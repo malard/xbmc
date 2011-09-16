@@ -1,0 +1,112 @@
+<window id="4">
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>CommonSettingsBackground</include>
+		<include>CommonMediaPlayingBackground</include>
+		<control type="group">
+			<posx>90</posx>
+			<posy>30</posy>
+			<animation type="WindowOpen" reversible="false">
+				<effect type="zoom" start="80" end="100" center="640,360" easing="out" tween="back" time="300" />
+				<effect type="fade" start="0" end="100" time="300" />
+			</animation>
+			<animation type="WindowClose" reversible="false">
+				<effect type="zoom" start="100" end="80" center="640,360" easing="in" tween="back" time="300" />
+				<effect type="fade" start="100" end="0" time="300" />
+			</animation>
+			<control type="list" id="9000">
+				<posx>0</posx>
+				<posy>80</posy>
+				<width>1280</width>
+				<height>200</height>
+				<onleft>9000</onleft>
+				<onright>9000</onright>
+				<onup>9000</onup>
+				<ondown>9000</ondown>
+				<pagecontrol>-</pagecontrol>
+				<scrolltime>300</scrolltime>
+				<orientation>Horizontal</orientation>
+				<itemlayout height="54" width="auto">
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>0</width>
+						<height>55</height>
+						<font>categoryTitle</font>
+						<textcolor>grey3</textcolor>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout height="54" width="auto">
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>0</width>
+						<height>55</height>
+						<font>categoryTitle</font>
+						<textcolor>white</textcolor>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</focusedlayout>
+				<content>
+					<item id="1">
+						<label>[LOWERCASE]$LOCALIZE[480]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(AppearanceSettings)</onclick>
+					</item>
+					<item id="2">
+						<label>[LOWERCASE]$LOCALIZE[157]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(VideosSettings)</onclick>
+					</item>
+					<item id="3">
+						<label>[LOWERCASE]$LOCALIZE[10022]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(MusicSettings)</onclick>
+					</item>
+					<item id="4">
+						<label>[LOWERCASE]$LOCALIZE[1]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(PicturesSettings)</onclick>
+					</item>
+					<item id="5">
+						<label>[LOWERCASE]$LOCALIZE[8]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(WeatherSettings)</onclick>
+					</item>
+					<item id="6">
+						<label>[LOWERCASE]$LOCALIZE[24001]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(AddonBrowser)</onclick>
+					</item>
+					<item id="7">
+						<label>[LOWERCASE]$LOCALIZE[705]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(NetworkSettings)</onclick>
+					</item>
+					<item id="8">
+						<label>[LOWERCASE]$LOCALIZE[12999]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(SystemSettings)</onclick>
+					</item>
+					<item id="9">
+						<label>[LOWERCASE]$LOCALIZE[166]  [/LOWERCASE]</label>
+						<onclick>ActivateWindow(1111)</onclick>
+					</item>
+				</content>
+			</control>
+			<control type="label">
+				<description>header label</description>
+				<posx>0</posx>
+				<posy>30</posy>
+				<width>300</width>
+				<height>30</height>
+				<font>groupTitle</font>
+				<label>[LOWERCASE]$LOCALIZE[5][/LOWERCASE]</label>
+				<align>left</align>
+				<aligny>center</aligny>
+				<textcolor>grey3</textcolor>
+			</control>
+		</control>
+		<include>CommonNowPlaying</include>
+		<include>BehindDialogFadeOut</include>
+		<include>Clock</include>
+	</controls>
+</window>
