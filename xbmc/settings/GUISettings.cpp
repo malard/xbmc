@@ -271,9 +271,9 @@ void CGUISettings::Initialize()
   AddGroup(4, 13000); //Advanced
   CSettingsCategory* in = AddCategory(4, "input", 14094);
   CSettingsCategory* pwm = AddCategory(4, "powermanagement", 14095);
-  CSettingsCategory* dbg = AddCategory(4, "debug", 14092);
   CSettingsCategory* mst = AddCategory(4, "masterlock", 12360);
   AddCategory(4, "cache", 439);
+  CSettingsCategory* dbg = AddCategory(4, "debug", 14092);
 
   // Pictures settings
   AddBool(pic, "pictures.usetags", 14082, true);
@@ -542,8 +542,8 @@ void CGUISettings::Initialize()
     AddInt(pwm, "powermanagement.shutdownstate", 13008, POWERSTATE_QUIT, shutdown, SPIN_CONTROL_TEXT);
   }
 
-  AddBool(dbg, "debug.showloginfo", 20191, false);
-  AddPath(dbg, "debug.screenshotpath",20004,"select writable folder",BUTTON_CONTROL_PATH_INPUT,false,657);
+  AddBool(NULL, "debug.showloginfo", 20191, false);
+  AddPath(NULL, "debug.screenshotpath",20004,"select writable folder",BUTTON_CONTROL_PATH_INPUT,false,657);
 
   AddString(mst, "masterlock.lockcode"       , 20100, "-", BUTTON_CONTROL_STANDARD);
   AddBool(mst, "masterlock.startuplock"      , 20076,false);
