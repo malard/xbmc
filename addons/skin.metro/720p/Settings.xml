@@ -162,10 +162,18 @@
 		<control type="list" id="9000">
 			<posy>-10</posy>
 			<orientation>horizontal</orientation>
+			<onup>ActivateWindow(Home)</onup>
+			<ondown condition="Container(9000).HasFocus(1)">ActivateWindow(AppearanceSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(2)">ActivateWindow(VideosSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(3)">ActivateWindow(MusicSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(4)">ActivateWindow(PicturesSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(5)">ActivateWindow(WeatherSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(6)">ActivateWindow(AddonBrowser)</ondown>
+			<ondown condition="Container(9000).HasFocus(7)">ActivateWindow(NetworkSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(8)">ActivateWindow(SystemSettings)</ondown>
+			<ondown condition="Container(9000).HasFocus(9)">ActivateWindow(1111)</ondown>
 			<content>
 				<item id="1">
-					<!--- HOW CAN I DO THIS?? --->
-					<ondown>ActivateWindow(AppearanceSettings)</ondown>
 					<onclick>ActivateWindow(AppearanceSettings)</onclick>
 				</item>
 				<item id="2">
