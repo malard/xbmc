@@ -87,6 +87,16 @@ bool CServiceManager::InitForTesting()
   m_extsMimeSupportList = std::make_unique<ADDONS::CExtsMimeSupportList>(*m_addonMgr);
   m_fileExtensionProvider->Initialize(*m_addonMgr);
 
+  // Needed because CServiceManager::GetMediaManager() dereferences this unconditionally,
+  // so anything reaching it without one - CDVDFactoryInputStream::CreateInputStream, for
+  // instance - takes the whole test binary down with an access violation rather than
+  // failing in a way that can be diagnosed.
+  //
+  // Deliberately constructed but not Initialize()d: that creates a platform storage
+  // provider and enumerates optical drives, which a headless test process has no business
+  // doing. Everything reachable from the test environment reads only plain members.
+  m_mediaManager = std::make_unique<CMediaManager>();
+
   m_subTagRegistryManager = std::make_unique<KODI::UTILS::I18N::CSubTagRegistryManager>();
   m_subTagRegistryManager->Initialize();
 
@@ -98,6 +108,7 @@ void CServiceManager::DeinitTesting()
 {
   init_level = 0;
   m_subTagRegistryManager.reset();
+  m_mediaManager.reset();
   m_fileExtensionProvider->Deinitialize();
   m_extsMimeSupportList.reset();
   m_dataCacheCore.reset();
