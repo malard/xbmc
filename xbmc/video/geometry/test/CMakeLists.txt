@@ -1,4 +1,7 @@
-set(SOURCES TestContentBarDetector.cpp)
+set(SOURCES TestContentBarDetector.cpp
+            TestContentGeometryCombiner.cpp
+            TestContentGeometrySampler.cpp
+            TestFrameSampling.cpp)
 
 set(HEADERS SyntheticFrame.h)
 

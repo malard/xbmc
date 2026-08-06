@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "utils/Geometry.h"
+#include "video/geometry/ContentGeometryCombiner.h"
+#include "video/geometry/FrameSampling.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,11 +24,38 @@ class CDVDInputStream;
 class CTexture;
 class CTextureDetails;
 
+/*!
+ * \brief What sampling a file for its content geometry produced.
+ */
+struct ContentGeometryScan
+{
+  bool succeeded{false}; //!< the file was opened and at least one picture decoded
+  CRectInt coded; //!< the coded frame, or the analysed view of a stereoscopic one
+  KODI::VIDEO::GEOMETRY::CombinedGeometry combined;
+
+  //! Every sample, kept because a wrong cached answer can only be explained afterwards if
+  //! the readings behind it survived.
+  std::vector<KODI::VIDEO::GEOMETRY::GeometrySample> samples;
+};
+
 class CDVDFileInfo
 {
 public:
   static std::unique_ptr<CTexture> ExtractThumbToTexture(const CFileItem& fileItem,
                                                          int chapterNumber = 0);
+
+  /*!
+   * \brief Sample a file at several points and work out its true picture rectangle.
+   *
+   * Opens the item once and walks it, rather than opening per position: the cost of a
+   * sample point is the seek, not the decode. Gated on CanExtract, so local and LAN files
+   * only. Decodes in software with film grain synthesis disabled, because synthesised
+   * grain over clean coded bars is exactly what the detector must not see.
+   */
+  static ContentGeometryScan ExtractContentGeometry(
+      const CFileItem& fileItem,
+      const KODI::VIDEO::GEOMETRY::SamplingParams& sampling = {},
+      const KODI::VIDEO::GEOMETRY::CombinerParams& combining = {});
 
   /*!
    * @brief Can a thumbnail image and file stream details be extracted from this file item?

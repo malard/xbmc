@@ -2,6 +2,8 @@ set(SOURCES Bookmark.cpp
             ContextMenus.cpp
             FilenameAttributes.cpp
             geometry/ContentBarDetector.cpp
+            geometry/ContentGeometryCombiner.cpp
+            geometry/FrameSampling.cpp
             GUIViewStateVideo.cpp
             PlayerController.cpp
             SetInfoTag.cpp
@@ -27,6 +29,8 @@ set(HEADERS Bookmark.h
             Episode.h
             FilenameAttributes.h
             geometry/ContentBarDetector.h
+            geometry/ContentGeometryCombiner.h
+            geometry/FrameSampling.h
             GUIViewStateVideo.h
             PlayerController.h
             SetInfoTag.h

@@ -19,6 +19,15 @@ extern "C"
 #define CODEC_FORCE_SOFTWARE 0x01
 #define CODEC_ALLOW_FALLBACK 0x02
 
+/*!
+ * \brief Export film grain parameters as side data instead of applying them.
+ *
+ * FFmpeg synthesises film grain during decode by default, which is right for playback and
+ * wrong for anything measuring the picture: it lays synthesised grain over what were clean
+ * coded pixels. Analysis paths want the coded image.
+ */
+#define CODEC_EXPORT_FILM_GRAIN 0x04
+
 class CDemuxStream;
 struct DemuxCryptoSession;
 

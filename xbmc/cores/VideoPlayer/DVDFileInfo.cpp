@@ -26,6 +26,9 @@
 #include "utils/log.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
+#include "video/geometry/ContentBarDetector.h"
+#include "video/geometry/ContentGeometryCombiner.h"
+#include "video/geometry/FrameSampling.h"
 #ifdef HAVE_LIBBLURAY
 #include "DVDInputStreams/DVDInputStreamBluray.h"
 #endif
@@ -97,25 +100,25 @@ int DegreeToOrientation(int degrees)
 
 namespace
 {
-//! Seek to the thumbnail position (chapter start or one third in) and decode the
-//! first clean picture.
-bool SeekAndDecodeFirstPicture(CDVDDemux& demuxer,
-                               CDVDVideoCodec& codec,
-                               int videoStream,
-                               int chapterNumber,
-                               const std::string& redactPath,
-                               VideoPicture& picture,
-                               int& packetsTried)
+/*!
+ * \brief Seek to a position in milliseconds and decode the first usable picture there.
+ *
+ * Split out from the chapter-based entry point below so a caller can walk a file at N
+ * positions on one open input stream, demuxer and codec, which is where the cost of
+ * multi-point sampling actually lies - the seek, not the decode.
+ */
+bool SeekAndDecodePictureAt(CDVDDemux& demuxer,
+                            CDVDVideoCodec& codec,
+                            int videoStream,
+                            int64_t seekToMs,
+                            const std::string& redactPath,
+                            VideoPicture& picture,
+                            int& packetsTried)
 {
-  const int nTotalLen = demuxer.GetStreamLength();
+  CLog::LogF(LOGDEBUG, "seeking to pos {}ms (total: {}ms) in {}", seekToMs,
+             demuxer.GetStreamLength(), redactPath);
 
-  const bool seekToChapter = chapterNumber > 0 && demuxer.GetChapterCount() > 0;
-  const int64_t nSeekTo =
-      seekToChapter ? demuxer.GetChapterPos(chapterNumber).count() : nTotalLen / 3;
-
-  CLog::LogF(LOGDEBUG, "seeking to pos {}ms (total: {}ms) in {}", nSeekTo, nTotalLen, redactPath);
-
-  if (!demuxer.SeekTime(static_cast<double>(nSeekTo), true))
+  if (!demuxer.SeekTime(static_cast<double>(seekToMs), true))
     return false;
 
   CDVDVideoCodec::VCReturn iDecoderState = CDVDVideoCodec::VC_NONE;
@@ -152,6 +155,24 @@ bool SeekAndDecodeFirstPicture(CDVDDemux& demuxer,
   }
 
   return iDecoderState == CDVDVideoCodec::VC_PICTURE && !(picture.iFlags & DVP_FLAG_DROPPED);
+}
+
+//! Seek to the thumbnail position (chapter start or one third in) and decode the
+//! first clean picture.
+bool SeekAndDecodeFirstPicture(CDVDDemux& demuxer,
+                               CDVDVideoCodec& codec,
+                               int videoStream,
+                               int chapterNumber,
+                               const std::string& redactPath,
+                               VideoPicture& picture,
+                               int& packetsTried)
+{
+  const bool seekToChapter = chapterNumber > 0 && demuxer.GetChapterCount() > 0;
+  const int64_t nSeekTo = seekToChapter ? demuxer.GetChapterPos(chapterNumber).count()
+                                        : demuxer.GetStreamLength() / 3;
+
+  return SeekAndDecodePictureAt(demuxer, codec, videoStream, nSeekTo, redactPath, picture,
+                                packetsTried);
 }
 
 //! Convert a decoded picture to a BGRA texture sized for the thumbnail cache.
@@ -353,6 +374,219 @@ std::unique_ptr<CTexture> CDVDFileInfo::ExtractThumbToTexture(const CFileItem& f
              duration.count(), redactPath, packetsTried);
 
   return result;
+}
+
+namespace
+{
+
+using namespace KODI::VIDEO::GEOMETRY;
+
+/*!
+ * \brief Describe a decoded picture to the detector.
+ *
+ * Reads the layout from the pixel format descriptor rather than switching on known formats,
+ * so a format we have not thought about is either described correctly or refused - never
+ * misread. The detector needs planar, little-endian, low-aligned samples.
+ */
+bool BuildFrameRef(const VideoPicture& picture, const CDVDStreamInfo& hint, FrameRef& frame)
+{
+  if (!picture.videoBuffer || picture.iWidth == 0 || picture.iHeight == 0)
+    return false;
+
+  const AVPixFmtDescriptor* description = av_pix_fmt_desc_get(picture.pixelFormat);
+  if (!description || description->nb_components < 3)
+    return false;
+
+  if (!(description->flags & AV_PIX_FMT_FLAG_PLANAR) ||
+      (description->flags & AV_PIX_FMT_FLAG_BE) || (description->flags & AV_PIX_FMT_FLAG_PAL))
+    return false;
+
+  const unsigned int depth = description->comp[0].depth;
+  if (depth < 8 || depth > 16)
+    return false;
+
+  if (description->log2_chroma_w == 1 && description->log2_chroma_h == 1)
+    frame.subsampling = ChromaSubsampling::YUV420;
+  else if (description->log2_chroma_w == 1 && description->log2_chroma_h == 0)
+    frame.subsampling = ChromaSubsampling::YUV422;
+  else if (description->log2_chroma_w == 0 && description->log2_chroma_h == 0)
+    frame.subsampling = ChromaSubsampling::YUV444;
+  else
+    return false;
+
+  uint8_t* planes[YuvImage::MAX_PLANES] = {};
+  int strides[YuvImage::MAX_PLANES] = {};
+  picture.videoBuffer->GetPlanes(planes);
+  picture.videoBuffer->GetStrides(strides);
+  if (!planes[0] || strides[0] == 0)
+    return false;
+
+  frame.width = picture.iWidth;
+  frame.height = picture.iHeight;
+  frame.bitDepth = depth;
+  frame.y = {planes[0], strides[0]};
+  if (planes[1] && planes[2])
+  {
+    frame.u = {planes[1], strides[1]};
+    frame.v = {planes[2], strides[2]};
+  }
+
+  // VideoPicture::color_range is a single bit, so by the time it reaches here an
+  // unspecified range has already been folded into limited. The stream hint still carries
+  // the real value, and the detector reports lower confidence when it had to assume - so
+  // prefer the hint and fall back to the picture.
+  if (hint.colorRange == AVCOL_RANGE_JPEG)
+    frame.range = ColorRange::Full;
+  else if (hint.colorRange == AVCOL_RANGE_MPEG)
+    frame.range = ColorRange::Limited;
+  else
+    frame.range = picture.color_range ? ColorRange::Full : ColorRange::Unspecified;
+
+  frame.roi = StereoViewRect(picture.stereoMode, picture.iWidth, picture.iHeight);
+  return true;
+}
+
+} // unnamed namespace
+
+ContentGeometryScan CDVDFileInfo::ExtractContentGeometry(const CFileItem& fileItem,
+                                                         const SamplingParams& sampling,
+                                                         const CombinerParams& combining)
+{
+  ContentGeometryScan scan;
+  if (!CanExtract(fileItem))
+    return scan;
+
+  const std::string redactPath = CURL::GetRedacted(fileItem.GetPath());
+  const auto start = std::chrono::steady_clock::now();
+
+  CFileItem item(fileItem);
+  item.SetMimeTypeForInternetFile();
+  auto inputStream = CDVDFactoryInputStream::CreateInputStream(nullptr, item);
+  if (!inputStream || !inputStream->Open())
+  {
+    CLog::LogF(LOGERROR, "unable to open {}", redactPath);
+    return scan;
+  }
+
+  std::unique_ptr<CDVDDemux> demuxer{CDVDFactoryDemuxer::CreateDemuxer(inputStream, true)};
+  if (!demuxer)
+  {
+    CLog::LogF(LOGERROR, "error creating demuxer for {}", redactPath);
+    return scan;
+  }
+
+  int videoStream = -1;
+  int64_t demuxerId = -1;
+  for (CDemuxStream* stream : demuxer->GetStreams())
+  {
+    if (!stream)
+      continue;
+
+    // Ignore picture attachments; assume the first video stream, which is the base layer
+    // in Dolby Vision dual-track files.
+    if (stream->type == StreamType::VIDEO && !(stream->flags & AV_DISPOSITION_ATTACHED_PIC) &&
+        videoStream == -1)
+    {
+      videoStream = stream->uniqueId;
+      demuxerId = stream->demuxerId;
+    }
+    else
+      demuxer->EnableStream(stream->demuxerId, stream->uniqueId, false);
+  }
+
+  if (videoStream == -1)
+    return scan;
+
+  auto processInfo = CProcessInfo::CreateInstance();
+  std::vector<AVPixelFormat> pixFmts{AV_PIX_FMT_YUV420P,   AV_PIX_FMT_YUV420P10,
+                                     AV_PIX_FMT_YUV422P,   AV_PIX_FMT_YUV422P10,
+                                     AV_PIX_FMT_YUV444P,   AV_PIX_FMT_YUV444P10};
+  processInfo->SetPixFormats(pixFmts);
+
+  CDVDStreamInfo hint(*demuxer->GetStream(demuxerId, videoStream), true);
+  hint.codecOptions = CODEC_FORCE_SOFTWARE | CODEC_EXPORT_FILM_GRAIN;
+
+  std::unique_ptr<CDVDVideoCodec> codec = CDVDFactoryCodec::CreateVideoCodec(hint, *processInfo);
+  if (!codec)
+  {
+    CLog::LogF(LOGERROR, "unable to create video codec for {}", redactPath);
+    return scan;
+  }
+
+  const double duration = demuxer->GetStreamLength() / 1000.0;
+  const std::vector<double> offsets = SampleOffsets(duration, sampling);
+  if (offsets.empty())
+  {
+    CLog::LogF(LOGDEBUG, "no usable duration for {}", redactPath);
+    return scan;
+  }
+
+  const unsigned int perPoint = std::max(1u, sampling.picturesPerPoint);
+  int packetsTried = 0;
+  std::vector<double> visited;
+
+  const auto walk = [&](const std::vector<double>& schedule)
+  {
+    for (const double offset : schedule)
+    {
+      visited.push_back(offset);
+      for (unsigned int repeat = 0; repeat < perPoint; ++repeat)
+      {
+        VideoPicture picture = {};
+        const auto position = static_cast<int64_t>(offset * 1000.0);
+        if (!SeekAndDecodePictureAt(*demuxer, *codec, videoStream, position, redactPath, picture,
+                                    packetsTried))
+          continue;
+
+        FrameRef frame;
+        if (!BuildFrameRef(picture, hint, frame))
+          continue;
+
+        if (!scan.succeeded)
+        {
+          scan.succeeded = true;
+          scan.coded = frame.roi.IsEmpty() ? CRectInt(0, 0, static_cast<int>(frame.width),
+                                                      static_cast<int>(frame.height))
+                                           : frame.roi;
+        }
+
+        const DetectionResult detected = DetectContentRect(frame);
+        scan.samples.push_back({detected.rect, detected.confidence, detected.degenerate, offset});
+      }
+    }
+  };
+
+  walk(offsets);
+  if (!scan.succeeded)
+    return scan;
+
+  scan.combined = CombineGeometrySamples(scan.samples, scan.coded, combining);
+
+  // A short pass cannot tell a fixed-ratio title from one whose changes it happened to miss.
+  // Where it looks inconclusive, densify - reusing the open demuxer, so only the extra seeks
+  // are paid for - and judge the whole set together.
+  if (ShouldEscalate(scan.combined.clusters.size(), scan.combined.usable, scan.combined.discarded,
+                     sampling))
+  {
+    SamplingParams denser = sampling;
+    denser.points = sampling.escalatedPoints;
+    const std::vector<double> extra = UnsampledOffsets(SampleOffsets(duration, denser), visited);
+
+    CLog::LogF(LOGDEBUG, "first pass inconclusive for {}, adding {} points", redactPath,
+               extra.size());
+
+    walk(extra);
+    scan.combined = CombineGeometrySamples(scan.samples, scan.coded, combining);
+  }
+
+  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - start);
+  CLog::LogF(LOGDEBUG, "sampled {} points ({} readings) in {} ms from <{}>: {}x{}{}",
+             offsets.size(), scan.samples.size(), elapsed.count(), redactPath,
+             scan.combined.rect.Width(), scan.combined.rect.Height(),
+             scan.combined.varies ? ", varies" : "");
+
+  return scan;
 }
 
 bool CDVDFileInfo::CanExtract(const CFileItem& fileItem)
