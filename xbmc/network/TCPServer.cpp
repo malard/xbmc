@@ -171,10 +171,8 @@ void CTCPServer::Process()
               if (websocket != NULL)
               {
                 // Replace the CTCPClient with a CWebSocketClient
-                CWebSocketClient *websocketClient = new CWebSocketClient(websocket, *(m_connections[i]));
-                delete m_connections[i];
-                m_connections.erase(m_connections.begin() + i);
-                m_connections.insert(m_connections.begin() + i, websocketClient);
+                m_connections[i] =
+                    std::make_shared<CWebSocketClient>(websocket, *(m_connections[i]));
               }
             }
 
@@ -190,7 +188,6 @@ void CTCPServer::Process()
           {
             CLog::Log(LOGINFO, "JSONRPC Server: Disconnection detected");
             m_connections[i]->Disconnect();
-            delete m_connections[i];
             m_connections.erase(m_connections.begin() + i);
           }
         }
@@ -201,7 +198,7 @@ void CTCPServer::Process()
         if (FD_ISSET(it, &rfds))
         {
           CLog::Log(LOGDEBUG, "JSONRPC Server: New connection detected");
-          CTCPClient *newconnection = new CTCPClient();
+          auto newconnection = std::make_shared<CTCPClient>();
           newconnection->m_socket =
               accept(it, (sockaddr*)&newconnection->m_cliaddr, &newconnection->m_addrlen);
 
@@ -218,7 +215,7 @@ void CTCPServer::Process()
           else
           {
             CLog::Log(LOGINFO, "JSONRPC Server: New connection added");
-            m_connections.push_back(newconnection);
+            m_connections.push_back(std::move(newconnection));
           }
         }
       }
@@ -248,26 +245,31 @@ void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                           const std::string& message,
                           const CVariant& data)
 {
-  // Hold m_connectionsCritSection across the whole iteration so the Process
-  // thread cannot erase a connection out from under us while we Send to it.
-  // Without this lock, a client that disconnects right after receiving its
-  // response (e.g. `nc -q1`) crashes Announce on use-after-free.
-  std::unique_lock lock(m_connectionsCritSection);
+  // Take a snapshot under the lock and send outside it. Each entry is a shared_ptr, so a
+  // connection the Process thread drops mid-iteration stays alive until we are done with it -
+  // which is what the lock used to be for. Holding it across the sends instead would park the
+  // announcement thread behind whatever the Process thread is doing, and every JSON-RPC
+  // notification in the application with it.
+  std::vector<std::shared_ptr<CTCPClient>> connections;
+  {
+    std::unique_lock lock(m_connectionsCritSection);
+    if (m_connections.empty())
+      return;
 
-  if (m_connections.empty())
-    return;
+    connections = m_connections;
+  }
 
   std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(flag, sender, message, data, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
 
-  for (unsigned int i = 0; i < m_connections.size(); i++)
+  for (const auto& connection : connections)
   {
     {
-      std::unique_lock connLock(m_connections[i]->m_critSection);
-      if ((m_connections[i]->GetAnnouncementFlags() & flag) == 0)
+      std::unique_lock connLock(connection->m_critSection);
+      if ((connection->GetAnnouncementFlags() & flag) == 0)
         continue;
     }
 
-    m_connections[i]->Send(str.c_str(), str.size());
+    connection->Send(str.c_str(), str.size());
   }
 }
 
@@ -501,11 +503,8 @@ void CTCPServer::Deinitialize()
 
   std::unique_lock lock(m_connectionsCritSection);
 
-  for (unsigned int i = 0; i < m_connections.size(); i++)
-  {
-    m_connections[i]->Disconnect();
-    delete m_connections[i];
-  }
+  for (const auto& connection : m_connections)
+    connection->Disconnect();
 
   m_connections.clear();
 
@@ -705,6 +704,10 @@ CTCPServer::CWebSocketClient& CTCPServer::CWebSocketClient::operator=(const CWeb
 
 void CTCPServer::CWebSocketClient::Send(const char *data, unsigned int size)
 {
+  // The announcement thread and this connection's worker both send here, so framing and the
+  // writes that carry one message have to stay together.
+  std::unique_lock lock(m_critSection);
+
   const CWebSocketMessage *msg = m_websocket->Send(WebSocketTextFrame, data, size);
   if (msg == NULL || !msg->IsComplete())
     return;
@@ -718,49 +721,62 @@ void CTCPServer::CWebSocketClient::PushBuffer(CTCPServer *host, const char *buff
 {
   bool send;
   const CWebSocketMessage *msg = NULL;
+  std::vector<std::string> payloads;
 
-  if (m_buffer.size() + length > maxBufferLength)
   {
-    CLog::Log(LOGINFO, "WebSocket: client buffer size {} exceeded", maxBufferLength);
-    return Disconnect();
-  }
+    // Unframing shares the websocket with the announcement thread and has to be locked, but the
+    // JSON-RPC calls below must not be - one of them can sit in a modal dialog, and holding the
+    // lock across that would park every announcement to this connection behind it.
+    std::unique_lock lock(m_critSection);
 
-  m_buffer.append(buffer, length);
-
-  const char* buf = m_buffer.data();
-  size_t len = m_buffer.size();
-
-  do
-  {
-    if ((msg = m_websocket->Handle(buf, len, send)) != NULL && msg->IsComplete())
+    if (m_buffer.size() + length > maxBufferLength)
     {
-      std::vector<const CWebSocketFrame *> frames = msg->GetFrames();
-      if (send)
-      {
-        for (unsigned int index = 0; index < frames.size(); index++)
-          CTCPClient::Send(frames.at(index)->GetFrameData(),
-                           static_cast<unsigned int>(frames.at(index)->GetFrameLength()));
-      }
-      else
-      {
-        for (unsigned int index = 0; index < frames.size(); index++)
-          CTCPClient::PushBuffer(host, frames.at(index)->GetApplicationData(), (int)frames.at(index)->GetLength());
-      }
-
-      delete msg;
+      CLog::Log(LOGINFO, "WebSocket: client buffer size {} exceeded", maxBufferLength);
+      return Disconnect();
     }
+
+    m_buffer.append(buffer, length);
+
+    const char* buf = m_buffer.data();
+    size_t len = m_buffer.size();
+
+    do
+    {
+      if ((msg = m_websocket->Handle(buf, len, send)) != NULL && msg->IsComplete())
+      {
+        std::vector<const CWebSocketFrame*> frames = msg->GetFrames();
+        if (send)
+        {
+          for (unsigned int index = 0; index < frames.size(); index++)
+            CTCPClient::Send(frames.at(index)->GetFrameData(),
+                             static_cast<unsigned int>(frames.at(index)->GetFrameLength()));
+        }
+        else
+        {
+          for (unsigned int index = 0; index < frames.size(); index++)
+            payloads.emplace_back(frames.at(index)->GetApplicationData(),
+                                  static_cast<size_t>(frames.at(index)->GetLength()));
+        }
+
+        delete msg;
+      }
+    } while (len > 0 && msg != NULL);
+
+    if (len < m_buffer.size())
+      m_buffer = m_buffer.substr(m_buffer.size() - len);
+
+    if (m_websocket->GetState() == WebSocketStateClosed)
+      Disconnect();
   }
-  while (len > 0 && msg != NULL);
 
-  if (len < m_buffer.size())
-    m_buffer = m_buffer.substr(m_buffer.size() - len);
-
-  if (m_websocket->GetState() == WebSocketStateClosed)
-    Disconnect();
+  for (const auto& payload : payloads)
+    CTCPClient::PushBuffer(host, payload.data(), static_cast<int>(payload.size()));
 }
 
 void CTCPServer::CWebSocketClient::Disconnect()
 {
+  std::unique_lock lock(m_critSection);
+
   if (m_socket > 0)
   {
     if (m_websocket->GetState() != WebSocketStateClosed && m_websocket->GetState() != WebSocketStateNotConnected)
