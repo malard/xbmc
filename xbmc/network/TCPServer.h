@@ -15,6 +15,7 @@
 #include "threads/Thread.h"
 #include "websocket/WebSocket.h"
 
+#include <memory>
 #include <vector>
 
 #include <sys/socket.h>
@@ -107,7 +108,7 @@ namespace JSONRPC
       std::string m_buffer;
     };
 
-    std::vector<CTCPClient*> m_connections;
+    std::vector<std::shared_ptr<CTCPClient>> m_connections;
     std::vector<SOCKET> m_servers;
     CCriticalSection m_connectionsCritSection;
     int m_port;
