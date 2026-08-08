@@ -562,11 +562,21 @@ bool CTCPServer::CTCPClient::SetAnnouncementFlags(int flags)
 void CTCPServer::CTCPClient::Send(const char *data, unsigned int size)
 {
   unsigned int sent = 0;
-  do
+  while (sent < size)
   {
     std::unique_lock lock(m_critSection);
-    sent += send(m_socket, data + sent, size - sent, 0);
-  } while (sent < size);
+    const auto written = send(m_socket, data + sent, size - sent, 0);
+    if (written <= 0)
+    {
+      // The server thread can close the socket while a send is in progress. send() then
+      // returns -1, which must not reach the unsigned counter below.
+      CLog::Log(LOGERROR, "JSONRPC Server: Send failed, dropping {} of {} bytes", size - sent,
+                size);
+      return;
+    }
+
+    sent += static_cast<unsigned int>(written);
+  }
 }
 
 void CTCPServer::CTCPClient::PushBuffer(CTCPServer *host, const char *buffer, int length)
