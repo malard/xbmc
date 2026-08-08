@@ -15,7 +15,12 @@
 #include "threads/Thread.h"
 #include "websocket/WebSocket.h"
 
+#include <atomic>
+#include <condition_variable>
+#include <deque>
 #include <memory>
+#include <mutex>
+#include <string>
 #include <vector>
 
 #include <sys/socket.h>
@@ -69,8 +74,29 @@ namespace JSONRPC
       virtual void PushBuffer(CTCPServer *host, const char *buffer, int length);
       virtual void Disconnect();
 
+      /*!
+       * \brief Hand a received buffer to this connection's own thread, starting it if needed.
+       *
+       * The server thread must never execute a request itself: a handler that raises a modal
+       * dialog does not return until a human dismisses it, and every other client - plus the
+       * accept() of new ones - would wait behind it.
+       *
+       * \param self shared ownership of this client, kept alive by the worker
+       * \param host the server, kept alive by the worker through its own shared_ptr
+       */
+      void Enqueue(const std::shared_ptr<CTCPClient>& self,
+                   CTCPServer* host,
+                   const char* buffer,
+                   int length);
+
+      /*!
+       * \brief Ask the worker to finish and exit. Signals only - it never joins, because the
+       *        worker may be blocked in a dialog and waiting for it would restore the wedge.
+       */
+      void StopWorker();
+
       virtual bool IsNew() const { return m_new; }
-      virtual bool Closing() const { return false; }
+      virtual bool Closing() const { return m_closing; }
 
       SOCKET m_socket{INVALID_SOCKET};
       sockaddr_storage m_cliaddr;
@@ -79,12 +105,29 @@ namespace JSONRPC
 
     protected:
       void Copy(const CTCPClient& client);
+
+      /*!
+       * \brief Ask the server thread to drop this connection. A worker must not close the
+       *        socket itself - the server thread may be in select() on that descriptor.
+       */
+      void RequestClose() { m_closing = true; }
+
     private:
+      static void RunWorker(std::shared_ptr<CTCPClient> self, std::shared_ptr<CTCPServer> host);
+
       bool m_new;
       int m_announcementflags;
       int m_beginBrackets, m_endBrackets;
       char m_beginChar, m_endChar;
       std::string m_buffer;
+
+      std::atomic<bool> m_closing{false};
+
+      std::mutex m_inboundMutex;
+      std::condition_variable m_inboundEvent;
+      std::deque<std::string> m_inbound;
+      bool m_workerStop{false};
+      bool m_workerStarted{false};
     };
 
     class CWebSocketClient : public CTCPClient
@@ -101,7 +144,6 @@ namespace JSONRPC
       void Disconnect() override;
 
       bool IsNew() const override { return m_websocket == NULL; }
-      bool Closing() const override { return m_websocket != NULL && m_websocket->GetState() == WebSocketStateClosed; }
 
     private:
       CWebSocket *m_websocket;
@@ -115,6 +157,11 @@ namespace JSONRPC
     bool m_nonlocal;
     void* m_sdpd;
 
-    static CTCPServer *ServerInstance;
+    // A worker is handed the server it must call back into and may still be inside a request -
+    // blocked on a modal dialog, say - when StopServer() drops the instance below. Holding a
+    // reference for the duration is what keeps that from becoming a use-after-free.
+    std::weak_ptr<CTCPServer> m_self;
+
+    static std::shared_ptr<CTCPServer> ServerInstance;
   };
 }
