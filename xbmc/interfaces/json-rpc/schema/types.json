@@ -321,7 +321,9 @@
     "type": "string",
     "enum": [
       "type",
-      "size"
+      "size",
+      "repeat",
+      "shuffled"
     ]
   },
   "Playlist.Property.Value": {
@@ -333,6 +335,12 @@
       "size": {
         "type": "integer",
         "minimum": 0
+      },
+      "repeat": {
+        "$ref": "#/$defs/Player.Repeat"
+      },
+      "shuffled": {
+        "type": "boolean"
       }
     }
   },

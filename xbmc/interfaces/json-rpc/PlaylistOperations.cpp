@@ -12,6 +12,7 @@
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
 #include "PlayListPlayer.h"
+#include "PlayerOperations.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -20,6 +21,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "pictures/PictureInfoTag.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayListTypes.h"
 #include "utils/Variant.h"
 
 using namespace JSONRPC;
@@ -227,6 +229,101 @@ JSONRPC_STATUS CPlaylistOperations::Swap(const std::string &method, ITransportLa
   return ACK;
 }
 
+JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
+                                               ITransportLayer* transport,
+                                               IClient* client,
+                                               const CVariant& parameterObject,
+                                               CVariant& result)
+{
+  PLAYLIST::Id playlistId = GetPlaylist(parameterObject["playlistid"]);
+  const CVariant& shuffle = parameterObject["shuffle"];
+  bool shuffleOn = (shuffle.isBoolean() && shuffle.asBoolean()) ||
+                   (shuffle.isString() && shuffle.asString() == "toggle");
+  bool shuffleOff = (shuffle.isBoolean() && !shuffle.asBoolean()) ||
+                    (shuffle.isString() && shuffle.asString() == "toggle");
+
+  switch (playlistId)
+  {
+    case PLAYLIST::Id::TYPE_MUSIC:
+    case PLAYLIST::Id::TYPE_VIDEO:
+    {
+      if (CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))
+      {
+        if (shuffleOff)
+        {
+          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
+                                                     static_cast<int>(playlistId), 0);
+        }
+      }
+      else
+      {
+        if (shuffleOn)
+        {
+          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
+                                                     static_cast<int>(playlistId), 1);
+        }
+      }
+      break;
+    }
+
+    case PLAYLIST::Id::TYPE_PICTURE:
+    {
+      CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
+      if (!slideShow.IsPlaying())
+        return FailedToExecute;
+
+      if (slideShow.IsShuffled())
+      {
+        // a running slideshow cannot be unshuffled
+        if (shuffleOff)
+          return FailedToExecute;
+      }
+      else
+      {
+        if (shuffleOn)
+          slideShow.Shuffle();
+      }
+      break;
+    }
+
+    default:
+      return InvalidParams;
+  }
+
+  return ACK;
+}
+
+JSONRPC_STATUS CPlaylistOperations::SetRepeat(const std::string& method,
+                                              ITransportLayer* transport,
+                                              IClient* client,
+                                              const CVariant& parameterObject,
+                                              CVariant& result)
+{
+  PLAYLIST::Id playlistId = GetPlaylist(parameterObject["playlistid"]);
+  if (playlistId != PLAYLIST::Id::TYPE_MUSIC && playlistId != PLAYLIST::Id::TYPE_VIDEO)
+    return FailedToExecute;
+
+  PLAYLIST::RepeatState state;
+  if (parameterObject["repeat"].asString() == "cycle")
+  {
+    const PLAYLIST::RepeatState statePrev =
+        CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId);
+    if (statePrev == PLAYLIST::RepeatState::NONE)
+      state = PLAYLIST::RepeatState::ALL;
+    else if (statePrev == PLAYLIST::RepeatState::ALL)
+      state = PLAYLIST::RepeatState::ONE;
+    else
+      state = PLAYLIST::RepeatState::NONE;
+  }
+  else
+    state = CPlayerOperations::ParseRepeatState(parameterObject["repeat"]);
+
+  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT,
+                                             static_cast<int>(playlistId), static_cast<int>(state));
+
+  return ACK;
+}
+
 PLAYLIST::Id CPlaylistOperations::GetPlaylist(const CVariant& playlist)
 {
   PLAYLIST::Id playlistId =
@@ -291,6 +388,53 @@ JSONRPC_STATUS CPlaylistOperations::GetPropertyValue(PLAYLIST::Id playlistId,
         result = 0;
         break;
       }
+    }
+  }
+  else if (property == "shuffled")
+  {
+    switch (playlistId)
+    {
+      case PLAYLIST::Id::TYPE_MUSIC:
+      case PLAYLIST::Id::TYPE_VIDEO:
+        result = CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId);
+        break;
+
+      case PLAYLIST::Id::TYPE_PICTURE:
+        result = CServiceBroker::GetSlideShowDelegator().IsShuffled();
+        break;
+
+      default:
+        result = false;
+        break;
+    }
+  }
+  else if (property == "repeat")
+  {
+    switch (playlistId)
+    {
+      case PLAYLIST::Id::TYPE_MUSIC:
+      case PLAYLIST::Id::TYPE_VIDEO:
+      {
+        switch (CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))
+        {
+          case PLAYLIST::RepeatState::ONE:
+            result = "one";
+            break;
+
+          case PLAYLIST::RepeatState::ALL:
+            result = "all";
+            break;
+
+          default:
+            result = "off";
+            break;
+        }
+        break;
+      }
+
+      default:
+        result = "off";
+        break;
     }
   }
   else

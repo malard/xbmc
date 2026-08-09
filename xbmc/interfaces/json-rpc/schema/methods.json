@@ -1484,6 +1484,62 @@
     ],
     "returns": "string"
   },
+  "Playlist.SetRepeat": {
+    "type": "method",
+    "description": "Set the repeat mode of the playlist, whether or not it is currently being played. The state persists and takes effect when playback of the playlist starts, unless overridden by the repeat option of Player.Open. Does not work for picture playlists (aka slideshows).",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [
+      {
+        "name": "playlistid",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
+      },
+      {
+        "name": "repeat",
+        "required": true,
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Player.Repeat"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "cycle"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "returns": "string"
+  },
+  "Playlist.SetShuffle": {
+    "type": "method",
+    "description": "Shuffle or unshuffle the playlist, whether or not it is currently being played. The items are reordered immediately, and the state persists unless overridden by the shuffled option of Player.Open. For picture playlists (aka slideshows) shuffling is only possible while a slideshow is running and cannot be undone.",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [
+      {
+        "name": "playlistid",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
+      },
+      {
+        "name": "shuffle",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Global.Toggle"
+        }
+      }
+    ],
+    "returns": "string"
+  },
   "Playlist.Swap": {
     "type": "method",
     "description": "Swap items in the playlist. Does not work for picture playlists (aka slideshows).",
