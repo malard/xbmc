@@ -348,6 +348,47 @@
     "minimum": 0,
     "default": -1
   },
+  "Playlist.UnresolvedItem": {
+    "type": "object",
+    "description": "An item that was not added: the item exactly as the client wrote it, carrying the reason it was not added. The identifying members are those of Playlist.Item, which cannot be referenced here because each of its variants forbids additional properties.",
+    "properties": {
+      "reason": {
+        "type": "string",
+        "description": "\"notfound\": the item does not exist. \"unavailable\": it exists but cannot be reached at the moment, so the reference is worth keeping and retrying. \"invalid\": the item cannot go in a playlist of this type, or holds nothing playable.",
+        "enum": [
+          "notfound",
+          "unavailable",
+          "invalid"
+        ]
+      }
+    },
+    "required": [
+      "reason"
+    ]
+  },
+  "Playlist.AddResult": {
+    "type": "object",
+    "description": "The outcome of adding or inserting items. An item that cannot be resolved is skipped rather than refusing the whole call, so a client that ignores \"unresolved\" will hold a shorter playlist than it asked for without being told.",
+    "properties": {
+      "added": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "How many items were added. Never zero: a call that adds nothing returns an error instead."
+      },
+      "unresolved": {
+        "type": "array",
+        "description": "One entry per item that was not added, in request order. Empty when every item was added.",
+        "items": {
+          "$ref": "#/$defs/Playlist.UnresolvedItem"
+        }
+      }
+    },
+    "required": [
+      "added",
+      "unresolved"
+    ],
+    "additionalProperties": false
+  },
   "Playlist.Item": {
     "anyOf": [
       {
