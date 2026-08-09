@@ -90,7 +90,7 @@ class TestOpenRpcDocument(unittest.TestCase):
         self.assertEqual(on_disk, serialize(self.document))
 
     def test_method_count(self):
-        self.assertEqual(len(self.document["methods"]), 184)
+        self.assertEqual(len(self.document["methods"]), 186)
 
     def test_all_refs_resolve(self):
         schemas = self.document["components"]["schemas"]
@@ -128,10 +128,10 @@ class TestAsyncApiDocument(unittest.TestCase):
         self.assertEqual(on_disk, serialize(self.document))
 
     def test_counts(self):
-        self.assertEqual(len(self.document["operations"]), 42)
-        self.assertEqual(len(self.document["components"]["messages"]), 42)
+        self.assertEqual(len(self.document["operations"]), 43)
+        self.assertEqual(len(self.document["components"]["messages"]), 43)
         self.assertEqual(
-            len(self.document["channels"]["jsonrpc"]["messages"]), 42)
+            len(self.document["channels"]["jsonrpc"]["messages"]), 43)
 
     def test_all_refs_resolve(self):
         schemas = self.document["components"]["schemas"]

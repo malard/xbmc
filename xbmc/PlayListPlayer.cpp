@@ -839,16 +839,24 @@ void CPlayListPlayer::AnnouncePropertyChanged(Id playlistId,
   const auto& components = CServiceBroker::GetAppComponents();
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
-  if (strProperty.empty() || value.isNull() ||
-      (playlistId == Id::TYPE_VIDEO && !appPlayer->IsPlayingVideo()) ||
+  if (strProperty.empty() || value.isNull())
+    return;
+
+  CVariant playlistData;
+  playlistData["playlistid"] = static_cast<int>(playlistId);
+  playlistData["property"][strProperty] = value;
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnPropertyChanged",
+                                                     playlistData);
+
+  if ((playlistId == Id::TYPE_VIDEO && !appPlayer->IsPlayingVideo()) ||
       (playlistId == Id::TYPE_MUSIC && !appPlayer->IsPlayingAudio()))
     return;
 
-  CVariant data;
-  data["player"]["playerid"] = static_cast<int>(playlistId);
-  data["property"][strProperty] = value;
+  CVariant playerData;
+  playerData["player"]["playerid"] = static_cast<int>(playlistId);
+  playerData["property"][strProperty] = value;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+                                                     playerData);
 }
 
 int PLAYLIST::CPlayListPlayer::GetMessageMask()

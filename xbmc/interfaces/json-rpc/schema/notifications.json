@@ -318,6 +318,39 @@
     ],
     "returns": null
   },
+  "Playlist.OnPropertyChanged": {
+    "type": "notification",
+    "description": "A property of the playlist has changed. Unlike Player.OnPropertyChanged this is also sent when the playlist is not currently being played.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "playlistid": {
+              "$ref": "#/$defs/Playlist.Id"
+            },
+            "property": {
+              "$ref": "#/$defs/Playlist.Property.Value"
+            }
+          },
+          "required": [
+            "playlistid",
+            "property"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
   "AudioLibrary.OnUpdate": {
     "type": "notification",
     "description": "An audio item has been updated.",

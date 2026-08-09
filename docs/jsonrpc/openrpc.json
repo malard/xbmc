@@ -3160,6 +3160,148 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Playlist.SetRepeat",
+      "summary": "Set the repeat mode of the playlist, whether or not it is currently being played. The state persists and takes effect when playback of the playlist starts, unless overridden by the repeat option of Player.Open. Does not work for picture playlists (aka slideshows).",
+      "tags": [
+        {
+          "name": "Playlist"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "playlistid",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Playlist.Id"
+          }
+        },
+        {
+          "name": "repeat",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Player.Repeat"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "cycle"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Playlist.SetShuffle",
+      "summary": "Shuffle or unshuffle the playlist, whether or not it is currently being played. The items are reordered immediately, and the state persists unless overridden by the shuffled option of Player.Open. For picture playlists (aka slideshows) shuffling is only possible while a slideshow is running and cannot be undone.",
+      "tags": [
+        {
+          "name": "Playlist"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "playlistid",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Playlist.Id"
+          }
+        },
+        {
+          "name": "shuffle",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Global.Toggle"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Playlist.Swap",
       "summary": "Swap items in the playlist. Does not work for picture playlists (aka slideshows).",
       "tags": [
@@ -16541,7 +16683,9 @@
         "type": "string",
         "enum": [
           "type",
-          "size"
+          "size",
+          "repeat",
+          "shuffled"
         ]
       },
       "Playlist.Property.Value": {
@@ -16553,6 +16697,12 @@
           "size": {
             "type": "integer",
             "minimum": 0
+          },
+          "repeat": {
+            "$ref": "#/components/schemas/Player.Repeat"
+          },
+          "shuffled": {
+            "type": "boolean"
           }
         }
       },

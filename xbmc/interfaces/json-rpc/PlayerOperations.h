@@ -92,6 +92,8 @@ namespace JSONRPC
                                       const CVariant& parameterObject,
                                       CVariant& result);
 
+    static KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
+
   private:
     static int GetActivePlayers();
     static PlayerType GetPlayer(const CVariant &player);
@@ -99,8 +101,6 @@ namespace JSONRPC
     static JSONRPC_STATUS StartSlideshow(const std::string& path, bool recursive, bool random, const std::string &firstPicturePath = "");
     static void SendSlideshowAction(int actionID);
     static JSONRPC_STATUS GetPropertyValue(PlayerType player, const std::string &property, CVariant &result);
-
-    static KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
     static bool IsPVRChannel();
     static std::shared_ptr<PVR::CPVREpgInfoTag> GetCurrentEpg();
   };
