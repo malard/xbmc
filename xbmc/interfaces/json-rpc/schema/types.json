@@ -351,8 +351,12 @@
   },
   "Playlist.UnresolvedItem": {
     "type": "object",
-    "description": "An item that was not added: the item exactly as the client wrote it, carrying the reason it was not added. The identifying members are those of Playlist.Item, which cannot be referenced here because each of its variants forbids additional properties.",
+    "description": "An item that was not added, and why.",
     "properties": {
+      "item": {
+        "$ref": "#/$defs/Playlist.Item",
+        "description": "The item exactly as the client asked for it."
+      },
       "reason": {
         "type": "string",
         "description": "\"notfound\": the item does not exist. \"unavailable\": it exists but cannot be reached at the moment, so the reference is worth keeping and retrying. \"invalid\": the item cannot go in a playlist of this type, or holds nothing playable.",
@@ -364,8 +368,10 @@
       }
     },
     "required": [
+      "item",
       "reason"
-    ]
+    ],
+    "additionalProperties": false
   },
   "Playlist.AddResult": {
     "type": "object",
