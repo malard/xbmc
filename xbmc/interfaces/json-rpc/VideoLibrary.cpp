@@ -1007,6 +1007,23 @@ JSONRPC_STATUS CVideoLibrary::RemoveMusicVideo(const std::string &method, ITrans
 JSONRPC_STATUS CVideoLibrary::Scan(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   std::string directory = parameterObject["directory"].asString();
+  if (!directory.empty())
+  {
+    // normalise to the form the library stores paths in, and refuse a directory
+    // that belongs to no video source instead of acknowledging a scan that can
+    // never find it
+    directory = CUtil::ValidatePath(directory);
+    URIUtils::AddSlashAtEnd(directory);
+
+    CVideoDatabase videodatabase;
+    if (!videodatabase.Open())
+      return InternalError;
+
+    std::string sourcePath;
+    if (!videodatabase.GetSourcePath(directory, sourcePath))
+      return NotFound;
+  }
+
   std::string cmd =
       StringUtils::Format("updatelibrary(video, {}, {})", StringUtils::Paramify(directory),
                           parameterObject["showdialogs"].asBoolean() ? "true" : "false");
@@ -1119,6 +1136,24 @@ JSONRPC_STATUS CVideoLibrary::Export(const std::string &method, ITransportLayer 
 JSONRPC_STATUS CVideoLibrary::Clean(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   std::string directory = parameterObject["directory"].asString();
+  if (!directory.empty())
+  {
+    // refuse a directory that resolves to no library path instead of
+    // acknowledging a clean that can never touch anything
+    const std::string contentParam = parameterObject["content"].asString();
+
+    CVideoDatabase videodatabase;
+    if (!videodatabase.Open())
+      return InternalError;
+
+    std::set<int> paths;
+    if (!videodatabase.GetPathsForCleaning(directory, contentParam == "video" ? "" : contentParam,
+                                           paths))
+      return InternalError;
+    if (paths.empty())
+      return NotFound;
+  }
+
   std::string cmd;
   if (parameterObject["content"].empty())
     cmd = StringUtils::Format("cleanlibrary(video, {0}, {1})",
