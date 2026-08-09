@@ -41,6 +41,7 @@ enum JSONRPC_STATUS
   BadPermission = -32099,
   NotFound = -32098,
   Unavailable = -32097,
+  AccessDenied = -32096,
   FailedToExecute = -32100
 };
 
@@ -69,12 +70,14 @@ struct JsonRpcStatusDescription
  Every JSONRPC_STATUS that reaches a client as an error appears here exactly once. OK and
  ACK are absent because they produce a result rather than an error.
  */
-inline constexpr std::array<JsonRpcStatusDescription, 9> JSONRPC_STATUS_DESCRIPTIONS{{
+inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIPTIONS{{
     {ParseError, "ParseError", "Parse error.", "The request could not be parsed as JSON.", false},
     {InvalidRequest, "InvalidRequest", "Invalid request.",
      "The request parsed as JSON but is not a well-formed JSON-RPC 2.0 request object.", false},
     {MethodNotFound, "MethodNotFound", "Method not found.",
-     "The requested method does not exist, or the client lacks the permission to see it.", false},
+     "The requested method does not exist, the client lacks the permission to see it, or it is "
+     "not available over the transport the request arrived on.",
+     false},
     {InvalidParams, "InvalidParams", "Invalid params.",
      "The given parameters do not validate against the schema of the method. The \"data\" member "
      "names the offending parameter and the constraint it failed.",
@@ -92,6 +95,10 @@ inline constexpr std::array<JsonRpcStatusDescription, 9> JSONRPC_STATUS_DESCRIPT
     {NotFound, "NotFound", "Not found.", "The requested item does not exist.", false},
     {Unavailable, "Unavailable", "Requested item is unavailable.",
      "The requested item exists but cannot be provided at the moment.", false},
+    {AccessDenied, "AccessDenied", "Access denied.",
+     "The referenced path is not inside a source shared for remote access and is not "
+     "whitelisted.",
+     false},
 }};
 
 /*!
