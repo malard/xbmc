@@ -380,6 +380,57 @@ bool CVideoDatabase::GetSubPaths(const std::string& basepath,
   return false;
 }
 
+bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
+                                         const std::string& content,
+                                         std::set<int>& paths)
+{
+  const bool byDirectory = !directory.empty();
+
+  // a named directory is matched by the content it resolves to, which for a path
+  // below a tvshows source is "seasons" or "episodes", never "tvshows" itself
+  const auto matchesContent = [byDirectory, &content](const std::string& pathContent)
+  {
+    if (!byDirectory)
+      return pathContent == content;
+    if (content.empty())
+      return true;
+    if (content == "tvshows")
+      return pathContent == "tvshows" || pathContent == "seasons" || pathContent == "episodes";
+    return pathContent == content;
+  };
+
+  std::set<std::string, std::less<>> contentPaths;
+  if (byDirectory)
+  {
+    // normalise to the form the path table stores: platform separators and a
+    // trailing separator
+    std::string dir = CUtil::ValidatePath(directory);
+    URIUtils::AddSlashAtEnd(dir);
+    contentPaths.insert(dir);
+  }
+  else if (!GetPaths(contentPaths))
+    return false;
+
+  for (const std::string& path : contentPaths)
+  {
+    if (!matchesContent(GetContentForPath(path)))
+      continue;
+
+    const int pathId = GetPathId(path);
+    if (pathId != -1)
+      paths.insert(pathId);
+
+    std::vector<std::pair<int, std::string>> sub;
+    if (GetSubPaths(path, sub))
+    {
+      for (const auto& [subPathId, subPath] : sub)
+        paths.insert(subPathId);
+    }
+  }
+
+  return true;
+}
+
 int CVideoDatabase::AddPath(const std::string& strPath, const std::string &parentPath /*= "" */, const CDateTime& dateAdded /* = CDateTime() */)
 {
   std::string strSQL;
