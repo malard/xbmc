@@ -174,8 +174,11 @@ JSONRPC_STATUS CPlaylistOperations::Add(const std::string &method, ITransportLay
         if (!picture.Load(list[index]->GetPath()))
         {
           // The file resolved but holds no picture, which the item parameter cannot express.
+          CVariant item{CVariant::VariantTypeObject};
+          item["file"] = list[index]->GetPath();
+
           CVariant entry{CVariant::VariantTypeObject};
-          entry["file"] = list[index]->GetPath();
+          entry["item"] = item;
           entry["reason"] = "invalid";
           unresolved.push_back(entry);
           continue;
@@ -543,7 +546,8 @@ void CPlaylistOperations::HandleItemsParameter(PLAYLIST::Id playlistId,
 
     if (!resolved)
     {
-      CVariant entry{requested};
+      CVariant entry{CVariant::VariantTypeObject};
+      entry["item"] = requested;
       entry["reason"] = ReasonOf(DiagnoseUnresolvedItem(requested));
       unresolved.push_back(entry);
     }
