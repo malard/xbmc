@@ -52,6 +52,20 @@ namespace JSONRPC
                                CThumbLoader* thumbLoader = nullptr);
 
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+
+    /*!
+     \brief Diagnoses an item FillFileItemList could not resolve
+
+     FillFileItemList drops whatever it cannot resolve rather than saying why, so an empty
+     list cannot on its own distinguish a malformed request from one that named something
+     real that is now gone. The caches are bypassed so a cached hit cannot mask storage
+     that has gone away.
+
+     \param item A single item as given by the client
+     \return NotFound, Unavailable, or InvalidParams when nothing better applies
+     */
+    static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
+
   private:
     static void Sort(CFileItemList &items, const CVariant& parameterObject);
     static bool GetField(const std::string& field,
