@@ -82,7 +82,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
   std::string strPath = parameterObject["directory"].asString();
 
   if (!CFileUtils::RemoteAccessAllowed(strPath))
-    return InvalidParams;
+    return AccessDenied;
 
   std::vector<std::string> regexps;
   std::string extensions;
@@ -170,17 +170,17 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
     return OK;
   }
 
-  return InvalidParams;
+  return Unavailable;
 }
 
 JSONRPC_STATUS CFileOperations::GetFileDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::Exists(file))
-    return InvalidParams;
-
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return InvalidParams;
+    return AccessDenied;
+
+  if (!CFileUtils::Exists(file))
+    return NotFound;
 
   std::string path = URIUtils::GetDirectory(file);
 
@@ -232,11 +232,11 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const std::string &method, ITrans
     return InvalidParams;
 
   std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::Exists(file))
-    return InvalidParams;
-
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return InvalidParams;
+    return AccessDenied;
+
+  if (!CFileUtils::Exists(file))
+    return NotFound;
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -283,12 +283,12 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(const std::string &method, ITran
     return OK;
   }
 
-  return InvalidParams;
+  return NotFound;
 }
 
 JSONRPC_STATUS CFileOperations::Download(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
-  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : InvalidParams;
+  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : NotFound;
 }
 
 bool CFileOperations::FillFileItem(
