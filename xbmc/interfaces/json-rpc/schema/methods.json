@@ -1403,7 +1403,9 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": {
+      "$ref": "#/$defs/Playlist.AddResult"
+    }
   },
   "Playlist.Insert": {
     "type": "method",
@@ -1443,7 +1445,9 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": {
+      "$ref": "#/$defs/Playlist.AddResult"
+    }
   },
   "Playlist.Remove": {
     "type": "method",
