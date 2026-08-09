@@ -66,12 +66,12 @@ class TestSiteGeneration(unittest.TestCase):
     def test_method_page_count(self):
         names = self.html_names("methods")
         self.assertIn("index.html", names)
-        self.assertEqual(len(names - {"index.html"}), 184)
+        self.assertEqual(len(names - {"index.html"}), 186)
 
     def test_notification_page_count(self):
         names = self.html_names("notifications")
         self.assertIn("index.html", names)
-        self.assertEqual(len(names - {"index.html"}), 42)
+        self.assertEqual(len(names - {"index.html"}), 43)
 
     def test_type_page_count(self):
         names = self.html_names("types")
