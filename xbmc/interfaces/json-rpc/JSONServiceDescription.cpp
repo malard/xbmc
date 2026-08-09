@@ -111,6 +111,8 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Playlist.Insert",                              CPlaylistOperations::Insert },
   { "Playlist.Clear",                               CPlaylistOperations::Clear },
   { "Playlist.Remove",                              CPlaylistOperations::Remove },
+  { "Playlist.SetRepeat",                           CPlaylistOperations::SetRepeat },
+  { "Playlist.SetShuffle",                          CPlaylistOperations::SetShuffle },
   { "Playlist.Swap",                                CPlaylistOperations::Swap },
 
 // Files
@@ -1180,41 +1182,38 @@ void JSONSchemaTypeDefinition::Print(bool isParameter, bool isGlobal, bool print
     output["id"] = ID;
   else if (!ID.empty())
   {
-    output["$ref"] = ID;
+    output["$ref"] = "#/$defs/" + ID;
     typeReference = true;
   }
 
   if (printDescriptions && !description.empty())
     output["description"] = description;
 
-  if (isParameter || printDefault)
-  {
-    if (!optional)
-      output["required"] = true;
-    if (optional && type != ObjectValue && type != ArrayValue)
-      output["default"] = defaultValue;
-  }
+  // Requiredness is carried by the "required" array of the containing object
+  // schema or the containing content descriptor, never by the schema itself
+  if ((isParameter || printDefault) && optional && type != ObjectValue && type != ArrayValue)
+    output["default"] = defaultValue;
 
   if (!typeReference)
   {
-    if (extends.size() == 1)
+    if (!extends.empty())
     {
-      output["extends"] = extends.at(0)->ID;
-    }
-    else if (extends.size() > 1)
-    {
-      output["extends"] = CVariant(CVariant::VariantTypeArray);
+      output["allOf"] = CVariant(CVariant::VariantTypeArray);
       for (unsigned int extendsIndex = 0; extendsIndex < extends.size(); extendsIndex++)
-        output["extends"].append(extends.at(extendsIndex)->ID);
+      {
+        CVariant extendsOutput = CVariant(CVariant::VariantTypeObject);
+        extendsOutput["$ref"] = "#/$defs/" + extends.at(extendsIndex)->ID;
+        output["allOf"].append(extendsOutput);
+      }
     }
     else if (!unionTypes.empty())
     {
-      output["type"] = CVariant(CVariant::VariantTypeArray);
+      output["anyOf"] = CVariant(CVariant::VariantTypeArray);
       for (unsigned int unionIndex = 0; unionIndex < unionTypes.size(); unionIndex++)
       {
         CVariant unionOutput = CVariant(CVariant::VariantTypeObject);
         unionTypes.at(unionIndex)->Print(false, false, false, printDescriptions, unionOutput);
-        output["type"].append(unionOutput);
+        output["anyOf"].append(unionOutput);
       }
     }
     else
@@ -1223,9 +1222,9 @@ void JSONSchemaTypeDefinition::Print(bool isParameter, bool isGlobal, bool print
     // Printing enum field
     if (!enums.empty())
     {
-      output["enums"] = CVariant(CVariant::VariantTypeArray);
+      output["enum"] = CVariant(CVariant::VariantTypeArray);
       for (unsigned int enumIndex = 0; enumIndex < enums.size(); enumIndex++)
-        output["enums"].append(enums.at(enumIndex));
+        output["enum"].append(enums.at(enumIndex));
     }
 
     // Printing integer/number fields
@@ -1309,13 +1308,19 @@ void JSONSchemaTypeDefinition::Print(bool isParameter, bool isGlobal, bool print
       if (properties.size() > 0)
       {
         output["properties"] = CVariant(CVariant::VariantTypeObject);
+        CVariant requiredProperties = CVariant(CVariant::VariantTypeArray);
 
         JSONSchemaTypeDefinition::CJsonSchemaPropertiesMap::JSONSchemaPropertiesIterator propertiesEnd = properties.end();
         JSONSchemaTypeDefinition::CJsonSchemaPropertiesMap::JSONSchemaPropertiesIterator propertiesIterator;
         for (propertiesIterator = properties.begin(); propertiesIterator != propertiesEnd; ++propertiesIterator)
         {
           propertiesIterator->second->Print(false, false, true, printDescriptions, output["properties"][propertiesIterator->first]);
+          if (!propertiesIterator->second->optional)
+            requiredProperties.append(propertiesIterator->second->name);
         }
+
+        if (!requiredProperties.empty())
+          output["required"] = requiredProperties;
       }
 
       if (!hasAdditionalProperties)
@@ -2118,8 +2123,19 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     currentMethod["params"] = CVariant(CVariant::VariantTypeArray);
     for (unsigned int paramIndex = 0; paramIndex < methodIterator->second.parameters.size(); paramIndex++)
     {
+      // Parameters are printed as content descriptors: the schema is wrapped
+      // together with the parameter's name, requiredness and description
+      const JSONSchemaTypeDefinitionPtr& parameter = methodIterator->second.parameters.at(paramIndex);
       CVariant param = CVariant(CVariant::VariantTypeObject);
-      methodIterator->second.parameters.at(paramIndex)->Print(true, false, true, printDescriptions, param);
+      param["name"] = parameter->name;
+      if (!parameter->optional)
+        param["required"] = true;
+      if (printDescriptions && !parameter->description.empty())
+        param["description"] = parameter->description;
+
+      parameter->Print(false, false, true, printDescriptions, param["schema"]);
+      param["schema"].erase("description");
+
       currentMethod["params"].append(param);
     }
 
