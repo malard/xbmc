@@ -92,7 +92,7 @@ void CPVRProvider::Serialize(CVariant& value) const
       value["state"] = "unknown";
       break;
   }
-  value["iconpath"] = GetClientIconPath();
+  value["iconpath"] = GetIconPath();
   value["countries"] = m_strCountries;
   value["languages"] = m_strLanguages;
 }
