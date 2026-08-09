@@ -41,6 +41,24 @@ CJSONServiceDescription::CJsonRpcMethodMap CJSONServiceDescription::m_actionMap;
 std::map<std::string, JSONSchemaTypeDefinitionPtr> CJSONServiceDescription::m_types = std::map<std::string, JSONSchemaTypeDefinitionPtr>();
 CJSONServiceDescription::IncompleteSchemaDefinitionMap CJSONServiceDescription::m_incompleteDefinitions = CJSONServiceDescription::IncompleteSchemaDefinitionMap();
 
+namespace
+{
+/*!
+ \brief Reduces a JSON schema reference to the identifier of a global type
+
+ References are written "#/\$defs/Name" in the schema files; the registry of
+ global types is keyed by the bare name.
+ */
+std::string RefToTypeId(const std::string& reference)
+{
+  static const std::string prefix = "#/$defs/";
+  if (StringUtils::StartsWith(reference, prefix))
+    return reference.substr(prefix.size());
+
+  return reference;
+}
+} // unnamed namespace
+
 // clang-format off
 
 JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
@@ -298,7 +316,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant &value, bool isParameter /* 
   if (value.isMember("$ref") && value["$ref"].isString())
   {
     // Get the name of the referenced type
-    std::string refType = value["$ref"].asString();
+    std::string refType = RefToTypeId(value["$ref"].asString());
     // Check if the referenced type exists
     JSONSchemaTypeDefinitionPtr referencedTypeDef = CJSONServiceDescription::GetType(refType);
     if (refType.empty() || referencedTypeDef.get() == NULL)
@@ -413,13 +431,95 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant &value, bool isParameter /* 
       type = extendedType;
     }
   }
+  // A 2020-12 "allOf" of references is the composition this schema uses for
+  // extension: every member must be a reference to a registered type
+  else if (value.isMember("allOf") && value["allOf"].isArray())
+  {
+    JSONSchemaType extendedType = AnyValue;
+    for (unsigned int extendsIndex = 0; extendsIndex < value["allOf"].size(); extendsIndex++)
+    {
+      const CVariant& member = value["allOf"][extendsIndex];
+      if (!member.isObject() || !member.isMember("$ref") || !member["$ref"].isString())
+      {
+        extends.clear();
+        CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} has an allOf member that is not a reference",
+                  name);
+        return false;
+      }
+
+      std::string extendsName = RefToTypeId(member["$ref"].asString());
+      if (extendsName.empty())
+        continue;
+
+      JSONSchemaTypeDefinitionPtr extendedTypeDef = CJSONServiceDescription::GetType(extendsName);
+      if (extendedTypeDef.get() == NULL)
+      {
+        extends.clear();
+        CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} extends an unknown type {}", name,
+                  extendsName);
+        missingReference = extendsName;
+        return false;
+      }
+
+      if (extends.empty())
+        extendedType = extendedTypeDef->type;
+      else if (extendedType != extendedTypeDef->type)
+      {
+        extends.clear();
+        CLog::Log(LOGDEBUG,
+                  "JSONRPC: JSON schema type {} extends multiple JSON schema types of "
+                  "mismatching types",
+                  name);
+        return false;
+      }
+
+      extends.push_back(extendedTypeDef);
+    }
+
+    type = extendedType;
+  }
 
   // Only read the "type" attribute if it's
   // not an extending type
   if (extends.empty())
   {
+    // A 2020-12 "anyOf" is a union type; the draft-03 spelling is an array
+    // of schemas under "type", handled by parseJSONSchemaType
+    if (value.isMember("anyOf"))
+    {
+      if (!value["anyOf"].isArray())
+      {
+        CLog::Log(LOGDEBUG, "JSONRPC: Invalid anyOf definition in type {}", name);
+        return false;
+      }
+
+      int parsedType = 0;
+      for (unsigned int unionIndex = 0; unionIndex < value["anyOf"].size(); unionIndex++)
+      {
+        if (!value["anyOf"][unionIndex].isObject())
+        {
+          CLog::Log(LOGDEBUG, "JSONRPC: Invalid anyOf member in type {}", name);
+          return false;
+        }
+
+        JSONSchemaTypeDefinitionPtr unionType = std::make_shared<JSONSchemaTypeDefinition>();
+        if (!unionType->Parse(value["anyOf"][unionIndex]))
+        {
+          missingReference = unionType->missingReference;
+          CLog::Log(LOGERROR, "JSONRPC: Invalid type schema in union type definition");
+          return false;
+        }
+
+        unionType->optional = false;
+        unionTypes.push_back(unionType);
+        parsedType |= unionType->type;
+      }
+
+      if (parsedType != 0)
+        type = (JSONSchemaType)parsedType;
+    }
     // Get the defined type of the parameter
-    if (!CJSONServiceDescription::parseJSONSchemaType(value["type"], unionTypes, type, missingReference))
+    else if (!CJSONServiceDescription::parseJSONSchemaType(value["type"], unionTypes, type, missingReference))
       return false;
   }
 
@@ -447,6 +547,28 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant &value, bool isParameter /* 
         }
         defaultValue[itr->first] = propertyType->defaultValue;
         properties.add(propertyType);
+      }
+    }
+
+    // 2020-12 requiredness of properties: an array of property names on the
+    // object schema; the draft-03 spelling is a boolean on each property
+    if (value.isMember("required") && value["required"].isArray())
+    {
+      for (unsigned int requiredIndex = 0; requiredIndex < value["required"].size();
+           requiredIndex++)
+      {
+        std::string propertyName = value["required"][requiredIndex].asString();
+        StringUtils::ToLower(propertyName);
+        CJsonSchemaPropertiesMap::JSONSchemaPropertiesIterator propertyIterator =
+            properties.find(propertyName);
+        if (propertyIterator == properties.end())
+        {
+          CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} requires an unknown property {}", name,
+                    propertyName);
+          return false;
+        }
+
+        propertyIterator->second->optional = false;
       }
     }
 
@@ -1337,13 +1459,16 @@ bool JsonRpcMethod::Parse(const CVariant &value)
     for (unsigned int paramIndex = 0; paramIndex < value["params"].size(); paramIndex++)
     {
       CVariant parameter = value["params"][paramIndex];
-      // If the parameter definition does not contain a valid "name" or
-      // "type" element we will ignore it
+      // A parameter is either a content descriptor carrying its schema in a
+      // "schema" member, or the legacy flattened form where the parameter
+      // object is the schema itself
       if (!parameter.isMember("name") || !parameter["name"].isString() ||
-         (!parameter.isMember("type") && !parameter.isMember("$ref") && !parameter.isMember("extends")) ||
-         (parameter.isMember("type") && !parameter["type"].isString() && !parameter["type"].isArray()) ||
-         (parameter.isMember("$ref") && !parameter["$ref"].isString()) ||
-         (parameter.isMember("extends") && !parameter["extends"].isString() && !parameter["extends"].isArray()))
+         (parameter.isMember("schema")
+              ? !parameter["schema"].isObject()
+              : ((!parameter.isMember("type") && !parameter.isMember("$ref") && !parameter.isMember("extends")) ||
+                 (parameter.isMember("type") && !parameter["type"].isString() && !parameter["type"].isArray()) ||
+                 (parameter.isMember("$ref") && !parameter["$ref"].isString()) ||
+                 (parameter.isMember("extends") && !parameter["extends"].isString() && !parameter["extends"].isArray()))))
       {
         CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined parameter", name);
         return false;
@@ -1419,6 +1544,21 @@ bool JsonRpcMethod::parseParameter(const CVariant& value,
                                    const JSONSchemaTypeDefinitionPtr& parameter)
 {
   parameter->name = GetString(value["name"], "");
+
+  // A content descriptor carries the parameter's schema in a "schema" member
+  // and its requiredness and description alongside it
+  if (value.isMember("schema"))
+  {
+    if (!parameter->Parse(value["schema"], true))
+      return false;
+
+    parameter->optional = !(value.isMember("required") && value["required"].isBoolean() &&
+                            value["required"].asBoolean());
+    if (value.isMember("description") && value["description"].isString())
+      parameter->description = GetString(value["description"], "");
+
+    return true;
+  }
 
   // Parse the type and default value of the parameter
   return parameter->Parse(value, true);
@@ -1522,7 +1662,9 @@ bool CJSONServiceDescription::prepareDescription(std::string &description, CVari
     name = member->first;
 
   if (name.empty() ||
-     (!descriptionObject[name].isMember("type") && !descriptionObject[name].isMember("$ref") && !descriptionObject[name].isMember("extends")))
+      (!descriptionObject[name].isMember("type") && !descriptionObject[name].isMember("$ref") &&
+       !descriptionObject[name].isMember("extends") &&
+       !descriptionObject[name].isMember("allOf") && !descriptionObject[name].isMember("anyOf")))
   {
     CLog::Log(LOGERROR, "JSONRPC: Invalid JSON Schema definition for \"{}\"", name);
     return false;
