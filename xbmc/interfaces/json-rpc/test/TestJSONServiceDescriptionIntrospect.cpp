@@ -9,6 +9,8 @@
 #include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 
+#include <cstdlib>
+#include <fstream>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -77,4 +79,13 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
   EXPECT_EQ(methodCount, result["methods"].size());
   EXPECT_EQ(notificationCount, result["notifications"].size());
   EXPECT_EQ(JSONRPC_STATUS_DESCRIPTIONS.size(), result["errors"].size());
+
+  // With KODI_TEST_DUMP_INTROSPECT set to a path, the full description is
+  // written there so that schema changes can be diffed on the wire format
+  const char* dumpPath = getenv("KODI_TEST_DUMP_INTROSPECT");
+  if (dumpPath != nullptr)
+  {
+    std::ofstream dump(dumpPath, std::ofstream::trunc);
+    dump << ToJson(result);
+  }
 }
