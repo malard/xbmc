@@ -88,7 +88,7 @@ void CPVRChannel::Serialize(CVariant& value) const
   value["channeltype"] = m_bIsRadio ? "radio" : "tv";
   value["hidden"] = m_bIsHidden;
   value["locked"] = m_bIsLocked;
-  value["icon"] = ClientIconPath();
+  value["icon"] = IconPath();
   value["channel"] = m_strChannelName;
   value["uniqueid"] = m_iUniqueId;
   CDateTime lastPlayed(m_iLastWatched);

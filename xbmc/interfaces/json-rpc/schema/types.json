@@ -2955,7 +2955,8 @@
         "type": "boolean"
       },
       "thumbnail": {
-        "type": "string"
+        "type": "string",
+        "description": "Image URL for this broadcast's own artwork, servable by the web server's /image/ endpoint. Empty when the broadcast has no image."
       },
       "rating": {
         "type": "integer"
@@ -3077,7 +3078,8 @@
         "type": "integer"
       },
       "icon": {
-        "type": "string"
+        "type": "string",
+        "description": "Image URL for the channel's own logo, servable by the web server's /image/ endpoint."
       },
       "channelnumber": {
         "type": "integer"
@@ -3446,7 +3448,8 @@
         "type": "integer"
       },
       "icon": {
-        "type": "string"
+        "type": "string",
+        "description": "Image URL for the recording's own icon, servable by the web server's /image/ endpoint."
       },
       "art": {
         "$ref": "#/$defs/Media.Artwork"
