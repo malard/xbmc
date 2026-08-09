@@ -3079,7 +3079,8 @@
         "type": "boolean"
       },
       "thumbnail": {
-        "type": "string"
+        "type": "string",
+        "description": "Image URL for the channel's own logo, servable by the web server's /image/ endpoint. This is the channel's logo, never the currently airing broadcast's artwork - for that, read thumbnail from broadcastnow."
       },
       "lastplayed": {
         "type": "string"
