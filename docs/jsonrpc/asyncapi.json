@@ -52,6 +52,9 @@
         "Player.OnStop": {
           "$ref": "#/components/messages/Player.OnStop"
         },
+        "Player.OnPlaybackFailed": {
+          "$ref": "#/components/messages/Player.OnPlaybackFailed"
+        },
         "Player.OnSpeedChanged": {
           "$ref": "#/components/messages/Player.OnSpeedChanged"
         },
@@ -230,6 +233,17 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/Player.OnStop"
+        }
+      ]
+    },
+    "Player.OnPlaybackFailed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Player.OnPlaybackFailed"
         }
       ]
     },
@@ -854,6 +868,60 @@
                   },
                   "required": [
                     "end"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Player.OnPlaybackFailed": {
+        "name": "Player.OnPlaybackFailed",
+        "summary": "Playback of a media item was requested but did not happen. Playback is started asynchronously, so a request that was answered successfully can still fail afterwards; this is the only report of that failure.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Player.OnPlaybackFailed"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Notifications.Item"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Why the item was not played. \"unplayable\": no player could play it, or the player refused it. \"unresolved\": a plugin did not return a playable item. \"locked\": the master or media source lock refused it. \"error\": the player reported an error after playback had started.",
+                      "enum": [
+                        "unplayable",
+                        "unresolved",
+                        "locked",
+                        "error"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "reason"
                   ]
                 }
               },

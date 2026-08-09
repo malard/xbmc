@@ -90,7 +90,8 @@ class TestOpenRpcDocument(unittest.TestCase):
         self.assertEqual(on_disk, serialize(self.document))
 
     def test_method_count(self):
-        self.assertEqual(len(self.document["methods"]), 186)
+        expected = len(kodi_schema.load_service()["methods"])
+        self.assertEqual(len(self.document["methods"]), expected)
 
     def test_all_refs_resolve(self):
         schemas = self.document["components"]["schemas"]
@@ -128,10 +129,11 @@ class TestAsyncApiDocument(unittest.TestCase):
         self.assertEqual(on_disk, serialize(self.document))
 
     def test_counts(self):
-        self.assertEqual(len(self.document["operations"]), 43)
-        self.assertEqual(len(self.document["components"]["messages"]), 43)
+        expected = len(kodi_schema.load_service()["notifications"])
+        self.assertEqual(len(self.document["operations"]), expected)
+        self.assertEqual(len(self.document["components"]["messages"]), expected)
         self.assertEqual(
-            len(self.document["channels"]["jsonrpc"]["messages"]), 43)
+            len(self.document["channels"]["jsonrpc"]["messages"]), expected)
 
     def test_all_refs_resolve(self):
         schemas = self.document["components"]["schemas"]

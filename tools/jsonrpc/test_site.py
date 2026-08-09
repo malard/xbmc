@@ -54,6 +54,7 @@ class TestSiteGeneration(unittest.TestCase):
         cls.out = Path(cls.tempdir.name) / "site"
         cls.written = generate_site.generate(cls.out)
         cls.vdir = "v" + kodi_schema.load_version().split(".")[0]
+        cls.service = kodi_schema.load_service()
 
     @classmethod
     def tearDownClass(cls):
@@ -66,17 +67,18 @@ class TestSiteGeneration(unittest.TestCase):
     def test_method_page_count(self):
         names = self.html_names("methods")
         self.assertIn("index.html", names)
-        self.assertEqual(len(names - {"index.html"}), 186)
+        self.assertEqual(len(names - {"index.html"}), len(self.service["methods"]))
 
     def test_notification_page_count(self):
         names = self.html_names("notifications")
         self.assertIn("index.html", names)
-        self.assertEqual(len(names - {"index.html"}), 43)
+        self.assertEqual(
+            len(names - {"index.html"}), len(self.service["notifications"]))
 
     def test_type_page_count(self):
         names = self.html_names("types")
         self.assertIn("index.html", names)
-        self.assertEqual(len(names - {"index.html"}), 204)
+        self.assertEqual(len(names - {"index.html"}), len(self.service["types"]))
 
     def test_core_files_exist(self):
         for relative in ("index.html", "style.css", ".nojekyll",
