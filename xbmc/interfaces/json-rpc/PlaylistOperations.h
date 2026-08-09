@@ -50,8 +50,22 @@ namespace JSONRPC
                                            const std::string& property,
                                            CVariant& result);
     static bool CheckMediaParameter(KODI::PLAYLIST::Id playlistId, const CVariant& itemObject);
-    static bool HandleItemsParameter(KODI::PLAYLIST::Id playlistId,
+
+    /*!
+     \brief Resolves the "item" parameter, reporting the entries that could not be resolved
+
+     An item naming content that no longer exists is dropped rather than refused, so the
+     caller needs the per-item outcome to tell a client what it did not get.
+
+     \param playlistId The playlist the items are destined for
+     \param itemParam A single item or an array of them
+     \param items Receives the items that resolved, in request order
+     \param unresolved Receives one entry per item that did not, each the item as given
+                       plus a "reason" of notfound, unavailable or invalid
+     */
+    static void HandleItemsParameter(KODI::PLAYLIST::Id playlistId,
                                      const CVariant& itemParam,
-                                     CFileItemList& items);
+                                     CFileItemList& items,
+                                     CVariant& unresolved);
   };
 }
