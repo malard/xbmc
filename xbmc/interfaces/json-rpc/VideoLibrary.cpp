@@ -717,6 +717,39 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const std::string &method, ITrans
   if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, removedArtwork))
     return InternalError;
 
+  const bool updatePlaycount = ParameterNotNull(parameterObject, "playcount");
+  const bool updateLastplayed = ParameterNotNull(parameterObject, "lastplayed");
+  if (updatePlaycount || updateLastplayed)
+  {
+    // a tvshow has no file row of its own - its playcount is derived from its
+    // episodes, so the new values have to be applied to every episode of the show
+    CVideoDbUrl videoUrl;
+    if (!videoUrl.FromString(StringUtils::Format("videodb://tvshows/titles/{}/-1/", id)))
+      return InternalError;
+    videoUrl.AddOption("tvshowid", id);
+
+    CFileItemList episodes;
+    if (!videodatabase.GetEpisodesByWhere(videoUrl.ToString(), CDatabase::Filter(), episodes,
+                                          false))
+      return InternalError;
+
+    videodatabase.BeginTransaction();
+    for (const auto& episode : episodes)
+    {
+      if (!episode->HasVideoInfoTag())
+        continue;
+
+      const int count =
+          updatePlaycount ? infos.GetPlayCount() : episode->GetVideoInfoTag()->GetPlayCount();
+      if (!updateLastplayed && count == episode->GetVideoInfoTag()->GetPlayCount())
+        continue;
+
+      videodatabase.SetPlayCount(*episode, count,
+                                 updateLastplayed ? infos.m_lastPlayed : CDateTime());
+    }
+    videodatabase.CommitTransaction();
+  }
+
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
 }
