@@ -50,6 +50,17 @@ using namespace KODI::VIDEO;
 namespace KODI::PLAYLIST
 {
 
+namespace
+{
+void AnnouncePlaybackFailed(const std::shared_ptr<const CFileItem>& item, const char* reason)
+{
+  CVariant data{CVariant::VariantTypeObject};
+  data["reason"] = reason;
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPlaybackFailed", item,
+                                                     data);
+}
+} // unnamed namespace
+
 CPlayListPlayer::CPlayListPlayer(void)
 {
   m_PlaylistMusic = new CPlayList(Id::TYPE_MUSIC);
@@ -368,6 +379,7 @@ bool CPlayListPlayer::Play(int iSong,
     CLog::Log(LOGERROR, "Playlist Player: skipping unplayable item: {}, path [{}]", m_iCurrentSong,
               CURL::GetRedacted(item->GetDynPath()));
     playlist.SetUnPlayable(m_iCurrentSong);
+    AnnouncePlaybackFailed(item, "unplayable");
 
     // abort on 100 failed CONSECUTIVE songs
     if (!m_iFailedSongs)
@@ -987,7 +999,8 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
       }
 
       CFileItem *item = static_cast<CFileItem*>(pMsg->lpVoid);
-      g_application.PlayFile(*item, "", pMsg->param1 != 0);
+      if (!g_application.PlayFile(*item, "", pMsg->param1 != 0))
+        AnnouncePlaybackFailed(std::make_shared<CFileItem>(*item), "unplayable");
       delete item;
       return;
     }
@@ -1019,6 +1032,7 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
           if (URIUtils::HasPluginPath(*item) &&
               !XFILE::CPluginDirectory::GetResolvedPluginResult(*item))
           {
+            AnnouncePlaybackFailed(item, "unresolved");
             return;
           }
           const bool isVideo{VIDEO::IsVideo(*item)};
@@ -1031,12 +1045,13 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
               CLog::LogF(LOGERROR,
                          "MasterCode or MediaSource-code is wrong: {} will not be played.",
                          item->GetPath());
+              AnnouncePlaybackFailed(item, "locked");
               return;
             }
             Play(item, pMsg->strParam);
           }
-          else
-            g_application.PlayMedia(*item, pMsg->strParam, playlistId);
+          else if (!g_application.PlayMedia(*item, pMsg->strParam, playlistId))
+            AnnouncePlaybackFailed(item, "unplayable");
         }
         else
         {
