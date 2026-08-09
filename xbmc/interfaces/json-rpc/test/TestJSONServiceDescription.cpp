@@ -183,8 +183,8 @@ void CheckForwardReferences(JSONServiceDescriptionTestBase& fixture,
   // deferred queue, is replayed against the stub when the base appears, and
   // ResolveReferences re-copies the completed base into the reference site.
   // Methods are registered only after all types, which is the ordering the
-  // initialization sequence guarantees. (Forward references via "extends" are
-  // NOT healed this way; types.json is topologically ordered for extends.)
+  // initialization sequence guarantees. (Forward references inside "allOf" are
+  // NOT healed this way; types.json is topologically ordered for allOf.)
   EXPECT_FALSE(CJSONServiceDescription::AddType(containerJson));
   EXPECT_TRUE(CJSONServiceDescription::AddType(baseJson));
   CJSONServiceDescription::ResolveReferences();
@@ -256,122 +256,6 @@ void CheckEnumParameter(JSONServiceDescriptionTestBase& fixture, const std::stri
 class TestJSONServiceDescription : public JSONServiceDescriptionTestBase
 {
 };
-
-TEST_F(TestJSONServiceDescription, MissingRequiredParameterDraft03)
-{
-  CheckMissingRequiredParameter(*this, R"({"Test.Required": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "value", "type": "string", "required": true } ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, ObjectParameterDraft03)
-{
-  CheckObjectParameter(*this, R"({"Test.Object": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [
-      { "name": "opts", "type": "object", "required": true,
-        "properties": {
-          "path": { "type": "string", "required": true },
-          "mode": { "type": "string", "default": "fast" }
-        },
-        "additionalProperties": false },
-      { "name": "speed", "type": "integer", "default": 5 }
-    ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, UnionParameterDraft03)
-{
-  CheckUnionParameter(*this, R"({"Test.Union": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [
-      { "name": "target", "required": true, "type": [
-          { "type": "object", "required": true,
-            "properties": { "movieid": { "type": "integer", "required": true } },
-            "additionalProperties": false },
-          { "type": "object", "required": true,
-            "properties": { "songid": { "type": "integer", "required": true } },
-            "additionalProperties": false }
-        ] },
-      { "name": "when", "type": [
-          "null",
-          { "type": "string", "enum": ["now", "later"], "required": true }
-        ], "default": null },
-      { "name": "flag", "type": ["null", "boolean"], "default": null }
-    ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, ExtendedTypeDraft03)
-{
-  CheckExtendedType(*this,
-                    R"({"Base.A": {
-    "type": "object",
-    "properties": {
-      "a": { "type": "string", "required": true },
-      "shared": { "type": "integer", "default": 1 }
-    }
-  }})",
-                    R"({"Derived.B": {
-    "extends": "Base.A",
-    "properties": {
-      "b": { "type": "boolean", "required": true },
-      "shared": { "type": "integer", "default": 2 }
-    }
-  }})",
-                    R"({"Test.Extends": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "$ref": "Derived.B", "required": true } ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, ForwardReferencesDraft03)
-{
-  CheckForwardReferences(*this,
-                         R"({"C.Base": {
-    "type": "object",
-    "properties": {
-      "x": { "type": "integer", "required": true },
-      "y": { "type": "integer", "default": 9 }
-    }
-  }})",
-                         R"({"C.Container": {
-    "type": "object",
-    "properties": { "inner": { "$ref": "C.Base", "required": true } }
-  }})",
-                         R"({"Test.Forward": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "$ref": "C.Container", "required": true } ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefaultDraft03)
-{
-  CheckReferenceWithLocalDefault(*this,
-                                 R"({"Level.T": {
-    "type": "integer", "minimum": 0, "maximum": 10, "default": 5
-  }})",
-                                 R"({"Test.Ref": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "level", "$ref": "Level.T", "default": 7 } ],
-    "returns": "string"
-  }})");
-}
-
-TEST_F(TestJSONServiceDescription, EnumParameterDraft03)
-{
-  CheckEnumParameter(*this, R"({"Test.Enum": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "mode", "type": "string", "enum": ["one", "two"] } ],
-    "returns": "string"
-  }})");
-}
 
 TEST_F(TestJSONServiceDescription, MissingRequiredParameter2020)
 {
