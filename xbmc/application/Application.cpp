@@ -551,6 +551,9 @@ bool CApplication::InitWindow(RESOLUTION res)
 
 bool CApplication::Initialize()
 {
+  // Must precede anything that can dispatch a JSON-RPC call
+  CJSONRPC::Initialize();
+
   m_pActiveAE->Start();
   // restore AE's previous volume state
 
@@ -776,8 +779,6 @@ bool CApplication::Initialize()
   {
     uiInitializationFinished = true;
   }
-
-  CJSONRPC::Initialize();
 
   CServiceBroker::RegisterSpeechRecognition(speech::ISpeechRecognition::CreateInstance());
 
