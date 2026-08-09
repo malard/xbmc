@@ -539,25 +539,34 @@ TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
                                                   StubMethod));
 }
 
-TEST_F(TestJSONServiceDescription, PrintEmitsDraft03Shape)
+TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(
       R"({"Print.Enum": { "type": "string", "enum": ["a", "b"] }})"));
   ASSERT_TRUE(CJSONServiceDescription::AddType(
       R"({"Print.Base": {
         "type": "object",
-        "properties": { "p": { "type": "string", "required": true } }
+        "properties": { "p": { "type": "string" } },
+        "required": ["p"]
       }})"));
   ASSERT_TRUE(CJSONServiceDescription::AddType(
       R"({"Print.Derived": {
-        "extends": "Print.Base",
+        "allOf": [ { "$ref": "#/$defs/Print.Base" } ],
         "properties": { "q": { "type": "integer" } }
       }})"));
   ASSERT_TRUE(CJSONServiceDescription::AddType(
-      R"({"Print.Union": { "type": [
-        { "type": "string", "required": true },
-        { "type": "integer", "required": true }
+      R"({"Print.Union": { "anyOf": [
+        { "type": "string" },
+        { "type": "integer" }
       ] }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Print.Method": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "target", "required": true, "description": "what to print",
+                  "schema": { "$ref": "#/$defs/Print.Enum" } } ],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+  CJSONServiceDescription::ResolveReferences();
 
   CVariant result;
   ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
@@ -565,16 +574,29 @@ TEST_F(TestJSONServiceDescription, PrintEmitsDraft03Shape)
   const CVariant& types = result["types"];
   ASSERT_TRUE(types.isMember("Print.Enum"));
 
-  // Introspect historically emits "enums" although the parser reads "enum"
-  ExpectVariantEq(ParseJson(R"(["a", "b"])"), types["Print.Enum"]["enums"]);
-  EXPECT_FALSE(types["Print.Enum"].isMember("enum"));
+  ExpectVariantEq(ParseJson(R"(["a", "b"])"), types["Print.Enum"]["enum"]);
+  EXPECT_FALSE(types["Print.Enum"].isMember("enums"));
 
-  ExpectVariantEq(CVariant("Print.Base"), types["Print.Derived"]["extends"]);
+  ExpectVariantEq(ParseJson(R"([ { "$ref": "#/$defs/Print.Base" } ])"),
+                  types["Print.Derived"]["allOf"]);
+  EXPECT_FALSE(types["Print.Derived"].isMember("extends"));
 
-  ASSERT_TRUE(types["Print.Union"]["type"].isArray());
-  EXPECT_EQ(2U, types["Print.Union"]["type"].size());
-  EXPECT_TRUE(types["Print.Union"]["type"][0].isObject());
+  ASSERT_TRUE(types["Print.Union"]["anyOf"].isArray());
+  EXPECT_EQ(2U, types["Print.Union"]["anyOf"].size());
+  EXPECT_FALSE(types["Print.Union"].isMember("type"));
 
-  ExpectVariantEq(CVariant(true), types["Print.Base"]["properties"]["p"]["required"]);
+  // Requiredness of properties is an array on the object, not a boolean
+  ExpectVariantEq(ParseJson(R"(["p"])"), types["Print.Base"]["required"]);
+  EXPECT_FALSE(types["Print.Base"]["properties"]["p"].isMember("required"));
   ExpectVariantEq(CVariant("Print.Base"), types["Print.Base"]["id"]);
+
+  // Parameters are printed as content descriptors
+  const CVariant& param = result["methods"]["Print.Method"]["params"][0];
+  ExpectVariantEq(ParseJson(R"({
+    "name": "target",
+    "required": true,
+    "description": "what to print",
+    "schema": { "$ref": "#/$defs/Print.Enum" }
+  })"),
+                  param);
 }
