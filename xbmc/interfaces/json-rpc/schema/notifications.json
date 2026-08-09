@@ -137,6 +137,45 @@
     ],
     "returns": null
   },
+  "Player.OnPlaybackFailed": {
+    "type": "notification",
+    "description": "Playback of a media item was requested but did not happen. Playback is started asynchronously, so a request that was answered successfully can still fail afterwards; this is the only report of that failure.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Notifications.Item"
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why the item was not played. \"unplayable\": no player could play it, or the player refused it. \"unresolved\": a plugin did not return a playable item. \"locked\": the master or media source lock refused it. \"error\": the player reported an error after playback had started.",
+              "enum": [
+                "unplayable",
+                "unresolved",
+                "locked",
+                "error"
+              ]
+            }
+          },
+          "required": [
+            "reason"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
   "Player.OnSpeedChanged": {
     "type": "notification",
     "description": "Speed of the playback of a media item has been changed. If there is no ID available extra information will be provided.",
