@@ -36,9 +36,9 @@ namespace JSONRPC
   public:
     JSONSchemaTypeDefinition();
 
-    bool Parse(const CVariant &value, bool isParameter = false);
+    bool Parse(const CVariant& value);
     JSONRPC_STATUS Check(const CVariant& value, CVariant& outputValue, CVariant& errorData) const;
-    void Print(bool isParameter, bool isGlobal, bool printDefault, bool printDescriptions, CVariant &output) const;
+    void Print(bool isGlobal, bool printDefault, bool printDescriptions, CVariant& output) const;
     void ResolveReference();
 
     std::string missingReference;
@@ -114,24 +114,6 @@ namespace JSONRPC
     double maximum;
 
     /*!
-     \brief Whether to exclude the defined Minimum
-     value from the valid range or not
-     */
-    bool exclusiveMinimum = false;
-
-    /*!
-     \brief  Whether to exclude the defined Maximum
-     value from the valid range or not
-     */
-    bool exclusiveMaximum = false;
-
-    /*!
-     \brief Integer by which the value (of type
-     Integer) must be divisible without rest
-     */
-    unsigned int divisibleBy = 0;
-
-    /*!
      \brief Minimum length for String types
      */
     int minLength = -1;
@@ -148,9 +130,9 @@ namespace JSONRPC
     std::vector<CVariant> enums;
 
     /*!
-     \brief List of possible values in an array
+     \brief Schema every value in an array must match
      */
-    std::vector<JSONSchemaTypeDefinitionPtr> items;
+    JSONSchemaTypeDefinitionPtr items;
 
     /*!
      \brief Minimum amount of items in the array
@@ -167,13 +149,6 @@ namespace JSONRPC
      must be unique or not
      */
     bool uniqueItems = false;
-
-    /*!
-     \brief List of json schema definitions for
-     additional items in an array with tuple
-     typing (defined schemas in "items")
-     */
-    std::vector<JSONSchemaTypeDefinitionPtr> additionalItems;
 
     /*!
      \brief Maps a properties name to its
@@ -394,7 +369,7 @@ namespace JSONRPC
     static bool prepareDescription(std::string &description, CVariant &descriptionObject, std::string &name);
     static bool addMethod(const std::string &jsonMethod, MethodCall method);
     static void parseHeader(const CVariant &descriptionObject);
-    static bool parseJSONSchemaType(const CVariant &value, std::vector<JSONSchemaTypeDefinitionPtr>& typeDefinitions, JSONSchemaType &schemaType, std::string &missingReference);
+    static bool parseJSONSchemaType(const CVariant& value, JSONSchemaType& schemaType);
     static void addReferenceTypeDefinition(const JSONSchemaTypeDefinitionPtr& typeDefinition);
     static void removeReferenceTypeDefinition(const std::string &typeID);
 
