@@ -554,6 +554,30 @@ bool CFileItemHandler::FillFileItemList(const CVariant &parameterObject, CFileIt
   return (list.Size() > 0);
 }
 
+JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
+{
+  const std::string file{item["file"].asString()};
+  if (!file.empty() && !URIUtils::IsURL(file) && !CFileUtils::Exists(file, false))
+  {
+    // A directory is dropped by the same rule as a missing file, but naming one here is a
+    // malformed request rather than a reference that has gone stale.
+    return XFILE::CDirectory::Exists(file, false) ? InvalidParams : NotFound;
+  }
+
+  const std::string directory{item["directory"].asString()};
+  if (!directory.empty() && !XFILE::CDirectory::Exists(directory, false))
+    return Unavailable;
+
+  for (const auto* identifier : {"movieid", "episodeid", "musicvideoid", "recordingid", "songid",
+                                 "albumid", "artistid", "genreid"})
+  {
+    if (item[identifier].asInteger(-1) > 0)
+      return NotFound;
+  }
+
+  return InvalidParams;
+}
+
 void CFileItemHandler::Sort(CFileItemList &items, const CVariant &parameterObject)
 {
   SortDescription sorting;

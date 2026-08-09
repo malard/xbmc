@@ -24,7 +24,6 @@
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
-#include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -51,7 +50,6 @@
 #include "settings/MediaSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
-#include "utils/FileUtils.h"
 #include "utils/MathUtils.h"
 #include "utils/PlayerUtils.h"
 #include "utils/URIUtils.h"
@@ -96,34 +94,6 @@ bool IsReachable(const CFileItem& item)
 
   // Bypass the directory cache; a cached hit would mask a share that has gone away.
   return XFILE::CFile::Exists(path, false);
-}
-
-// FillFileItemList drops whatever it cannot resolve rather than saying why, so an empty list
-// on its own cannot distinguish a malformed request from one that named something real that
-// is now gone. Diagnose the request again to tell the two apart. The caches are bypassed for
-// the same reason IsReachable bypasses them.
-JSONRPC_STATUS UnresolvedItemStatus(const CVariant& item)
-{
-  const std::string file{item["file"].asString()};
-  if (!file.empty() && !URIUtils::IsURL(file) && !CFileUtils::Exists(file, false))
-  {
-    // A directory is dropped by the same rule as a missing file, but naming one here is a
-    // malformed request rather than a reference that has gone stale.
-    return XFILE::CDirectory::Exists(file, false) ? InvalidParams : NotFound;
-  }
-
-  const std::string directory{item["directory"].asString()};
-  if (!directory.empty() && !XFILE::CDirectory::Exists(directory, false))
-    return Unavailable;
-
-  for (const auto* identifier : {"movieid", "episodeid", "musicvideoid", "recordingid", "songid",
-                                 "albumid", "artistid", "genreid"})
-  {
-    if (item[identifier].asInteger(-1) > 0)
-      return NotFound;
-  }
-
-  return InvalidParams;
 }
 
 void OverlayCurrentSongTag(CFileItem& item)
@@ -1134,7 +1104,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const std::string &method, ITransportLaye
       return ACK;
     }
     else
-      return UnresolvedItemStatus(parameterObject["item"]);
+      return DiagnoseUnresolvedItem(parameterObject["item"]);
   }
 
   return InvalidParams;
