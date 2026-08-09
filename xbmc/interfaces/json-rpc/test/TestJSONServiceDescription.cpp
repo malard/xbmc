@@ -373,6 +373,172 @@ TEST_F(TestJSONServiceDescription, EnumParameterDraft03)
   }})");
 }
 
+TEST_F(TestJSONServiceDescription, MissingRequiredParameter2020)
+{
+  CheckMissingRequiredParameter(*this, R"({"Test.Required": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "value", "required": true, "schema": { "type": "string" } } ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, ObjectParameter2020)
+{
+  CheckObjectParameter(*this, R"({"Test.Object": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [
+      { "name": "opts", "required": true, "schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "mode": { "type": "string", "default": "fast" }
+          },
+          "required": ["path"],
+          "additionalProperties": false } },
+      { "name": "speed", "schema": { "type": "integer", "default": 5 } }
+    ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, UnionParameter2020)
+{
+  CheckUnionParameter(*this, R"({"Test.Union": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [
+      { "name": "target", "required": true, "schema": { "anyOf": [
+          { "type": "object",
+            "properties": { "movieid": { "type": "integer" } },
+            "required": ["movieid"],
+            "additionalProperties": false },
+          { "type": "object",
+            "properties": { "songid": { "type": "integer" } },
+            "required": ["songid"],
+            "additionalProperties": false }
+        ] } },
+      { "name": "when", "schema": { "anyOf": [
+          { "type": "null" },
+          { "type": "string", "enum": ["now", "later"] }
+        ], "default": null } },
+      { "name": "flag", "schema": { "type": ["null", "boolean"], "default": null } }
+    ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, ExtendedType2020)
+{
+  CheckExtendedType(*this,
+                    R"({"Base.A": {
+    "type": "object",
+    "properties": {
+      "a": { "type": "string" },
+      "shared": { "type": "integer", "default": 1 }
+    },
+    "required": ["a"]
+  }})",
+                    R"({"Derived.B": {
+    "allOf": [ { "$ref": "#/$defs/Base.A" } ],
+    "properties": {
+      "b": { "type": "boolean" },
+      "shared": { "type": "integer", "default": 2 }
+    },
+    "required": ["b"]
+  }})",
+                    R"({"Test.Extends": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Derived.B" } } ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, ForwardReferences2020)
+{
+  CheckForwardReferences(*this,
+                         R"({"C.Base": {
+    "type": "object",
+    "properties": {
+      "x": { "type": "integer" },
+      "y": { "type": "integer", "default": 9 }
+    },
+    "required": ["x"]
+  }})",
+                         R"({"C.Container": {
+    "type": "object",
+    "properties": { "inner": { "$ref": "#/$defs/C.Base" } },
+    "required": ["inner"]
+  }})",
+                         R"({"Test.Forward": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/C.Container" } } ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefault2020)
+{
+  CheckReferenceWithLocalDefault(*this,
+                                 R"({"Level.T": {
+    "type": "integer", "minimum": 0, "maximum": 10, "default": 5
+  }})",
+                                 R"({"Test.Ref": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "level", "schema": { "$ref": "#/$defs/Level.T", "default": 7 } } ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, EnumParameter2020)
+{
+  CheckEnumParameter(*this, R"({"Test.Enum": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "mode", "schema": { "type": "string", "enum": ["one", "two"] } } ],
+    "returns": "string"
+  }})");
+}
+
+TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Case": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "o", "required": true, "schema": {
+      "type": "object",
+      "properties": { "MixedCase": { "type": "string" } },
+      "required": ["MixedCase"] } } ],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Case", R"({"o": {"MixedCase": "v"}})", output));
+  ExpectVariantEq(ParseJson(R"({ "o": { "MixedCase": "v" } })"), output);
+
+  EXPECT_EQ(InvalidParams, Call("Test.Case", R"({"o": {}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Case",
+    "stack": {
+      "name": "o",
+      "type": "object",
+      "property": { "name": "MixedCase", "type": "string" },
+      "message": "Missing property"
+    }
+  })"),
+                  output);
+}
+
+TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.Bad": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "o", "schema": {
+      "type": "object",
+      "properties": { "real": { "type": "string" } },
+      "required": ["nonexistent"] } } ],
+    "returns": "string"
+  }})",
+                                                  StubMethod));
+}
+
 TEST_F(TestJSONServiceDescription, PrintEmitsDraft03Shape)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(
