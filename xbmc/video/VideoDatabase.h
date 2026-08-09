@@ -610,6 +610,21 @@ public:
                    std::vector<std::pair<int, std::string>>& subpaths,
                    bool excludeDiscPaths = true);
 
+  /*! \brief Resolve the path ids a library clean should cover.
+   \param directory a directory to restrict the clean to, empty for the whole library.
+                    Normalised to the stored form (platform separators, trailing
+                    separator) before matching.
+   \param content the content type to clean for ("movies", "tvshows", "musicvideos"),
+                  empty for any. With a directory, "tvshows" also matches paths
+                  resolving to "seasons" or "episodes".
+   \param paths the matching path ids, including subpaths. Left empty when nothing
+                matches.
+   \return true on success (even with no matches), false on a database error
+   */
+  bool GetPathsForCleaning(const std::string& directory,
+                           const std::string& content,
+                           std::set<int>& paths);
+
   bool GetSourcePath(const std::string &path, std::string &sourcePath);
   bool GetSourcePath(const std::string& path,
                      std::string& sourcePath,
