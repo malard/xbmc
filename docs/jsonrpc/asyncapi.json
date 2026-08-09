@@ -70,6 +70,9 @@
         "Playlist.OnClear": {
           "$ref": "#/components/messages/Playlist.OnClear"
         },
+        "Playlist.OnPropertyChanged": {
+          "$ref": "#/components/messages/Playlist.OnPropertyChanged"
+        },
         "AudioLibrary.OnUpdate": {
           "$ref": "#/components/messages/AudioLibrary.OnUpdate"
         },
@@ -293,6 +296,17 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/Playlist.OnClear"
+        }
+      ]
+    },
+    "Playlist.OnPropertyChanged": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Playlist.OnPropertyChanged"
         }
       ]
     },
@@ -1111,6 +1125,54 @@
                   },
                   "required": [
                     "playlistid"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Playlist.OnPropertyChanged": {
+        "name": "Playlist.OnPropertyChanged",
+        "summary": "A property of the playlist has changed. Unlike Player.OnPropertyChanged this is also sent when the playlist is not currently being played.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Playlist.OnPropertyChanged"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "playlistid": {
+                      "$ref": "#/components/schemas/Playlist.Id"
+                    },
+                    "property": {
+                      "$ref": "#/components/schemas/Playlist.Property.Value"
+                    }
+                  },
+                  "required": [
+                    "playlistid",
+                    "property"
                   ]
                 }
               },
@@ -2423,6 +2485,34 @@
         "minimum": 0,
         "maximum": 2,
         "default": -1
+      },
+      "Playlist.Type": {
+        "type": "string",
+        "enum": [
+          "unknown",
+          "video",
+          "audio",
+          "picture",
+          "mixed"
+        ]
+      },
+      "Playlist.Property.Value": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/Playlist.Type"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repeat": {
+            "$ref": "#/components/schemas/Player.Repeat"
+          },
+          "shuffled": {
+            "type": "boolean"
+          }
+        }
       },
       "Playlist.Position": {
         "type": "integer",
