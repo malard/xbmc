@@ -1978,16 +1978,16 @@
         "type": "string"
       },
       "bpm": {
-        "type": "Integer"
+        "type": "integer"
       },
       "samplerate": {
-        "type": "Integer"
+        "type": "integer"
       },
       "bitrate": {
-        "type": "Integer"
+        "type": "integer"
       },
       "channels": {
-        "type": "Integer"
+        "type": "integer"
       },
       "songvideourl": {
         "type": "string"
@@ -2530,7 +2530,7 @@
         "type": "integer"
       },
       "ratings": {
-        "type": "Video.Ratings"
+        "$ref": "#/$defs/Video.Ratings"
       },
       "premiered": {
         "type": "string"
@@ -2644,7 +2644,7 @@
         "type": "integer"
       },
       "ratings": {
-        "type": "Video.Ratings"
+        "$ref": "#/$defs/Video.Ratings"
       },
       "runtime": {
         "type": "integer",
@@ -2761,7 +2761,7 @@
         "$ref": "#/$defs/Library.Id"
       },
       "ratings": {
-        "type": "Video.Ratings"
+        "$ref": "#/$defs/Video.Ratings"
       },
       "studio": {
         "$ref": "#/$defs/Array.String"
@@ -3653,8 +3653,7 @@
     "type": "object",
     "properties": {
       "textureid": {
-        "$ref": "#/$defs/Library.Id",
-        "required": "true"
+        "$ref": "#/$defs/Library.Id"
       },
       "url": {
         "type": "string",
@@ -3682,7 +3681,10 @@
         "type": "string",
         "description": "Last time texture existence was verified in library"
       }
-    }
+    },
+    "required": [
+      "textureid"
+    ]
   },
   "Profiles.Password": {
     "type": "object",
@@ -4505,7 +4507,6 @@
         "displayorchestra",
         "displaylyricist",
         "userrating",
-        "votes",
         "sortartist",
         "musicbrainzreleasegroupid",
         "mediapath",
@@ -4979,7 +4980,6 @@
       "muted",
       "name",
       "version",
-      "volume",
       "sorttokens",
       "language"
     ]
