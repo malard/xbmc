@@ -27,6 +27,7 @@
 #include "video/VideoDbUrl.h"
 #include "video/VideoLibraryQueue.h"
 
+#include <algorithm>
 #include <memory>
 
 using namespace JSONRPC;
@@ -1167,6 +1168,20 @@ JSONRPC_STATUS CVideoLibrary::Clean(const std::string &method, ITransportLayer *
   return ACK;
 }
 
+void CVideoLibrary::ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details)
+{
+  details.m_iFileId = fileDetails.m_iFileId;
+  details.SetPlayCount(std::max(details.GetPlayCount(), fileDetails.GetPlayCount()));
+  if (!details.m_lastPlayed.IsValid())
+    details.m_lastPlayed = fileDetails.m_lastPlayed;
+  if (!details.m_dateAdded.IsValid())
+    details.m_dateAdded = fileDetails.m_dateAdded;
+  if (!details.GetResumePoint().IsSet())
+    details.SetResumePoint(fileDetails.GetResumePoint());
+  if (!details.m_streamDetails.HasItems())
+    details.m_streamDetails = fileDetails.m_streamDetails;
+}
+
 bool CVideoLibrary::FillFileItem(
     const std::string& strFilename,
     std::shared_ptr<CFileItem>& item,
@@ -1179,15 +1194,29 @@ bool CVideoLibrary::FillFileItem(
   bool filled = false;
   if (videodatabase.Open())
   {
+    // Deliberately not CVideoDatabase::LoadVideoInfo: it answers "the database knows this path",
+    // which is true of anything ever played, and the caller needs "the library describes this
+    // item". Serving a played-once plugin item from its files table row replaces the description
+    // the add-on supplied with an empty one.
+    // A tv show is held against its folder, so it is only worth asking about when the entry is
+    // one.
     CVideoInfoTag details;
-    // LoadVideoInfo resolves a movie, episode, music video or plain file. A tv show is held
-    // against its folder, so it is only worth asking about when the entry is one.
-    if (videodatabase.LoadVideoInfo(strFilename, details) ||
+    if (videodatabase.GetMovieInfo(strFilename, details) ||
+        videodatabase.GetEpisodeInfo(strFilename, details) ||
+        videodatabase.GetMusicVideoInfo(strFilename, details) ||
         (item->IsFolder() && videodatabase.GetTvShowInfo(strFilename, details, -1, item.get())))
     {
       item->SetFromVideoInfoTag(details);
       item->SetDynPath(strFilename);
       filled = true;
+    }
+    else
+    {
+      // A library row already carries its own playback state, so only an item the library does
+      // not describe needs the files table - and needs it added to whatever it already says.
+      CVideoInfoTag fileDetails;
+      if (videodatabase.GetFileInfo(strFilename, fileDetails))
+        ApplyPlaybackState(fileDetails, *item->GetVideoInfoTag());
     }
   }
 

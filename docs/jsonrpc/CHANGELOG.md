@@ -155,6 +155,8 @@ schema never says *when* something goes; that is here.
   items.
 - `Player.GetItem` reports AirPlay cover art, and live stream metadata for a
   playing PVR radio channel.
+- `Player.GetItem` and `Files.GetFileDetails` keep the metadata of an item the
+  library does not hold, an add-on's typically, once it has been played.
 - `file` agrees with `filetype` for a movie with versions or extras.
 - `Files.GetFileDetails` reports the `file` and `filetype` its result type
   requires.
