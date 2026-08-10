@@ -11613,6 +11613,24 @@ bool CMusicDatabase::SetScraper(int id,
   try
   {
     BeginTransaction();
+
+    if (!scraper)
+    {
+      // Clear any specific settings (0 => default scraper used)
+      if (content == ADDON::ContentType::ARTISTS)
+        strSQL = "UPDATE artist SET idInfoSetting = %i WHERE idArtist = %i";
+      else
+        strSQL = "UPDATE album SET idInfoSetting = %i WHERE idAlbum = %i";
+      strSQL = PrepareSQL(strSQL, 0, id);
+      m_pDS->exec(strSQL);
+
+      //Remove orphaned settings
+      CleanupInfoSettings();
+
+      CommitTransaction();
+      return true;
+    }
+
     // Fetch current info settings for item, 0 => default is used
     if (content == ADDON::ContentType::ARTISTS)
       strSQL = "SELECT idInfoSetting FROM artist WHERE idArtist = %i";
