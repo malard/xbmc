@@ -6272,7 +6272,7 @@ void CVideoPlayer::NotifySubtitleUpdate(int flags)
       // Only add stream info if valid
       CVariant contentEntry(CVariant::VariantTypeObject);
       contentEntry["index"] = stream;
-      contentEntry["codec"] = info.codecDesc;
+      contentEntry["codec"] = info.codecName;
       contentEntry["isdefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
       contentEntry["isforced"] = (info.flags & StreamFlags::FLAG_FORCED) != 0;
       contentEntry["isimpaired"] = (info.flags & StreamFlags::FLAG_VISUAL_IMPAIRED) != 0;
@@ -6298,12 +6298,14 @@ void CVideoPlayer::NotifyAudioUpdate()
   contentEntry["index"] = stream;
   contentEntry["bitrate"] = info.bitrate;
   contentEntry["channels"] = info.channels;
-  contentEntry["codec"] = info.codecDesc;
+  contentEntry["codec"] = info.codecName;
   contentEntry["isdefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
   contentEntry["isimpaired"] = (info.flags & StreamFlags::FLAG_HEARING_IMPAIRED) != 0;
   contentEntry["isoriginal"] = (info.flags & StreamFlags::FLAG_ORIGINAL) != 0;
   contentEntry["language"] = info.language;
   contentEntry["name"] = info.name;
+  contentEntry["samplerate"] = info.samplerate;
+  contentEntry["bitspersample"] = info.bitspersample;
   data["property"]["currentaudiostream"] = contentEntry;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
                                                      data);
