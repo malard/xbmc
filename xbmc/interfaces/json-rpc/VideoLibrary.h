@@ -83,6 +83,17 @@ namespace JSONRPC
         std::shared_ptr<CFileItem>& item,
         const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+
+    /*! \brief Add how a file was played to an item that already says what it is.
+
+     A row in the files table records playback state - the play count, when it was last played,
+     where it was left, what streams it turned out to have. It describes nothing about the item,
+     so it must be added to a description rather than used as one.
+     \param fileDetails the tag filled from the files table
+     \param details the tag to add it to, left otherwise untouched
+    */
+    static void ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details);
+
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 
     /*! \brief Provided the JSON-RPC parameter object compute the VideoDbDetails mask
