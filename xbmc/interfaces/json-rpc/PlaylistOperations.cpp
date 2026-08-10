@@ -12,7 +12,7 @@
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
 #include "PlayListPlayer.h"
-#include "PlayerOperations.h"
+#include "PlaybackModes.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -23,6 +23,8 @@
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayListTypes.h"
 #include "utils/Variant.h"
+
+#include <optional>
 
 using namespace JSONRPC;
 using namespace KODI;
@@ -42,9 +44,8 @@ const char* ReasonOf(JSONRPC_STATUS status)
   }
 }
 
-// Nothing was added, so the call achieved nothing and owes an error rather than a result.
-// The reference is the reason unless every entry was malformed, which is the client's
-// mistake rather than storage that has gone away.
+// The error for a call that added nothing. A reference that no longer resolves is NotFound;
+// only when every entry was malformed is the request itself at fault.
 JSONRPC_STATUS StatusForNothingAdded(const CVariant& unresolved)
 {
   for (auto entry = unresolved.begin_array(); entry != unresolved.end_array(); ++entry)
@@ -295,31 +296,18 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
 {
   PLAYLIST::Id playlistId = GetPlaylist(parameterObject["playlistid"]);
   const CVariant& shuffle = parameterObject["shuffle"];
-  bool shuffleOn = (shuffle.isBoolean() && shuffle.asBoolean()) ||
-                   (shuffle.isString() && shuffle.asString() == "toggle");
-  bool shuffleOff = (shuffle.isBoolean() && !shuffle.asBoolean()) ||
-                    (shuffle.isString() && shuffle.asString() == "toggle");
 
   switch (playlistId)
   {
     case PLAYLIST::Id::TYPE_MUSIC:
     case PLAYLIST::Id::TYPE_VIDEO:
     {
-      if (CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))
+      const std::optional<bool> requested{
+          ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))};
+      if (requested.has_value())
       {
-        if (shuffleOff)
-        {
-          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
-                                                     static_cast<int>(playlistId), 0);
-        }
-      }
-      else
-      {
-        if (shuffleOn)
-        {
-          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
-                                                     static_cast<int>(playlistId), 1);
-        }
+        CServiceBroker::GetAppMessenger()->SendMsg(
+            TMSG_PLAYLISTPLAYER_SHUFFLE, static_cast<int>(playlistId), *requested ? 1 : 0);
       }
       break;
     }
@@ -330,17 +318,15 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
       if (!slideShow.IsPlaying())
         return FailedToExecute;
 
-      if (slideShow.IsShuffled())
-      {
-        // a running slideshow cannot be unshuffled
-        if (shuffleOff)
-          return FailedToExecute;
-      }
-      else
-      {
-        if (shuffleOn)
-          slideShow.Shuffle();
-      }
+      const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
+      if (!requested.has_value())
+        break;
+
+      // a running slideshow cannot be unshuffled
+      if (!*requested)
+        return FailedToExecute;
+
+      slideShow.Shuffle();
       break;
     }
 
@@ -361,20 +347,8 @@ JSONRPC_STATUS CPlaylistOperations::SetRepeat(const std::string& method,
   if (playlistId != PLAYLIST::Id::TYPE_MUSIC && playlistId != PLAYLIST::Id::TYPE_VIDEO)
     return FailedToExecute;
 
-  PLAYLIST::RepeatState state;
-  if (parameterObject["repeat"].asString() == "cycle")
-  {
-    const PLAYLIST::RepeatState statePrev =
-        CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId);
-    if (statePrev == PLAYLIST::RepeatState::NONE)
-      state = PLAYLIST::RepeatState::ALL;
-    else if (statePrev == PLAYLIST::RepeatState::ALL)
-      state = PLAYLIST::RepeatState::ONE;
-    else
-      state = PLAYLIST::RepeatState::NONE;
-  }
-  else
-    state = CPlayerOperations::ParseRepeatState(parameterObject["repeat"]);
+  const PLAYLIST::RepeatState state{ParseRepeatState(
+      parameterObject["repeat"], CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))};
 
   CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT,
                                              static_cast<int>(playlistId), static_cast<int>(state));
@@ -536,9 +510,8 @@ void CPlaylistOperations::HandleItemsParameter(PLAYLIST::Id playlistId,
           break;
       }
 
-      // FillFileItemList reports whether the list is non-empty rather than whether this
-      // item contributed to it, so every item after the first success would look resolved.
-      // Growth is what actually says this one landed.
+      // FillFileItemList reports whether the list is non-empty, not whether this item
+      // contributed to it. Growth of the list is what says this one resolved.
       const int before{items.Size()};
       FillFileItemList(itemIt, items);
       resolved = items.Size() > before;

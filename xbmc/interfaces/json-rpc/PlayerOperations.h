@@ -92,8 +92,6 @@ namespace JSONRPC
                                       const CVariant& parameterObject,
                                       CVariant& result);
 
-    static KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
-
   private:
     static int GetActivePlayers();
     static PlayerType GetPlayer(const CVariant &player);
