@@ -1,4 +1,5 @@
 set(SOURCES TestAddonsExecuteAddon.cpp
+            TestDeprecatedMethodSchema.cpp
             TestFileOperations.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp

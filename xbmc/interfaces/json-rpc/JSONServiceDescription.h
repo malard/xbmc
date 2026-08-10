@@ -231,6 +231,15 @@ namespace JSONRPC
      */
     std::string description;
     /*!
+     \brief What a caller should use instead, and from when, or empty if the
+     method is not deprecated
+
+     A deprecated method keeps working. The note is served through
+     JSONRPC.Introspect so that a client can find out it is on borrowed time
+     without anyone having to read a release note.
+     */
+    std::string deprecated;
+    /*!
      \brief List of accepted parameters
      */
     std::vector<JSONSchemaTypeDefinitionPtr> parameters;

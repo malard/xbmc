@@ -6765,6 +6765,60 @@
     ],
     "returns": "string"
   },
+  "GUI.GetInfoLabels": {
+    "type": "method",
+    "description": "Retrieve info labels about Kodi and the system",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "labels",
+        "required": true,
+        "description": "See http://kodi.wiki/view/InfoLabels for a list of possible info labels",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "description": "Object containing key-value pairs of the retrieved info labels",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "GUI.GetInfoBooleans": {
+    "type": "method",
+    "description": "Retrieve info booleans about Kodi and the system",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "booleans",
+        "required": true,
+        "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "description": "Object containing key-value pairs of the retrieved info booleans",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    }
+  },
   "Addons.GetAddons": {
     "type": "method",
     "description": "Gets all available addons",
@@ -8107,6 +8161,7 @@
   "XBMC.GetInfoLabels": {
     "type": "method",
     "description": "Retrieve info labels about Kodi and the system",
+    "deprecated": "Use GUI.GetInfoLabels instead. Removed in Kodi 23, JSON-RPC API version 15.",
     "transport": "Response",
     "permission": "ReadData",
     "params": [
@@ -8134,12 +8189,14 @@
   "XBMC.GetInfoBooleans": {
     "type": "method",
     "description": "Retrieve info booleans about Kodi and the system",
+    "deprecated": "Use GUI.GetInfoBooleans instead. Removed in Kodi 23, JSON-RPC API version 15.",
     "transport": "Response",
     "permission": "ReadData",
     "params": [
       {
         "name": "booleans",
         "required": true,
+        "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
         "schema": {
           "type": "array",
           "items": {
@@ -8153,7 +8210,7 @@
       "type": "object",
       "description": "Object containing key-value pairs of the retrieved info booleans",
       "additionalProperties": {
-        "type": "string"
+        "type": "boolean"
       }
     }
   },
