@@ -915,6 +915,11 @@ void CVideoPlayer::OnStartup()
   m_CurrentRadioRDS.Clear();
   m_CurrentAudioID3.Clear();
 
+  {
+    std::unique_lock lock(m_content.m_section);
+    m_content.m_selectedSubtitleIndex = -1;
+  }
+
   UTILS::FONT::ClearTemporaryFonts();
 }
 
@@ -6086,8 +6091,8 @@ void CVideoPlayer::UpdateContentState()
       m_SelectionStreams.TypeIndexOf(StreamType::SUBTITLE, m_CurrentSubtitle.source,
                                      m_CurrentSubtitle.demuxerId, m_CurrentSubtitle.id);
 
-  if (m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) && m_content.m_videoIndex == -1 &&
-      m_content.m_audioIndex == -1)
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) &&
+      m_content.m_videoIndex == -1 && m_content.m_audioIndex == -1)
   {
     std::shared_ptr<CDVDInputStreamNavigator> nav =
           std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream);
@@ -6106,7 +6111,18 @@ void CVideoPlayer::UpdateContentState()
     }
   }
 
-  if (m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) && m_State.menuType == MenuType::NATIVE)
+  // A subtitle that is hidden has its stream closed (see the
+  // PLAYER_SET_SUBTITLESTREAM_VISIBLE handler), yet it remains the selected one.
+  // The indices above are derived from the open streams, so without this the
+  // next stream open of any type would report the selection as gone.
+  if (m_content.m_subtitleIndex >= 0)
+    m_content.m_selectedSubtitleIndex = m_content.m_subtitleIndex;
+  else if (m_content.m_selectedSubtitleIndex >= 0 &&
+           m_content.m_selectedSubtitleIndex < m_SelectionStreams.CountType(StreamType::SUBTITLE))
+    m_content.m_subtitleIndex = m_content.m_selectedSubtitleIndex;
+
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) &&
+      m_State.menuType == MenuType::NATIVE)
   {
     // Update settings with changes made in bluray menu
     CVideoSettings settings{m_processInfo->GetVideoSettings()};
