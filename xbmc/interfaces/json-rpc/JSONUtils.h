@@ -16,8 +16,10 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <set>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <vector>
 
 class CDateTime;
@@ -64,6 +66,25 @@ namespace JSONRPC
     }
 
   protected:
+    /*!
+     \brief The property names a request asks to have filled in
+
+     \param parameterObject The parameters of the call
+     \return The members of its "properties" parameter, empty when it has none
+     */
+    static std::set<std::string> RequestedFields(const CVariant& parameterObject)
+    {
+      std::set<std::string> fields;
+      if (parameterObject.isMember("properties") && parameterObject["properties"].isArray())
+      {
+        for (CVariant::const_iterator_array field = parameterObject["properties"].begin_array();
+             field != parameterObject["properties"].end_array(); ++field)
+          fields.insert(field->asString());
+      }
+
+      return fields;
+    }
+
     static void HandleLimits(const CVariant &parameterObject, CVariant &result, int size, int &start, int &end)
     {
       if (size < 0)
