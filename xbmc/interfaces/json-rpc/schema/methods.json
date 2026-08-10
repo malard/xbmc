@@ -7169,6 +7169,73 @@
       ]
     }
   },
+  "PVR.GetProviders": {
+    "type": "method",
+    "description": "Retrieves the providers of the enabled PVR clients",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "properties",
+        "schema": {
+          "$ref": "#/$defs/PVR.Fields.Provider"
+        }
+      },
+      {
+        "name": "limits",
+        "schema": {
+          "$ref": "#/$defs/List.Limits"
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/$defs/List.LimitsReturned"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PVR.Details.Provider"
+          }
+        }
+      },
+      "required": [
+        "limits",
+        "providers"
+      ]
+    }
+  },
+  "PVR.GetProviderDetails": {
+    "type": "method",
+    "description": "Retrieves the details of a specific provider",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "providerid",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "properties",
+        "schema": {
+          "$ref": "#/$defs/PVR.Fields.Provider"
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "providerdetails": {
+          "$ref": "#/$defs/PVR.Details.Provider"
+        }
+      }
+    }
+  },
   "PVR.GetBroadcasts": {
     "type": "method",
     "description": "Retrieves the program of a specific channel",
