@@ -1214,9 +1214,16 @@ bool CVideoLibrary::FillFileItem(
     {
       // A library row already carries its own playback state, so only an item the library does
       // not describe needs the files table - and needs it added to whatever it already says.
+      // The database still knew the path, which is what a caller building an item from one has
+      // to be told, so this counts as filled.
       CVideoInfoTag fileDetails;
       if (videodatabase.GetFileInfo(strFilename, fileDetails))
+      {
         ApplyPlaybackState(fileDetails, *item->GetVideoInfoTag());
+        if (item->GetPath().empty())
+          item->SetPath(strFilename);
+        filled = true;
+      }
     }
   }
 
