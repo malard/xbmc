@@ -10,6 +10,7 @@ set(SOURCES AddonsOperations.cpp
             JSONRPC.cpp
             JSONServiceDescription.cpp
             JSONUtils.cpp
+            PlaybackModes.cpp
             PlayerOperations.cpp
             PlaylistOperations.cpp
             ProfilesOperations.cpp
@@ -38,6 +39,7 @@ set(HEADERS AddonsOperations.h
             JSONRPCUtils.h
             JSONServiceDescription.h
             JSONUtils.h
+            PlaybackModes.h
             PlayerOperations.h
             PlaylistOperations.h
             ProfilesOperations.h
