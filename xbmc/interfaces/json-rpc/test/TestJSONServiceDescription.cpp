@@ -423,6 +423,44 @@ TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
                                                   StubMethod));
 }
 
+TEST_F(TestJSONServiceDescription, SchemaWithoutATypeAcceptsAnyValue)
+{
+  // In 2020-12 an omitted "type" constrains nothing. draft-03 spelled that "any", so the
+  // migrated schema has to be able to leave the keyword out.
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Any": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "schema": { "default": null } } ],
+    "returns": {}
+  }})",
+                                                 StubMethod));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": "a string"})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": "a string" })"), output);
+
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": 42})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": 42 })"), output);
+
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": {"nested": [1, 2]}})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": { "nested": [1, 2] } })"), output);
+
+  // Omitting it altogether falls back to the declared default
+  EXPECT_EQ(OK, Call("Test.Any", "{}", output));
+  ExpectVariantEq(ParseJson(R"({ "data": null })"), output);
+}
+
+TEST_F(TestJSONServiceDescription, SchemaWithAMalformedTypeStillFailsParse)
+{
+  // Absent is not the same as nonsense: a "type" that is neither a name nor a list of names
+  // is a broken schema and must not be read as "any".
+  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.BadType": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "schema": { "type": 5 } } ],
+    "returns": "string"
+  }})",
+                                                  StubMethod));
+}
+
 TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(
