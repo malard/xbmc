@@ -362,6 +362,9 @@ class SiteBuilder:
             if "default" in prop:
                 default = f"<code>{esc(dumps(prop['default']))}</code>"
             description = esc(prop.get("description", ""))
+            if prop.get("deprecated"):
+                description = ('<span class="badge warn">deprecated</span> '
+                               + description)
             rows.append(
                 "<tr>"
                 f"<td><code>{esc(name)}</code></td>"
@@ -535,8 +538,10 @@ class SiteBuilder:
             f"<p>{esc(method['description'])}</p>",
         ]
         if method.get("deprecated"):
-            parts.append(f'<p class="deprecated"><strong>Deprecated.</strong> '
-                         f"{esc(method['deprecated'])}</p>")
+            parts.append('<p class="deprecated"><strong>Deprecated.</strong> '
+                         "Still served, but it will be removed in the next "
+                         "major version of the API. The description says what "
+                         "to use instead.</p>")
         badges = [f'<span class="badge">Permission: '
                   f"{esc(method['permission'])}</span>"]
         badges.extend(f'<span class="badge">Transport: {esc(label)}</span>'
