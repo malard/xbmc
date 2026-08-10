@@ -15,6 +15,7 @@
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
 #include "PlayListPlayer.h"
+#include "PlaybackModes.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
 #include "Util.h"
@@ -57,6 +58,7 @@
 #include "video/VideoDatabase.h"
 
 #include <map>
+#include <optional>
 #include <tuple>
 
 using namespace KODI;
@@ -1184,23 +1186,12 @@ JSONRPC_STATUS CPlayerOperations::SetShuffle(const std::string &method, ITranspo
         return FailedToExecute;
 
       PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
-      if (CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistid))
+      const std::optional<bool> requested{
+          ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistid))};
+      if (requested.has_value())
       {
-        if ((shuffle.isBoolean() && !shuffle.asBoolean()) ||
-            (shuffle.isString() && shuffle.asString() == "toggle"))
-        {
-          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
-                                                     static_cast<int>(playlistid), 0);
-        }
-      }
-      else
-      {
-        if ((shuffle.isBoolean() && shuffle.asBoolean()) ||
-            (shuffle.isString() && shuffle.asString() == "toggle"))
-        {
-          CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
-                                                     static_cast<int>(playlistid), 1);
-        }
+        CServiceBroker::GetAppMessenger()->SendMsg(
+            TMSG_PLAYLISTPLAYER_SHUFFLE, static_cast<int>(playlistid), *requested ? 1 : 0);
       }
       break;
     }
@@ -1213,18 +1204,15 @@ JSONRPC_STATUS CPlayerOperations::SetShuffle(const std::string &method, ITranspo
         return FailedToExecute;
       }
 
-      if (slideShow.IsShuffled())
-      {
-        if ((shuffle.isBoolean() && !shuffle.asBoolean()) ||
-            (shuffle.isString() && shuffle.asString() == "toggle"))
-          return FailedToExecute;
-      }
-      else
-      {
-        if ((shuffle.isBoolean() && shuffle.asBoolean()) ||
-            (shuffle.isString() && shuffle.asString() == "toggle"))
-          slideShow.Shuffle();
-      }
+      const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
+      if (!requested.has_value())
+        break;
+
+      // a running slideshow cannot be unshuffled
+      if (!*requested)
+        return FailedToExecute;
+
+      slideShow.Shuffle();
       break;
     }
     default:
@@ -1243,21 +1231,9 @@ JSONRPC_STATUS CPlayerOperations::SetRepeat(const std::string &method, ITranspor
       if (IsPVRChannel())
         return FailedToExecute;
 
-      PLAYLIST::RepeatState repeat = PLAYLIST::RepeatState::NONE;
       PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
-      if (parameterObject["repeat"].asString() == "cycle")
-      {
-        PLAYLIST::RepeatState repeatPrev =
-            CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistid);
-        if (repeatPrev == PLAYLIST::RepeatState::NONE)
-          repeat = PLAYLIST::RepeatState::ALL;
-        else if (repeatPrev == PLAYLIST::RepeatState::ALL)
-          repeat = PLAYLIST::RepeatState::ONE;
-        else
-          repeat = PLAYLIST::RepeatState::NONE;
-      }
-      else
-        repeat = ParseRepeatState(parameterObject["repeat"]);
+      const PLAYLIST::RepeatState repeat{ParseRepeatState(
+          parameterObject["repeat"], CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistid))};
 
       CServiceBroker::GetAppMessenger()->SendMsg(
           TMSG_PLAYLISTPLAYER_REPEAT, static_cast<int>(playlistid), static_cast<int>(repeat));
@@ -2265,19 +2241,6 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
     return InvalidParams;
 
   return OK;
-}
-
-PLAYLIST::RepeatState CPlayerOperations::ParseRepeatState(const CVariant& repeat)
-{
-  PLAYLIST::RepeatState state = PLAYLIST::RepeatState::NONE;
-  std::string strState = repeat.asString();
-
-  if (strState.compare("one") == 0)
-    state = PLAYLIST::RepeatState::ONE;
-  else if (strState.compare("all") == 0)
-    state = PLAYLIST::RepeatState::ALL;
-
-  return state;
 }
 
 bool CPlayerOperations::IsPVRChannel()
