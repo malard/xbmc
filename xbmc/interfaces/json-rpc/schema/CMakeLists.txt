@@ -4,10 +4,14 @@ set(JSON_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt
               ${CMAKE_CURRENT_SOURCE_DIR}/types.json
               ${CMAKE_CURRENT_SOURCE_DIR}/notifications.json)
 
+# The generator itself is a dependency of its output: what it emits is not
+# only a function of the schema files, so a change to the tool has to
+# regenerate the header too
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/ServiceDescription.h
                    COMMAND JsonSchemaBuilder::JsonSchemaBuilder ${JSON_SRCS}
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}
                    DEPENDS ${JSON_SRCS}
+                           $<TARGET_FILE:JsonSchemaBuilder::JsonSchemaBuilder>
                    COMMENT "Generating ServiceDescription.h")
 
 if(${CORE_SYSTEM_NAME} MATCHES "windows")
