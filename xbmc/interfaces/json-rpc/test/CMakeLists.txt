@@ -8,6 +8,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONServiceDescriptionIntrospect.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
+            TestVideoLibraryPlaybackState.cpp
             TestVideoLibrarySetSourceContent.cpp)
 
 core_add_test_library(jsonrpc_test)
