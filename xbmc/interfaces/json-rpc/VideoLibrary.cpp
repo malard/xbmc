@@ -1009,11 +1009,9 @@ JSONRPC_STATUS CVideoLibrary::Scan(const std::string &method, ITransportLayer *t
   std::string directory = parameterObject["directory"].asString();
   if (!directory.empty())
   {
-    // normalise to the form the library stores paths in, and refuse a directory
-    // that belongs to no video source instead of acknowledging a scan that can
-    // never find it
-    directory = CUtil::ValidatePath(directory);
-    URIUtils::AddSlashAtEnd(directory);
+    // refuse a directory that belongs to no video source instead of acknowledging
+    // a scan that can never find it
+    directory = CVideoDatabase::ToStoredPath(directory);
 
     CVideoDatabase videodatabase;
     if (!videodatabase.Open())
@@ -1058,7 +1056,8 @@ JSONRPC_STATUS CVideoLibrary::SetSourceContent(const std::string& method,
     return InternalError;
   }
 
-  // allAudio has no parameter, but SetScraperForPath() writes it in every branch.
+  // m_allExtAudio has no parameter, but SetScraperForPath() writes it in every branch, so
+  // the path's stored value has to be carried across.
   KODI::VIDEO::SScanSettings existing;
   videodatabase.GetScraperForPath(parsed.path, existing);
   parsed.settings.m_allExtAudio = existing.m_allExtAudio;
@@ -1066,8 +1065,8 @@ JSONRPC_STATUS CVideoLibrary::SetSourceContent(const std::string& method,
   ADDON::ScraperPtr scraper;
   if (parsed.content != ADDON::ContentType::NONE)
   {
-    // By type: a scraper serving more than one content type has an instance per type, and the
-    // binding is stored with the instance's own content.
+    // Looked up by type: a scraper serving more than one content type has an instance per
+    // type, and the binding is stored with the instance's own content.
     ADDON::AddonPtr addon;
     ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
     if (!addonMgr.GetAddon(parsed.scraperId, addon, ADDON::ScraperTypeFromContent(parsed.content),

@@ -372,6 +372,14 @@ bool CVideoDatabase::GetSubPaths(const std::string& basepath,
   return false;
 }
 
+std::string CVideoDatabase::ToStoredPath(const std::string& directory)
+{
+  std::string path{CUtil::ValidatePath(directory)};
+  URIUtils::AddSlashAtEnd(path);
+
+  return path;
+}
+
 bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
                                          const std::string& content,
                                          std::set<int>& paths)
@@ -393,13 +401,7 @@ bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
 
   std::set<std::string, std::less<>> contentPaths;
   if (byDirectory)
-  {
-    // normalise to the form the path table stores: platform separators and a
-    // trailing separator
-    std::string dir = CUtil::ValidatePath(directory);
-    URIUtils::AddSlashAtEnd(dir);
-    contentPaths.insert(dir);
-  }
+    contentPaths.insert(ToStoredPath(directory));
   else if (!GetPaths(contentPaths))
     return false;
 
