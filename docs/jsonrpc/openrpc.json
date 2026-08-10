@@ -17293,6 +17293,9 @@
           "language": {
             "type": "string"
           },
+          "codec": {
+            "type": "string"
+          },
           "isdefault": {
             "type": "boolean"
           },
@@ -17307,6 +17310,7 @@
           "index",
           "name",
           "language",
+          "codec",
           "isdefault",
           "isforced",
           "isimpaired"
@@ -17398,7 +17402,14 @@
             "type": "boolean"
           },
           "currentaudiostream": {
-            "$ref": "#/components/schemas/Player.Audio.Stream"
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Player.Audio.Stream"
+              }
+            ]
           },
           "audiostreams": {
             "type": "array",
@@ -17407,7 +17418,14 @@
             }
           },
           "currentvideostream": {
-            "$ref": "#/components/schemas/Player.Video.Stream"
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Player.Video.Stream"
+              }
+            ]
           },
           "videostreams": {
             "type": "array",
@@ -17419,7 +17437,14 @@
             "type": "boolean"
           },
           "currentsubtitle": {
-            "$ref": "#/components/schemas/Player.Subtitle"
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Player.Subtitle"
+              }
+            ]
           },
           "subtitles": {
             "type": "array",

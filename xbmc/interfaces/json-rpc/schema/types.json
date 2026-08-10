@@ -785,6 +785,9 @@
       "language": {
         "type": "string"
       },
+      "codec": {
+        "type": "string"
+      },
       "isdefault": {
         "type": "boolean"
       },
@@ -799,6 +802,7 @@
       "index",
       "name",
       "language",
+      "codec",
       "isdefault",
       "isforced",
       "isimpaired"
@@ -890,7 +894,14 @@
         "type": "boolean"
       },
       "currentaudiostream": {
-        "$ref": "#/$defs/Player.Audio.Stream"
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Player.Audio.Stream"
+          }
+        ]
       },
       "audiostreams": {
         "type": "array",
@@ -899,7 +910,14 @@
         }
       },
       "currentvideostream": {
-        "$ref": "#/$defs/Player.Video.Stream"
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Player.Video.Stream"
+          }
+        ]
       },
       "videostreams": {
         "type": "array",
@@ -911,7 +929,14 @@
         "type": "boolean"
       },
       "currentsubtitle": {
-        "$ref": "#/$defs/Player.Subtitle"
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Player.Subtitle"
+          }
+        ]
       },
       "subtitles": {
         "type": "array",
