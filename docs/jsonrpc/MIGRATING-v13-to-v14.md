@@ -126,8 +126,9 @@ unconditionally will now fault on `null`.
 
 ## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are deprecated
 
-They still work and are the same implementation. They will be **removed in
-Kodi 23, API version 15**.
+They still work and are the same implementation, but **everything deprecated
+in 14 is removed in 15**, so this is work to do before the next major version
+rather than something to revisit later.
 
 ```diff
 - {"method": "XBMC.GetInfoLabels", "params": {"labels": ["System.Time"]}}
@@ -181,8 +182,27 @@ same schema and gated in CI so it cannot drift.
 
 ## 7. `seasonnum` and `episodenum` on a PVR broadcast are deprecated
 
-Superseded by `season` and `episode`. The old names still work. Nothing has
-been announced about when they go.
+Superseded by `season` and `episode`. The old names still work, and go in 15
+along with everything else deprecated here.
+
+They have carried "Deprecated" in their description since 13.6.0, but only in
+prose, and 13.6.0 never reached a stable release — so if you are coming from
+Kodi 21 this is the first you will have seen of it. They now carry the
+`deprecated` annotation, which means you can find them from
+`JSONRPC.Introspect` or `openrpc.json` rather than by reading descriptions.
+
+## Finding the rest
+
+Anything deprecated is marked `"deprecated": true` on its method or its
+schema, so you do not have to take this document's word for the list:
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "JSONRPC.Introspect",
+ "params": {"getdescriptions": false}}
+```
+
+The flag is reported even with descriptions suppressed. `openrpc.json` carries
+the same flag for offline tooling.
 
 ---
 

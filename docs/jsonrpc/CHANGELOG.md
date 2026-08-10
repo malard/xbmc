@@ -44,13 +44,23 @@ the additions below and none of the breaks.
 
 ### Deprecated
 
+**Everything deprecated in 14 is removed in 15.** Nothing on this list will
+outlive this major version, so treat it as work to do before the next one
+rather than something to revisit later.
+
+Anything deprecated carries `"deprecated": true` — the annotation JSON Schema
+2020-12 defines and OpenRPC uses — on its method or its schema. It is reported
+by `JSONRPC.Introspect` even when a client asks for no descriptions, and
+appears in `openrpc.json`. The description says what to use instead. The
+schema never says *when* something goes; that is here.
+
 - `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans`, superseded by
   `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`. The old names still work and
-  are served by the same implementation. They will be removed in Kodi 23,
-  API version 15. A deprecated method carries a `deprecated` note in
-  `JSONRPC.Introspect` and a `deprecated` flag in `openrpc.json`.
+  are served by the same implementation.
 - `seasonnum` and `episodenum` on `PVR.Details.Broadcast`, superseded by
-  `season` and `episode`.
+  `season` and `episode`. These were deprecated in 13.6.0 in prose only, so
+  they never reached a stable release marked as such; 14 is the first version
+  in which a client can discover it.
 
 ### Added
 

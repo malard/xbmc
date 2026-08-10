@@ -8156,8 +8156,8 @@
   },
   "XBMC.GetInfoLabels": {
     "type": "method",
-    "description": "Retrieve info labels about Kodi and the system",
-    "deprecated": "Use GUI.GetInfoLabels instead. Removed in Kodi 23, JSON-RPC API version 15.",
+    "description": "Retrieve info labels about Kodi and the system. Use GUI.GetInfoLabels instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "ReadData",
     "params": [
@@ -8184,8 +8184,8 @@
   },
   "XBMC.GetInfoBooleans": {
     "type": "method",
-    "description": "Retrieve info booleans about Kodi and the system",
-    "deprecated": "Use GUI.GetInfoBooleans instead. Removed in Kodi 23, JSON-RPC API version 15.",
+    "description": "Retrieve info booleans about Kodi and the system. Use GUI.GetInfoBooleans instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "ReadData",
     "params": [

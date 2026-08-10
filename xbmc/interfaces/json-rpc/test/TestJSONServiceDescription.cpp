@@ -474,7 +474,7 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
     "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "deprecated": "Use Test.New instead. Removed in a later version.",
+    "deprecated": true,
     "params": [],
     "returns": "string"
   }})",
@@ -489,8 +489,7 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
   CVariant result;
   ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
 
-  ExpectVariantEq(CVariant("Use Test.New instead. Removed in a later version."),
-                  result["methods"]["Test.Old"]["deprecated"]);
+  ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
   EXPECT_FALSE(result["methods"]["Test.New"].isMember("deprecated"));
 }
 
@@ -500,7 +499,7 @@ TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppresse
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
     "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "deprecated": "Use Test.New instead.",
+    "deprecated": true,
     "params": [],
     "returns": "string"
   }})",
@@ -511,7 +510,7 @@ TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppresse
             CJSONServiceDescription::Print(result, &m_transport, &m_client, false, true, false));
 
   EXPECT_FALSE(result["methods"]["Test.Old"].isMember("description"));
-  ExpectVariantEq(CVariant("Use Test.New instead."), result["methods"]["Test.Old"]["deprecated"]);
+  ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
 }
 
 //! \brief A method with no "deprecated" key must not grow an empty one
@@ -528,4 +527,46 @@ TEST_F(TestJSONServiceDescription, AMethodIsNotDeprecatedByDefault)
   ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
 
   EXPECT_FALSE(result["methods"]["Test.Plain"].isMember("deprecated"));
+}
+
+//! \brief 2020-12 allows the annotation on any schema, so a single property of a type can
+//! carry it without the whole type being deprecated
+TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {
+    "type": "object",
+    "properties": {
+      "old": { "type": "integer", "deprecated": true, "description": "Use new instead" },
+      "new": { "type": "integer" }
+    }
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  const CVariant& properties = result["types"]["Dep.Thing"]["properties"];
+  ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
+  EXPECT_FALSE(properties["new"].isMember("deprecated"));
+}
+
+//! \brief The annotation is a fact about the contract, so it outlives the documentation a
+//! client asked not to be sent
+TEST_F(TestJSONServiceDescription, ADeprecatedPropertySurvivesDescriptionsBeingSuppressed)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {
+    "type": "object",
+    "properties": {
+      "old": { "type": "integer", "deprecated": true, "description": "Use new instead" }
+    }
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  CVariant result;
+  ASSERT_EQ(OK,
+            CJSONServiceDescription::Print(result, &m_transport, &m_client, false, true, false));
+
+  const CVariant& property = result["types"]["Dep.Thing"]["properties"]["old"];
+  ExpectVariantEq(CVariant(true), property["deprecated"]);
+  EXPECT_FALSE(property.isMember("description"));
 }

@@ -15578,7 +15578,7 @@
     },
     {
       "name": "XBMC.GetInfoLabels",
-      "summary": "Retrieve info labels about Kodi and the system",
+      "summary": "Retrieve info labels about Kodi and the system. Use GUI.GetInfoLabels instead.",
       "tags": [
         {
           "name": "XBMC"
@@ -15643,12 +15643,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-transport": "Response",
-      "deprecated": true,
-      "description": "Use GUI.GetInfoLabels instead. Removed in Kodi 23, JSON-RPC API version 15."
+      "deprecated": true
     },
     {
       "name": "XBMC.GetInfoBooleans",
-      "summary": "Retrieve info booleans about Kodi and the system",
+      "summary": "Retrieve info booleans about Kodi and the system. Use GUI.GetInfoBooleans instead.",
       "tags": [
         {
           "name": "XBMC"
@@ -15713,8 +15712,7 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-transport": "Response",
-      "deprecated": true,
-      "description": "Use GUI.GetInfoBooleans instead. Removed in Kodi 23, JSON-RPC API version 15."
+      "deprecated": true
     },
     {
       "name": "Favourites.GetFavourites",
@@ -19611,7 +19609,8 @@
           },
           "episodenum": {
             "type": "integer",
-            "description": "Deprecated - Use episode"
+            "deprecated": true,
+            "description": "Use episode instead"
           },
           "episodepart": {
             "type": "integer"
@@ -19693,7 +19692,8 @@
           },
           "seasonnum": {
             "type": "integer",
-            "description": "Deprecated - Use season"
+            "deprecated": true,
+            "description": "Use season instead"
           }
         },
         "required": [
