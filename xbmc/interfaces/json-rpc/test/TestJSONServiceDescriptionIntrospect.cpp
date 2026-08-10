@@ -89,3 +89,16 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
     dump << ToJson(result);
   }
 }
+
+//! \brief The header of an Introspect answer identifies the API, and Kodi has not been called
+//! XBMC since 2014
+TEST_F(TestJSONServiceDescriptionIntrospect, TheServiceHeaderIsNotBranded)
+{
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  EXPECT_EQ(std::string::npos, result["id"].asString().find("xbmc"))
+      << "service id: " << result["id"].asString();
+  EXPECT_EQ(std::string::npos, result["description"].asString().find("XBMC"))
+      << "service description: " << result["description"].asString();
+}
