@@ -2978,7 +2978,8 @@
       },
       "episodenum": {
         "type": "integer",
-        "description": "Deprecated - Use episode"
+        "deprecated": true,
+        "description": "Use episode instead"
       },
       "episodepart": {
         "type": "integer"
@@ -3060,7 +3061,8 @@
       },
       "seasonnum": {
         "type": "integer",
-        "description": "Deprecated - Use season"
+        "deprecated": true,
+        "description": "Use season instead"
       }
     },
     "required": [

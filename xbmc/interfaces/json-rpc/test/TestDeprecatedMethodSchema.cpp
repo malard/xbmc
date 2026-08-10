@@ -14,6 +14,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -23,35 +24,44 @@ namespace
 {
 
 /*!
- \brief The methods of the shipped service description, by name
+ \brief The definitions of the shipped service description, by name
 
- Read out of what actually ships rather than restated here, so that a method
- which never reaches the schema fails rather than passes.
+ Read out of what actually ships rather than restated here, so that a
+ definition which never reaches the schema fails rather than passes.
  */
-std::map<std::string, CVariant> ShippedMethods()
+std::map<std::string, CVariant> ShippedDefinitions(const char* const entries[], size_t count)
 {
-  std::map<std::string, CVariant> methods;
+  std::map<std::string, CVariant> definitions;
 
-  for (const char* const entry : JSONRPC_SERVICE_METHODS)
+  for (size_t index = 0; index < count; index++)
   {
     // Each entry is one definition without its enclosing braces
     CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
+    if (!CJSONVariantParser::Parse("{" + std::string(entries[index]) + "}", parsed))
       continue;
 
     for (auto member = parsed.begin_map(); member != parsed.end_map(); ++member)
-      methods.emplace(member->first, member->second);
+      definitions.emplace(member->first, member->second);
   }
 
-  return methods;
+  return definitions;
+}
+
+std::map<std::string, CVariant> ShippedMethods()
+{
+  return ShippedDefinitions(JSONRPC_SERVICE_METHODS, std::size(JSONRPC_SERVICE_METHODS));
+}
+
+std::map<std::string, CVariant> ShippedTypes()
+{
+  return ShippedDefinitions(JSONRPC_SERVICE_TYPES, std::size(JSONRPC_SERVICE_TYPES));
 }
 
 /*!
- \brief What a deprecated method is superseded by, and what it must agree with
+ \brief What a deprecated definition is superseded by
 
- A caller moved off the deprecated name has to land on something that takes
- the same request and gives the same answer, or the note is telling them to
- break their client.
+ A caller moved off the deprecated name has to land on something that exists,
+ or the schema is telling them to break their client.
  */
 struct Supersession
 {
@@ -59,53 +69,114 @@ struct Supersession
   const char* replacement;
 };
 
-constexpr std::array<Supersession, 2> SUPERSESSIONS{{
+constexpr std::array<Supersession, 2> DEPRECATED_METHODS{{
     {"XBMC.GetInfoLabels", "GUI.GetInfoLabels"},
     {"XBMC.GetInfoBooleans", "GUI.GetInfoBooleans"},
 }};
 
+//! \brief Deprecated properties, as type name, property, and what replaces it
+struct DeprecatedProperty
+{
+  const char* type;
+  const char* property;
+  const char* replacement;
+};
+
+constexpr std::array<DeprecatedProperty, 2> DEPRECATED_PROPERTIES{{
+    {"PVR.Details.Broadcast", "seasonnum", "season"},
+    {"PVR.Details.Broadcast", "episodenum", "episode"},
+}};
+
+//! \brief Every deprecated definition the schema declares, as "name" or "Type.property"
+std::vector<std::string> DeclaredDeprecations()
+{
+  std::vector<std::string> found;
+
+  for (const auto& [name, method] : ShippedMethods())
+  {
+    if (method["deprecated"].asBoolean(false))
+      found.push_back(name);
+  }
+
+  for (const auto& [name, type] : ShippedTypes())
+  {
+    const CVariant& properties = type["properties"];
+    for (auto property = properties.begin_map(); property != properties.end_map(); ++property)
+    {
+      if (property->second["deprecated"].asBoolean(false))
+        found.push_back(name + "." + property->first);
+    }
+  }
+
+  return found;
+}
+
 } // unnamed namespace
 
 /*!
- The deprecation note is the only warning a client gets, and it is served
- through JSONRPC.Introspect rather than written in a release note, so it has to
- name the replacement it tells the caller to move to.
+ The annotation is the only warning a client gets on the wire, so anything
+ deprecated has to be listed here as well - which is what makes the two tests
+ below cover the whole schema rather than whatever they happen to name.
  */
-TEST(TestDeprecatedMethodSchema, EveryDeprecatedMethodNamesAReplacementThatExists)
+TEST(TestDeprecatedMethodSchema, EveryDeprecationIsAccountedFor)
+{
+  std::vector<std::string> expected;
+  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+    expected.emplace_back(deprecated);
+  for (const auto& [type, property, replacement] : DEPRECATED_PROPERTIES)
+    expected.emplace_back(std::string(type) + "." + property);
+
+  std::vector<std::string> declared{DeclaredDeprecations()};
+
+  std::sort(expected.begin(), expected.end());
+  std::sort(declared.begin(), declared.end());
+  EXPECT_EQ(expected, declared);
+}
+
+TEST(TestDeprecatedMethodSchema, ADeprecatedMethodNamesAReplacementThatExists)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
-  ASSERT_FALSE(methods.empty());
 
-  for (const auto& [name, method] : methods)
+  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
   {
-    if (!method.isMember("deprecated"))
-      continue;
+    ASSERT_TRUE(methods.contains(deprecated)) << deprecated;
+    EXPECT_TRUE(methods.contains(replacement)) << replacement << " does not exist";
 
-    const std::string note{method["deprecated"].asString()};
-    EXPECT_FALSE(note.empty()) << name << " is deprecated without saying anything";
+    const std::string description{methods.at(deprecated)["description"].asString()};
+    EXPECT_NE(std::string::npos, description.find(replacement))
+        << deprecated << " does not name " << replacement << " in its description";
+  }
+}
 
-    const auto supersession = std::find_if(SUPERSESSIONS.begin(), SUPERSESSIONS.end(),
-                                           [&name = name](const Supersession& entry)
-                                           { return name == entry.deprecated; });
-    ASSERT_NE(SUPERSESSIONS.end(), supersession)
-        << name << " is deprecated but this test does not know what supersedes it";
+TEST(TestDeprecatedMethodSchema, ADeprecatedPropertyNamesAReplacementThatExists)
+{
+  const std::map<std::string, CVariant> types{ShippedTypes()};
 
-    EXPECT_NE(std::string::npos, note.find(supersession->replacement))
-        << name << " does not name " << supersession->replacement << " in its deprecation note";
-    EXPECT_TRUE(methods.contains(supersession->replacement))
-        << supersession->replacement << " does not exist";
+  for (const auto& [typeName, property, replacement] : DEPRECATED_PROPERTIES)
+  {
+    ASSERT_TRUE(types.contains(typeName)) << typeName;
+    const CVariant& properties = types.at(typeName)["properties"];
+
+    ASSERT_TRUE(properties.isMember(property)) << property;
+    EXPECT_TRUE(properties.isMember(replacement))
+        << replacement << " does not exist on " << typeName;
+
+    const std::string description{properties[property]["description"].asString()};
+    EXPECT_NE(std::string::npos, description.find(replacement))
+        << property << " does not name " << replacement << " in its description";
   }
 }
 
 /*!
  The two are the same implementation under two names, so a client that follows
- the note must not find the request or the answer has changed underneath it.
+ the description must not find the request or the answer has changed underneath
+ it.
  */
 TEST(TestDeprecatedMethodSchema, ADeprecatedMethodAgreesWithItsReplacement)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
 
-  for (const auto& [deprecated, replacement] : SUPERSESSIONS)
+  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
   {
     ASSERT_TRUE(methods.contains(deprecated)) << deprecated;
     ASSERT_TRUE(methods.contains(replacement)) << replacement;
@@ -123,16 +194,44 @@ TEST(TestDeprecatedMethodSchema, ADeprecatedMethodAgreesWithItsReplacement)
 }
 
 /*!
- The replacement is the name callers are being sent to, so deprecating it as
- well would leave the note pointing at a dead end.
+ The replacement is what callers are being sent to, so deprecating it as well
+ would leave the schema pointing at a dead end.
  */
 TEST(TestDeprecatedMethodSchema, AReplacementIsNotItselfDeprecated)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
+  const std::map<std::string, CVariant> types{ShippedTypes()};
 
-  for (const auto& [deprecated, replacement] : SUPERSESSIONS)
+  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
   {
     ASSERT_TRUE(methods.contains(replacement)) << replacement;
-    EXPECT_FALSE(methods.at(replacement).isMember("deprecated")) << replacement;
+    EXPECT_FALSE(methods.at(replacement)["deprecated"].asBoolean(false)) << replacement;
+  }
+
+  for (const auto& [typeName, property, replacement] : DEPRECATED_PROPERTIES)
+  {
+    ASSERT_TRUE(types.contains(typeName)) << typeName;
+    const CVariant& properties = types.at(typeName)["properties"];
+    EXPECT_FALSE(properties[replacement]["deprecated"].asBoolean(false)) << replacement;
+  }
+}
+
+/*!
+ When something is removed is a release decision that gets revised; the schema
+ is the contract a client reads over the wire. Naming a version here would put
+ a date in the one place it cannot be changed without an API change, so the
+ removal schedule lives in the API documentation instead.
+ */
+TEST(TestDeprecatedMethodSchema, TheSchemaDoesNotDateItsOwnRemovals)
+{
+  const std::map<std::string, CVariant> methods{ShippedMethods()};
+
+  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  {
+    const std::string description{methods.at(deprecated)["description"].asString()};
+    EXPECT_EQ(std::string::npos, description.find("Kodi 2"))
+        << deprecated << " names a Kodi version in its description";
+    EXPECT_EQ(std::string::npos, description.find("version 1"))
+        << deprecated << " names an API version in its description";
   }
 }

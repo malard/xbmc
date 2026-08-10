@@ -358,6 +358,10 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
   if (!hasReference || (value.isMember("description") && value["description"].isString()))
     description = GetString(value["description"], "");
 
+  // A reference carries the deprecation of what it points at unless it says
+  // otherwise, so that deprecating a type deprecates every use of it
+  deprecated = value["deprecated"].asBoolean(deprecated);
+
   if (hasReference)
   {
     // If there is a specific default value, read it
@@ -1002,6 +1006,11 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
   if (printDescriptions && !description.empty())
     output["description"] = description;
 
+  // As for a method, this is a fact about the contract rather than
+  // documentation, so suppressing descriptions does not suppress it
+  if (deprecated)
+    output["deprecated"] = true;
+
   // Requiredness is carried by the "required" array of the containing object
   // schema or the containing content descriptor, never by the schema itself
   if (printDefault && optional && type != ObjectValue && type != ArrayValue)
@@ -1235,7 +1244,7 @@ bool JsonRpcMethod::Parse(const CVariant &value)
     permission = StringToPermission(value.isMember("permission") ? value["permission"].asString() : "");
 
   description = GetString(value["description"], "");
-  deprecated = GetString(value["deprecated"], "");
+  deprecated = value["deprecated"].asBoolean(false);
 
   // Check whether there are parameters defined
   if (value.isMember("params") && value["params"].isArray())
@@ -1872,8 +1881,8 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     // Reported even when descriptions are suppressed: a client that trims the
     // documentation out of the answer is not asking to be kept in the dark about
     // a method it will have to stop calling
-    if (!methodIterator->second.deprecated.empty())
-      currentMethod["deprecated"] = methodIterator->second.deprecated;
+    if (methodIterator->second.deprecated)
+      currentMethod["deprecated"] = true;
     if (printMetadata)
     {
       CVariant permissions(CVariant::VariantTypeArray);
