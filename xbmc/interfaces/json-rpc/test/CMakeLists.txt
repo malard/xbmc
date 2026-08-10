@@ -4,6 +4,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
+            TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestVideoLibrarySetSourceContent.cpp)
 
