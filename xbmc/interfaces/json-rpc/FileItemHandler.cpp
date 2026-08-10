@@ -330,8 +330,8 @@ void CFileItemHandler::HandleFileItem(const char* ID,
                                       bool append /* = true */,
                                       CThumbLoader* thumbLoader /* = NULL */)
 {
-  HandleFileItem(ID, allowFile, resultname, item, parameterObject, RequestedFields(parameterObject),
-                 result, append, thumbLoader);
+  HandleFileItem(ID, allowFile, resultname, item, parameterObject, FieldNames(validFields), result,
+                 append, thumbLoader);
 }
 
 void CFileItemHandler::HandleFileItem(const char* ID,
