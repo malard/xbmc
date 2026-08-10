@@ -375,12 +375,12 @@
   },
   "Playlist.AddResult": {
     "type": "object",
-    "description": "The outcome of adding or inserting items. An item that cannot be resolved is skipped rather than refusing the whole call, so a client that ignores \"unresolved\" will hold a shorter playlist than it asked for without being told.",
+    "description": "The outcome of adding or inserting items. Items that could not be resolved are skipped and named in \"unresolved\".",
     "properties": {
       "added": {
         "type": "integer",
         "minimum": 1,
-        "description": "How many items were added. Never zero: a call that adds nothing returns an error instead."
+        "description": "How many items were added. Never zero; a call that adds nothing returns an error."
       },
       "unresolved": {
         "type": "array",
@@ -3131,7 +3131,7 @@
       },
       "channeluid": {
         "type": "integer",
-        "description": "The channel's own identifier on the client that provides it, as also reported by channeluid on a broadcast and a recording. Unrelated to uniqueid on a library item, which is a set of scraper identifiers."
+        "description": "The channel's own identifier on the client that provides it. A broadcast and a recording report the same value as channeluid. Unrelated to uniqueid on a library item, which is a set of scraper identifiers."
       },
       "icon": {
         "type": "string",
