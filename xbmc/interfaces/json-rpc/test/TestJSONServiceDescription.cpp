@@ -469,3 +469,63 @@ TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
   })"),
                   param);
 }
+
+TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "deprecated": "Use Test.New instead. Removed in a later version.",
+    "params": [],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.New": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  ExpectVariantEq(CVariant("Use Test.New instead. Removed in a later version."),
+                  result["methods"]["Test.Old"]["deprecated"]);
+  EXPECT_FALSE(result["methods"]["Test.New"].isMember("deprecated"));
+}
+
+//! \brief A client that asks for no descriptions is trimming documentation, not asking to be
+//! left unaware that a method it calls is going away
+TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppressed)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "deprecated": "Use Test.New instead.",
+    "params": [],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant result;
+  ASSERT_EQ(OK,
+            CJSONServiceDescription::Print(result, &m_transport, &m_client, false, true, false));
+
+  EXPECT_FALSE(result["methods"]["Test.Old"].isMember("description"));
+  ExpectVariantEq(CVariant("Use Test.New instead."), result["methods"]["Test.Old"]["deprecated"]);
+}
+
+//! \brief A method with no "deprecated" key must not grow an empty one
+TEST_F(TestJSONServiceDescription, AMethodIsNotDeprecatedByDefault)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Plain": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  EXPECT_FALSE(result["methods"]["Test.Plain"].isMember("deprecated"));
+}
