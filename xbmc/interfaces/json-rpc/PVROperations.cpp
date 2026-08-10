@@ -275,15 +275,7 @@ void CPVROperations::FillProviderDetails(const std::shared_ptr<const CPVRProvide
   object["providerid"] = provider->GetDatabaseId();
   object["label"] = provider->GetName();
 
-  std::set<std::string> fields;
-  if (parameterObject.isMember("properties") && parameterObject["properties"].isArray())
-  {
-    for (CVariant::const_iterator_array field = parameterObject["properties"].begin_array();
-         field != parameterObject["properties"].end_array(); ++field)
-    {
-      fields.insert(field->asString());
-    }
-  }
+  std::set<std::string> fields{RequestedFields(parameterObject)};
 
   // A provider is not backed by a file item, so the serialized values are all there is to
   // answer from.
