@@ -145,6 +145,8 @@ schema never says *when* something goes; that is here.
 - `Player.GetItem` reports AirPlay cover art, and live stream metadata for a
   playing PVR radio channel.
 - `file` agrees with `filetype` for a movie with versions or extras.
+- `Files.GetFileDetails` reports the `file` and `filetype` its result type
+  requires.
 - `VideoLibrary.SetTVShowDetails` applies `playcount` and `lastplayed` to the
   show's episodes.
 - `VideoLibrary.Clean` honours its `directory` parameter.
