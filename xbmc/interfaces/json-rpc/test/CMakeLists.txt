@@ -1,4 +1,5 @@
 set(SOURCES TestDeprecatedMethodSchema.cpp
+            TestFileItemHandler.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
