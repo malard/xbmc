@@ -41,6 +41,9 @@ from pathlib import Path
 
 SCHEMA_FILES = ("methods.json", "types.json", "notifications.json")
 REF_PREFIX = "#/$defs/"
+SIMPLE_TYPES = frozenset(
+    ("array", "boolean", "integer", "null", "number", "object", "string")
+)
 PARAM_WRAPPER_KEYS = ("name", "required", "description")
 
 
@@ -640,14 +643,27 @@ def lint_schema(data, path, problems):
         problems.append(f"{path}: non-standard 'enums'")
     if "divisibleBy" in data:
         problems.append(f"{path}: draft-03 'divisibleBy'")
-    if isinstance(data.get("required"), bool):
-        problems.append(f"{path}: draft-03 boolean 'required'")
+    if "required" in data and not isinstance(data["required"], list):
+        # Inside a schema, 2020-12 spells requiredness as an array of property names on the
+        # containing object. draft-03 put a flag on the property itself, sometimes as the
+        # string "true" rather than a boolean, and the C++ parser reads only the array form -
+        # so a leftover flag is silently doing nothing.
+        problems.append(f"{path}: 'required' is {data['required']!r}, not an array of "
+                        "property names - move it to the containing object")
     ref = data.get("$ref")
     if isinstance(ref, str) and not ref.startswith(REF_PREFIX):
         problems.append(f"{path}: unqualified $ref {ref!r}")
     type_value = data.get("type")
     if isinstance(type_value, list) and any(isinstance(m, dict) for m in type_value):
         problems.append(f"{path}: draft-03 union type array")
+    if isinstance(type_value, str) and type_value not in SIMPLE_TYPES:
+        # Anything else is either draft-03 ("any", or a defined type named in "type" instead
+        # of referenced) or a misspelling. All three reach openrpc.json verbatim, where the
+        # OpenRPC meta-schema rejects them, and the C++ parser degrades them to AnyValue, so
+        # the field silently stops being validated.
+        problems.append(f"{path}: 'type' is {type_value!r}, not a JSON Schema type - "
+                        "omit it for an unconstrained schema, $ref a defined type, "
+                        "or fix the spelling")
     for key in ("items", "additionalProperties"):
         if isinstance(data.get(key), dict):
             lint_schema(data[key], f"{path}/{key}", problems)

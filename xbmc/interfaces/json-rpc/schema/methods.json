@@ -254,12 +254,11 @@
       {
         "name": "data",
         "schema": {
-          "type": "any",
           "default": null
         }
       }
     ],
-    "returns": "any"
+    "returns": {}
   },
   "Player.Open": {
     "type": "method",
@@ -1671,7 +1670,6 @@
           ]
         },
         "details": {
-          "type": "any",
           "description": "Transport specific details on how/from where to download the given file"
         },
         "mode": {
@@ -1707,9 +1705,7 @@
         }
       }
     ],
-    "returns": {
-      "type": "any"
-    }
+    "returns": {}
   },
   "Files.GetDirectory": {
     "type": "method",

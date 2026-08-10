@@ -544,7 +544,6 @@
         {
           "name": "data",
           "schema": {
-            "type": "any",
             "default": null
           }
         }
@@ -3556,7 +3555,6 @@
               ]
             },
             "details": {
-              "type": "any",
               "description": "Transport specific details on how/from where to download the given file"
             },
             "mode": {
@@ -3633,9 +3631,7 @@
       ],
       "result": {
         "name": "result",
-        "schema": {
-          "type": "any"
-        }
+        "schema": {}
       },
       "errors": [
         {
@@ -18486,16 +18482,16 @@
             "type": "string"
           },
           "bpm": {
-            "type": "Integer"
+            "type": "integer"
           },
           "samplerate": {
-            "type": "Integer"
+            "type": "integer"
           },
           "bitrate": {
-            "type": "Integer"
+            "type": "integer"
           },
           "channels": {
-            "type": "Integer"
+            "type": "integer"
           },
           "songvideourl": {
             "type": "string"
@@ -19026,7 +19022,7 @@
             "type": "integer"
           },
           "ratings": {
-            "type": "Video.Ratings"
+            "$ref": "#/components/schemas/Video.Ratings"
           },
           "premiered": {
             "type": "string"
@@ -19140,7 +19136,7 @@
             "type": "integer"
           },
           "ratings": {
-            "type": "Video.Ratings"
+            "$ref": "#/components/schemas/Video.Ratings"
           },
           "runtime": {
             "type": "integer",
@@ -19257,7 +19253,7 @@
             "$ref": "#/components/schemas/Library.Id"
           },
           "ratings": {
-            "type": "Video.Ratings"
+            "$ref": "#/components/schemas/Video.Ratings"
           },
           "studio": {
             "$ref": "#/components/schemas/Array.String"
@@ -20149,8 +20145,7 @@
         "type": "object",
         "properties": {
           "textureid": {
-            "$ref": "#/components/schemas/Library.Id",
-            "required": "true"
+            "$ref": "#/components/schemas/Library.Id"
           },
           "url": {
             "type": "string",
@@ -20178,7 +20173,10 @@
             "type": "string",
             "description": "Last time texture existence was verified in library"
           }
-        }
+        },
+        "required": [
+          "textureid"
+        ]
       },
       "Profiles.Password": {
         "type": "object",
@@ -21001,7 +20999,6 @@
             "displayorchestra",
             "displaylyricist",
             "userrating",
-            "votes",
             "sortartist",
             "musicbrainzreleasegroupid",
             "mediapath",
@@ -21475,7 +21472,6 @@
           "muted",
           "name",
           "version",
-          "volume",
           "sorttokens",
           "language"
         ]
