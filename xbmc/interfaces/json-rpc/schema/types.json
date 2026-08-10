@@ -3043,7 +3043,7 @@
         "lastplayed",
         "broadcastnow",
         "broadcastnext",
-        "uniqueid",
+        "channeluid",
         "icon",
         "channelnumber",
         "subchannelnumber",
@@ -3088,8 +3088,9 @@
       "broadcastnext": {
         "$ref": "#/$defs/PVR.Details.Broadcast"
       },
-      "uniqueid": {
-        "type": "integer"
+      "channeluid": {
+        "type": "integer",
+        "description": "The channel's own identifier on the client that provides it, as also reported by channeluid on a broadcast and a recording. Unrelated to uniqueid on a library item, which is a set of scraper identifiers."
       },
       "icon": {
         "type": "string",
@@ -3113,7 +3114,7 @@
     },
     "required": [
       "channelid",
-      "uniqueid"
+      "channeluid"
     ]
   },
   "PVR.Details.ChannelGroup": {
