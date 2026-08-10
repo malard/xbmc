@@ -33,6 +33,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
+#include <string_view>
 
 using namespace JSONRPC;
 
@@ -43,6 +45,9 @@ CJSONServiceDescription::IncompleteSchemaDefinitionMap CJSONServiceDescription::
 
 namespace
 {
+//! \brief Where a reference to a global type points: the schema files keep them all here
+constexpr std::string_view DEFS_POINTER = "#/$defs/";
+
 /*!
  \brief Reduces a JSON schema reference to the identifier of a global type
 
@@ -51,11 +56,16 @@ namespace
  */
 std::string RefToTypeId(const std::string& reference)
 {
-  static const std::string prefix = "#/$defs/";
-  if (StringUtils::StartsWith(reference, prefix))
-    return reference.substr(prefix.size());
+  if (StringUtils::StartsWith(reference, DEFS_POINTER))
+    return reference.substr(DEFS_POINTER.size());
 
   return reference;
+}
+
+//! \brief Writes the reference by which the given global type is reached
+std::string TypeIdToRef(const std::string& typeId)
+{
+  return std::string(DEFS_POINTER) + typeId;
 }
 } // unnamed namespace
 
@@ -375,8 +385,8 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     return true;
   }
 
-  // A 2020-12 "allOf" of references is the composition this schema uses for
-  // extension: every member must be a reference to a registered type
+  // An "allOf" of references is the composition this schema uses for extension:
+  // every member must be a reference to a registered type
   if (value.isMember("allOf") && value["allOf"].isArray())
   {
     JSONSchemaType extendedType = AnyValue;
@@ -427,8 +437,8 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
   // not an extending type
   if (extends.empty())
   {
-    // A 2020-12 "anyOf" is a union type; the draft-03 spelling is an array
-    // of schemas under "type", handled by parseJSONSchemaType
+    // An "anyOf" is a union type. An array of bare type names under "type" is
+    // the weaker form of the same thing, handled by parseJSONSchemaType
     if (value.isMember("anyOf"))
     {
       if (!value["anyOf"].isArray())
@@ -496,8 +506,8 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       }
     }
 
-    // 2020-12 requiredness of properties: an array of property names on the
-    // object schema; the draft-03 spelling is a boolean on each property
+    // Requiredness of properties is an array of property names on the object
+    // schema, not a flag on each property
     if (value.isMember("required") && value["required"].isArray())
     {
       for (unsigned int requiredIndex = 0; requiredIndex < value["required"].size();
@@ -983,7 +993,7 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
     output["id"] = ID;
   else if (!ID.empty())
   {
-    output["$ref"] = "#/$defs/" + ID;
+    output["$ref"] = TypeIdToRef(ID);
     typeReference = true;
   }
 
@@ -1003,7 +1013,7 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
       for (unsigned int extendsIndex = 0; extendsIndex < extends.size(); extendsIndex++)
       {
         CVariant extendsOutput = CVariant(CVariant::VariantTypeObject);
-        extendsOutput["$ref"] = "#/$defs/" + extends.at(extendsIndex)->ID;
+        extendsOutput["$ref"] = TypeIdToRef(extends.at(extendsIndex)->ID);
         output["allOf"].append(extendsOutput);
       }
     }
@@ -1882,11 +1892,16 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
       param["name"] = parameter->name;
       if (!parameter->optional)
         param["required"] = true;
-      if (printDescriptions && !parameter->description.empty())
-        param["description"] = parameter->description;
 
       parameter->Print(false, true, printDescriptions, param["schema"]);
-      param["schema"].erase("description");
+
+      // the description describes the parameter, so it belongs to the descriptor
+      // rather than to the schema of the parameter's value
+      if (param["schema"].isMember("description"))
+      {
+        param["description"] = param["schema"]["description"];
+        param["schema"].erase("description");
+      }
 
       currentMethod["params"].append(param);
     }
