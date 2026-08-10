@@ -98,7 +98,7 @@ void CPVRChannel::Serialize(CVariant& value) const
   value["icon"] = IconPath();
   value["thumbnail"] = IconPath();
   value["channel"] = m_strChannelName;
-  value["uniqueid"] = m_iUniqueId;
+  value["channeluid"] = m_iUniqueId;
   CDateTime lastPlayed(m_iLastWatched);
   value["lastplayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDate() : "";
   value["dateadded"] = m_dateTimeAdded.IsValid() ? m_dateTimeAdded.GetAsDBDate() : "";
