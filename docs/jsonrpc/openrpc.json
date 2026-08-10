@@ -12601,6 +12601,155 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "PVR.GetProviders",
+      "summary": "Retrieves the providers of the enabled PVR clients",
+      "tags": [
+        {
+          "name": "PVR"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "properties",
+          "schema": {
+            "$ref": "#/components/schemas/PVR.Fields.Provider"
+          }
+        },
+        {
+          "name": "limits",
+          "schema": {
+            "$ref": "#/components/schemas/List.Limits"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "$ref": "#/components/schemas/List.LimitsReturned"
+            },
+            "providers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PVR.Details.Provider"
+              }
+            }
+          },
+          "required": [
+            "limits",
+            "providers"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "PVR.GetProviderDetails",
+      "summary": "Retrieves the details of a specific provider",
+      "tags": [
+        {
+          "name": "PVR"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "providerid",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        {
+          "name": "properties",
+          "schema": {
+            "$ref": "#/components/schemas/PVR.Fields.Provider"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "providerdetails": {
+              "$ref": "#/components/schemas/PVR.Details.Provider"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "PVR.GetBroadcasts",
       "summary": "Retrieves the program of a specific channel",
       "tags": [
@@ -19231,6 +19380,9 @@
             "hastimer",
             "isactive",
             "parentalrating",
+            "parentalratingcode",
+            "parentalratingicon",
+            "parentalratingsource",
             "wasactive",
             "thumbnail",
             "rating",
@@ -19314,11 +19466,22 @@
           "parentalrating": {
             "type": "integer"
           },
+          "parentalratingcode": {
+            "type": "string"
+          },
+          "parentalratingicon": {
+            "type": "string",
+            "description": "Image URL for the icon of this broadcast's parental rating, servable by the web server's /image/ endpoint. Empty when the rating has no icon."
+          },
+          "parentalratingsource": {
+            "type": "string"
+          },
           "wasactive": {
             "type": "boolean"
           },
           "thumbnail": {
-            "type": "string"
+            "type": "string",
+            "description": "Image URL for this broadcast's own artwork, servable by the web server's /image/ endpoint. Empty when the broadcast has no image."
           },
           "rating": {
             "type": "integer"
@@ -19425,7 +19588,8 @@
             "type": "boolean"
           },
           "thumbnail": {
-            "type": "string"
+            "type": "string",
+            "description": "Image URL for the channel's own logo, servable by the web server's /image/ endpoint. This is the channel's logo, never the currently airing broadcast's artwork - for that, read thumbnail from broadcastnow."
           },
           "lastplayed": {
             "type": "string"
@@ -19440,7 +19604,8 @@
             "type": "integer"
           },
           "icon": {
-            "type": "string"
+            "type": "string",
+            "description": "Image URL for the channel's own logo, servable by the web server's /image/ endpoint."
           },
           "channelnumber": {
             "type": "integer"
@@ -19560,6 +19725,72 @@
         },
         "required": [
           "clientid"
+        ]
+      },
+      "PVR.Provider.Type": {
+        "type": "string",
+        "enum": [
+          "unknown",
+          "addon",
+          "satellite",
+          "cable",
+          "aerial",
+          "iptv",
+          "other"
+        ]
+      },
+      "PVR.Fields.Provider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Item.Fields.Base"
+          }
+        ],
+        "items": {
+          "type": "string",
+          "enum": [
+            "clientid",
+            "providername",
+            "providertype",
+            "iconpath",
+            "countries",
+            "languages"
+          ]
+        }
+      },
+      "PVR.Details.Provider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Item.Details.Base"
+          }
+        ],
+        "properties": {
+          "providerid": {
+            "$ref": "#/components/schemas/Library.Id"
+          },
+          "clientid": {
+            "$ref": "#/components/schemas/Library.Id"
+          },
+          "providername": {
+            "type": "string"
+          },
+          "providertype": {
+            "$ref": "#/components/schemas/PVR.Provider.Type"
+          },
+          "iconpath": {
+            "type": "string",
+            "description": "Image URL for the provider's own icon, servable by the web server's /image/ endpoint."
+          },
+          "countries": {
+            "$ref": "#/components/schemas/Array.String",
+            "description": "ISO 3166 country codes this provider serves."
+          },
+          "languages": {
+            "$ref": "#/components/schemas/Array.String",
+            "description": "RFC 5646 language codes this provider broadcasts in."
+          }
+        },
+        "required": [
+          "providerid"
         ]
       },
       "PVR.TimerState": {
@@ -19742,6 +19973,10 @@
             "plot",
             "plotoutline",
             "genre",
+            "parentalrating",
+            "parentalratingcode",
+            "parentalratingicon",
+            "parentalratingsource",
             "playcount",
             "resume",
             "channel",
@@ -19787,6 +20022,19 @@
           "genre": {
             "type": "string"
           },
+          "parentalrating": {
+            "type": "integer"
+          },
+          "parentalratingcode": {
+            "type": "string"
+          },
+          "parentalratingicon": {
+            "type": "string",
+            "description": "Image URL for the icon of this recording's parental rating, servable by the web server's /image/ endpoint. Empty when the rating has no icon."
+          },
+          "parentalratingsource": {
+            "type": "string"
+          },
           "playcount": {
             "type": "integer"
           },
@@ -19809,7 +20057,8 @@
             "type": "integer"
           },
           "icon": {
-            "type": "string"
+            "type": "string",
+            "description": "Image URL for the recording's own icon, servable by the web server's /image/ endpoint."
           },
           "art": {
             "$ref": "#/components/schemas/Media.Artwork"
