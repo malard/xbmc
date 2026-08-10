@@ -80,6 +80,15 @@ namespace JSONRPC
     std::string description;
 
     /*!
+     \brief Whether the value still exists but should no longer be relied on
+
+     The "deprecated" annotation JSON Schema 2020-12 defines, which is valid on
+     any schema, so a single property of a type can carry it. The description
+     says what to use instead.
+     */
+    bool deprecated = false;
+
+    /*!
      \brief JSON schema type of the parameter's value
      */
     JSONSchemaType type = AnyValue;
@@ -231,14 +240,13 @@ namespace JSONRPC
      */
     std::string description;
     /*!
-     \brief What a caller should use instead, and from when, or empty if the
-     method is not deprecated
+     \brief Whether the method still works but should no longer be called
 
-     A deprecated method keeps working. The note is served through
-     JSONRPC.Introspect so that a client can find out it is on borrowed time
-     without anyone having to read a release note.
+     Reported through JSONRPC.Introspect and as OpenRPC's deprecated flag. The
+     description says what to use instead; when it is removed is a matter for
+     the API documentation rather than the wire.
      */
-    std::string deprecated;
+    bool deprecated = false;
     /*!
      \brief List of accepted parameters
      */
