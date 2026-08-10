@@ -67,6 +67,25 @@ namespace JSONRPC
 
   protected:
     /*!
+     \brief The property names in a list of properties
+
+     \param properties A "properties" array
+     \return Its members, empty when it is not an array
+     */
+    static std::set<std::string> FieldNames(const CVariant& properties)
+    {
+      std::set<std::string> fields;
+      if (properties.isArray())
+      {
+        for (CVariant::const_iterator_array field = properties.begin_array();
+             field != properties.end_array(); ++field)
+          fields.insert(field->asString());
+      }
+
+      return fields;
+    }
+
+    /*!
      \brief The property names a request asks to have filled in
 
      \param parameterObject The parameters of the call
@@ -74,15 +93,7 @@ namespace JSONRPC
      */
     static std::set<std::string> RequestedFields(const CVariant& parameterObject)
     {
-      std::set<std::string> fields;
-      if (parameterObject.isMember("properties") && parameterObject["properties"].isArray())
-      {
-        for (CVariant::const_iterator_array field = parameterObject["properties"].begin_array();
-             field != parameterObject["properties"].end_array(); ++field)
-          fields.insert(field->asString());
-      }
-
-      return fields;
+      return FieldNames(parameterObject["properties"]);
     }
 
     static void HandleLimits(const CVariant &parameterObject, CVariant &result, int size, int &start, int &end)

@@ -43,6 +43,19 @@ public:
 
     return result["files"][0];
   }
+
+  // the overload a handler reaches when the fields it wants are not the ones its caller asked
+  // for, as Files.GetFileDetails appends "file" and "filetype" to a copy of them
+  static CVariant HandleWithProperties(const std::shared_ptr<CFileItem>& item,
+                                       const CVariant& fields)
+  {
+    CThumbLoader thumbLoader;
+    CVariant result;
+    HandleFileItem("id", true, "files", item, CVariant{CVariant::VariantTypeObject}, fields, result,
+                   true, &thumbLoader);
+
+    return result["files"][0];
+  }
 };
 
 // A movie as CVideoDatabase::GetMoviesByWhere builds it: the path addresses the library item,
@@ -116,5 +129,17 @@ TEST(TestFileItemHandler, MovieWithVersionsNamesItsDefaultVersionWhereFiletypeIs
 {
   const CVariant object{CTestFileItemHandler::Handle(MakeMovieWithVersions(), {"file"})};
 
+  EXPECT_EQ(DEFAULT_VERSION, object["file"].asString());
+}
+
+TEST(TestFileItemHandler, FieldsComeFromTheListGivenRatherThanFromTheParameters)
+{
+  CVariant fields{CVariant::VariantTypeArray};
+  fields.push_back("file");
+  fields.push_back("filetype");
+
+  const CVariant object{CTestFileItemHandler::HandleWithProperties(MakeMovie(), fields)};
+
+  EXPECT_EQ("file", object["filetype"].asString());
   EXPECT_EQ(DEFAULT_VERSION, object["file"].asString());
 }
