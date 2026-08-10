@@ -23,6 +23,7 @@ Usage: python tools/jsonrpc/generate_site.py [--out DIR]
 import argparse
 import html
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -34,6 +35,12 @@ EXAMPLES_DIR = Path(__file__).resolve().parent / "examples"
 GITIGNORE_PATH = DOCS_DIR / ".gitignore"
 
 DEFS_PREFIX = "#/$defs/"
+
+#! Hand-written documents in docs/jsonrpc, rendered into the site as pages
+PROSE_DOCUMENTS = {
+    "MIGRATING-v13-to-v14.md": "Migrating from 13 to 14",
+    "CHANGELOG.md": "Changelog",
+}
 
 CONSTRAINT_KEYS = ("minimum", "maximum", "exclusiveMinimum",
                    "exclusiveMaximum", "minLength", "maxLength", "minItems",
@@ -51,6 +58,132 @@ def dumps(value):
 def pre_json(value):
     text = json.dumps(value, indent=2, ensure_ascii=False)
     return f"<pre><code>{esc(text)}</code></pre>"
+
+
+_MD_INLINE_CODE = re.compile(r"`([^`]+)`")
+_MD_BOLD = re.compile(r"\*\*([^*]+)\*\*")
+_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+def md_inline(text):
+    """Inline markdown: code spans, bold, links.
+
+    Code spans are lifted out first so their content is never read as
+    markup, but they are replaced by a placeholder rather than rendered in
+    place: bold and links have to see the whole line, or emphasis wrapping
+    a code span is left with its markers in two different pieces.
+    """
+    spans = []
+
+    def lift(match):
+        spans.append(match.group(1))
+        return f"\x00{len(spans) - 1}\x00"
+
+    lifted = _MD_INLINE_CODE.sub(lift, text)
+
+    rendered = esc(lifted)
+    rendered = _MD_BOLD.sub(r"<strong>\1</strong>", rendered)
+    rendered = _MD_LINK.sub(r'<a href="\2">\1</a>', rendered)
+
+    for index, span in enumerate(spans):
+        rendered = rendered.replace(f"\x00{index}\x00",
+                                    f"<code>{esc(span)}</code>")
+    return rendered
+
+
+def md_to_html(source, link_rewrite=None):
+    """Render the markdown subset the JSON-RPC documents use.
+
+    Headings, paragraphs, bullet lists, fenced code, tables, horizontal
+    rules and the inline forms above. Anything else is emitted as a
+    paragraph, which is the failure mode that loses the least.
+    """
+    if link_rewrite:
+        for before, after in link_rewrite.items():
+            source = source.replace(f"]({before})", f"]({after})")
+
+    parts = []
+    lines = source.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+
+        if line.startswith("```"):
+            index += 1
+            block = []
+            while index < len(lines) and not lines[index].startswith("```"):
+                block.append(lines[index])
+                index += 1
+            index += 1
+            parts.append(f"<pre><code>{esc(chr(10).join(block))}</code></pre>")
+            continue
+
+        if line.startswith("#"):
+            level = len(line) - len(line.lstrip("#"))
+            parts.append(f"<h{level}>{md_inline(line[level:].strip())}"
+                         f"</h{level}>")
+            index += 1
+            continue
+
+        if line.strip() in ("---", "***", "___"):
+            parts.append("<hr>")
+            index += 1
+            continue
+
+        if line.startswith("|"):
+            rows = []
+            while index < len(lines) and lines[index].startswith("|"):
+                rows.append(lines[index])
+                index += 1
+            parts.append(_md_table(rows))
+            continue
+
+        if line.lstrip().startswith("- "):
+            items = []
+            while index < len(lines) and (lines[index].lstrip().startswith("- ")
+                                          or (lines[index].startswith("  ")
+                                              and lines[index].strip()
+                                              and items)):
+                current = lines[index]
+                if current.lstrip().startswith("- "):
+                    items.append(current.lstrip()[2:])
+                else:
+                    # a wrapped continuation of the item above
+                    items[-1] += " " + current.strip()
+                index += 1
+            body = "".join(f"<li>{md_inline(item)}</li>" for item in items)
+            parts.append(f"<ul>{body}</ul>")
+            continue
+
+        if not line.strip():
+            index += 1
+            continue
+
+        paragraph = []
+        while index < len(lines) and lines[index].strip() \
+                and not lines[index].startswith(("#", "|", "```")) \
+                and not lines[index].lstrip().startswith("- "):
+            paragraph.append(lines[index].strip())
+            index += 1
+        parts.append(f"<p>{md_inline(' '.join(paragraph))}</p>")
+
+    return "".join(parts)
+
+
+def _md_table(rows):
+    cells = [[cell.strip() for cell in row.strip().strip("|").split("|")]
+             for row in rows]
+    # the second row of a markdown table is the alignment rule, not data
+    body = cells[2:] if len(cells) > 1 and set("-: |") >= set(rows[1]) else \
+        cells[1:]
+    head = "".join(f"<th>{md_inline(cell)}</th>" for cell in cells[0])
+    out = [f"<thead><tr>{head}</tr></thead><tbody>"]
+    for row in body:
+        out.append("<tr>"
+                   + "".join(f"<td>{md_inline(cell)}</td>" for cell in row)
+                   + "</tr>")
+    out.append("</tbody>")
+    return f'<div class="tablewrap"><table>{"".join(out)}</table></div>'
 
 
 def ref_name(schema):
@@ -536,6 +669,20 @@ class SiteBuilder:
         self.page(f"{self.vdir}/errors.html",
                   "Errors - Kodi JSON-RPC API", body)
 
+    def build_prose_page(self, source, title):
+        """Render a hand-written document from docs/jsonrpc into the site.
+
+        The markdown file is the source of truth: it is what a reviewer reads
+        in the pull request and what GitHub renders. Links between the two
+        documents are rewritten to the pages they become here.
+        """
+        text = (DOCS_DIR / source).read_text(encoding="utf-8")
+        rewrite = {name: name[:-len(".md")] + ".html"
+                   for name in PROSE_DOCUMENTS}
+        body = md_to_html(text, link_rewrite=rewrite)
+        self.page(f"{self.vdir}/{source[:-len('.md')]}.html",
+                  f"{title} - Kodi JSON-RPC API", body)
+
     def build_landing_page(self):
         v = self.vdir
         # Counted from the schema rather than stated, so that adding or
@@ -678,9 +825,9 @@ class SiteBuilder:
             "is not guaranteed to work unchanged. The migration guide lists "
             "every break and what to do about each.</p>",
             "<ul>"
-            f'<li><a href="{v}/MIGRATING-v13-to-v14.md">Migrating from 13 to '
-            "14</a></li>"
-            f'<li><a href="{v}/CHANGELOG.md">Changelog</a></li>'
+            f'<li><a href="{v}/MIGRATING-v13-to-v14.html">Migrating from 13 '
+            "to 14</a></li>"
+            f'<li><a href="{v}/CHANGELOG.html">Changelog</a></li>'
             "</ul>",
 
             "<h2>Reference</h2>",
@@ -703,8 +850,9 @@ class SiteBuilder:
     def build(self):
         self.write("style.css", STYLESHEET)
         self.write(".nojekyll", "")
-        for artifact in ("openrpc.json", "asyncapi.json", "CHANGELOG.md",
-                         "MIGRATING-v13-to-v14.md"):
+        for source, title in PROSE_DOCUMENTS.items():
+            self.build_prose_page(source, title)
+        for artifact in ("openrpc.json", "asyncapi.json"):
             source = DOCS_DIR / artifact
             target = self.out / self.vdir / artifact
             target.parent.mkdir(parents=True, exist_ok=True)
