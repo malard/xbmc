@@ -354,8 +354,10 @@ void CFileItemHandler::HandleFileItem(const char* ID,
     {
       if (allowFile)
       {
-        //! @todo get rid of "videos with versions as folder" hack!
-        if (fields.contains("filetype") && item->GetProperty("IsHybridFolder").asBoolean(false))
+        // where filetype is reported, file must agree with it: a folder's video info tag holds
+        // a file inside it - the default version for a hybrid folder, the movie itself for a
+        // movie folder matched while browsing
+        if (fields.contains("filetype") && item->IsFolder())
         {
           object["file"] = item->GetPath().c_str();
         }
