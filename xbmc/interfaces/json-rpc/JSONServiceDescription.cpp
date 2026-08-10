@@ -26,7 +26,6 @@
 #include "SystemOperations.h"
 #include "TextureOperations.h"
 #include "VideoLibrary.h"
-#include "XBMCOperations.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
@@ -214,6 +213,8 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "GUI.GetStereoscopicModes",                     CGUIOperations::GetStereoscopicModes },
   { "GUI.ActivateScreenSaver",                      CGUIOperations::ActivateScreenSaver},
   { "GUI.TakeScreenshot",                           CGUIOperations::TakeScreenshot },
+  { "GUI.GetInfoLabels",                            CGUIOperations::GetInfoLabels },
+  { "GUI.GetInfoBooleans",                          CGUIOperations::GetInfoBooleans },
 
 // PVR operations
   { "PVR.GetProperties",                            CPVROperations::GetProperties },
@@ -293,9 +294,10 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Settings.GetSkinSettingValue",                 CSettingsOperations::GetSkinSettingValue },
   { "Settings.SetSkinSettingValue",                 CSettingsOperations::SetSkinSettingValue },
 
-// XBMC operations
-  { "XBMC.GetInfoLabels",                           CXBMCOperations::GetInfoLabels },
-  { "XBMC.GetInfoBooleans",                         CXBMCOperations::GetInfoBooleans },
+// XBMC operations, deprecated in favour of the GUI namespace above and served
+// by the same implementations
+  { "XBMC.GetInfoLabels",                           CGUIOperations::GetInfoLabels },
+  { "XBMC.GetInfoBooleans",                         CGUIOperations::GetInfoBooleans },
 
 // Database operations
   { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseNameByType },
@@ -1233,6 +1235,7 @@ bool JsonRpcMethod::Parse(const CVariant &value)
     permission = StringToPermission(value.isMember("permission") ? value["permission"].asString() : "");
 
   description = GetString(value["description"], "");
+  deprecated = GetString(value["deprecated"], "");
 
   // Check whether there are parameters defined
   if (value.isMember("params") && value["params"].isArray())
@@ -1866,6 +1869,11 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     currentMethod["type"] = "method";
     if (printDescriptions && !methodIterator->second.description.empty())
       currentMethod["description"] = methodIterator->second.description;
+    // Reported even when descriptions are suppressed: a client that trims the
+    // documentation out of the answer is not asking to be kept in the dark about
+    // a method it will have to stop calling
+    if (!methodIterator->second.deprecated.empty())
+      currentMethod["deprecated"] = methodIterator->second.deprecated;
     if (printMetadata)
     {
       CVariant permissions(CVariant::VariantTypeArray);

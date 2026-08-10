@@ -37,6 +37,29 @@ namespace JSONRPC
                                          const CVariant& parameterObject,
                                          CVariant& result);
 
+    /*!
+     \brief Answers the info labels a caller names
+
+     Also serves the deprecated XBMC.GetInfoLabels, which is the same method
+     under the name it was given before the interface stopped being branded.
+     */
+    static JSONRPC_STATUS GetInfoLabels(const std::string& method,
+                                        ITransportLayer* transport,
+                                        IClient* client,
+                                        const CVariant& parameterObject,
+                                        CVariant& result);
+
+    /*!
+     \brief Answers the boolean info conditions a caller names
+
+     Also serves the deprecated XBMC.GetInfoBooleans.
+     */
+    static JSONRPC_STATUS GetInfoBooleans(const std::string& method,
+                                          ITransportLayer* transport,
+                                          IClient* client,
+                                          const CVariant& parameterObject,
+                                          CVariant& result);
+
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
     static CVariant GetStereoModeObjectFromGuiMode(const RenderStereoMode mode);
