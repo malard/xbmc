@@ -373,6 +373,8 @@ class SiteBuilder:
                 badge = ""
                 if entity.get("x-kodi-runtime-enum"):
                     badge = ' <span class="badge">runtime enum</span>'
+                if entity.get("deprecated"):
+                    badge += ' <span class="badge warn">deprecated</span>'
                 rows.append(
                     "<tr>"
                     f'<td><a href="{esc(name)}.html">{esc(name)}</a>'
@@ -399,6 +401,9 @@ class SiteBuilder:
             f"<h1>{esc(name)}</h1>",
             f"<p>{esc(method['description'])}</p>",
         ]
+        if method.get("deprecated"):
+            parts.append(f'<p class="deprecated"><strong>Deprecated.</strong> '
+                         f"{esc(method['deprecated'])}</p>")
         badges = [f'<span class="badge">Permission: '
                   f"{esc(method['permission'])}</span>"]
         badges.extend(f'<span class="badge">Transport: {esc(label)}</span>'
@@ -533,6 +538,15 @@ class SiteBuilder:
 
     def build_landing_page(self):
         v = self.vdir
+        # Counted from the schema rather than stated, so that adding or
+        # removing a runtime enum cannot leave the prose behind saying
+        # something that was true once
+        runtime_enums = sorted(name for name, schema
+                               in self.service["types"].items()
+                               if schema.get("x-kodi-runtime-enum"))
+        runtime_enum_count = len(runtime_enums)
+        runtime_enum_names = ", ".join(f"<code>{esc(name)}</code>"
+                                       for name in runtime_enums)
         parts = [
             "<h1>Kodi JSON-RPC API</h1>",
             f'<p class="meta"><span class="badge">schema version '
@@ -595,6 +609,51 @@ class SiteBuilder:
                     "WebSocket/TCP only</p>")
                 parts.append(pre_json(example["message"]))
         parts.extend([
+            "<h2>Discovering the API at runtime</h2>",
+            "<p>This site and the artifacts below describe a release. "
+            f'<a href="{v}/methods/JSONRPC.Introspect.html">'
+            "JSONRPC.Introspect</a> describes the instance you are connected "
+            "to. Call it for three things.</p>",
+
+            "<p><strong>The values of a runtime enumeration.</strong> "
+            f"{runtime_enum_count} types carry no values here "
+            f"({runtime_enum_names}); the running instance holds them. Read "
+            "them from Introspect to build a filter, or to activate a window "
+            "by name.</p>",
+
+            "<p><strong>What your connection may call.</strong> Introspect "
+            "reports the methods your permissions and your transport allow, "
+            "not every method that exists. A method missing from the answer "
+            f'returns <a href="{v}/errors.html">MethodNotFound</a> if you '
+            "call it anyway, as does one that does not exist at all and one "
+            "that is not served over the transport you used.</p>",
+
+            "<p><strong>Which version you are talking to.</strong> Call "
+            "<code>JSONRPC.Version</code>, then Introspect if you need the "
+            "shape as well as the number. Do this before assuming any "
+            "behaviour described here.</p>",
+
+            "<p>For code generation, offline tooling and comparing one "
+            "release against another, use the artifacts below instead.</p>",
+
+            "<p>Introspect answers with the whole description by default, "
+            "which is large. Narrow it:</p>",
+            pre_json({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "JSONRPC.Introspect",
+                "params": {
+                    "filter": {"type": "type", "id": "GUI.Window"},
+                    "getdescriptions": False,
+                },
+            }),
+            "<p><code>filter.type</code> accepts <code>method</code>, "
+            "<code>namespace</code>, <code>type</code>, "
+            "<code>notification</code> and <code>error</code>. "
+            "<code>getdescriptions</code> and <code>getmetadata</code> strip "
+            "the documentation out of the answer; a method's "
+            "<code>deprecated</code> note is reported either way.</p>",
+
             "<h2>About this documentation</h2>",
             "<p>This site is generated from the machine-readable schema "
             "shipped inside Kodi "
@@ -611,6 +670,17 @@ class SiteBuilder:
             f'<li><a href="{v}/asyncapi.json">asyncapi.json</a> - '
             '<a href="https://www.asyncapi.com/">AsyncAPI</a> document '
             "covering the notifications</li>"
+            "</ul>",
+
+            "<h2>Upgrading</h2>",
+            f'<p class="deprecated"><strong>Version {esc(self.version)} is a '
+            "breaking release.</strong> A client written against version 13 "
+            "is not guaranteed to work unchanged. The migration guide lists "
+            "every break and what to do about each.</p>",
+            "<ul>"
+            f'<li><a href="{v}/MIGRATING-v13-to-v14.md">Migrating from 13 to '
+            "14</a></li>"
+            f'<li><a href="{v}/CHANGELOG.md">Changelog</a></li>'
             "</ul>",
 
             "<h2>Reference</h2>",
@@ -633,7 +703,8 @@ class SiteBuilder:
     def build(self):
         self.write("style.css", STYLESHEET)
         self.write(".nojekyll", "")
-        for artifact in ("openrpc.json", "asyncapi.json"):
+        for artifact in ("openrpc.json", "asyncapi.json", "CHANGELOG.md",
+                         "MIGRATING-v13-to-v14.md"):
             source = DOCS_DIR / artifact
             target = self.out / self.vdir / artifact
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -674,6 +745,9 @@ STYLESHEET = """\
   --accent: #0d84b4;
   --accent-soft: #d5eefa;
   --badge-fg: #0a5d80;
+  --warn-soft: #fdeccd;
+  --warn-fg: #8a5200;
+  --warn-border: #e8c68a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -685,6 +759,9 @@ STYLESHEET = """\
     --accent: #3ec6f2;
     --accent-soft: #0f3d51;
     --badge-fg: #9edff8;
+    --warn-soft: #422e0d;
+    --warn-fg: #f0c479;
+    --warn-border: #6b4d18;
   }
 }
 * {
@@ -758,6 +835,17 @@ h3 {
   color: var(--badge-fg);
   font-size: 0.8rem;
   white-space: nowrap;
+}
+.badge.warn {
+  background: var(--warn-soft);
+  color: var(--warn-fg);
+}
+.deprecated {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--warn-border);
+  border-radius: 6px;
+  background: var(--warn-soft);
+  color: var(--warn-fg);
 }
 .meta {
   margin: 0.25rem 0 1rem;

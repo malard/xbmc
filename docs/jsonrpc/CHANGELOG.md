@@ -1,0 +1,143 @@
+# JSON-RPC API changelog
+
+The version reported by `JSONRPC.Version` and carried in `openrpc.json` and
+`asyncapi.json`. It moves independently of Kodi's own version.
+
+This changelog starts at version 14. Earlier versions were not tracked here;
+for those, the commit history of `xbmc/interfaces/json-rpc/` is the record.
+
+## 14.0.0
+
+**A breaking release.** A client written against version 13 is not guaranteed
+to work unchanged. [MIGRATING-v13-to-v14.md](MIGRATING-v13-to-v14.md) covers
+every break below, with what to do about each.
+
+Everything here is new since **13.5.0, the version Kodi 21 (Omega) shipped**,
+which is the last version delivered in a stable release. Intermediate
+versions went out in the Kodi 22 pre-releases — 13.8.0 in 22.0a1 and 13.11.0
+in 22.0b1 — so a client tested only against a beta will already have some of
+the additions below and none of the breaks.
+
+### Breaking
+
+- `JSONRPC.Introspect` answers in JSON Schema 2020-12 instead of draft-03.
+  `extends` becomes `allOf`, a `$ref` is a JSON pointer, `enums` becomes
+  `enum`, requiredness moves from a boolean on each property to an array on
+  the containing object, and a parameter is a content descriptor wrapping its
+  schema. Tuple-form `items`, `additionalItems`, `divisibleBy` and the boolean
+  forms of `exclusiveMinimum`/`exclusiveMaximum` are gone.
+- A PVR channel reports its client-side identifier as `channeluid`, not
+  `uniqueid`. A broadcast and a recording already used that name. `uniqueid`
+  on a library item is unrelated and unchanged.
+- `Playlist.Add` and `Playlist.Insert` return an object naming what they could
+  not add, in place of the `"OK"` string.
+- `Player.GetProperties` reports `currentaudiostream`, `currentvideostream`
+  and `currentsubtitle` as `null` when nothing is selected, in place of an
+  empty object.
+- Calls that answered `InvalidParams` (-32602) for something that was named
+  correctly but could not be provided now answer `NotFound` (-32098),
+  `Unavailable` (-32097), `AccessDenied` (-32096) or `InternalError` (-32603).
+  This affects `Files.GetDirectory`, `Files.GetFileDetails`,
+  `Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
+  `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean` and
+  `AudioLibrary.GetArtistDetails`.
+
+### Deprecated
+
+- `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans`, superseded by
+  `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`. The old names still work and
+  are served by the same implementation. They will be removed in Kodi 23,
+  API version 15. A deprecated method carries a `deprecated` note in
+  `JSONRPC.Introspect` and a `deprecated` flag in `openrpc.json`.
+- `seasonnum` and `episodenum` on `PVR.Details.Broadcast`, superseded by
+  `season` and `episode`.
+
+### Added
+
+**Methods**
+
+- `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist` - refresh the
+  additional information for an album or an artist.
+- `Database.GetDatabaseName` - the database name in use for a given type,
+  with the new `Database.Type`.
+- `GUI.GetInfoLabels` and `GUI.GetInfoBooleans` - the unbranded names for the
+  two deprecated `XBMC.*` methods.
+- `GUI.TakeScreenshot` - takes a screenshot into the configured folder.
+- `PVR.GetPlayableBroadcasts` - the playable broadcasts of a channel within a
+  time range, for catchup availability.
+- `PVR.GetProviders` and `PVR.GetProviderDetails`, with `PVR.Details.Provider`,
+  `PVR.Fields.Provider` and `PVR.Provider.Type`.
+- `Player.GetChapters` - the chapters of the playing item, with
+  `Player.Chapter`.
+- `Playlist.SetShuffle` and `Playlist.SetRepeat`.
+- `VideoLibrary.SetSourceContent` - assigns a content type and scraper to a
+  video source path, as the "Set content" dialog does.
+
+**Notifications**
+
+- `GUI.OnSkinLoaded`, `GUI.OnSkinLoadFailed` and `GUI.OnSkinUnloading`.
+- `Player.OnPlaybackFailed`, raised when playback was asked for and did not
+  happen. Previously the request was acknowledged and nothing followed.
+- `Playlist.OnPropertyChanged`, raised when a playlist's shuffle or repeat
+  state changes.
+
+**Properties and types**
+
+- An error taxonomy in `JSONRPC.Introspect`, under `errors`: every status a
+  call can fail with, its code, its message, and whether it carries `data`.
+  `JSONRPC.Introspect` accepts `"error"` as a filter type.
+- `AccessDenied` (-32096), for a path outside a source shared for remote
+  access.
+- `shuffled` and `repeat` on `Playlist.GetProperties`.
+- `Playlist.AddResult` and `Playlist.UnresolvedItem`.
+- `stationname` on `List.Item.Base`, the radio station serving an internet
+  stream. `episodename` and `episodepart` are also newly requestable in
+  `List.Fields.All`.
+- `codec` on `Player.Subtitle`; `bitspersample` on `Player.Audio.Stream`.
+- `season` and `episode` on `PVR.Details.Broadcast`, replacing `seasonnum`
+  and `episodenum`.
+- `parentalratingcode`, `parentalratingicon` and `parentalratingsource` on
+  `PVR.Details.Broadcast`; those three plus `parentalrating` on
+  `PVR.Details.Recording`.
+- `status` and `trailer` on `Video.Details.TVShow`.
+- `lastlibrarycheck` on `Textures.Details.Texture`.
+
+### Changed
+
+- `Player.OnPropertyChanged` carries the members `Player.Property.Value`
+  declares, rather than a subset.
+- PVR image properties (`icon`, `thumbnail`, `parentalratingicon`, and a
+  recording's `art`) are URLs the web server's `/image/` endpoint can serve,
+  rather than paths only the local machine could read.
+- A PVR channel keeps its own logo in `icon` and `thumbnail` when the
+  programme airing on it has its own artwork. The programme's artwork remains
+  available under `broadcastnow`.
+- Every cast member of a PVR item carries a `role` and an `order`, which
+  `Video.Cast` requires.
+- `XBMC.GetInfoBooleans` and `GUI.GetInfoBooleans` describe their return as an
+  object of booleans. The description said strings; the implementation has
+  always answered booleans.
+- `Application.Property.Name` lists `volume` once. It was listed twice.
+- `Textures.Details.Texture` declares `textureid` required.
+- The header of a `JSONRPC.Introspect` answer names Kodi. `id` is
+  `https://kodi.tv/jsonrpc/ServiceDescription.json` and `description` is
+  "JSON-RPC API of Kodi"; both said XBMC.
+
+### Fixed
+
+- Announcements are no longer blocked while the TCP server is busy, and each
+  request runs on its connection's own thread, so a method that raises a modal
+  dialog no longer stalls every other client.
+- A failing send gives up instead of spinning.
+- The JSON-RPC methods are registered before anything can call them.
+- `Playlist.Clear` resets the playlist position that indexed the cleared
+  items.
+- `Player.GetItem` reports AirPlay cover art, and live stream metadata for a
+  playing PVR radio channel.
+- `file` agrees with `filetype` for a movie with versions or extras.
+- `VideoLibrary.SetTVShowDetails` applies `playcount` and `lastplayed` to the
+  show's episodes.
+- `VideoLibrary.Clean` honours its `directory` parameter.
+- `Playlist.Add` keeps an album's tracks together when several albums are
+  added at once.
+- A hidden subtitle keeps its selection when its stream is closed.

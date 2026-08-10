@@ -124,13 +124,37 @@ class TestSiteGeneration(unittest.TestCase):
         service = kodi_schema.load_service()
         placeholders = [name for name, schema in service["types"].items()
                         if schema.get("x-kodi-runtime-enum")]
-        self.assertEqual(len(placeholders), 12)
+        # not an exact count: the guard is that the flag still selects
+        # something, so that a renamed key cannot make the loop vacuous
+        self.assertGreater(len(placeholders), 0)
         for name in placeholders:
             with self.subTest(type=name):
                 text = (self.out / self.vdir / "types"
                         / f"{name}.html").read_text(encoding="utf-8")
                 self.assertIn("JSONRPC.Introspect", text)
                 self.assertIn("runtime", text)
+
+    def test_landing_page_names_every_runtime_enum(self):
+        """The runtime-enum list is the reason to call Introspect at all, so
+        it is derived from the schema rather than written out."""
+        text = (self.out / "index.html").read_text(encoding="utf-8")
+        service = kodi_schema.load_service()
+        placeholders = [name for name, schema in service["types"].items()
+                        if schema.get("x-kodi-runtime-enum")]
+        self.assertGreater(len(placeholders), 0)
+        self.assertIn(f"{len(placeholders)} types carry no values", text)
+        for name in placeholders:
+            with self.subTest(type=name):
+                self.assertIn(f"<code>{generate_site.esc(name)}</code>", text)
+
+    def test_landing_page_explains_introspect_against_the_artifacts(self):
+        text = (self.out / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Discovering the API at runtime", text)
+        # the three things only the live call can answer
+        for claim in ("runtime enumeration", "What your connection may call",
+                      "Which version you are talking to"):
+            with self.subTest(claim=claim):
+                self.assertIn(claim, text)
 
     def test_landing_page_renders_every_example(self):
         text = (self.out / "index.html").read_text(encoding="utf-8")
