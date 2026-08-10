@@ -887,7 +887,7 @@
       },
       "Player.OnPlaybackFailed": {
         "name": "Player.OnPlaybackFailed",
-        "summary": "Playback of a media item was requested but did not happen. Playback is started asynchronously, so a request that was answered successfully can still fail afterwards; this is the only report of that failure.",
+        "summary": "Playback of a media item was requested but did not happen. Playback starts asynchronously, so a request that was answered successfully can still fail afterwards.",
         "payload": {
           "type": "object",
           "properties": {
