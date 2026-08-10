@@ -2884,6 +2884,9 @@
         "hastimer",
         "isactive",
         "parentalrating",
+        "parentalratingcode",
+        "parentalratingicon",
+        "parentalratingsource",
         "wasactive",
         "thumbnail",
         "rating",
@@ -2966,6 +2969,16 @@
       },
       "parentalrating": {
         "type": "integer"
+      },
+      "parentalratingcode": {
+        "type": "string"
+      },
+      "parentalratingicon": {
+        "type": "string",
+        "description": "Image URL for the icon of this broadcast's parental rating, servable by the web server's /image/ endpoint. Empty when the rating has no icon."
+      },
+      "parentalratingsource": {
+        "type": "string"
       },
       "wasactive": {
         "type": "boolean"
@@ -3218,6 +3231,72 @@
       "clientid"
     ]
   },
+  "PVR.Provider.Type": {
+    "type": "string",
+    "enum": [
+      "unknown",
+      "addon",
+      "satellite",
+      "cable",
+      "aerial",
+      "iptv",
+      "other"
+    ]
+  },
+  "PVR.Fields.Provider": {
+    "allOf": [
+      {
+        "$ref": "#/$defs/Item.Fields.Base"
+      }
+    ],
+    "items": {
+      "type": "string",
+      "enum": [
+        "clientid",
+        "providername",
+        "providertype",
+        "iconpath",
+        "countries",
+        "languages"
+      ]
+    }
+  },
+  "PVR.Details.Provider": {
+    "allOf": [
+      {
+        "$ref": "#/$defs/Item.Details.Base"
+      }
+    ],
+    "properties": {
+      "providerid": {
+        "$ref": "#/$defs/Library.Id"
+      },
+      "clientid": {
+        "$ref": "#/$defs/Library.Id"
+      },
+      "providername": {
+        "type": "string"
+      },
+      "providertype": {
+        "$ref": "#/$defs/PVR.Provider.Type"
+      },
+      "iconpath": {
+        "type": "string",
+        "description": "Image URL for the provider's own icon, servable by the web server's /image/ endpoint."
+      },
+      "countries": {
+        "$ref": "#/$defs/Array.String",
+        "description": "ISO 3166 country codes this provider serves."
+      },
+      "languages": {
+        "$ref": "#/$defs/Array.String",
+        "description": "RFC 5646 language codes this provider broadcasts in."
+      }
+    },
+    "required": [
+      "providerid"
+    ]
+  },
   "PVR.TimerState": {
     "type": "string",
     "enum": [
@@ -3398,6 +3477,10 @@
         "plot",
         "plotoutline",
         "genre",
+        "parentalrating",
+        "parentalratingcode",
+        "parentalratingicon",
+        "parentalratingsource",
         "playcount",
         "resume",
         "channel",
@@ -3441,6 +3524,19 @@
         "type": "string"
       },
       "genre": {
+        "type": "string"
+      },
+      "parentalrating": {
+        "type": "integer"
+      },
+      "parentalratingcode": {
+        "type": "string"
+      },
+      "parentalratingicon": {
+        "type": "string",
+        "description": "Image URL for the icon of this recording's parental rating, servable by the web server's /image/ endpoint. Empty when the rating has no icon."
+      },
+      "parentalratingsource": {
         "type": "string"
       },
       "playcount": {
