@@ -2,7 +2,7 @@
   "asyncapi": "3.0.0",
   "info": {
     "title": "Kodi JSON-RPC notifications",
-    "version": "13.15.0",
+    "version": "14.0.0",
     "description": "Server-initiated notifications of Kodi's JSON-RPC 2.0 API. Kodi pushes these over the WebSocket and raw TCP transports only; they are never delivered over HTTP. Request/response methods are documented separately in openrpc.json.",
     "license": {
       "name": "GPL-2.0-or-later"

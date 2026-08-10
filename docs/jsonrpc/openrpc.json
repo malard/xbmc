@@ -2,7 +2,7 @@
   "openrpc": "1.3.2",
   "info": {
     "title": "Kodi JSON-RPC API",
-    "version": "13.15.0",
+    "version": "14.0.0",
     "description": "Kodi's JSON-RPC 2.0 API. All methods are served from a single endpoint over HTTP POST and over WebSocket/TCP. Server-initiated notifications are only delivered over WebSocket/TCP and are documented separately in asyncapi.json.",
     "license": {
       "name": "GPL-2.0-or-later"
