@@ -462,8 +462,10 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       if (parsedType != 0)
         type = (JSONSchemaType)parsedType;
     }
-    // Get the defined type of the parameter
-    else if (!CJSONServiceDescription::parseJSONSchemaType(value["type"], type))
+    // Get the defined type of the parameter. An absent "type" constrains nothing and leaves
+    // the AnyValue this is constructed with; only a malformed one is an error.
+    else if (value.isMember("type") &&
+             !CJSONServiceDescription::parseJSONSchemaType(value["type"], type))
       return false;
   }
 
