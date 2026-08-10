@@ -18,6 +18,7 @@
 #include "VideoLibrary.h"
 #include "filesystem/Directory.h"
 #include "media/MediaLockState.h"
+#include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSourceSettings.h"
@@ -28,6 +29,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoFileItemClassify.h"
 
 #include <memory>
 
@@ -114,6 +116,11 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
         return status;
     }
 
+    // A "files" listing is a plain directory browse and pays no database lookups for its own
+    // sake. It only consults the library when the caller asked for a property that nothing but
+    // the library can answer.
+    const bool enrichFromLibrary{!parameterObject["properties"].empty()};
+
     CFileItemList filteredFiles;
     RegExpCache cache;
     for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
@@ -130,9 +137,8 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
       if ((media == "video" && items[i]->HasVideoInfoTag()) ||
           (media == "music" && items[i]->HasMusicInfoTag()) ||
           (media == "pictures" && items[i]->HasPictureInfoTag()) ||
-           media == "files" ||
-           URIUtils::IsUPnP(items.GetPath()))
-          filteredFiles.Add(items[i]);
+          (media == "files" && !enrichFromLibrary) || URIUtils::IsUPnP(items.GetPath()))
+        filteredFiles.Add(items[i]);
       else
       {
         CFileItemPtr fileItem(new CFileItem());
@@ -311,6 +317,28 @@ bool CFileOperations::FillFileItem(
       status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
     else if (media == "music")
       status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
+    else if (media == "files")
+    {
+      // A "files" listing is untyped, so ask whichever library the entry could belong to. A
+      // directory is asked about both ways: it can be a movie or show folder as easily as an
+      // album.
+      if (!MUSIC::IsAudio(*originalItem))
+        status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
+      if (!status && !VIDEO::IsVideo(*originalItem))
+        status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
+    }
+
+    if (status)
+    {
+      // A library match annotates the entry, it does not replace it. Filling from the tag
+      // adopts the matched item's path and drops the folder flag, which turns a movie folder
+      // into the movie inside it and loses the directory the caller was browsing.
+      item->SetPath(strFilename);
+      item->SetFolder(originalItem->IsFolder());
+      // The mime type was derived from the path the tag brought with it. Restoring the
+      // original leaves it to be filled in from the entry itself, as it is for any other item.
+      item->SetMimeType(originalItem->GetMimeType());
+    }
 
     if (status && item->GetLabel().empty())
     {

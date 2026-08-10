@@ -34,6 +34,17 @@ the additions below and none of the breaks.
 - `Player.GetProperties` reports `currentaudiostream`, `currentvideostream`
   and `currentsubtitle` as `null` when nothing is selected, in place of an
   empty object.
+- `Files.GetDirectory` browses the directory it was given. A folder that
+  matches a library item keeps its own path and comes back as
+  `"filetype": "directory"`, where version 13 replaced it with the item and
+  returned `"filetype": "file"` naming the video inside it. Entries for files
+  are unchanged.
+- `Files.GetDirectory` honours the requested `properties` under
+  `"media": "files"`, which previously returned none of them. A request naming
+  no properties still gets a plain listing and consults no library.
+- `Files.GetDirectory` fills in tv show details for a show's folder. Version 13
+  resolved movies, episodes and music videos but never shows, so a show folder
+  came back bare even under `"media": "video"`.
 - Calls that answered `InvalidParams` (-32602) for something that was named
   correctly but could not be provided now answer `NotFound` (-32098),
   `Unavailable` (-32097), `AccessDenied` (-32096) or `InternalError` (-32603).

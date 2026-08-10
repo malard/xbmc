@@ -191,6 +191,50 @@ Kodi 21 this is the first you will have seen of it. They now carry the
 `deprecated` annotation, which means you can find them from
 `JSONRPC.Introspect` or `openrpc.json` rather than by reading descriptions.
 
+## 8. `Files.GetDirectory` browses directories, and answers `properties`
+
+Three changes to one call, all of them in the direction of it doing what its
+name says.
+
+**A folder stays a folder.** Version 13 matched each entry against the video
+library and, on a hit, replaced the entry with the library item — path and
+all. For the common layout of one movie per folder, that turned every scanned
+folder into the movie inside it:
+
+```json
+{"file": "smb://nas/Movies/Hail Caesar (2016)/Hail.Caesar.2016.mp4",
+ "filetype": "file", "label": "Hail, Caesar!"}
+```
+
+Version 14 keeps the entry the caller was browsing and annotates it:
+
+```json
+{"file": "smb://nas/Movies/Hail Caesar (2016)/",
+ "filetype": "directory", "label": "Hail, Caesar!"}
+```
+
+**What to do.** If you followed `file` to play an item, check `filetype`
+first — a `directory` is a level to descend into, not something to open. The
+change only affects folders; an entry for a file is byte-for-byte what it was.
+
+**`"media": "files"` answers `properties`.** It previously ignored them and
+returned bare listings, which is why a client that wanted artwork had to ask
+for `"media": "video"` and accept the folder flattening above. Both modes now
+return the same details for the same entry, so the workaround is no longer
+needed and `"media": "files"` is the mode to browse with.
+
+A request that names no `properties` still gets the plain listing it always
+got, and still costs no library lookups — so a client walking a tree for its
+structure alone pays nothing for this.
+
+**Tv show folders resolve.** Version 13 looked up movies, episodes and music
+videos, so a show's folder came back with no title, art or `watchedepisodes`
+even under `"media": "video"`. It now carries the same details
+`VideoLibrary.GetTVShows` reports for that show.
+
+Note that a show has no `thumbnail` — that is true of `VideoLibrary.GetTVShows`
+too. Use `art.poster`.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
