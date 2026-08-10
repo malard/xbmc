@@ -2030,13 +2030,14 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
         const auto appPlayer = components.GetComponent<CApplicationPlayer>();
         if (appPlayer->HasPlayer())
         {
-          result = CVariant(CVariant::VariantTypeObject);
+          result = CVariant(CVariant::VariantTypeNull);
           int index = appPlayer->GetAudioStream();
           if (index >= 0)
           {
             AudioStreamInfo info;
             appPlayer->GetAudioStreamInfo(index, info);
 
+            result = CVariant(CVariant::VariantTypeObject);
             result["index"] = index;
             result["name"] = info.name;
             result["language"] = info.language.AsBcp47();
@@ -2196,16 +2197,18 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
         const auto appPlayer = components.GetComponent<CApplicationPlayer>();
         if (appPlayer->HasPlayer())
         {
-          result = CVariant(CVariant::VariantTypeObject);
+          result = CVariant(CVariant::VariantTypeNull);
           int index = appPlayer->GetSubtitle();
           if (index >= 0)
           {
             SubtitleStreamInfo info;
             appPlayer->GetSubtitleStreamInfo(index, info);
 
+            result = CVariant(CVariant::VariantTypeObject);
             result["index"] = index;
             result["name"] = info.name;
             result["language"] = info.language.AsBcp47();
+            result["codec"] = info.codecName;
             AppendSubtitleStreamFlagsAsBooleans(result, info.flags);
           }
         }
@@ -2241,6 +2244,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
             subtitle["index"] = index;
             subtitle["name"] = info.name;
             subtitle["language"] = info.language.AsBcp47();
+            subtitle["codec"] = info.codecName;
             AppendSubtitleStreamFlagsAsBooleans(subtitle, info.flags);
 
             result.append(subtitle);
