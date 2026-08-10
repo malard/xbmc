@@ -134,6 +134,59 @@ class TestSiteGeneration(unittest.TestCase):
                 self.assertIn("JSONRPC.Introspect", text)
                 self.assertIn("runtime", text)
 
+    def test_prose_documents_render_as_pages(self):
+        for source, title in generate_site.PROSE_DOCUMENTS.items():
+            page = self.out / self.vdir / (source[:-len(".md")] + ".html")
+            with self.subTest(document=source):
+                self.assertTrue(page.is_file())
+                text = page.read_text(encoding="utf-8")
+                self.assertIn(generate_site.esc(title), text)
+                # nothing left unrendered
+                self.assertNotIn("**", text)
+                self.assertNotIn("```", text)
+
+    def test_markdown_renders_the_forms_the_documents_use(self):
+        rendered = generate_site.md_to_html(
+            "# Title\n"
+            "\n"
+            "A paragraph with `code`, **bold** and [a link](x.html).\n"
+            "\n"
+            "- first item\n"
+            "- second item\n"
+            "\n"
+            "| a | b |\n"
+            "|---|---|\n"
+            "| 1 | 2 |\n"
+            "\n"
+            "```json\n"
+            "{\"k\": 1}\n"
+            "```\n"
+            "\n"
+            "---\n")
+        self.assertIn("<h1>Title</h1>", rendered)
+        self.assertIn("<code>code</code>", rendered)
+        self.assertIn("<strong>bold</strong>", rendered)
+        self.assertIn('<a href="x.html">a link</a>', rendered)
+        self.assertIn("<li>first item</li>", rendered)
+        self.assertIn("<th>a</th>", rendered)
+        self.assertIn("<td>1</td>", rendered)
+        self.assertIn("<hr>", rendered)
+        self.assertIn("&quot;k&quot;", rendered)
+        # the alignment row of a table is not data
+        self.assertNotIn("<td>---</td>", rendered)
+
+    def test_markdown_emphasis_can_wrap_a_code_span(self):
+        """Code spans are lifted out before emphasis is applied, so bold
+        wrapping one must not be left with its markers in two pieces."""
+        rendered = generate_site.md_to_html("**`Thing.Method`** does a thing\n")
+        self.assertIn("<strong><code>Thing.Method</code></strong>", rendered)
+        self.assertNotIn("**", rendered)
+
+    def test_markdown_leaves_markup_inside_code_alone(self):
+        rendered = generate_site.md_to_html("Literal `**not bold**` here\n")
+        self.assertIn("<code>**not bold**</code>", rendered)
+        self.assertNotIn("<strong>", rendered)
+
     def test_landing_page_names_every_runtime_enum(self):
         """The runtime-enum list is the reason to call Introspect at all, so
         it is derived from the schema rather than written out."""
