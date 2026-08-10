@@ -11783,6 +11783,142 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "GUI.GetInfoLabels",
+      "summary": "Retrieve info labels about Kodi and the system",
+      "tags": [
+        {
+          "name": "GUI"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "labels",
+          "required": true,
+          "description": "See http://kodi.wiki/view/InfoLabels for a list of possible info labels",
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "description": "Object containing key-value pairs of the retrieved info labels",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "GUI.GetInfoBooleans",
+      "summary": "Retrieve info booleans about Kodi and the system",
+      "tags": [
+        {
+          "name": "GUI"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "booleans",
+          "required": true,
+          "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "description": "Object containing key-value pairs of the retrieved info booleans",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Addons.GetAddons",
       "summary": "Gets all available addons",
       "tags": [
@@ -15506,7 +15642,9 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true,
+      "description": "Use GUI.GetInfoLabels instead. Removed in Kodi 23, JSON-RPC API version 15."
     },
     {
       "name": "XBMC.GetInfoBooleans",
@@ -15521,6 +15659,7 @@
         {
           "name": "booleans",
           "required": true,
+          "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
           "schema": {
             "type": "array",
             "items": {
@@ -15536,7 +15675,7 @@
           "type": "object",
           "description": "Object containing key-value pairs of the retrieved info booleans",
           "additionalProperties": {
-            "type": "string"
+            "type": "boolean"
           }
         }
       },
@@ -15573,7 +15712,9 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true,
+      "description": "Use GUI.GetInfoBooleans instead. Removed in Kodi 23, JSON-RPC API version 15."
     },
     {
       "name": "Favourites.GetFavourites",

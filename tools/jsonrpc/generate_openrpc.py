@@ -52,6 +52,11 @@ def build_method(name, method, taxonomy):
     }
     if "transport" in method:
         entry["x-kodi-transport"] = method["transport"]
+    if method.get("deprecated"):
+        # OpenRPC carries the fact as a flag and has nowhere else for the note,
+        # so the note becomes the description the flag is explained by
+        entry["deprecated"] = True
+        entry["description"] = method["deprecated"]
     return entry
 
 

@@ -1,4 +1,5 @@
-set(SOURCES TestJSONRPCPermission.cpp
+set(SOURCES TestDeprecatedMethodSchema.cpp
+            TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
