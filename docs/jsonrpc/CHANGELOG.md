@@ -184,3 +184,7 @@ schema never says *when* something goes; that is here.
 - `Playlist.Add` keeps an album's tracks together when several albums are
   added at once.
 - A hidden subtitle keeps its selection when its stream is closed.
+- `Files.PrepareDownload` reports the scheme the client reached Kodi by, so
+  `protocol` can now be `https`. It was always `http`, which was wrong both
+  when the web server serves HTTPS itself and behind a reverse proxy that
+  terminates TLS - a browser blocked the composed URL as mixed content.

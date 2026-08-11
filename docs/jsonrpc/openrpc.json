@@ -3554,8 +3554,10 @@
             "protocol": {
               "type": "string",
               "enum": [
-                "http"
-              ]
+                "http",
+                "https"
+              ],
+              "description": "The scheme by which the client reached Kodi, honouring X-Forwarded-Proto from a reverse proxy that terminates TLS. A client rendering in a page should compose the download URL from its own origin and \"details\" instead, so that it stays correct however the page was served."
             },
             "details": {
               "description": "Transport specific details on how/from where to download the given file"
