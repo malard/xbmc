@@ -12,6 +12,7 @@
 #include "JSONUtils.h"
 
 #include <memory>
+#include <optional>
 #include <set>
 
 class CFileItem;
@@ -19,6 +20,11 @@ class CFileItemList;
 class CThumbLoader;
 class CVariant;
 class ISerializable;
+
+namespace PVR
+{
+class CPVRRecording;
+}
 
 namespace JSONRPC
 {
@@ -68,11 +74,16 @@ namespace JSONRPC
 
   private:
     static void Sort(CFileItemList &items, const CVariant& parameterObject);
+    /*!
+     \param epgRecording The recording behind this item's EPG tag, shared by every field that
+            needs it. Engaged holding nothing means the lookup ran and found none.
+     */
     static bool GetField(const std::string& field,
                          const CVariant& info,
                          const std::shared_ptr<CFileItem>& item,
                          CVariant& result,
                          bool& fetchedArt,
+                         std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
                          CThumbLoader* thumbLoader = nullptr);
   };
 }

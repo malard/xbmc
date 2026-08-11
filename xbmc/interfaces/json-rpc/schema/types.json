@@ -2920,6 +2920,7 @@
         "hastimerrule",
         "hasrecording",
         "recording",
+        "recordingid",
         "isseries",
         "isplayable",
         "clientid",
@@ -3038,6 +3039,10 @@
       },
       "recording": {
         "type": "string"
+      },
+      "recordingid": {
+        "$ref": "#/$defs/Library.Id",
+        "description": "Identifies the recording of this broadcast for PVR.GetRecordingDetails. -1 when the broadcast has no recording."
       },
       "isseries": {
         "type": "boolean"
