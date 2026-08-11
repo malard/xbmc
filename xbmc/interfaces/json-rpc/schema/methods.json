@@ -6156,9 +6156,124 @@
     ],
     "returns": "string"
   },
+  "VideoLibrary.Refresh": {
+    "type": "method",
+    "description": "Refresh the given item in the library",
+    "transport": "Response",
+    "permission": "UpdateData",
+    "params": [
+      {
+        "name": "item",
+        "required": true,
+        "description": "The library item to refresh.",
+        "schema": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "movieid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "movieid"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "setid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "setid"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tvshowid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "tvshowid"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "seasonid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "seasonid"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "episodeid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "episodeid"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "musicvideoid": {
+                  "$ref": "#/$defs/Library.Id"
+                }
+              },
+              "required": [
+                "musicvideoid"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "ignorenfo",
+        "description": "Whether or not to ignore a local NFO if present.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "refreshepisodes",
+        "description": "Whether or not to refresh all episodes belonging to the item. Applies to a tv show or a season.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      {
+        "name": "title",
+        "description": "Title to use for searching (instead of determining it from the item's filename/path).",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    ],
+    "returns": "string"
+  },
   "VideoLibrary.RefreshMovie": {
     "type": "method",
-    "description": "Refresh the given movie in the library",
+    "description": "Refresh the given movie in the library. Use VideoLibrary.Refresh instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "UpdateData",
     "params": [
@@ -6190,7 +6305,8 @@
   },
   "VideoLibrary.RefreshTVShow": {
     "type": "method",
-    "description": "Refresh the given tv show in the library",
+    "description": "Refresh the given tv show in the library. Use VideoLibrary.Refresh instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "UpdateData",
     "params": [
@@ -6230,7 +6346,8 @@
   },
   "VideoLibrary.RefreshEpisode": {
     "type": "method",
-    "description": "Refresh the given episode in the library",
+    "description": "Refresh the given episode in the library. Use VideoLibrary.Refresh instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "UpdateData",
     "params": [
@@ -6262,7 +6379,8 @@
   },
   "VideoLibrary.RefreshMusicVideo": {
     "type": "method",
-    "description": "Refresh the given music video in the library",
+    "description": "Refresh the given music video in the library. Use VideoLibrary.Refresh instead.",
+    "deprecated": true,
     "transport": "Response",
     "permission": "UpdateData",
     "params": [

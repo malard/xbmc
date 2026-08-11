@@ -185,6 +185,8 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "VideoLibrary.SetSeasonDetails",                CVideoLibrary::SetSeasonDetails },
   { "VideoLibrary.SetEpisodeDetails",               CVideoLibrary::SetEpisodeDetails },
   { "VideoLibrary.SetMusicVideoDetails",            CVideoLibrary::SetMusicVideoDetails },
+  { "VideoLibrary.Refresh",                         CVideoLibrary::Refresh },
+// Deprecated in favour of VideoLibrary.Refresh above
   { "VideoLibrary.RefreshMovie",                    CVideoLibrary::RefreshMovie },
   { "VideoLibrary.RefreshTVShow",                   CVideoLibrary::RefreshTVShow },
   { "VideoLibrary.RefreshEpisode",                  CVideoLibrary::RefreshEpisode },
