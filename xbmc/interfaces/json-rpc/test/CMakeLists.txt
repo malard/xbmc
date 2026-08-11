@@ -8,6 +8,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONServiceDescriptionIntrospect.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
+            TestSettingsLevel.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibrarySetSourceContent.cpp)
 

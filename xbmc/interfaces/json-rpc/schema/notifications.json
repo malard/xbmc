@@ -1176,5 +1176,34 @@
       }
     ],
     "returns": null
+  },
+  "Settings.OnLevelChanged": {
+    "type": "notification",
+    "description": "The setting level in force has changed. The profile's settings lock can lower it without the viewer asking for it.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "$ref": "#/$defs/Setting.Level"
+            }
+          },
+          "required": [
+            "level"
+          ]
+        }
+      }
+    ],
+    "returns": null
   }
 }
