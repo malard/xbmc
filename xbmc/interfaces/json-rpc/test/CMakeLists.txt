@@ -9,6 +9,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestPVRProviderSchema.cpp
             TestSettingsLevel.cpp
             TestVideoLibraryPlaybackState.cpp
+            TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp)
 
 core_add_test_library(jsonrpc_test)

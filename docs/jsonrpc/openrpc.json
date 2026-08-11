@@ -10320,8 +10320,165 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "VideoLibrary.Refresh",
+      "summary": "Refresh the given item in the library",
+      "tags": [
+        {
+          "name": "VideoLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "description": "The library item to refresh.",
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "movieid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "movieid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "setid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "setid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "tvshowid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "tvshowid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "seasonid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "seasonid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "episodeid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "episodeid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "musicvideoid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "required": [
+                  "musicvideoid"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        {
+          "name": "ignorenfo",
+          "description": "Whether or not to ignore a local NFO if present.",
+          "schema": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        {
+          "name": "refreshepisodes",
+          "description": "Whether or not to refresh all episodes belonging to the item. Applies to a tv show or a season.",
+          "schema": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        {
+          "name": "title",
+          "description": "Title to use for searching (instead of determining it from the item's filename/path).",
+          "schema": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "UpdateData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "VideoLibrary.RefreshMovie",
-      "summary": "Refresh the given movie in the library",
+      "summary": "Refresh the given movie in the library. Use VideoLibrary.Refresh instead.",
       "tags": [
         {
           "name": "VideoLibrary"
@@ -10392,11 +10549,12 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true
     },
     {
       "name": "VideoLibrary.RefreshTVShow",
-      "summary": "Refresh the given tv show in the library",
+      "summary": "Refresh the given tv show in the library. Use VideoLibrary.Refresh instead.",
       "tags": [
         {
           "name": "VideoLibrary"
@@ -10475,11 +10633,12 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true
     },
     {
       "name": "VideoLibrary.RefreshEpisode",
-      "summary": "Refresh the given episode in the library",
+      "summary": "Refresh the given episode in the library. Use VideoLibrary.Refresh instead.",
       "tags": [
         {
           "name": "VideoLibrary"
@@ -10550,11 +10709,12 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true
     },
     {
       "name": "VideoLibrary.RefreshMusicVideo",
-      "summary": "Refresh the given music video in the library",
+      "summary": "Refresh the given music video in the library. Use VideoLibrary.Refresh instead.",
       "tags": [
         {
           "name": "VideoLibrary"
@@ -10625,7 +10785,8 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
+      "x-kodi-transport": "Response",
+      "deprecated": true
     },
     {
       "name": "VideoLibrary.RemoveMovie",

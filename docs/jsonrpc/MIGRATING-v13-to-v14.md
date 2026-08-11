@@ -235,6 +235,30 @@ even under `"media": "video"`. It now carries the same details
 Note that a show has no `thumbnail` — that is true of `VideoLibrary.GetTVShows`
 too. Use `art.poster`.
 
+---
+
+## 9. The four `VideoLibrary.Refresh*` methods are deprecated
+
+`RefreshMovie`, `RefreshTVShow`, `RefreshEpisode` and `RefreshMusicVideo` are
+superseded by one `VideoLibrary.Refresh` that names the item rather than
+encoding its type in the method name. The old names still work, and go in 15
+along with everything else deprecated here.
+
+```diff
+- {"method": "VideoLibrary.RefreshMovie", "params": {"movieid": 42}}
++ {"method": "VideoLibrary.Refresh",      "params": {"item": {"movieid": 42}}}
+```
+
+Unlike the `XBMC.*` renames above this is not only a rename: the id moves
+inside an `item` object. `ignorenfo`, `title` and `refreshepisodes` stay where
+they are.
+
+The item names exactly one of `movieid`, `setid`, `tvshowid`, `seasonid`,
+`episodeid` or `musicvideoid`. A movie set and a season can therefore be
+refreshed for the first time — the interface has always been able to, and no
+per-type method covered either. `refreshepisodes` applies to a tv show or a
+season and is ignored by the rest, as it always was.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
