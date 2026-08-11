@@ -8,6 +8,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestSettingsLevel.cpp
+            TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp)
