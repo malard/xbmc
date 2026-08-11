@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kodi — design and review documents</title>
+<style>
+:root {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --warn:    #A9522A;
+
+  --serif: Constantia, Cambria, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #0D1013;
+    --surface: #151A1F;
+    --sunk:    #10151A;
+    --ink:     #E4E9ED;
+    --muted:   #8B96A2;
+    --rule:    #252D35;
+    --rule-firm:#38434E;
+    --accent:  #3FB4BE;
+    --accent-soft: #10333A;
+    --lit:     #E0B45C;
+    --warn:    #D2854E;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0D1013;
+  --surface: #151A1F;
+  --sunk:    #10151A;
+  --ink:     #E4E9ED;
+  --muted:   #8B96A2;
+  --rule:    #252D35;
+  --rule-firm:#38434E;
+  --accent:  #3FB4BE;
+  --accent-soft: #10333A;
+  --lit:     #E0B45C;
+  --warn:    #D2854E;
+}
+:root[data-theme="light"] {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --warn:    #A9522A;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.inner { max-width: 58rem; margin: 0 auto; padding: 0 2rem; }
+.masthead .inner { padding-top: 3.25rem; padding-bottom: 2.25rem; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.1rem;
+}
+h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3.1rem);
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 52ch;
+  margin: 0;
+}
+
+main { padding: 2.75rem 0 5rem; }
+
+h2 {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+h2:not(:first-child) { margin-top: 3.25rem; }
+
+.doc {
+  display: block;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  padding: 1.35rem 1.5rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+.doc:hover { border-color: var(--rule-firm); border-left-color: var(--accent); background: var(--accent-soft); }
+.doc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.doc h3 {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  margin: 0 0 0.4rem;
+}
+.doc p { margin: 0 0 0.7rem; color: var(--muted); font-size: 0.95rem; max-width: 62ch; }
+.doc p:last-child { margin: 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tag {
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.45rem;
+  border: 1px solid var(--rule-firm);
+  color: var(--muted);
+  border-radius: 2px;
+}
+.tag.rev { border-color: var(--warn); color: var(--warn); }
+.tag.usr { border-color: var(--accent); color: var(--accent); }
+
+.about {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 1.2rem 1.4rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+  max-width: 64ch;
+}
+.about p { margin: 0 0 0.7rem; }
+.about p:last-child { margin: 0; }
+.about code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  padding: 0.05em 0.32em;
+  border-radius: 2px;
+}
+.about strong { color: var(--ink); }
+
+footer { border-top: 1px solid var(--rule); background: var(--surface); }
+footer .inner { padding-top: 2rem; padding-bottom: 3rem; font-size: 0.84rem; color: var(--muted); }
+footer p { margin: 0; max-width: 56ch; }
+
+.toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--rule-firm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.toggle:hover { color: var(--ink); border-color: var(--accent); }
+
+@media (max-width: 40rem) {
+  .inner { padding-left: 1.15rem; padding-right: 1.15rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="inner">
+    <div class="eyebrow">Kodi &rsaquo; malard fork &rsaquo; documents</div>
+    <h1>Design &amp; review documents</h1>
+    <p class="standfirst">
+      Long-form documentation for work in progress on the Kodi fork — feature design that is larger
+      than any one diff, and review documents for changes too broad to read as a patch.
+    </p>
+  </div>
+</header>
+
+<main>
+  <div class="inner">
+
+    <h2>Feature documentation</h2>
+
+    <a class="doc" href="screen-aspect-ratio/">
+      <h3>Screen &amp; Aspect Ratio</h3>
+      <p>
+        Kodi learns the true shape of what it is playing, and the true shape of the screen it is
+        playing onto — then keeps everything it draws inside that shape, and tells the rest of the
+        room about it.
+      </p>
+      <div class="tags">
+        <span class="tag usr">User documentation</span>
+        <span class="tag">Kodi v22</span>
+        <span class="tag">Epic</span>
+      </div>
+    </a>
+
+    <h2>Review documents</h2>
+
+    <a class="doc" href="language-tags/">
+      <h3>Language tags</h3>
+      <p>
+        Kodi carries language codes in four notations and, until now, in bare strings that never
+        said which. <code>CLanguageTag</code> replaces the string with a value that knows, and
+        settles which notation each public surface speaks.
+      </p>
+      <div class="tags">
+        <span class="tag rev">Engineering review</span>
+        <span class="tag">Kodi v22</span>
+        <span class="tag">PR 28852</span>
+      </div>
+    </a>
+
+    <h2>About this site</h2>
+
+    <div class="about">
+      <p>
+        Served by GitHub Pages from the <strong>orphan <code>gh-pages</code> branch</strong> of
+        <code>malard/xbmc</code>. That branch shares no history with <code>master</code> or with any
+        feature branch, so a document published here can never appear in a pull request diff.
+      </p>
+      <p>
+        Every document is a single self-contained file. Nothing here is a Team Kodi publication.
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="inner">
+    <p>Independently written. Not affiliated with Team Kodi.</p>
+  </div>
+</footer>
+
+<button class="toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme">Theme</button>
+
+<script>
+document.getElementById('themeToggle').addEventListener('click', function () {
+  var root = document.documentElement;
+  var current = root.getAttribute('data-theme');
+  if (!current) {
+    current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+});
+</script>
+
+</body>
+</html>
