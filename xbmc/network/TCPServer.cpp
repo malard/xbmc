@@ -18,6 +18,8 @@
 #include "utils/log.h"
 #include "websocket/WebSocketManager.h"
 
+#include <algorithm>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <stdio.h>
@@ -61,6 +63,9 @@ using namespace JSONRPC;
 namespace
 {
 constexpr size_t maxBufferLength = 64 * 1024;
+
+// Bounded because the peer may have stopped reading, and a shutdown must complete regardless.
+constexpr auto workerDrainTimeout = std::chrono::seconds(3);
 }
 
 std::shared_ptr<CTCPServer> CTCPServer::ServerInstance;
@@ -527,11 +532,22 @@ void CTCPServer::Deinitialize()
 
   std::unique_lock lock(m_connectionsCritSection);
 
+  // Let every worker finish the response it is writing before any socket is closed, so a client
+  // that asked for the shutdown - or was answered just as one arrived - gets its reply rather
+  // than a dropped connection. The deadline is shared, so one stalled peer cannot multiply the
+  // delay by the number of connections.
+  const auto deadline = std::chrono::steady_clock::now() + workerDrainTimeout;
+
   for (const auto& connection : m_connections)
   {
-    connection->StopWorker();
-    connection->Disconnect();
+    const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(
+        deadline - std::chrono::steady_clock::now());
+    if (!connection->DrainWorker(std::max(remaining, std::chrono::milliseconds(0))))
+      CLog::Log(LOGWARNING, "JSONRPC Server: Timed out draining a connection, its reply is lost");
   }
+
+  for (const auto& connection : m_connections)
+    connection->Disconnect();
 
   m_connections.clear();
 
@@ -623,6 +639,7 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
     if (!m_workerStarted)
     {
       m_workerStarted = true;
+      m_workerRunning = true;
       start = true;
     }
   }
@@ -643,6 +660,16 @@ void CTCPServer::CTCPClient::StopWorker()
   m_inboundEvent.notify_one();
 }
 
+bool CTCPServer::CTCPClient::DrainWorker(std::chrono::milliseconds timeout)
+{
+  std::unique_lock<std::mutex> lock(m_inboundMutex);
+  m_workerStop = true;
+  m_workerDiscard = true;
+  m_inboundEvent.notify_one();
+
+  return m_workerIdleEvent.wait_for(lock, timeout, [this] { return !m_workerRunning; });
+}
+
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
 {
@@ -658,9 +685,11 @@ void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                 [&self] { return !self->m_inbound.empty() || self->m_workerStop; });
 
       // Drain what has already been accepted before exiting, so a client that sends a command
-      // and closes immediately still gets it executed.
-      if (self->m_inbound.empty())
-        return;
+      // and closes immediately still gets it executed. A shutdown asks for the opposite through
+      // m_workerDiscard: finish the response in flight and leave the rest, so the socket can be
+      // closed without a queue of new requests holding it open.
+      if (self->m_inbound.empty() || self->m_workerDiscard)
+        break;
 
       buffer = std::move(self->m_inbound.front());
       self->m_inbound.pop_front();
@@ -668,6 +697,13 @@ void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
 
     self->PushBuffer(host.get(), buffer.data(), static_cast<int>(buffer.size()));
   }
+
+  {
+    std::unique_lock<std::mutex> lock(self->m_inboundMutex);
+    self->m_workerRunning = false;
+  }
+
+  self->m_workerIdleEvent.notify_all();
 }
 
 void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, int length)
@@ -675,6 +711,11 @@ void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, in
   bool inObject = false;
   bool inString = false;
   bool escapeNext = false;
+
+  // A drain is owed the response in flight and nothing more, so once one is asked for, requests
+  // this buffer has not reached yet are abandoned rather than holding the socket open.
+  if (m_workerDiscard)
+    return;
 
   for (int i = 0; i < length; i++)
   {
@@ -736,6 +777,9 @@ void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, in
         Send(line.c_str(), line.size());
         m_beginChar = m_beginBrackets = m_endBrackets = 0;
         m_buffer.clear();
+
+        if (m_workerDiscard)
+          return;
       }
     }
   }

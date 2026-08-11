@@ -16,6 +16,7 @@
 #include "websocket/WebSocket.h"
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <deque>
 #include <memory>
@@ -95,6 +96,20 @@ namespace JSONRPC
        */
       void StopWorker();
 
+      /*!
+       * \brief Ask the worker to abandon anything it has not started and wait for the response
+       *        it is writing to reach the socket.
+       *
+       * Closing the socket under a send discards the response whole, so a client cannot tell an
+       * answered request from a dropped connection. The wait is bounded because a worker may be
+       * blocked in a dialog, or writing to a peer that has stopped reading, and neither may hold
+       * up the shutdown indefinitely.
+       *
+       * \param timeout how long to wait for the worker to reach the end of the request in flight
+       * \return whether the worker finished within the timeout
+       */
+      bool DrainWorker(std::chrono::milliseconds timeout);
+
       virtual bool IsNew() const { return m_new; }
       virtual bool Closing() const { return m_closing; }
 
@@ -125,9 +140,14 @@ namespace JSONRPC
 
       std::mutex m_inboundMutex;
       std::condition_variable m_inboundEvent;
+      std::condition_variable m_workerIdleEvent;
       std::deque<std::string> m_inbound;
       bool m_workerStop{false};
       bool m_workerStarted{false};
+      bool m_workerRunning{false};
+
+      // Read by PushBuffer outside m_inboundMutex, between the objects of one received buffer.
+      std::atomic<bool> m_workerDiscard{false};
     };
 
     class CWebSocketClient : public CTCPClient

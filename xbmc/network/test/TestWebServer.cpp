@@ -27,8 +27,13 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <errno.h>
+#include <mutex>
 #include <stdlib.h>
+#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -42,6 +47,65 @@ using namespace XFILE;
 #define TEST_FILES_DATA_RANGES  "range1;range2;range3"
 #define TEST_FILES_HTML         TEST_FILES_DATA ".html"
 #define TEST_FILES_RANGES       TEST_FILES_DATA "-ranges.txt"
+
+#define TEST_URL_HELD "held"
+#define TEST_HELD_DATA "held"
+
+namespace
+{
+// State shared with CHeldRequestHandler, which the web server instantiates per request.
+std::mutex heldMutex;
+std::condition_variable heldEvent;
+bool heldRequestArrived = false;
+bool heldRequestReleased = false;
+
+//! \brief A handler that parks inside HandleRequest() until the test lets it go, so a request can
+//!        be held in flight across a Stop().
+class CHeldRequestHandler : public IHTTPRequestHandler
+{
+public:
+  CHeldRequestHandler() = default;
+
+  IHTTPRequestHandler* Create(const HTTPRequest& request) const override
+  {
+    return new CHeldRequestHandler(request);
+  }
+
+  bool CanHandleRequest(const HTTPRequest& request) const override
+  {
+    return request.pathUrl == "/" TEST_URL_HELD;
+  }
+
+  int GetPriority() const override { return 10; }
+
+  MHD_RESULT HandleRequest() override
+  {
+    {
+      std::unique_lock<std::mutex> lock(heldMutex);
+      heldRequestArrived = true;
+      heldEvent.notify_all();
+      heldEvent.wait(lock, [] { return heldRequestReleased; });
+    }
+
+    m_responseRange.SetData(TEST_HELD_DATA, strlen(TEST_HELD_DATA));
+
+    m_response.type = HTTPMemoryDownloadNoFreeCopy;
+    m_response.status = MHD_HTTP_OK;
+    m_response.contentType = "text/plain";
+    m_response.totalLength = strlen(TEST_HELD_DATA);
+
+    return MHD_YES;
+  }
+
+  HttpResponseRanges GetResponseData() const override { return {m_responseRange}; }
+
+protected:
+  explicit CHeldRequestHandler(const HTTPRequest& request) : IHTTPRequestHandler(request) {}
+
+private:
+  CHttpResponseRange m_responseRange;
+};
+} // namespace
 
 class TestWebServer : public testing::Test
 {
@@ -381,6 +445,54 @@ TEST_F(TestWebServer, TwoServersDoNotShareAPort)
 
   other.Stop();
   EXPECT_EQ(0, other.GetPort());
+}
+
+TEST_F(TestWebServer, StopDoesNotDiscardAResponseStillOutstanding)
+{
+  {
+    std::unique_lock<std::mutex> lock(heldMutex);
+    heldRequestArrived = false;
+    heldRequestReleased = false;
+  }
+
+  CHeldRequestHandler heldHandler;
+  webserver.RegisterRequestHandler(&heldHandler);
+
+  std::string result;
+  std::atomic<bool> requestSucceeded{false};
+  std::thread client(
+      [&]
+      {
+        CCurlFile curl;
+        requestSucceeded = curl.Get(GetUrl(TEST_URL_HELD), result);
+      });
+
+  bool arrived = false;
+  {
+    std::unique_lock<std::mutex> lock(heldMutex);
+    arrived = heldEvent.wait_for(lock, std::chrono::seconds(10), [] { return heldRequestArrived; });
+  }
+  EXPECT_TRUE(arrived) << "the request never reached the handler";
+
+  std::thread stopper([&] { webserver.Stop(); });
+
+  // Long enough for a Stop() that does not wait to have torn the daemon down before the handler
+  // produces anything, which is what used to lose the response.
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  {
+    std::unique_lock<std::mutex> lock(heldMutex);
+    heldRequestReleased = true;
+  }
+  heldEvent.notify_all();
+
+  stopper.join();
+  client.join();
+
+  EXPECT_TRUE(requestSucceeded) << "the response was discarded when the server stopped";
+  EXPECT_STREQ(TEST_HELD_DATA, result.c_str());
+
+  webserver.UnregisterRequestHandler(&heldHandler);
 }
 
 TEST_F(TestWebServer, CanGetJsonRpcApiDescriptionWithHttpGet)

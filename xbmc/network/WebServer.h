@@ -12,7 +12,10 @@
 #include "threads/CriticalSection.h"
 #include "utils/logtypes.h"
 
+#include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace XFILE
@@ -114,8 +117,19 @@ private:
                              const char *filename, const char *content_type,
                              const char *transfer_encoding, const char *data, uint64_t off,
                              size_t size);
+  static void RequestCompleted(void* cls,
+                               struct MHD_Connection* connection,
+                               void** con_cls,
+                               enum MHD_RequestTerminationCode code);
 
   bool LoadCert(std::string &skey, std::string &scert);
+
+  /*!
+   \brief Wait for the responses still being written to reach their sockets
+   \param timeout how long to wait before giving up on them
+   \return whether every request finished within the timeout
+   */
+  bool DrainRequests(std::chrono::milliseconds timeout);
 
   static Logger GetLogger();
 
@@ -131,6 +145,13 @@ private:
   std::string m_cert;
   mutable CCriticalSection m_critSection;
   std::vector<IHTTPRequestHandler *> m_requestHandlers;
+
+  // libmicrohttpd writes a response after the handler has returned, so stopping the daemon
+  // while one is outstanding discards it. Counted from the first call to AnswerToConnection
+  // for a request to the MHD_OPTION_NOTIFY_COMPLETED that closes it out.
+  std::mutex m_requestsMutex;
+  std::condition_variable m_requestsIdleEvent;
+  unsigned int m_requestsInFlight = 0;
 
   Logger m_logger;
 };

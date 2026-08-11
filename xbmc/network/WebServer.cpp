@@ -24,6 +24,7 @@
 #include "utils/log.h"
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -46,6 +47,12 @@
 #define HEADER_VALUE_NO_CACHE "no-cache"
 
 #define HEADER_NEWLINE "\r\n"
+
+namespace
+{
+// Bounded because the peer may have stopped reading, and a shutdown must complete regardless.
+constexpr auto requestDrainTimeout = std::chrono::seconds(3);
+} // namespace
 
 typedef struct
 {
@@ -189,6 +196,14 @@ MHD_RESULT CWebServer::HandlePartialRequest(struct MHD_Connection* connection,
   // because now it isn't anymore
   conHandler->isNew = false;
 
+  // Balanced by RequestCompleted, which libmicrohttpd calls exactly once for every request that
+  // reached this handler, after it has finished with the response.
+  if (isNewRequest)
+  {
+    std::unique_lock<std::mutex> lock(m_requestsMutex);
+    ++m_requestsInFlight;
+  }
+
   // reset con_cls and set it if still necessary
   *con_cls = nullptr;
 
@@ -318,6 +333,30 @@ MHD_RESULT CWebServer::HandlePostField(void* cls,
 
   conHandler->requestHandler->AddPostField(key, std::string(data, size));
   return MHD_YES;
+}
+
+void CWebServer::RequestCompleted(void* cls,
+                                  struct MHD_Connection* connection,
+                                  void** con_cls,
+                                  enum MHD_RequestTerminationCode code)
+{
+  CWebServer* webServer = reinterpret_cast<CWebServer*>(cls);
+  if (webServer == nullptr)
+    return;
+
+  {
+    std::unique_lock<std::mutex> lock(webServer->m_requestsMutex);
+    if (webServer->m_requestsInFlight > 0)
+      --webServer->m_requestsInFlight;
+  }
+
+  webServer->m_requestsIdleEvent.notify_all();
+}
+
+bool CWebServer::DrainRequests(std::chrono::milliseconds timeout)
+{
+  std::unique_lock<std::mutex> lock(m_requestsMutex);
+  return m_requestsIdleEvent.wait_for(lock, timeout, [this] { return m_requestsInFlight == 0; });
 }
 
 MHD_RESULT CWebServer::HandleRequest(const std::shared_ptr<IHTTPRequestHandler>& handler)
@@ -1217,7 +1256,8 @@ struct MHD_Daemon* CWebServer::StartMHD(unsigned int flags, int port)
 
         MHD_OPTION_EXTERNAL_LOGGER, &logFromMHD, 0, MHD_OPTION_CONNECTION_LIMIT, 512,
         MHD_OPTION_CONNECTION_TIMEOUT, timeout, MHD_OPTION_URI_LOG_CALLBACK,
-        &CWebServer::UriRequestLogger, this, MHD_OPTION_THREAD_STACK_SIZE, m_thread_stacksize,
+        &CWebServer::UriRequestLogger, this, MHD_OPTION_NOTIFY_COMPLETED,
+        &CWebServer::RequestCompleted, this, MHD_OPTION_THREAD_STACK_SIZE, m_thread_stacksize,
         MHD_OPTION_HTTPS_MEM_KEY, m_key.c_str(), MHD_OPTION_HTTPS_MEM_CERT, m_cert.c_str(),
         MHD_OPTION_HTTPS_PRIORITIES, ciphers, MHD_OPTION_END);
 
@@ -1238,7 +1278,8 @@ struct MHD_Daemon* CWebServer::StartMHD(unsigned int flags, int port)
 
       MHD_OPTION_EXTERNAL_LOGGER, &logFromMHD, 0, MHD_OPTION_CONNECTION_LIMIT, 512,
       MHD_OPTION_CONNECTION_TIMEOUT, timeout, MHD_OPTION_URI_LOG_CALLBACK,
-      &CWebServer::UriRequestLogger, this, MHD_OPTION_THREAD_STACK_SIZE, m_thread_stacksize,
+      &CWebServer::UriRequestLogger, this, MHD_OPTION_NOTIFY_COMPLETED,
+      &CWebServer::RequestCompleted, this, MHD_OPTION_THREAD_STACK_SIZE, m_thread_stacksize,
       MHD_OPTION_END);
 }
 
@@ -1304,6 +1345,12 @@ bool CWebServer::Stop()
 {
   if (!m_running)
     return true;
+
+  // Stopping a daemon shuts its connections down under whatever is being written, so a response
+  // that has not reached its socket yet has to be given the chance to. Bounded, because a peer
+  // that has stopped reading must not hold up a shutdown.
+  if (!DrainRequests(requestDrainTimeout))
+    m_logger->warn("Timed out waiting for requests to finish, their responses are lost");
 
   if (m_daemon_ip6 != nullptr)
   {
