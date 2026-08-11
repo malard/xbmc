@@ -209,6 +209,23 @@ class TestSiteGeneration(unittest.TestCase):
             with self.subTest(claim=claim):
                 self.assertIn(claim, text)
 
+    def test_landing_page_leads_with_the_socket_transports(self):
+        """A reader with no prior knowledge takes the transport listed first,
+        and only the socket ones can carry a notification."""
+        text = (self.out / "index.html").read_text(encoding="utf-8")
+        order = [text.index(f"<strong>{name}</strong>")
+                 for name in ("WebSocket", "Raw TCP", "HTTP")]
+        self.assertEqual(order, sorted(order))
+        self.assertIn("Which to use", text)
+
+    def test_landing_page_does_not_claim_the_socket_is_authenticated(self):
+        """Authentication covers HTTP only - the socket on 9090 grants every
+        connection full permissions. Saying otherwise about a security
+        property is worse than saying nothing."""
+        text = (self.out / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Authentication over HTTP is basic auth", text)
+        self.assertNotIn("Authentication is HTTP basic auth", text)
+
     def test_landing_page_renders_every_example(self):
         text = (self.out / "index.html").read_text(encoding="utf-8")
         examples = sorted(generate_site.EXAMPLES_DIR.glob("*.json"))
