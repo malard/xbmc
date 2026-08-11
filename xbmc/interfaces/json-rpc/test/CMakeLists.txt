@@ -10,6 +10,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestSettingsLevel.cpp
+            TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp)

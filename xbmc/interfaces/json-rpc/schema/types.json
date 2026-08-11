@@ -2981,7 +2981,7 @@
         "type": "number"
       },
       "genre": {
-        "type": "string"
+        "$ref": "#/$defs/Array.String"
       },
       "episodename": {
         "type": "string"
@@ -3045,7 +3045,7 @@
         "type": "integer"
       },
       "imdbnumber": {
-        "type": "integer"
+        "type": "string"
       },
       "hastimerrule": {
         "type": "boolean"
@@ -3569,7 +3569,7 @@
         "type": "string"
       },
       "genre": {
-        "type": "string"
+        "$ref": "#/$defs/Array.String"
       },
       "parentalrating": {
         "type": "integer"
