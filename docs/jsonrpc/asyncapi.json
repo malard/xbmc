@@ -165,6 +165,9 @@
         },
         "GUI.OnSkinLoadFailed": {
           "$ref": "#/components/messages/GUI.OnSkinLoadFailed"
+        },
+        "Settings.OnLevelChanged": {
+          "$ref": "#/components/messages/Settings.OnLevelChanged"
         }
       }
     }
@@ -651,6 +654,17 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/GUI.OnSkinLoadFailed"
+        }
+      ]
+    },
+    "Settings.OnLevelChanged": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Settings.OnLevelChanged"
         }
       ]
     }
@@ -2494,6 +2508,50 @@
             "params"
           ]
         }
+      },
+      "Settings.OnLevelChanged": {
+        "name": "Settings.OnLevelChanged",
+        "summary": "The setting level in force has changed. The profile's settings lock can lower it without the viewer asking for it.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Settings.OnLevelChanged"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "level": {
+                      "$ref": "#/components/schemas/Setting.Level"
+                    }
+                  },
+                  "required": [
+                    "level"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
       }
     },
     "schemas": {
@@ -3064,6 +3122,15 @@
         "required": [
           "item",
           "player"
+        ]
+      },
+      "Setting.Level": {
+        "type": "string",
+        "enum": [
+          "basic",
+          "standard",
+          "advanced",
+          "expert"
         ]
       },
       "Notifications.Library.Audio.Type": {

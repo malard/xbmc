@@ -6,6 +6,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestJSONServiceDescriptionIntrospect.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
+            TestSettingsLevel.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibrarySetSourceContent.cpp)
 
