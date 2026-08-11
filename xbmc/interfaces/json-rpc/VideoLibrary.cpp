@@ -896,93 +896,49 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const std::string &method, IT
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::RefreshMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::Refresh(const std::string& method,
+                                      ITransportLayer* transport,
+                                      IClient* client,
+                                      const CVariant& parameterObject,
+                                      CVariant& result)
 {
-  int id = static_cast<int>(parameterObject["movieid"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CVideoInfoTag infos;
-  if (!videodatabase.GetMovieInfo("", infos, id, -1) || //! @todo API support for video version id
-      infos.m_iDbId <= 0)
-    return NotFound;
-
-  bool ignoreNfo = parameterObject["ignorenfo"].asBoolean();
-  std::string searchTitle = parameterObject["title"].asString();
-  CVideoLibraryQueue::GetInstance().RefreshItem(std::make_shared<CFileItem>(infos), ignoreNfo, true,
-                                                false, searchTitle);
-
-  return ACK;
+  return RefreshVideo(parameterObject["item"], parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RefreshTVShow(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RefreshMovie(const std::string& method,
+                                           ITransportLayer* transport,
+                                           IClient* client,
+                                           const CVariant& parameterObject,
+                                           CVariant& result)
 {
-  int id = static_cast<int>(parameterObject["tvshowid"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemPtr item(new CFileItem());
-  CVideoInfoTag infos;
-  if (!videodatabase.GetTvShowInfo("", infos, id, item.get()) || infos.m_iDbId <= 0)
-    return NotFound;
-
-  item->SetFromVideoInfoTag(infos);
-
-  bool ignoreNfo = parameterObject["ignorenfo"].asBoolean();
-  bool refreshEpisodes = parameterObject["refreshepisodes"].asBoolean();
-  std::string searchTitle = parameterObject["title"].asString();
-  CVideoLibraryQueue::GetInstance().RefreshItem(item, ignoreNfo, true, refreshEpisodes, searchTitle);
-
-  return ACK;
+  return RefreshVideo(parameterObject, parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RefreshEpisode(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RefreshTVShow(const std::string& method,
+                                            ITransportLayer* transport,
+                                            IClient* client,
+                                            const CVariant& parameterObject,
+                                            CVariant& result)
 {
-  int id = (int)parameterObject["episodeid"].asInteger();
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CVideoInfoTag infos;
-  if (!videodatabase.GetEpisodeInfo("", infos, id) || infos.m_iDbId <= 0)
-    return NotFound;
-
-  CFileItemPtr item = std::make_shared<CFileItem>(infos);
-  // We need to set the correct base path to get the valid fanart
-  int tvshowid = infos.m_iIdShow;
-  if (tvshowid <= 0)
-    tvshowid = videodatabase.GetTvShowForEpisode(id);
-
-  bool ignoreNfo = parameterObject["ignorenfo"].asBoolean();
-  std::string searchTitle = parameterObject["title"].asString();
-  CVideoLibraryQueue::GetInstance().RefreshItem(item, ignoreNfo, true, false, searchTitle);
-
-  return ACK;
+  return RefreshVideo(parameterObject, parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RefreshMusicVideo(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RefreshEpisode(const std::string& method,
+                                             ITransportLayer* transport,
+                                             IClient* client,
+                                             const CVariant& parameterObject,
+                                             CVariant& result)
 {
-  int id = static_cast<int>(parameterObject["musicvideoid"].asInteger());
+  return RefreshVideo(parameterObject, parameterObject);
+}
 
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CVideoInfoTag infos;
-  if (!videodatabase.GetMusicVideoInfo("", infos, id) || infos.m_iDbId <= 0)
-    return NotFound;
-
-  bool ignoreNfo = parameterObject["ignorenfo"].asBoolean();
-  std::string searchTitle = parameterObject["title"].asString();
-  CVideoLibraryQueue::GetInstance().RefreshItem(std::make_shared<CFileItem>(infos), ignoreNfo, true,
-                                                false, searchTitle);
-
-  return ACK;
+JSONRPC_STATUS CVideoLibrary::RefreshMusicVideo(const std::string& method,
+                                                ITransportLayer* transport,
+                                                IClient* client,
+                                                const CVariant& parameterObject,
+                                                CVariant& result)
+{
+  return RefreshVideo(parameterObject, parameterObject);
 }
 
 JSONRPC_STATUS CVideoLibrary::RemoveMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
@@ -1363,6 +1319,96 @@ JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant &parameterObject)
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
+}
+
+JSONRPC_STATUS CVideoLibrary::RefreshVideo(const CVariant& identifier,
+                                           const CVariant& parameterObject)
+{
+  CVideoDatabase videodatabase;
+  if (!videodatabase.Open())
+  {
+    return InternalError;
+  }
+
+  const std::shared_ptr<CFileItem> item = std::make_shared<CFileItem>();
+  const JSONRPC_STATUS status = ResolveRefreshItem(identifier, videodatabase, *item);
+  if (status != OK)
+  {
+    return status;
+  }
+
+  const bool ignoreNfo = parameterObject["ignorenfo"].asBoolean();
+  const bool refreshEpisodes = parameterObject["refreshepisodes"].asBoolean();
+  const std::string searchTitle = parameterObject["title"].asString();
+  CVideoLibraryQueue::GetInstance().RefreshItem(item, ignoreNfo, true, refreshEpisodes,
+                                                searchTitle);
+
+  return ACK;
+}
+
+JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
+                                                 CVideoDatabase& videodatabase,
+                                                 CFileItem& item)
+{
+  CVideoInfoTag details;
+
+  if (identifier.isMember("setid"))
+  {
+    // A set has no file of its own. The refresh reads the set's movies back out of the
+    // videodb:// path the database fills the item with, which the tag does not carry, so this
+    // one keeps the item it was given rather than rebuilding it from the tag.
+    if (!videodatabase.GetSetInfo(static_cast<int>(identifier["setid"].asInteger()), details,
+                                  &item) ||
+        details.m_iDbId <= 0)
+    {
+      return NotFound;
+    }
+
+    return OK;
+  }
+
+  bool found = false;
+  if (identifier.isMember("movieid"))
+  {
+    //! @todo API support for video version id
+    found = videodatabase.GetMovieInfo("", details,
+                                       static_cast<int>(identifier["movieid"].asInteger()), -1);
+  }
+  else if (identifier.isMember("tvshowid"))
+  {
+    found = videodatabase.GetTvShowInfo(
+        "", details, static_cast<int>(identifier["tvshowid"].asInteger()), &item);
+  }
+  else if (identifier.isMember("seasonid"))
+  {
+    found = videodatabase.GetSeasonInfo(static_cast<int>(identifier["seasonid"].asInteger()),
+                                        details, &item);
+  }
+  else if (identifier.isMember("episodeid"))
+  {
+    found = videodatabase.GetEpisodeInfo("", details,
+                                         static_cast<int>(identifier["episodeid"].asInteger()));
+  }
+  else if (identifier.isMember("musicvideoid"))
+  {
+    found = videodatabase.GetMusicVideoInfo(
+        "", details, static_cast<int>(identifier["musicvideoid"].asInteger()));
+  }
+  else
+  {
+    return InvalidParams;
+  }
+
+  if (!found || details.m_iDbId <= 0)
+  {
+    return NotFound;
+  }
+
+  // A tv show and a season are held against a folder, an episode and a movie against their file.
+  // The tag says which, and the refresh resolves the scraper and any local NFO from it.
+  item.SetFromVideoInfoTag(details);
+
+  return OK;
 }
 
 void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase)

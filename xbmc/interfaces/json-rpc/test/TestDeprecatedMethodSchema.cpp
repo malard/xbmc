@@ -69,10 +69,33 @@ struct Supersession
   const char* replacement;
 };
 
-constexpr std::array<Supersession, 2> DEPRECATED_METHODS{{
+//! \brief Deprecated names their replacement answers unchanged - a rename, nothing more
+constexpr std::array<Supersession, 2> RENAMED_METHODS{{
     {"XBMC.GetInfoLabels", "GUI.GetInfoLabels"},
     {"XBMC.GetInfoBooleans", "GUI.GetInfoBooleans"},
 }};
+
+/*!
+ \brief Deprecated methods a replacement covers under a different signature
+
+ A caller has to rewrite the request rather than only the method name, so these
+ are held apart from the renames above: what they share is that the old name
+ still works and still names somewhere to go.
+ */
+constexpr std::array<Supersession, 4> SUPERSEDED_METHODS{{
+    {"VideoLibrary.RefreshMovie", "VideoLibrary.Refresh"},
+    {"VideoLibrary.RefreshTVShow", "VideoLibrary.Refresh"},
+    {"VideoLibrary.RefreshEpisode", "VideoLibrary.Refresh"},
+    {"VideoLibrary.RefreshMusicVideo", "VideoLibrary.Refresh"},
+}};
+
+//! \brief Every deprecated method, however its replacement is reached
+std::vector<Supersession> DeprecatedMethods()
+{
+  std::vector<Supersession> methods{RENAMED_METHODS.begin(), RENAMED_METHODS.end()};
+  methods.insert(methods.end(), SUPERSEDED_METHODS.begin(), SUPERSEDED_METHODS.end());
+  return methods;
+}
 
 //! \brief Deprecated properties, as type name, property, and what replaces it
 struct DeprecatedProperty
@@ -121,7 +144,7 @@ std::vector<std::string> DeclaredDeprecations()
 TEST(TestDeprecatedMethodSchema, EveryDeprecationIsAccountedFor)
 {
   std::vector<std::string> expected;
-  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  for (const auto& [deprecated, replacement] : DeprecatedMethods())
     expected.emplace_back(deprecated);
   for (const auto& [type, property, replacement] : DEPRECATED_PROPERTIES)
     expected.emplace_back(std::string(type) + "." + property);
@@ -137,7 +160,7 @@ TEST(TestDeprecatedMethodSchema, ADeprecatedMethodNamesAReplacementThatExists)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
 
-  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  for (const auto& [deprecated, replacement] : DeprecatedMethods())
   {
     ASSERT_TRUE(methods.contains(deprecated)) << deprecated;
     EXPECT_TRUE(methods.contains(replacement)) << replacement << " does not exist";
@@ -168,15 +191,16 @@ TEST(TestDeprecatedMethodSchema, ADeprecatedPropertyNamesAReplacementThatExists)
 }
 
 /*!
- The two are the same implementation under two names, so a client that follows
+ A rename is the same implementation under two names, so a client that follows
  the description must not find the request or the answer has changed underneath
- it.
+ it. A method superseded by one of a different shape is exempt by construction -
+ rewriting the request is what the migration guide is for.
  */
-TEST(TestDeprecatedMethodSchema, ADeprecatedMethodAgreesWithItsReplacement)
+TEST(TestDeprecatedMethodSchema, ARenamedMethodAgreesWithItsReplacement)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
 
-  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  for (const auto& [deprecated, replacement] : RENAMED_METHODS)
   {
     ASSERT_TRUE(methods.contains(deprecated)) << deprecated;
     ASSERT_TRUE(methods.contains(replacement)) << replacement;
@@ -202,7 +226,7 @@ TEST(TestDeprecatedMethodSchema, AReplacementIsNotItselfDeprecated)
   const std::map<std::string, CVariant> methods{ShippedMethods()};
   const std::map<std::string, CVariant> types{ShippedTypes()};
 
-  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  for (const auto& [deprecated, replacement] : DeprecatedMethods())
   {
     ASSERT_TRUE(methods.contains(replacement)) << replacement;
     EXPECT_FALSE(methods.at(replacement)["deprecated"].asBoolean(false)) << replacement;
@@ -226,7 +250,7 @@ TEST(TestDeprecatedMethodSchema, TheSchemaDoesNotDateItsOwnRemovals)
 {
   const std::map<std::string, CVariant> methods{ShippedMethods()};
 
-  for (const auto& [deprecated, replacement] : DEPRECATED_METHODS)
+  for (const auto& [deprecated, replacement] : DeprecatedMethods())
   {
     const std::string description{methods.at(deprecated)["description"].asString()};
     EXPECT_EQ(std::string::npos, description.find("Kodi 2"))

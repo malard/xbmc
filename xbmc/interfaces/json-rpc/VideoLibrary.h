@@ -59,6 +59,13 @@ namespace JSONRPC
     static JSONRPC_STATUS SetEpisodeDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS SetMusicVideoDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
 
+    static JSONRPC_STATUS Refresh(const std::string& method,
+                                  ITransportLayer* transport,
+                                  IClient* client,
+                                  const CVariant& parameterObject,
+                                  CVariant& result);
+
+    // Deprecated in favour of Refresh, which also reaches movie sets and seasons
     static JSONRPC_STATUS RefreshMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS RefreshTVShow(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS RefreshEpisode(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
@@ -106,6 +113,24 @@ namespace JSONRPC
     static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant &parameterObject);
     static JSONRPC_STATUS HandleItems(const char *idProperty, const char *resultName, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool limit = true);
     static JSONRPC_STATUS RemoveVideo(const CVariant &parameterObject);
+
+    /*! \brief Queue a refresh of the library item an identifier names
+
+     The deprecated per-type methods carry their id at the top level of the call, so they name
+     the parameter object as the identifier as well.
+     \param identifier the object carrying the item's library id
+     \param parameterObject the call's parameters, for the options the refresh takes
+    */
+    static JSONRPC_STATUS RefreshVideo(const CVariant& identifier, const CVariant& parameterObject);
+
+    /*! \brief Fill in the item a refresh acts on from the identifier naming it
+     \param identifier the object carrying the item's library id
+     \param videodatabase an open video database
+     \param item the item to fill in
+    */
+    static JSONRPC_STATUS ResolveRefreshItem(const CVariant& identifier,
+                                             CVideoDatabase& videodatabase,
+                                             CFileItem& item);
     static void UpdateVideoTag(const CVariant& parameterObject,
                                CVideoInfoTag& details,
                                KODI::ART::Artwork& artwork,

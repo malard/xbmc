@@ -72,6 +72,11 @@ schema never says *when* something goes; that is here.
   `season` and `episode`. These were deprecated in 13.6.0 in prose only, so
   they never reached a stable release marked as such; 14 is the first version
   in which a client can discover it.
+- `VideoLibrary.RefreshMovie`, `VideoLibrary.RefreshTVShow`,
+  `VideoLibrary.RefreshEpisode` and `VideoLibrary.RefreshMusicVideo`,
+  superseded by `VideoLibrary.Refresh`. The old names still work and are served
+  by the same implementation, but the id moves inside an `item` object, so this
+  one is not only a rename at the call site.
 
 ### Added
 
@@ -97,6 +102,10 @@ schema never says *when* something goes; that is here.
   Kodi could not reach an entry gated above the level it happened to be left
   at. `Settings.SetLevel` answers with the level that ended up in force,
   because the profile's settings lock can refuse the one asked for.
+- `VideoLibrary.Refresh` - refreshes the library item its `item` parameter
+  names, in place of the four deprecated per-type methods. A movie set and a
+  season can be refreshed for the first time; the interface has always been
+  able to and no per-type method covered either.
 - `VideoLibrary.SetSourceContent` - assigns a content type and scraper to a
   video source path, as the "Set content" dialog does.
 
