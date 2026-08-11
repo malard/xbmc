@@ -197,3 +197,6 @@ schema never says *when* something goes; that is here.
   `protocol` can now be `https`. It was always `http`, which was wrong both
   when the web server serves HTTPS itself and behind a reverse proxy that
   terminates TLS - a browser blocked the composed URL as mixed content.
+- `PVR.Details.Broadcast` declares `imdbnumber` as a string, and it and
+  `PVR.Details.Recording` declare `genre` as an array of strings, which is
+  what each has always sent.
