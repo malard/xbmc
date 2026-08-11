@@ -222,6 +222,9 @@
             },
             "Other": {
               "$ref": "#/$defs/Optional.Boolean"
+            },
+            "Settings": {
+              "$ref": "#/$defs/Optional.Boolean"
             }
           }
         }
@@ -8308,6 +8311,49 @@
     ],
     "returns": "string"
   },
+  "Settings.GetLevel": {
+    "type": "method",
+    "description": "Retrieves the setting level in force, which is what the settings window is showing and what the level button cycles",
+    "transport": "Response",
+    "permission": "ReadData",
+    "returns": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/Setting.Level"
+        }
+      },
+      "required": [
+        "level"
+      ]
+    }
+  },
+  "Settings.SetLevel": {
+    "type": "method",
+    "description": "Changes the setting level in force and answers with the level that ended up in force, which is unchanged if the profile's settings lock does not permit the one asked for",
+    "transport": "Response",
+    "permission": "ControlGUI",
+    "params": [
+      {
+        "name": "level",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Setting.Level"
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/Setting.Level"
+        }
+      },
+      "required": [
+        "level"
+      ]
+    }
+  },
   "Settings.GetSections": {
     "type": "method",
     "description": "Retrieves all setting sections",
@@ -8341,13 +8387,20 @@
     "returns": {
       "type": "object",
       "properties": {
+        "level": {
+          "$ref": "#/$defs/Setting.Level"
+        },
         "sections": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Setting.Details.Section"
           }
         }
-      }
+      },
+      "required": [
+        "level",
+        "sections"
+      ]
     }
   },
   "Settings.GetCategories": {
@@ -8390,13 +8443,20 @@
     "returns": {
       "type": "object",
       "properties": {
+        "level": {
+          "$ref": "#/$defs/Setting.Level"
+        },
         "categories": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Setting.Details.Category"
           }
         }
-      }
+      },
+      "required": [
+        "level",
+        "categories"
+      ]
     }
   },
   "Settings.GetSettings": {
@@ -8442,13 +8502,20 @@
     "returns": {
       "type": "object",
       "properties": {
+        "level": {
+          "$ref": "#/$defs/Setting.Level"
+        },
         "settings": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Setting.Details.Setting"
           }
         }
-      }
+      },
+      "required": [
+        "level",
+        "settings"
+      ]
     }
   },
   "Settings.GetSettingValue": {

@@ -471,6 +471,9 @@
               },
               "Other": {
                 "$ref": "#/components/schemas/Optional.Boolean"
+              },
+              "Settings": {
+                "$ref": "#/components/schemas/Optional.Boolean"
               }
             }
           }
@@ -15893,6 +15896,132 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Settings.GetLevel",
+      "summary": "Retrieves the setting level in force, which is what the settings window is showing and what the level button cycles",
+      "tags": [
+        {
+          "name": "Settings"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "$ref": "#/components/schemas/Setting.Level"
+            }
+          },
+          "required": [
+            "level"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Settings.SetLevel",
+      "summary": "Changes the setting level in force and answers with the level that ended up in force, which is unchanged if the profile's settings lock does not permit the one asked for",
+      "tags": [
+        {
+          "name": "Settings"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "level",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Setting.Level"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "$ref": "#/components/schemas/Setting.Level"
+            }
+          },
+          "required": [
+            "level"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ControlGUI",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Settings.GetSections",
       "summary": "Retrieves all setting sections",
       "tags": [
@@ -15931,13 +16060,20 @@
         "schema": {
           "type": "object",
           "properties": {
+            "level": {
+              "$ref": "#/components/schemas/Setting.Level"
+            },
             "sections": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Setting.Details.Section"
               }
             }
-          }
+          },
+          "required": [
+            "level",
+            "sections"
+          ]
         }
       },
       "errors": [
@@ -16021,13 +16157,20 @@
         "schema": {
           "type": "object",
           "properties": {
+            "level": {
+              "$ref": "#/components/schemas/Setting.Level"
+            },
             "categories": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Setting.Details.Category"
               }
             }
-          }
+          },
+          "required": [
+            "level",
+            "categories"
+          ]
         }
       },
       "errors": [
@@ -16114,13 +16257,20 @@
         "schema": {
           "type": "object",
           "properties": {
+            "level": {
+              "$ref": "#/components/schemas/Setting.Level"
+            },
             "settings": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Setting.Details.Setting"
               }
             }
-          }
+          },
+          "required": [
+            "level",
+            "settings"
+          ]
         }
       },
       "errors": [
@@ -16787,6 +16937,15 @@
           },
           "Other": {
             "type": "boolean"
+          },
+          "Info": {
+            "type": "boolean"
+          },
+          "Sources": {
+            "type": "boolean"
+          },
+          "Settings": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -16799,7 +16958,10 @@
           "Application",
           "Input",
           "PVR",
-          "Other"
+          "Other",
+          "Info",
+          "Sources",
+          "Settings"
         ],
         "additionalProperties": false
       },

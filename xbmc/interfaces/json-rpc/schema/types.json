@@ -140,6 +140,15 @@
       },
       "Other": {
         "type": "boolean"
+      },
+      "Info": {
+        "type": "boolean"
+      },
+      "Sources": {
+        "type": "boolean"
+      },
+      "Settings": {
+        "type": "boolean"
       }
     },
     "required": [
@@ -152,7 +161,10 @@
       "Application",
       "Input",
       "PVR",
-      "Other"
+      "Other",
+      "Info",
+      "Sources",
+      "Settings"
     ],
     "additionalProperties": false
   },

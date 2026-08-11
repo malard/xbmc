@@ -57,6 +57,12 @@ public:
    \returns true if we're allowed to access the settings
    */
   bool CheckSettingLevelLock(const SettingLevel& level, bool enforce = false);
+  /*! \brief Checks if the current profile may move to the given settings level without being asked
+   for the master lock code, for a caller that has no viewer to ask - a JSON-RPC client, say
+   \param level - The level to check
+   \returns true if the level may be entered
+   */
+  bool IsSettingLevelUnlocked(const SettingLevel& level);
   bool CheckMenuLock(int iWindowID);
   bool IsVideoUnlocked();
   bool IsMusicUnlocked();

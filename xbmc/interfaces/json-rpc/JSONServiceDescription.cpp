@@ -284,6 +284,8 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Textures.RemoveTexture",                       CTextureOperations::RemoveTexture },
 
 // Settings operations
+  { "Settings.GetLevel",                            CSettingsOperations::GetLevel },
+  { "Settings.SetLevel",                            CSettingsOperations::SetLevel },
   { "Settings.GetSections",                         CSettingsOperations::GetSections },
   { "Settings.GetCategories",                       CSettingsOperations::GetCategories },
   { "Settings.GetSettings",                         CSettingsOperations::GetSettings },

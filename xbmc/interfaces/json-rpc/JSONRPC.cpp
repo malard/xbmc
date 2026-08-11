@@ -214,6 +214,9 @@ JSONRPC_STATUS CJSONRPC::SetConfiguration(const std::string &method, ITransportL
     if ((notifications["Other"].isNull() && (oldFlags & ANNOUNCEMENT::Other)) ||
         (notifications["Other"].isBoolean() && notifications["Other"].asBoolean()))
       flags |= ANNOUNCEMENT::Other;
+    if ((notifications["Settings"].isNull() && (oldFlags & ANNOUNCEMENT::Settings)) ||
+        (notifications["Settings"].isBoolean() && notifications["Settings"].asBoolean()))
+      flags |= ANNOUNCEMENT::Settings;
   }
 
   if (!client->SetAnnouncementFlags(flags))
