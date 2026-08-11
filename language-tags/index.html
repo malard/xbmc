@@ -228,7 +228,7 @@ body {
 /* ---------- content ---------- */
 
 .content { padding: 2.25rem 0 0; min-width: 0; }
-section { margin: 0 0 3.25rem; scroll-margin-top: 1.5rem; }
+section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
 
 h2.sec {
   font-family: var(--serif);
@@ -255,7 +255,7 @@ h3 {
   font-family: var(--serif);
   font-weight: 600;
   font-size: 1.2rem;
-  margin: 2rem 0 0.55rem;
+  margin: 1.9rem 0 0.55rem;
 }
 
 p, ul, ol.prose { max-width: var(--measure); }
@@ -291,8 +291,6 @@ p code, li code, td code {
 .note.caution { border-left-color: var(--warn); background: var(--lit-soft); }
 .note p { margin: 0 0 0.5rem; max-width: none; }
 .note p:last-child { margin: 0; }
-.note ul { margin: 0.35rem 0 0; padding-left: 1.1rem; max-width: none; }
-.note li { margin-bottom: 0.25rem; }
 .note-label {
   font-family: var(--mono);
   font-size: 0.64rem;
@@ -364,18 +362,10 @@ figure {
   margin: 1.35rem 0 1.5rem;
   border: 1px solid var(--rule);
   background: var(--surface);
-  padding: 1.2rem 1.2rem 0.9rem;
+  padding: 1.2rem;
   max-width: var(--measure);
 }
 figure svg { display: block; width: 100%; height: auto; }
-figcaption {
-  margin-top: 0.8rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--rule);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: var(--muted);
-}
 
 /* ---------- footer ---------- */
 
@@ -456,15 +446,14 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <p>
         Ask Kodi what language a soundtrack is in and it answers <code>eng</code> or <code>en</code>
         for the same film in the same response, depending where the track came from. This picks one
-        answer for everything outside Kodi, and gives the inside a type that knows which it holds.
+        answer for everything outside Kodi.
       </p>
     </div>
 
     <div class="tldr">
       <h2>Substance</h2>
       <ul>
-        <li><code>CLanguageTag</code> — canonical BCP&nbsp;47, narrowing accessors for ISO&nbsp;639-1, 639-2/B, 639-2/T and English names.</li>
-        <li>Replaces bare strings through the demuxers, <code>SelectionStream</code>, <code>StreamInfo</code> and the player.</li>
+        <li><code>CLanguageTag</code> replaces bare strings through the demuxers, <code>SelectionStream</code>, <code>StreamInfo</code> and the player.</li>
         <li>Three exits, three notations: <b>BCP&nbsp;47</b> on the wire, <b>639-2/B</b> in the database, whatever the disc library takes.</li>
         <li>Ten latent defects fixed en route, two of them build-dependent data corruption.</li>
       </ul>
@@ -473,10 +462,10 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <div class="tldr">
       <h2>Where to look</h2>
       <ul>
-        <li><a href="#boundaries">§03</a> — the three boundaries. The spine of the change.</li>
+        <li><a href="#boundaries">§03</a> — the three boundaries. The spine.</li>
         <li><a href="#api">§04</a> — the only breaking part.</li>
-        <li><a href="#matches">§02</a> — <code>Matches()</code>, and what it deliberately is not.</li>
-        <li><a href="#order">§06</a> — why 26 commits, and which two matter.</li>
+        <li><a href="#matches">§02</a> — <code>Matches()</code>, and what it is not.</li>
+        <li><a href="#order">§06</a> — why 26 commits.</li>
       </ul>
     </div>
 
@@ -508,14 +497,13 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <p class="lead">
       <code>Player.GetProperties</code> served ISO&nbsp;639-2/B for embedded streams and the
       filename-derived tag for external subtitles — <code>eng</code> and <code>en</code> in one
-      response. That is the reported bug; the ambiguity behind it is the target.
+      response.
     </p>
 
     <p>
-      A bare string never states its notation, so every receiver guessed. The guesses disagreed:
-      preferences compared against streams in another notation silently never matched, failed
-      conversions left the caller's output untouched to be read as stale, and normalisation happened
-      on some paths and not others.
+      A bare string never states its notation, so every receiver guessed. Preferences compared
+      against streams in another notation never matched, failed conversions left the caller's output
+      untouched to be read as stale, and normalisation happened on some paths and not others.
     </p>
 
     <p>
@@ -524,7 +512,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     </p>
 
     <figure>
-      <svg viewBox="0 0 660 300" role="img" aria-labelledby="flowtitle">
+      <svg viewBox="0 0 660 292" role="img" aria-labelledby="flowtitle">
         <title id="flowtitle">Language flow before and after</title>
         <g font-family="Cascadia Mono, Consolas, monospace" font-size="11">
 
@@ -584,28 +572,20 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <text x="590" y="232" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.8">AsIso6391 / 6392T</text>
           <text x="590" y="243" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.6">en / eng</text>
 
-          <text x="0" y="276" fill="currentColor" font-size="10" opacity="0.6">Narrowing is lossy and always deliberate. Nothing widens on the way in.</text>
+          <text x="0" y="272" fill="currentColor" font-size="10" opacity="0.6">Narrowing is lossy and always deliberate. Nothing widens on the way in.</text>
         </g>
       </svg>
-      <figcaption>
-        Dashed boxes converted on their own initiative. Below the line, conversion happens only at
-        an exit, and each exit names the notation it needs.
-      </figcaption>
     </figure>
 
     <p>
-      Four structs carry the language along that path and flip together: <code>CDemuxStream</code>,
-      <code>SelectionStream</code>, <code>StreamInfo</code>, <code>ExternalStreamInfo</code>. Each
-      demuxer parses its own container's notation at the edge, closed captions as the explicit
-      undetermined tag rather than an invented code.
+      The carrier is <code>CLanguageTag</code> (<code>xbmc/utils/LanguageTag.h</code>): one canonical
+      BCP&nbsp;47 string.
     </p>
 
     <p>
-      The carrier is <code>CLanguageTag</code> (<code>xbmc/utils/LanguageTag.h</code>): one canonical
-      BCP&nbsp;47 string, constructible only through named factories, with narrowing accessors for
-      each notation a boundary needs. Each accessor is a documented lossy projection with a stated
-      fallback, at a call site that had to pick a notation anyway — the choice is now visible rather
-      than incidental. The header carries the rest.
+      Four structs carry it and flip together: <code>CDemuxStream</code>,
+      <code>SelectionStream</code>, <code>StreamInfo</code>, <code>ExternalStreamInfo</code>. Closed
+      captions become the explicit undetermined tag rather than an invented code.
     </p>
   </section>
 
@@ -625,18 +605,17 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 }</code></pre>
 
     <ul class="prose">
-      <li><b>A preference test.</b> A user states a language and means any variety of it, so <code>en</code>, <code>eng</code>, <code>en-AU</code>, <code>en-GB</code> all match.</li>
-      <li><b>Not RFC&nbsp;4647 matching</b>, which pairs a range against a tag and answers differently depending on which side is asked. This is symmetric; nothing is more specific, nothing partly matches. Ranking varieties needs the subtags.</li>
-      <li><b>An extlang qualifies its prefix.</b> <code>zh-yue</code> is Chinese here and matches <code>zh</code>; RFC&nbsp;5646 canonicalises it to <code>yue</code>, a language of its own, which does not match. Both asserted in <code>TestLanguageTag</code>.</li>
+      <li><b>A preference test.</b> <code>en</code>, <code>eng</code>, <code>en-AU</code> and <code>en-GB</code> all match.</li>
+      <li><b>Not RFC&nbsp;4647 matching.</b> Symmetric: nothing is more specific, nothing partly matches. Ranking varieties needs the subtags.</li>
+      <li><b>An extlang qualifies its prefix.</b> <code>zh-yue</code> matches <code>zh</code>, not <code>yue</code>. Both asserted in <code>TestLanguageTag</code>.</li>
     </ul>
 
     <div class="note">
       <span class="note-label">At the merge base</span>
       <p>
-        <code>CompareISO639Codes</code> expanded both sides to English names and compared those, so a
-        qualified tag expanded to a qualified name: <code>en-AU</code> vs <code>eng</code> did not
-        match — the reported bug — nor did <code>en-AU</code> vs <code>en-GB</code>. Nor did
-        <code>zh-yue</code> vs <code>yue</code>, exactly as now.
+        <code>CompareISO639Codes</code> compared expanded English names, so <code>en-AU</code>
+        matched neither <code>eng</code> nor <code>en-GB</code>. <code>zh-yue</code> did not match
+        <code>yue</code> then either.
       </p>
     </div>
   </section>
@@ -658,7 +637,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <tr>
             <td class="w"><b>Public API</b><br><span class="mono">JSON-RPC, Python</span></td>
             <td class="m">BCP 47</td>
-            <td>The only notation that expresses what media declares, and already what the external subtitle path produced. This makes the mixed response consistent rather than inventing a third answer.</td>
+            <td>The only notation that expresses what media declares, and already what the external subtitle path produced.</td>
           </tr>
           <tr>
             <td class="w"><b>Persistence</b><br><span class="mono">streamdetails</span></td>
@@ -676,16 +655,14 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
     <p>
       The persistence constraint is recorded above the <code>CStreamDetail</code> classes in
-      <code>StreamDetails.h</code>, where the next person will be tempted to change it. Consequently
-      library values carry a language only, never a region: the region is lost at the narrowing on
-      the way in, and <code>Serialize()</code> widens the persisted form on the way out. The schema
-      states this per field.
+      <code>StreamDetails.h</code>. Library values therefore carry a language only, never a region;
+      <code>Serialize()</code> widens the persisted form on the way out, and the schema states this
+      per field.
     </p>
 
     <p>
-      The skin surface keeps its spelling. What changed there is that eight sites which hand-rolled
-      the same lookup-and-fall-back-to-<i>Unknown</i> now share
-      <code>CGUIInfoUtils::FormatLanguage</code>.
+      The skin surface keeps its spelling. Eight sites that hand-rolled the same
+      lookup-and-fall-back-to-<i>Unknown</i> now share <code>CGUIInfoUtils::FormatLanguage</code>.
     </p>
   </section>
 
@@ -694,9 +671,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <h2 class="sec"><span class="num">04</span>Public API</h2>
     <hr class="sec-rule">
 
-    <p class="lead">
-      All of it is value-format change. No signature, type or ABI changes.
-    </p>
+    <p class="lead">All of it is value-format change. No signature, type or ABI changes.</p>
 
     <div class="table-wrap">
       <table>
@@ -705,17 +680,17 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <tr>
             <td class="w">JSON-RPC <span class="chip brk">breaking</span></td>
             <td class="m">13.16.0<br>&rarr; 14.0.0</td>
-            <td>Player stream properties, the <code>OnAVChange</code>-adjacent payloads and library <code>streamdetails</code> all serve BCP&nbsp;47. <code>eng</code> becomes <code>en</code>; player properties may now carry a region. Every affected field gained a description stating notation, the empty case, and unrecognised pass-through.</td>
+            <td>Player stream properties, the <code>OnAVChange</code>-adjacent payloads and library <code>streamdetails</code> serve BCP&nbsp;47. <code>eng</code> becomes <code>en</code>; player properties may carry a region. Affected fields gained descriptions stating notation, the empty case and unrecognised pass-through.</td>
           </tr>
           <tr>
             <td class="w">Python <span class="chip brk">breaking</span></td>
             <td class="m">3.0.2<br>&rarr; 3.1.0<br>abi 3.0.0</td>
-            <td>The four Player stream-language functions serve tags. <code>convertLanguage()</code> accepts one as input, so the new output composes with the existing conversion API. <code>ISO_NAME</code> added — the English name without qualifiers, which <code>getLanguage()</code> also serves, so add-ons stop parsing it out of <code>ENGLISH_NAME</code> (unchanged). <b>The minor bump is for the constant</b>; the value change rides with it.</td>
+            <td>The four Player stream-language functions serve tags, and <code>convertLanguage()</code> accepts one. <code>ISO_NAME</code> added — the English name without qualifiers, which <code>getLanguage()</code> also serves; <code>ENGLISH_NAME</code> is unchanged. <b>The minor bump is for the constant</b>; the value change rides with it.</td>
           </tr>
           <tr>
             <td class="w">Native add-on <span class="chip ok">no bump</span></td>
             <td class="m">unchanged</td>
-            <td><code>GetLanguage(LangFormats, bool region)</code> and the <code>LANG_FMT_*</code> values are untouched; <code>General.cpp</code> fixes how the existing region contract is implemented. It pushed the region name through the <i>language</i> expander, so on every non-Windows platform <code>ISO_639_2</code> with region returned <code>eng-</code>. Both bindings now ask ISO&nbsp;3166-1 and write the separator only when both halves exist.</td>
+            <td><code>GetLanguage(LangFormats, bool region)</code> and the <code>LANG_FMT_*</code> values are untouched. <code>General.cpp</code> pushed the region name through the <i>language</i> expander, so on every non-Windows platform <code>ISO_639_2</code> with region returned <code>eng-</code>. Both bindings now ask ISO&nbsp;3166-1 and write the separator only when both halves exist.</td>
           </tr>
         </tbody>
       </table>
@@ -725,12 +700,9 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <span class="note-label">The decision to take explicitly</span>
       <p>
         A 3.0-ABI add-on does not opt in: it starts receiving <code>en</code> where it received
-        <code>eng</code>. Add-ons comparing those strings need updating.
-      </p>
-      <p>
-        Serving 639-2 to 3.0.0 callers and BCP&nbsp;47 to 3.1.0 callers was considered and rejected —
-        it makes language semantics depend on the caller, which is the ambiguity this removes, and
-        would be carried indefinitely.
+        <code>eng</code>. Serving 639-2 to 3.0.0 callers and BCP&nbsp;47 to 3.1.0 callers was
+        rejected — it makes language semantics depend on the caller, and would be carried
+        indefinitely.
       </p>
     </div>
   </section>
@@ -741,8 +713,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <hr class="sec-rule">
 
     <p>
-      <code>CLangCodeExpander</code> lost about a third of itself and became static. Its only state
-      was the user-defined code map; that now lives in a function-local, every method is static, and
+      <code>CLangCodeExpander</code> lost about a third of itself and became static;
       <code>g_LangCodeExpander</code> is gone.
     </p>
 
@@ -750,9 +721,9 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <table>
         <thead><tr><th class="w">Removed</th><th>Because</th></tr></thead>
         <tbody>
-          <tr><td class="w"><code>checkWin32Locales</code></td><td>A switch on every conversion plus two table columns. Regions come from ISO&nbsp;3166-1 now and the T-form from the 639-2 table.</td></tr>
-          <tr><td class="w"><code>CompareFullLanguageNames</code></td><td>Assigned over its own lookup results on both branches, so the lookups had no effect on the answer. Deleted, not repaired.</td></tr>
-          <tr><td class="w">Country-matching branches</td><td>Treated any ISO&nbsp;3166-1 alpha-3 as a language, so <code>bol</code> converted to Bolivia instead of failing, stealing the answer from a real code.</td></tr>
+          <tr><td class="w"><code>checkWin32Locales</code></td><td>A switch on every conversion plus two table columns. Regions come from ISO&nbsp;3166-1 now, the T-form from the 639-2 table.</td></tr>
+          <tr><td class="w"><code>CompareFullLanguageNames</code></td><td>Assigned over its own lookup results on both branches, so the lookups had no effect on the answer.</td></tr>
+          <tr><td class="w">Country-matching branches</td><td>Treated any ISO&nbsp;3166-1 alpha-3 as a language, so <code>bol</code> converted to Bolivia instead of failing.</td></tr>
           <tr><td class="w">Four dead lookups</td><td>No callers, or superseded by the tag and the ISO&nbsp;3166-1 table.</td></tr>
         </tbody>
       </table>
@@ -764,11 +735,11 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <table>
         <thead><tr><th class="w">Where</th><th>Defect</th></tr></thead>
         <tbody>
-          <tr><td class="w">Withdrawn 639-1 codes</td><td><code>in</code> and <code>iw</code> sat in the main table beside <code>id</code> and <code>he</code>, duplicating <code>ind</code> and <code>heb</code>. The reverse index is built with an <b>unstable constexpr sort</b>, so which spelling won was the compiler's choice — Hebrew could persist as <code>iw</code> in one build and <code>he</code> in another. All five withdrawn codes now sit in a forward-only table, with a <code>static_assert</code> pinning uniqueness.</td></tr>
-          <tr><td class="w">Special-scope codes</td><td><code>und</code>, <code>zxx</code>, <code>mis</code>, <code>mul</code> were padded with invented alpha-2 spellings <code>zv zx zy zz</code>, which leaked: the alpha-2 of <code>und</code> answered <code>zv</code>. Now empty, and the conversion reports failure.</td></tr>
-          <tr><td class="w">ffmpeg demuxer</td><td><code>std::string(value, 3)</code> — a fixed three-byte read. Shorter values read past the terminator; a TS carries several 639 descriptors joined with commas (<code>deu,eng</code>), so the read truncated the first and could split it mid-code.</td></tr>
-          <tr><td class="w">vobsub <code>.idx</code></td><td><code>id: en, index: 0</code> read as a fixed two-character substring, halving any three-character code into something unmatchable.</td></tr>
-          <tr><td class="w">UPnP</td><td>Compared the setting narrowed to 639-2/B against a filename-derived BCP&nbsp;47 tag — <code>eng</code> against <code>en</code> — so the preference never matched and the first subtitle always won.</td></tr>
+          <tr><td class="w">Withdrawn 639-1 codes</td><td><code>in</code> and <code>iw</code> sat in the main table beside <code>id</code> and <code>he</code>, duplicating <code>ind</code> and <code>heb</code>. The reverse index uses an <b>unstable constexpr sort</b>, so Hebrew could persist as <code>iw</code> in one build and <code>he</code> in another. All five withdrawn codes now sit in a forward-only table, with a <code>static_assert</code> pinning uniqueness.</td></tr>
+          <tr><td class="w">Special-scope codes</td><td><code>und zxx mis mul</code> were padded with invented alpha-2 spellings <code>zv zx zy zz</code>, which leaked — the alpha-2 of <code>und</code> answered <code>zv</code>. Now empty, and the conversion reports failure.</td></tr>
+          <tr><td class="w">ffmpeg demuxer</td><td><code>std::string(value, 3)</code>, a fixed three-byte read. Shorter values read past the terminator; a TS joins several 639 descriptors with commas (<code>deu,eng</code>), so the read truncated the first and could split it mid-code.</td></tr>
+          <tr><td class="w">vobsub <code>.idx</code></td><td><code>id: en, index: 0</code> read as a fixed two-character substring, halving any three-character code.</td></tr>
+          <tr><td class="w">UPnP</td><td>Compared the setting narrowed to 639-2/B against a filename-derived tag — <code>eng</code> against <code>en</code> — so the preference never matched and the first subtitle always won.</td></tr>
           <tr><td class="w">Schema</td><td>Video <code>streamdetails</code> declared fewer fields than the serializer emits: <code>stereomode</code>, <code>language</code>, <code>hdrdetail</code>.</td></tr>
         </tbody>
       </table>
@@ -781,25 +752,23 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <hr class="sec-rule">
 
     <p>
-      26 commits over 66 files is not reviewable as a diff, and is ordered so it does not have to be:
-      isolated fixes first, then the expander cleanup, then the type with no callers, then adoption,
-      then the wire formats one surface per commit.
+      Ordered so 66 files need not be read as one diff: isolated fixes, expander cleanup, the type
+      with no callers, adoption, then the wire formats one surface per commit.
     </p>
 
     <div class="note">
       <span class="note-label">The split that matters</span>
       <p>
-        The adoption commit <b>changes no wire format</b> — JSON-RPC, notification and Python outputs
-        narrow the tag back to ISO&nbsp;639-2/B at the end of it. So the large mechanical commit is
-        reviewable for type correctness alone, and the small commits after it contain nothing but
-        contract.
+        The adoption commit <b>changes no wire format</b> — every output narrows back to
+        ISO&nbsp;639-2/B at the end of it. The large mechanical commit is reviewable for type
+        correctness alone; the commits after it contain nothing but contract.
       </p>
     </div>
 
     <h3>Tests</h3>
     <ul class="prose">
-      <li><b>TestLanguageTag</b> (new) — every notation to one tag, narrowing losses, verbatim retention, <code>Matches</code> across notation, region, script, extlang, undetermined and <code>zxx</code>, the withdrawn spellings, <code>FindInText</code> parameterised.</li>
-      <li><b>TestLangCodeExpander</b> — rewritten static; pins the 639-2/T fallback, special-scope codes returning empty, and <code>bol</code> failing rather than converting to a country.</li>
+      <li><b>TestLanguageTag</b> (new) — narrowing losses, verbatim retention, <code>Matches</code> across notation, region, script, extlang, undetermined and <code>zxx</code>, the withdrawn spellings, <code>FindInText</code> parameterised.</li>
+      <li><b>TestLangCodeExpander</b> — the 639-2/T fallback, special-scope codes returning empty, <code>bol</code> failing.</li>
       <li><b>TestStreamDetails</b> — the serialization boundary: <code>eng&rarr;en</code>, <code>chi&rarr;zh</code>, unrecognised pass-through.</li>
       <li><b>TestBcp47</b>, <b>TestLangInfo</b>, <b>TestUtil</b> — extension length, deprecated subtag replacement, policy setting values, subtitle filename tokens.</li>
     </ul>
@@ -810,16 +779,11 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <h2 class="sec"><span class="num">07</span>Non-goals</h2>
     <hr class="sec-rule">
 
-    <p class="lead">
-      Stated so they are not read as oversights. None change the contracts above, so none need
-      settling before this lands.
-    </p>
-
     <ul class="prose">
-      <li><b>Extlang canonicalisation.</b> <code>Bcp47.cpp</code> carries a <code>@todo</code> for the rest of RFC&nbsp;5646 step 3, so <code>zh-yue</code> and <code>yue</code> remain different tags. They did not match before this change either; the behaviour is now documented and tested rather than incidental.</li>
-      <li><b>DVD is still bounded by ISO&nbsp;639-1.</b> libdvdnav takes two letters, so a language without an alpha-2 code cannot be expressed to it and the navigator's existing fallback to <code>en</code> applies. That is libdvdnav's alphabet — and the same rework is what lets libbluray receive such a language correctly.</li>
-      <li><b>Library values carry no region.</b> A consequence of the persistence decision in §03, stated in the schema.</li>
-      <li><b>The skin surface is unchanged.</b> Its own compatibility surface, and no reason to move it in the same change as the wire format.</li>
+      <li><b>Extlang canonicalisation.</b> <code>Bcp47.cpp</code> carries a <code>@todo</code> for the rest of RFC&nbsp;5646 step 3, so <code>zh-yue</code> and <code>yue</code> remain different tags — as they were before this change.</li>
+      <li><b>DVD is bounded by ISO&nbsp;639-1.</b> libdvdnav takes two letters, so a language without an alpha-2 code cannot be expressed to it and the navigator's existing fallback to <code>en</code> applies. The same rework is what lets libbluray receive such a language correctly.</li>
+      <li><b>Library values carry no region.</b> A consequence of the persistence decision in §03.</li>
+      <li><b>The skin surface is unchanged.</b> Its own compatibility surface, and no reason to move it alongside the wire format.</li>
     </ul>
   </section>
 
@@ -829,7 +793,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 <footer>
   <div class="footer-inner">
     <p>
-      Written for review of the <code>CLanguageTag</code> series against Kodi v22. Claims about
+      Review document for the <code>CLanguageTag</code> series against Kodi v22. Claims about
       previous behaviour are taken from the code at the merge base. Not a Team Kodi publication.
     </p>
   </div>
