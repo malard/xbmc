@@ -91,6 +91,12 @@ schema never says *when* something goes; that is here.
 - `Player.GetChapters` - the chapters of the playing item, with
   `Player.Chapter`.
 - `Playlist.SetShuffle` and `Playlist.SetRepeat`.
+- `Settings.GetLevel` and `Settings.SetLevel` - the setting level in force,
+  which is what the settings window shows and what its level button cycles.
+  It was previously reachable only from the interface, so a client driving
+  Kodi could not reach an entry gated above the level it happened to be left
+  at. `Settings.SetLevel` answers with the level that ended up in force,
+  because the profile's settings lock can refuse the one asked for.
 - `VideoLibrary.SetSourceContent` - assigns a content type and scraper to a
   video source path, as the "Set content" dialog does.
 
@@ -101,6 +107,11 @@ schema never says *when* something goes; that is here.
   happen. Previously the request was acknowledged and nothing followed.
 - `Playlist.OnPropertyChanged`, raised when a playlist's shuffle or repeat
   state changes.
+- `Settings.OnLevelChanged`, raised when the setting level in force changes.
+  The profile's settings lock lowers it without the viewer asking, which
+  nothing could previously observe. `Settings` is a new notification
+  namespace, and a client already receives it unless it has narrowed its
+  subscription with `JSONRPC.SetConfiguration`.
 
 **Properties and types**
 
@@ -125,6 +136,13 @@ schema never says *when* something goes; that is here.
 
 ### Changed
 
+- `Settings.GetSections`, `Settings.GetCategories` and `Settings.GetSettings`
+  answer with the `level` they filtered at. That level is the one the call
+  asked for and still defaults to `standard`, so it does not follow the level
+  in force - which is exactly what the answer now makes it possible to tell.
+- `Configuration.Notifications` declares `Info`, `Sources` and `Settings`.
+  `JSONRPC.GetConfiguration` has always reported the first two, and the type
+  forbids members it does not declare.
 - `Player.OnPropertyChanged` carries the members `Player.Property.Value`
   declares, rather than a subset.
 - PVR image properties (`icon`, `thumbnail`, `parentalratingicon`, and a
