@@ -4,6 +4,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
+            TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestSettingsLevel.cpp
