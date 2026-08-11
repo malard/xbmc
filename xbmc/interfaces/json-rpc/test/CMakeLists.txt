@@ -6,6 +6,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
+            TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestSettingsLevel.cpp

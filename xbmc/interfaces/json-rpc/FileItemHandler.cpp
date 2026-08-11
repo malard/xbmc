@@ -41,6 +41,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string.h>
 
 using namespace MUSIC_INFO;
@@ -52,6 +53,7 @@ bool CFileItemHandler::GetField(const std::string& field,
                                 const std::shared_ptr<CFileItem>& item,
                                 CVariant& result,
                                 bool& fetchedArt,
+                                std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
                                 CThumbLoader* thumbLoader /* = NULL */)
 {
   if (result.isMember(field) && !result[field].empty())
@@ -113,20 +115,27 @@ bool CFileItemHandler::GetField(const std::string& field,
         result[field] = (timer && timer->HasParent());
         return true;
       }
-      else if (field == "hasrecording")
+      else if (field == "hasrecording" || field == "recording" || field == "recordingid")
       {
-        const std::shared_ptr<PVR::CPVRRecording> recording =
-            CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(
-                item->GetEPGInfoTag());
-        result[field] = (recording != nullptr);
-        return true;
-      }
-      else if (field == "recording")
-      {
-        const std::shared_ptr<PVR::CPVRRecording> recording =
-            CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(
-                item->GetEPGInfoTag());
-        result[field] = recording ? recording->m_strFileNameAndPath : "";
+        if (!epgRecording.has_value())
+        {
+          epgRecording = CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(
+              item->GetEPGInfoTag());
+        }
+
+        const std::shared_ptr<PVR::CPVRRecording>& recording{*epgRecording};
+        if (field == "hasrecording")
+        {
+          result[field] = (recording != nullptr);
+        }
+        else if (field == "recording")
+        {
+          result[field] = recording ? recording->m_strFileNameAndPath : "";
+        }
+        else
+        {
+          result[field] = recording ? static_cast<int>(recording->RecordingID()) : -1;
+        }
         return true;
       }
     }
@@ -267,12 +276,13 @@ void CFileItemHandler::FillDetails(const ISerializable* info,
   info->Serialize(serialization);
 
   bool fetchedArt = false;
+  std::optional<std::shared_ptr<PVR::CPVRRecording>> epgRecording;
 
   std::set<std::string> originalFields = fields;
 
   for (const auto& fieldIt : originalFields)
   {
-    if (GetField(fieldIt, serialization, item, result, fetchedArt, thumbLoader) &&
+    if (GetField(fieldIt, serialization, item, result, fetchedArt, epgRecording, thumbLoader) &&
         result.isMember(fieldIt) && !result[fieldIt].empty())
       fields.erase(fieldIt);
   }
