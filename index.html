@@ -151,6 +151,7 @@ h2:not(:first-child) { margin-top: 3.25rem; }
 }
 .tag.rev { border-color: var(--warn); color: var(--warn); }
 .tag.usr { border-color: var(--accent); color: var(--accent); }
+.tag.rfc { border-color: var(--lit); color: var(--lit); }
 
 .about {
   border: 1px solid var(--rule);
@@ -243,6 +244,21 @@ footer p { margin: 0; max-width: 56ch; }
         <span class="tag rev">Engineering review</span>
         <span class="tag">Kodi v22</span>
         <span class="tag">PR 28852</span>
+      </div>
+    </a>
+
+    <h2>Requests for comment</h2>
+
+    <a class="doc" href="rfc/library-relocate/">
+      <h3>Moving files without losing the library</h3>
+      <p>
+        Rename a folder on disk and Kodi cannot be told. The only route destroys the library entry
+        &mdash; watched state, resume points and all &mdash; to fix a spelling mistake.
+      </p>
+      <div class="tags">
+        <span class="tag rfc">RFC</span>
+        <span class="tag">Kodi v22</span>
+        <span class="tag">JSON-RPC v14</span>
       </div>
     </a>
 

@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving files without losing the library</title>
+<style>
+:root {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+
+  --serif: Constantia, Cambria, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+
+  --measure: 70ch;
+  --rail: 14.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #0D1013;
+    --surface: #151A1F;
+    --sunk:    #10151A;
+    --ink:     #E4E9ED;
+    --muted:   #8B96A2;
+    --rule:    #252D35;
+    --rule-firm:#38434E;
+    --accent:  #3FB4BE;
+    --accent-soft: #10333A;
+    --lit:     #E0B45C;
+    --lit-soft:#3A2F17;
+    --warn:    #D2854E;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0D1013;
+  --surface: #151A1F;
+  --sunk:    #10151A;
+  --ink:     #E4E9ED;
+  --muted:   #8B96A2;
+  --rule:    #252D35;
+  --rule-firm:#38434E;
+  --accent:  #3FB4BE;
+  --accent-soft: #10333A;
+  --lit:     #E0B45C;
+  --lit-soft:#3A2F17;
+  --warn:    #D2854E;
+}
+:root[data-theme="light"] {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.masthead-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2.75rem 2rem 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+}
+.eyebrow .dot { color: var(--rule-firm); }
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin: 0;
+}
+.standfirst {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0;
+}
+.factbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2.2rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+.fact { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.3rem 0; }
+.fact dt {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fact dd { margin: 0; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- summary band ---------- */
+
+.band { border-bottom: 1px solid var(--rule); background: var(--sunk); }
+.band-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.9rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.5rem 2.5rem;
+}
+.tldr h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.tldr p, .tldr ul { max-width: 46ch; }
+.tldr p { margin: 0; font-size: 0.97rem; }
+.tldr ul { margin: 0; padding-left: 1.1rem; font-size: 0.92rem; }
+.tldr li { margin-bottom: 0.3rem; }
+.tldr li:last-child { margin-bottom: 0; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 3.25rem;
+  align-items: start;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2.25rem 0;
+  border-right: 1px solid var(--rule);
+}
+.rail h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.8rem;
+  font-weight: 600;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.rail li { counter-increment: toc; }
+.rail a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 2rem;
+  font-size: 0.855rem;
+  line-height: 1.3;
+  color: var(--muted);
+  text-decoration: none;
+  position: relative;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+}
+.rail a::before {
+  content: counter(toc, decimal-leading-zero);
+  position: absolute;
+  left: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--rule-firm);
+}
+.rail a:hover { color: var(--ink); }
+.rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rail a.here { color: var(--accent); border-left-color: var(--accent); }
+.rail a.here::before { color: var(--accent); }
+
+/* ---------- content ---------- */
+
+.content { padding: 2.25rem 0 0; min-width: 0; }
+section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
+
+h2.sec {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.3rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+h2.sec .num {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  flex: none;
+}
+.sec-rule { border: 0; border-top: 1px solid var(--rule-firm); margin: 0 0 1.35rem; }
+
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 1.9rem 0 0.55rem;
+}
+
+p, ul, ol.prose { max-width: var(--measure); }
+p { margin: 0 0 0.9rem; }
+ul.prose, ol.prose { margin: 0 0 1rem; padding-left: 1.15rem; }
+ul.prose li, ol.prose li { margin-bottom: 0.35rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+code, .mono { font-family: var(--mono); font-size: 0.875em; }
+p code, li code, td code {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  padding: 0.05em 0.32em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.lead { font-size: 1.05rem; line-height: 1.55; color: var(--ink); max-width: 62ch; }
+
+/* ---------- notes ---------- */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1rem;
+  margin: 1.1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: var(--measure);
+}
+.note.caution { border-left-color: var(--warn); background: var(--lit-soft); }
+.note p { margin: 0 0 0.5rem; max-width: none; }
+.note p:last-child { margin: 0; }
+.note ul { margin: 0; padding-left: 1.1rem; }
+.note li { margin-bottom: 0.3rem; }
+.note li:last-child { margin-bottom: 0; }
+.note-label {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.note.caution .note-label { color: var(--warn); }
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 34rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--sunk);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.m, th.m { font-family: var(--mono); font-size: 0.79rem; white-space: nowrap; }
+td.w { min-width: 10rem; }
+.chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--rule-firm);
+  color: var(--muted);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chip.brk { border-color: var(--warn); color: var(--warn); }
+.chip.ok { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- code ---------- */
+
+pre {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-firm);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: 1rem 0 1.35rem;
+  tab-size: 2;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; white-space: pre; }
+.c-com { color: var(--muted); font-style: italic; }
+
+/* ---------- figures ---------- */
+
+figure {
+  margin: 1.35rem 0 1.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 1.2rem;
+  max-width: var(--measure);
+}
+figure svg { display: block; width: 100%; height: auto; }
+
+/* ---------- footer ---------- */
+
+footer { border-top: 1px solid var(--rule); background: var(--surface); padding: 2rem 2rem 3rem; }
+.footer-inner { max-width: 76rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
+.footer-inner p { max-width: 60ch; margin: 0; }
+
+/* ---------- theme toggle ---------- */
+
+.toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--rule-firm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.toggle:hover { color: var(--ink); border-color: var(--accent); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rail {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding: 1.35rem 0;
+  }
+  .rail ol { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
+  .rail a { padding-left: 1.6rem; border-left: 0; }
+}
+@media (max-width: 40rem) {
+  .masthead-inner, .band-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">
+      <span>Kodi&nbsp;v22</span><span class="dot">/</span>
+      <span>JSON-RPC&nbsp;v14</span><span class="dot">/</span>
+      <span>Concept</span>
+    </div>
+    <h1>Moving files without losing the library</h1>
+    <p class="standfirst">Rename a folder on disk and Kodi cannot be told. The only route destroys
+    the library entry to fix a spelling mistake.</p>
+
+    <dl class="factbar">
+      <div class="fact"><dt>Components</dt><dd>2</dd></div>
+      <div class="fact"><dt>New methods</dt><dd>1</dd></div>
+      <div class="fact"><dt>Schema migration</dt><dd>none</dd></div>
+      <div class="fact"><dt>Risk sits in</dt><dd>the design, not the code</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="band">
+  <div class="band-inner">
+
+    <div class="tldr">
+      <h2>Plainly</h2>
+      <p>Rename a show's folder and Kodi cannot follow it. You delete the show and rescan, and the
+      watched history, resume points and ratings go with it. Nothing in Kodi can move a library
+      entry to a new path &mdash; not the API, not the database, not the interface.</p>
+    </div>
+
+    <div class="tldr">
+      <h2>Substance</h2>
+      <ul>
+        <li>No <code>Set*Details</code> method takes a path &mdash; all 32 checked.</li>
+        <li>No SQL anywhere rewrites <code>path.strPath</code>; the primitive does not exist.</li>
+        <li>Paths are also copied into <code>movie</code>, <code>episode</code>,
+        <code>musicvideo</code> and <code>art</code>.</li>
+        <li>Two components. The database is the larger half.</li>
+      </ul>
+    </div>
+
+    <div class="tldr">
+      <h2>Where to look</h2>
+      <ul>
+        <li><a href="#gap">&sect;01</a> &mdash; the gap.</li>
+        <li><a href="#database">&sect;02</a> &mdash; the work.</li>
+        <li><a href="#api">&sect;03</a> &mdash; the method.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#gap">The gap</a></li>
+      <li><a href="#database">The database</a></li>
+      <li><a href="#api">The API</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+  <!-- 1 -->
+  <section id="gap">
+    <h2 class="sec"><span class="num">01</span>The gap</h2>
+    <hr class="sec-rule">
+    <p class="lead">A folder rename is a prefix change, and there is no way to tell Kodi one
+    happened.</p>
+    <p>Remove and rescan is the only route. It discards playcount, last played, resume points,
+    date added, user rating, tags and art overrides, and issues fresh ids &mdash; to correct a
+    name. The same holds for a movie, an album, or a whole source when a NAS is renamed. Path
+    substitution in <code>advancedsettings.xml</code> remaps at runtime; it never repairs the
+    database.</p>
+  </section>
+
+  <!-- 2 -->
+  <section id="database">
+    <h2 class="sec"><span class="num">02</span>The database</h2>
+    <hr class="sec-rule">
+    <p class="lead">Relocation is a prefix rewrite, and cheap, because nothing worth keeping lives
+    on a path row.</p>
+    <p>Playcount, resume and every id hang off the file row, which a path change does not touch,
+    so one rewrite carries a whole show with it. The cost is that a path is stored in four places,
+    not one.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Table</th><th>Column</th><th>Holds</th></tr></thead>
+      <tbody>
+        <tr><td class="m">path</td><td class="m">strPath</td><td>the canonical row</td></tr>
+        <tr><td class="m">movie, musicvideo</td><td class="m">c22</td><td>a copy of the base path</td></tr>
+        <tr><td class="m">episode</td><td class="m">c18</td><td>a copy of the base path</td></tr>
+        <tr><td class="m">art</td><td class="m">url</td><td>local art, and embedded thumbs as <code>image://video@&hellip;</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>A <code>RelocatePath</code> on <code>CVideoDatabase</code> and <code>CMusicDatabase</code>:
+    transactional, clearing the path hash so the next scan is honest. Both stand up against a real
+    sqlite schema under test. No new columns, so no migration.</p>
+  </section>
+
+  <!-- 3 -->
+  <section id="api">
+    <h2 class="sec"><span class="num">03</span>The API</h2>
+    <hr class="sec-rule">
+    <p class="lead">One method, shaped around the path rather than the item.</p>
+    <p>An item-shaped call would have to derive the same prefix rewrite, and could not express a
+    show's season subdirectories without assuming a layout. It also covers the whole-source move
+    for free. A relocate per media type would repeat the mistake v14 just undid by folding four
+    <code>Refresh</code> methods into one.</p>
+    <p>The destination must sit under an existing source, the check <code>Scan</code> already
+    performs. Additive, so nothing to migrate.</p>
+
+    <div class="note caution">
+      <span class="note-label">Non-goals</span>
+      <ul>
+        <li>Editing <code>sources.xml</code>. A source definition is not the library's to move.</li>
+        <li>Renaming a file rather than a directory. Movies with versions hold several file rows.</li>
+        <li>Moving anything on disk. Kodi is told what happened; it does not do it.</li>
+      </ul>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p>Not a Team Kodi publication.</p>
+  </div>
+</footer>
+
+<button class="toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme">Theme</button>
+
+<script>
+(function () {
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var root = document.documentElement;
+    var current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var sections = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 120) { best = i; }
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () { mark(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  mark();
+})();
+</script>
+
+</body>
+</html>
