@@ -215,6 +215,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "GUI.GetStereoscopicModes",                     CGUIOperations::GetStereoscopicModes },
   { "GUI.ActivateScreenSaver",                      CGUIOperations::ActivateScreenSaver},
   { "GUI.TakeScreenshot",                           CGUIOperations::TakeScreenshot },
+  { "GUI.DeleteScreenshots",                        CGUIOperations::DeleteScreenshots },
   { "GUI.GetInfoLabels",                            CGUIOperations::GetInfoLabels },
   { "GUI.GetInfoBooleans",                          CGUIOperations::GetInfoBooleans },
 

@@ -130,6 +130,11 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://skin"))
     return true;
+  // a screenshot folder is not a media source, so without this a client that
+  // took a screenshot could fetch the one it was told about but never see what
+  // else had accumulated there
+  else if (StringUtils::StartsWithNoCase(realPath, "special://screenshots"))
+    return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://profile/addon_data"))
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "addons://sources"))

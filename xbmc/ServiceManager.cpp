@@ -90,6 +90,11 @@ bool CServiceManager::InitForTesting()
   m_subTagRegistryManager = std::make_unique<KODI::UTILS::I18N::CSubTagRegistryManager>();
   m_subTagRegistryManager->Initialize();
 
+  // left uninitialized, so it reports no removable drives and starts no platform
+  // storage. Code that consults one before deciding a path is out of bounds has
+  // to reach it: without this, asking is a null dereference.
+  m_mediaManager = std::make_unique<CMediaManager>();
+
   init_level = 1;
   return true;
 }
@@ -97,6 +102,7 @@ bool CServiceManager::InitForTesting()
 void CServiceManager::DeinitTesting()
 {
   init_level = 0;
+  m_mediaManager.reset();
   m_subTagRegistryManager.reset();
   m_fileExtensionProvider->Deinitialize();
   m_extsMimeSupportList.reset();

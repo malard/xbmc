@@ -6864,13 +6864,13 @@
   },
   "GUI.TakeScreenshot": {
     "type": "method",
-    "description": "Takes a screenshot into the configured screenshot folder",
+    "description": "Takes a screenshot into the configured screenshot folder and answers with the files it wrote. Waits for the capture to be encoded, so every file it names is complete when the response arrives. Pass a returned path to Files.PrepareDownload to fetch the image. Answers Unavailable when no screenshot folder is configured.",
     "transport": "Response",
     "permission": "ControlGUI",
     "params": [
       {
         "name": "content",
-        "description": "composite captures the full display output, video only the video frame, both writes two files, the video frame and the full composite, from the same rendered frame. Files are written asynchronously; the method acknowledges the request and does not wait for the write.",
+        "description": "composite captures the full display output, video only the video frame, both writes two files, the video frame and the full composite, from the same rendered frame",
         "schema": {
           "type": "string",
           "enum": [
@@ -6880,9 +6880,55 @@
           ],
           "default": "composite"
         }
+      },
+      {
+        "name": "target",
+        "description": "Name to write the screenshot under, which must be a plain .png file name carrying no directory: the file always goes to the configured folder, and an existing one of that name is overwritten. Names the composite, the video frame taking the matching \"-video\" name. Auto-numbered as screenshotNNNNN.png when omitted. A client capturing repeatedly should name a target and reuse it: the auto-numbered name accumulates files it cannot reclaim without GUI.DeleteScreenshots, costs a directory listing per call, and runs out at 65535.",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
       }
     ],
-    "returns": "string"
+    "returns": {
+      "type": "object",
+      "properties": {
+        "composite": {
+          "type": "string",
+          "description": "Path of the full display output, under special://screenshots. Absent when only the video frame was captured."
+        },
+        "video": {
+          "type": "string",
+          "description": "Path of the video frame alone, under special://screenshots. Absent when only the composite was captured."
+        }
+      }
+    }
+  },
+  "GUI.DeleteScreenshots": {
+    "type": "method",
+    "description": "Deletes screenshots from the configured screenshot folder, which is otherwise the one thing a client can fill and never reclaim. Disabled unless <jsonrpc><allowscreenshotdeletion>true</allowscreenshotdeletion></jsonrpc> is set in advancedsettings.xml, and answers Unavailable while it is off: this is the only call that deletes a file from disk, and the folder it clears is wherever the viewer pointed debug.screenshotpath.",
+    "transport": "Response",
+    "permission": "RemoveData",
+    "params": [
+      {
+        "name": "file",
+        "description": "The one screenshot to delete, named as GUI.TakeScreenshot answered or as a plain file name. Every .png in the folder is deleted when omitted, whichever of them Kodi wrote. Nothing outside the folder is reachable either way.",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many files were deleted."
+        }
+      }
+    }
   },
   "GUI.GetInfoLabels": {
     "type": "method",
