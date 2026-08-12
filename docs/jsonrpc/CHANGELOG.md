@@ -88,7 +88,23 @@ schema never says *when* something goes; that is here.
   with the new `Database.Type`.
 - `GUI.GetInfoLabels` and `GUI.GetInfoBooleans` - the unbranded names for the
   two deprecated `XBMC.*` methods.
-- `GUI.TakeScreenshot` - takes a screenshot into the configured folder.
+- `GUI.TakeScreenshot` - takes a screenshot into the configured folder and
+  answers with the `special://screenshots` path of every file it wrote. It
+  waits for the capture to be encoded, so a file it names is complete when the
+  response arrives, and `Files.PrepareDownload` serves it: the screenshot
+  folder is reachable through the web server's `/vfs/` endpoint without being
+  a media source. An optional `target` names the file instead of taking the
+  next `screenshotNNNNN.png`. With no folder configured it answers
+  `Unavailable`, where it would otherwise raise a browse-for-folder dialog no
+  caller is there to answer.
+- `GUI.DeleteScreenshots` - deletes one screenshot or clears the folder, which
+  is otherwise the one thing a client can fill and never reclaim: the
+  auto-numbered name runs out at 65535 and nothing else in the API deletes a
+  file. It is the only call that does, so it is **off unless**
+  `<jsonrpc><allowscreenshotdeletion>true</allowscreenshotdeletion></jsonrpc>`
+  is set in `advancedsettings.xml`, and answers `Unavailable` while it is off.
+  `Files.GetDirectory` now lists `special://screenshots` so a client can see
+  what is there before clearing it.
 - `PVR.GetPlayableBroadcasts` - the playable broadcasts of a channel within a
   time range, for catchup availability.
 - `PVR.GetProviders` and `PVR.GetProviderDetails`, with `PVR.Details.Provider`,
