@@ -36,6 +36,11 @@ namespace JSONRPC
                                          IClient* client,
                                          const CVariant& parameterObject,
                                          CVariant& result);
+    static JSONRPC_STATUS DeleteScreenshots(const std::string& method,
+                                            ITransportLayer* transport,
+                                            IClient* client,
+                                            const CVariant& parameterObject,
+                                            CVariant& result);
 
     /*!
      \brief Answers the info labels a caller names

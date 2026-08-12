@@ -387,6 +387,10 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
 
     bool m_jsonOutputCompact;
     unsigned int m_jsonTcpPort;
+    //! Whether GUI.DeleteScreenshots is offered. Off by default: it is the only
+    //! call that deletes a file from disk, and the folder it clears is wherever
+    //! the viewer pointed debug.screenshotpath.
+    bool m_jsonAllowScreenshotDeletion{false};
 
     bool m_enableMultimediaKeys;
     std::vector<std::string> m_settingsFiles;

@@ -26,6 +26,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "powermanagement/PowerManager.h"
 #include "rendering/RenderSystem.h"
+#include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Screenshot.h"
@@ -166,14 +167,63 @@ JSONRPC_STATUS CGUIOperations::TakeScreenshot(const std::string& method,
       return FailedToExecute;
   }
 
-  if (content == "video")
-    CScreenShot::TakeScreenshot(CaptureContent::VIDEO);
-  else if (content == "both")
-    CScreenShot::TakeScreenshotBoth();
-  else
-    CScreenShot::TakeScreenshot(CaptureContent::COMPOSITE);
+  const CaptureContent capture = content == "video"  ? CaptureContent::VIDEO
+                                 : content == "both" ? CaptureContent::BOTH
+                                                     : CaptureContent::COMPOSITE;
 
-  return ACK;
+  const CScreenShot::ScreenshotFiles files =
+      CScreenShot::TakeScreenshotSync(capture, parameterObject["target"].asString());
+
+  switch (files.error)
+  {
+    case CScreenShot::ScreenshotError::NO_FOLDER:
+      return Unavailable;
+    case CScreenShot::ScreenshotError::BAD_TARGET:
+      return InvalidParams;
+    case CScreenShot::ScreenshotError::NOT_FOUND:
+    case CScreenShot::ScreenshotError::FAILED:
+      return FailedToExecute;
+    case CScreenShot::ScreenshotError::NONE:
+      break;
+  }
+
+  if (!files.composite.empty())
+    result["composite"] = files.composite;
+  if (!files.video.empty())
+    result["video"] = files.video;
+
+  return OK;
+}
+
+JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const std::string& method,
+                                                 ITransportLayer* transport,
+                                                 IClient* client,
+                                                 const CVariant& parameterObject,
+                                                 CVariant& result)
+{
+  if (!CServiceBroker::GetSettingsComponent()
+           ->GetAdvancedSettings()
+           ->m_jsonAllowScreenshotDeletion)
+    return Unavailable;
+
+  const CScreenShot::ScreenshotDeletion removed =
+      CScreenShot::DeleteScreenshots(parameterObject["file"].asString());
+
+  switch (removed.error)
+  {
+    case CScreenShot::ScreenshotError::BAD_TARGET:
+      return InvalidParams;
+    case CScreenShot::ScreenshotError::NOT_FOUND:
+      return NotFound;
+    case CScreenShot::ScreenshotError::NO_FOLDER:
+    case CScreenShot::ScreenshotError::FAILED:
+      return FailedToExecute;
+    case CScreenShot::ScreenshotError::NONE:
+      break;
+  }
+
+  result["deleted"] = removed.deleted;
+  return OK;
 }
 
 JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string &property, CVariant &result)
