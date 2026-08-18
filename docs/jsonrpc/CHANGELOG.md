@@ -186,6 +186,11 @@ schema never says *when* something goes; that is here.
 - The header of a `JSONRPC.Introspect` answer names Kodi. `id` is
   `https://kodi.tv/jsonrpc/ServiceDescription.json` and `description` is
   "JSON-RPC API of Kodi"; both said XBMC.
+- `Player.Open` with `item.path` plays a directory that holds no pictures as
+  a playlist of its video and audio files, in the fullscreen video window
+  with its OSD. It used to start a slideshow of the directory regardless,
+  which played each video as a slide inside the slideshow window. A directory
+  with pictures in it is a slideshow as before; `random` applies only there.
 
 ### Fixed
 
