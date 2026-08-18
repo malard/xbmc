@@ -33,6 +33,7 @@ DOCS_DIR = kodi_schema.REPO_ROOT / "docs" / "jsonrpc"
 DEFAULT_OUT = DOCS_DIR / "site"
 EXAMPLES_DIR = Path(__file__).resolve().parent / "examples"
 STYLESHEET_PATH = Path(__file__).resolve().parent / "site.css"
+HOW_IT_WORKS_PATH = Path(__file__).resolve().parent / "how-the-api-works.md"
 GITIGNORE_PATH = DOCS_DIR / ".gitignore"
 
 
@@ -43,9 +44,6 @@ PROSE_DOCUMENTS = {
 }
 
 
-
-
-
 def transports(entity):
     value = entity.get("transport")
     if value is None:
@@ -53,7 +51,6 @@ def transports(entity):
     if isinstance(value, str):
         return [value]
     return list(value)
-
 
 
 class SiteBuilder:
@@ -129,14 +126,6 @@ class SiteBuilder:
             "</body>\n"
             "</html>\n")
         self.write(relative, text)
-
-
-
-
-
-
-
-
 
     def index_page(self, relative, title, entities, intro):
         """Namespace-grouped index for methods/notifications/types."""
@@ -355,41 +344,7 @@ class SiteBuilder:
             "error taxonomy, and is generated directly from the "
             "machine-readable schema shipped inside Kodi itself.</p>",
 
-            "<h2>How the API actually works</h2>",
-            "<p>The API is <a href=\"https://www.jsonrpc.org/specification\">"
-            "JSON-RPC 2.0</a> served over three transports:</p>",
-            "<ul>"
-            "<li><strong>WebSocket</strong> - default port 9090; carries "
-            "request/response and server-initiated notifications.</li>"
-            "<li><strong>Raw TCP</strong> - port 9090; a newline-free "
-            "stream of JSON objects over a plain socket, carrying the same "
-            "two.</li>"
-            "<li><strong>HTTP</strong> - POST the request envelope to "
-            "<code>/jsonrpc</code> (default port 8080). Request/response "
-            "only: notifications are never delivered over HTTP, so a client "
-            "on this transport can only learn that something happened by "
-            "asking again. Requires the 'Allow remote control via HTTP' "
-            "setting to be enabled.</li>"
-            "</ul>",
-            "<p><strong>Which to use.</strong> Prefer a socket transport for "
-            "anything that outlives a single call. Kodi announces what it is "
-            "doing - playback starting, a library item changing, the skin "
-            "finishing its load - and a client holding a socket open is told, "
-            "while a client on HTTP has to poll for the same thing and will "
-            "miss anything that starts and finishes between two polls. HTTP "
-            "suits one-shot calls and environments where keeping a connection "
-            "open is impractical.</p>",
-            "<p>Preferring a socket does not mean turning the web server off. "
-            "It also serves the artwork and file endpoints "
-            "(<code>/image/</code>, <code>/vfs/</code>) that several methods "
-            "hand back URLs for, so a client doing its calls over a socket "
-            "still fetches those over HTTP.</p>",
-            "<p>There is a single endpoint: the method is selected by the "
-            "<code>method</code> member of the request envelope, not by the "
-            "URL. Authentication over HTTP is basic auth when a username and "
-            "password are configured. A permissions model gates the "
-            "methods; each method page states the permission it "
-            "requires.</p>",
+            md_to_html(HOW_IT_WORKS_PATH.read_text(encoding="utf-8")),
 
             "<h2>Worked examples</h2>",
             "<p>Each example shows the exact envelopes on the wire. The "
