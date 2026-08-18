@@ -62,7 +62,7 @@ unsigned int ToStoredTime(const CDateTime& time)
  */
 CDateTime FromStoredTime(const std::string& value)
 {
-  return CDateTime(static_cast<time_t>(std::atoi(value.c_str())));
+  return CDateTime(static_cast<time_t>(std::strtoll(value.c_str(), nullptr, 10)));
 }
 
 /*!
@@ -72,7 +72,7 @@ CDateTime FromStoredTime(const std::string& value)
  */
 CDateTime FromStoredTime(const field_value& value)
 {
-  return CDateTime(static_cast<time_t>(value.get_asInt()));
+  return CDateTime(static_cast<time_t>(value.get_asInt64()));
 }
 } // unnamed namespace
 
