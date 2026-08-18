@@ -6,9 +6,13 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
+#include "ServiceDescription.h"
 #include "interfaces/json-rpc/PVREpgFields.h"
+#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
+#include <set>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -66,4 +70,97 @@ TEST(TestPVREpgFields, TranslateEpgCastSkipsEmptyNames)
   EXPECT_EQ(0, cast[0]["order"].asInteger());
   EXPECT_EQ("Second Actor", cast[1]["name"].asString());
   EXPECT_EQ(1, cast[1]["order"].asInteger());
+}
+
+namespace
+{
+
+/*!
+ \brief One type's entry, as the generated service description ships it
+
+ Read rather than restated, so that a field which never reaches the schema fails here
+ instead of passing.
+ */
+std::string ShippedDefinition(const std::string& type)
+{
+  for (const char* const entry : JSONRPC_SERVICE_TYPES)
+  {
+    // Each entry is one definition without its enclosing braces
+    const std::string definition{"{" + std::string(entry) + "}"};
+
+    CVariant parsed;
+    if (CJSONVariantParser::Parse(definition, parsed) && parsed.isMember(type))
+    {
+      return definition;
+    }
+  }
+
+  ADD_FAILURE() << type << " is not declared in the service description";
+  return {};
+}
+
+std::set<std::string> ShippedEnum(const std::string& type)
+{
+  std::set<std::string> values;
+
+  CVariant parsed;
+  CJSONVariantParser::Parse(ShippedDefinition(type), parsed);
+
+  const CVariant& members{parsed[type]["items"]["enum"]};
+  for (auto member = members.begin_array(); member != members.end_array(); ++member)
+  {
+    values.insert(member->asString());
+  }
+
+  return values;
+}
+
+class TestPVRBroadcastFields : public JSONServiceDescriptionTestBase
+{
+protected:
+  void SetUp() override
+  {
+    JSONServiceDescriptionTestBase::SetUp();
+
+    // PVR.Fields.Broadcast extends Item.Fields.Base, which has to be registered first
+    ASSERT_TRUE(CJSONServiceDescription::AddType(ShippedDefinition("Item.Fields.Base")));
+    ASSERT_TRUE(CJSONServiceDescription::AddType(ShippedDefinition("PVR.Fields.Broadcast")));
+  }
+};
+
+} // unnamed namespace
+
+/*!
+ An empty set still answers with the label and identifier the handler supplies itself, so a
+ lookup that stops working reads as a thin broadcast rather than as a failure.
+ */
+TEST_F(TestPVRBroadcastFields, EveryFieldTheSchemaOffersIsAnswered)
+{
+  const std::set<std::string> offered{ShippedEnum("PVR.Fields.Broadcast")};
+
+  ASSERT_FALSE(offered.empty()) << "the two sides agreeing on nothing is not agreement";
+  EXPECT_EQ(offered, BroadcastFields());
+}
+
+/*!
+ CPVREpgInfoTag::Serialize writes these four, and the schema declares none of them, so a
+ caller asking for one by name is refused. A nested broadcast answers on the same terms.
+ */
+TEST_F(TestPVRBroadcastFields, UndeclaredSerializedKeysAreNotAnswered)
+{
+  const std::set<std::string> fields{BroadcastFields()};
+
+  EXPECT_FALSE(fields.contains("channeluid"));
+  EXPECT_FALSE(fields.contains("filenameandpath"));
+  EXPECT_FALSE(fields.contains("serieslink"));
+  EXPECT_FALSE(fields.contains("titleextrainfo"));
+}
+
+/*!
+ Item.Details.Base requires the label, and no caller may ask for it. Whatever builds a
+ nested broadcast has to supply it unasked.
+ */
+TEST_F(TestPVRBroadcastFields, TheRequiredLabelIsNotOneOfThem)
+{
+  EXPECT_FALSE(BroadcastFields().contains("label"));
 }

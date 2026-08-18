@@ -90,6 +90,20 @@ bool CFileItemHandler::GetField(const std::string& field,
             *item->GetPVRChannelInfoTag());
         return true;
       }
+      else if (field == "broadcastnow" || field == "broadcastnext")
+      {
+        // both slots are declared PVR.Details.Broadcast, and only the handler supplies the label
+        // that type requires and bounds the object to the fields it declares
+        const std::shared_ptr<const PVR::CPVRChannel> channel{item->GetPVRChannelInfoTag()};
+        const std::shared_ptr<PVR::CPVREpgInfoTag> tag{
+            field == "broadcastnow" ? channel->GetEPGNow() : channel->GetEPGNext()};
+        if (tag)
+        {
+          HandleFileItem("broadcastid", false, field.c_str(), std::make_shared<CFileItem>(tag),
+                         CVariant{CVariant::VariantTypeObject}, BroadcastFields(), result, false);
+        }
+        return true;
+      }
     }
 
     if (item->HasEPGInfoTag())
