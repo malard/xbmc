@@ -28,6 +28,7 @@ if str(TOOLS_DIR) not in sys.path:
 
 import generate_site
 import kodi_schema
+import markup
 
 
 class LinkCollector(HTMLParser):
@@ -140,13 +141,13 @@ class TestSiteGeneration(unittest.TestCase):
             with self.subTest(document=source):
                 self.assertTrue(page.is_file())
                 text = page.read_text(encoding="utf-8")
-                self.assertIn(generate_site.esc(title), text)
+                self.assertIn(markup.esc(title), text)
                 # nothing left unrendered
                 self.assertNotIn("**", text)
                 self.assertNotIn("```", text)
 
     def test_markdown_renders_the_forms_the_documents_use(self):
-        rendered = generate_site.md_to_html(
+        rendered = markup.md_to_html(
             "# Title\n"
             "\n"
             "A paragraph with `code`, **bold** and [a link](x.html).\n"
@@ -178,12 +179,12 @@ class TestSiteGeneration(unittest.TestCase):
     def test_markdown_emphasis_can_wrap_a_code_span(self):
         """Code spans are lifted out before emphasis is applied, so bold
         wrapping one must not be left with its markers in two pieces."""
-        rendered = generate_site.md_to_html("**`Thing.Method`** does a thing\n")
+        rendered = markup.md_to_html("**`Thing.Method`** does a thing\n")
         self.assertIn("<strong><code>Thing.Method</code></strong>", rendered)
         self.assertNotIn("**", rendered)
 
     def test_markdown_leaves_markup_inside_code_alone(self):
-        rendered = generate_site.md_to_html("Literal `**not bold**` here\n")
+        rendered = markup.md_to_html("Literal `**not bold**` here\n")
         self.assertIn("<code>**not bold**</code>", rendered)
         self.assertNotIn("<strong>", rendered)
 
@@ -198,7 +199,7 @@ class TestSiteGeneration(unittest.TestCase):
         self.assertIn(f"{len(placeholders)} types carry no values", text)
         for name in placeholders:
             with self.subTest(type=name):
-                self.assertIn(f"<code>{generate_site.esc(name)}</code>", text)
+                self.assertIn(f"<code>{markup.esc(name)}</code>", text)
 
     def test_landing_page_explains_introspect_against_the_artifacts(self):
         text = (self.out / "index.html").read_text(encoding="utf-8")
@@ -236,7 +237,7 @@ class TestSiteGeneration(unittest.TestCase):
             with open(path, encoding="utf-8") as handle:
                 example = json.load(handle)
             with self.subTest(example=path.name):
-                self.assertIn(generate_site.esc(example["title"]), text)
+                self.assertIn(markup.esc(example["title"]), text)
             if "method" in example:
                 method_examples += 1
         self.assertEqual(curl_count, method_examples)
@@ -247,7 +248,7 @@ class TestSiteGeneration(unittest.TestCase):
         for error in kodi_schema.load_error_taxonomy():
             with self.subTest(error=error["name"]):
                 self.assertIn(f"<code>{error['code']}</code>", text)
-                self.assertIn(generate_site.esc(error["name"]), text)
+                self.assertIn(markup.esc(error["name"]), text)
 
     def test_output_is_deterministic(self):
         with tempfile.TemporaryDirectory() as second:
