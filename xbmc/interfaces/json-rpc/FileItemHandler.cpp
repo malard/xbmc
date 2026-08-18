@@ -11,6 +11,7 @@
 #include "AudioLibrary.h"
 #include "FileItemList.h"
 #include "FileOperations.h"
+#include "JSONServiceDescription.h"
 #include "PVREpgFields.h"
 #include "ServiceBroker.h"
 #include "Util.h"
@@ -42,11 +43,49 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string.h>
+#include <string>
 
 using namespace MUSIC_INFO;
 using namespace JSONRPC;
 using namespace XFILE;
+
+namespace
+{
+/*!
+ \brief The members of an item that name a library entry by its identifier
+
+ Read from Playlist.Item, which is the type both callers of DiagnoseUnresolvedItem take -
+ Playlist.Add and Insert directly, Player.Open through the alternative that references it.
+ Reading it rather than restating it means a member added to that type is diagnosed as a
+ reference that has gone stale, without this having to be found and extended.
+
+ \return the identifier names, empty when the service description has not been parsed
+ */
+std::set<std::string> LibraryIdentifiers()
+{
+  std::set<std::string> identifiers;
+
+  const JSONSchemaTypeDefinitionPtr item{CJSONServiceDescription::GetType("Playlist.Item")};
+  const JSONSchemaTypeDefinitionPtr libraryId{CJSONServiceDescription::GetType("Library.Id")};
+  if (!item || !libraryId)
+    return identifiers;
+
+  for (const auto& alternative : item->unionTypes)
+  {
+    for (auto property = alternative->properties.begin(); property != alternative->properties.end();
+         ++property)
+    {
+      // the alternatives naming a library entry are those whose member is a Library.Id
+      if (property->second->referencedType == libraryId)
+        identifiers.insert(property->first);
+    }
+  }
+
+  return identifiers;
+}
+} // unnamed namespace
 
 bool CFileItemHandler::GetField(const std::string& field,
                                 const CVariant& info,
@@ -573,8 +612,7 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
   if (!directory.empty() && !XFILE::CDirectory::Exists(directory, false))
     return Unavailable;
 
-  for (const auto* identifier : {"movieid", "episodeid", "musicvideoid", "recordingid", "songid",
-                                 "albumid", "artistid", "genreid"})
+  for (const std::string& identifier : LibraryIdentifiers())
   {
     if (item[identifier].asInteger(-1) > 0)
       return NotFound;
