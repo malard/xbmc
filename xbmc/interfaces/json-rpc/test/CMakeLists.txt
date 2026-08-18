@@ -7,6 +7,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
+            TestPVRRecordingSchema.cpp
             TestSettingsLevel.cpp
             TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
