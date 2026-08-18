@@ -20589,7 +20589,8 @@
             "$ref": "#/components/schemas/Library.Id"
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "description": "Title of the recorded item itself. For a recorded episode this is the episode's own name and showtitle carries the show; for anything else it is the programme title and showtitle is empty."
           },
           "plot": {
             "type": "string"
@@ -20669,7 +20670,8 @@
             "type": "integer"
           },
           "showtitle": {
-            "type": "string"
+            "type": "string",
+            "description": "Title of the show this recording is an episode of. Empty when the recording is not of an episode."
           },
           "clientid": {
             "$ref": "#/components/schemas/Library.Id"
