@@ -224,3 +224,5 @@ schema never says *when* something goes; that is here.
   the first time, and the undeclared `channeluid`, `filenameandpath`,
   `serieslink` and `titleextrainfo` no longer appear - a caller has never
   been able to request those four by name.
+- A broadcast reports a `starttime` or `endtime` that falls on or after
+  2038-01-19, in place of a date in the past.
