@@ -20573,7 +20573,9 @@
             "channeluid",
             "season",
             "episode",
+            "episodepart",
             "showtitle",
+            "titleextrainfo",
             "clientid"
           ]
         }
@@ -20669,9 +20671,17 @@
           "episode": {
             "type": "integer"
           },
+          "episodepart": {
+            "type": "integer",
+            "description": "Part number of a multi-part episode. Zero when the episode is not in parts."
+          },
           "showtitle": {
             "type": "string",
             "description": "Title of the show this recording is an episode of. Empty when the recording is not of an episode."
+          },
+          "titleextrainfo": {
+            "type": "string",
+            "description": "Additional information the client supplies alongside the title, such as a sub title or a programme classification. Empty when the client supplies none."
           },
           "clientid": {
             "$ref": "#/components/schemas/Library.Id"
