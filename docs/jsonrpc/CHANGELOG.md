@@ -216,3 +216,11 @@ schema never says *when* something goes; that is here.
 - `PVR.Details.Broadcast` declares `imdbnumber` as a string, and it and
   `PVR.Details.Recording` declare `genre` as an array of strings, which is
   what each has always sent.
+- The `broadcastnow` and `broadcastnext` sub-objects of a PVR channel carry
+  the `label` their type requires, and answer with the fields
+  `PVR.Fields.Broadcast` declares. They are built the way a broadcast asked
+  for by name is, so `hastimer`, `hastimerrule`, `hasreminder`,
+  `hasrecording`, `recording` and `recordingid` are readable inside them for
+  the first time, and the undeclared `channeluid`, `filenameandpath`,
+  `serieslink` and `titleextrainfo` no longer appear - a caller has never
+  been able to request those four by name.
