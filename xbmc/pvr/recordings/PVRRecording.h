@@ -57,6 +57,15 @@ private:
   std::string m_strRecordingId; /*!< unique ID of the recording on the client */
 };
 
+/*!
+ * @brief A recording made by a PVR backend.
+ *
+ * The inherited CVideoInfoTag members carry the same meaning here as they do for a scanned
+ * video: m_strTitle is the recorded item's own title and m_strShowTitle the show it belongs
+ * to, empty when it belongs to none. A PVR client instead supplies a programme title plus an
+ * optional episode name, so a recorded episode arrives with the two the other way round;
+ * ProgrammeTitle() and EpisodeName() are how the PVR side of Kodi reads them back.
+ */
 class CPVRRecording final : public CVideoInfoTag
 {
 public:
@@ -363,10 +372,22 @@ public:
   const std::string& FanartPath() const { return m_fanartPath.GetLocalImage(); }
 
   /*!
+   * @brief Retrieve the title of the programme this recording is of
+   * @note For a recorded episode this is the show, not the episode's own name
+   */
+  const std::string& ProgrammeTitle() const;
+
+  /*!
+   * @brief Set the title of the programme this recording is of
+   * @param title The title
+   */
+  void SetProgrammeTitle(std::string_view title);
+
+  /*!
    * @brief Retrieve the recording Episode Name
    * @note Returns an empty string if no Episode Name was provided by the PVR client
    */
-  const std::string& EpisodeName() const { return m_strShowTitle; }
+  std::string EpisodeName() const;
 
   /*!
    * @brief check whether this recording is currently in progress
