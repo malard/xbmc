@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ServiceDescription.h"
 #include "interfaces/json-rpc/IClient.h"
 #include "interfaces/json-rpc/ITransportLayer.h"
 #include "interfaces/json-rpc/JSONRPCUtils.h"
@@ -64,6 +65,30 @@ inline std::string ToJson(const CVariant& variant)
   std::string json;
   CJSONVariantWriter::Write(variant, json, true);
   return json;
+}
+
+/*!
+ \brief One type's entry, as the generated service description ships it
+
+ Read rather than restated, so that a declaration which never reaches the schema fails here
+ instead of passing. The result is ready to hand to CJSONServiceDescription::AddType.
+ */
+inline std::string ShippedDefinition(const std::string& type)
+{
+  for (const char* const entry : JSONRPC_SERVICE_TYPES)
+  {
+    // Each entry is one definition without its enclosing braces
+    const std::string definition{"{" + std::string(entry) + "}"};
+
+    CVariant parsed;
+    if (CJSONVariantParser::Parse(definition, parsed) && parsed.isMember(type))
+    {
+      return definition;
+    }
+  }
+
+  ADD_FAILURE() << type << " is not declared in the service description";
+  return {};
 }
 
 /*!

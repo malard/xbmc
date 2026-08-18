@@ -7,6 +7,7 @@
  */
 
 #include "FileItem.h"
+#include "JSONRPCTestUtils.h"
 #include "ThumbLoader.h"
 #include "interfaces/json-rpc/FileItemHandler.h"
 #include "media/MediaType.h"
@@ -43,6 +44,8 @@ public:
 
     return result["files"][0];
   }
+
+  static JSONRPC_STATUS Diagnose(const CVariant& item) { return DiagnoseUnresolvedItem(item); }
 
   // the overload a handler reaches when the fields it wants are not the ones its caller asked
   // for, as Files.GetFileDetails appends "file" and "filetype" to a copy of them
@@ -142,4 +145,77 @@ TEST(TestFileItemHandler, FieldsComeFromTheListGivenRatherThanFromTheParameters)
 
   EXPECT_EQ("file", object["filetype"].asString());
   EXPECT_EQ(DEFAULT_VERSION, object["file"].asString());
+}
+
+namespace
+{
+
+// Playlist.Item is the type both callers of DiagnoseUnresolvedItem take, so the identifiers
+// it declares are exactly the ones a diagnosis has to account for.
+std::set<std::string> DeclaredIdentifiers()
+{
+  std::set<std::string> identifiers;
+
+  CVariant parsed;
+  CJSONVariantParser::Parse(ShippedDefinition("Playlist.Item"), parsed);
+
+  const CVariant& alternatives{parsed["Playlist.Item"]["anyOf"]};
+  for (auto alternative = alternatives.begin_array(); alternative != alternatives.end_array();
+       ++alternative)
+  {
+    const CVariant& properties{(*alternative)["properties"]};
+    for (auto property = properties.begin_map(); property != properties.end_map(); ++property)
+    {
+      if (property->second["$ref"].asString() == "#/$defs/Library.Id")
+        identifiers.insert(property->first);
+    }
+  }
+
+  return identifiers;
+}
+
+class TestUnresolvedItemDiagnosis : public JSONServiceDescriptionTestBase
+{
+protected:
+  void SetUp() override
+  {
+    JSONServiceDescriptionTestBase::SetUp();
+
+    // Playlist.Item references both, so they have to be registered first
+    ASSERT_TRUE(CJSONServiceDescription::AddType(ShippedDefinition("Library.Id")));
+    ASSERT_TRUE(CJSONServiceDescription::AddType(ShippedDefinition("Files.Media")));
+    ASSERT_TRUE(CJSONServiceDescription::AddType(ShippedDefinition("Playlist.Item")));
+  }
+};
+
+} // unnamed namespace
+
+/*!
+ An identifier the diagnosis does not account for falls through to InvalidParams, telling a
+ client that named a deleted item that its request was malformed. Reading the identifiers
+ from the schema is what stops that, so this asserts every declared one is answered - and
+ grows on its own when the type does.
+ */
+TEST_F(TestUnresolvedItemDiagnosis, EveryDeclaredIdentifierIsDiagnosedAsAMissingItem)
+{
+  const std::set<std::string> identifiers{DeclaredIdentifiers()};
+
+  ASSERT_FALSE(identifiers.empty()) << "Playlist.Item declares no library identifiers";
+
+  for (const std::string& identifier : identifiers)
+  {
+    CVariant item{CVariant::VariantTypeObject};
+    item[identifier] = 1;
+
+    EXPECT_EQ(NotFound, CTestFileItemHandler::Diagnose(item))
+        << "an item naming " << identifier << " is not diagnosed as a reference that has gone";
+  }
+}
+
+TEST_F(TestUnresolvedItemDiagnosis, AnItemNamingNothingResolvableIsMalformed)
+{
+  CVariant item{CVariant::VariantTypeObject};
+  item["nosuchid"] = 1;
+
+  EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item));
 }
