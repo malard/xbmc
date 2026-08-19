@@ -13151,6 +13151,20 @@
           }
         },
         {
+          "name": "starttime",
+          "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime; given with endtime, restricts the result to broadcasts overlapping the range",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "endtime",
+          "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime; given with starttime, restricts the result to broadcasts overlapping the range",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
           "name": "properties",
           "schema": {
             "$ref": "#/components/schemas/PVR.Fields.Broadcast"
@@ -13181,6 +13195,113 @@
           "required": [
             "limits",
             "broadcasts"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "PVR.GetBroadcastsByChannelGroup",
+      "summary": "Retrieves the program of every channel of a channel group within a time range",
+      "tags": [
+        {
+          "name": "PVR"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "channelgroupid",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/PVR.ChannelGroup.Id"
+          }
+        },
+        {
+          "name": "starttime",
+          "required": true,
+          "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "endtime",
+          "required": true,
+          "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "properties",
+          "schema": {
+            "$ref": "#/components/schemas/PVR.Fields.Broadcast"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "channelid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  },
+                  "broadcasts": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PVR.Details.Broadcast"
+                    }
+                  }
+                },
+                "required": [
+                  "channelid",
+                  "broadcasts"
+                ]
+              }
+            }
+          },
+          "required": [
+            "channels"
           ]
         }
       },

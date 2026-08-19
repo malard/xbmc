@@ -105,6 +105,9 @@ schema never says *when* something goes; that is here.
   is set in `advancedsettings.xml`, and answers `Unavailable` while it is off.
   `Files.GetDirectory` now lists `special://screenshots` so a client can see
   what is there before clearing it.
+- `PVR.GetBroadcastsByChannelGroup` - the programme of every channel of a
+  channel group within a time range, answered per channel, so an EPG grid is
+  one call rather than one per channel and carries only the span it shows.
 - `PVR.GetPlayableBroadcasts` - the playable broadcasts of a channel within a
   time range, for catchup availability.
 - `PVR.GetProviders` and `PVR.GetProviderDetails`, with `PVR.Details.Provider`,
@@ -151,6 +154,9 @@ schema never says *when* something goes; that is here.
   stream. `episodename` and `episodepart` are also newly requestable in
   `List.Fields.All`.
 - `codec` on `Player.Subtitle`; `bitspersample` on `Player.Audio.Stream`.
+- `starttime` and `endtime` on `PVR.GetBroadcasts`, which bound the answer
+  to the broadcasts overlapping that range. Without them it answers as it
+  always did.
 - `season` and `episode` on `PVR.Details.Broadcast`, replacing `seasonnum`
   and `episodenum`.
 - `parentalratingcode`, `parentalratingicon` and `parentalratingsource` on
