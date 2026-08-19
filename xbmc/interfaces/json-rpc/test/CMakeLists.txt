@@ -5,6 +5,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
             TestPlayerOpenDirectory.cpp
+            TestPVRBroadcastRange.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp

@@ -7470,6 +7470,20 @@
         }
       },
       {
+        "name": "starttime",
+        "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime; given with endtime, restricts the result to broadcasts overlapping the range",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "endtime",
+        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime; given with starttime, restricts the result to broadcasts overlapping the range",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
         "name": "properties",
         "schema": {
           "$ref": "#/$defs/PVR.Fields.Broadcast"
@@ -7498,6 +7512,72 @@
       "required": [
         "limits",
         "broadcasts"
+      ]
+    }
+  },
+  "PVR.GetBroadcastsByChannelGroup": {
+    "type": "method",
+    "description": "Retrieves the program of every channel of a channel group within a time range",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "channelgroupid",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/PVR.ChannelGroup.Id"
+        }
+      },
+      {
+        "name": "starttime",
+        "required": true,
+        "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "endtime",
+        "required": true,
+        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "properties",
+        "schema": {
+          "$ref": "#/$defs/PVR.Fields.Broadcast"
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "channelid": {
+                "$ref": "#/$defs/Library.Id"
+              },
+              "broadcasts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/PVR.Details.Broadcast"
+                }
+              }
+            },
+            "required": [
+              "channelid",
+              "broadcasts"
+            ]
+          }
+        }
+      },
+      "required": [
+        "channels"
       ]
     }
   },
