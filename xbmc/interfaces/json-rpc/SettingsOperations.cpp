@@ -240,9 +240,8 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const std::string &method, I
   std::string settingId = parameterObject["setting"].asString();
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL ||
-      !setting->IsVisible())
-    return InvalidParams;
+  if (setting == NULL)
+    return NotFound;
 
   CVariant value;
   switch (setting->GetType())
@@ -286,9 +285,10 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
   CVariant value = parameterObject["value"];
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL ||
-      !setting->IsVisible())
-    return InvalidParams;
+  if (setting == NULL)
+    return NotFound;
+  if (!setting->IsEnabled())
+    return Unavailable;
 
   switch (setting->GetType())
   {
@@ -347,9 +347,10 @@ JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const std::string &method,
   std::string settingId = parameterObject["setting"].asString();
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL ||
-      !setting->IsVisible())
-    return InvalidParams;
+  if (setting == NULL)
+    return NotFound;
+  if (!setting->IsEnabled())
+    return Unavailable;
 
   switch (setting->GetType())
   {

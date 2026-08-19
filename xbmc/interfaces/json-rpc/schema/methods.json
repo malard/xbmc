@@ -8400,6 +8400,49 @@
       "description": "Mute state"
     }
   },
+  "Application.SetLogLevel": {
+    "type": "method",
+    "description": "Changes the log level and the components with extra logging, and answers with what is now in force. Either parameter may be left out to keep its current value",
+    "transport": "Response",
+    "permission": "ControlSystem",
+    "params": [
+      {
+        "name": "level",
+        "schema": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/Application.LogLevel"
+            }
+          ],
+          "default": null
+        }
+      },
+      {
+        "name": "components",
+        "description": "the names of the components to enable extra logging for; every other component is disabled, and an empty array disables component logging",
+        "schema": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "default": null
+        }
+      }
+    ],
+    "returns": {
+      "$ref": "#/$defs/Application.LogLevel.Value"
+    }
+  },
   "Application.Quit": {
     "type": "method",
     "description": "Quit application",

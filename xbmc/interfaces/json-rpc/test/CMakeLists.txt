@@ -1,4 +1,5 @@
 set(SOURCES TestAddonsExecuteAddon.cpp
+            TestApplicationLogLevel.cpp
             TestDeprecatedMethodSchema.cpp
             TestFileItemHandler.cpp
             TestFileOperations.cpp
@@ -13,6 +14,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestPVRProviderSchema.cpp
             TestPVRRecordingSchema.cpp
             TestSettingsLevel.cpp
+            TestSettingsValueGate.cpp
             TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp

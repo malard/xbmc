@@ -5029,6 +5029,52 @@
       }
     }
   },
+  "Application.LogLevel": {
+    "type": "string",
+    "description": "How much is written to the log: nothing, errors and notices, everything, or everything with the free-memory overlay the interface shows while debug logging is on",
+    "enum": [
+      "none",
+      "normal",
+      "debug",
+      "debugfreemem"
+    ]
+  },
+  "Application.LogComponent": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "the component's own name, stable across languages and versions"
+      },
+      "enabled": {
+        "type": "boolean",
+        "description": "whether the component's extra logging is in force"
+      }
+    },
+    "required": [
+      "name",
+      "enabled"
+    ]
+  },
+  "Application.LogLevel.Value": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "$ref": "#/$defs/Application.LogLevel"
+      },
+      "components": {
+        "type": "array",
+        "description": "every log component this build knows, and whether each is enabled",
+        "items": {
+          "$ref": "#/$defs/Application.LogComponent"
+        }
+      }
+    },
+    "required": [
+      "level",
+      "components"
+    ]
+  },
   "Application.Property.Name": {
     "type": "string",
     "enum": [
@@ -5037,12 +5083,16 @@
       "name",
       "version",
       "sorttokens",
-      "language"
+      "language",
+      "loglevel"
     ]
   },
   "Application.Property.Value": {
     "type": "object",
     "properties": {
+      "loglevel": {
+        "$ref": "#/$defs/Application.LogLevel.Value"
+      },
       "volume": {
         "type": "integer",
         "minimum": 0,
