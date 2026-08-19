@@ -22,9 +22,27 @@ namespace JSONRPC
 
     static JSONRPC_STATUS SetVolume(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS SetMute(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS SetLogLevel(const std::string& method,
+                                      ITransportLayer* transport,
+                                      IClient* client,
+                                      const CVariant& parameterObject,
+                                      CVariant& result);
 
     static JSONRPC_STATUS Quit(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+
+  protected:
+    /*!
+     \brief The Application.LogLevel name of a log level, or an empty string for a value outside the scale
+     */
+    static std::string LogLevelName(int level);
+
+    /*!
+     \brief The log level an Application.LogLevel name stands for, or LOG_LEVEL_NONE - 1 for an unknown name
+     */
+    static int LogLevelFromName(const std::string& name);
+
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
+    static CVariant LogLevelValue();
   };
 }

@@ -52,6 +52,17 @@ the additions below and none of the breaks.
   `Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
   `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean` and
   `AudioLibrary.GetArtistDetails`.
+- `Settings.GetSettingValue`, `Settings.SetSettingValue` and
+  `Settings.ResetSettingValue` answer `NotFound` for a setting that does not
+  exist, and the two writers answer `Unavailable` for one that exists but is
+  disabled by its dependencies. All three used to answer `InvalidParams` for
+  both, and for a setting that was merely hidden - the same answer a typo
+  gets. A hidden setting is now read and written like any other: visibility
+  is what the settings window shows, not whether the value is real, and
+  `advancedsettings.xml` hides the debug toggle whenever it pins a
+  `<loglevel>`, which left the log level unreachable on exactly the
+  installations that had set one. `Settings.GetSettings` and the listings
+  above it still filter on visibility, since they describe that window.
 
 ### Deprecated
 
@@ -82,6 +93,12 @@ schema never says *when* something goes; that is here.
 
 **Methods**
 
+- `Application.SetLogLevel` - changes the log level, and which components
+  have extra logging, and answers with what is now in force. Either part can
+  be left out to keep its value. The level was previously reachable only as
+  `debug.showloginfo`, a boolean over a four-value scale, and could not be
+  read back at all: `--debug`, the interface toggle and the
+  `advancedsettings.xml` hint all feed it and nothing reported the result.
 - `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist` - refresh the
   additional information for an album or an artist.
 - `Database.GetDatabaseName` - the database name in use for a given type,
@@ -148,6 +165,10 @@ schema never says *when* something goes; that is here.
   `JSONRPC.Introspect` accepts `"error"` as a filter type.
 - `AccessDenied` (-32096), for a path outside a source shared for remote
   access.
+- `loglevel` on `Application.GetProperties`, with `Application.LogLevel`,
+  `Application.LogLevel.Value` and `Application.LogComponent`: the level in
+  force and every log component this build knows, by its own name, with
+  whether each is enabled.
 - `shuffled` and `repeat` on `Playlist.GetProperties`.
 - `Playlist.AddResult` and `Playlist.UnresolvedItem`.
 - `stationname` on `List.Item.Base`, the radio station serving an internet

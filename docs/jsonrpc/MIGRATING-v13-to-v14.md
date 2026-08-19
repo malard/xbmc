@@ -45,7 +45,15 @@ request". Version 14 separates them:
 Affected: `Files.GetDirectory`, `Files.GetFileDetails`,
 `Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
 `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
-`AudioLibrary.GetArtistDetails`.
+`AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
+`Settings.SetSettingValue`, `Settings.ResetSettingValue`.
+
+The three `Settings` calls also stop refusing a *hidden* setting: a setting
+that `advancedsettings.xml` pins, or that hidden-value loading read, is now
+read and written like any other. If you relied on `InvalidParams` to mean
+"hidden on this installation", read `enabled` from `Settings.GetSettings`
+instead - a write is refused, as `Unavailable`, only when the setting is
+disabled by its dependencies.
 
 **What to do.** If you test `error.code == -32602` to decide that something is
 missing, you will now miss the case. Treat -32098, -32097 and -32096 as

@@ -1,4 +1,5 @@
-set(SOURCES TestDeprecatedMethodSchema.cpp
+set(SOURCES TestApplicationLogLevel.cpp
+            TestDeprecatedMethodSchema.cpp
             TestFileItemHandler.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
@@ -11,6 +12,7 @@ set(SOURCES TestDeprecatedMethodSchema.cpp
             TestPVRProviderSchema.cpp
             TestPVRRecordingSchema.cpp
             TestSettingsLevel.cpp
+            TestSettingsValueGate.cpp
             TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp

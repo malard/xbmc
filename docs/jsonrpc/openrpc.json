@@ -15899,6 +15899,90 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Application.SetLogLevel",
+      "summary": "Changes the log level and the components with extra logging, and answers with what is now in force. Either parameter may be left out to keep its current value",
+      "tags": [
+        {
+          "name": "Application"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "level",
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Application.LogLevel"
+              }
+            ],
+            "default": null
+          }
+        },
+        {
+          "name": "components",
+          "description": "the names of the components to enable extra logging for; every other component is disabled, and an empty array disables component logging",
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "default": null
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/Application.LogLevel.Value"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        {
+          "$ref": "#/components/errors/AccessDenied"
+        }
+      ],
+      "x-kodi-permission": "ControlSystem",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Application.Quit",
       "summary": "Quit application",
       "tags": [
@@ -22180,6 +22264,52 @@
           }
         }
       },
+      "Application.LogLevel": {
+        "type": "string",
+        "description": "How much is written to the log: nothing, errors and notices, everything, or everything with the free-memory overlay the interface shows while debug logging is on",
+        "enum": [
+          "none",
+          "normal",
+          "debug",
+          "debugfreemem"
+        ]
+      },
+      "Application.LogComponent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "the component's own name, stable across languages and versions"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "whether the component's extra logging is in force"
+          }
+        },
+        "required": [
+          "name",
+          "enabled"
+        ]
+      },
+      "Application.LogLevel.Value": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "$ref": "#/components/schemas/Application.LogLevel"
+          },
+          "components": {
+            "type": "array",
+            "description": "every log component this build knows, and whether each is enabled",
+            "items": {
+              "$ref": "#/components/schemas/Application.LogComponent"
+            }
+          }
+        },
+        "required": [
+          "level",
+          "components"
+        ]
+      },
       "Application.Property.Name": {
         "type": "string",
         "enum": [
@@ -22188,12 +22318,16 @@
           "name",
           "version",
           "sorttokens",
-          "language"
+          "language",
+          "loglevel"
         ]
       },
       "Application.Property.Value": {
         "type": "object",
         "properties": {
+          "loglevel": {
+            "$ref": "#/components/schemas/Application.LogLevel.Value"
+          },
           "volume": {
             "type": "integer",
             "minimum": 0,
