@@ -175,9 +175,13 @@ static int dvd_file_read(void* h, uint8_t* buf, int size)
   std::shared_ptr<CDVDInputStream> pInputStream = static_cast<CDVDDemuxFFmpeg*>(h)->m_pInput;
   int len = pInputStream->Read(buf, size);
   if (len == 0)
+  {
+    // A file input that has bytes left is a stalled source rather than the end
+    if (pInputStream->IsStreamType(DVDSTREAM_TYPE_FILE) && !pInputStream->IsEOF())
+      return AVERROR(EAGAIN);
     return AVERROR_EOF;
-  else
-    return len;
+  }
+  return len;
 }
 /*
 static int dvd_file_write(URLContext* h, uint8_t* buf, int size)
@@ -1011,9 +1015,15 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
     std::unique_lock lock(m_critSection); // open lock scope
     if (m_pFormatContext)
     {
-      // assume we are not eof
+      // assume we are not eof, and drop any stale io error so a failure
+      // reported below is known to be this read's own
       if (m_pFormatContext->pb)
+      {
         m_pFormatContext->pb->eof_reached = 0;
+        m_pFormatContext->pb->error = 0;
+      }
+
+      bool readPacingExpired = false;
 
       // check for saved packet after a program change
       if (m_pkt.result < 0)
@@ -1025,7 +1035,14 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
         // timeout reads after 100ms
         m_timeout.Set(20s);
         m_pkt.result = av_read_frame(m_pFormatContext, &m_pkt.pkt);
+        readPacingExpired = m_timeout.IsTimePast();
         m_timeout.SetInfinite();
+      }
+
+      if (m_inputStalled && m_pkt.result >= 0)
+      {
+        m_inputStalled = false;
+        CLog::Log(LOGINFO, "CDVDDemuxFFmpeg::{}: the input recovered", __FUNCTION__);
       }
 
       if (m_pkt.result == AVERROR(EINTR) || m_pkt.result == AVERROR(EAGAIN))
@@ -1035,10 +1052,19 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
       }
       else if (m_pkt.result == AVERROR_EOF)
       {
+        if (WaitingOutInputStall(readPacingExpired))
+          bReturnEmpty = true;
       }
       else if (m_pkt.result < 0)
       {
-        Flush();
+        // A source that blocks inside av_read_frame trips the read timer
+        // before its io error can propagate, so that AVERROR_EXIT is pacing,
+        // not an abort ending playback
+        if ((m_pkt.result != AVERROR_EXIT || readPacingExpired) &&
+            WaitingOutInputStall(readPacingExpired))
+          bReturnEmpty = true;
+        else
+          Flush();
       }
       // check size and stream index for being in a valid range
       else if (m_pkt.pkt.size < 0 || m_pkt.pkt.stream_index < 0 ||
@@ -1222,6 +1248,61 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
     pPacket->demuxerId = GetDemuxerId();
   }
   return pPacket;
+}
+
+bool CDVDDemuxFFmpeg::WaitingOutInputStall(bool readPacingExpired)
+{
+  // Long enough to ride out a network share dropping individual connections for
+  // over a minute; playback ends once the window closes without a packet.
+  constexpr auto recoveryWindow = 2min;
+
+  if (!m_pInput || !m_pInput->IsStreamType(DVDSTREAM_TYPE_FILE) || m_pInput->IsEOF())
+    return false;
+
+  // Opening the window takes evidence of a stall: an io-reported failure, or
+  // our own read pacing expiring around a blocked read. An index-driven
+  // container's clean end and a parse error carry neither and must keep
+  // ending playback promptly. Once open, the window holds by itself - the
+  // demuxer serves latched state during a stall, with no fresh io to cite.
+  if (!m_inputStalled && !readPacingExpired &&
+      (!m_pFormatContext || !m_pFormatContext->pb || m_pFormatContext->pb->error == 0))
+    return false;
+
+  if (!m_inputStalled)
+  {
+    m_inputStalled = true;
+    m_stallDeadline.Set(recoveryWindow);
+    CLog::Log(LOGWARNING,
+              "CDVDDemuxFFmpeg::{}: the input stalled short of its length, polling for up to {} s",
+              __FUNCTION__,
+              std::chrono::duration_cast<std::chrono::seconds>(recoveryWindow).count());
+  }
+  else if (m_stallDeadline.IsTimePast())
+    return false;
+
+  // The demuxer's io state stays latched from the failed reads, so only the
+  // input stream itself can report recovery. The probe blocks and fails the
+  // same way the player's own reads do while the stall lasts - and any
+  // completed answer counts, including a zero where the demuxer's resync
+  // left the position parked at the end. The restoring seek also clears the
+  // eof a zero-at-the-end probe just latched on the input.
+  const int64_t position = m_pInput->Seek(0, SEEK_CUR);
+  if (position >= 0)
+  {
+    uint8_t probe = 0;
+    if (m_pInput->Read(&probe, 1) >= 0)
+    {
+      m_pInput->Seek(position, SEEK_SET);
+      // A seek is what resets the demuxer's latched end-of-file, letting real
+      // packets flow again once the input answers
+      if (m_pFormatContext && m_currentPts != DVD_NOPTS_VALUE)
+        av_seek_frame(m_pFormatContext, -1, static_cast<int64_t>(m_currentPts),
+                      AVSEEK_FLAG_BACKWARD);
+      CLog::Log(LOGINFO, "CDVDDemuxFFmpeg::{}: the input answered again, resuming", __FUNCTION__);
+    }
+  }
+
+  return true;
 }
 
 DemuxPacket* CDVDDemuxFFmpeg::Read()
