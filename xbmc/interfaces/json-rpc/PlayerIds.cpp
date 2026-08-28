@@ -13,7 +13,50 @@ using namespace KODI;
 namespace JSONRPC
 {
 
-PLAYLIST::Id PlayerIdOf(PlayerType player, const PlayerState& state)
+PLAYLIST::Id PlayerIdOf(PlayerType player)
+{
+  switch (player)
+  {
+    case Video:
+      return PLAYLIST::Id::TYPE_VIDEO;
+
+    case Audio:
+      return PLAYLIST::Id::TYPE_MUSIC;
+
+    case Picture:
+      return PLAYLIST::Id::TYPE_PICTURE;
+
+    default:
+      return PLAYLIST::Id::TYPE_NONE;
+  }
+}
+
+PlayerType PlayerForId(PLAYLIST::Id playerid)
+{
+  PlayerType player;
+
+  switch (playerid)
+  {
+    case PLAYLIST::Id::TYPE_VIDEO:
+      player = Video;
+      break;
+
+    case PLAYLIST::Id::TYPE_MUSIC:
+      player = Audio;
+      break;
+
+    case PLAYLIST::Id::TYPE_PICTURE:
+      player = Picture;
+      break;
+
+    default:
+      return None;
+  }
+
+  return player;
+}
+
+PLAYLIST::Id PlaylistOf(PlayerType player, const PlayerState& state)
 {
   PLAYLIST::Id playlistId = state.currentPlaylist;
   if (playlistId == PLAYLIST::Id::TYPE_NONE) // No active playlist, try guessing
@@ -33,32 +76,6 @@ PLAYLIST::Id PlayerIdOf(PlayerType player, const PlayerState& state)
     default:
       return playlistId;
   }
-}
-
-PlayerType PlayerForId(PLAYLIST::Id playerid, const PlayerState& state)
-{
-  PlayerType player;
-
-  switch (playerid)
-  {
-    case PLAYLIST::Id::TYPE_VIDEO:
-      player = Video;
-      break;
-
-    case PLAYLIST::Id::TYPE_MUSIC:
-      player = Audio;
-      break;
-
-    case PLAYLIST::Id::TYPE_PICTURE:
-      player = Picture;
-      break;
-
-    default:
-      player = None;
-      break;
-  }
-
-  return PlayerIdOf(player, state) == playerid ? player : None;
 }
 
 } // namespace JSONRPC
