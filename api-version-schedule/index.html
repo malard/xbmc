@@ -480,7 +480,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <ul class="prose">
       <li><strong>One major per surface per release.</strong> It appears at 22.0 and nowhere earlier.</li>
       <li><strong>Breaking changes close at Beta&nbsp;1</strong>, additive changes at RC1. A point release takes the next minor and may add API; it never breaks one.</li>
-      <li><strong>Floors do not move after Beta&nbsp;1</strong> &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code>. Build against Beta&nbsp;2 or later and the binary loads on 22.0.</li>
+      <li><strong>Floors do not move after Beta&nbsp;1</strong> &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code>. Build against Beta&nbsp;2 or later and the binary loads on 22.0 and every 22.<em>n</em>.</li>
       <li><strong>A version never goes backwards</strong> and never reaches the next cut&rsquo;s number before that cut.</li>
     </ul>
   </section>
