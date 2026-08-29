@@ -462,14 +462,14 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <tr><td>RC2</td><td class="m">21.90.902</td><td class="m">13.2000</td><td class="m">6.2000</td></tr>
           <tr><td>RC<em>n</em></td><td class="m">21.90.90<em>n</em></td><td class="m">13.<em>n</em>000</td><td class="m">6.<em>n</em>000</td></tr>
           <tr><td><strong>22.0</strong></td><td class="m">22.0.0</td><td class="m">14.0</td><td class="m">7.0</td></tr>
-          <tr><td>22.<em>n</em></td><td class="m">22.<em>n</em>.0</td><td class="m">14.0.<em>n</em></td><td class="m">7.0.<em>n</em></td></tr>
+          <tr><td>22.<em>n</em></td><td class="m">22.<em>n</em>.0</td><td class="m">14.<em>n</em>.0</td><td class="m">7.<em>n</em>.0</td></tr>
         </tbody>
       </table>
     </div>
 
-    <p>The band is the number at the cut. A change landing inside a window increments the minor from there &mdash; 13.201, 13.202 &mdash; and the next cut jumps to the next band, discarding whatever is left. The gaps are headroom, not a count.</p>
+    <p>Each number above is set at its cut. An API change landing between cuts increments the minor from there &mdash; 13.201, 13.202 &mdash; and the next cut takes its own number regardless of where the previous one reached. The gaps exist so that changes between cuts never reach the next cut&rsquo;s number.</p>
 
-    <p>Python, the skin API and the remaining binary add-on APIs are not banded. They cross no major this cycle, keep the numbers in <a href="#release">At release</a>, and stop moving at RC1.</p>
+    <p>Python, the skin API and the remaining binary add-on APIs have no per-cut numbers. They cross no major this cycle, keep the numbers in <a href="#release">At release</a>, and stop moving at RC1.</p>
   </section>
 
   <!-- 3 -->
@@ -479,9 +479,9 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
     <ul class="prose">
       <li><strong>One major per surface per release.</strong> It appears at 22.0 and nowhere earlier.</li>
-      <li><strong>Breaking changes close at Beta&nbsp;1</strong>, additive changes at RC1. Fixes stay open for the life of the branch.</li>
+      <li><strong>Breaking changes close at Beta&nbsp;1</strong>, additive changes at RC1. A point release takes the next minor and may add API; it never breaks one.</li>
       <li><strong>Floors do not move after Beta&nbsp;1</strong> &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code>. Build against Beta&nbsp;2 or later and the binary loads on 22.0.</li>
-      <li><strong>A version never goes backwards</strong> and never reaches the next cut&rsquo;s band ahead of that cut.</li>
+      <li><strong>A version never goes backwards</strong> and never reaches the next cut&rsquo;s number before that cut.</li>
     </ul>
   </section>
 
@@ -498,7 +498,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       "id":      "jsonrpc",
       "path":    "xbmc/interfaces/json-rpc/schema/version.txt",
       "read":    "key:JSONRPC_VERSION",
-      "banded":  true,
+      "per_cut": true,
       "cut":     "13.200",
       "release": "14.0"
     },
@@ -506,7 +506,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       "id":      "addon.game",
       "path":    "xbmc/addons/kodi-dev-kit/include/kodi/versions.h",
       "read":    "define:ADDON_INSTANCE_VERSION_GAME",
-      "banded":  true,
+      "per_cut": true,
       "cut":     "6.200",
       "release": "7.0",
       "floor":   "6.0.0"
@@ -515,14 +515,14 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       "id":      "python",
       "path":    "addons/xbmc.python/addon.xml",
       "read":    "xml:/addon/@version",
-      "banded":  false,
+      "per_cut": false,
       "release": "3.1",
       "floor":   "3.0.0"
     }
   ]
 }</code></pre>
 
-    <p>The phase comes from <code>VERSION_TAG</code>. A pull request fails if a version falls below its band, reaches the next band before its cut, moves a floor, moves an unbanded surface after RC1, or goes backwards. <code>cut</code> is re-baselined on the cut commit and nowhere else.</p>
+    <p>The phase comes from <code>VERSION_TAG</code>. A pull request fails if a version falls below its cut number, reaches the next cut&rsquo;s number early, moves a floor, moves a surface that has no per-cut number after RC1, or goes backwards. <code>cut</code> is re-baselined on the cut commit and nowhere else.</p>
   </section>
 
   </main>
