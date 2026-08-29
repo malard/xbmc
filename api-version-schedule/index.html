@@ -419,17 +419,16 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   <div class="masthead-inner">
     <div class="eyebrow">
       <span>Kodi&nbsp;v22 &ldquo;Piers&rdquo;</span><span class="dot">/</span>
-      <span>Release engineering</span><span class="dot">/</span>
-      <span>Proposal</span>
+      <span>API versions</span>
     </div>
     <h1>API version schedule</h1>
-    <p class="standfirst">Every public API version Kodi&nbsp;22 will present, fixed to a cut, so that an add-on, skin or client author can target a number before the release exists.</p>
+    <p class="standfirst">The API versions Kodi&nbsp;22 presents, and the cut after which each one stops moving.</p>
 
     <dl class="factbar">
-      <div class="fact"><dt>Cycle</dt><dd>v22 &ldquo;Piers&rdquo;</dd></div>
-      <div class="fact"><dt>Current cut</dt><dd>BETA1, 11&nbsp;Jun&nbsp;2026</dd></div>
-      <div class="fact"><dt>Next cut</dt><dd>BETA2</dd></div>
-      <div class="fact"><dt>Status</dt><dd>Proposal</dd></div>
+      <div class="fact"><dt>JSON-RPC</dt><dd>14.x</dd></div>
+      <div class="fact"><dt>Python</dt><dd>3.x</dd></div>
+      <div class="fact"><dt>Skin</dt><dd>5.18.x</dd></div>
+      <div class="fact"><dt>Current cut</dt><dd>BETA1</dd></div>
     </dl>
   </div>
 </header>
@@ -439,25 +438,24 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
     <div class="tldr">
       <h2>Plainly</h2>
-      <p>Kodi&rsquo;s public API version numbers move without warning during a cycle &mdash; sometimes in the last days before gold. This pins each number to a cut, so anyone writing against Kodi knows what version 22 will present long before it ships.</p>
+      <p>The version numbers Kodi&nbsp;22 presents to add-ons, skins and JSON-RPC clients, and the point in the cycle after which each can no longer change.</p>
     </div>
 
     <div class="tldr">
       <h2>Substance</h2>
       <ul>
-        <li>Breaking changes land before Beta&nbsp;1. Additive changes close at RC1. After RC1, patch only.</li>
-        <li>Kodi&nbsp;22 presents JSON-RPC <strong>14.x</strong>, Python <strong>3.x</strong>, skin <strong>5.x</strong>, Game add-on API <strong>8.x</strong>.</li>
-        <li><code>ADDON_API</code> is fully determined by the cut &mdash; <code>21.90.80n</code> beta, <code>21.90.90n</code> RC, <code>22.0.0</code> gold.</li>
-        <li>The schedule is a checked-in manifest, so CI rejects a bump past the ceiling rather than a reviewer catching it.</li>
+        <li>Breaking changes close at Beta&nbsp;1, additive changes at RC1. Patch stays open.</li>
+        <li>Compatibility floors are fixed from Beta&nbsp;1.</li>
+        <li><code>ADDON_API</code> is determined by the cut.</li>
       </ul>
     </div>
 
     <div class="tldr">
       <h2>Where to look</h2>
       <ul>
-        <li><a href="#ladder">&sect;02</a> &mdash; the rule, in one table.</li>
-        <li><a href="#schedule">&sect;03</a> &mdash; the v22 numbers.</li>
-        <li><a href="#enforce">&sect;05</a> &mdash; what CI reads.</li>
+        <li><a href="#versions">&sect;01</a> &mdash; what v22 presents.</li>
+        <li><a href="#ladder">&sect;02</a> &mdash; what moves when.</li>
+        <li><a href="#cuts">&sect;03</a> &mdash; the cuts.</li>
       </ul>
     </div>
 
@@ -469,49 +467,49 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   <nav class="rail" aria-label="Contents">
     <h2>Contents</h2>
     <ol>
-      <li><a href="#why">The problem</a></li>
-      <li><a href="#ladder">The ladder</a></li>
-      <li><a href="#schedule">The v22 schedule</a></li>
-      <li><a href="#rely">What you can rely on</a></li>
+      <li><a href="#versions">Versions</a></li>
+      <li><a href="#ladder">What moves when</a></li>
+      <li><a href="#cuts">The cuts</a></li>
       <li><a href="#enforce">Enforcement</a></li>
-      <li><a href="#nongoals">Non-goals</a></li>
     </ol>
   </nav>
 
   <main class="content">
 
   <!-- 1 -->
-  <section id="why">
-    <h2 class="sec"><span class="num">01</span>The problem</h2>
+  <section id="versions">
+    <h2 class="sec"><span class="num">01</span>Versions</h2>
     <hr class="sec-rule">
-    <p class="lead">A third party cannot presently predict which API version a Kodi release will present, because the number has moved at a different point in every cycle.</p>
-
-    <p>The JSON-RPC contract is the clearest case. Across four cycles the major component has landed at gold, landed two minors past a major at gold, never landed at all, and landed mid-beta:</p>
 
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Cycle</th><th class="m">Beta&nbsp;1</th><th class="m">RC1</th><th class="m">Released</th><th>Where the major landed</th></tr>
+          <tr><th>Surface</th><th class="w">Declared in</th><th class="m">v22 presents</th><th class="m">Floor</th></tr>
         </thead>
         <tbody>
-          <tr><td>v19 Matrix</td><td class="m">11.19.1</td><td class="m">11.21.1</td><td class="m">12.2.0</td><td>After RC1, plus two minors</td></tr>
-          <tr><td>v20 Nexus</td><td class="m">12.10.2</td><td class="m">12.10.2</td><td class="m">13.0.0</td><td>At gold</td></tr>
-          <tr><td>v21 Omega</td><td class="m">13.3.0</td><td class="m">13.5.0</td><td class="m">13.5.0</td><td>Never</td></tr>
-          <tr><td>v22 Piers</td><td class="m">13.11.0</td><td class="m">&mdash;</td><td class="m">14.x</td><td>12&nbsp;Aug&nbsp;2026, two months after Beta&nbsp;1</td></tr>
+          <tr><td>JSON-RPC</td><td class="m">xbmc/interfaces/json-rpc/schema/version.txt</td><td class="m">14.x</td><td class="m">&mdash;</td></tr>
+          <tr><td><code>ADDON_API</code></td><td class="m">version.txt</td><td class="m">22.0.0</td><td class="m">&mdash;</td></tr>
+          <tr><td>Python</td><td class="m">addons/xbmc.python/addon.xml</td><td class="m">3.x</td><td class="m">3.0.0</td></tr>
+          <tr><td>Skin</td><td class="m">addons/xbmc.gui/addon.xml</td><td class="m">5.18.x</td><td class="m">5.17.0</td></tr>
+          <tr><td>Binary add-on</td><td class="m">kodi-dev-kit/include/kodi/versions.h</td><td class="m">per API</td><td class="m">per <code>_MIN</code></td></tr>
         </tbody>
       </table>
     </div>
 
-    <p>Binary add-on APIs behave the same way. In this cycle the Game add-on API moved <code>6.0.0</code> &rarr; <code>8.0.0</code> across five bumps between 12 and 26&nbsp;August, all after the Beta&nbsp;1 cut, with <code>ADDON_INSTANCE_VERSION_GAME_MIN</code> moving in step &mdash; so every game client binary built against Beta&nbsp;1 is refused by the current master.</p>
+    <p>Of the twenty binary add-on APIs, two moved after the Beta&nbsp;1 cut: <strong>Game</strong> to 8.x and <strong>VideoCodec</strong> to 2.2.x. <code>ADDON_INSTANCE_VERSION_GAME_MIN</code> moved with it, so a game client built against Beta&nbsp;1 must be rebuilt. The other eighteen are unchanged since Beta&nbsp;1.</p>
 
-    <p>None of these bumps was wrong on its own terms. The defect is that they are unannounced: an author who compiled against Beta&nbsp;1 had no way to learn that the floor would move under them, and no document to read that would have said so.</p>
+    <p>A floor &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code> &mdash; is what a compiled add-on is tested against. Build against Beta&nbsp;2 or later and the binary loads on 22.0 gold.</p>
+
+    <div class="note">
+      <span class="note-label">Not covered</span>
+      <p>Video, music, texture and add-on database schema versions are internal to an installation and are not part of this schedule.</p>
+    </div>
   </section>
 
   <!-- 2 -->
   <section id="ladder">
-    <h2 class="sec"><span class="num">02</span>The ladder</h2>
+    <h2 class="sec"><span class="num">02</span>What moves when</h2>
     <hr class="sec-rule">
-    <p class="lead">Each cut closes one component of every public API version. Nothing that is closed reopens for the life of the release.</p>
 
     <div class="table-wrap">
       <table>
@@ -535,7 +533,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
             <td>Fixes to declared behaviour. No new surface</td>
           </tr>
           <tr>
-            <td><strong>Gold</strong> and point releases</td>
+            <td><strong>Gold</strong>, point releases</td>
             <td><span class="chip brk">locked</span></td><td><span class="chip brk">locked</span></td><td><span class="chip ok">open</span></td>
             <td>Fixes only, for the life of the branch</td>
           </tr>
@@ -543,64 +541,14 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       </table>
     </div>
 
-    <p><em>Locked</em> means the component may not change, in either direction. A minor bump after RC1 is a rejected pull request, not a discussion; the change waits for the next cycle&rsquo;s alpha.</p>
-
-    <div class="note">
-      <span class="note-label">Compatibility floors</span>
-      <p>A <code>_MIN</code> in <code>versions.h</code>, or a <code>backwards-compatibility abi</code> in an <code>addon.xml</code>, is the actual promise to a compiled add-on. It follows the major: locked from Beta&nbsp;1. Raising a floor after Beta&nbsp;1 invalidates every binary built against that beta and is the one change the ladder exists to stop.</p>
-    </div>
-
-    <p>One override exists. A release manager may move a locked component to fix a defect that would otherwise ship, by recording it in the manifest with a reason. The record is the point &mdash; an override is visible to everyone reading this page, rather than discoverable only by diffing a header.</p>
+    <p>Locked means the component does not change, in either direction, for the rest of the release. A change that would move one waits for the next cycle&rsquo;s alpha.</p>
   </section>
 
   <!-- 3 -->
-  <section id="schedule">
-    <h2 class="sec"><span class="num">03</span>The v22 schedule</h2>
+  <section id="cuts">
+    <h2 class="sec"><span class="num">03</span>The cuts</h2>
     <hr class="sec-rule">
-    <p class="lead">Kodi&nbsp;22 presents JSON-RPC&nbsp;14, and that is the aim the rest of the schedule is built around.</p>
-
-    <h3>Per surface</h3>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>Surface</th><th class="w">Read from</th><th class="m">Beta&nbsp;1</th><th class="m">Today</th><th class="m">v22 ships</th><th class="m">Floor</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>JSON-RPC</td>
-            <td class="m">json-rpc/schema/version.txt</td>
-            <td class="m">13.11.0</td><td class="m">14.2.0</td><td class="m">14.x</td><td class="m">&mdash;</td>
-          </tr>
-          <tr>
-            <td><code>ADDON_API</code></td>
-            <td class="m">version.txt</td>
-            <td class="m">21.90.801</td><td class="m">21.90.801</td><td class="m">22.0.0</td><td class="m">&mdash;</td>
-          </tr>
-          <tr>
-            <td>Python</td>
-            <td class="m">addons/xbmc.python</td>
-            <td class="m">3.0.2</td><td class="m">3.1.0</td><td class="m">3.x</td><td class="m">3.0.0</td>
-          </tr>
-          <tr>
-            <td>Skin</td>
-            <td class="m">addons/xbmc.gui</td>
-            <td class="m">5.18.0</td><td class="m">5.18.0</td><td class="m">5.x</td><td class="m">5.17.0</td>
-          </tr>
-          <tr>
-            <td>Binary add-on APIs</td>
-            <td class="m">kodi-dev-kit/&hellip;/versions.h</td>
-            <td class="m">per API</td><td class="m">per API</td><td class="m">per API</td><td class="m">per <code>_MIN</code></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>Two binary APIs moved after the Beta&nbsp;1 cut and are therefore what v22 declares: <strong>Game&nbsp;8.x</strong> (from 6.0.0) and <strong>VideoCodec&nbsp;2.2.x</strong> (from 2.2.0). The other nineteen global and instance APIs are unchanged since Beta&nbsp;1 and are locked at their Beta&nbsp;1 majors. <code>versions.h</code> remains the per-API reference.</p>
-
-    <h3>Per cut</h3>
-
-    <p><code>ADDON_API</code> and <code>VERSION_CODE</code> are the one pair that can be stated exactly for every remaining cut, because they encode the cut rather than the API surface:</p>
+    <p class="lead"><code>ADDON_API</code> and <code>VERSION_CODE</code> encode the cut, so they are known for the whole cycle in advance.</p>
 
     <div class="table-wrap">
       <table>
@@ -608,48 +556,28 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <tr><th>Cut</th><th class="m">ADDON_API</th><th>Closes</th></tr>
         </thead>
         <tbody>
-          <tr><td>ALPHA1&ndash;3 <span class="chip">shipped</span></td><td class="m">21.90.700&ndash;703</td><td>&mdash;</td></tr>
-          <tr><td>BETA1 <span class="chip">shipped</span></td><td class="m">21.90.801</td><td>Major, and every <code>_MIN</code> / <code>abi</code> floor</td></tr>
+          <tr><td>ALPHA1&ndash;3</td><td class="m">21.90.700&ndash;703</td><td>&mdash;</td></tr>
+          <tr><td>BETA1</td><td class="m">21.90.801</td><td>Major, and every floor</td></tr>
           <tr><td>BETA2</td><td class="m">21.90.802</td><td>&mdash;</td></tr>
           <tr><td>BETA<em>n</em></td><td class="m">21.90.80<em>n</em></td><td>&mdash;</td></tr>
           <tr><td>RC1</td><td class="m">21.90.901</td><td>Minor</td></tr>
           <tr><td>RC<em>n</em></td><td class="m">21.90.90<em>n</em></td><td>&mdash;</td></tr>
-          <tr><td>22.0 gold</td><td class="m">22.0.0</td><td>&mdash;</td></tr>
-          <tr><td>22.<em>n</em> point release</td><td class="m">22.<em>n</em>.0</td><td>&mdash;</td></tr>
+          <tr><td>22.0</td><td class="m">22.0.0</td><td>&mdash;</td></tr>
+          <tr><td>22.<em>n</em></td><td class="m">22.<em>n</em>.0</td><td>&mdash;</td></tr>
         </tbody>
       </table>
     </div>
-
-    <p>This regularises a convention that already half-exists: v20 used <code>19.90.801</code> and <code>19.90.901</code>, but v21 used <code>20.90.821</code> and <code>20.90.910</code> for the same cuts, and v22&rsquo;s first alpha was <code>21.90.700</code> where v21&rsquo;s was <code>20.90.101</code>. The band is meaningful; the last two digits have not been.</p>
   </section>
 
   <!-- 4 -->
-  <section id="rely">
-    <h2 class="sec"><span class="num">04</span>What you can rely on</h2>
-    <hr class="sec-rule">
-    <p class="lead">If you write against Kodi, these four lines are the whole document.</p>
-
-    <ul class="prose">
-      <li><strong>JSON-RPC clients.</strong> Kodi&nbsp;22 speaks 14.x. Methods and fields may be added up to RC1; nothing declared is removed or changed in shape.</li>
-      <li><strong>Python add-ons.</strong> Kodi&nbsp;22 presents <code>xbmc.python</code> 3.x with an unchanged 3.0.0 floor. An add-on importing 3.0.0 loads on every v22 build, beta included.</li>
-      <li><strong>Skins.</strong> Kodi&nbsp;22 presents <code>xbmc.gui</code> 5.18.x against a 5.17.0 floor.</li>
-      <li><strong>Binary add-ons.</strong> Build against Beta&nbsp;2 or later and your binary loads on 22.0 gold, because no <code>_MIN</code> moves after Beta&nbsp;1. Beta&nbsp;1 itself predates this schedule &mdash; Game clients must rebuild.</li>
-    </ul>
-
-    <p>The reciprocal obligation is on the release: any of these lines proving false is a release blocker, not a release note.</p>
-  </section>
-
-  <!-- 5 -->
   <section id="enforce">
-    <h2 class="sec"><span class="num">05</span>Enforcement</h2>
+    <h2 class="sec"><span class="num">04</span>Enforcement</h2>
     <hr class="sec-rule">
-    <p class="lead">The schedule is only worth publishing if a pull request cannot quietly break it, so the numbers above live in the tree in a form CI reads.</p>
-
-    <p>A single manifest, <code>api-versions.json</code>, sits beside <code>version.txt</code>. Each entry names where a version is read from, the major the release has declared, and the value as of the last cut:</p>
+    <p class="lead">Every version above is declared in <code>api-versions.json</code>, beside <code>version.txt</code>. CI validates each pull request against it.</p>
 
 <pre><code>{
-  <span class="c-com">"release"</span>: { <span class="c-com">"major"</span>: 22, <span class="c-com">"codename"</span>: "Piers" },
-  <span class="c-com">"surfaces"</span>: [
+  "release": { "major": 22, "codename": "Piers" },
+  "surfaces": [
     {
       "id":       "jsonrpc",
       "path":     "xbmc/interfaces/json-rpc/schema/version.txt",
@@ -676,32 +604,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   ]
 }</code></pre>
 
-    <p>Three readers cover every current surface &mdash; <code>key:</code> for the whitespace-separated <code>version.txt</code> files, <code>xml:</code> for an <code>addon.xml</code> attribute, <code>define:</code> for a string macro in <code>versions.h</code>. A surface that needs a fourth is a surface that should be reporting its version differently.</p>
-
-    <h3>What the check does</h3>
-
-    <ul class="prose">
-      <li>Reads <code>VERSION_TAG</code> from <code>version.txt</code> to determine the phase &mdash; alpha, beta, RC or release &mdash; and from that, which components are locked per <a href="#ladder">&sect;02</a>.</li>
-      <li>For each surface, fails if the major differs from <code>line</code>; if a locked component differs from <code>declared</code>; if <code>floor</code> has moved while locked; or if the value has gone backwards.</li>
-      <li>Validates <code>ADDON_API</code> and <code>VERSION_CODE</code> against the cut table in <a href="#schedule">&sect;03</a>, which is derived, not declared.</li>
-    </ul>
-
-    <p>Re-baselining <code>declared</code> is the act of cutting a release. It runs on the cut commit and nowhere else, which makes the release manager the only person who can move a locked number, and makes each move a reviewable one-line diff.</p>
-
-    <p>The check needs the merge base, the working tree and nothing else &mdash; no build, no network. It belongs wherever the cheap per-PR checks already run.</p>
-  </section>
-
-  <!-- 6 -->
-  <section id="nongoals">
-    <h2 class="sec"><span class="num">06</span>Non-goals</h2>
-    <hr class="sec-rule">
-
-    <ul class="prose">
-      <li><strong>Internal schema versions are out of scope.</strong> Video, music, texture and add-on database versions are not third-party contracts and are not scheduled here.</li>
-      <li><strong>This does not redefine semantic versioning</strong> for any surface. It says when each component may move, not what it means.</li>
-      <li><strong>It is not retrospective.</strong> v21 and earlier are cited as evidence only. v22 is scheduled from its Beta&nbsp;1 baseline forward, with the two surfaces that already moved past it &mdash; JSON-RPC and Game &mdash; declared rather than reverted.</li>
-      <li><strong>It does not set release dates.</strong> Cuts are named, not scheduled; the numbering holds whenever a cut happens.</li>
-    </ul>
+    <p>The phase comes from <code>VERSION_TAG</code>. A pull request fails if a locked component or a floor differs from <code>declared</code>, if a major differs from <code>line</code>, or if a version goes backwards. <code>declared</code> is re-baselined on the cut commit and nowhere else.</p>
   </section>
 
   </main>
