@@ -480,19 +480,20 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   <section id="release">
     <h2 class="sec"><span class="num">01</span>At release</h2>
     <hr class="sec-rule">
+    <p class="lead">Team&nbsp;Kodi will be updating API versions to the following numbers at the v22 final release.</p>
 
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Surface</th><th class="w">Declared in</th><th class="m">22.0 presents</th><th class="m">Floor</th></tr>
+          <tr><th>Surface</th><th class="w">Declared in</th><th class="m">22.0 presents</th></tr>
         </thead>
         <tbody>
-          <tr><td>JSON-RPC</td><td class="m">xbmc/interfaces/json-rpc/schema/version.txt</td><td class="m">14.0</td><td class="m">&mdash;</td></tr>
-          <tr><td><code>ADDON_API</code></td><td class="m">version.txt</td><td class="m">22.0.0</td><td class="m">&mdash;</td></tr>
-          <tr><td>Game add-on</td><td class="m">kodi-dev-kit/include/kodi/versions.h</td><td class="m">7.0</td><td class="m">7.0.0</td></tr>
-          <tr><td>Python</td><td class="m">addons/xbmc.python/addon.xml</td><td class="m">3.1</td><td class="m">3.0.0</td></tr>
-          <tr><td>Skin</td><td class="m">addons/xbmc.gui/addon.xml</td><td class="m">5.18</td><td class="m">5.17.0</td></tr>
-          <tr><td>Other binary add-on</td><td class="m">kodi-dev-kit/include/kodi/versions.h</td><td class="m">unchanged</td><td class="m">per <code>_MIN</code></td></tr>
+          <tr><td>JSON-RPC</td><td class="m">xbmc/interfaces/json-rpc/schema/version.txt</td><td class="m">14.0</td></tr>
+          <tr><td><code>ADDON_API</code></td><td class="m">version.txt</td><td class="m">22.0.0</td></tr>
+          <tr><td>Game add-on</td><td class="m">kodi-dev-kit/include/kodi/versions.h</td><td class="m">7.0</td></tr>
+          <tr><td>Python</td><td class="m">addons/xbmc.python/addon.xml</td><td class="m">3.1</td></tr>
+          <tr><td>Skin</td><td class="m">addons/xbmc.gui/addon.xml</td><td class="m">5.18</td></tr>
+          <tr><td>Other binary add-on</td><td class="m">kodi-dev-kit/include/kodi/versions.h</td><td class="m">unchanged</td></tr>
         </tbody>
       </table>
     </div>
@@ -538,11 +539,6 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <li><strong>Floors do not move after Beta&nbsp;1</strong> &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code>. Build against Beta&nbsp;2 or later and the binary loads on 22.0.</li>
       <li><strong>A version never goes backwards</strong> and never reaches the next cut&rsquo;s band ahead of that cut.</li>
     </ul>
-
-    <div class="note">
-      <span class="note-label">Not covered</span>
-      <p>Video, music, texture and add-on database schema versions are internal to an installation and are not part of this schedule.</p>
-    </div>
   </section>
 
   <!-- 4 -->
