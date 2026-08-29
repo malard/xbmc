@@ -63,6 +63,14 @@ the additions below and none of the breaks.
   `<loglevel>`, which left the log level unreachable on exactly the
   installations that had set one. `Settings.GetSettings` and the listings
   above it still filter on visibility, since they describe that window.
+- Stream languages are BCP 47 language tags, not ISO 639-2/B. `language` on
+  `Player.Audio.Stream`, `Player.Video.Stream` and `Player.Subtitle` reads
+  `en` where version 13 sent `eng`, and carries a region when the player knows
+  one, `en-AU`. The same field inside a library item's `streamdetails` changes
+  the same way but never carries a region: it is read from a column that holds
+  ISO 639-2/B and is widened on the way out, so it can only ever name the
+  language. An empty value still means the stream declared none, and a value
+  Kodi does not recognise is passed through unchanged rather than blanked.
 
 ### Deprecated
 
@@ -110,10 +118,12 @@ schema never says *when* something goes; that is here.
   waits for the capture to be encoded, so a file it names is complete when the
   response arrives, and `Files.PrepareDownload` serves it: the screenshot
   folder is reachable through the web server's `/vfs/` endpoint without being
-  a media source. An optional `target` names the file instead of taking the
-  next `screenshotNNNNN.png`. With no folder configured it answers
-  `Unavailable`, where it would otherwise raise a browse-for-folder dialog no
-  caller is there to answer.
+  a media source. `content` chooses what is captured: `composite` for the full
+  display output, `video` for the video frame alone, or `both`, which writes
+  two files from the same rendered frame. An optional `target` names the file
+  instead of taking the next `screenshotNNNNN.png`. With no folder configured
+  it answers `Unavailable`, where it would otherwise raise a browse-for-folder
+  dialog no caller is there to answer.
 - `GUI.DeleteScreenshots` - deletes one screenshot or clears the folder, which
   is otherwise the one thing a client can fill and never reclaim: the
   auto-numbered name runs out at 65535 and nothing else in the API deletes a
@@ -185,6 +195,10 @@ schema never says *when* something goes; that is here.
   `PVR.Details.Recording`.
 - `status` and `trailer` on `Video.Details.TVShow`.
 - `lastlibrarycheck` on `Textures.Details.Texture`.
+- `games` on `Files.Media`, so `Files.GetSources` reaches the game sources.
+- `Notifications.Library.Audio.Type` and `Notifications.Library.Video.Type`,
+  the media types carried by the library notifications, named as types rather
+  than repeated inline.
 
 ### Changed
 
@@ -218,6 +232,8 @@ schema never says *when* something goes; that is here.
   with its OSD. It used to start a slideshow of the directory regardless,
   which played each video as a slide inside the slideshow window. A directory
   with pictures in it is a slideshow as before; `random` applies only there.
+- `VideoLibrary.SetTVShowDetails` accepts `trailer`, so the trailer a show
+  already reported through `Video.Details.TVShow` can now be written back.
 
 ### Fixed
 
@@ -258,3 +274,7 @@ schema never says *when* something goes; that is here.
   been able to request those four by name.
 - A broadcast reports a `starttime` or `endtime` that falls on or after
   2038-01-19, in place of a date in the past.
+- The video streams of a library item declare `stereomode`, `language` and
+  `hdrdetail`, which the serializer has always sent. The type refuses members
+  it does not declare, so a client validating a response against it rejected
+  one that was correct.
