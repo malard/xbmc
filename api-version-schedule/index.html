@@ -94,7 +94,7 @@ body {
 
 .masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
 .masthead-inner {
-  max-width: 76rem;
+  max-width: 62rem;
   margin: 0 auto;
   padding: 2.75rem 2rem 1.9rem;
   display: flex;
@@ -173,13 +173,9 @@ body {
 /* ---------- shell ---------- */
 
 .shell {
-  max-width: 76rem;
+  max-width: 62rem;
   margin: 0 auto;
   padding: 0 2rem 5rem;
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, 1fr);
-  gap: 3.25rem;
-  align-items: start;
 }
 
 .rail {
@@ -228,6 +224,7 @@ body {
 /* ---------- content ---------- */
 
 .content { padding: 2.25rem 0 0; min-width: 0; }
+section + section { margin-top: 2.6rem; }
 section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
 
 h2.sec {
@@ -370,7 +367,7 @@ figure svg { display: block; width: 100%; height: auto; }
 /* ---------- footer ---------- */
 
 footer { border-top: 1px solid var(--rule); background: var(--surface); padding: 2rem 2rem 3rem; }
-.footer-inner { max-width: 76rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
+.footer-inner { max-width: 62rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
 .footer-inner p { max-width: 60ch; margin: 0; }
 
 /* ---------- theme toggle ---------- */
@@ -396,20 +393,8 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 60rem) {
-  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .rail {
-    position: static;
-    max-height: none;
-    border-right: 0;
-    border-bottom: 1px solid var(--rule);
-    padding: 1.35rem 0;
-  }
-  .rail ol { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
-  .rail a { padding-left: 1.6rem; border-left: 0; }
-}
 @media (max-width: 40rem) {
-  .masthead-inner, .band-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
+  .masthead-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
 }
 </style>
 </head>
@@ -433,52 +418,13 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   </div>
 </header>
 
-<div class="band">
-  <div class="band-inner">
-
-    <div class="tldr">
-      <h2>Plainly</h2>
-      <p>The version numbers Kodi&nbsp;22 presents to add-ons, skins and JSON-RPC clients &mdash; fixed in advance, for every remaining cut.</p>
-    </div>
-
-    <div class="tldr">
-      <h2>Substance</h2>
-      <ul>
-        <li>A pre-release never carries the release major. JSON-RPC 13.x is a beta or an RC; 14.x is 22.0 or later.</li>
-        <li>Each surface crosses at most one major per release.</li>
-        <li>Compatibility floors do not move after Beta&nbsp;1.</li>
-      </ul>
-    </div>
-
-    <div class="tldr">
-      <h2>Where to look</h2>
-      <ul>
-        <li><a href="#release">&sect;01</a> &mdash; what 22.0 presents.</li>
-        <li><a href="#cuts">&sect;02</a> &mdash; every cut in between.</li>
-        <li><a href="#rules">&sect;03</a> &mdash; how the numbers move.</li>
-      </ul>
-    </div>
-
-  </div>
-</div>
-
 <div class="shell">
-
-  <nav class="rail" aria-label="Contents">
-    <h2>Contents</h2>
-    <ol>
-      <li><a href="#release">At release</a></li>
-      <li><a href="#cuts">At each cut</a></li>
-      <li><a href="#rules">Rules</a></li>
-      <li><a href="#enforce">Enforcement</a></li>
-    </ol>
-  </nav>
 
   <main class="content">
 
   <!-- 1 -->
   <section id="release">
-    <h2 class="sec"><span class="num">01</span>At release</h2>
+    <h2 class="sec">At release</h2>
     <hr class="sec-rule">
     <p class="lead">Team&nbsp;Kodi will be updating API versions to the following numbers at the v22 final release.</p>
 
@@ -501,7 +447,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
   <!-- 2 -->
   <section id="cuts">
-    <h2 class="sec"><span class="num">02</span>At each cut</h2>
+    <h2 class="sec">At each cut</h2>
     <hr class="sec-rule">
     <p class="lead">JSON-RPC and the Game add-on API cross a major this cycle, so both are banded: every pre-release cut carries the outgoing major, and the new one appears at 22.0.</p>
 
@@ -530,7 +476,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
   <!-- 3 -->
   <section id="rules">
-    <h2 class="sec"><span class="num">03</span>Rules</h2>
+    <h2 class="sec">Rules</h2>
     <hr class="sec-rule">
 
     <ul class="prose">
@@ -543,7 +489,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
   <!-- 4 -->
   <section id="enforce">
-    <h2 class="sec"><span class="num">04</span>Enforcement</h2>
+    <h2 class="sec">Enforcement</h2>
     <hr class="sec-rule">
     <p class="lead">Every number above is declared in <code>api-versions.json</code>, beside <code>version.txt</code>. CI validates each pull request against it.</p>
 
@@ -603,27 +549,6 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
   });
 
-  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
-  var sections = links.map(function (a) {
-    return document.getElementById(a.getAttribute('href').slice(1));
-  });
-
-  function mark() {
-    var best = 0;
-    for (var i = 0; i < sections.length; i++) {
-      if (sections[i] && sections[i].getBoundingClientRect().top <= 120) { best = i; }
-    }
-    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
-  }
-
-  var ticking = false;
-  window.addEventListener('scroll', function () {
-    if (!ticking) {
-      window.requestAnimationFrame(function () { mark(); ticking = false; });
-      ticking = true;
-    }
-  }, { passive: true });
-  mark();
 })();
 </script>
 
