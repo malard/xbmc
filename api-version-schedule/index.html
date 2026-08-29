@@ -496,7 +496,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       </table>
     </div>
 
-    <p>Of the twenty binary add-on APIs, two moved after the Beta&nbsp;1 cut: <strong>Game</strong> to 8.x and <strong>VideoCodec</strong> to 2.2.x. <code>ADDON_INSTANCE_VERSION_GAME_MIN</code> moved with it, so a game client built against Beta&nbsp;1 must be rebuilt. The other eighteen are unchanged since Beta&nbsp;1.</p>
+    <p>Binary add-on APIs are declared individually in <code>versions.h</code>, each with its own floor in <code>_MIN</code>. Game is 8.x, VideoCodec 2.2.x.</p>
 
     <p>A floor &mdash; <code>_MIN</code> in <code>versions.h</code>, <code>backwards-compatibility abi</code> in an <code>addon.xml</code> &mdash; is what a compiled add-on is tested against. Build against Beta&nbsp;2 or later and the binary loads on 22.0 gold.</p>
 
@@ -556,7 +556,6 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
           <tr><th>Cut</th><th class="m">ADDON_API</th><th>Closes</th></tr>
         </thead>
         <tbody>
-          <tr><td>ALPHA1&ndash;3</td><td class="m">21.90.700&ndash;703</td><td>&mdash;</td></tr>
           <tr><td>BETA1</td><td class="m">21.90.801</td><td>Major, and every floor</td></tr>
           <tr><td>BETA2</td><td class="m">21.90.802</td><td>&mdash;</td></tr>
           <tr><td>BETA<em>n</em></td><td class="m">21.90.80<em>n</em></td><td>&mdash;</td></tr>
