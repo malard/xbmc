@@ -2683,7 +2683,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"
@@ -2735,7 +2736,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"
@@ -2767,7 +2769,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"

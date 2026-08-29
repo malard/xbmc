@@ -9607,6 +9607,12 @@
           }
         },
         {
+          "name": "trailer",
+          "schema": {
+            "$ref": "#/components/schemas/Optional.String"
+          }
+        },
+        {
           "name": "sorttitle",
           "schema": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17437,7 +17443,8 @@
           "music",
           "pictures",
           "files",
-          "programs"
+          "programs",
+          "games"
         ]
       },
       "List.Amount": {
@@ -17962,7 +17969,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"
@@ -18014,7 +18022,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"
@@ -18046,7 +18055,8 @@
             "type": "string"
           },
           "language": {
-            "type": "string"
+            "type": "string",
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
           },
           "codec": {
             "type": "string"
@@ -19591,7 +19601,8 @@
                   "type": "string"
                 },
                 "language": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
                 },
                 "channels": {
                   "type": "integer"
@@ -19621,7 +19632,17 @@
                 "duration": {
                   "type": "integer"
                 },
+                "stereomode": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string",
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
+                },
                 "hdrtype": {
+                  "type": "string"
+                },
+                "hdrdetail": {
                   "type": "string"
                 }
               },
@@ -19635,7 +19656,8 @@
               "type": "object",
               "properties": {
                 "language": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
                 }
               },
               "additionalProperties": false

@@ -5609,7 +5609,9 @@
       },
       {
         "name": "trailer",
-        "$ref": "Optional.String"
+        "schema": {
+          "$ref": "#/$defs/Optional.String"
+        }
       },
       {
         "name": "sorttitle",
