@@ -94,6 +94,63 @@ TEST(TestVideoLibraryPlaybackState, DoesNotDowngradeStateTheItemAlreadyHas)
   EXPECT_EQ(600.0, details.GetResumePoint().timeInSeconds);
 }
 
+namespace
+{
+CVideoInfoTag Show(int playCount, const char* lastPlayed)
+{
+  CVideoInfoTag show;
+  show.m_type = MediaTypeTvShow;
+  show.SetPlayCount(playCount);
+  show.m_lastPlayed.SetFromDBDateTime(lastPlayed);
+  return show;
+}
+
+CVideoInfoTag Episode(int playCount, const char* lastPlayed)
+{
+  CVideoInfoTag episode;
+  episode.m_type = MediaTypeEpisode;
+  episode.SetPlayCount(playCount);
+  if (lastPlayed)
+    episode.m_lastPlayed.SetFromDBDateTime(lastPlayed);
+  return episode;
+}
+} // unnamed namespace
+
+TEST(TestVideoLibraryEpisodePlaybackUpdate, APlaycountOnlyUpdateKeepsTheEpisodesLastPlayed)
+{
+  const auto update = CVideoLibrary::EpisodePlaybackUpdate(
+      Show(1, "2026-09-02 20:00:00"), true, false, Episode(0, "2026-08-10 21:49:28"));
+
+  ASSERT_TRUE(update);
+  EXPECT_EQ(1, update->playCount);
+  EXPECT_EQ("2026-08-10 21:49:28", update->lastPlayed.GetAsDBDateTime());
+}
+
+TEST(TestVideoLibraryEpisodePlaybackUpdate, ANeverPlayedEpisodeHasNoTimeToKeep)
+{
+  const auto update = CVideoLibrary::EpisodePlaybackUpdate(Show(1, "2026-09-02 20:00:00"), true,
+                                                           false, Episode(0, nullptr));
+
+  ASSERT_TRUE(update);
+  EXPECT_FALSE(update->lastPlayed.IsValid());
+}
+
+TEST(TestVideoLibraryEpisodePlaybackUpdate, AnEpisodeAlreadyAtThePlaycountIsLeftAlone)
+{
+  EXPECT_FALSE(CVideoLibrary::EpisodePlaybackUpdate(Show(2, "2026-09-02 20:00:00"), true, false,
+                                                    Episode(2, "2026-08-10 21:49:28")));
+}
+
+TEST(TestVideoLibraryEpisodePlaybackUpdate, ALastPlayedUpdateAppliesTheShowsTime)
+{
+  const auto update = CVideoLibrary::EpisodePlaybackUpdate(Show(0, "2026-09-02 20:00:00"), false,
+                                                           true, Episode(2, "2026-08-10 21:49:28"));
+
+  ASSERT_TRUE(update);
+  EXPECT_EQ(2, update->playCount);
+  EXPECT_EQ("2026-09-02 20:00:00", update->lastPlayed.GetAsDBDateTime());
+}
+
 TEST(TestVideoLibraryPlaybackState, FillsAnItemThatSaysNothingAboutItself)
 {
   // Files.GetFileDetails on a file no add-on described: the row is all there is, and it must

@@ -740,13 +740,10 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const std::string &method, ITrans
       if (!episode->HasVideoInfoTag())
         continue;
 
-      const int count =
-          updatePlaycount ? infos.GetPlayCount() : episode->GetVideoInfoTag()->GetPlayCount();
-      if (!updateLastplayed && count == episode->GetVideoInfoTag()->GetPlayCount())
-        continue;
-
-      videodatabase.SetPlayCount(*episode, count,
-                                 updateLastplayed ? infos.m_lastPlayed : CDateTime());
+      const auto update = EpisodePlaybackUpdate(infos, updatePlaycount, updateLastplayed,
+                                                *episode->GetVideoInfoTag());
+      if (update)
+        videodatabase.SetPlayCount(*episode, update->playCount, update->lastPlayed);
     }
     videodatabase.CommitTransaction();
   }
@@ -1120,6 +1117,19 @@ JSONRPC_STATUS CVideoLibrary::Clean(const std::string &method, ITransportLayer *
 
   CServiceBroker::GetAppMessenger()->SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr, cmd);
   return ACK;
+}
+
+std::optional<CVideoLibrary::PlaybackUpdate> CVideoLibrary::EpisodePlaybackUpdate(
+    const CVideoInfoTag& show,
+    bool updatePlaycount,
+    bool updateLastplayed,
+    const CVideoInfoTag& episode)
+{
+  const int count = updatePlaycount ? show.GetPlayCount() : episode.GetPlayCount();
+  if (!updateLastplayed && count == episode.GetPlayCount())
+    return std::nullopt;
+
+  return PlaybackUpdate{count, updateLastplayed ? show.m_lastPlayed : episode.m_lastPlayed};
 }
 
 void CVideoLibrary::ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details)

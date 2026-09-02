@@ -10,10 +10,12 @@
 
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
+#include "XBDateTime.h"
 #include "utils/Artwork.h"
 #include "utils/DatabaseUtils.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -96,6 +98,24 @@ namespace JSONRPC
      \param details the tag to add it to, left otherwise untouched
     */
     static void ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details);
+
+    struct PlaybackUpdate
+    {
+      int playCount;
+      CDateTime lastPlayed;
+    };
+
+    /*! \brief The playback state a show-level update leaves one of its episodes with.
+     \param show the show's tag, carrying the values the update asked for
+     \param updatePlaycount whether the update named a playcount
+     \param updateLastplayed whether the update named a lastplayed
+     \param episode the episode as the library holds it
+     \return what to store, or nothing when the episode is left as it is
+    */
+    static std::optional<PlaybackUpdate> EpisodePlaybackUpdate(const CVideoInfoTag& show,
+                                                               bool updatePlaycount,
+                                                               bool updateLastplayed,
+                                                               const CVideoInfoTag& episode);
 
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 
