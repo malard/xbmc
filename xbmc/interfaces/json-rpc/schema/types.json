@@ -1149,12 +1149,16 @@
       "playerid": {
         "$ref": "#/$defs/Player.Id"
       },
+      "playlistid": {
+        "$ref": "#/$defs/Playlist.Id"
+      },
       "speed": {
         "type": "integer"
       }
     },
     "required": [
-      "playerid"
+      "playerid",
+      "playlistid"
     ]
   },
   "Player.Notifications.Player.Seek": {

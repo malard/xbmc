@@ -477,6 +477,9 @@
           "playerid": {
             "$ref": "#/$defs/Player.Id"
           },
+          "playlistid": {
+            "$ref": "#/$defs/Playlist.Id"
+          },
           "type": {
             "$ref": "#/$defs/Player.Type"
           },
@@ -491,6 +494,7 @@
         },
         "required": [
           "playerid",
+          "playlistid",
           "type",
           "playertype"
         ]
@@ -559,7 +563,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -573,6 +577,13 @@
           "items": {
             "$ref": "#/$defs/Player.Property.Name"
           }
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -592,7 +603,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -601,6 +612,13 @@
         "name": "properties",
         "schema": {
           "$ref": "#/$defs/List.Fields.All"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -628,7 +646,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -638,6 +656,13 @@
         "schema": {
           "$ref": "#/$defs/Global.Toggle",
           "default": "toggle"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -656,9 +681,16 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -695,7 +727,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -713,6 +745,13 @@
               "$ref": "#/$defs/Global.IncrementDecrement"
             }
           ]
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -741,7 +780,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -774,6 +813,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": {
@@ -792,7 +838,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -809,6 +855,13 @@
               "$ref": "#/$defs/Global.IncrementDecrement"
             }
           ]
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -828,7 +881,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -898,6 +951,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": {
@@ -927,7 +987,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -943,6 +1003,13 @@
             "up",
             "down"
           ]
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -960,7 +1027,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -984,6 +1051,13 @@
               "description": "zoom level"
             }
           ]
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1064,7 +1138,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1078,6 +1152,13 @@
             "counterclockwise"
           ],
           "default": "clockwise"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1094,7 +1175,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1117,6 +1198,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": "string",
@@ -1133,7 +1221,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1143,6 +1231,13 @@
         "required": true,
         "schema": {
           "$ref": "#/$defs/Global.Toggle"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1159,7 +1254,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1180,6 +1275,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": "string",
@@ -1195,7 +1297,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1205,6 +1307,13 @@
         "required": true,
         "schema": {
           "$ref": "#/$defs/Global.Toggle"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1222,7 +1331,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1246,6 +1355,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": "string",
@@ -1262,7 +1378,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1286,6 +1402,13 @@
             }
           ]
         }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
+        }
       }
     ],
     "returns": "string",
@@ -1302,7 +1425,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1313,6 +1436,13 @@
         "description": "Local path or remote URL to the subtitle file to load",
         "schema": {
           "type": "string"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1329,7 +1459,7 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
         }
@@ -1362,6 +1492,13 @@
         "schema": {
           "type": "boolean",
           "default": false
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],
@@ -1715,9 +1852,16 @@
     "params": [
       {
         "name": "playerid",
-        "required": true,
+        "description": "The player. Exactly one of playerid and playlistid is given",
         "schema": {
           "$ref": "#/$defs/Player.Id"
+        }
+      },
+      {
+        "name": "playlistid",
+        "description": "The playlist a player is working through, in place of playerid",
+        "schema": {
+          "$ref": "#/$defs/Playlist.Id"
         }
       }
     ],

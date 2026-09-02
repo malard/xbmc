@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "JSONRPCUtils.h"
 #include "playlists/PlayListTypes.h"
+
+class CVariant;
 
 namespace JSONRPC
 {
@@ -47,14 +50,31 @@ struct PlayerState
  */
 KODI::PLAYLIST::Id PlayerIdOf(PlayerType player);
 
-/*! \brief The player a client's playerid names.
-
- Does not check that the player is running; the ids notifications carry must resolve as well.
-
+/*! \brief The player a playerid names, running or not.
  \param playerid the playerid as the client gave it
  \return the player, or None when the id names none
  */
 PlayerType PlayerForId(KODI::PLAYLIST::Id playerid);
+
+/*! \brief The player a request addresses, by playerid or by playlistid.
+ \param playerid the playerid given, TYPE_NONE when the request gave none
+ \param playlistid the playlistid given, TYPE_NONE when the request gave none
+ \param state the players running and the playlists in force
+ \param player receives the player
+ \return OK; InvalidParams for both or neither id; Unavailable for a player that is not running,
+         or a playlist no running player is working through
+ */
+JSONRPC_STATUS ResolvePlayer(KODI::PLAYLIST::Id playerid,
+                             KODI::PLAYLIST::Id playlistid,
+                             const PlayerState& state,
+                             PlayerType& player);
+
+/*! \brief Fill the "player" member of a Player notification.
+ \param player the member to fill
+ \param type the player the notification is about
+ \param playlist the playlist it is working through, TYPE_NONE for the player's own
+ */
+void DescribePlayer(CVariant& player, PlayerType type, KODI::PLAYLIST::Id playlist);
 
 /*! \brief The playlist a player is working through.
 

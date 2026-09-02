@@ -96,7 +96,7 @@ namespace JSONRPC
     static JSONRPC_STATUS PlayFileItemList(CFileItemList& list, const CVariant& options);
     static int GetActivePlayers();
     static PlayerState GetPlayerState();
-    static PlayerType GetPlayer(const CVariant &player);
+    static JSONRPC_STATUS ResolvePlayer(const CVariant& parameterObject, PlayerType& player);
     static KODI::PLAYLIST::Id GetPlaylist(PlayerType player);
     static JSONRPC_STATUS StartSlideshow(const std::string& path, bool recursive, bool random, const std::string &firstPicturePath = "");
     static void SendSlideshowAction(int actionID);

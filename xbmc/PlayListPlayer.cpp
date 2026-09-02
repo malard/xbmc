@@ -27,6 +27,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/json-rpc/PlayerIds.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicFileItemClassify.h"
@@ -873,7 +874,9 @@ void CPlayListPlayer::AnnouncePropertyChanged(Id playlistId,
     return;
 
   CVariant playerData;
-  playerData["player"]["playerid"] = static_cast<int>(playlistId);
+  JSONRPC::DescribePlayer(playerData["player"],
+                          playlistId == Id::TYPE_VIDEO ? JSONRPC::Video : JSONRPC::Audio,
+                          playlistId);
   playerData["property"][strProperty] = value;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
                                                      playerData);
