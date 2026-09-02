@@ -16,26 +16,8 @@
 #include "settings/MediaSourceSettings.h"
 #include "storage/MediaManager.h"
 #include "utils/FileUtils.h"
-#include "utils/StringUtils.h"
+#include "utils/Screenshot.h"
 #include "utils/URIUtils.h"
-
-#include <string_view>
-
-namespace
-{
-constexpr std::string_view SCREENSHOT_FOLDER = "special://screenshots/";
-
-// A screenshot as GUI.TakeScreenshot names one: the screenshot folder and a plain file name.
-// A name carrying a path is refused, so the folder cannot be walked out of.
-bool IsScreenshot(const std::string& path)
-{
-  if (!StringUtils::StartsWithNoCase(path, SCREENSHOT_FOLDER))
-    return false;
-
-  const std::string name = path.substr(SCREENSHOT_FOLDER.size());
-  return !name.empty() && name.find_first_of("/\\") == std::string::npos;
-}
-} // namespace
 
 CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest &request)
   : CHTTPFileHandler(request)
@@ -52,7 +34,7 @@ CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest &request)
       bool accessible = false;
       if (file.substr(0, 8) == "image://")
         accessible = true;
-      else if (IsScreenshot(file))
+      else if (CScreenShot::IsScreenshotPath(file))
         accessible = true;
       else
       {

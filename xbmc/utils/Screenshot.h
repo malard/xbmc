@@ -62,6 +62,9 @@ public:
                                             const std::string& target = "");
 
   //! \brief What a delete removed.
+  //! \brief Whether a path names a screenshot: the special://screenshots folder and a plain file name
+  static bool IsScreenshotPath(const std::string& path);
+
   struct ScreenshotDeletion
   {
     ScreenshotError error{ScreenshotError::NONE};

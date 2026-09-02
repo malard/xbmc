@@ -28,6 +28,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/Screenshot.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 
@@ -130,8 +131,7 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://skin"))
     return true;
-  // the screenshot folder is not a media source
-  else if (StringUtils::StartsWithNoCase(realPath, "special://screenshots"))
+  else if (CScreenShot::IsScreenshotPath(realPath))
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://profile/addon_data"))
     return true;

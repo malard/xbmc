@@ -271,6 +271,15 @@ struct PendingScreenshot
 constexpr std::chrono::milliseconds SCREENSHOT_TIMEOUT{5000};
 } // namespace
 
+bool CScreenShot::IsScreenshotPath(const std::string& path)
+{
+  if (!StringUtils::StartsWithNoCase(path, SCREENSHOT_FOLDER))
+    return false;
+
+  const std::string name = path.substr(SCREENSHOT_FOLDER.size());
+  return !name.empty() && name.find_first_of("/\\") == std::string::npos;
+}
+
 CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
     KODI::RENDERING::CAPTURE::CaptureContent content, const std::string& target)
 {
