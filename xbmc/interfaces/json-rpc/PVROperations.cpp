@@ -861,11 +861,11 @@ JSONRPC_STATUS CPVROperations::ParseTimeRange(const CVariant& parameterObject,
 std::vector<std::shared_ptr<CPVREpgInfoTag>> CPVROperations::GetBroadcastsInRange(
     const CPVREpg& epg, const CDateTime& start, const CDateTime& end)
 {
-  std::vector<std::shared_ptr<CPVREpgInfoTag>> tags{epg.GetTags()};
   if (!start.IsValid() || !end.IsValid())
-    return tags;
+    return epg.GetTags();
 
-  std::erase_if(tags, [&start, &end](const std::shared_ptr<CPVREpgInfoTag>& tag)
-                { return tag->EndAsUTC() <= start || tag->StartAsUTC() >= end; });
+  // the ranged query fills the gaps between broadcasts with placeholder tags
+  std::vector<std::shared_ptr<CPVREpgInfoTag>> tags{epg.GetTimeline(start, end, start, end)};
+  std::erase_if(tags, [](const std::shared_ptr<CPVREpgInfoTag>& tag) { return tag->IsGapTag(); });
   return tags;
 }
