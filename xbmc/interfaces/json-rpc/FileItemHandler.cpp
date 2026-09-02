@@ -599,7 +599,7 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
 
   const std::string directory{item["directory"].asString()};
   if (!directory.empty() && !XFILE::CDirectory::Exists(directory, false))
-    return Unavailable;
+    return NotFound;
 
   for (const std::string& identifier : LibraryIdentifiers())
   {

@@ -65,7 +65,7 @@ namespace JSONRPC
      Bypasses the caches so a cached hit cannot mask storage that has gone away.
 
      \param item A single item as given by the client
-     \return NotFound, Unavailable, or InvalidParams when nothing better applies
+     \return NotFound, or InvalidParams when nothing better applies
      */
     static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
 
