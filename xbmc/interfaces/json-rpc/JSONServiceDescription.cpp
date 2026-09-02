@@ -1139,6 +1139,7 @@ void JSONSchemaTypeDefinition::ResolveReference()
   std::string origName = name;
   std::string origDescription = description;
   bool origOptional = optional;
+  const bool origDeprecated = deprecated;
   CVariant origDefaultValue = defaultValue;
   JSONSchemaTypeDefinitionPtr referencedTypeDef = referencedType;
 
@@ -1154,6 +1155,9 @@ void JSONSchemaTypeDefinition::ResolveReference()
 
   if (!origOptional)
     optional = origOptional;
+
+  if (origDeprecated)
+    deprecated = true;
 
   if (!origDefaultValue.isNull())
     defaultValue = origDefaultValue;

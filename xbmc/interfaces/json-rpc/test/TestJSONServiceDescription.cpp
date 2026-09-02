@@ -614,6 +614,26 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
   EXPECT_FALSE(properties["new"].isMember("deprecated"));
 }
 
+TEST_F(TestJSONServiceDescription, ADeprecatedReferenceKeepsItsAnnotation)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Target": { "type": "integer" }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Holder": {
+    "type": "object",
+    "properties": {
+      "old": { "$ref": "#/$defs/Dep.Target", "deprecated": true },
+      "new": { "$ref": "#/$defs/Dep.Target" }
+    }
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  const CVariant& properties = result["types"]["Dep.Holder"]["properties"];
+  ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
+  EXPECT_FALSE(properties["new"].isMember("deprecated"));
+}
+
 //! \brief The annotation is part of the contract, so it outlives suppressed descriptions
 TEST_F(TestJSONServiceDescription, ADeprecatedPropertySurvivesDescriptionsBeingSuppressed)
 {
