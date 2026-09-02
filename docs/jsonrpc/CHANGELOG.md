@@ -101,6 +101,10 @@ schema never says *when* something goes; that is here.
 
 **Methods**
 
+- `Settings.SetSettingValue` takes `confirmed`, which answers in advance the
+  prompt a display mode change raises asking whether to keep the new mode.
+  Without it the write blocks on the prompt for up to fifteen seconds and the
+  mode reverts when nobody at the screen answers, which an automation cannot.
 - `Application.SetLogLevel` - changes the log level, and which components
   have extra logging, and answers with what is now in force. Either part can
   be left out to keep its value. The level was previously reachable only as
@@ -242,6 +246,10 @@ schema never says *when* something goes; that is here.
   dialog no longer stalls every other client.
 - A failing send gives up instead of spinning.
 - The JSON-RPC methods are registered before anything can call them.
+- `Settings.SetSettingValue` answers `InvalidParams` for a value the setting
+  does not offer, including one outside a list the setting fills at runtime,
+  and `Unavailable` for a change a handler declined, a display mode not kept
+  for one. Both were a `false` result, indistinguishable from each other.
 - `Video.Streams` declares the `source` and `version` every stream carries,
   and the `flags` bitmask on audio and subtitle streams, all of which the
   serializer has emitted since the fields were added.

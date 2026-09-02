@@ -15,6 +15,7 @@ set(SOURCES TestApplicationLogLevel.cpp
             TestSetConfiguration.cpp
             TestSettingsLevel.cpp
             TestSettingsValueGate.cpp
+            TestSettingsValueRefusal.cpp
             TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
