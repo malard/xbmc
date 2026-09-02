@@ -88,6 +88,8 @@ void CTCPServer::StopServer(bool bWait)
     ServerInstance->StopThread(bWait);
     if (bWait)
     {
+      // Deinitialize has told every worker to stop; one inside a modal dialog may not return
+      ServerInstance->WaitForWorkers(std::chrono::seconds(2));
       ServerInstance.reset();
     }
   }
@@ -616,7 +618,13 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
   m_inboundEvent.notify_one();
 
   if (start)
+  {
+    {
+      std::lock_guard lock(host->m_workersMutex);
+      ++host->m_activeWorkers;
+    }
     std::thread(&CTCPClient::RunWorker, self, host->m_self.lock()).detach();
+  }
 }
 
 void CTCPServer::CTCPClient::StopWorker()
@@ -631,6 +639,17 @@ void CTCPServer::CTCPClient::StopWorker()
 
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
+{
+  RunRequests(self, host.get());
+
+  {
+    std::lock_guard lock(host->m_workersMutex);
+    --host->m_activeWorkers;
+  }
+  host->m_workersDone.notify_all();
+}
+
+void CTCPServer::CTCPClient::RunRequests(const std::shared_ptr<CTCPClient>& self, CTCPServer* host)
 {
   while (true)
   {
@@ -649,8 +668,14 @@ void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
       self->m_inbound.pop_front();
     }
 
-    self->PushBuffer(host.get(), buffer.data(), static_cast<int>(buffer.size()));
+    self->PushBuffer(host, buffer.data(), static_cast<int>(buffer.size()));
   }
+}
+
+void CTCPServer::WaitForWorkers(std::chrono::milliseconds timeout)
+{
+  std::unique_lock lock(m_workersMutex);
+  m_workersDone.wait_for(lock, timeout, [this] { return m_activeWorkers == 0; });
 }
 
 void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, int length)

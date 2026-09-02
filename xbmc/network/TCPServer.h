@@ -16,6 +16,7 @@
 #include "websocket/WebSocket.h"
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <deque>
 #include <memory>
@@ -114,6 +115,7 @@ namespace JSONRPC
 
     private:
       static void RunWorker(std::shared_ptr<CTCPClient> self, std::shared_ptr<CTCPServer> host);
+      static void RunRequests(const std::shared_ptr<CTCPClient>& self, CTCPServer* host);
 
       bool m_new;
       int m_announcementflags;
@@ -160,6 +162,13 @@ namespace JSONRPC
     // Handed to each worker, so a request still running when StopServer() drops ServerInstance
     // keeps the server alive until it returns.
     std::weak_ptr<CTCPServer> m_self;
+
+    //! \brief Wait for every worker to finish, for at most the given time
+    void WaitForWorkers(std::chrono::milliseconds timeout);
+
+    std::mutex m_workersMutex;
+    std::condition_variable m_workersDone;
+    unsigned int m_activeWorkers{0};
 
     static std::shared_ptr<CTCPServer> ServerInstance;
   };
