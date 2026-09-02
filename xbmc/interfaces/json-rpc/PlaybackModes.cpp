@@ -8,6 +8,10 @@
 
 #include "PlaybackModes.h"
 
+#include "PlayListPlayer.h"
+#include "ServiceBroker.h"
+#include "messaging/ApplicationMessenger.h"
+#include "pictures/SlideShowDelegator.h"
 #include "utils/Variant.h"
 
 #include <string>
@@ -59,6 +63,39 @@ PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat, PLAYLIST::RepeatS
     default:
       return PLAYLIST::RepeatState::NONE;
   }
+}
+
+void ApplyShuffle(PLAYLIST::Id playlistId, const CVariant& shuffle)
+{
+  const std::optional<bool> requested{
+      ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))};
+  if (requested.has_value())
+  {
+    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
+                                               static_cast<int>(playlistId), *requested ? 1 : 0);
+  }
+}
+
+void ApplyRepeat(PLAYLIST::Id playlistId, const CVariant& repeat)
+{
+  const PLAYLIST::RepeatState state{
+      ParseRepeatState(repeat, CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))};
+  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT,
+                                             static_cast<int>(playlistId), static_cast<int>(state));
+}
+
+JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle)
+{
+  CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
+  const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
+  if (!requested.has_value())
+    return ACK;
+
+  if (!*requested)
+    return FailedToExecute;
+
+  slideShow.Shuffle();
+  return ACK;
 }
 
 } // namespace JSONRPC

@@ -1237,36 +1237,15 @@ JSONRPC_STATUS CPlayerOperations::SetShuffle(const std::string &method, ITranspo
       if (IsPVRChannel())
         return FailedToExecute;
 
-      PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
-      const std::optional<bool> requested{
-          ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistid))};
-      if (requested.has_value())
-      {
-        CServiceBroker::GetAppMessenger()->SendMsg(
-            TMSG_PLAYLISTPLAYER_SHUFFLE, static_cast<int>(playlistid), *requested ? 1 : 0);
-      }
+      ApplyShuffle(GetPlaylist(GetPlayer(parameterObject["playerid"])), shuffle);
       break;
     }
 
     case Picture:
-    {
-      CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
-      if (slideShow.NumSlides() < 0)
-      {
+      if (CServiceBroker::GetSlideShowDelegator().NumSlides() < 0)
         return FailedToExecute;
-      }
+      return ShuffleSlideshow(shuffle);
 
-      const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
-      if (!requested.has_value())
-        break;
-
-      // a running slideshow cannot be unshuffled
-      if (!*requested)
-        return FailedToExecute;
-
-      slideShow.Shuffle();
-      break;
-    }
     default:
       return FailedToExecute;
   }
@@ -1283,12 +1262,7 @@ JSONRPC_STATUS CPlayerOperations::SetRepeat(const std::string &method, ITranspor
       if (IsPVRChannel())
         return FailedToExecute;
 
-      PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
-      const PLAYLIST::RepeatState repeat{ParseRepeatState(
-          parameterObject["repeat"], CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistid))};
-
-      CServiceBroker::GetAppMessenger()->SendMsg(
-          TMSG_PLAYLISTPLAYER_REPEAT, static_cast<int>(playlistid), static_cast<int>(repeat));
+      ApplyRepeat(GetPlaylist(GetPlayer(parameterObject["playerid"])), parameterObject["repeat"]);
       break;
     }
 

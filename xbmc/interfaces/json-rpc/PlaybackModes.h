@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "JSONRPCUtils.h"
 #include "playlists/PlayListTypes.h"
 
 #include <optional>
@@ -38,5 +39,23 @@ KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
  */
 KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat,
                                              KODI::PLAYLIST::RepeatState current);
+
+/*! \brief Apply the "shuffle" parameter to a playlist.
+ \param playlistId the playlist
+ \param shuffle the parameter as given by the client
+ */
+void ApplyShuffle(KODI::PLAYLIST::Id playlistId, const CVariant& shuffle);
+
+/*! \brief Apply the "repeat" parameter to a playlist.
+ \param playlistId the playlist
+ \param repeat the parameter as given by the client
+ */
+void ApplyRepeat(KODI::PLAYLIST::Id playlistId, const CVariant& repeat);
+
+/*! \brief Apply the "shuffle" parameter to the running slideshow, which cannot be unshuffled.
+ \param shuffle the parameter as given by the client
+ \return FailedToExecute when asked to unshuffle it
+ */
+JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle);
 
 } // namespace JSONRPC

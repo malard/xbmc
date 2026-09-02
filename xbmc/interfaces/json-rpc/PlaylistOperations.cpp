@@ -301,33 +301,13 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
   {
     case PLAYLIST::Id::TYPE_MUSIC:
     case PLAYLIST::Id::TYPE_VIDEO:
-    {
-      const std::optional<bool> requested{
-          ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))};
-      if (requested.has_value())
-      {
-        CServiceBroker::GetAppMessenger()->SendMsg(
-            TMSG_PLAYLISTPLAYER_SHUFFLE, static_cast<int>(playlistId), *requested ? 1 : 0);
-      }
+      ApplyShuffle(playlistId, shuffle);
       break;
-    }
 
     case PLAYLIST::Id::TYPE_PICTURE:
-    {
-      CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
-      if (!slideShow.IsPlaying())
+      if (!CServiceBroker::GetSlideShowDelegator().IsPlaying())
         return FailedToExecute;
-
-      const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
-      if (!requested.has_value())
-        break;
-
-      if (!*requested)
-        return FailedToExecute;
-
-      slideShow.Shuffle();
-      break;
-    }
+      return ShuffleSlideshow(shuffle);
 
     default:
       return InvalidParams;
@@ -346,11 +326,7 @@ JSONRPC_STATUS CPlaylistOperations::SetRepeat(const std::string& method,
   if (playlistId != PLAYLIST::Id::TYPE_MUSIC && playlistId != PLAYLIST::Id::TYPE_VIDEO)
     return FailedToExecute;
 
-  const PLAYLIST::RepeatState state{ParseRepeatState(
-      parameterObject["repeat"], CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))};
-
-  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT,
-                                             static_cast<int>(playlistId), static_cast<int>(state));
+  ApplyRepeat(playlistId, parameterObject["repeat"]);
 
   return ACK;
 }
