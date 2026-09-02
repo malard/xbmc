@@ -86,6 +86,7 @@ bool CFileItemHandler::GetField(const std::string& field,
                                 CVariant& result,
                                 bool& fetchedArt,
                                 std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
+                                std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>>& epgTimer,
                                 CThumbLoader* thumbLoader /* = NULL */)
 {
   if (result.isMember(field) && !result[field].empty())
@@ -139,25 +140,21 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (item->HasEPGInfoTag())
     {
-      if (field == "hastimer")
+      if (field == "hastimer" || field == "hasreminder" || field == "hastimerrule")
       {
-        const std::shared_ptr<PVR::CPVRTimerInfoTag> timer =
-            CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
-        result[field] = (timer != nullptr);
-        return true;
-      }
-      else if (field == "hasreminder")
-      {
-        const std::shared_ptr<PVR::CPVRTimerInfoTag> timer =
-            CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
-        result[field] = (timer && timer->IsReminder());
-        return true;
-      }
-      else if (field == "hastimerrule")
-      {
-        const std::shared_ptr<PVR::CPVRTimerInfoTag> timer =
-            CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
-        result[field] = (timer && timer->HasParent());
+        if (!epgTimer.has_value())
+        {
+          epgTimer =
+              CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
+        }
+
+        const std::shared_ptr<PVR::CPVRTimerInfoTag>& timer{*epgTimer};
+        if (field == "hastimer")
+          result[field] = (timer != nullptr);
+        else if (field == "hasreminder")
+          result[field] = (timer && timer->IsReminder());
+        else
+          result[field] = (timer && timer->HasParent());
         return true;
       }
       else if (field == "hasrecording" || field == "recording" || field == "recordingid")
@@ -322,12 +319,14 @@ void CFileItemHandler::FillDetails(const ISerializable* info,
 
   bool fetchedArt = false;
   std::optional<std::shared_ptr<PVR::CPVRRecording>> epgRecording;
+  std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>> epgTimer;
 
   std::set<std::string> originalFields = fields;
 
   for (const auto& fieldIt : originalFields)
   {
-    if (GetField(fieldIt, serialization, item, result, fetchedArt, epgRecording, thumbLoader) &&
+    if (GetField(fieldIt, serialization, item, result, fetchedArt, epgRecording, epgTimer,
+                 thumbLoader) &&
         result.isMember(fieldIt) && !result[fieldIt].empty())
       fields.erase(fieldIt);
   }

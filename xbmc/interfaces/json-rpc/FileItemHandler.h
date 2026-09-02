@@ -24,6 +24,7 @@ class ISerializable;
 namespace PVR
 {
 class CPVRRecording;
+class CPVRTimerInfoTag;
 }
 
 namespace JSONRPC
@@ -73,6 +74,7 @@ namespace JSONRPC
     static void Sort(CFileItemList &items, const CVariant& parameterObject);
     /*!
      \param epgRecording The item's EPG recording, looked up once; engaged and null when none
+     \param epgTimer The item's EPG timer, looked up once; engaged and null when none
      */
     static bool GetField(const std::string& field,
                          const CVariant& info,
@@ -80,6 +82,7 @@ namespace JSONRPC
                          CVariant& result,
                          bool& fetchedArt,
                          std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
+                         std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>>& epgTimer,
                          CThumbLoader* thumbLoader = nullptr);
   };
 }
