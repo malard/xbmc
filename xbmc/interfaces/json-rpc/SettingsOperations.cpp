@@ -15,6 +15,7 @@
 #include "addons/addoninfo/AddonInfo.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "settings/DisplaySettings.h"
 #include "settings/SettingAddon.h"
 #include "settings/SettingControl.h"
 #include "settings/SettingDateTime.h"
@@ -29,6 +30,9 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "view/ViewStateSettings.h"
+
+#include <algorithm>
+#include <optional>
 
 using namespace JSONRPC;
 
@@ -279,6 +283,30 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const std::string &method, I
   return OK;
 }
 
+namespace
+{
+// A setting whose options come from a filler passes any value through CheckValidity
+bool IsListedOption(const std::shared_ptr<CSettingInt>& setting, int value)
+{
+  if (setting->GetOptionsType() != SettingOptionsType::Dynamic)
+    return true;
+
+  return std::ranges::any_of(setting->UpdateDynamicOptions(),
+                             [value](const IntegerSettingOption& option)
+                             { return option.value == value; });
+}
+
+bool IsListedOption(const std::shared_ptr<CSettingString>& setting, const std::string& value)
+{
+  if (setting->GetOptionsType() != SettingOptionsType::Dynamic)
+    return true;
+
+  return std::ranges::any_of(setting->UpdateDynamicOptions(),
+                             [&value](const StringSettingOption& option)
+                             { return option.value == value; });
+}
+} // namespace
+
 JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   std::string settingId = parameterObject["setting"].asString();
@@ -290,35 +318,60 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
   if (!setting->IsEnabled())
     return Unavailable;
 
+  std::optional<CDisplaySettings::CConfirmedChange> confirmed;
+  if (parameterObject["confirmed"].asBoolean())
+    confirmed.emplace();
+
+  bool changed = false;
   switch (setting->GetType())
   {
   case SettingType::Boolean:
     if (!value.isBoolean())
       return InvalidParams;
 
-    result = std::static_pointer_cast<CSettingBool>(setting)->SetValue(value.asBoolean());
+    changed = std::static_pointer_cast<CSettingBool>(setting)->SetValue(value.asBoolean());
     break;
 
   case SettingType::Integer:
+  {
     if (!value.isInteger() && !value.isUnsignedInteger())
       return InvalidParams;
 
-    result = std::static_pointer_cast<CSettingInt>(setting)->SetValue((int)value.asInteger());
+    const auto intSetting = std::static_pointer_cast<CSettingInt>(setting);
+    const int intValue = static_cast<int>(value.asInteger());
+    if (!intSetting->CheckValidity(intValue) || !IsListedOption(intSetting, intValue))
+      return InvalidParams;
+
+    changed = intSetting->SetValue(intValue);
     break;
+  }
 
   case SettingType::Number:
+  {
     if (!value.isDouble())
       return InvalidParams;
 
-    result = std::static_pointer_cast<CSettingNumber>(setting)->SetValue(value.asDouble());
+    const auto numberSetting = std::static_pointer_cast<CSettingNumber>(setting);
+    if (!numberSetting->CheckValidity(value.asDouble()))
+      return InvalidParams;
+
+    changed = numberSetting->SetValue(value.asDouble());
     break;
+  }
 
   case SettingType::String:
+  {
     if (!value.isString())
       return InvalidParams;
 
-    result = std::static_pointer_cast<CSettingString>(setting)->SetValue(value.asString());
+    const auto stringSetting = std::static_pointer_cast<CSettingString>(setting);
+    if (!stringSetting->CheckValidity(value.asString()) ||
+        !IsListedOption(stringSetting, value.asString()))
+      return InvalidParams;
+
+    changed = stringSetting->SetValue(value.asString());
     break;
+  }
 
   case SettingType::List:
   {
@@ -329,7 +382,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
     for (CVariant::const_iterator_array itValue = value.begin_array(); itValue != value.end_array(); ++itValue)
       values.push_back(*itValue);
 
-    result = CServiceBroker::GetSettingsComponent()->GetSettings()->SetList(settingId, values);
+    changed = CServiceBroker::GetSettingsComponent()->GetSettings()->SetList(settingId, values);
     break;
   }
 
@@ -339,6 +392,11 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
     return InvalidParams;
   }
 
+  // the value was acceptable and a change handler declined it, a display mode not kept for one
+  if (!changed)
+    return Unavailable;
+
+  result = true;
   return OK;
 }
 

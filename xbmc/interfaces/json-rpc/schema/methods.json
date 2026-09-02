@@ -8866,6 +8866,15 @@
         "schema": {
           "$ref": "#/$defs/Setting.Value.Extended"
         }
+      },
+      {
+        "name": "confirmed",
+        "required": false,
+        "schema": {
+          "type": "boolean",
+          "default": false,
+          "description": "Answers in advance, with yes, the prompt a display mode change raises asking whether to keep the new mode. The caller takes on the responsibility that the display can show it. Has no effect on other settings."
+        }
       }
     ],
     "returns": "boolean"
