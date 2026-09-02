@@ -1053,7 +1053,8 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
             }
             Play(item, pMsg->strParam);
           }
-          else if (!g_application.PlayMedia(*item, pMsg->strParam, playlistId))
+          // PVR playback prompts and can be declined, which is not a failure
+          else if (!g_application.PlayMedia(*item, pMsg->strParam, playlistId) && !item->IsPVR())
             AnnouncePlaybackFailed(item, "unplayable");
         }
         else

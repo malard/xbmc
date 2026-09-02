@@ -2114,15 +2114,12 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
   // pushed some delay message into the threadmessage list, they are not
   // expected be processed after or during the new item playback starting.
   // so we clean up previous playing item's playback callback delay messages here.
-  static constexpr std::array previousMsgsIgnoredByNewPlaying{GUI_MSG_PLAYBACK_STARTED,
-                                                              GUI_MSG_PLAYBACK_ENDED,
-                                                              GUI_MSG_PLAYBACK_STOPPED,
-                                                              GUI_MSG_PLAYLIST_CHANGED,
-                                                              GUI_MSG_PLAYLISTPLAYER_STOPPED,
-                                                              GUI_MSG_PLAYLISTPLAYER_STARTED,
-                                                              GUI_MSG_PLAYLISTPLAYER_CHANGED,
-                                                              GUI_MSG_QUEUE_NEXT_ITEM,
-                                                              0};
+  static constexpr std::array previousMsgsIgnoredByNewPlaying{
+      GUI_MSG_PLAYBACK_STARTED,       GUI_MSG_PLAYBACK_ENDED,
+      GUI_MSG_PLAYBACK_STOPPED,       GUI_MSG_PLAYBACK_ERROR,
+      GUI_MSG_PLAYLIST_CHANGED,       GUI_MSG_PLAYLISTPLAYER_STOPPED,
+      GUI_MSG_PLAYLISTPLAYER_STARTED, GUI_MSG_PLAYLISTPLAYER_CHANGED,
+      GUI_MSG_QUEUE_NEXT_ITEM,        0};
   if (const int dMsgCount{
           CServiceBroker::GetGUI()->GetWindowManager().RemoveThreadMessageByMessageIds(
               &previousMsgsIgnoredByNewPlaying[0])};
