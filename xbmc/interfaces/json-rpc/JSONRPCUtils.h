@@ -85,10 +85,8 @@ inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIP
     {InternalError, "InternalError", "Internal error.",
      "The method failed for a reason that no other status describes.", false},
     {FailedToExecute, "FailedToExecute", "Failed to execute method.",
-     "The method was called correctly but the operation it requested did not succeed. Note that "
-     "-32100 sits one code point below the -32099..-32000 range that JSON-RPC 2.0 reserves for "
-     "implementation-defined server errors; this is long-standing and is retained for "
-     "compatibility with existing clients.",
+     "The method was called correctly but the operation it requested did not succeed. Its code "
+     "sits one below the -32099..-32000 range JSON-RPC 2.0 reserves for server errors.",
      false},
     {BadPermission, "BadPermission", "Bad client permission.",
      "The client does not hold every permission the method requires.", false},

@@ -7287,7 +7287,7 @@
       },
       {
         "name": "target",
-        "description": "Name to write the screenshot under, which must be a plain .png file name carrying no directory: the file always goes to the configured folder, and an existing one of that name is overwritten. Names the composite, the video frame taking the matching \"-video\" name. Auto-numbered as screenshotNNNNN.png when omitted. A client capturing repeatedly should name a target and reuse it: the auto-numbered name accumulates files it cannot reclaim without GUI.DeleteScreenshots, costs a directory listing per call, and runs out at 65535.",
+        "description": "A plain .png file name, written to the configured folder, overwriting an existing file of that name. Names the composite; the video frame takes the matching \"-video\" name. Auto-numbered as screenshotNNNNN.png when omitted; the auto-numbered name runs out at 65535.",
         "schema": {
           "type": "string",
           "default": ""
@@ -7315,13 +7315,13 @@
   },
   "GUI.DeleteScreenshots": {
     "type": "method",
-    "description": "Deletes screenshots from the configured screenshot folder, which is otherwise the one thing a client can fill and never reclaim. Disabled unless <jsonrpc><allowscreenshotdeletion>true</allowscreenshotdeletion></jsonrpc> is set in advancedsettings.xml, and answers Unavailable while it is off: this is the only call that deletes a file from disk, and the folder it clears is wherever the viewer pointed debug.screenshotpath.",
+    "description": "Deletes screenshots from the configured screenshot folder. Disabled unless <jsonrpc><allowscreenshotdeletion>true</allowscreenshotdeletion></jsonrpc> is set in advancedsettings.xml; answers Unavailable while it is off.",
     "transport": "Response",
     "permission": "RemoveData",
     "params": [
       {
         "name": "file",
-        "description": "The one screenshot to delete, named as GUI.TakeScreenshot answered or as a plain file name. Every .png in the folder is deleted when omitted, whichever of them Kodi wrote. Nothing outside the folder is reachable either way.",
+        "description": "The one screenshot to delete, named as GUI.TakeScreenshot answered or as a plain file name. Every .png in the folder is deleted when omitted. Nothing outside the folder is reachable.",
         "schema": {
           "type": "string",
           "default": ""
