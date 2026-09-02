@@ -216,6 +216,7 @@ JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const std::string& method,
     case CScreenShot::ScreenshotError::NOT_FOUND:
       return NotFound;
     case CScreenShot::ScreenshotError::NO_FOLDER:
+      return Unavailable;
     case CScreenShot::ScreenshotError::FAILED:
       return FailedToExecute;
     case CScreenShot::ScreenshotError::NONE:
@@ -315,10 +316,7 @@ JSONRPC_STATUS CGUIOperations::GetInfoBooleans(const std::string& method,
 
     // Need to override power management of whats in infomanager since jsonrpc
     // have a security layer aswell.
-    if (field == "system.canshutdown")
-      result[parameterObject["booleans"][i].asString()] =
-          (CServiceBroker::GetPowerManager().CanPowerdown() && CanControlPower);
-    else if (field == "system.canpowerdown")
+    if (field == "system.canshutdown" || field == "system.canpowerdown")
       result[parameterObject["booleans"][i].asString()] =
           (CServiceBroker::GetPowerManager().CanPowerdown() && CanControlPower);
     else if (field == "system.cansuspend")
