@@ -1911,7 +1911,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     currentMethod["type"] = "method";
     if (printDescriptions && !methodIterator->second.description.empty())
       currentMethod["description"] = methodIterator->second.description;
-    // Reported even when descriptions are suppressed
     if (methodIterator->second.deprecated)
       currentMethod["deprecated"] = true;
     if (printMetadata)
