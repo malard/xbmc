@@ -33,27 +33,20 @@ PLAYLIST::Id PlayerIdOf(PlayerType player)
 
 PlayerType PlayerForId(PLAYLIST::Id playerid)
 {
-  PlayerType player;
-
   switch (playerid)
   {
     case PLAYLIST::Id::TYPE_VIDEO:
-      player = Video;
-      break;
+      return Video;
 
     case PLAYLIST::Id::TYPE_MUSIC:
-      player = Audio;
-      break;
+      return Audio;
 
     case PLAYLIST::Id::TYPE_PICTURE:
-      player = Picture;
-      break;
+      return Picture;
 
     default:
       return None;
   }
-
-  return player;
 }
 
 PLAYLIST::Id PlaylistOf(PlayerType player, const PlayerState& state)
