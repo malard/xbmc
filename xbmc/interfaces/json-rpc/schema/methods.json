@@ -7706,8 +7706,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetChannels": {
@@ -7761,8 +7761,8 @@
       ]
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetChannelDetails": {
@@ -7794,8 +7794,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetClients": {
@@ -7903,8 +7903,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetBroadcasts": {
@@ -7968,7 +7968,8 @@
     "errors": [
       "InvalidParams",
       "InternalError",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetBroadcastsByChannelGroup": {
@@ -8038,7 +8039,8 @@
     },
     "errors": [
       "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetBroadcastDetails": {
@@ -8070,8 +8072,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetBroadcastIsPlayable": {
@@ -8091,8 +8093,8 @@
     ],
     "returns": "boolean",
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetPlayableBroadcasts": {
@@ -8153,7 +8155,8 @@
     "errors": [
       "InvalidParams",
       "InternalError",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetTimers": {
@@ -8232,8 +8235,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.AddTimer": {
@@ -8270,7 +8273,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.DeleteTimer": {
@@ -8290,8 +8294,8 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.ToggleTimer": {
@@ -8320,7 +8324,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.GetRecordings": {
@@ -8399,8 +8404,8 @@
       }
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.Record": {
@@ -8438,7 +8443,8 @@
     "errors": [
       "InvalidParams",
       "InternalError",
-      "FailedToExecute"
+      "FailedToExecute",
+      "NotFound"
     ]
   },
   "PVR.Scan": {
