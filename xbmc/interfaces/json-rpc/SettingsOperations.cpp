@@ -287,15 +287,16 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const std::string &method, I
 
 namespace
 {
-// A setting whose options come from a filler passes any value through CheckValidity.
-// Running the filler can also snap the current value to its best match, as the GUI does.
+// A setting whose options come from a filler passes any value through CheckValidity. The filler
+// runs only while nothing is cached: it can snap the current value to its best match.
 bool IsListedOption(const std::shared_ptr<CSettingInt>& setting, int value)
 {
   if (setting->GetOptionsType() != SettingOptionsType::Dynamic)
     return true;
 
-  return std::ranges::any_of(setting->UpdateDynamicOptions(),
-                             [value](const IntegerSettingOption& option)
+  const IntegerSettingOptions& cached = setting->GetDynamicOptions();
+  const IntegerSettingOptions options = cached.empty() ? setting->UpdateDynamicOptions() : cached;
+  return std::ranges::any_of(options, [value](const IntegerSettingOption& option)
                              { return option.value == value; });
 }
 
@@ -304,8 +305,9 @@ bool IsListedOption(const std::shared_ptr<CSettingString>& setting, const std::s
   if (setting->GetOptionsType() != SettingOptionsType::Dynamic)
     return true;
 
-  return std::ranges::any_of(setting->UpdateDynamicOptions(),
-                             [&value](const StringSettingOption& option)
+  const StringSettingOptions& cached = setting->GetDynamicOptions();
+  const StringSettingOptions options = cached.empty() ? setting->UpdateDynamicOptions() : cached;
+  return std::ranges::any_of(options, [&value](const StringSettingOption& option)
                              { return option.value == value; });
 }
 } // namespace
