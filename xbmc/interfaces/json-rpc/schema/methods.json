@@ -1711,6 +1711,7 @@
   "Player.GetChapters": {
     "type": "method",
     "description": "Returns the chapters of the currently playing item for the given player",
+    "transport": "Response",
     "params": [
       {
         "name": "playerid",
