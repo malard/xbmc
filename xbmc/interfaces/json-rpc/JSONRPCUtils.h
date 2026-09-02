@@ -94,8 +94,8 @@ inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIP
     {Unavailable, "Unavailable", "Requested item is unavailable.",
      "The requested item exists but cannot be provided at the moment.", false},
     {AccessDenied, "AccessDenied", "Access denied.",
-     "The referenced path is not inside a source shared for remote access and is not "
-     "whitelisted.",
+     "What was asked for is locked on this installation: a path outside every source shared for "
+     "remote access, or a setting level the profile's settings lock keeps.",
      false},
 }};
 

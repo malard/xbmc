@@ -56,9 +56,11 @@ JSONRPC_STATUS CSettingsOperations::SetLevel(const std::string& method,
   const SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
   CViewStateSettings& viewStateSettings = CViewStateSettings::GetInstance();
 
-  if (level != viewStateSettings.GetSettingLevel() &&
-      g_passwordManager.IsSettingLevelUnlocked(level))
+  if (level != viewStateSettings.GetSettingLevel())
   {
+    if (!g_passwordManager.IsSettingLevelUnlocked(level))
+      return AccessDenied;
+
     viewStateSettings.SetSettingLevel(level);
     CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
   }

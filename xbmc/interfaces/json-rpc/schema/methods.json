@@ -9199,7 +9199,7 @@
   },
   "Settings.SetLevel": {
     "type": "method",
-    "description": "Changes the setting level in force and answers with the level that ended up in force, which is unchanged if the profile's settings lock does not permit the one asked for",
+    "description": "Changes the setting level in force and answers with it. AccessDenied when the profile's settings lock does not permit the level asked for",
     "transport": "Response",
     "permission": "ControlGUI",
     "params": [
@@ -9222,7 +9222,9 @@
         "level"
       ]
     },
-    "errors": []
+    "errors": [
+      "AccessDenied"
+    ]
   },
   "Settings.GetSections": {
     "type": "method",
