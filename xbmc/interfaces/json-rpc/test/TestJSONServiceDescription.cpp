@@ -230,10 +230,8 @@ TEST_F(TestJSONServiceDescription, ExtendedType)
 
 TEST_F(TestJSONServiceDescription, ForwardReferences)
 {
-  // The container references a type that arrives later: it parks in the
-  // deferred queue and is replayed once the base has parsed. Methods are
-  // registered only after all types, which is the ordering the initialization
-  // sequence guarantees.
+  // A reference to a type that arrives later parks until the base has parsed; methods are
+  // registered only after all types, as at startup.
   EXPECT_FALSE(CJSONServiceDescription::AddType(R"({"C.Container": {
     "type": "object",
     "properties": { "inner": { "$ref": "#/$defs/C.Base" } },

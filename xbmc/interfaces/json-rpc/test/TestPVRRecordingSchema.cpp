@@ -61,10 +61,8 @@ CPVRRecording ClientRecording()
 
 TEST(TestPVRRecordingSchema, EveryValueTheRecordingAddsIsRequestable)
 {
-  // CPVRRecording::Serialize starts from CVideoInfoTag::Serialize, which writes the whole
-  // video tag surface whether a recording has anything to say through it or not. Those keys
-  // answer to the video library's Fields types, so what has to be reachable here is what the
-  // recording adds on top of them.
+  // CPVRRecording::Serialize writes the whole CVideoInfoTag surface, whose keys answer to the
+  // video library's Fields types; only what the recording adds has to be reachable here.
   CVariant base;
   CVideoInfoTag{}.Serialize(base);
 

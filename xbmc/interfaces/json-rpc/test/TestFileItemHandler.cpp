@@ -28,9 +28,8 @@ constexpr const char* HYBRID_FOLDER = "videodb://movies/titles/42/-2/";
 constexpr const char* SET_FOLDER = "videodb://movies/sets/7/";
 constexpr const char* DEFAULT_VERSION = "smb://nas/Movies/Easter Parade/Easter Parade - 4K.mkv";
 
-// HandleFileItem is protected, and for an item carrying a video info tag it builds itself a
-// CVideoThumbLoader - which opens the video database - unless it is handed a loader. Neither
-// file nor filetype consults the loader, so a plain one stands in for it here.
+// HandleFileItem builds a CVideoThumbLoader, which opens the video database, unless handed a
+// loader; file and filetype never consult it, so a plain one stands in.
 class CTestFileItemHandler : public CFileItemHandler
 {
 public:

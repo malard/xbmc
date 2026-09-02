@@ -52,9 +52,8 @@ TEST(TestPlayerIds, EachPlayerHasItsOwnId)
 
 TEST(TestPlayerIds, TwoPlayersNeverShareAPlayerid)
 {
-  // Two can run at once - playing a radio recording is enough, since PVR reports a recording,
-  // which counts as a video player, while the app player reports audio because the stream
-  // carries no video.
+  // Two can run at once: a radio recording counts as a video player for PVR while the app
+  // player reports audio, as the stream carries no video.
   EXPECT_NE(PlayerIdOf(Video), PlayerIdOf(Audio));
   EXPECT_NE(PlayerIdOf(Audio), PlayerIdOf(Picture));
   EXPECT_NE(PlayerIdOf(Picture), PlayerIdOf(Video));

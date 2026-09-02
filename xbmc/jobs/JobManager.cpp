@@ -234,7 +234,7 @@ void CJobManager::CancelJob(unsigned int jobID)
     return;
   }
 
-  // or its abort callback is running on another thread, and the owner may not go until it has returned
+  // or its abort callback is running on another thread, which the owner must outlive
   if (m_abortingId == jobID && m_abortingThread != std::this_thread::get_id())
   {
     m_abortDone.wait(lock, [this, jobID] { return m_abortingId != jobID; });

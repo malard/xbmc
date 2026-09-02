@@ -51,13 +51,11 @@ public:
     std::string video;
   };
 
-  //! \brief Screenshot of the given content, written before this returns.
-  //!
-  //! Never prompts for the folder: an unset one is NO_FOLDER.
+  //! \brief Screenshot of the given content, written before this returns; an unset folder is
+  //!        NO_FOLDER, never a prompt.
   //! \param content what to capture
-  //! \param target file name under the configured folder; auto-numbered when
-  //!               empty. Names the composite, the video frame taking the
-  //!               matching "-video" name.
+  //! \param target file name under the configured folder, auto-numbered when empty; the video
+  //!               frame takes the matching "-video" name
   static ScreenshotFiles TakeScreenshotSync(KODI::RENDERING::CAPTURE::CaptureContent content,
                                             const std::string& target = "");
 
@@ -71,11 +69,9 @@ public:
     unsigned int deleted{0};
   };
 
-  //! \brief Delete written screenshots from the configured folder.
-  //!
-  //! With no file, removes every .png in the folder.
-  //! \param file one screenshot, named either as TakeScreenshotSync answers or
-  //!             as a bare file name; every .png in the folder when empty
+  //! \brief Delete screenshots from the configured folder.
+  //! \param file one screenshot, named as TakeScreenshotSync answers or as a bare name; every
+  //!             .png in the folder when empty
   static ScreenshotDeletion DeleteScreenshots(const std::string& file = "");
 
 private:

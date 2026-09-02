@@ -323,7 +323,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
   if (!setting->IsEnabled())
     return Unavailable;
 
-  // engaged for the rest of the call, so a display mode change is kept without the prompt
+  // engaged for the rest of the call: a display mode change is kept without the prompt
   std::optional<CDisplaySettings::CConfirmedChange> confirmed;
   if (parameterObject["confirmed"].asBoolean())
     confirmed.emplace();

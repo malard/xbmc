@@ -78,7 +78,7 @@ using namespace KODI;
 
 namespace
 {
-//! \brief The player a notification about the app player is about, and the playlist it works through
+//! \brief The app player and the playlist it works through, as a notification describes them
 void DescribePlayer(CVariant& player)
 {
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();

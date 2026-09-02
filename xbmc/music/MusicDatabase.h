@@ -677,8 +677,7 @@ public:
   /*! \brief Set the information provider for a single artist or album.
    \param id the database id of the artist or album.
    \param content ARTISTS or ALBUMS.
-   \param scraper the scraper to use, nullptr to clear any item specific scraper so that
-   the default information provider is used again.
+   \param scraper the scraper to use; nullptr clears the item's own, and the default applies.
    \return true on success, false otherwise.
    */
   bool SetScraper(int id, ADDON::ContentType content, const ADDON::ScraperPtr& scraper);
