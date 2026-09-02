@@ -12,6 +12,7 @@ set(SOURCES TestApplicationLogLevel.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestPVRRecordingSchema.cpp
+            TestSetConfiguration.cpp
             TestSettingsLevel.cpp
             TestSettingsValueGate.cpp
             TestSharedFieldDeclarations.cpp

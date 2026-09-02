@@ -220,7 +220,16 @@
             "Input": {
               "$ref": "#/$defs/Optional.Boolean"
             },
+            "PVR": {
+              "$ref": "#/$defs/Optional.Boolean"
+            },
             "Other": {
+              "$ref": "#/$defs/Optional.Boolean"
+            },
+            "Info": {
+              "$ref": "#/$defs/Optional.Boolean"
+            },
+            "Sources": {
               "$ref": "#/$defs/Optional.Boolean"
             },
             "Settings": {

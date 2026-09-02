@@ -242,6 +242,10 @@ schema never says *when* something goes; that is here.
   dialog no longer stalls every other client.
 - A failing send gives up instead of spinning.
 - The JSON-RPC methods are registered before anything can call them.
+- `JSONRPC.SetConfiguration` keeps every namespace the caller does not name.
+  It silently dropped `PVR`, `Info` and `Sources` on every call, with no way
+  to ask for them back, and kept `Application` by the state of `Other`. The
+  three are now declared in its parameter alongside the rest.
 - `Playlist.Clear` resets the playlist position that indexed the cleared
   items.
 - `Player.GetItem` reports AirPlay cover art, and live stream metadata for a
