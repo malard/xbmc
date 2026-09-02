@@ -93,6 +93,7 @@ namespace JSONRPC
         const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
 
+  protected:
     /*! \brief Add how a file was played to an item that already says what it is.
      \param fileDetails the tag filled from the files table
      \param details the tag to add it to, left otherwise untouched
@@ -117,6 +118,7 @@ namespace JSONRPC
                                                                bool updateLastplayed,
                                                                const CVideoInfoTag& episode);
 
+  public:
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 
     /*! \brief Provided the JSON-RPC parameter object compute the VideoDbDetails mask

@@ -17,6 +17,13 @@ using namespace JSONRPC;
 
 namespace
 {
+class CTestVideoLibrary : public CVideoLibrary
+{
+public:
+  using CVideoLibrary::ApplyPlaybackState;
+  using CVideoLibrary::EpisodePlaybackUpdate;
+};
+
 //! \brief A tag as CVideoDatabase::GetFileInfo fills it: bookkeeping, not what the item is
 CVideoInfoTag FileRow()
 {
@@ -48,7 +55,7 @@ CVideoInfoTag PluginDescription()
 TEST(TestVideoLibraryPlaybackState, KeepsTheDescriptionItIsAppliedTo)
 {
   CVideoInfoTag details = PluginDescription();
-  CVideoLibrary::ApplyPlaybackState(FileRow(), details);
+  CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
   EXPECT_EQ(MediaTypeEpisode, details.m_type);
   EXPECT_EQ("Extraterrestrial Girl", details.m_strTitle);
@@ -60,7 +67,7 @@ TEST(TestVideoLibraryPlaybackState, KeepsTheDescriptionItIsAppliedTo)
 TEST(TestVideoLibraryPlaybackState, AddsTheStateTheFileRowCarries)
 {
   CVideoInfoTag details = PluginDescription();
-  CVideoLibrary::ApplyPlaybackState(FileRow(), details);
+  CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
   EXPECT_EQ(42, details.m_iFileId);
   EXPECT_EQ(3, details.GetPlayCount());
@@ -74,7 +81,7 @@ TEST(TestVideoLibraryPlaybackState, LeavesThePathsAlone)
 {
   // The row's paths are the plugin URL it is keyed on, not the file that plays.
   CVideoInfoTag details = PluginDescription();
-  CVideoLibrary::ApplyPlaybackState(FileRow(), details);
+  CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
   EXPECT_EQ("http://stream.example/real-stream.mkv", details.m_strFileNameAndPath);
   EXPECT_TRUE(details.m_strPath.empty());
@@ -87,7 +94,7 @@ TEST(TestVideoLibraryPlaybackState, DoesNotDowngradeStateTheItemAlreadyHas)
   details.m_lastPlayed.SetFromDBDateTime("2026-08-10 23:00:00");
   details.SetResumePoint(600.0, 1800.0, "");
 
-  CVideoLibrary::ApplyPlaybackState(FileRow(), details);
+  CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
   EXPECT_EQ(9, details.GetPlayCount());
   EXPECT_EQ("2026-08-10 23:00:00", details.m_lastPlayed.GetAsDBDateTime());
@@ -118,7 +125,7 @@ CVideoInfoTag Episode(int playCount, const char* lastPlayed)
 
 TEST(TestVideoLibraryEpisodePlaybackUpdate, APlaycountOnlyUpdateKeepsTheEpisodesLastPlayed)
 {
-  const auto update = CVideoLibrary::EpisodePlaybackUpdate(
+  const auto update = CTestVideoLibrary::EpisodePlaybackUpdate(
       Show(1, "2026-09-02 20:00:00"), true, false, Episode(0, "2026-08-10 21:49:28"));
 
   ASSERT_TRUE(update);
@@ -128,8 +135,8 @@ TEST(TestVideoLibraryEpisodePlaybackUpdate, APlaycountOnlyUpdateKeepsTheEpisodes
 
 TEST(TestVideoLibraryEpisodePlaybackUpdate, ANeverPlayedEpisodeHasNoTimeToKeep)
 {
-  const auto update = CVideoLibrary::EpisodePlaybackUpdate(Show(1, "2026-09-02 20:00:00"), true,
-                                                           false, Episode(0, nullptr));
+  const auto update = CTestVideoLibrary::EpisodePlaybackUpdate(Show(1, "2026-09-02 20:00:00"), true,
+                                                               false, Episode(0, nullptr));
 
   ASSERT_TRUE(update);
   EXPECT_FALSE(update->lastPlayed.IsValid());
@@ -137,14 +144,14 @@ TEST(TestVideoLibraryEpisodePlaybackUpdate, ANeverPlayedEpisodeHasNoTimeToKeep)
 
 TEST(TestVideoLibraryEpisodePlaybackUpdate, AnEpisodeAlreadyAtThePlaycountIsLeftAlone)
 {
-  EXPECT_FALSE(CVideoLibrary::EpisodePlaybackUpdate(Show(2, "2026-09-02 20:00:00"), true, false,
-                                                    Episode(2, "2026-08-10 21:49:28")));
+  EXPECT_FALSE(CTestVideoLibrary::EpisodePlaybackUpdate(Show(2, "2026-09-02 20:00:00"), true, false,
+                                                        Episode(2, "2026-08-10 21:49:28")));
 }
 
 TEST(TestVideoLibraryEpisodePlaybackUpdate, ALastPlayedUpdateAppliesTheShowsTime)
 {
-  const auto update = CVideoLibrary::EpisodePlaybackUpdate(Show(0, "2026-09-02 20:00:00"), false,
-                                                           true, Episode(2, "2026-08-10 21:49:28"));
+  const auto update = CTestVideoLibrary::EpisodePlaybackUpdate(
+      Show(0, "2026-09-02 20:00:00"), false, true, Episode(2, "2026-08-10 21:49:28"));
 
   ASSERT_TRUE(update);
   EXPECT_EQ(2, update->playCount);
@@ -156,7 +163,7 @@ TEST(TestVideoLibraryPlaybackState, FillsAnItemThatSaysNothingAboutItself)
   // Files.GetFileDetails on a file no add-on described: the row is all there is, and it must
   // still come through.
   CVideoInfoTag details;
-  CVideoLibrary::ApplyPlaybackState(FileRow(), details);
+  CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
   EXPECT_EQ(42, details.m_iFileId);
   EXPECT_EQ(3, details.GetPlayCount());
