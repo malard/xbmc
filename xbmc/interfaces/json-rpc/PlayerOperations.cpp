@@ -1148,6 +1148,7 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
 
   items.Sort(SortBy::FILE, SortOrder::ASCENDING);
 
+  // one picture makes the directory a slideshow, and the slideshow window lists the rest itself
   for (const auto& item : items)
   {
     if (item->IsFolder())
@@ -1159,6 +1160,9 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
       pictures.Add(item);
     else if (VIDEO::IsVideo(*item) || MUSIC::IsAudio(*item))
       media.Add(item);
+
+    if (!pictures.IsEmpty())
+      return true;
   }
 
   return true;
