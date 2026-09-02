@@ -18,6 +18,7 @@ set(SOURCES TestApplicationLogLevel.cpp
             TestSharedFieldDeclarations.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
-            TestVideoLibrarySetSourceContent.cpp)
+            TestVideoLibrarySetSourceContent.cpp
+            TestVideoStreamsSchema.cpp)
 
 core_add_test_library(jsonrpc_test)

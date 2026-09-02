@@ -242,6 +242,9 @@ schema never says *when* something goes; that is here.
   dialog no longer stalls every other client.
 - A failing send gives up instead of spinning.
 - The JSON-RPC methods are registered before anything can call them.
+- `Video.Streams` declares the `source` and `version` every stream carries,
+  and the `flags` bitmask on audio and subtitle streams, all of which the
+  serializer has emitted since the fields were added.
 - `JSONRPC.SetConfiguration` keeps every namespace the caller does not name.
   It silently dropped `PVR`, `Info` and `Sources` on every call, with no way
   to ask for them back, and kept `Application` by the state of `Other`. The
