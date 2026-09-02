@@ -575,10 +575,10 @@ bool CTCPServer::CTCPClient::SetAnnouncementFlags(int flags)
 
 void CTCPServer::CTCPClient::Send(const char *data, unsigned int size)
 {
+  std::unique_lock lock(m_critSection);
   unsigned int sent = 0;
   while (sent < size)
   {
-    std::unique_lock lock(m_critSection);
     const auto written = send(m_socket, data + sent, size - sent, 0);
     if (written <= 0)
     {
