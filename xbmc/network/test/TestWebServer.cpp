@@ -1209,4 +1209,6 @@ TEST_F(TestWebServerScreenshots, CannotGetAFileTheScreenshotFolderOnlyLeadsTo)
   CCurlFile curl;
   std::string result;
   EXPECT_FALSE(curl.Get(url, result));
+
+  CFile::Delete(URIUtils::AddFileToFolder(outside, m_name));
 }

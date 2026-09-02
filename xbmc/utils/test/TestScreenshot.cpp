@@ -115,14 +115,22 @@ TEST_F(TestScreenshotDeletion, AcceptsThePathTakeScreenshotAnswered)
 
 TEST_F(TestScreenshotDeletion, RefusesANameThatWouldLeaveTheFolder)
 {
-  for (const auto* name : {"../secret.png", "sub/shot.png", "special://screenshots/../secret.png",
-                           "C:\\secret.png", "notes.txt"})
+  for (const auto* name :
+       {"../secret.png", "sub/shot.png", "special://screenshots/../secret.png", "C:\\secret.png"})
   {
     const CScreenShot::ScreenshotDeletion removed = CScreenShot::DeleteScreenshots(name);
 
     EXPECT_EQ(Error::BAD_TARGET, removed.error) << name;
     EXPECT_EQ(0u, removed.deleted) << name;
   }
+}
+
+TEST_F(TestScreenshotDeletion, RefusesANameThatIsNotAPng)
+{
+  const CScreenShot::ScreenshotDeletion removed = CScreenShot::DeleteScreenshots("notes.txt");
+
+  EXPECT_EQ(Error::BAD_TARGET, removed.error);
+  EXPECT_EQ(0u, removed.deleted);
 }
 
 TEST_F(TestScreenshotDeletion, ReportsAScreenshotThatIsNotThere)

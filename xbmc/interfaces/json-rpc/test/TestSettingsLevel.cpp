@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "interfaces/IAnnouncer.h"
 #include "settings/lib/SettingLevel.h"
@@ -18,77 +19,13 @@
 
 #include <gtest/gtest.h>
 
+using namespace JSONRPC;
+
 namespace
 {
 
 constexpr std::array<SettingLevel, 4> VIEWER_LEVELS{SettingLevel::Basic, SettingLevel::Standard,
                                                     SettingLevel::Advanced, SettingLevel::Expert};
-
-//! \brief One definition out of the shipped service description, by name
-CVariant Definition(const char* const entries[], size_t count, const std::string& name)
-{
-  for (size_t i = 0; i < count; ++i)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entries[i]) + "}", parsed))
-    {
-      continue;
-    }
-
-    if (parsed.isMember(name))
-    {
-      return parsed[name];
-    }
-  }
-
-  ADD_FAILURE() << name << " is not declared in the service description";
-  return {};
-}
-
-CVariant Method(const std::string& name)
-{
-  return Definition(JSONRPC::JSONRPC_SERVICE_METHODS, std::size(JSONRPC::JSONRPC_SERVICE_METHODS),
-                    name);
-}
-
-CVariant Notification(const std::string& name)
-{
-  return Definition(JSONRPC::JSONRPC_SERVICE_NOTIFICATIONS,
-                    std::size(JSONRPC::JSONRPC_SERVICE_NOTIFICATIONS), name);
-}
-
-CVariant Type(const std::string& name)
-{
-  return Definition(JSONRPC::JSONRPC_SERVICE_TYPES, std::size(JSONRPC::JSONRPC_SERVICE_TYPES),
-                    name);
-}
-
-std::set<std::string> RequiredMembers(const CVariant& object)
-{
-  std::set<std::string> required;
-  const CVariant& values{object["required"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-  {
-    required.insert(value->asString());
-  }
-
-  return required;
-}
-
-const CVariant* Param(const CVariant& method, const std::string& name)
-{
-  const CVariant& params{method["params"]};
-  for (auto param = params.begin_array(); param != params.end_array(); ++param)
-  {
-    if (param->isMember("name") && (*param)["name"].asString() == name)
-    {
-      return &(*param);
-    }
-  }
-
-  return nullptr;
-}
 
 } // unnamed namespace
 
@@ -116,7 +53,7 @@ TEST(TestSettingLevelName, TheNamesAreExactlyTheSchemaEnum)
   }
 
   std::set<std::string> declared;
-  const CVariant& values{Type("Setting.Level")["enum"]};
+  const CVariant& values{ShippedType("Setting.Level")["enum"]};
   for (auto value = values.begin_array(); value != values.end_array(); ++value)
   {
     declared.insert(value->asString());
@@ -127,7 +64,7 @@ TEST(TestSettingLevelName, TheNamesAreExactlyTheSchemaEnum)
 
 TEST(TestSettingsLevelSchema, TheLevelInForceCanBeRead)
 {
-  const CVariant method{Method("Settings.GetLevel")};
+  const CVariant method{ShippedMethod("Settings.GetLevel")};
 
   EXPECT_EQ("ReadData", method["permission"].asString());
   EXPECT_EQ("#/$defs/Setting.Level", method["returns"]["properties"]["level"]["$ref"].asString());
@@ -136,7 +73,7 @@ TEST(TestSettingsLevelSchema, TheLevelInForceCanBeRead)
 
 TEST(TestSettingsLevelSchema, TheLevelInForceCanBeSet)
 {
-  const CVariant method{Method("Settings.SetLevel")};
+  const CVariant method{ShippedMethod("Settings.SetLevel")};
 
   const CVariant* const level{Param(method, "level")};
   ASSERT_NE(nullptr, level);
@@ -156,7 +93,7 @@ TEST(TestSettingsLevelSchema, AListingNamesTheLevelItFilteredAt)
   for (const char* const name :
        {"Settings.GetSections", "Settings.GetCategories", "Settings.GetSettings"})
   {
-    const CVariant returns{Method(name)["returns"]};
+    const CVariant returns{ShippedMethod(name)["returns"]};
     EXPECT_TRUE(returns["properties"].isMember("level")) << name;
     EXPECT_TRUE(RequiredMembers(returns).contains("level")) << name;
   }
@@ -164,7 +101,7 @@ TEST(TestSettingsLevelSchema, AListingNamesTheLevelItFilteredAt)
 
 TEST(TestSettingsLevelSchema, TheLevelChangeIsAnnounced)
 {
-  const CVariant data{Notification("Settings.OnLevelChanged")["params"][1]};
+  const CVariant data{ShippedNotification("Settings.OnLevelChanged")["params"][1]};
 
   EXPECT_EQ("data", data["name"].asString());
   EXPECT_TRUE(data["schema"]["properties"].isMember("level"));
@@ -180,7 +117,7 @@ TEST(TestSettingsAnnouncementFlag, ItsNameIsTheNotificationNamespace)
   const std::string prefix{ANNOUNCEMENT::AnnouncementFlagToString(ANNOUNCEMENT::Settings)};
 
   EXPECT_EQ("Settings", prefix);
-  Notification(prefix + ".OnLevelChanged");
+  ShippedNotification(prefix + ".OnLevelChanged");
 }
 
 //! \brief A flag left out of ANNOUNCE_ALL is announced to a client that never configured itself

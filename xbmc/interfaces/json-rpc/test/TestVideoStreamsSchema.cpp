@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/StreamDetails.h"
@@ -16,36 +17,13 @@
 
 #include <gtest/gtest.h>
 
+using namespace JSONRPC;
+
 namespace
 {
-//! \brief A type's definition, read out of the shipped service description
-CVariant Definition(const std::string& type)
-{
-  for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
-  {
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
-      continue;
-
-    if (parsed.isMember(type))
-      return parsed[type];
-  }
-
-  ADD_FAILURE() << type << " is not declared in the service description";
-  return {};
-}
-
-std::set<std::string> Keys(const CVariant& object)
-{
-  std::set<std::string> keys;
-  for (auto it = object.begin_map(); it != object.end_map(); ++it)
-    keys.insert(it->first);
-  return keys;
-}
-
 std::set<std::string> DeclaredProperties(const std::string& kind)
 {
-  return Keys(Definition("Video.Streams")["properties"][kind]["items"]["properties"]);
+  return Keys(ShippedType("Video.Streams")["properties"][kind]["items"]["properties"]);
 }
 
 std::set<std::string> SerializedProperties(const CStreamDetail& detail)

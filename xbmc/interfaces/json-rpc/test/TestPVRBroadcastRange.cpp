@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "XBDateTime.h"
 #include "interfaces/json-rpc/JSONRPCUtils.h"
@@ -36,46 +37,6 @@ public:
   }
 };
 
-//! \brief A method's definition, read out of the shipped service description
-CVariant Method(const std::string& name)
-{
-  for (const char* const entry : JSONRPC_SERVICE_METHODS)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
-      continue;
-
-    if (parsed.isMember(name))
-      return parsed[name];
-  }
-
-  ADD_FAILURE() << name << " is not declared in the service description";
-  return {};
-}
-
-std::map<std::string, CVariant> Params(const CVariant& method)
-{
-  std::map<std::string, CVariant> params;
-
-  const CVariant& values{method["params"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-    params.emplace((*value)["name"].asString(), *value);
-
-  return params;
-}
-
-std::set<std::string> RequiredReturns(const CVariant& schema)
-{
-  std::set<std::string> required;
-
-  const CVariant& values{schema["required"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-    required.insert(value->asString());
-
-  return required;
-}
-
 CVariant Request(const std::string& starttime, const std::string& endtime)
 {
   CVariant params{CVariant::VariantTypeObject};
@@ -94,7 +55,7 @@ CVariant Request(const std::string& starttime, const std::string& endtime)
  */
 TEST(TestPVRBroadcastRange, TheRangeOnGetBroadcastsIsOptional)
 {
-  const std::map<std::string, CVariant> params{Params(Method("PVR.GetBroadcasts"))};
+  const std::map<std::string, CVariant> params{Params(ShippedMethod("PVR.GetBroadcasts"))};
 
   ASSERT_TRUE(params.contains("starttime"));
   ASSERT_TRUE(params.contains("endtime"));
@@ -107,7 +68,8 @@ TEST(TestPVRBroadcastRange, TheRangeOnGetBroadcastsIsOptional)
  */
 TEST(TestPVRBroadcastRange, TheGroupFormRequiresARange)
 {
-  const std::map<std::string, CVariant> params{Params(Method("PVR.GetBroadcastsByChannelGroup"))};
+  const std::map<std::string, CVariant> params{
+      Params(ShippedMethod("PVR.GetBroadcastsByChannelGroup"))};
 
   ASSERT_TRUE(params.contains("channelgroupid"));
   ASSERT_TRUE(params.contains("starttime"));
@@ -125,12 +87,12 @@ TEST(TestPVRBroadcastRange, TheGroupFormRequiresARange)
  */
 TEST(TestPVRBroadcastRange, TheGroupFormAnswersPerChannel)
 {
-  const CVariant returns{Method("PVR.GetBroadcastsByChannelGroup")["returns"]};
+  const CVariant returns{ShippedMethod("PVR.GetBroadcastsByChannelGroup")["returns"]};
 
-  EXPECT_TRUE(RequiredReturns(returns).contains("channels"));
+  EXPECT_TRUE(RequiredMembers(returns).contains("channels"));
 
   const CVariant& channel{returns["properties"]["channels"]["items"]};
-  const std::set<std::string> required{RequiredReturns(channel)};
+  const std::set<std::string> required{RequiredMembers(channel)};
   EXPECT_TRUE(required.contains("channelid"));
   EXPECT_TRUE(required.contains("broadcasts"));
   EXPECT_EQ(channel["properties"]["broadcasts"]["items"]["$ref"].asString(),

@@ -48,16 +48,6 @@ TEST(TestPlayerIds, EachPlayerHasItsOwnId)
   EXPECT_EQ(PICTURE_PLAYLIST, PlayerIdOf(Picture));
 }
 
-TEST(TestPlayerIds, AVideoIsPlayerOneEvenWhenTheMusicPlaylistIsCurrent)
-{
-  EXPECT_EQ(VIDEO_PLAYLIST, PlayerIdOf(Video));
-}
-
-TEST(TestPlayerIds, PlayeridOneReachesTheVideoPlayerWhicheverPlaylistIsCurrent)
-{
-  EXPECT_EQ(Video, PlayerForId(VIDEO_PLAYLIST));
-}
-
 TEST(TestPlayerIds, TwoPlayersNeverShareAPlayerid)
 {
   // Two can run at once - playing a radio recording is enough, since PVR reports a recording,

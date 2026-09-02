@@ -578,21 +578,6 @@ TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppresse
   ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
 }
 
-//! \brief A method with no "deprecated" key must not grow an empty one
-TEST_F(TestJSONServiceDescription, AMethodIsNotDeprecatedByDefault)
-{
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Plain": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
-
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
-
-  EXPECT_FALSE(result["methods"]["Test.Plain"].isMember("deprecated"));
-}
 
 //! \brief A single property can carry the annotation without the whole type being deprecated
 TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)

@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "pvr/providers/PVRProvider.h"
 #include "utils/JSONVariantParser.h"
@@ -17,6 +18,7 @@
 #include <gtest/gtest.h>
 
 using namespace PVR;
+using namespace JSONRPC;
 
 namespace
 {
@@ -24,26 +26,7 @@ namespace
 //! \brief The property names a caller may request for the given Fields type
 std::set<std::string> RequestableFields(const std::string& fieldsType)
 {
-  for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
-      continue;
-
-    if (!parsed.isMember(fieldsType))
-      continue;
-
-    std::set<std::string> fields;
-    const CVariant& values{parsed[fieldsType]["items"]["enum"]};
-    for (auto value = values.begin_array(); value != values.end_array(); ++value)
-      fields.insert(value->asString());
-
-    return fields;
-  }
-
-  ADD_FAILURE() << fieldsType << " is not declared in the service description";
-  return {};
+  return EnumValues(ShippedType(fieldsType)["items"]);
 }
 
 } // unnamed namespace

@@ -34,13 +34,7 @@ public:
   {
     JSONServiceDescriptionTestBase::SetUp();
 
-    for (unsigned int index = 0; index < std::size(JSONRPC_SERVICE_TYPES); index++)
-      CJSONServiceDescription::AddType(JSONRPC_SERVICE_TYPES[index]);
-
-    for (unsigned int index = 0; index < std::size(JSONRPC_SERVICE_METHODS); index++)
-      CJSONServiceDescription::AddBuiltinMethod(JSONRPC_SERVICE_METHODS[index]);
-
-    CJSONServiceDescription::ResolveReferences();
+    AddShippedServiceDescription();
   }
 };
 

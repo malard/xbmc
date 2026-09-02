@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
 #include "ServiceDescription.h"
 #include "commons/ilog.h"
@@ -35,52 +36,6 @@ public:
   static std::string Name(int level) { return LogLevelName(level); }
   static int FromName(const std::string& name) { return LogLevelFromName(name); }
 };
-
-//! \brief A definition out of the shipped service description, by name
-CVariant Definition(const char* const entries[], size_t count, const std::string& name)
-{
-  for (size_t index = 0; index < count; ++index)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entries[index]) + "}", parsed))
-      continue;
-
-    if (parsed.isMember(name))
-      return parsed[name];
-  }
-
-  ADD_FAILURE() << name << " is not declared in the service description";
-  return {};
-}
-
-CVariant Type(const std::string& name)
-{
-  return Definition(JSONRPC_SERVICE_TYPES, std::size(JSONRPC_SERVICE_TYPES), name);
-}
-
-CVariant Method(const std::string& name)
-{
-  return Definition(JSONRPC_SERVICE_METHODS, std::size(JSONRPC_SERVICE_METHODS), name);
-}
-
-std::set<std::string> Enum(const CVariant& type)
-{
-  std::set<std::string> values;
-  const CVariant& list{type["enum"]};
-  for (auto value = list.begin_array(); value != list.end_array(); ++value)
-    values.insert(value->asString());
-  return values;
-}
-
-std::map<std::string, CVariant> Params(const CVariant& method)
-{
-  std::map<std::string, CVariant> params;
-  const CVariant& values{method["params"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-    params.emplace((*value)["name"].asString(), *value);
-  return params;
-}
 
 /*!
  \brief Puts the log level back when a test leaves scope, so the suite's own logging is unaffected
@@ -118,8 +73,8 @@ private:
  */
 TEST(TestApplicationLogLevel, TheLevelIsAnApplicationProperty)
 {
-  EXPECT_TRUE(Enum(Type("Application.Property.Name")).contains("loglevel"));
-  EXPECT_EQ(Type("Application.Property.Value")["properties"]["loglevel"]["$ref"].asString(),
+  EXPECT_TRUE(EnumValues(ShippedType("Application.Property.Name")).contains("loglevel"));
+  EXPECT_EQ(ShippedType("Application.Property.Value")["properties"]["loglevel"]["$ref"].asString(),
             "#/$defs/Application.LogLevel.Value");
 }
 
@@ -130,7 +85,7 @@ TEST(TestApplicationLogLevel, TheLevelIsAnApplicationProperty)
  */
 TEST(TestApplicationLogLevel, TheSetterLeavesWhatItIsNotGiven)
 {
-  const CVariant method{Method("Application.SetLogLevel")};
+  const CVariant method{ShippedMethod("Application.SetLogLevel")};
   EXPECT_EQ(method["permission"].asString(), "ControlSystem");
 
   const std::map<std::string, CVariant> params{Params(method)};
@@ -149,7 +104,7 @@ TEST(TestApplicationLogLevel, TheSetterLeavesWhatItIsNotGiven)
  */
 TEST(TestApplicationLogLevel, TheSchemaAndTheHandlerAgreeOnTheNames)
 {
-  const std::set<std::string> names{Enum(Type("Application.LogLevel"))};
+  const std::set<std::string> names{EnumValues(ShippedType("Application.LogLevel"))};
   ASSERT_EQ(names.size(), 4u);
 
   for (const std::string& name : names)

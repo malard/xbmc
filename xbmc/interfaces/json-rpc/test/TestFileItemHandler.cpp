@@ -37,20 +37,21 @@ public:
   static CVariant Handle(const std::shared_ptr<CFileItem>& item,
                          const std::set<std::string>& fields)
   {
-    CThumbLoader thumbLoader;
-    CVariant result;
-    HandleFileItem("id", true, "files", item, CVariant{CVariant::VariantTypeObject}, fields, result,
-                   true, &thumbLoader);
+    return HandleWith(item, fields);
+  }
 
-    return result["files"][0];
+  // the overload a handler reaches when the fields it wants are not the ones its caller asked for
+  static CVariant HandleWithProperties(const std::shared_ptr<CFileItem>& item,
+                                       const CVariant& fields)
+  {
+    return HandleWith(item, fields);
   }
 
   static JSONRPC_STATUS Diagnose(const CVariant& item) { return DiagnoseUnresolvedItem(item); }
 
-  // the overload a handler reaches when the fields it wants are not the ones its caller asked
-  // for, as Files.GetFileDetails appends "file" and "filetype" to a copy of them
-  static CVariant HandleWithProperties(const std::shared_ptr<CFileItem>& item,
-                                       const CVariant& fields)
+private:
+  template<typename Fields>
+  static CVariant HandleWith(const std::shared_ptr<CFileItem>& item, const Fields& fields)
   {
     CThumbLoader thumbLoader;
     CVariant result;

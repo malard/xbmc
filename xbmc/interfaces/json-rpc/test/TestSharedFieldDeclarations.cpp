@@ -24,29 +24,19 @@ std::map<std::string, std::string> DeclarationsOf(const std::string& property)
 {
   std::map<std::string, std::string> declarations;
 
-  for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
+  for (const auto& [name, type] : JSONRPC::ShippedTypes())
   {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
+    const CVariant& properties{type["properties"]};
+    if (!properties.isMember(property))
     {
       continue;
     }
 
-    for (auto type = parsed.begin_map(); type != parsed.end_map(); ++type)
-    {
-      const CVariant& properties{type->second["properties"]};
-      if (!properties.isMember(property))
-      {
-        continue;
-      }
+    // Two types may describe the same value differently in prose
+    CVariant declaration{properties[property]};
+    declaration.erase("description");
 
-      // Two types may describe the same value differently in prose
-      CVariant declaration{properties[property]};
-      declaration.erase("description");
-
-      declarations.emplace(type->first, JSONRPC::ToJson(declaration));
-    }
+    declarations.emplace(name, JSONRPC::ToJson(declaration));
   }
 
   return declarations;

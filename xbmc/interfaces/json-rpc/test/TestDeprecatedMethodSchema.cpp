@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <map>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -22,35 +24,6 @@ using namespace JSONRPC;
 
 namespace
 {
-
-//! \brief The definitions of the shipped service description, by name
-std::map<std::string, CVariant> ShippedDefinitions(const char* const entries[], size_t count)
-{
-  std::map<std::string, CVariant> definitions;
-
-  for (size_t index = 0; index < count; index++)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entries[index]) + "}", parsed))
-      continue;
-
-    for (auto member = parsed.begin_map(); member != parsed.end_map(); ++member)
-      definitions.emplace(member->first, member->second);
-  }
-
-  return definitions;
-}
-
-std::map<std::string, CVariant> ShippedMethods()
-{
-  return ShippedDefinitions(JSONRPC_SERVICE_METHODS, std::size(JSONRPC_SERVICE_METHODS));
-}
-
-std::map<std::string, CVariant> ShippedTypes()
-{
-  return ShippedDefinitions(JSONRPC_SERVICE_TYPES, std::size(JSONRPC_SERVICE_TYPES));
-}
 
 /*!
  \brief What a deprecated definition is superseded by
@@ -245,7 +218,7 @@ TEST(TestDeprecatedMethodSchema, TheSchemaDoesNotDateItsOwnRemovals)
     const std::string description{methods.at(deprecated)["description"].asString()};
     EXPECT_EQ(std::string::npos, description.find("Kodi 2"))
         << deprecated << " names a Kodi version in its description";
-    EXPECT_EQ(std::string::npos, description.find("version 1"))
+    EXPECT_FALSE(std::regex_search(description, std::regex{"version [0-9]"}))
         << deprecated << " names an API version in its description";
   }
 }

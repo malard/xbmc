@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
@@ -15,55 +16,19 @@
 
 #include <gtest/gtest.h>
 
+using namespace JSONRPC;
+
 namespace
 {
 
-//! \brief A type's definition, read out of the shipped service description
-CVariant Definition(const std::string& type)
-{
-  for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
-  {
-    // Each entry is one definition without its enclosing braces
-    CVariant parsed;
-    if (!CJSONVariantParser::Parse("{" + std::string(entry) + "}", parsed))
-    {
-      continue;
-    }
-
-    if (parsed.isMember(type))
-    {
-      return parsed[type];
-    }
-  }
-
-  ADD_FAILURE() << type << " is not declared in the service description";
-  return {};
-}
-
 std::set<std::string> RequestableFields()
 {
-  std::set<std::string> fields;
-
-  const CVariant& values{Definition("PVR.Fields.Broadcast")["items"]["enum"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-  {
-    fields.insert(value->asString());
-  }
-
-  return fields;
+  return EnumValues(ShippedType("PVR.Fields.Broadcast")["items"]);
 }
 
 std::set<std::string> DeclaredProperties()
 {
-  std::set<std::string> properties;
-
-  const CVariant& values{Definition("PVR.Details.Broadcast")["properties"]};
-  for (auto value = values.begin_map(); value != values.end_map(); ++value)
-  {
-    properties.insert(value->first);
-  }
-
-  return properties;
+  return Keys(ShippedType("PVR.Details.Broadcast")["properties"]);
 }
 
 } // unnamed namespace
