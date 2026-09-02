@@ -419,7 +419,9 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
         continue;
 
       JSONSchemaTypeDefinitionPtr extendedTypeDef = CJSONServiceDescription::GetType(extendsName);
-      if (extendedTypeDef.get() == NULL)
+      // The base's type is copied here, so a base that is registered but not
+      // yet parsed is as unusable as one that is missing
+      if (extendedTypeDef.get() == NULL || !extendedTypeDef->parsed)
       {
         extends.clear();
         CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} extends an unknown type {}", name,
@@ -1591,6 +1593,9 @@ bool CJSONServiceDescription::AddType(const std::string &jsonType)
   JSONSchemaTypeDefinitionPtr globalType = std::make_shared<JSONSchemaTypeDefinition>();
   globalType->name = typeName;
   globalType->ID = typeName;
+  // Registered before its body is parsed so that a reference to itself, or a
+  // definition waiting on it that it references in turn, can resolve
+  globalType->parsed = false;
   CJSONServiceDescription::addReferenceTypeDefinition(globalType);
 
   if (!globalType->Parse(descriptionObject[typeName]))
@@ -1619,6 +1624,9 @@ bool CJSONServiceDescription::AddType(const std::string &jsonType)
     return false;
   }
 
+  // A definition composed from this type through allOf waits for the body
+  globalType->parsed = true;
+  replayIncompleteDefinitions(typeName);
   return true;
 }
 
@@ -2067,21 +2075,26 @@ void CJSONServiceDescription::addReferenceTypeDefinition(
   // Add the type to the list of type definitions
   m_types[typeDefinition->ID] = typeDefinition;
 
-  IncompleteSchemaDefinitionMap::iterator iter = m_incompleteDefinitions.find(typeDefinition->ID);
+  replayIncompleteDefinitions(typeDefinition->ID);
+}
+
+void CJSONServiceDescription::replayIncompleteDefinitions(const std::string& typeID)
+{
+  const auto iter = m_incompleteDefinitions.find(typeID);
   if (iter == m_incompleteDefinitions.end())
     return;
 
-  CLog::Log(LOGINFO, "JSONRPC: Resolving incomplete types/methods referencing {}",
-            typeDefinition->ID);
-  for (unsigned int index = 0; index < iter->second.size(); index++)
-  {
-    if (iter->second[index].Type == SchemaDefinitionType)
-      AddType(iter->second[index].Schema);
-    else
-      AddMethod(iter->second[index].Schema, iter->second[index].Method);
-  }
+  const std::vector<IncompleteSchemaDefinition> incomplete = std::move(iter->second);
+  m_incompleteDefinitions.erase(iter);
 
-  m_incompleteDefinitions.erase(typeDefinition->ID);
+  CLog::Log(LOGINFO, "JSONRPC: Resolving incomplete types/methods referencing {}", typeID);
+  for (const auto& definition : incomplete)
+  {
+    if (definition.Type == SchemaDefinitionType)
+      AddType(definition.Schema);
+    else
+      AddMethod(definition.Schema, definition.Method);
+  }
 }
 
 void CJSONServiceDescription::removeReferenceTypeDefinition(const std::string &typeID)

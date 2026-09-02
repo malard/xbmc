@@ -69,6 +69,13 @@ namespace JSONRPC
     bool referencedTypeSet = false;
 
     /*!
+     \brief Whether the body has been parsed
+
+     False only while AddType has the type registered ahead of parsing it.
+     */
+    bool parsed = true;
+
+    /*!
      \brief Array of reference types
      which are extended by this type.
      */
@@ -396,6 +403,7 @@ namespace JSONRPC
     static bool parseJSONSchemaType(const CVariant& value, JSONSchemaType& schemaType);
     static void addReferenceTypeDefinition(const JSONSchemaTypeDefinitionPtr& typeDefinition);
     static void removeReferenceTypeDefinition(const std::string &typeID);
+    static void replayIncompleteDefinitions(const std::string& typeID);
 
     static void getReferencedTypes(const JSONSchemaTypeDefinitionPtr& type,
                                    std::vector<std::string>& referencedTypes);

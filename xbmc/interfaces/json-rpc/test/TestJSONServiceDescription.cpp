@@ -231,11 +231,9 @@ TEST_F(TestJSONServiceDescription, ExtendedType)
 TEST_F(TestJSONServiceDescription, ForwardReferences)
 {
   // The container references a type that arrives later: it parks in the
-  // deferred queue, is replayed against the stub when the base appears, and
-  // ResolveReferences re-copies the completed base into the reference site.
-  // Methods are registered only after all types, which is the ordering the
-  // initialization sequence guarantees. (Forward references inside "allOf" are
-  // NOT healed this way; types.json is topologically ordered for allOf.)
+  // deferred queue and is replayed once the base has parsed. Methods are
+  // registered only after all types, which is the ordering the initialization
+  // sequence guarantees.
   EXPECT_FALSE(CJSONServiceDescription::AddType(R"({"C.Container": {
     "type": "object",
     "properties": { "inner": { "$ref": "#/$defs/C.Base" } },
@@ -263,6 +261,75 @@ TEST_F(TestJSONServiceDescription, ForwardReferences)
   CVariant output;
   EXPECT_EQ(OK, Call("Test.Forward", R"({"data": {"inner": {"x": 1}}})", output));
   ExpectVariantEq(ParseJson(R"({ "data": { "inner": { "x": 1, "y": 9 } } })"), output);
+}
+
+//! \brief Two types referencing each other resolve, whichever arrives first
+TEST_F(TestJSONServiceDescription, MutuallyReferencingTypes)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddType(R"({"Cycle.A": {
+    "type": "object",
+    "properties": { "b": { "$ref": "#/$defs/Cycle.B" } }
+  }})"));
+  EXPECT_TRUE(CJSONServiceDescription::AddType(R"({"Cycle.B": {
+    "type": "object",
+    "properties": { "a": { "$ref": "#/$defs/Cycle.A" }, "n": { "type": "integer", "default": 3 } }
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  ASSERT_NE(nullptr, CJSONServiceDescription::GetType("Cycle.A"));
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Cycle": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Cycle.A" } } ],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  // Both types validate: the default of the second fills in, and its constraint holds
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Cycle", R"({"data": {"b": {"a": {}}}})", output));
+  EXPECT_EQ(3, output["data"]["b"]["n"].asInteger());
+  EXPECT_EQ(InvalidParams, Call("Test.Cycle", R"({"data": {"b": {"n": "x"}}})", output));
+}
+
+/*!
+ A derived type registered before its base is replayed only once the base has parsed. Replayed
+ against the base's empty stub it would copy AnyValue as its type and skip its own properties,
+ leaving a validator that accepts anything for the derived part with nothing in the log.
+ */
+TEST_F(TestJSONServiceDescription, ForwardCompositionReference)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddType(R"({"Late.Derived": {
+    "allOf": [ { "$ref": "#/$defs/Late.Base" } ],
+    "properties": {
+      "b": { "type": "boolean" },
+      "shared": { "type": "integer", "default": 2 }
+    },
+    "required": ["b"]
+  }})"));
+  EXPECT_TRUE(CJSONServiceDescription::AddType(R"({"Late.Base": {
+    "type": "object",
+    "properties": {
+      "a": { "type": "string" },
+      "shared": { "type": "integer", "default": 1 }
+    },
+    "required": ["a"]
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  ASSERT_NE(nullptr, CJSONServiceDescription::GetType("Late.Derived"));
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.LateExtends": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Late.Derived" } } ],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.LateExtends", R"({"data": {"a": "x", "b": true}})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": { "a": "x", "b": true, "shared": 2 } })"), output);
+
+  // The derived type's own required property is enforced
+  EXPECT_EQ(InvalidParams, Call("Test.LateExtends", R"({"data": {"a": "x"}})", output));
 }
 
 TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefault)
