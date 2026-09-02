@@ -20,6 +20,7 @@
 #include "utils/log.h"
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -34,7 +35,7 @@ class CTestApplicationOperations : public CApplicationOperations
 {
 public:
   static std::string Name(int level) { return LogLevelName(level); }
-  static int FromName(const std::string& name) { return LogLevelFromName(name); }
+  static std::optional<int> FromName(const std::string& name) { return LogLevelFromName(name); }
 };
 
 /*!
@@ -109,9 +110,9 @@ TEST(TestApplicationLogLevel, TheSchemaAndTheHandlerAgreeOnTheNames)
 
   for (const std::string& name : names)
   {
-    const int level{CTestApplicationOperations::FromName(name)};
-    EXPECT_GE(level, LOG_LEVEL_NONE) << name << " is in the schema and unknown to the handler";
-    EXPECT_EQ(CTestApplicationOperations::Name(level), name);
+    const std::optional<int> level{CTestApplicationOperations::FromName(name)};
+    ASSERT_TRUE(level) << name << " is in the schema and unknown to the handler";
+    EXPECT_EQ(CTestApplicationOperations::Name(*level), name);
   }
 
   for (int level = LOG_LEVEL_NONE; level <= LOG_LEVEL_MAX; ++level)
@@ -121,7 +122,7 @@ TEST(TestApplicationLogLevel, TheSchemaAndTheHandlerAgreeOnTheNames)
   }
 
   EXPECT_TRUE(CTestApplicationOperations::Name(LOG_LEVEL_MAX + 1).empty());
-  EXPECT_LT(CTestApplicationOperations::FromName("verbose"), LOG_LEVEL_NONE);
+  EXPECT_FALSE(CTestApplicationOperations::FromName("verbose"));
 }
 
 TEST(TestApplicationLogLevel, AnUnknownComponentIsRejected)

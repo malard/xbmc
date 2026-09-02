@@ -11,6 +11,9 @@
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
 
+#include <optional>
+#include <string>
+
 class CVariant;
 
 namespace JSONRPC
@@ -37,9 +40,9 @@ namespace JSONRPC
     static std::string LogLevelName(int level);
 
     /*!
-     \brief The log level an Application.LogLevel name stands for; LOG_LEVEL_NONE - 1 if unknown
+     \brief The log level an Application.LogLevel name stands for; nothing for an unknown name
      */
-    static int LogLevelFromName(const std::string& name);
+    static std::optional<int> LogLevelFromName(const std::string& name);
 
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);

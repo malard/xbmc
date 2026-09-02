@@ -129,11 +129,11 @@ JSONRPC_STATUS CApplicationOperations::SetLogLevel(const std::string& method,
   const CVariant& levelParam{parameterObject["level"]};
   const CVariant& componentsParam{parameterObject["components"]};
 
-  int level{LOG_LEVEL_NONE - 1};
+  std::optional<int> level;
   if (!levelParam.isNull())
   {
     level = LogLevelFromName(levelParam.asString());
-    if (level < LOG_LEVEL_NONE)
+    if (!level)
       return InvalidParams;
   }
 
@@ -151,12 +151,12 @@ JSONRPC_STATUS CApplicationOperations::SetLogLevel(const std::string& method,
 
   const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
 
-  if (level >= LOG_LEVEL_NONE)
+  if (level)
   {
     // SetDebugMode cannot express none or debugfreemem, so the exact level is applied after it.
-    settings->SetBool(CSettings::SETTING_DEBUG_SHOWLOGINFO, level >= LOG_LEVEL_DEBUG);
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = level;
-    CServiceBroker::GetLogging().SetLogLevel(level);
+    settings->SetBool(CSettings::SETTING_DEBUG_SHOWLOGINFO, *level >= LOG_LEVEL_DEBUG);
+    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = *level;
+    CServiceBroker::GetLogging().SetLogLevel(*level);
   }
 
   if (!componentsParam.isNull())
@@ -180,14 +180,14 @@ std::string CApplicationOperations::LogLevelName(int level)
   return {};
 }
 
-int CApplicationOperations::LogLevelFromName(const std::string& name)
+std::optional<int> CApplicationOperations::LogLevelFromName(const std::string& name)
 {
   for (const auto& [value, levelName] : LOG_LEVEL_NAMES)
   {
     if (name == levelName)
       return value;
   }
-  return LOG_LEVEL_NONE - 1;
+  return std::nullopt;
 }
 
 CVariant CApplicationOperations::LogLevelValue()
