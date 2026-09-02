@@ -80,8 +80,7 @@ namespace JSONRPC
 
   protected:
     /*!
-     \brief List a directory the way a slideshow of it would, split into the pictures and the
-            playable media (video and audio) it holds
+     \brief List a directory as a slideshow would, split into its pictures and its playable media
      \param path The directory
      \param recursive Whether to descend into subdirectories
      \param pictures Receives the picture files

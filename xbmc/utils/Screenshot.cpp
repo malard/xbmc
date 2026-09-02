@@ -230,9 +230,8 @@ void CScreenShot::TakeScreenshot(KODI::RENDERING::CAPTURE::CaptureContent conten
 
 namespace
 {
-// A caller-named target, resolved under dir. It is a bare .png file name:
-// anything carrying a path is refused rather than reinterpreted, so no target
-// can name a file outside the configured folder.
+// A caller-named target, resolved under dir: a bare .png file name, so nothing outside the
+// configured folder can be named.
 std::string TargetScreenshotFile(const std::string& dir, const std::string& target)
 {
   if (!URIUtils::HasExtension(target, ".png") || target.find_first_of("/\\:") != std::string::npos)
@@ -250,9 +249,7 @@ std::string SpecialScreenshotPath(const std::string& file)
   return URIUtils::AddFileToFolder(SCREENSHOT_FOLDER, URIUtils::GetFileName(file));
 }
 
-// The bare name a caller named a screenshot by, accepting the path this file
-// hands out as readily as a plain name. What comes back is still checked by
-// TargetScreenshotFile, so a folder prefix cannot smuggle a path through.
+// Accepts a bare name or the special://screenshots path TakeScreenshotSync hands out.
 std::string ScreenshotName(const std::string& file)
 {
   if (StringUtils::StartsWithNoCase(file, SCREENSHOT_FOLDER))
@@ -270,9 +267,7 @@ struct PendingScreenshot
   std::atomic<unsigned int> written{0};
 };
 
-// Covers forcing a frame, reading it back and encoding it at the native
-// resolution. Generous: it is a backstop against a render loop that never
-// delivers, not a budget anything is expected to spend.
+// Covers forcing a frame, reading it back and encoding it at the native resolution.
 constexpr std::chrono::milliseconds SCREENSHOT_TIMEOUT{5000};
 } // namespace
 
@@ -317,10 +312,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
   const unsigned int expected = both ? 2u : 1u;
   auto pending = std::make_shared<PendingScreenshot>();
 
-  // The write stays on the capture worker, as it is for every other caller; what
-  // changes is that this thread waits for it, rather than handing back a name
-  // whose file is still being encoded. A BOTH request delivers twice, so the
-  // wait ends on the second.
+  // This thread waits for the capture worker's write; a BOTH request delivers twice.
   auto handle =
       captureService->Submit(spec,
                              [pending, expected, composite, video](const CaptureResult& result)
@@ -377,8 +369,7 @@ CScreenShot::ScreenshotDeletion CScreenShot::DeleteScreenshots(const std::string
     return {ScreenshotError::NONE, 1};
   }
 
-  // with no folder configured nothing was ever written, so there is nothing to
-  // clear and no reason to call that a failure
+  // with no folder configured nothing was ever written, so there is nothing to clear
   if (dir.empty())
     return {};
 

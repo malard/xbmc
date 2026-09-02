@@ -72,7 +72,7 @@ private:
 
 /*!
  A value the setting does not offer is a client-side error, which is a different answer from
- a change the application would not keep. Both used to be a false result.
+ a change the application would not keep.
  */
 TEST(TestSettingsValueRefusal, AValueTheSettingDoesNotOfferIsInvalidParams)
 {
@@ -84,9 +84,8 @@ TEST(TestSettingsValueRefusal, AValueTheSettingDoesNotOfferIsInvalidParams)
 }
 
 /*!
- The settings manager dispatches change callbacks only once it is marked loaded, which the
- test environment never does and cannot do for one test without resetting every setting for
- the rest of the run. These two run only against a loaded settings store.
+ Change callbacks are dispatched only once the settings manager is marked loaded, which the
+ test environment never does, so these two run only against a loaded settings store.
  */
 TEST(TestSettingsValueRefusal, DISABLED_AChangeAHandlerDeclinesIsUnavailable)
 {

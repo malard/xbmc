@@ -18,9 +18,7 @@ namespace JSONRPC
 
 /*! \brief Translate an EPG tag's cast string into a Video.Cast array.
 
- An EPG tag carries its cast as one separator-joined string of names, while the generic list
- types declare the field as Video.Cast, whose entries require a role and an order as well as a
- name. The EPG format carries neither, so the role is empty and the order is the position in
+ The EPG format carries names only, so the role is empty and the order is the position in
  the string.
 
  \param cast the cast as CPVREpgInfoTag::Serialize writes it
@@ -30,9 +28,8 @@ CVariant TranslateEpgCast(const std::string& cast);
 
 /*! \brief The fields a broadcast nested inside a channel answers with.
 
- One field of the parent names the whole sub-object, leaving its caller no way to select
- within it, so it answers with everything PVR.Fields.Broadcast declares. Read from the
- service description rather than restated, so a field added there reaches the nested copy.
+ Everything PVR.Fields.Broadcast declares, read from the service description so a field
+ added there reaches the nested copy.
 
  \return the field names, empty when the service description has not been parsed
  */

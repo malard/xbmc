@@ -60,12 +60,9 @@ namespace JSONRPC
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
 
     /*!
-     \brief Diagnoses an item FillFileItemList could not resolve
+     \brief Diagnoses an item FillFileItemList dropped without saying why
 
-     FillFileItemList drops whatever it cannot resolve rather than saying why, so an empty
-     list cannot on its own distinguish a malformed request from one that named something
-     real that is now gone. The caches are bypassed so a cached hit cannot mask storage
-     that has gone away.
+     Bypasses the caches so a cached hit cannot mask storage that has gone away.
 
      \param item A single item as given by the client
      \return NotFound, Unavailable, or InvalidParams when nothing better applies
@@ -75,8 +72,7 @@ namespace JSONRPC
   private:
     static void Sort(CFileItemList &items, const CVariant& parameterObject);
     /*!
-     \param epgRecording The recording behind this item's EPG tag, shared by every field that
-            needs it. Engaged holding nothing means the lookup ran and found none.
+     \param epgRecording The item's EPG recording, looked up once; engaged and null when none
      */
     static bool GetField(const std::string& field,
                          const CVariant& info,

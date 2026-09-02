@@ -45,8 +45,7 @@ namespace JSONRPC
     /*!
      \brief Answers the info labels a caller names
 
-     Also serves the deprecated XBMC.GetInfoLabels, which is the same method
-     under the name it was given before the interface stopped being branded.
+     Also serves the deprecated XBMC.GetInfoLabels.
      */
     static JSONRPC_STATUS GetInfoLabels(const std::string& method,
                                         ITransportLayer* transport,

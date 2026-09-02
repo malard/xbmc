@@ -26,11 +26,7 @@ constexpr std::array<const char*, 6> IDENTIFIERS{
 
 } // unnamed namespace
 
-/*!
- Drives the shipped schema rather than a fixture of its own: the union is the
- change these tests are here for, so validating anything else would prove
- nothing about what a client reaches.
- */
+//! \brief Drives the shipped schema, so what is validated is what a client reaches
 class TestVideoLibraryRefreshSchema : public JSONServiceDescriptionTestBase
 {
 public:

@@ -34,8 +34,7 @@ std::string HTTPRequestHandlerUtils::GetRequestScheme(struct MHD_Connection* con
     StringUtils::Trim(forwarded);
     StringUtils::ToLower(forwarded);
 
-    // the header is whatever the client sent, so anything unrecognised is dropped rather
-    // than handed back for a client to compose a URL from
+    // the header is whatever the client sent, so anything unrecognised is dropped
     if (forwarded == HTTPSchemeInsecure || forwarded == HTTPSchemeSecure)
       return forwarded;
   }

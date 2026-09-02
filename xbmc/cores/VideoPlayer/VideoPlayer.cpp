@@ -6111,10 +6111,7 @@ void CVideoPlayer::UpdateContentState()
     }
   }
 
-  // A subtitle that is hidden has its stream closed (see the
-  // PLAYER_SET_SUBTITLESTREAM_VISIBLE handler), yet it remains the selected one.
-  // The indices above are derived from the open streams, so without this the
-  // next stream open of any type would report the selection as gone.
+  // A hidden subtitle's stream is closed but it stays selected; carry the selection across.
   if (m_content.m_subtitleIndex >= 0)
     m_content.m_selectedSubtitleIndex = m_content.m_subtitleIndex;
   else if (m_content.m_selectedSubtitleIndex >= 0 &&

@@ -92,10 +92,6 @@ namespace JSONRPC
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
 
     /*! \brief Add how a file was played to an item that already says what it is.
-
-     A row in the files table records playback state - the play count, when it was last played,
-     where it was left, what streams it turned out to have. It describes nothing about the item,
-     so it must be added to a description rather than used as one.
      \param fileDetails the tag filled from the files table
      \param details the tag to add it to, left otherwise untouched
     */
@@ -115,9 +111,6 @@ namespace JSONRPC
     static JSONRPC_STATUS RemoveVideo(const CVariant &parameterObject);
 
     /*! \brief Queue a refresh of the library item an identifier names
-
-     The deprecated per-type methods carry their id at the top level of the call, so they name
-     the parameter object as the identifier as well.
      \param identifier the object carrying the item's library id
      \param parameterObject the call's parameters, for the options the refresh takes
     */

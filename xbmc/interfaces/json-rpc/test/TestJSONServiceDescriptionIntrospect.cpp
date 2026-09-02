@@ -48,10 +48,8 @@ class TestJSONServiceDescriptionIntrospect : public JSONServiceDescriptionTestBa
 };
 
 /*!
- Feeds the full generated service description through the parser and asserts
- that every definition survives to the Introspect output. A definition that a
- parser gate rejects without queueing a missing reference vanishes silently;
- the exact counts here are the net that catches that.
+ A definition a parser gate rejects vanishes silently, so the counts of what
+ reaches the Introspect output are exact.
  */
 TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect)
 {
@@ -95,8 +93,7 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
   }
 }
 
-//! \brief The header of an Introspect answer identifies the API, and Kodi has not been called
-//! XBMC since 2014
+//! \brief The service header identifies the API as Kodi, not XBMC
 TEST_F(TestJSONServiceDescriptionIntrospect, TheServiceHeaderIsNotBranded)
 {
   CVariant result;
@@ -108,8 +105,7 @@ TEST_F(TestJSONServiceDescriptionIntrospect, TheServiceHeaderIsNotBranded)
       << "service description: " << result["description"].asString();
 }
 
-//! \brief A method's declared errors are served under it, and an answer filtered to the
-//! method carries their descriptions as it does the types it references
+//! \brief A method's declared errors are served under it, with their descriptions
 TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredErrorsAreServedWithTheMethod)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Errors": {

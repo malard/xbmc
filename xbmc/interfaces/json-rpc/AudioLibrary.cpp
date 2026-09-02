@@ -1139,9 +1139,7 @@ bool CAudioLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
   int albumID = (int)parameterObject["albumid"].asInteger(-1);
   int genreID = (int)parameterObject["genreid"].asInteger(-1);
 
-  // Gather into a list of our own. The sort below applies to what this call resolved, and
-  // callers accumulate several items into one list - sorting theirs would reorder the items
-  // they resolved earlier.
+  // Sort only what this call resolved; the caller's list may already hold items.
   CFileItemList resolved;
 
   bool success = false;

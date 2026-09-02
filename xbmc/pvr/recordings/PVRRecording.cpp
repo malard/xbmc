@@ -527,9 +527,8 @@ std::string CPVRRecording::EpisodeName() const
 
 void CPVRRecording::UpdatePath()
 {
-  // The path is this recording's key into the video database, where its play count, resume
-  // point and stream details are stored, so it is built from the programme title and episode
-  // name the client supplied rather than from the members those now live in.
+  // The path is the recording's key into the video database, so it keeps the client's
+  // programme title and episode name.
   m_strFileNameAndPath =
       CPVRRecordingsPath(m_bIsDeleted, m_bRadio, m_strDirectory, ProgrammeTitle(), m_iSeason,
                          m_iEpisode, GetYear(), EpisodeName(), m_strChannelName, m_recordingTime,

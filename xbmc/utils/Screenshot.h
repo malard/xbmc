@@ -53,11 +53,7 @@ public:
 
   //! \brief Screenshot of the given content, written before this returns.
   //!
-  //! The fire-and-forget overloads choose the destination inside the capture
-  //! callback, so a caller learns neither what was written nor when it was
-  //! finished. This one names the files first, waits for the encoder, and hands
-  //! the names back. It never prompts for the folder: an unset one is
-  //! NO_FOLDER, because the prompt belongs to a caller with a keyboard.
+  //! Never prompts for the folder: an unset one is NO_FOLDER.
   //! \param content what to capture
   //! \param target file name under the configured folder; auto-numbered when
   //!               empty. Names the composite, the video frame taking the
@@ -74,10 +70,7 @@ public:
 
   //! \brief Delete written screenshots from the configured folder.
   //!
-  //! A client that takes screenshots has no other way to reclaim the space, and
-  //! the auto-numbered name runs out at 65535. Deleting everything clears every
-  //! .png in the folder, whoever wrote it, so the folder wants to be one Kodi
-  //! owns; nothing outside it is reachable either way.
+  //! With no file, removes every .png in the folder.
   //! \param file one screenshot, named either as TakeScreenshotSync answers or
   //!             as a bare file name; every .png in the folder when empty
   static ScreenshotDeletion DeleteScreenshots(const std::string& file = "");

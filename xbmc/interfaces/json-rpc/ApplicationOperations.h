@@ -32,12 +32,12 @@ namespace JSONRPC
 
   protected:
     /*!
-     \brief The Application.LogLevel name of a log level, or an empty string for a value outside the scale
+     \brief The Application.LogLevel name of a log level; empty for a value outside the scale
      */
     static std::string LogLevelName(int level);
 
     /*!
-     \brief The log level an Application.LogLevel name stands for, or LOG_LEVEL_NONE - 1 for an unknown name
+     \brief The log level an Application.LogLevel name stands for; LOG_LEVEL_NONE - 1 if unknown
      */
     static int LogLevelFromName(const std::string& name);
 

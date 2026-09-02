@@ -68,10 +68,9 @@ inline std::string ToJson(const CVariant& variant)
 }
 
 /*!
- \brief One type's entry, as the generated service description ships it
-
- Read rather than restated, so that a declaration which never reaches the schema fails here
- instead of passing. The result is ready to hand to CJSONServiceDescription::AddType.
+ \brief One type's entry as the generated service description ships it, ready for
+        CJSONServiceDescription::AddType. Read rather than restated, so that a declaration
+        which never reaches the schema fails here.
  */
 inline std::string ShippedDefinition(const std::string& type)
 {

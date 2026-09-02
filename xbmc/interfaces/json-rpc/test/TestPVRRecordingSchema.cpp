@@ -22,12 +22,7 @@ using namespace PVR;
 namespace
 {
 
-/*!
- \brief A type's definition, read out of the shipped service description
-
- Read rather than restated here, so that a declaration which never reaches the
- schema fails instead of passing.
- */
+//! \brief A type's definition, read out of the shipped service description
 CVariant Definition(const std::string& type)
 {
   for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
@@ -92,12 +87,6 @@ CPVRRecording ClientRecording()
 
 } // unnamed namespace
 
-/*!
- CFileItemHandler::GetField only ever answers fields the caller asked for, and
- a caller may only ask for members of the relevant Fields enum. So anything a
- Serialize writes that the schema does not declare is written and then
- discarded, with nothing to warn that it is happening.
- */
 TEST(TestPVRRecordingSchema, EveryValueTheRecordingAddsIsRequestable)
 {
   // CPVRRecording::Serialize starts from CVideoInfoTag::Serialize, which writes the whole
@@ -129,11 +118,6 @@ TEST(TestPVRRecordingSchema, EveryValueTheRecordingAddsIsRequestable)
   }
 }
 
-/*!
- A field a caller may ask for that the details type does not declare arrives
- with no documented type or meaning. Half a field addition landing on its own
- says nothing at runtime, in either direction.
- */
 TEST(TestPVRRecordingSchema, EveryRequestableFieldIsDeclared)
 {
   const std::set<std::string> declared{DeclaredProperties()};

@@ -359,8 +359,8 @@ protected:
     return StringUtils::Format("bytes={}-{}", start, end);
   }
 
-  //! \brief Calls Files.PrepareDownload for a test file over HTTP POST and returns the result
-  //! object, optionally sending the given X-Forwarded-Proto header with the request.
+  //! \brief Files.PrepareDownload for a test file over HTTP POST, with an optional
+  //!        X-Forwarded-Proto header.
   CVariant PrepareDownloadOfTestFile(const std::string& testFile,
                                      const std::string& forwardedProtocol = "")
   {
@@ -1147,8 +1147,7 @@ TEST_F(TestWebServerAuth, CanStatWithStoredCredentials)
   ASSERT_EQ(0, CFile::Stat(CURL{GetUrlOfTestFile(TEST_FILES_RANGES)}, &buffer));
 }
 
-//! \brief Points debug.screenshotpath somewhere no media source covers, which is
-//!        the situation the screenshot allowance exists for.
+//! \brief Points debug.screenshotpath somewhere no media source covers.
 class TestWebServerScreenshots : public TestWebServer
 {
 protected:
@@ -1172,8 +1171,8 @@ protected:
     TestWebServer::TearDown();
   }
 
-  //! \brief Write a file, and answer the /vfs URL of the special:// path that
-  //!        GUI.TakeScreenshot would hand a client for it.
+  //! \brief Writes a file and answers the /vfs URL of the special:// path
+  //!        GUI.TakeScreenshot would hand out for it.
   std::string WriteFile(const std::string& directory, const std::string& specialPath)
   {
     CFile file;

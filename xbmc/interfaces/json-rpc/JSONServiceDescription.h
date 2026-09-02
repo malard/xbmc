@@ -89,9 +89,8 @@ namespace JSONRPC
     /*!
      \brief Whether the value still exists but should no longer be relied on
 
-     The "deprecated" annotation JSON Schema 2020-12 defines, which is valid on
-     any schema, so a single property of a type can carry it. The description
-     says what to use instead.
+     The JSON Schema 2020-12 annotation, valid on any schema, so a single property
+     of a type can carry it. The description says what to use instead.
      */
     bool deprecated = false;
 
@@ -107,8 +106,10 @@ namespace JSONRPC
     std::vector<JSONSchemaTypeDefinitionPtr> unionTypes;
 
     /*!
-     \brief Whether or not the parameter is
-     optional
+     \brief Whether or not the parameter is optional
+
+     Set by the containing object schema's "required" array or the containing
+     content descriptor, never by the schema itself.
      */
     bool optional = true;
 
@@ -250,8 +251,7 @@ namespace JSONRPC
      \brief Whether the method still works but should no longer be called
 
      Reported through JSONRPC.Introspect and as OpenRPC's deprecated flag. The
-     description says what to use instead; when it is removed is a matter for
-     the API documentation rather than the wire.
+     description says what to use instead.
      */
     bool deprecated = false;
     /*!

@@ -53,8 +53,7 @@ void CApplicationPlayer::ResetPlayer()
   std::unique_lock lock(m_playerLock);
   m_pPlayer.reset();
 
-  // the cached stream indices describe the player that has just gone away, and
-  // they outlive it long enough to be served for the next one
+  // the cached stream indices describe the player that has just gone away
   m_iAudioStream = -1;
   m_iVideoStream = -1;
   m_iSubtitleStream = -1;

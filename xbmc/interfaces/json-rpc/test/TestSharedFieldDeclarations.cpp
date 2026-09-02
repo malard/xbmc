@@ -19,12 +19,7 @@
 namespace
 {
 
-/*!
- \brief How each type declaring a property declares it, keyed by type name
-
- Read out of the shipped service description rather than restated here, so a
- declaration that never reaches the schema fails instead of passing.
- */
+//! \brief How each type declaring a property declares it, keyed by type name
 std::map<std::string, std::string> DeclarationsOf(const std::string& property)
 {
   std::map<std::string, std::string> declarations;
@@ -59,9 +54,7 @@ std::map<std::string, std::string> DeclarationsOf(const std::string& property)
 
 /*!
  A property carried by several types is one value with one meaning, so every
- type carrying it has to describe the same shape. A type that disagrees
- describes a value nothing sends, and a client generated from it branches on a
- type it will never receive.
+ type carrying it has to describe the same shape.
  */
 void ExpectOneDeclaration(const std::string& property)
 {

@@ -17,11 +17,7 @@ class CVariant;
 namespace JSONRPC
 {
 
-/*! \brief Translate the "shuffle" parameter into the state it asks for.
-
- The parameter is either the state itself or "toggle", so what it means depends on the state
- the target is already in.
-
+/*! \brief Translate the "shuffle" parameter, a state or "toggle", into the state it asks for.
  \param shuffle the parameter as given by the client
  \param current whether the target is shuffled at the moment
  \return the requested state, or nothing when that is the current state already
@@ -35,10 +31,7 @@ std::optional<bool> ParseShuffleState(const CVariant& shuffle, bool current);
 KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
 
 /*! \brief Translate the "repeat" parameter into the state it asks for.
-
- As ParseRepeatState above, but also accepts "cycle", which steps none -> all -> one -> none
- from the state the target is already in.
-
+ Also accepts "cycle", which steps none -> all -> one -> none from the current state.
  \param repeat the parameter as given by the client
  \param current the state of the target at the moment
  \return the requested state

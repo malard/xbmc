@@ -107,8 +107,8 @@ protected:
 } // unnamed namespace
 
 /*!
- An empty set still answers with the label and identifier the handler supplies itself, so a
- lookup that stops working reads as a thin broadcast rather than as a failure.
+ The schema enum and BroadcastFields() must agree exactly; an empty set on either side is a
+ lookup failure, not agreement.
  */
 TEST_F(TestPVRBroadcastFields, EveryFieldTheSchemaOffersIsAnswered)
 {

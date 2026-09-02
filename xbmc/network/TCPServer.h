@@ -62,6 +62,7 @@ namespace JSONRPC
       CTCPClient();
       //Copying a CCriticalSection is not allowed, so copy everything but that
       //when adding a member variable, make sure to copy it in CTCPClient::Copy
+      // worker state is deliberately not copied
       CTCPClient(const CTCPClient& client);
       CTCPClient& operator=(const CTCPClient& client);
       ~CTCPClient() override = default;
@@ -77,9 +78,8 @@ namespace JSONRPC
       /*!
        * \brief Hand a received buffer to this connection's own thread, starting it if needed.
        *
-       * The server thread must never execute a request itself: a handler that raises a modal
-       * dialog does not return until a human dismisses it, and every other client - plus the
-       * accept() of new ones - would wait behind it.
+       * The server thread never executes a request itself: a handler may block in a modal
+       * dialog, and every other client would wait behind it.
        *
        * \param self shared ownership of this client, kept alive by the worker
        * \param host the server, kept alive by the worker through its own shared_ptr
@@ -90,8 +90,7 @@ namespace JSONRPC
                    int length);
 
       /*!
-       * \brief Ask the worker to finish and exit. Signals only - it never joins, because the
-       *        worker may be blocked in a dialog and waiting for it would restore the wedge.
+       * \brief Ask the worker to finish; never joins, as the worker may be blocked in a dialog.
        */
       void StopWorker();
 
@@ -107,8 +106,9 @@ namespace JSONRPC
       void Copy(const CTCPClient& client);
 
       /*!
-       * \brief Ask the server thread to drop this connection. A worker must not close the
-       *        socket itself - the server thread may be in select() on that descriptor.
+       * \brief Ask the server thread to drop this connection.
+       *
+       * Only the server thread closes a socket: it may be in select() on that descriptor.
        */
       void RequestClose() { m_closing = true; }
 
@@ -157,9 +157,8 @@ namespace JSONRPC
     bool m_nonlocal;
     void* m_sdpd;
 
-    // A worker is handed the server it must call back into and may still be inside a request -
-    // blocked on a modal dialog, say - when StopServer() drops the instance below. Holding a
-    // reference for the duration is what keeps that from becoming a use-after-free.
+    // Handed to each worker, so a request still running when StopServer() drops ServerInstance
+    // keeps the server alive until it returns.
     std::weak_ptr<CTCPServer> m_self;
 
     static std::shared_ptr<CTCPServer> ServerInstance;

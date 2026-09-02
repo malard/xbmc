@@ -23,12 +23,7 @@ using namespace JSONRPC;
 namespace
 {
 
-/*!
- \brief The definitions of the shipped service description, by name
-
- Read out of what actually ships rather than restated here, so that a
- definition which never reaches the schema fails rather than passes.
- */
+//! \brief The definitions of the shipped service description, by name
 std::map<std::string, CVariant> ShippedDefinitions(const char* const entries[], size_t count)
 {
   std::map<std::string, CVariant> definitions;
@@ -137,9 +132,8 @@ std::vector<std::string> DeclaredDeprecations()
 } // unnamed namespace
 
 /*!
- The annotation is the only warning a client gets on the wire, so anything
- deprecated has to be listed here as well - which is what makes the two tests
- below cover the whole schema rather than whatever they happen to name.
+ Every deprecation the schema declares must be listed here, so the tests below
+ cover the whole schema rather than whatever they happen to name.
  */
 TEST(TestDeprecatedMethodSchema, EveryDeprecationIsAccountedFor)
 {
@@ -191,10 +185,8 @@ TEST(TestDeprecatedMethodSchema, ADeprecatedPropertyNamesAReplacementThatExists)
 }
 
 /*!
- A rename is the same implementation under two names, so a client that follows
- the description must not find the request or the answer has changed underneath
- it. A method superseded by one of a different shape is exempt by construction -
- rewriting the request is what the migration guide is for.
+ A rename is the same implementation under two names, so request and answer must
+ agree; a method superseded under a different signature is exempt.
  */
 TEST(TestDeprecatedMethodSchema, ARenamedMethodAgreesWithItsReplacement)
 {
@@ -241,10 +233,8 @@ TEST(TestDeprecatedMethodSchema, AReplacementIsNotItselfDeprecated)
 }
 
 /*!
- When something is removed is a release decision that gets revised; the schema
- is the contract a client reads over the wire. Naming a version here would put
- a date in the one place it cannot be changed without an API change, so the
- removal schedule lives in the API documentation instead.
+ A removal schedule is revised between releases, so it lives in the API
+ documentation rather than in the schema a client reads over the wire.
  */
 TEST(TestDeprecatedMethodSchema, TheSchemaDoesNotDateItsOwnRemovals)
 {

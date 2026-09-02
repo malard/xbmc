@@ -18,9 +18,7 @@
 
 namespace
 {
-/*!
- \brief A type's definition, read out of the shipped service description
- */
+//! \brief A type's definition, read out of the shipped service description
 CVariant Definition(const std::string& type)
 {
   for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)

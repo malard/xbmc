@@ -93,7 +93,7 @@ namespace JSONRPC
                                          CDateTime& end);
 
     /*!
-     \brief The broadcasts of an EPG overlapping [start, end), or all of them when the range is invalid
+     \brief The broadcasts of an EPG overlapping [start, end), or all of them for an invalid range
      */
     static std::vector<std::shared_ptr<PVR::CPVREpgInfoTag>> GetBroadcastsInRange(
         const PVR::CPVREpg& epg, const CDateTime& start, const CDateTime& end);

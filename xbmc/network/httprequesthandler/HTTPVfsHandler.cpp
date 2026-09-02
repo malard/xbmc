@@ -25,9 +25,8 @@ namespace
 {
 constexpr std::string_view SCREENSHOT_FOLDER = "special://screenshots/";
 
-// A screenshot named the way GUI.TakeScreenshot names one: the screenshot
-// folder and a plain file name. A name carrying a path is refused rather than
-// resolved, so the folder cannot be walked out of into the rest of the disk.
+// A screenshot as GUI.TakeScreenshot names one: the screenshot folder and a plain file name.
+// A name carrying a path is refused, so the folder cannot be walked out of.
 bool IsScreenshot(const std::string& path)
 {
   if (!StringUtils::StartsWithNoCase(path, SCREENSHOT_FOLDER))
@@ -53,9 +52,6 @@ CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest &request)
       bool accessible = false;
       if (file.substr(0, 8) == "image://")
         accessible = true;
-      // a screenshot sits in a folder that is not a media source, so nothing
-      // below would ever admit one, and a client that GUI.TakeScreenshot has
-      // just handed a name to has no other way to fetch it
       else if (IsScreenshot(file))
         accessible = true;
       else

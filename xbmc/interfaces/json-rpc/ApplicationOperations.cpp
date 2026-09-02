@@ -153,9 +153,7 @@ JSONRPC_STATUS CApplicationOperations::SetLogLevel(const std::string& method,
 
   if (level >= LOG_LEVEL_NONE)
   {
-    // The toggle is what the interface and CAdvancedSettings::SetDebugMode key off, so keep it
-    // truthful, then set the exact level asked for: SetDebugMode only ever picks between the
-    // hint and the two debug values, and the toggle cannot express none.
+    // SetDebugMode cannot express none or debugfreemem, so the exact level is applied after it.
     settings->SetBool(CSettings::SETTING_DEBUG_SHOWLOGINFO, level >= LOG_LEVEL_DEBUG);
     CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = level;
     CServiceBroker::GetLogging().SetLogLevel(level);

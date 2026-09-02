@@ -231,10 +231,8 @@ TEST_F(TestVideoPlayer, UpdateHasVideoAudioKeepsFlagsWhenStreamsOpen)
 
 TEST_F(TestVideoPlayer, SubtitleSelectionSurvivesTheStreamBeingClosed)
 {
-  // hiding a bitmap subtitle whose language differs from the audio's closes the
-  // subtitle stream (the PLAYER_SET_SUBTITLESTREAM_VISIBLE handler), but it is
-  // still the selected subtitle. The next stream open recomputes the reported
-  // indices from the open streams, which must not drop that selection.
+  // Hiding a bitmap subtitle closes its stream while it stays the selected one;
+  // recomputing indices on the next open must not drop that selection.
   CTestPlayerCallback playercallback;
   CTestVideoPlayer player(playercallback);
 

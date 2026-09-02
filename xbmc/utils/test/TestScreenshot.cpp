@@ -19,9 +19,8 @@
 
 using Error = CScreenShot::ScreenshotError;
 
-//! \brief Exercises deletion against a real screenshot folder. Taking a
-//!        screenshot is not covered here: it needs a render loop to deliver a
-//!        frame, which this harness has not got.
+//! \brief Exercises deletion against a real screenshot folder. Taking one is not covered:
+//!        it needs a render loop to deliver a frame.
 class TestScreenshotDeletion : public testing::Test
 {
 protected:

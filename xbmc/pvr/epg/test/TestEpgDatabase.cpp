@@ -27,8 +27,8 @@ namespace
 constexpr int EPG_ID = 1;
 constexpr unsigned int BROADCAST_UID = 4242;
 
-// 2099-12-31 23:59:00 UTC as a seconds count. Beyond the signed 32-bit ceiling of
-// 2038-01-19, and within the unsigned one of 2106-02-07 that the insert side uses.
+// 2099-12-31 23:59:00 UTC: past the signed 32-bit ceiling of 2038-01-19, within the
+// unsigned one of 2106-02-07 that the insert side uses.
 constexpr int64_t FAR_FUTURE_END = 4102444740;
 constexpr int64_t START = 4102441140; // an hour earlier
 
@@ -45,8 +45,7 @@ protected:
     ASSERT_EQ(m_database->Connect("TestEpgDatabase", settings, true),
               CDatabase::ConnectionState::STATE_CONNECTED);
 
-    // inserted directly rather than through Persist, so that the row holds exactly the
-    // value under test and the read path is the only thing being measured
+    // inserted directly so that only the read path is under test
     ASSERT_TRUE(m_database->ExecuteQuery(
         StringUtils::Format("REPLACE INTO epgtags (idEpg, iBroadcastUid, iStartTime, iEndTime, "
                             "sTitle) VALUES ({}, {}, {}, {}, 'Far Future Programme');",
@@ -61,8 +60,7 @@ CDateTime AsDateTime(int64_t seconds)
   return CDateTime(static_cast<time_t>(seconds));
 }
 
-// gtest prints a CDateTime as its raw bytes, which says nothing about which year came
-// back. Comparing the rendered date puts the wrapped value in the failure itself.
+// gtest prints a CDateTime as raw bytes; the rendered date names the year in a failure
 std::string AsText(const CDateTime& value)
 {
   return value.IsValid() ? value.GetAsDBDateTime() : "invalid";
@@ -76,9 +74,7 @@ std::string Expected(int64_t seconds)
 } // unnamed namespace
 
 /*!
- The column is written as an unsigned 32-bit count and was read back as a signed one, so
- every stored time from 2038-01-19 onward came back as a date in 1901-1969. A 24/7 channel
- whose programme is given a far-future end is the ordinary way to meet this.
+ The column holds an unsigned 32-bit count, so a time past 2038-01-19 reads back as stored.
  */
 TEST_F(TestEpgDatabase, ATagKeepsAnEndTimePast2038)
 {
@@ -91,8 +87,7 @@ TEST_F(TestEpgDatabase, ATagKeepsAnEndTimePast2038)
 }
 
 /*!
- The guide window is sized from these, so a wrapped value does not merely display wrongly -
- it reports the EPG as having ended decades ago.
+ The guide window is sized from the last end time.
  */
 TEST_F(TestEpgDatabase, TheLastEndTimeIsNotWrapped)
 {

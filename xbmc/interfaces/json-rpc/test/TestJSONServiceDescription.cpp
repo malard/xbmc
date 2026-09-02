@@ -292,9 +292,8 @@ TEST_F(TestJSONServiceDescription, MutuallyReferencingTypes)
 }
 
 /*!
- A derived type registered before its base is replayed only once the base has parsed. Replayed
- against the base's empty stub it would copy AnyValue as its type and skip its own properties,
- leaving a validator that accepts anything for the derived part with nothing in the log.
+ A derived type registered before its base is replayed only once the base has parsed, so its
+ own properties and defaults are enforced.
  */
 TEST_F(TestJSONServiceDescription, ForwardCompositionReference)
 {
@@ -560,8 +559,7 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
   EXPECT_FALSE(result["methods"]["Test.New"].isMember("deprecated"));
 }
 
-//! \brief A client that asks for no descriptions is trimming documentation, not asking to be
-//! left unaware that a method it calls is going away
+//! \brief Suppressing descriptions must not also drop the deprecation annotation
 TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppressed)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
@@ -596,8 +594,7 @@ TEST_F(TestJSONServiceDescription, AMethodIsNotDeprecatedByDefault)
   EXPECT_FALSE(result["methods"]["Test.Plain"].isMember("deprecated"));
 }
 
-//! \brief 2020-12 allows the annotation on any schema, so a single property of a type can
-//! carry it without the whole type being deprecated
+//! \brief A single property can carry the annotation without the whole type being deprecated
 TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {
@@ -617,8 +614,7 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
   EXPECT_FALSE(properties["new"].isMember("deprecated"));
 }
 
-//! \brief The annotation is a fact about the contract, so it outlives the documentation a
-//! client asked not to be sent
+//! \brief The annotation is part of the contract, so it outlives suppressed descriptions
 TEST_F(TestJSONServiceDescription, ADeprecatedPropertySurvivesDescriptionsBeingSuppressed)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {

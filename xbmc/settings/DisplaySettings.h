@@ -30,8 +30,8 @@ public:
   static CDisplaySettings& GetInstance();
 
   /*!
-   \brief Keeps a display mode changed on this thread while it is alive, without asking whether
-   to save it. The caller takes on what the prompt exists for: that the display can show the mode.
+   \brief While alive, a display mode change on this thread skips the confirmation prompt.
+   The caller vouches that the display can show the mode.
    */
   class CConfirmedChange
   {

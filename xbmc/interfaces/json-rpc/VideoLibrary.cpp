@@ -966,8 +966,7 @@ JSONRPC_STATUS CVideoLibrary::Scan(const std::string &method, ITransportLayer *t
   std::string directory = parameterObject["directory"].asString();
   if (!directory.empty())
   {
-    // refuse a directory that belongs to no video source instead of acknowledging
-    // a scan that can never find it
+    // a directory outside every video source could never be found by the scan
     directory = CVideoDatabase::ToStoredPath(directory);
 
     CVideoDatabase videodatabase;
@@ -1094,8 +1093,7 @@ JSONRPC_STATUS CVideoLibrary::Clean(const std::string &method, ITransportLayer *
   std::string directory = parameterObject["directory"].asString();
   if (!directory.empty())
   {
-    // refuse a directory that resolves to no library path instead of
-    // acknowledging a clean that can never touch anything
+    // a directory that resolves to no library path leaves the clean nothing to touch
     const std::string contentParam = parameterObject["content"].asString();
 
     CVideoDatabase videodatabase;
@@ -1150,12 +1148,8 @@ bool CVideoLibrary::FillFileItem(
   bool filled = false;
   if (videodatabase.Open())
   {
-    // Deliberately not CVideoDatabase::LoadVideoInfo: it answers "the database knows this path",
-    // which is true of anything ever played, and the caller needs "the library describes this
-    // item". Serving a played-once plugin item from its files table row replaces the description
-    // the add-on supplied with an empty one.
-    // A tv show is held against its folder, so it is only worth asking about when the entry is
-    // one.
+    // Only a library row describes the item; the files table knows anything ever played.
+    // A tv show is keyed on its folder, so it is only asked about for a folder entry.
     CVideoInfoTag details;
     if (videodatabase.GetMovieInfo(strFilename, details) ||
         videodatabase.GetEpisodeInfo(strFilename, details) ||
@@ -1168,10 +1162,7 @@ bool CVideoLibrary::FillFileItem(
     }
     else
     {
-      // A library row already carries its own playback state, so only an item the library does
-      // not describe needs the files table - and needs it added to whatever it already says.
-      // The database still knew the path, which is what a caller building an item from one has
-      // to be told, so this counts as filled.
+      // Not a library item: add the files table's playback state to what the entry already says.
       CVideoInfoTag fileDetails;
       if (videodatabase.GetFileInfo(strFilename, fileDetails))
       {
@@ -1354,9 +1345,7 @@ JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
 
   if (identifier.isMember("setid"))
   {
-    // A set has no file of its own. The refresh reads the set's movies back out of the
-    // videodb:// path the database fills the item with, which the tag does not carry, so this
-    // one keeps the item it was given rather than rebuilding it from the tag.
+    // GetSetInfo fills the item with the set's videodb:// path, which the tag cannot carry.
     if (!videodatabase.GetSetInfo(static_cast<int>(identifier["setid"].asInteger()), details,
                                   &item) ||
         details.m_iDbId <= 0)
@@ -1404,8 +1393,6 @@ JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
     return NotFound;
   }
 
-  // A tv show and a season are held against a folder, an episode and a movie against their file.
-  // The tag says which, and the refresh resolves the scraper and any local NFO from it.
   item.SetFromVideoInfoTag(details);
 
   return OK;

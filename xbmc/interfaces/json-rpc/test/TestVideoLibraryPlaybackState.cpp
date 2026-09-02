@@ -17,8 +17,7 @@ using namespace JSONRPC;
 
 namespace
 {
-/*! \brief A tag as CVideoDatabase::GetFileInfo fills it: bookkeeping, and nothing that says
-    what the item is. */
+//! \brief A tag as CVideoDatabase::GetFileInfo fills it: bookkeeping, not what the item is
 CVideoInfoTag FileRow()
 {
   CVideoInfoTag fileDetails;
@@ -73,8 +72,7 @@ TEST(TestVideoLibraryPlaybackState, AddsTheStateTheFileRowCarries)
 
 TEST(TestVideoLibraryPlaybackState, LeavesThePathsAlone)
 {
-  // The stored path is the plugin url the row is keyed on. Letting it through is what made
-  // Player.GetItem report a different file on the second play than on the first.
+  // The row's paths are the plugin URL it is keyed on, not the file that plays.
   CVideoInfoTag details = PluginDescription();
   CVideoLibrary::ApplyPlaybackState(FileRow(), details);
 

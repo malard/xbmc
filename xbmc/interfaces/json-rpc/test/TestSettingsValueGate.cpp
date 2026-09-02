@@ -68,7 +68,7 @@ private:
 
 /*!
  A setting id that names nothing is not-found, which is a different answer from a
- request that did not validate. Before this, both were InvalidParams.
+ request that did not validate.
  */
 TEST(TestSettingsValueGate, AnUnknownSettingIsNotFound)
 {
@@ -85,9 +85,8 @@ TEST(TestSettingsValueGate, AnUnknownSettingIsNotFound)
 }
 
 /*!
- Visibility is a GUI predicate: advancedsettings.xml hides the debug toggle when it pins
- a log level, and hidden-value loading hides whatever it read. Neither says anything about
- whether the value is real, so a read answers for a hidden setting.
+ Visibility is a GUI predicate that says nothing about whether the value is real, so a
+ read answers for a hidden setting.
  */
 TEST(TestSettingsValueGate, AHiddenSettingCanBeRead)
 {
@@ -123,8 +122,7 @@ TEST(TestSettingsValueGate, AHiddenSettingCanBeWritten)
 
 /*!
  A disabled setting is one the interface would not let a person change either, so a write
- to it is refused - as Unavailable, which says "exists, but not now", where an unknown id
- says "does not exist". A read still answers.
+ is refused as Unavailable (exists, but not now); a read still answers.
  */
 TEST(TestSettingsValueGate, ADisabledSettingRefusesWritesAsUnavailable)
 {

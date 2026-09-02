@@ -929,8 +929,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const std::string &method, ITransportLaye
     const std::string path{parameterObject["item"]["path"].asString()};
     const bool recursive{parameterObject["item"]["recursive"].asBoolean()};
 
-    // Only a directory holding pictures is a slideshow. One holding none is a media directory
-    // and plays as a playlist, so that its videos reach the fullscreen video window.
+    // Only a directory holding pictures is a slideshow; one holding none plays as a playlist.
     CFileItemList pictures;
     CFileItemList media;
     if (ListSlideshowDirectory(path, recursive, pictures, media) && pictures.IsEmpty() &&
@@ -1122,8 +1121,7 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list, const CV
   if (list.Size() == 1)
     HandleResumeOption(optionResume, *list[0]);
 
-  // Playback is posted asynchronously, so nothing after this point can be reported
-  // back to the caller. Report an addressable single item that cannot be reached.
+  // Playback is posted asynchronously; nothing after this point can be reported to the caller.
   if (list.Size() == 1 && !IsReachable(*list[0]))
     return Unavailable;
 

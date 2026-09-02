@@ -130,9 +130,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
       }
     }
 
-    // A "files" listing is a plain directory browse and pays no database lookups for its own
-    // sake. It only consults the library when the caller asked for a property that nothing but
-    // the library can answer.
+    // A plain "files" browse only consults the library when properties were requested.
     const bool enrichFromLibrary{!parameterObject["properties"].empty()};
 
     CFileItemList filteredFiles;
@@ -333,9 +331,8 @@ bool CFileOperations::FillFileItem(
       status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
     else if (media == "files")
     {
-      // A "files" listing is untyped, so ask whichever library the entry could belong to. A
-      // directory is asked about both ways: it can be a movie or show folder as easily as an
-      // album.
+      // A "files" entry is untyped, so ask whichever library it could belong to; a folder could
+      // be a movie, a show or an album, so it is asked about in both.
       if (!MUSIC::IsAudio(*originalItem))
         status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
       if (!status && !VIDEO::IsVideo(*originalItem))
@@ -344,13 +341,10 @@ bool CFileOperations::FillFileItem(
 
     if (status)
     {
-      // A library match annotates the entry, it does not replace it. Filling from the tag
-      // adopts the matched item's path and drops the folder flag, which turns a movie folder
-      // into the movie inside it and loses the directory the caller was browsing.
+      // The library match annotates the browsed entry; keep the entry's own path, folder flag
+      // and mime type.
       item->SetPath(strFilename);
       item->SetFolder(originalItem->IsFolder());
-      // The mime type was derived from the path the tag brought with it. Restoring the
-      // original leaves it to be filled in from the entry itself, as it is for any other item.
       item->SetMimeType(originalItem->GetMimeType());
     }
 

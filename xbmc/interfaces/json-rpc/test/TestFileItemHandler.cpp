@@ -191,10 +191,8 @@ protected:
 } // unnamed namespace
 
 /*!
- An identifier the diagnosis does not account for falls through to InvalidParams, telling a
- client that named a deleted item that its request was malformed. Reading the identifiers
- from the schema is what stops that, so this asserts every declared one is answered - and
- grows on its own when the type does.
+ Every Library.Id property Playlist.Item declares must diagnose as NotFound; reading them
+ from the schema keeps this test growing with the type.
  */
 TEST_F(TestUnresolvedItemDiagnosis, EveryDeclaredIdentifierIsDiagnosedAsAMissingItem)
 {

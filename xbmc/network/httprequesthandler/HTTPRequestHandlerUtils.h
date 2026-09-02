@@ -19,9 +19,8 @@ public:
   /*!
    * \brief Returns the URI scheme by which the client reached Kodi, either "http" or "https".
    *
-   * \details A reverse proxy terminating TLS forwards the client's own scheme in
-   * X-Forwarded-Proto, which is honoured over the scheme of the connection the proxy then
-   * made to Kodi.
+   * \details X-Forwarded-Proto, set by a reverse proxy terminating TLS, is honoured over the
+   * scheme of the connection the proxy made to Kodi.
    */
   static std::string GetRequestScheme(struct MHD_Connection* connection);
 

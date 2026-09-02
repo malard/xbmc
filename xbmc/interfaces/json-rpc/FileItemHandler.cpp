@@ -54,13 +54,7 @@ using namespace XFILE;
 namespace
 {
 /*!
- \brief The members of an item that name a library entry by its identifier
-
- Read from Playlist.Item, which is the type both callers of DiagnoseUnresolvedItem take -
- Playlist.Add and Insert directly, Player.Open through the alternative that references it.
- Reading it rather than restating it means a member added to that type is diagnosed as a
- reference that has gone stale, without this having to be found and extended.
-
+ \brief The members of Playlist.Item that name a library entry by its identifier
  \return the identifier names, empty when the service description has not been parsed
  */
 std::set<std::string> LibraryIdentifiers()
@@ -77,7 +71,6 @@ std::set<std::string> LibraryIdentifiers()
     for (auto property = alternative->properties.begin(); property != alternative->properties.end();
          ++property)
     {
-      // the alternatives naming a library entry are those whose member is a Library.Id
       if (property->second->referencedType == libraryId)
         identifiers.insert(property->first);
     }
@@ -131,8 +124,7 @@ bool CFileItemHandler::GetField(const std::string& field,
       }
       else if (field == "broadcastnow" || field == "broadcastnext")
       {
-        // both slots are declared PVR.Details.Broadcast, and only the handler supplies the label
-        // that type requires and bounds the object to the fields it declares
+        // Both slots are PVR.Details.Broadcast, whose label and field set only the handler supplies
         const std::shared_ptr<const PVR::CPVRChannel> channel{item->GetPVRChannelInfoTag()};
         const std::shared_ptr<PVR::CPVREpgInfoTag> tag{
             field == "broadcastnow" ? channel->GetEPGNow() : channel->GetEPGNext()};
@@ -417,9 +409,7 @@ void CFileItemHandler::HandleFileItem(const char* ID,
     {
       if (allowFile)
       {
-        // where filetype is reported, file must agree with it: a folder's video info tag holds
-        // a file inside it - the default version for a hybrid folder, the movie itself for a
-        // movie folder matched while browsing
+        // A folder reports its own path so that file agrees with filetype
         if (fields.contains("filetype") && item->IsFolder())
         {
           object["file"] = item->GetPath().c_str();
@@ -603,8 +593,7 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
   const std::string file{item["file"].asString()};
   if (!file.empty() && !URIUtils::IsURL(file) && !CFileUtils::Exists(file, false))
   {
-    // A directory is dropped by the same rule as a missing file, but naming one here is a
-    // malformed request rather than a reference that has gone stale.
+    // A directory named as a file is a malformed request, not a reference that has gone stale
     return XFILE::CDirectory::Exists(file, false) ? InvalidParams : NotFound;
   }
 

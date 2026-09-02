@@ -277,8 +277,7 @@ void CPVROperations::FillProviderDetails(const std::shared_ptr<const CPVRProvide
 
   std::set<std::string> fields{RequestedFields(parameterObject)};
 
-  // A provider is not backed by a file item, so the serialized values are all there is to
-  // answer from.
+  // A provider has no file item, so the serialized values are all there is to answer from.
   FillDetails(provider.get(), {}, fields, object);
 
   if (append)

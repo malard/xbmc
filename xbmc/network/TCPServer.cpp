@@ -88,10 +88,6 @@ void CTCPServer::StopServer(bool bWait)
     ServerInstance->StopThread(bWait);
     if (bWait)
     {
-      // Workers hold their own reference, so a worker still blocked in a request - a modal
-      // dialog waiting on a human, say - keeps the server alive and frees it on the way out.
-      // StopThread() above has already joined the server thread, so the destructor a worker
-      // may end up running here is inert.
       ServerInstance.reset();
     }
   }
@@ -139,9 +135,6 @@ void CTCPServer::Process()
 
       for (int i = m_connections.size() - 1; i >= 0; i--)
       {
-        // A worker can ask for its connection to be dropped while we are in select(). Closing
-        // the socket is left to this thread so that a descriptor we are about to wait on can
-        // never be pulled out from under us.
         if (m_connections[i]->Closing())
         {
           CLog::Log(LOGINFO, "JSONRPC Server: Disconnection requested");
@@ -198,10 +191,6 @@ void CTCPServer::Process()
 
             if (response.empty())
             {
-              // Hand the buffer to this connection's own thread and go straight back to
-              // select(). A handler may block for as long as it likes - one that raises a modal
-              // dialog does not return until a human dismisses it - and this thread has to stay
-              // free to serve the other connections and accept new ones.
               m_connections[i]->Enqueue(m_connections[i], this, buffer, nread);
             }
           }
@@ -272,8 +261,6 @@ void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 {
   // Take a snapshot under the lock and send outside it. Each entry is a shared_ptr, so a
   // connection the Process thread drops mid-iteration stays alive until we are done with it.
-  // Holding the lock across the sends instead would park the announcement thread behind
-  // whatever the Process thread is doing, and every JSON-RPC notification with it.
   std::vector<std::shared_ptr<CTCPClient>> connections;
   {
     std::unique_lock lock(m_connectionsCritSection);
@@ -611,9 +598,8 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
                                      const char* buffer,
                                      int length)
 {
-  // Cleared here rather than in PushBuffer, which runs on the worker: a second read must not
-  // re-enter the WebSocket handshake before the first buffer has been parsed.
-  // CWebSocketClient::IsNew() is independent of this flag.
+  // Cleared on the server thread so a second read cannot re-enter the WebSocket handshake
+  // before the first buffer is parsed.
   m_new = false;
 
   bool start = false;
@@ -646,9 +632,6 @@ void CTCPServer::CTCPClient::StopWorker()
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
 {
-  // Both handles are held for the life of the worker. The server is reference counted precisely
-  // for this: StopServer() may drop the last other reference while we are still inside a
-  // request, and the pointer we hand to CJSONRPC::MethodCall has to stay valid until we return.
   while (true)
   {
     std::string buffer;
@@ -824,9 +807,8 @@ void CTCPServer::CWebSocketClient::PushBuffer(CTCPServer *host, const char *buff
   std::vector<std::string> payloads;
 
   {
-    // Unframing shares the websocket with the announcement thread and has to be locked, but the
-    // JSON-RPC calls below must not be - one of them can sit in a modal dialog, and holding the
-    // lock across that would park every announcement to this connection behind it.
+    // Unframing shares the websocket with the announcement thread and is locked; the JSON-RPC
+    // calls below are not, as one may sit in a modal dialog.
     std::unique_lock lock(m_critSection);
 
     if (m_buffer.size() + length > maxBufferLength)

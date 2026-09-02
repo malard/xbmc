@@ -36,12 +36,7 @@ public:
   }
 };
 
-/*!
- \brief A method's definition, read out of the shipped service description
-
- Read rather than restated here, so that a declaration which never reaches the
- schema fails instead of passing.
- */
+//! \brief A method's definition, read out of the shipped service description
 CVariant Method(const std::string& name)
 {
   for (const char* const entry : JSONRPC_SERVICE_METHODS)
@@ -108,8 +103,7 @@ TEST(TestPVRBroadcastRange, TheRangeOnGetBroadcastsIsOptional)
 }
 
 /*!
- A whole group without a range is the transfer the ticket is about, so the group form
- cannot be asked for one. A limit over channels has no meaning, so there is none.
+ The group form always needs a range; a limit over channels has no meaning, so there is none.
  */
 TEST(TestPVRBroadcastRange, TheGroupFormRequiresARange)
 {

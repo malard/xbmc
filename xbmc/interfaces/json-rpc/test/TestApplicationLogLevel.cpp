@@ -36,12 +36,7 @@ public:
   static int FromName(const std::string& name) { return LogLevelFromName(name); }
 };
 
-/*!
- \brief A definition out of the shipped service description, by name
-
- Read rather than restated here, so that a declaration which never reaches the
- schema fails instead of passing.
- */
+//! \brief A definition out of the shipped service description, by name
 CVariant Definition(const char* const entries[], size_t count, const std::string& name)
 {
   for (size_t index = 0; index < count; ++index)

@@ -18,12 +18,7 @@
 namespace
 {
 
-/*!
- \brief A type's definition, read out of the shipped service description
-
- Read rather than restated here, so that a declaration which never reaches the
- schema fails instead of passing.
- */
+//! \brief A type's definition, read out of the shipped service description
 CVariant Definition(const std::string& type)
 {
   for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
@@ -108,10 +103,8 @@ TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
 }
 
 /*!
- A recording is reachable from the broadcast it came from as a library item, so
- a client told one exists can call PVR.GetRecordingDetails. Listing every
- recording and matching is not an alternative: a broadcast carries neither the
- client's broadcast uid nor the channel uid that a recording is matched on.
+ A recording is reachable from its broadcast as a library item, so PVR.GetRecordingDetails
+ can follow it.
  */
 TEST(TestPVRBroadcastSchema, TheRecordingIsAddressableByItsIdentifier)
 {

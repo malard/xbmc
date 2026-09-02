@@ -60,11 +60,8 @@ private:
 /*!
  * @brief A recording made by a PVR backend.
  *
- * The inherited CVideoInfoTag members carry the same meaning here as they do for a scanned
- * video: m_strTitle is the recorded item's own title and m_strShowTitle the show it belongs
- * to, empty when it belongs to none. A PVR client instead supplies a programme title plus an
- * optional episode name, so a recorded episode arrives with the two the other way round;
- * ProgrammeTitle() and EpisodeName() are how the PVR side of Kodi reads them back.
+ * m_strTitle and m_strShowTitle keep their CVideoInfoTag meaning; the programme title and
+ * episode name a PVR client supplies are read back through ProgrammeTitle() and EpisodeName().
  */
 class CPVRRecording final : public CVideoInfoTag
 {

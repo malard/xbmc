@@ -39,9 +39,8 @@ struct PlayerState
 
 /*! \brief The playerid a client addresses a player by.
 
- A property of the player itself, so Player.GetActivePlayers publishes the id every other
- Player method accepts. It shares a range with the playlist ids, which is why the two are
- easily confused, but it does not follow whichever playlist the player is working through.
+ Published by Player.GetActivePlayers and accepted by every other Player method. Shares a
+ range with the playlist ids but is independent of the playlist the player is working through.
 
  \param player the player being addressed
  \return the playerid
@@ -50,9 +49,7 @@ KODI::PLAYLIST::Id PlayerIdOf(PlayerType player);
 
 /*! \brief The player a client's playerid names.
 
- Whether that player is running is not asked here. The notifications a client is handed still
- carry playlist-derived ids, so refusing an id for a player that is not running would reject
- ids Kodi itself has just published.
+ Does not check that the player is running; the ids notifications carry must resolve as well.
 
  \param playerid the playerid as the client gave it
  \return the player, or None when the id names none

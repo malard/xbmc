@@ -24,12 +24,7 @@ namespace
 constexpr std::array<SettingLevel, 4> VIEWER_LEVELS{SettingLevel::Basic, SettingLevel::Standard,
                                                     SettingLevel::Advanced, SettingLevel::Expert};
 
-/*!
- \brief One definition out of the shipped service description, by name.
-
- Read out of what the build generates rather than restated here, so that a method the schema
- never declares fails rather than passes.
- */
+//! \brief One definition out of the shipped service description, by name
 CVariant Definition(const char* const entries[], size_t count, const std::string& name)
 {
   for (size_t i = 0; i < count; ++i)
@@ -105,16 +100,13 @@ TEST(TestSettingLevelName, EveryLevelAViewerCanBeAtHasAName)
   }
 }
 
-//! \brief Internal is a level settings are assigned to, never one the viewer is at, and having no
-//! name is what keeps it out of an answer - CSettingsOperations declines to serialize a setting it
-//! cannot name
+//! \brief Internal is never a level the viewer is at, and having no name keeps it out of an answer
 TEST(TestSettingLevelName, InternalHasNoName)
 {
   EXPECT_EQ(nullptr, SettingLevelToString(SettingLevel::Internal));
 }
 
-//! \brief The names are a wire format: they are what a client sends and reads back, so the enum
-//! and the schema have to agree term for term
+//! \brief The names are a wire format, so the enum and the schema have to agree term for term
 TEST(TestSettingLevelName, TheNamesAreExactlyTheSchemaEnum)
 {
   std::set<std::string> named;
@@ -156,9 +148,8 @@ TEST(TestSettingsLevelSchema, TheLevelInForceCanBeSet)
 }
 
 /*!
- A listing is filtered at the level the caller passed, which defaults to standard and is not the
- level the viewer is at. Naming it in the answer is what lets a client tell the two apart without
- a second call.
+ A listing is filtered at the level the caller passed, not the level the viewer is at; the
+ answer names it so a client can tell the two apart.
  */
 TEST(TestSettingsLevelSchema, AListingNamesTheLevelItFilteredAt)
 {
@@ -181,9 +172,8 @@ TEST(TestSettingsLevelSchema, TheLevelChangeIsAnnounced)
 }
 
 /*!
- A notification's namespace is not written down anywhere - it is the announcement flag's name,
- pasted in front of the message by IJSONRPCAnnouncer. So the flag and the schema entry agree only
- by convention, and a client subscribes to a namespace that the schema promises exists.
+ The namespace is the announcement flag's name as IJSONRPCAnnouncer pastes it in front of the
+ message, so the flag and the schema entry must agree.
  */
 TEST(TestSettingsAnnouncementFlag, ItsNameIsTheNotificationNamespace)
 {
@@ -193,8 +183,7 @@ TEST(TestSettingsAnnouncementFlag, ItsNameIsTheNotificationNamespace)
   Notification(prefix + ".OnLevelChanged");
 }
 
-//! \brief A client that never calls JSONRPC.SetConfiguration is subscribed to everything in
-//! ANNOUNCE_ALL, so a flag left out of it is announced to nobody
+//! \brief A flag left out of ANNOUNCE_ALL is announced to a client that never configured itself
 TEST(TestSettingsAnnouncementFlag, ItIsDeliveredWithoutBeingAskedFor)
 {
   EXPECT_EQ(ANNOUNCEMENT::Settings, ANNOUNCEMENT::ANNOUNCE_ALL & ANNOUNCEMENT::Settings);

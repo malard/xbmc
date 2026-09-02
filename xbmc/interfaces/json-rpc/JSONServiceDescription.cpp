@@ -47,12 +47,7 @@ namespace
 //! \brief Where a reference to a global type points: the schema files keep them all here
 constexpr std::string_view DEFS_POINTER = "#/$defs/";
 
-/*!
- \brief Reduces a JSON schema reference to the identifier of a global type
-
- References are written "#/\$defs/Name" in the schema files; the registry of
- global types is keyed by the bare name.
- */
+//! \brief Reduces a reference to the bare name the registry of global types is keyed by
 std::string RefToTypeId(const std::string& reference)
 {
   if (StringUtils::StartsWith(reference, DEFS_POINTER))
@@ -186,7 +181,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "VideoLibrary.SetEpisodeDetails",               CVideoLibrary::SetEpisodeDetails },
   { "VideoLibrary.SetMusicVideoDetails",            CVideoLibrary::SetMusicVideoDetails },
   { "VideoLibrary.Refresh",                         CVideoLibrary::Refresh },
-// Deprecated in favour of VideoLibrary.Refresh above
   { "VideoLibrary.RefreshMovie",                    CVideoLibrary::RefreshMovie },
   { "VideoLibrary.RefreshTVShow",                   CVideoLibrary::RefreshTVShow },
   { "VideoLibrary.RefreshEpisode",                  CVideoLibrary::RefreshEpisode },
@@ -301,8 +295,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Settings.GetSkinSettingValue",                 CSettingsOperations::GetSkinSettingValue },
   { "Settings.SetSkinSettingValue",                 CSettingsOperations::SetSkinSettingValue },
 
-// XBMC operations, deprecated in favour of the GUI namespace above and served
-// by the same implementations
+// XBMC operations
   { "XBMC.GetInfoLabels",                           CGUIOperations::GetInfoLabels },
   { "XBMC.GetInfoBooleans",                         CGUIOperations::GetInfoBooleans },
 
@@ -357,16 +350,13 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     hasReference = true;
   }
 
-  // Whether a value is required is decided by the containing object schema's
-  // "required" array or the containing content descriptor, not by the schema
   optional = true;
 
   // Get the "description"
   if (!hasReference || (value.isMember("description") && value["description"].isString()))
     description = GetString(value["description"], "");
 
-  // A reference carries the deprecation of what it points at unless it says
-  // otherwise, so that deprecating a type deprecates every use of it
+  // A reference inherits the deprecation of what it points at unless it says otherwise
   deprecated = value["deprecated"].asBoolean(deprecated);
 
   if (hasReference)
@@ -398,8 +388,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     return true;
   }
 
-  // An "allOf" of references is the composition this schema uses for extension:
-  // every member must be a reference to a registered type
+  // Extension is an "allOf" whose every member is a reference to a registered type
   if (value.isMember("allOf") && value["allOf"].isArray())
   {
     JSONSchemaType extendedType = AnyValue;
@@ -452,8 +441,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
   // not an extending type
   if (extends.empty())
   {
-    // An "anyOf" is a union type. An array of bare type names under "type" is
-    // the weaker form of the same thing, handled by parseJSONSchemaType
+    // An "anyOf" is a union type
     if (value.isMember("anyOf"))
     {
       if (!value["anyOf"].isArray())
@@ -487,8 +475,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       if (parsedType != 0)
         type = (JSONSchemaType)parsedType;
     }
-    // Get the defined type of the parameter. An absent "type" constrains nothing and leaves
-    // the AnyValue this is constructed with; only a malformed one is an error.
+    // An absent "type" constrains nothing; only a malformed one is an error
     else if (value.isMember("type") &&
              !CJSONServiceDescription::parseJSONSchemaType(value["type"], type))
       return false;
@@ -521,8 +508,6 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       }
     }
 
-    // Requiredness of properties is an array of property names on the object
-    // schema, not a flag on each property
     if (value.isMember("required") && value["required"].isArray())
     {
       for (unsigned int requiredIndex = 0; requiredIndex < value["required"].size();
@@ -587,7 +572,6 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     else
       uniqueItems = false;
 
-    // "items" holds the single schema every array element must match
     if (value.isMember("items"))
     {
       if (!value["items"].isObject())
@@ -1015,13 +999,10 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
   if (printDescriptions && !description.empty())
     output["description"] = description;
 
-  // As for a method, this is a fact about the contract rather than
-  // documentation, so suppressing descriptions does not suppress it
+  // Reported even when descriptions are suppressed
   if (deprecated)
     output["deprecated"] = true;
 
-  // Requiredness is carried by the "required" array of the containing object
-  // schema or the containing content descriptor, never by the schema itself
   if (printDefault && optional && type != ObjectValue && type != ArrayValue)
     output["default"] = defaultValue;
 
@@ -1262,8 +1243,6 @@ bool JsonRpcMethod::Parse(const CVariant &value)
     for (unsigned int paramIndex = 0; paramIndex < value["params"].size(); paramIndex++)
     {
       CVariant parameter = value["params"][paramIndex];
-      // A parameter must be a content descriptor: a name together with the
-      // schema of the parameter's value
       if (!parameter.isMember("name") || !parameter["name"].isString() ||
           !parameter.isMember("schema") || !parameter["schema"].isObject())
       {
@@ -1370,8 +1349,7 @@ JSONRPC_STATUS JsonRpcMethod::Check(const CVariant &requestParameters, ITranspor
 bool JsonRpcMethod::parseParameter(const CVariant& value,
                                    const JSONSchemaTypeDefinitionPtr& parameter)
 {
-  // A parameter is a content descriptor: its schema wrapped together with the
-  // parameter's name, requiredness and description
+  // A parameter is a content descriptor: name, schema, requiredness and description
   parameter->name = GetString(value["name"], "");
 
   if (!parameter->Parse(value["schema"]))
@@ -1929,9 +1907,7 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     currentMethod["type"] = "method";
     if (printDescriptions && !methodIterator->second.description.empty())
       currentMethod["description"] = methodIterator->second.description;
-    // Reported even when descriptions are suppressed: a client that trims the
-    // documentation out of the answer is not asking to be kept in the dark about
-    // a method it will have to stop calling
+    // Reported even when descriptions are suppressed
     if (methodIterator->second.deprecated)
       currentMethod["deprecated"] = true;
     if (printMetadata)
@@ -1952,8 +1928,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
     currentMethod["params"] = CVariant(CVariant::VariantTypeArray);
     for (unsigned int paramIndex = 0; paramIndex < methodIterator->second.parameters.size(); paramIndex++)
     {
-      // Parameters are printed as content descriptors: the schema is wrapped
-      // together with the parameter's name, requiredness and description
       const JSONSchemaTypeDefinitionPtr& parameter =
           methodIterator->second.parameters.at(paramIndex);
       CVariant param = CVariant(CVariant::VariantTypeObject);
@@ -1963,8 +1937,7 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
 
       parameter->Print(false, true, printDescriptions, param["schema"]);
 
-      // the description describes the parameter, so it belongs to the descriptor
-      // rather than to the schema of the parameter's value
+      // The description belongs to the descriptor, not to the schema of the value
       if (param["schema"].isMember("description"))
       {
         param["description"] = param["schema"]["description"];

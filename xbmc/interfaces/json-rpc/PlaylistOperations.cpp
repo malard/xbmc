@@ -322,7 +322,6 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
       if (!requested.has_value())
         break;
 
-      // a running slideshow cannot be unshuffled
       if (!*requested)
         return FailedToExecute;
 
@@ -488,8 +487,7 @@ void CPlaylistOperations::HandleItemsParameter(PLAYLIST::Id playlistId,
 
   for (auto& itemIt : vecItems)
   {
-    // Keep the item as the client wrote it; "media" below is ours, and echoing it back
-    // would describe a request that was never made.
+    // Keep the item as the client wrote it; "media" below is added here, not requested.
     const CVariant requested{itemIt};
     bool resolved{false};
 
@@ -510,8 +508,7 @@ void CPlaylistOperations::HandleItemsParameter(PLAYLIST::Id playlistId,
           break;
       }
 
-      // FillFileItemList reports whether the list is non-empty, not whether this item
-      // contributed to it. Growth of the list is what says this one resolved.
+      // FillFileItemList reports a non-empty list, not whether this item resolved; growth says so.
       const int before{items.Size()};
       FillFileItemList(itemIt, items);
       resolved = items.Size() > before;

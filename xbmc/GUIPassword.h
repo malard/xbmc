@@ -57,8 +57,7 @@ public:
    \returns true if we're allowed to access the settings
    */
   bool CheckSettingLevelLock(const SettingLevel& level, bool enforce = false);
-  /*! \brief Checks if the current profile may move to the given settings level without being asked
-   for the master lock code, for a caller that has no viewer to ask - a JSON-RPC client, say
+  /*! \brief Whether the given settings level may be entered without a master lock prompt
    \param level - The level to check
    \returns true if the level may be entered
    */

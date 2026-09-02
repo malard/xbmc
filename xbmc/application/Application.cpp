@@ -749,9 +749,6 @@ bool CApplication::Initialize()
     CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SPLASH);
   }
 
-  // Must stay above the window activation below: that can raise a modal dialog, whose nested
-  // render loop reaches anything after it only once the dialog has been dismissed. JSON-RPC
-  // itself is initialized earlier still, in InitWindow.
   CServiceBroker::RegisterSpeechRecognition(speech::ISpeechRecognition::CreateInstance());
 
   if (!m_ServiceManager->InitStageThree(profileManager))

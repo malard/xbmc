@@ -84,8 +84,7 @@ CPVRChannel::~CPVRChannel()
 
 void CPVRChannel::Serialize(CVariant& value) const
 {
-  // add the properties of the current EPG item to the main object. This happens before the
-  // channel's own properties so that the channel wins wherever the two carry the same key.
+  // add the properties of the current EPG item before the channel's own, which win on a shared key
   const std::shared_ptr<const CPVREpgInfoTag> epg = GetEPGNow();
   if (epg)
     epg->Serialize(value);

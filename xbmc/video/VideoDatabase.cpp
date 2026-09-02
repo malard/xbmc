@@ -394,8 +394,6 @@ bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
 {
   const bool byDirectory = !directory.empty();
 
-  // a named directory is matched by the content it resolves to, which for a path
-  // below a tvshows source is "seasons" or "episodes", never "tvshows" itself
   const auto matchesContent = [byDirectory, &content](const std::string& pathContent)
   {
     if (!byDirectory)

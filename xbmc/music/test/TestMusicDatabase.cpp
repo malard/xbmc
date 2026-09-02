@@ -30,8 +30,7 @@ ADDON::ScraperPtr MakeScraper(const std::string& id, ADDON::AddonType type)
 class TestMusicDatabase : public ::testing::Test
 {
 protected:
-  // Each test gets its own database file: a test that dies mid-transaction leaks
-  // a connection holding a write lock, which would starve a sibling on the same file.
+  // Each test gets its own database file: a test that dies mid-transaction leaks a write lock.
   void Connect(const std::string& name)
   {
     DatabaseSettings settings;

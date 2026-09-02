@@ -808,9 +808,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_ERROR:
     {
-      // Playback is dispatched asynchronously, so this is the only point at which the
-      // failure can reach whoever asked for it; the stop that follows carries no error and
-      // cannot be told apart from a user stop.
+      // The stop that follows carries no error, so this is the only point the failure can be
+      // announced.
       CVariant data{CVariant::VariantTypeObject};
       data["reason"] = "error";
       CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPlaybackFailed",

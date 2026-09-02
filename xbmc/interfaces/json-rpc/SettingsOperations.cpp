@@ -392,7 +392,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
     return InvalidParams;
   }
 
-  // the value was acceptable and a change handler declined it, a display mode not kept for one
+  // A change handler declined the value, e.g. a display mode that was not kept.
   if (!changed)
     return Unavailable;
 

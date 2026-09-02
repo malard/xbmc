@@ -22,10 +22,8 @@ namespace
 constexpr unsigned int CLIENT_ID{1};
 
 /*!
- \brief A recording as a client reports one.
-
- The channel type is stated so that the recording does not have to consult the
- PVR manager for it, which no test has running.
+ \brief A recording as a client reports one, with the channel type stated so that the
+        PVR manager is never consulted for it.
  */
 PVR_RECORDING ClientRecording(const char* title, const char* episodeName)
 {
@@ -43,10 +41,8 @@ PVR_RECORDING ClientRecording(const char* title, const char* episodeName)
 } // unnamed namespace
 
 /*!
- A client reports a programme title plus an episode name, which is the opposite
- way round to the CVideoInfoTag members a recording inherits. Playing the same
- episode from the library and from the client used to answer every generic
- caller - JSON-RPC and the info labels alike - with the two swapped.
+ A client reports a programme title plus an episode name, the opposite way round to the
+ CVideoInfoTag members a recording inherits.
  */
 TEST(TestPVRRecording, AnEpisodeDescribesItselfAsAScannedOneDoes)
 {
@@ -63,8 +59,7 @@ TEST(TestPVRRecording, AnEpisodeDescribesItselfAsAScannedOneDoes)
 }
 
 /*!
- The PVR side of Kodi still has to reach what the client actually sent, and
- renaming a recording renames the programme rather than the episode.
+ The PVR side still reaches what the client sent; renaming a recording renames the programme.
  */
 TEST(TestPVRRecording, AnEpisodeStillReportsWhatTheClientSent)
 {
@@ -80,8 +75,7 @@ TEST(TestPVRRecording, AnEpisodeStillReportsWhatTheClientSent)
 }
 
 /*!
- A recording of anything that is not an episode has its own title and belongs
- to no show, exactly as a scanned film does.
+ A recording that is not an episode has its own title and belongs to no show, as a film does.
  */
 TEST(TestPVRRecording, ARecordingThatIsNotAnEpisodeBelongsToNoShow)
 {
@@ -99,11 +93,8 @@ TEST(TestPVRRecording, ARecordingThatIsNotAnEpisodeBelongsToNoShow)
 }
 
 /*!
- The path is this recording's key into the video database, where its play
- count, resume point and stream details are stored. It is built from the
- programme title and then the episode name, which is what the client sent and
- what it was built from before those two moved between members - so every
- stored playback state on an existing installation still keys on it.
+ The path keys the recording's playback state in the video database, so it is still built
+ from the programme title and then the episode name.
  */
 TEST(TestPVRRecording, ThePathKeysOnTheProgrammeTitleAndThenTheEpisodeName)
 {

@@ -21,12 +21,7 @@ using namespace PVR;
 namespace
 {
 
-/*!
- \brief The property names a caller may request for the given Fields type.
-
- Read out of the shipped service description rather than restated here, so
- that a field which never reaches the schema fails rather than passes.
- */
+//! \brief The property names a caller may request for the given Fields type
 std::set<std::string> RequestableFields(const std::string& fieldsType)
 {
   for (const char* const entry : JSONRPC::JSONRPC_SERVICE_TYPES)
@@ -54,10 +49,8 @@ std::set<std::string> RequestableFields(const std::string& fieldsType)
 } // unnamed namespace
 
 /*!
- CFileItemHandler::GetField only ever answers fields the caller asked for, and
- a caller may only ask for members of the relevant Fields enum. So anything a
- Serialize writes that the schema does not declare is written and then
- discarded, with nothing to warn that it is happening.
+ A caller may only ask for members of the Fields enum, so anything Serialize
+ writes that the schema does not declare is silently discarded.
  */
 TEST(TestPVRProviderSchema, EverySerializedValueIsRequestable)
 {
