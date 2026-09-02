@@ -16,8 +16,11 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <condition_variable>
+#include <optional>
 #include <queue>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -244,6 +247,13 @@ private:
   size_t m_completing{0};
   Workers m_workers;
   size_t m_idleWorkers{0};
+
+  // Jobs CancelJobs has taken off the queues whose abort callbacks have not run yet, and the
+  // one whose callback is running now.
+  JobQueue m_aborting;
+  std::optional<unsigned int> m_abortingId;
+  std::thread::id m_abortingThread;
+  std::condition_variable_any m_abortDone;
 
   mutable CCriticalSection m_section;
   CEvent m_jobEvent;

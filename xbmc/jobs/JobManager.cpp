@@ -103,17 +103,15 @@ void CJobManager::Restart()
 
 void CJobManager::CancelJobs()
 {
-  Processing pending;
-
   {
     std::unique_lock lock(m_section);
     m_running = false;
 
-    // clear any pending jobs
+    // queued jobs are aborted below, outside the lock; CancelJob still finds them in m_aborting
     for (auto& queue : m_jobQueue)
     {
       for (auto& wi : queue)
-        pending.emplace_back(std::move(wi));
+        m_aborting.emplace_back(std::move(wi));
       queue.clear();
     }
 
@@ -127,13 +125,30 @@ void CJobManager::CancelJobs()
                           });
   }
 
-  std::ranges::for_each(pending,
-                        [](CWorkItem& wi)
-                        {
-                          for (auto* callback : wi.GetCallbacks())
-                            callback->OnJobAbort(wi.GetId(), wi.GetJob());
-                          wi.FreeJob();
-                        });
+  while (true)
+  {
+    std::optional<CWorkItem> item;
+    {
+      std::unique_lock lock(m_section);
+      if (m_aborting.empty())
+        break;
+
+      item.emplace(std::move(m_aborting.front()));
+      m_aborting.pop_front();
+      m_abortingId = item->GetId();
+      m_abortingThread = std::this_thread::get_id();
+    }
+
+    for (auto* callback : item->GetCallbacks())
+      callback->OnJobAbort(item->GetId(), item->GetJob());
+    item->FreeJob();
+
+    {
+      std::unique_lock lock(m_section);
+      m_abortingId.reset();
+    }
+    m_abortDone.notify_all();
+  }
 
   // tell our workers to finish
   std::unique_lock lock(m_section);
@@ -210,6 +225,22 @@ void CJobManager::CancelJob(unsigned int jobID)
       return;
     }
   }
+  // or CancelJobs holds it for its abort callback
+  const auto aborting =
+      std::ranges::find_if(m_aborting, [jobID](const auto& wi) { return wi.GetId() == jobID; });
+  if (aborting != m_aborting.cend())
+  {
+    aborting->Cancel();
+    return;
+  }
+
+  // or its abort callback is running on another thread, and the owner may not go until it has returned
+  if (m_abortingId == jobID && m_abortingThread != std::this_thread::get_id())
+  {
+    m_abortDone.wait(lock, [this, jobID] { return m_abortingId != jobID; });
+    return;
+  }
+
   // or if we're processing it
   const auto it =
       std::ranges::find_if(m_processing, [jobID](const auto& wi) { return wi.GetId() == jobID; });

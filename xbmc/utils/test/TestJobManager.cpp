@@ -330,3 +330,30 @@ TEST_F(TestJobManager, CancelJobsDoesNotRunCallbacksUnderTheLock)
   observer.join();
   canceller.join();
 }
+
+TEST_F(TestJobManager, CancelJobWaitsForAnAbortCallbackInFlight)
+{
+  CServiceBroker::GetJobManager()->PauseJobs();
+
+  BlockingCallback callback;
+  Flags flags;
+  const unsigned int id = AddDumbJob(flags, &callback, CJob::PRIORITY_LOW_PAUSABLE);
+
+  std::thread canceller([]() { CServiceBroker::GetJobManager()->CancelJobs(); });
+  ASSERT_TRUE(poll([&callback]() { return callback.HasEntered(); }));
+
+  std::atomic<bool> returned{false};
+  std::thread owner(
+      [id, &returned]()
+      {
+        CServiceBroker::GetJobManager()->CancelJob(id);
+        returned = true;
+      });
+
+  EXPECT_FALSE(poll(500, [&returned]() { return returned.load(); }));
+
+  callback.Release();
+  EXPECT_TRUE(poll([&returned]() { return returned.load(); }));
+  owner.join();
+  canceller.join();
+}
