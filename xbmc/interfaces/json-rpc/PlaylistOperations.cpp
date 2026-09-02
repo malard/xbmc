@@ -44,6 +44,14 @@ const char* ReasonOf(JSONRPC_STATUS status)
   }
 }
 
+CVariant UnresolvedEntry(const CVariant& item, const std::string& reason)
+{
+  CVariant entry{CVariant::VariantTypeObject};
+  entry["item"] = item;
+  entry["reason"] = reason;
+  return entry;
+}
+
 // The error for a call that added nothing. A reference that no longer resolves is NotFound;
 // only when every entry was malformed is the request itself at fault.
 JSONRPC_STATUS StatusForNothingAdded(const CVariant& unresolved)
@@ -177,11 +185,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const std::string &method, ITransportLay
           // The file resolved but holds no picture, which the item parameter cannot express.
           CVariant item{CVariant::VariantTypeObject};
           item["file"] = list[index]->GetPath();
-
-          CVariant entry{CVariant::VariantTypeObject};
-          entry["item"] = item;
-          entry["reason"] = "invalid";
-          unresolved.push_back(entry);
+          unresolved.push_back(UnresolvedEntry(item, "invalid"));
           continue;
         }
 
@@ -492,10 +496,7 @@ void CPlaylistOperations::HandleItemsParameter(PLAYLIST::Id playlistId,
 
     if (!resolved)
     {
-      CVariant entry{CVariant::VariantTypeObject};
-      entry["item"] = requested;
-      entry["reason"] = ReasonOf(DiagnoseUnresolvedItem(requested));
-      unresolved.push_back(entry);
+      unresolved.push_back(UnresolvedEntry(requested, ReasonOf(DiagnoseUnresolvedItem(requested))));
     }
   }
 }
