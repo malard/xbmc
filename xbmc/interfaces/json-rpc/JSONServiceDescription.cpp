@@ -1288,6 +1288,36 @@ bool JsonRpcMethod::Parse(const CVariant &value)
     return false;
   }
 
+  return parseErrors(value);
+}
+
+bool JsonRpcMethod::parseErrors(const CVariant& value)
+{
+  errors.clear();
+  if (!value.isMember("errors"))
+    return true;
+
+  if (!value["errors"].isArray())
+  {
+    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined errors list", name);
+    return false;
+  }
+
+  for (unsigned int index = 0; index < value["errors"].size(); index++)
+  {
+    const std::string errorName = value["errors"][index].asString();
+    const auto description =
+        std::find_if(JSONRPC_STATUS_DESCRIPTIONS.begin(), JSONRPC_STATUS_DESCRIPTIONS.end(),
+                     [&errorName](const JsonRpcStatusDescription& candidate)
+                     { return errorName == candidate.name; });
+    if (description == JSONRPC_STATUS_DESCRIPTIONS.end())
+    {
+      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown error \"{}\"", name, errorName);
+      return false;
+    }
+    errors.push_back(&(*description));
+  }
+
   return true;
 }
 
@@ -1836,6 +1866,12 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
           getReferencedTypes(methodIterator->second.parameters.at(index), referencedTypes);
 
         getReferencedTypes(methodIterator->second.returns, referencedTypes);
+
+        for (const auto* error : methodIterator->second.errors)
+        {
+          if (std::find(errors.begin(), errors.end(), error) == errors.end())
+            errors.push_back(error);
+        }
       }
 
       for (unsigned int index = 0; index < referencedTypes.size(); index++)
@@ -1932,6 +1968,10 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant &result, ITransportLayer 
 
     methodIterator->second.returns->Print(false, false, printDescriptions,
                                           currentMethod["returns"]);
+
+    currentMethod["errors"] = CVariant(CVariant::VariantTypeArray);
+    for (const auto* error : methodIterator->second.errors)
+      currentMethod["errors"].append(error->name);
 
     result["methods"][methodIterator->second.name] = currentMethod;
   }

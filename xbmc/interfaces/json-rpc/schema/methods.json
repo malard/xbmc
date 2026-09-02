@@ -59,7 +59,10 @@
         }
       }
     ],
-    "returns": "object"
+    "returns": "object",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "JSONRPC.Version": {
     "type": "method",
@@ -99,7 +102,8 @@
       "required": [
         "version"
       ]
-    }
+    },
+    "errors": []
   },
   "JSONRPC.Permission": {
     "type": "method",
@@ -165,7 +169,8 @@
         "ExecuteAddon",
         "ControlPVR"
       ]
-    }
+    },
+    "errors": []
   },
   "JSONRPC.Ping": {
     "type": "method",
@@ -173,7 +178,8 @@
     "transport": "Response",
     "permission": "ReadData",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "JSONRPC.GetConfiguration": {
     "type": "method",
@@ -183,7 +189,8 @@
     "params": [],
     "returns": {
       "$ref": "#/$defs/Configuration"
-    }
+    },
+    "errors": []
   },
   "JSONRPC.SetConfiguration": {
     "type": "method",
@@ -241,7 +248,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Configuration"
-    }
+    },
+    "errors": [
+      "BadPermission"
+    ]
   },
   "JSONRPC.NotifyAll": {
     "type": "method",
@@ -270,7 +280,8 @@
         }
       }
     ],
-    "returns": {}
+    "returns": {},
+    "errors": []
   },
   "Player.Open": {
     "type": "method",
@@ -444,7 +455,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute",
+      "Unavailable"
+    ]
   },
   "Player.GetActivePlayers": {
     "type": "method",
@@ -479,7 +495,8 @@
           "playertype"
         ]
       }
-    }
+    },
+    "errors": []
   },
   "Player.GetPlayers": {
     "type": "method",
@@ -531,7 +548,8 @@
           "playsaudio"
         ]
       }
-    }
+    },
+    "errors": []
   },
   "Player.GetProperties": {
     "type": "method",
@@ -560,7 +578,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/Player.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.GetItem": {
     "type": "method",
@@ -592,7 +614,11 @@
       "required": [
         "item"
       ]
-    }
+    },
+    "errors": [
+      "InternalError",
+      "FailedToExecute"
+    ]
   },
   "Player.PlayPause": {
     "type": "method",
@@ -617,7 +643,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Player.Speed"
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.Stop": {
     "type": "method",
@@ -633,7 +662,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.GetAudioDelay": {
     "type": "method",
@@ -652,7 +684,8 @@
       "required": [
         "offset"
       ]
-    }
+    },
+    "errors": []
   },
   "Player.SetAudioDelay": {
     "type": "method",
@@ -694,7 +727,11 @@
       "required": [
         "offset"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetSpeed": {
     "type": "method",
@@ -741,7 +778,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/Player.Speed"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetTempo": {
     "type": "method",
@@ -773,7 +814,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/Player.Tempo"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.Seek": {
     "type": "method",
@@ -868,7 +913,11 @@
           "$ref": "#/$defs/Global.Time"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.Move": {
     "type": "method",
@@ -897,7 +946,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.Zoom": {
     "type": "method",
@@ -934,7 +987,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetViewMode": {
     "type": "method",
@@ -959,7 +1016,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Player.GetViewMode": {
     "type": "method",
@@ -993,7 +1053,8 @@
         "verticalshift",
         "nonlinearstretch"
       ]
-    }
+    },
+    "errors": []
   },
   "Player.Rotate": {
     "type": "method",
@@ -1020,7 +1081,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.GoTo": {
     "type": "method",
@@ -1055,7 +1119,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetShuffle": {
     "type": "method",
@@ -1078,7 +1146,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.SetRepeat": {
     "type": "method",
@@ -1111,7 +1182,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.SetPartymode": {
     "type": "method",
@@ -1134,7 +1208,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetAudioStream": {
     "type": "method",
@@ -1170,7 +1248,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.SetVideoStream": {
     "type": "method",
@@ -1206,7 +1288,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.AddSubtitle": {
     "type": "method",
@@ -1230,7 +1316,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.SetSubtitle": {
     "type": "method",
@@ -1276,7 +1365,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Playlist.GetPlaylists": {
     "type": "method",
@@ -1302,7 +1395,8 @@
           "type"
         ]
       }
-    }
+    },
+    "errors": []
   },
   "Playlist.GetProperties": {
     "type": "method",
@@ -1331,7 +1425,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Playlist.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Playlist.GetItems": {
     "type": "method",
@@ -1382,7 +1479,8 @@
         "limits",
         "items"
       ]
-    }
+    },
+    "errors": []
   },
   "Playlist.Add": {
     "type": "method",
@@ -1417,7 +1515,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/Playlist.AddResult"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "NotFound"
+    ]
   },
   "Playlist.Insert": {
     "type": "method",
@@ -1459,7 +1561,12 @@
     ],
     "returns": {
       "$ref": "#/$defs/Playlist.AddResult"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute",
+      "NotFound"
+    ]
   },
   "Playlist.Remove": {
     "type": "method",
@@ -1482,7 +1589,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Playlist.Clear": {
     "type": "method",
@@ -1498,7 +1609,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Playlist.SetRepeat": {
     "type": "method",
@@ -1531,7 +1643,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Playlist.SetShuffle": {
     "type": "method",
@@ -1554,7 +1669,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Playlist.Swap": {
     "type": "method",
@@ -1584,7 +1703,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.GetChapters": {
     "type": "method",
@@ -1612,7 +1734,11 @@
       "required": [
         "chapters"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Files.GetSources": {
     "type": "method",
@@ -1654,7 +1780,8 @@
         "limits",
         "sources"
       ]
-    }
+    },
+    "errors": []
   },
   "Files.PrepareDownload": {
     "type": "method",
@@ -1701,7 +1828,10 @@
         "details",
         "mode"
       ]
-    }
+    },
+    "errors": [
+      "NotFound"
+    ]
   },
   "Files.Download": {
     "type": "method",
@@ -1720,7 +1850,10 @@
         }
       }
     ],
-    "returns": {}
+    "returns": {},
+    "errors": [
+      "NotFound"
+    ]
   },
   "Files.GetDirectory": {
     "type": "method",
@@ -1779,7 +1912,12 @@
         "limits",
         "files"
       ]
-    }
+    },
+    "errors": [
+      "InternalError",
+      "Unavailable",
+      "AccessDenied"
+    ]
   },
   "Files.GetFileDetails": {
     "type": "method",
@@ -1819,7 +1957,12 @@
       "required": [
         "filedetails"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "NotFound",
+      "AccessDenied"
+    ]
   },
   "Files.SetFileDetails": {
     "type": "method",
@@ -1871,7 +2014,13 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound",
+      "AccessDenied"
+    ]
   },
   "AudioLibrary.GetProperties": {
     "type": "method",
@@ -1893,7 +2042,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Audio.Property.Value"
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetArtists": {
     "type": "method",
@@ -2180,7 +2332,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetArtistDetails": {
     "type": "method",
@@ -2209,7 +2365,11 @@
           "$ref": "#/$defs/Audio.Details.Artist"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.GetAlbums": {
     "type": "method",
@@ -2397,7 +2557,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetAlbumDetails": {
     "type": "method",
@@ -2426,7 +2590,11 @@
           "$ref": "#/$defs/Audio.Details.Album"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.GetSongs": {
     "type": "method",
@@ -2648,7 +2816,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetSongDetails": {
     "type": "method",
@@ -2677,7 +2849,11 @@
           "$ref": "#/$defs/Audio.Details.Song"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.GetRecentlyAddedAlbums": {
     "type": "method",
@@ -2720,7 +2896,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetRecentlyAddedSongs": {
     "type": "method",
@@ -2770,7 +2949,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetRecentlyPlayedAlbums": {
     "type": "method",
@@ -2813,7 +2995,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetRecentlyPlayedSongs": {
     "type": "method",
@@ -2856,7 +3041,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetGenres": {
     "type": "method",
@@ -2900,7 +3088,10 @@
         "limits",
         "genres"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetSources": {
     "type": "method",
@@ -2944,7 +3135,10 @@
         "limits",
         "sources"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetRoles": {
     "type": "method",
@@ -2988,7 +3182,10 @@
         "limits",
         "roles"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetAvailableArtTypes": {
     "type": "method",
@@ -3042,7 +3239,10 @@
       "required": [
         "availablearttypes"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.GetAvailableArt": {
     "type": "method",
@@ -3119,7 +3319,10 @@
       "required": [
         "availableart"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "AudioLibrary.SetArtistDetails": {
     "type": "method",
@@ -3285,7 +3488,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.SetAlbumDetails": {
     "type": "method",
@@ -3489,7 +3696,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.SetSongDetails": {
     "type": "method",
@@ -3673,7 +3884,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.RefreshArtist": {
     "type": "method",
@@ -3689,7 +3904,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.RefreshAlbum": {
     "type": "method",
@@ -3705,7 +3924,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "AudioLibrary.Scan": {
     "type": "method",
@@ -3729,7 +3952,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "AudioLibrary.Export": {
     "type": "method",
@@ -3775,7 +3999,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "AudioLibrary.Clean": {
     "type": "method",
@@ -3792,7 +4017,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "VideoLibrary.GetMovies": {
     "type": "method",
@@ -3973,7 +4199,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetMovieDetails": {
     "type": "method",
@@ -4002,7 +4232,11 @@
           "$ref": "#/$defs/Video.Details.Movie"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetMovieSets": {
     "type": "method",
@@ -4045,7 +4279,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetMovieSetDetails": {
     "type": "method",
@@ -4091,7 +4328,11 @@
           "$ref": "#/$defs/Video.Details.MovieSet.Extended"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetTVShows": {
     "type": "method",
@@ -4221,7 +4462,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetTVShowDetails": {
     "type": "method",
@@ -4250,7 +4495,11 @@
           "$ref": "#/$defs/Video.Details.TVShow"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetSeasons": {
     "type": "method",
@@ -4299,7 +4548,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetSeasonDetails": {
     "type": "method",
@@ -4328,7 +4580,11 @@
           "$ref": "#/$defs/Video.Details.Season"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetEpisodes": {
     "type": "method",
@@ -4462,7 +4718,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetEpisodeDetails": {
     "type": "method",
@@ -4491,7 +4751,11 @@
           "$ref": "#/$defs/Video.Details.Episode"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetMusicVideos": {
     "type": "method",
@@ -4634,7 +4898,11 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetMusicVideoDetails": {
     "type": "method",
@@ -4663,7 +4931,11 @@
           "$ref": "#/$defs/Video.Details.MusicVideo"
         }
       }
-    }
+    },
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.GetRecentlyAddedMovies": {
     "type": "method",
@@ -4706,7 +4978,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetRecentlyAddedEpisodes": {
     "type": "method",
@@ -4749,7 +5024,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetRecentlyAddedMusicVideos": {
     "type": "method",
@@ -4792,7 +5070,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetInProgressTVShows": {
     "type": "method",
@@ -4835,7 +5116,10 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetGenres": {
     "type": "method",
@@ -4891,7 +5175,10 @@
         "limits",
         "genres"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetTags": {
     "type": "method",
@@ -4947,7 +5234,10 @@
         "limits",
         "tags"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetAvailableArtTypes": {
     "type": "method",
@@ -5049,7 +5339,10 @@
       "required": [
         "availablearttypes"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.GetAvailableArt": {
     "type": "method",
@@ -5174,7 +5467,10 @@
       "required": [
         "availableart"
       ]
-    }
+    },
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.SetMovieDetails": {
     "type": "method",
@@ -5471,7 +5767,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetMovieSetDetails": {
     "type": "method",
@@ -5513,7 +5813,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetTVShowDetails": {
     "type": "method",
@@ -5721,7 +6025,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetSeasonDetails": {
     "type": "method",
@@ -5763,7 +6071,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetEpisodeDetails": {
     "type": "method",
@@ -5952,7 +6264,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetMusicVideoDetails": {
     "type": "method",
@@ -6166,7 +6482,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.Refresh": {
     "type": "method",
@@ -6280,7 +6600,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.RefreshMovie": {
     "type": "method",
@@ -6313,7 +6638,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.RefreshTVShow": {
     "type": "method",
@@ -6354,7 +6684,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.RefreshEpisode": {
     "type": "method",
@@ -6387,7 +6722,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.RefreshMusicVideo": {
     "type": "method",
@@ -6420,7 +6760,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.RemoveMovie": {
     "type": "method",
@@ -6436,7 +6781,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.RemoveTVShow": {
     "type": "method",
@@ -6452,7 +6800,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.RemoveEpisode": {
     "type": "method",
@@ -6468,7 +6819,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.RemoveMusicVideo": {
     "type": "method",
@@ -6484,7 +6838,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError"
+    ]
   },
   "VideoLibrary.Scan": {
     "type": "method",
@@ -6508,7 +6865,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.SetSourceContent": {
     "type": "method",
@@ -6609,7 +6970,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ]
   },
   "VideoLibrary.Export": {
     "type": "method",
@@ -6660,7 +7026,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "VideoLibrary.Clean": {
     "type": "method",
@@ -6699,7 +7066,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "NotFound"
+    ]
   },
   "GUI.ActivateWindow": {
     "type": "method",
@@ -6726,7 +7097,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "GUI.ShowNotification": {
     "type": "method",
@@ -6777,7 +7151,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "GUI.GetProperties": {
     "type": "method",
@@ -6799,7 +7174,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/GUI.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "GUI.SetFullscreen": {
     "type": "method",
@@ -6818,7 +7197,11 @@
     "returns": {
       "type": "boolean",
       "description": "Fullscreen state"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "GUI.SetStereoscopicMode": {
     "type": "method",
@@ -6849,7 +7232,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "GUI.GetStereoscopicModes": {
     "type": "method",
@@ -6868,7 +7254,8 @@
           }
         }
       }
-    }
+    },
+    "errors": []
   },
   "GUI.ActivateScreenSaver": {
     "type": "method",
@@ -6876,7 +7263,8 @@
     "transport": "Response",
     "permission": "ControlGUI",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "GUI.TakeScreenshot": {
     "type": "method",
@@ -6918,7 +7306,12 @@
           "description": "Path of the video frame alone, under special://screenshots. Absent when only the composite was captured."
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute",
+      "Unavailable"
+    ]
   },
   "GUI.DeleteScreenshots": {
     "type": "method",
@@ -6944,7 +7337,13 @@
           "description": "How many files were deleted."
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute",
+      "NotFound",
+      "Unavailable"
+    ]
   },
   "GUI.GetInfoLabels": {
     "type": "method",
@@ -6971,7 +7370,8 @@
       "additionalProperties": {
         "type": "string"
       }
-    }
+    },
+    "errors": []
   },
   "GUI.GetInfoBooleans": {
     "type": "method",
@@ -6998,7 +7398,8 @@
       "additionalProperties": {
         "type": "boolean"
       }
-    }
+    },
+    "errors": []
   },
   "Addons.GetAddons": {
     "type": "method",
@@ -7082,7 +7483,8 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": []
   },
   "Addons.GetAddonDetails": {
     "type": "method",
@@ -7118,7 +7520,10 @@
         "limits",
         "addon"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Addons.SetAddonEnabled": {
     "type": "method",
@@ -7141,7 +7546,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Addons.ExecuteAddon": {
     "type": "method",
@@ -7188,7 +7596,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "PVR.GetProperties": {
     "type": "method",
@@ -7210,7 +7621,11 @@
     ],
     "returns": {
       "$ref": "#/$defs/PVR.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetChannelGroups": {
     "type": "method",
@@ -7249,7 +7664,10 @@
         "limits",
         "channelgroups"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "PVR.GetChannelGroupDetails": {
     "type": "method",
@@ -7286,7 +7704,11 @@
           "$ref": "#/$defs/PVR.Details.ChannelGroup.Extended"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetChannels": {
     "type": "method",
@@ -7337,7 +7759,11 @@
         "limits",
         "channels"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetChannelDetails": {
     "type": "method",
@@ -7366,7 +7792,11 @@
           "$ref": "#/$defs/PVR.Details.Channel"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetClients": {
     "type": "method",
@@ -7398,7 +7828,10 @@
         "limits",
         "clients"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "PVR.GetProviders": {
     "type": "method",
@@ -7436,7 +7869,10 @@
         "limits",
         "providers"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "PVR.GetProviderDetails": {
     "type": "method",
@@ -7465,7 +7901,11 @@
           "$ref": "#/$defs/PVR.Details.Provider"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetBroadcasts": {
     "type": "method",
@@ -7524,7 +7964,12 @@
         "limits",
         "broadcasts"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetBroadcastsByChannelGroup": {
     "type": "method",
@@ -7590,7 +8035,11 @@
       "required": [
         "channels"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetBroadcastDetails": {
     "type": "method",
@@ -7619,7 +8068,11 @@
           "$ref": "#/$defs/PVR.Details.Broadcast"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetBroadcastIsPlayable": {
     "type": "method",
@@ -7636,7 +8089,11 @@
         }
       }
     ],
-    "returns": "boolean"
+    "returns": "boolean",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetPlayableBroadcasts": {
     "type": "method",
@@ -7692,7 +8149,12 @@
         "limits",
         "broadcastids"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetTimers": {
     "type": "method",
@@ -7736,7 +8198,10 @@
         "limits",
         "timers"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "PVR.GetTimerDetails": {
     "type": "method",
@@ -7765,7 +8230,11 @@
           "$ref": "#/$defs/PVR.Details.Timer"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.AddTimer": {
     "type": "method",
@@ -7798,7 +8267,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.DeleteTimer": {
     "type": "method",
@@ -7815,7 +8288,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.ToggleTimer": {
     "type": "method",
@@ -7840,7 +8317,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.GetRecordings": {
     "type": "method",
@@ -7884,7 +8365,10 @@
         "limits",
         "recordings"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "PVR.GetRecordingDetails": {
     "type": "method",
@@ -7913,7 +8397,11 @@
           "$ref": "#/$defs/PVR.Details.Recording"
         }
       }
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "PVR.Record": {
     "type": "method",
@@ -7946,7 +8434,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "FailedToExecute"
+    ]
   },
   "PVR.Scan": {
     "type": "method",
@@ -7962,7 +8455,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Textures.GetTextures": {
     "type": "method",
@@ -7996,7 +8492,11 @@
       "required": [
         "textures"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
   },
   "Textures.RemoveTexture": {
     "type": "method",
@@ -8013,7 +8513,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Profiles.GetProfiles": {
     "type": "method",
@@ -8057,7 +8560,8 @@
         "limits",
         "profiles"
       ]
-    }
+    },
+    "errors": []
   },
   "Profiles.GetCurrentProfile": {
     "type": "method",
@@ -8074,7 +8578,8 @@
     ],
     "returns": {
       "$ref": "#/$defs/Profiles.Details.Profile"
-    }
+    },
+    "errors": []
   },
   "Profiles.LoadProfile": {
     "type": "method",
@@ -8104,7 +8609,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "System.GetProperties": {
     "type": "method",
@@ -8126,7 +8634,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/System.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "System.EjectOpticalDrive": {
     "type": "method",
@@ -8134,7 +8645,10 @@
     "transport": "Response",
     "permission": "ControlSystem",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "System.Shutdown": {
     "type": "method",
@@ -8142,7 +8656,10 @@
     "transport": "Response",
     "permission": "ControlPower",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "System.Suspend": {
     "type": "method",
@@ -8150,7 +8667,10 @@
     "transport": "Response",
     "permission": "ControlPower",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "System.Hibernate": {
     "type": "method",
@@ -8158,7 +8678,10 @@
     "transport": "Response",
     "permission": "ControlPower",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "System.Reboot": {
     "type": "method",
@@ -8166,7 +8689,10 @@
     "transport": "Response",
     "permission": "ControlPower",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Input.SendText": {
     "type": "method",
@@ -8191,7 +8717,8 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.ExecuteAction": {
     "type": "method",
@@ -8207,7 +8734,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Input.ButtonEvent": {
     "type": "method",
@@ -8247,7 +8777,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Input.Left": {
     "type": "method",
@@ -8255,7 +8788,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Right": {
     "type": "method",
@@ -8263,7 +8797,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Down": {
     "type": "method",
@@ -8271,7 +8806,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Up": {
     "type": "method",
@@ -8279,7 +8815,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Select": {
     "type": "method",
@@ -8287,7 +8824,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Back": {
     "type": "method",
@@ -8295,7 +8833,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.ContextMenu": {
     "type": "method",
@@ -8303,7 +8842,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Info": {
     "type": "method",
@@ -8311,7 +8851,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.Home": {
     "type": "method",
@@ -8319,7 +8860,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.ShowCodec": {
     "type": "method",
@@ -8327,7 +8869,10 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "MethodNotFound"
+    ]
   },
   "Input.ShowOSD": {
     "type": "method",
@@ -8335,7 +8880,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Input.ShowPlayerProcessInfo": {
     "type": "method",
@@ -8343,7 +8889,8 @@
     "transport": "Response",
     "permission": "Navigate",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Application.GetProperties": {
     "type": "method",
@@ -8365,7 +8912,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Application.Property.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Application.SetVolume": {
     "type": "method",
@@ -8390,7 +8940,10 @@
         }
       }
     ],
-    "returns": "integer"
+    "returns": "integer",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Application.SetMute": {
     "type": "method",
@@ -8409,7 +8962,10 @@
     "returns": {
       "type": "boolean",
       "description": "Mute state"
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Application.SetLogLevel": {
     "type": "method",
@@ -8452,7 +9008,10 @@
     ],
     "returns": {
       "$ref": "#/$defs/Application.LogLevel.Value"
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Application.Quit": {
     "type": "method",
@@ -8460,7 +9019,8 @@
     "transport": "Response",
     "permission": "ControlPower",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "XBMC.GetInfoLabels": {
     "type": "method",
@@ -8488,7 +9048,8 @@
       "additionalProperties": {
         "type": "string"
       }
-    }
+    },
+    "errors": []
   },
   "XBMC.GetInfoBooleans": {
     "type": "method",
@@ -8516,7 +9077,8 @@
       "additionalProperties": {
         "type": "boolean"
       }
-    }
+    },
+    "errors": []
   },
   "Favourites.GetFavourites": {
     "type": "method",
@@ -8561,7 +9123,8 @@
       "required": [
         "limits"
       ]
-    }
+    },
+    "errors": []
   },
   "Favourites.AddFavourite": {
     "type": "method",
@@ -8610,7 +9173,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Settings.GetLevel": {
     "type": "method",
@@ -8627,7 +9194,8 @@
       "required": [
         "level"
       ]
-    }
+    },
+    "errors": []
   },
   "Settings.SetLevel": {
     "type": "method",
@@ -8653,7 +9221,8 @@
       "required": [
         "level"
       ]
-    }
+    },
+    "errors": []
   },
   "Settings.GetSections": {
     "type": "method",
@@ -8702,7 +9271,8 @@
         "level",
         "sections"
       ]
-    }
+    },
+    "errors": []
   },
   "Settings.GetCategories": {
     "type": "method",
@@ -8758,7 +9328,10 @@
         "level",
         "categories"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Settings.GetSettings": {
     "type": "method",
@@ -8817,7 +9390,10 @@
         "level",
         "settings"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Settings.GetSettingValue": {
     "type": "method",
@@ -8844,7 +9420,11 @@
       "required": [
         "value"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams",
+      "NotFound"
+    ]
   },
   "Settings.SetSettingValue": {
     "type": "method",
@@ -8869,7 +9449,6 @@
       },
       {
         "name": "confirmed",
-        "required": false,
         "schema": {
           "type": "boolean",
           "default": false,
@@ -8877,7 +9456,12 @@
         }
       }
     ],
-    "returns": "boolean"
+    "returns": "boolean",
+    "errors": [
+      "InvalidParams",
+      "NotFound",
+      "Unavailable"
+    ]
   },
   "Settings.ResetSettingValue": {
     "type": "method",
@@ -8894,7 +9478,12 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "NotFound",
+      "Unavailable"
+    ]
   },
   "Settings.GetSkinSettingValue": {
     "type": "method",
@@ -8924,7 +9513,10 @@
       "required": [
         "value"
       ]
-    }
+    },
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Settings.SetSkinSettingValue": {
     "type": "method",
@@ -8951,7 +9543,10 @@
         }
       }
     ],
-    "returns": "boolean"
+    "returns": "boolean",
+    "errors": [
+      "InvalidParams"
+    ]
   },
   "Settings.GetSkinSettings": {
     "type": "method",
@@ -8999,7 +9594,8 @@
       "required": [
         "skin"
       ]
-    }
+    },
+    "errors": []
   },
   "Database.GetDatabaseName": {
     "type": "method",
@@ -9015,6 +9611,9 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   }
 }

@@ -255,8 +255,15 @@ namespace JSONRPC
      \brief Definition of the return value
      */
     JSONSchemaTypeDefinitionPtr returns;
+    /*!
+     \brief Errors the implementation can return, beyond those any request can receive
+
+     Derived from the handler's source by tools/jsonrpc/method_errors.py.
+     */
+    std::vector<const JsonRpcStatusDescription*> errors;
 
   private:
+    bool parseErrors(const CVariant& value);
     bool parseParameter(const CVariant& value, const JSONSchemaTypeDefinitionPtr& parameter);
     bool parseReturn(const CVariant &value);
     static JSONRPC_STATUS checkParameter(const CVariant& requestParameters,
