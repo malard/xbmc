@@ -287,7 +287,8 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const std::string &method, I
 
 namespace
 {
-// A setting whose options come from a filler passes any value through CheckValidity
+// A setting whose options come from a filler passes any value through CheckValidity.
+// Running the filler can also snap the current value to its best match, as the GUI does.
 bool IsListedOption(const std::shared_ptr<CSettingInt>& setting, int value)
 {
   if (setting->GetOptionsType() != SettingOptionsType::Dynamic)
@@ -320,6 +321,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const std::string &method, I
   if (!setting->IsEnabled())
     return Unavailable;
 
+  // engaged for the rest of the call, so a display mode change is kept without the prompt
   std::optional<CDisplaySettings::CConfirmedChange> confirmed;
   if (parameterObject["confirmed"].asBoolean())
     confirmed.emplace();
