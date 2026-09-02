@@ -29,9 +29,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
-
 #include "video/VideoFileItemClassify.h"
-#include "video/windows/GUIWindowVideoBase.h"
 
 #include <memory>
 #include <set>
@@ -118,20 +116,9 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
       if (status != OK)
         return status;
     }
-    else if (media == "files" && NeedsLibraryLookup(parameterObject))
-    {
-      CVideoDatabase videoDatabase;
-      if (videoDatabase.Open())
-      {
-        // Matched folder paths may be rewritten according to the GUI stacking setting.
-        CGUIWindowVideoBase::LoadVideoInfo(
-            items, videoDatabase, false,
-            CVideoLibrary::GetDetailsFromJsonParameters(parameterObject));
-      }
-    }
 
-    // A plain "files" browse only consults the library when properties were requested.
-    const bool enrichFromLibrary{!parameterObject["properties"].empty()};
+    // A plain "files" browse consults the library only for a property a file cannot answer.
+    const bool enrichFromLibrary{NeedsLibraryLookup(parameterObject)};
 
     CFileItemList filteredFiles;
     RegExpCache cache;
