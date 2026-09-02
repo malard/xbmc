@@ -13,6 +13,8 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <mutex>
+
 namespace JSONRPC
 {
 
@@ -38,18 +40,25 @@ CVariant TranslateEpgCast(const std::string& cast)
 
 std::set<std::string> BroadcastFields()
 {
-  std::set<std::string> fields;
+  static std::mutex mutex;
+  static JSONSchemaTypeDefinitionPtr cachedType;
+  static std::set<std::string> cachedFields;
 
   const JSONSchemaTypeDefinitionPtr type{CJSONServiceDescription::GetType("PVR.Fields.Broadcast")};
-  if (type && type->items)
+
+  std::lock_guard lock(mutex);
+  if (type != cachedType)
   {
-    for (const CVariant& field : type->items->enums)
+    cachedFields.clear();
+    if (type && type->items)
     {
-      fields.insert(field.asString());
+      for (const CVariant& field : type->items->enums)
+        cachedFields.insert(field.asString());
     }
+    cachedType = type;
   }
 
-  return fields;
+  return cachedFields;
 }
 
 } // namespace JSONRPC
