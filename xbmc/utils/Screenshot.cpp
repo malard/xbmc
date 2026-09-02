@@ -277,7 +277,7 @@ bool CScreenShot::IsScreenshotPath(const std::string& path)
     return false;
 
   const std::string name = path.substr(SCREENSHOT_FOLDER.size());
-  return !name.empty() && name.find_first_of("/\\") == std::string::npos;
+  return name.find_first_of("/\\") == std::string::npos && URIUtils::HasExtension(name, ".png");
 }
 
 CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(

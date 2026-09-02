@@ -141,3 +141,13 @@ TEST_F(TestScreenshotDeletion, ReportsAScreenshotThatIsNotThere)
   EXPECT_EQ(Error::NOT_FOUND, removed.error);
   EXPECT_EQ(0u, removed.deleted);
 }
+
+TEST(TestScreenshotPath, OnlyAPlainPngUnderTheScreenshotFolderIsAScreenshot)
+{
+  EXPECT_TRUE(CScreenShot::IsScreenshotPath("special://screenshots/screenshot00000.png"));
+  EXPECT_TRUE(CScreenShot::IsScreenshotPath("special://screenshots/named.png"));
+  EXPECT_FALSE(CScreenShot::IsScreenshotPath("special://screenshots/passwords.xml"));
+  EXPECT_FALSE(CScreenShot::IsScreenshotPath("special://screenshots/sub/shot.png"));
+  EXPECT_FALSE(CScreenShot::IsScreenshotPath("special://screenshots/"));
+  EXPECT_FALSE(CScreenShot::IsScreenshotPath("special://temp/shot.png"));
+}
