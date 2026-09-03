@@ -571,6 +571,15 @@ bool CPlayListPlayer::RepeatedOne(Id playlistId) const
   return false;
 }
 
+bool CPlayListPlayer::CurrentItemIsInStack() const
+{
+  const CPlayList& playlist{GetPlaylist(m_iCurrentPlayList)};
+  if (m_iCurrentSong < 0 || m_iCurrentSong >= playlist.size())
+    return false;
+
+  return URIUtils::IsStack(playlist[m_iCurrentSong]->GetDynPath());
+}
+
 void CPlayListPlayer::SetShuffle(Id playlistId, bool bYesNo, bool bNotify /* = false */)
 {
   if (playlistId != Id::TYPE_MUSIC && playlistId != Id::TYPE_VIDEO)
@@ -993,13 +1002,8 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
       // Discard the current playlist, if TMSG_MEDIA_PLAY gets posted with just a single item.
       // Otherwise items may fail to play, when started while a playlist is playing.
       // But a single item in a stack is allowed.
-      if (m_iCurrentPlayList != Id::TYPE_NONE)
-      {
-
-        CPlayList& playlist{GetPlaylist(m_iCurrentPlayList)};
-        if (!URIUtils::IsStack(playlist[m_iCurrentSong]->GetDynPath()))
-          Reset();
-      }
+      if (m_iCurrentPlayList != Id::TYPE_NONE && !CurrentItemIsInStack())
+        Reset();
 
       CFileItem *item = static_cast<CFileItem*>(pMsg->lpVoid);
       if (!g_application.PlayFile(*item, "", pMsg->param1 != 0))

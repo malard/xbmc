@@ -182,6 +182,12 @@ protected:
    */
   bool RepeatedOne(Id playlistId) const;
 
+  /*! \brief Returns true if the current item is one part of a stack.
+   \return false when the position names no item, which is its state once the playlist has
+   been cleared.
+   */
+  bool CurrentItemIsInStack() const;
+
   void ReShuffle(Id playlistId, int iPosition);
 
   void AnnouncePropertyChanged(Id playlistId,
