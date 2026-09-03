@@ -254,6 +254,9 @@ JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string &property, CVa
   }
   else if (property == "fullscreen")
     result = g_application.IsFullScreen();
+  else if (property == "ready")
+    result =
+        g_application.IsInitialized() && CServiceBroker::GetGUI()->GetWindowManager().Initialized();
   else if (property == "stereoscopicmode")
   {
     const CStereoscopicsManager &stereoscopicsManager = CServiceBroker::GetGUI()->GetStereoscopicsManager();

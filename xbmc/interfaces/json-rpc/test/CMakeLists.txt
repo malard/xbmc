@@ -3,6 +3,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestDeprecatedMethodSchema.cpp
             TestFileItemHandler.cpp
             TestFileOperations.cpp
+            TestGUIPropertySchema.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp

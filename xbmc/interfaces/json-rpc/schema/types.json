@@ -4987,7 +4987,8 @@
       "currentcontrol",
       "skin",
       "fullscreen",
-      "stereoscopicmode"
+      "stereoscopicmode",
+      "ready"
     ]
   },
   "GUI.Property.Value": {
@@ -5039,6 +5040,10 @@
       },
       "stereoscopicmode": {
         "$ref": "#/$defs/GUI.Stereoscopy.Mode"
+      },
+      "ready": {
+        "type": "boolean",
+        "description": "True once the interface has finished starting and a skin is loaded with its first window active. False while Kodi is still starting and while a skin is reloading. A client that polls can wait on this rather than on the web server answering, which only proves the JSON-RPC service is up."
       }
     }
   },
