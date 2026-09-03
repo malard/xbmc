@@ -247,11 +247,14 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const std::string &method, ITrans
   if (!videodatabase.Open())
     return InternalError;
 
-  int fileId = videodatabase.AddFile(file);
+  const int fileId = videodatabase.AddFile(file);
+  if (fileId < 0)
+    return InternalError;
 
   CVideoInfoTag infos;
-  if (!videodatabase.GetFileInfo("", infos, fileId))
-    return InvalidParams;
+  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId));
+      status != OK)
+    return status;
 
   CDateTime lastPlayed = infos.m_lastPlayed;
   int playcount = infos.GetPlayCount();

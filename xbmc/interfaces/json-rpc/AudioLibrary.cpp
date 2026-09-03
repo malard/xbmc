@@ -332,8 +332,9 @@ JSONRPC_STATUS CAudioLibrary::GetAlbumDetails(const std::string &method, ITransp
     return InternalError;
 
   CAlbum album;
-  if (!musicdatabase.GetAlbum(albumID, album, false))
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(albumID, album, false));
+      status != OK)
+    return status;
 
   std::string path = StringUtils::Format("musicdb://albums/{}/", albumID);
 
@@ -498,8 +499,8 @@ JSONRPC_STATUS CAudioLibrary::GetSongDetails(const std::string &method, ITranspo
     return InternalError;
 
   CSong song;
-  if (!musicdatabase.GetSong(idSong, song))
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(idSong, song)); status != OK)
+    return status;
 
   CFileItemList items;
   CFileItemPtr item = std::make_shared<CFileItem>(song);
@@ -752,8 +753,8 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(const std::string &method, ITrans
     return InternalError;
 
   CArtist artist;
-  if (!musicdatabase.GetArtist(id, artist) || artist.idArtist <= 0)
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist)); status != OK)
+    return status;
 
   if (ParameterNotNull(parameterObject, "artist"))
     artist.strArtist = parameterObject["artist"].asString();
@@ -830,8 +831,9 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const std::string &method, ITransp
 
   CAlbum album;
   // Get current album details, but not songs as we do not want to update them here
-  if (!musicdatabase.GetAlbum(id, album, false) || album.idAlbum <= 0)
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(id, album, false));
+      status != OK)
+    return status;
 
   if (ParameterNotNull(parameterObject, "title"))
     album.strAlbum = parameterObject["title"].asString();
@@ -935,8 +937,8 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(const std::string &method, ITranspo
     return InternalError;
 
   CSong song;
-  if (!musicdatabase.GetSong(id, song) || song.idSong != id)
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(id, song)); status != OK)
+    return status;
 
   if (ParameterNotNull(parameterObject, "title"))
     song.strTitle = parameterObject["title"].asString();
@@ -1382,8 +1384,9 @@ JSONRPC_STATUS CAudioLibrary::RefreshArtist(const std::string& method,
   // Checking if artistID is a valid one
   const CVariant artistIdVariant{parameterObject["artistid"]};
   const auto artistID{static_cast<int>(artistIdVariant.asInteger())};
-  if (!musicdatabase.GetArtistExists(artistID))
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtistExists(artistID));
+      status != OK)
+    return status;
 
   // Start rescraping additional information for the given artist
   const std::string cmd = StringUtils::Format("musiclibrary.refreshartist({})",
@@ -1407,8 +1410,9 @@ JSONRPC_STATUS CAudioLibrary::RefreshAlbum(const std::string& method,
   CAlbum album;
   const CVariant albumIdVariant{parameterObject["albumid"]};
   const int albumID = static_cast<int>(albumIdVariant.asInteger());
-  if (!musicdatabase.GetAlbum(albumID, album, false))
-    return NotFound;
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(albumID, album, false));
+      status != OK)
+    return status;
 
   // Start rescraping additional information for the given album
   const std::string cmd = StringUtils::Format("musiclibrary.refreshalbum({})",

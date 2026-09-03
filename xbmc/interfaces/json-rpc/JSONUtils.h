@@ -9,6 +9,7 @@
 #pragma once
 
 #include "JSONRPCUtils.h"
+#include "dbwrappers/Database.h"
 #include "playlists/SmartPlayList.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
@@ -477,6 +478,23 @@ namespace JSONRPC
     static inline bool ParameterNotNull(const CVariant& parameterObject, const std::string& key)
     {
       return parameterObject.isMember(key) && !parameterObject[key].isNull();
+    }
+
+    /*!
+     \brief The status a method answers for the outcome of a by-id database lookup.
+     */
+    static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup)
+    {
+      switch (lookup)
+      {
+        case CDatabase::GetResult::Ok:
+          return OK;
+        case CDatabase::GetResult::NotFound:
+          return NotFound;
+        case CDatabase::GetResult::Error:
+          break;
+      }
+      return InternalError;
     }
 
     /*!
