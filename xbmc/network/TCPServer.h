@@ -98,6 +98,15 @@ namespace JSONRPC
       virtual bool IsNew() const { return m_new; }
       virtual bool Closing() const { return m_closing; }
 
+      /*!
+       * \brief Whether this connection has more accepted but unparsed input than it should.
+       *
+       * The server thread stops reading a backlogged connection, which closes the receive
+       * window and holds the client back. Running the request on the server thread used to do
+       * that on its own.
+       */
+      bool Backlogged();
+
       SOCKET m_socket{INVALID_SOCKET};
       sockaddr_storage m_cliaddr;
       socklen_t m_addrlen;
@@ -128,6 +137,7 @@ namespace JSONRPC
       std::mutex m_inboundMutex;
       std::condition_variable m_inboundEvent;
       std::deque<std::string> m_inbound;
+      size_t m_inboundBytes{0};
       bool m_workerStop{false};
       bool m_workerStarted{false};
     };

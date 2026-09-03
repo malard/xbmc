@@ -119,6 +119,7 @@ void CTCPServer::Process()
     SOCKET          max_fd = 0;
     fd_set          rfds;
     struct timeval  to     = {1, 0};
+    bool backlogged = false;
     FD_ZERO(&rfds);
 
     {
@@ -146,11 +147,27 @@ void CTCPServer::Process()
           continue;
         }
 
+        // Reading faster than the worker parses would queue without limit, so a connection
+        // that is far enough ahead is left unread until the worker catches up. Its receive
+        // window closes and the client waits, which is the backpressure that running the
+        // request on this thread used to provide. Nothing is refused, and a request of any
+        // size still arrives - at the rate it can be consumed.
+        if (m_connections[i]->Backlogged())
+        {
+          backlogged = true;
+          continue;
+        }
+
         FD_SET(m_connections[i]->m_socket, &rfds);
         if ((intptr_t)m_connections[i]->m_socket > (intptr_t)max_fd)
           max_fd = m_connections[i]->m_socket;
       }
     }
+
+    // A held-back connection is not in the set, so nothing wakes the select when its worker
+    // drains. Look again soon rather than after the idle timeout.
+    if (backlogged)
+      to = {0, 50000};
 
     int res = select((intptr_t)max_fd+1, &rfds, NULL, NULL, &to);
     if (res < 0)
@@ -608,6 +625,7 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
   {
     std::unique_lock<std::mutex> lock(m_inboundMutex);
     m_inbound.emplace_back(buffer, length);
+    m_inboundBytes += static_cast<size_t>(length);
     if (!m_workerStarted)
     {
       m_workerStarted = true;
@@ -643,6 +661,7 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
         std::unique_lock<std::mutex> lock(m_inboundMutex);
         m_workerStarted = false;
         m_inbound.clear();
+        m_inboundBytes = 0;
       }
 
       CLog::Log(LOGERROR,
@@ -652,6 +671,12 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
       RequestClose();
     }
   }
+}
+
+bool CTCPServer::CTCPClient::Backlogged()
+{
+  std::unique_lock<std::mutex> lock(m_inboundMutex);
+  return m_inboundBytes >= maxBufferLength;
 }
 
 void CTCPServer::CTCPClient::StopWorker()
@@ -693,6 +718,7 @@ void CTCPServer::CTCPClient::RunRequests(const std::shared_ptr<CTCPClient>& self
 
       buffer = std::move(self->m_inbound.front());
       self->m_inbound.pop_front();
+      self->m_inboundBytes -= buffer.size();
     }
 
     self->PushBuffer(host, buffer.data(), static_cast<int>(buffer.size()));
