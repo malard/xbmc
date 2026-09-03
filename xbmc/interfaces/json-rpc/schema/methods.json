@@ -9353,7 +9353,7 @@
     "type": "method",
     "description": "Changes the setting level in force and answers with it. AccessDenied when the profile's settings lock does not permit the level asked for",
     "transport": "Response",
-    "permission": "ControlGUI",
+    "permission": "WriteSetting",
     "params": [
       {
         "name": "level",
@@ -9386,6 +9386,7 @@
     "params": [
       {
         "name": "level",
+        "description": "Filters the tree to the settings at or below this level. It is not the level in force, which Settings.GetLevel reports; the answer names the level it was filtered at.",
         "schema": {
           "$ref": "#/$defs/Setting.Level",
           "default": "standard"
@@ -9436,6 +9437,7 @@
     "params": [
       {
         "name": "level",
+        "description": "Filters the tree to the settings at or below this level. It is not the level in force, which Settings.GetLevel reports; the answer names the level it was filtered at.",
         "schema": {
           "$ref": "#/$defs/Setting.Level",
           "default": "standard"
@@ -9495,6 +9497,7 @@
     "params": [
       {
         "name": "level",
+        "description": "Filters the tree to the settings at or below this level. It is not the level in force, which Settings.GetLevel reports; the answer names the level it was filtered at.",
         "schema": {
           "$ref": "#/$defs/Setting.Level",
           "default": "standard"
