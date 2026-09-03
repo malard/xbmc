@@ -623,7 +623,34 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
       std::lock_guard lock(host->m_workersMutex);
       ++host->m_activeWorkers;
     }
-    std::thread(&CTCPClient::RunWorker, self, host->m_self.lock()).detach();
+
+    try
+    {
+      std::thread(&CTCPClient::RunWorker, self, host->m_self.lock()).detach();
+    }
+    catch (const std::exception& error)
+    {
+      // Out of threads. The count was reserved for a worker that will never run, and letting
+      // this reach the server thread would end it: CThread swallows the exception, so Process()
+      // would return without deinitializing and no connection would ever be served again.
+      {
+        std::lock_guard lock(host->m_workersMutex);
+        --host->m_activeWorkers;
+      }
+      host->m_workersDone.notify_all();
+
+      {
+        std::unique_lock<std::mutex> lock(m_inboundMutex);
+        m_workerStarted = false;
+        m_inbound.clear();
+      }
+
+      CLog::Log(LOGERROR,
+                "JSONRPC Server: Could not start a request worker ({}), dropping the "
+                "connection",
+                error.what());
+      RequestClose();
+    }
   }
 }
 
