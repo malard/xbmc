@@ -576,7 +576,6 @@ TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppresse
   ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
 }
 
-
 //! \brief A single property can carry the annotation without the whole type being deprecated
 TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
 {

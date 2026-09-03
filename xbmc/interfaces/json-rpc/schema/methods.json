@@ -4152,8 +4152,8 @@
     ],
     "returns": "string",
     "errors": [
-      "InternalError",
       "InvalidParams",
+      "InternalError",
       "NotFound"
     ]
   },

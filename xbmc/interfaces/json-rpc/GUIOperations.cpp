@@ -205,9 +205,7 @@ JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const std::string& method,
                                                  const CVariant& parameterObject,
                                                  CVariant& result)
 {
-  if (!CServiceBroker::GetSettingsComponent()
-           ->GetAdvancedSettings()
-           ->m_jsonAllowScreenshotDeletion)
+  if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonAllowScreenshotDeletion)
     return Unavailable;
 
   const CScreenShot::ScreenshotDeletion removed =

@@ -786,8 +786,8 @@ std::vector<std::shared_ptr<CPVREpgInfoTag>> CPVREpgDatabase::GetEpgTags(
   if (searchData.m_bIgnoreFinishedBroadcasts)
   {
     const auto now{std::chrono::system_clock::now()};
-    filter.AppendWhere(PrepareSQL(
-        "iEndTime > %u", ToStoredTime(std::chrono::system_clock::to_time_t(now))));
+    filter.AppendWhere(
+        PrepareSQL("iEndTime > %u", ToStoredTime(std::chrono::system_clock::to_time_t(now))));
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -797,8 +797,8 @@ std::vector<std::shared_ptr<CPVREpgInfoTag>> CPVREpgDatabase::GetEpgTags(
   if (searchData.m_bIgnoreFutureBroadcasts)
   {
     const auto now{std::chrono::system_clock::now()};
-    filter.AppendWhere(PrepareSQL(
-        "iStartTime < %u", ToStoredTime(std::chrono::system_clock::to_time_t(now))));
+    filter.AppendWhere(
+        PrepareSQL("iStartTime < %u", ToStoredTime(std::chrono::system_clock::to_time_t(now))));
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1083,8 +1083,7 @@ bool CPVREpgDatabase::QueueDeleteEpgTagsByMinEndMaxStartTimeQuery(int iEpgID,
 
   std::unique_lock lock(m_critSection);
   filter.AppendWhere(PrepareSQL("idEpg = %u AND iEndTime >= %u AND iStartTime <= %u", iEpgID,
-                                ToStoredTime(minEndTime),
-                                ToStoredTime(maxStartTime)));
+                                ToStoredTime(minEndTime), ToStoredTime(maxStartTime)));
 
   std::string strQuery;
   if (BuildSQL("DELETE FROM epgtags", filter, strQuery))
@@ -1254,8 +1253,7 @@ bool CPVREpgDatabase::DeleteEpgTags(int iEpgId, const CDateTime& maxEndTime)
   Filter filter;
 
   std::unique_lock lock(m_critSection);
-  filter.AppendWhere(
-      PrepareSQL("idEpg = %u AND iEndTime < %u", iEpgId, ToStoredTime(maxEndTime)));
+  filter.AppendWhere(PrepareSQL("idEpg = %u AND iEndTime < %u", iEpgId, ToStoredTime(maxEndTime)));
   return DeleteValues("epgtags", filter);
 }
 
@@ -1312,9 +1310,9 @@ bool CPVREpgDatabase::QueuePersistQuery(const CPVREpgInfoTag& tag)
         "iBroadcastUid, sParentalRatingIcon, sParentalRatingSource, sTitleExtraInfo) "
         "VALUES (%u, %u, %u, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %i, '%s', '%s', %i, %i, "
         "'%s', '%s', %i, %i, %i, %i, %i, '%s', %i, '%s', '%s', %i, '%s', '%s', '%s');",
-        tag.EpgID(), iStartTime, iEndTime,
-        tag.Title().c_str(), tag.PlotOutline().c_str(), tag.Plot().c_str(),
-        tag.OriginalTitle().c_str(), CPVREpgInfoTag::DeTokenize(tag.Cast()).c_str(),
+        tag.EpgID(), iStartTime, iEndTime, tag.Title().c_str(), tag.PlotOutline().c_str(),
+        tag.Plot().c_str(), tag.OriginalTitle().c_str(),
+        CPVREpgInfoTag::DeTokenize(tag.Cast()).c_str(),
         CPVREpgInfoTag::DeTokenize(tag.Directors()).c_str(),
         CPVREpgInfoTag::DeTokenize(tag.Writers()).c_str(), tag.Year(), tag.IMDBNumber().c_str(),
         tag.ClientIconPath().c_str(), tag.GenreType(), tag.GenreSubType(),
@@ -1336,9 +1334,9 @@ bool CPVREpgDatabase::QueuePersistQuery(const CPVREpgInfoTag& tag)
         "iBroadcastUid, idBroadcast, sParentalRatingIcon, sParentalRatingSource, sTitleExtraInfo) "
         "VALUES (%u, %u, %u, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %i, '%s', '%s', %i, %i, "
         "'%s', '%s', %i, %i, %i, %i, %i, '%s', %i, '%s', '%s', %i, %i, '%s', '%s', '%s');",
-        tag.EpgID(), iStartTime, iEndTime,
-        tag.Title().c_str(), tag.PlotOutline().c_str(), tag.Plot().c_str(),
-        tag.OriginalTitle().c_str(), CPVREpgInfoTag::DeTokenize(tag.Cast()).c_str(),
+        tag.EpgID(), iStartTime, iEndTime, tag.Title().c_str(), tag.PlotOutline().c_str(),
+        tag.Plot().c_str(), tag.OriginalTitle().c_str(),
+        CPVREpgInfoTag::DeTokenize(tag.Cast()).c_str(),
         CPVREpgInfoTag::DeTokenize(tag.Directors()).c_str(),
         CPVREpgInfoTag::DeTokenize(tag.Writers()).c_str(), tag.Year(), tag.IMDBNumber().c_str(),
         tag.ClientIconPath().c_str(), tag.GenreType(), tag.GenreSubType(),

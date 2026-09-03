@@ -25,7 +25,7 @@ namespace PVR
 {
 class CPVRRecording;
 class CPVRTimerInfoTag;
-}
+} // namespace PVR
 
 namespace JSONRPC
 {
