@@ -11,7 +11,10 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
+#include "URL.h"
 #include "Util.h"
+#include "addons/AddonManager.h"
+#include "addons/Scraper.h"
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
 #include "messaging/ApplicationMessenger.h"
@@ -19,6 +22,7 @@
 #include "music/Artist.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicDbUrl.h"
+#include "music/MusicLibraryQueue.h"
 #include "music/MusicThumbLoader.h"
 #include "music/Song.h"
 #include "music/tags/MusicInfoTag.h"
@@ -1418,6 +1422,145 @@ JSONRPC_STATUS CAudioLibrary::RefreshAlbum(const std::string& method,
   const std::string cmd = StringUtils::Format("musiclibrary.refreshalbum({})",
                                               StringUtils::Paramify(albumIdVariant.asString()));
   CServiceBroker::GetAppMessenger()->SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr, cmd);
+
+  return ACK;
+}
+
+JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const std::string& method,
+                                              ITransportLayer* transport,
+                                              IClient* client,
+                                              const CVariant& parameterObject,
+                                              CVariant& result)
+{
+  const std::string applyTo = parameterObject["applyto"].asString();
+  const std::string scraperId = parameterObject["scraperid"].asString();
+
+  CMusicDatabase musicdatabase;
+  if (!musicdatabase.Open())
+    return InternalError;
+
+  // Resolve the scope to a content type and to the rows it covers: one id, or a musicdb://
+  // path whose filter options SetScraperAll turns into a WHERE clause.
+  ADDON::ContentType content = ADDON::ContentType::NONE;
+  int itemId = -1;
+  std::string viewPath;
+  if (applyTo == "item")
+  {
+    const int artistId = static_cast<int>(parameterObject["artistid"].asInteger(-1));
+    const int albumId = static_cast<int>(parameterObject["albumid"].asInteger(-1));
+    if ((artistId > 0) == (albumId > 0))
+      return InvalidParams;
+
+    if (artistId > 0)
+    {
+      if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtistExists(artistId));
+          status != OK)
+        return status;
+      content = ADDON::ContentType::ARTISTS;
+      itemId = artistId;
+    }
+    else
+    {
+      CAlbum album;
+      if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(albumId, album, false));
+          status != OK)
+        return status;
+      content = ADDON::ContentType::ALBUMS;
+      itemId = albumId;
+    }
+  }
+  else if (applyTo == "view")
+  {
+    CMusicDbUrl musicUrl;
+    if (!musicUrl.FromString(parameterObject["path"].asString()))
+      return InvalidParams;
+
+    if (StringUtils::EqualsNoCase(musicUrl.GetType(), "artists"))
+      content = ADDON::ContentType::ARTISTS;
+    else if (StringUtils::EqualsNoCase(musicUrl.GetType(), "albums"))
+      content = ADDON::ContentType::ALBUMS;
+    else
+      return InvalidParams;
+
+    // The view is the listing the path filters, never the one item it may name: the albums
+    // filter ignores albumid, so a path carrying one would rewrite every album.
+    CURL options(parameterObject["path"].asString());
+    options.RemoveOption("artistid");
+    options.RemoveOption("albumid");
+    viewPath =
+        (content == ADDON::ContentType::ARTISTS ? "musicdb://artists/" : "musicdb://albums/") +
+        options.GetOptions();
+  }
+  else if (applyTo == "default")
+  {
+    content = ADDON::TranslateContent(parameterObject["content"].asString());
+    if ((content != ADDON::ContentType::ARTISTS && content != ADDON::ContentType::ALBUMS) ||
+        scraperId.empty())
+      return InvalidParams;
+
+    viewPath = content == ADDON::ContentType::ARTISTS ? "musicdb://artists/" : "musicdb://albums/";
+  }
+  else
+    return InvalidParams;
+
+  ADDON::ScraperPtr scraper;
+  if (!scraperId.empty())
+  {
+    ADDON::AddonPtr addon;
+    ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
+    if (!addonMgr.GetAddon(scraperId, addon, ADDON::ScraperTypeFromContent(content),
+                           ADDON::OnlyEnabled::CHOICE_YES))
+    {
+      return addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES) ? InvalidParams
+                                                                                 : NotFound;
+    }
+
+    scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
+    if (!scraper)
+      return InvalidParams;
+
+    // Without supplied XML a failure is the scraper's own defaults, not the caller's doing.
+    const std::string scraperSettings = parameterObject["scrapersettings"].asString();
+    if (!scraper->SetPathSettings(content, scraperSettings) && !scraperSettings.empty())
+      return InvalidParams;
+  }
+
+  bool written = false;
+  if (applyTo == "item")
+    written = musicdatabase.SetScraper(itemId, content, scraper);
+  else if (applyTo == "view")
+    written = musicdatabase.SetScraperAll(viewPath, scraper);
+  else
+  {
+    // The dialog's default flow: the scraper's settings become its defaults, the setting
+    // names it, and every override is cleared so that the default applies everywhere.
+    scraper->SaveSettings();
+    const std::shared_ptr<CSettings> settings =
+        CServiceBroker::GetSettingsComponent()->GetSettings();
+    settings->SetString(content == ADDON::ContentType::ARTISTS
+                            ? CSettings::SETTING_MUSICLIBRARY_ARTISTSSCRAPER
+                            : CSettings::SETTING_MUSICLIBRARY_ALBUMSSCRAPER,
+                        scraper->ID());
+    settings->Save();
+    written = musicdatabase.SetScraperAll(viewPath, nullptr);
+  }
+  if (!written)
+    return InternalError;
+
+  if (parameterObject["refresh"].asBoolean(false))
+  {
+    if (applyTo == "item")
+    {
+      const std::string cmd = StringUtils::Format(
+          "musiclibrary.{}({})",
+          content == ADDON::ContentType::ARTISTS ? "refreshartist" : "refreshalbum", itemId);
+      CServiceBroker::GetAppMessenger()->SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr, cmd);
+    }
+    else if (content == ADDON::ContentType::ARTISTS)
+      CMusicLibraryQueue::GetInstance().StartArtistScan(viewPath, true);
+    else
+      CMusicLibraryQueue::GetInstance().StartAlbumScan(viewPath, true);
+  }
 
   return ACK;
 }

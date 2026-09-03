@@ -149,6 +149,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "AudioLibrary.SetSongDetails",                  CAudioLibrary::SetSongDetails },
   { "AudioLibrary.RefreshArtist",                   CAudioLibrary::RefreshArtist },
   { "AudioLibrary.RefreshAlbum",                    CAudioLibrary::RefreshAlbum },
+  { "AudioLibrary.SetInfoProvider",                 CAudioLibrary::SetInfoProvider },
   { "AudioLibrary.Scan",                            CAudioLibrary::Scan },
   { "AudioLibrary.Export",                          CAudioLibrary::Export },
   { "AudioLibrary.Clean",                           CAudioLibrary::Clean },

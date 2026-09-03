@@ -4076,6 +4076,87 @@
       "NotFound"
     ]
   },
+  "AudioLibrary.SetInfoProvider": {
+    "type": "method",
+    "description": "Assigns an information provider (scraper) to one artist or album, to every artist or album a musicdb:// view lists, or as the default, as the 'Set information provider' dialog does. Music binds a scraper to library items, not to source paths",
+    "transport": "Response",
+    "permission": "UpdateData",
+    "params": [
+      {
+        "name": "applyto",
+        "required": true,
+        "description": "\"item\" binds one artist or album named by artistid or albumid. \"view\" binds every artist or album listed by path. \"default\" makes the scraper the default for content and clears every item's own binding so that the default applies everywhere",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "item",
+            "view",
+            "default"
+          ]
+        }
+      },
+      {
+        "name": "scraperid",
+        "description": "Addon id of the scraper, of the kind the target needs: an artists scraper for artists, an albums scraper for albums. Empty for \"item\" or \"view\" clears the binding so that the default applies; required for \"default\"",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      {
+        "name": "scrapersettings",
+        "description": "Scraper settings as XML. Scraper defaults are used when empty",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      {
+        "name": "artistid",
+        "description": "The artist, for \"item\". Exactly one of artistid and albumid",
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "albumid",
+        "description": "The album, for \"item\". Exactly one of artistid and albumid",
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "path",
+        "description": "A musicdb://artists/ or musicdb://albums/ path, for \"view\". Its filter options select the items; an artistid or albumid option and the item in the path are ignored, since the view is the listing. An albums path leaves singles out unless it carries show_singles=true",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      {
+        "name": "content",
+        "description": "Which default to set, for \"default\": \"artists\" or \"albums\"",
+        "schema": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      {
+        "name": "refresh",
+        "description": "Refresh the additional information of the items bound, with the scraper now in force",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    ],
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "InvalidParams",
+      "NotFound"
+    ]
+  },
   "AudioLibrary.Scan": {
     "type": "method",
     "description": "Scans the audio sources for new library items",

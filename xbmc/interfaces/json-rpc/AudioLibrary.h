@@ -79,6 +79,11 @@ namespace JSONRPC
                                        IClient* client,
                                        const CVariant& parameterObject,
                                        CVariant& result);
+    static JSONRPC_STATUS SetInfoProvider(const std::string& method,
+                                          ITransportLayer* transport,
+                                          IClient* client,
+                                          const CVariant& parameterObject,
+                                          CVariant& result);
 
   private:
     static void FillAlbumItem(const CAlbum& album,
