@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
+#include "MessengerPayload.h"
 #include "PlayListPlayer.h"
 #include "PlaybackModes.h"
 #include "ServiceBroker.h"
@@ -24,6 +25,7 @@
 #include "playlists/PlayListTypes.h"
 #include "utils/Variant.h"
 
+#include <memory>
 #include <optional>
 
 using namespace JSONRPC;
@@ -112,9 +114,8 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const std::string &method, ITranspo
   {
     case PLAYLIST::Id::TYPE_VIDEO:
     case PLAYLIST::Id::TYPE_MUSIC:
-      CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_GET_ITEMS,
-                                                 static_cast<int>(playlistId), -1,
-                                                 static_cast<void*>(&list));
+      CServiceBroker::GetAppMessenger()->SendMsg(
+          TMSG_PLAYLISTPLAYER_GET_ITEMS, static_cast<int>(playlistId), -1, LendToMessenger(list));
       break;
 
     case PLAYLIST::Id::TYPE_PICTURE:
@@ -166,10 +167,11 @@ JSONRPC_STATUS CPlaylistOperations::Add(const std::string &method, ITransportLay
     {
       if (list.Size() > 0)
       {
-        auto tmpList = new CFileItemList();
-        tmpList->Copy(list);
-        CServiceBroker::GetAppMessenger()->PostMsg(
-            TMSG_PLAYLISTPLAYER_ADD, static_cast<int>(playlistId), -1, static_cast<void*>(tmpList));
+        auto items = std::make_unique<CFileItemList>();
+        items->Copy(list);
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_ADD,
+                                                   static_cast<int>(playlistId), -1,
+                                                   TransferToMessenger(std::move(items)));
       }
       added = list.Size();
       break;
@@ -221,11 +223,12 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const std::string &method, ITransport
   if (list.Size() == 0)
     return StatusForNothingAdded(unresolved);
 
-  auto tmpList = new CFileItemList();
-  tmpList->Copy(list);
+  auto items = std::make_unique<CFileItemList>();
+  items->Copy(list);
   CServiceBroker::GetAppMessenger()->PostMsg(
       TMSG_PLAYLISTPLAYER_INSERT, static_cast<int>(playlistId),
-      static_cast<int>(parameterObject["position"].asInteger()), static_cast<void*>(tmpList));
+      static_cast<int>(parameterObject["position"].asInteger()),
+      TransferToMessenger(std::move(items)));
 
   result["added"] = list.Size();
   result["unresolved"] = unresolved;
@@ -265,8 +268,9 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const std::string &method, ITransportL
     {
       CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
       //! @todo: Stop should be a delegator method to void GUI coupling! Same goes for other player controls.
-      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
-                                                 static_cast<void*>(new CAction(ACTION_STOP)));
+      CServiceBroker::GetAppMessenger()->PostMsg(
+          TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
+          TransferToMessenger(std::make_unique<CAction>(ACTION_STOP)));
       slideShow.Reset();
       break;
     }
@@ -283,11 +287,11 @@ JSONRPC_STATUS CPlaylistOperations::Swap(const std::string &method, ITransportLa
   if (playlistId == PLAYLIST::Id::TYPE_PICTURE)
     return FailedToExecute;
 
-  auto tmpVec = new std::vector<int>();
-  tmpVec->push_back(static_cast<int>(parameterObject["position1"].asInteger()));
-  tmpVec->push_back(static_cast<int>(parameterObject["position2"].asInteger()));
+  auto positions = std::make_unique<std::vector<int>>();
+  positions->push_back(static_cast<int>(parameterObject["position1"].asInteger()));
+  positions->push_back(static_cast<int>(parameterObject["position2"].asInteger()));
   CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_SWAP, static_cast<int>(playlistId),
-                                             -1, static_cast<void*>(tmpVec));
+                                             -1, TransferToMessenger(std::move(positions)));
 
   return ACK;
 }
@@ -378,9 +382,8 @@ JSONRPC_STATUS CPlaylistOperations::GetPropertyValue(PLAYLIST::Id playlistId,
       case PLAYLIST::Id::TYPE_MUSIC:
       case PLAYLIST::Id::TYPE_VIDEO:
       {
-        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_GET_ITEMS,
-                                                   static_cast<int>(playlistId), -1,
-                                                   static_cast<void*>(&list));
+        CServiceBroker::GetAppMessenger()->SendMsg(
+            TMSG_PLAYLISTPLAYER_GET_ITEMS, static_cast<int>(playlistId), -1, LendToMessenger(list));
         result = list.Size();
         break;
       }

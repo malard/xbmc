@@ -9,6 +9,7 @@
 #include "GUIOperations.h"
 
 #include "GUIInfoManager.h"
+#include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "addons/AddonManager.h"
 #include "addons/IAddon.h"
@@ -33,6 +34,7 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -104,8 +106,9 @@ JSONRPC_STATUS CGUIOperations::SetFullscreen(const std::string &method, ITranspo
       (parameterObject["fullscreen"].isBoolean() &&
        parameterObject["fullscreen"].asBoolean() != g_application.IsFullScreen()))
   {
-    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                                               static_cast<void*>(new CAction(ACTION_SHOW_GUI)));
+    CServiceBroker::GetAppMessenger()->SendMsg(
+        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        TransferToMessenger(std::make_unique<CAction>(ACTION_SHOW_GUI)));
   }
   else if (!parameterObject["fullscreen"].isBoolean() && !parameterObject["fullscreen"].isString())
     return InvalidParams;
@@ -118,8 +121,9 @@ JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const std::string &method, IT
   CAction action = CStereoscopicsManager::ConvertActionCommandToAction("SetStereoMode", parameterObject["mode"].asString());
   if (action.GetID() != ACTION_NONE)
   {
-    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                                               static_cast<void*>(new CAction(action)));
+    CServiceBroker::GetAppMessenger()->SendMsg(
+        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        TransferToMessenger(std::make_unique<CAction>(action)));
     return ACK;
   }
 
@@ -289,7 +293,7 @@ JSONRPC_STATUS CGUIOperations::GetInfoLabels(const std::string& method,
   {
     std::vector<std::string> infoLabels;
     CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_INFOLABEL, -1, -1,
-                                               static_cast<void*>(&infoLabels), "", info);
+                                               LendToMessenger(infoLabels), "", info);
 
     for (unsigned int i = 0; i < info.size(); i++)
     {
@@ -339,7 +343,7 @@ JSONRPC_STATUS CGUIOperations::GetInfoBooleans(const std::string& method,
   {
     std::vector<bool> infoLabels;
     CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_INFOBOOL, -1, -1,
-                                               static_cast<void*>(&infoLabels), "", info);
+                                               LendToMessenger(infoLabels), "", info);
     for (unsigned int i = 0; i < info.size(); i++)
     {
       if (i >= infoLabels.size())

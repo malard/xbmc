@@ -11,6 +11,7 @@
 #include "CompileInfo.h"
 #include "InputOperations.h"
 #include "LangInfo.h"
+#include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationVolumeHandling.h"
@@ -26,6 +27,7 @@
 
 #include <array>
 #include <cmath>
+#include <memory>
 #include <string.h>
 #include <utility>
 #include <vector>
@@ -102,8 +104,9 @@ JSONRPC_STATUS CApplicationOperations::SetMute(const std::string &method, ITrans
        parameterObject["mute"].asString().compare("toggle") == 0) ||
       (parameterObject["mute"].isBoolean() &&
        parameterObject["mute"].asBoolean() != appVolume->IsMuted()))
-    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                                               static_cast<void*>(new CAction(ACTION_MUTE)));
+    CServiceBroker::GetAppMessenger()->SendMsg(
+        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        TransferToMessenger(std::make_unique<CAction>(ACTION_MUTE)));
   else if (!parameterObject["mute"].isBoolean() && !parameterObject["mute"].isString())
     return InvalidParams;
 

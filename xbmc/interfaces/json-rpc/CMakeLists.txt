@@ -41,6 +41,7 @@ set(HEADERS AddonsExecuteAddon.h
             JSONRPCUtils.h
             JSONServiceDescription.h
             JSONUtils.h
+            MessengerPayload.h
             PlaybackModes.h
             PlayerIds.h
             PlayerOperations.h
