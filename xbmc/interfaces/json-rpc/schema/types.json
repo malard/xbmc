@@ -5047,6 +5047,35 @@
       }
     }
   },
+  "GUI.ScreenAlignment": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "showing": {
+        "type": "boolean",
+        "required": true,
+        "description": "Whether the frames are on the screen now"
+      },
+      "ratios": {
+        "type": "array",
+        "uniqueItems": true,
+        "required": true,
+        "items": {
+          "type": "number"
+        },
+        "description": "The ratios whose frames are drawn, ascending. Reported whether or not the tool is showing, because a set may be stated before it is brought up"
+      },
+      "available": {
+        "type": "array",
+        "uniqueItems": true,
+        "required": true,
+        "items": {
+          "type": "number"
+        },
+        "description": "Every ratio a frame can be drawn for, ascending. This is Kodi's aspect ratio vocabulary, which a viewer may add to in userdata, so it is read rather than assumed"
+      }
+    }
+  },
   "System.Property.Name": {
     "type": "string",
     "enum": [

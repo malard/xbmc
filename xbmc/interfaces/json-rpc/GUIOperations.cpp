@@ -21,6 +21,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h"
+#include "guilib/WindowIDs.h"
 #include "input/WindowTranslator.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
@@ -30,16 +31,37 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "settings/windows/GUIWindowScreenAlignment.h"
+#include "utils/AspectRatioVocabulary.h"
 #include "utils/Screenshot.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
 
 using namespace JSONRPC;
 using namespace ADDON;
+
+namespace
+{
+CGUIWindowScreenAlignment* GetScreenAlignmentWindow()
+{
+  auto* const gui = CServiceBroker::GetGUI();
+  if (!gui)
+    return nullptr;
+
+  return gui->GetWindowManager().GetWindow<CGUIWindowScreenAlignment>(WINDOW_SCREEN_ALIGNMENT);
+}
+
+//! \brief A ratio as the API states them, rounded to four places so a caller can compare it.
+double PublishedAspect(float aspect)
+{
+  return std::round(static_cast<double>(aspect) * 10000.0) / 10000.0;
+}
+} // unnamed namespace
 
 JSONRPC_STATUS CGUIOperations::GetProperties(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
@@ -227,6 +249,82 @@ JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const std::string& method,
 
   result["deleted"] = removed.deleted;
   return OK;
+}
+
+JSONRPC_STATUS CGUIOperations::SetScreenAlignment(const std::string& method,
+                                                  ITransportLayer* transport,
+                                                  IClient* client,
+                                                  const CVariant& parameterObject,
+                                                  CVariant& result)
+{
+  CGUIWindowScreenAlignment* const window = GetScreenAlignmentWindow();
+  if (!window)
+    return FailedToExecute;
+
+  // Null is the only value meaning "unstated": the service description materialises an absent
+  // parameter as its type's empty value, so an omitted array arrives indistinguishable from the
+  // empty one that clears every frame.
+  if (!parameterObject["ratios"].isNull())
+  {
+    std::vector<float> ratios;
+    for (CVariant::const_iterator_array ratio = parameterObject["ratios"].begin_array();
+         ratio != parameterObject["ratios"].end_array(); ++ratio)
+      ratios.push_back(ratio->asFloat());
+
+    window->SetShownRatios(ratios);
+  }
+
+  if (!parameterObject["show"].isNull())
+  {
+    CGUIWindowManager& windowManager = CServiceBroker::GetGUI()->GetWindowManager();
+    const bool show = parameterObject["show"].asBoolean();
+
+    if (show != windowManager.IsWindowActive(WINDOW_SCREEN_ALIGNMENT))
+    {
+      if (show)
+        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTIVATE_WINDOW,
+                                                   WINDOW_SCREEN_ALIGNMENT, 0);
+      else
+        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_PREVIOUS_WINDOW);
+    }
+  }
+
+  result = GetScreenAlignmentState();
+  return OK;
+}
+
+JSONRPC_STATUS CGUIOperations::GetScreenAlignment(const std::string& method,
+                                                  ITransportLayer* transport,
+                                                  IClient* client,
+                                                  const CVariant& parameterObject,
+                                                  CVariant& result)
+{
+  if (!GetScreenAlignmentWindow())
+    return FailedToExecute;
+
+  result = GetScreenAlignmentState();
+  return OK;
+}
+
+CVariant CGUIOperations::GetScreenAlignmentState()
+{
+  CVariant state(CVariant::VariantTypeObject);
+
+  state["showing"] =
+      CServiceBroker::GetGUI()->GetWindowManager().IsWindowActive(WINDOW_SCREEN_ALIGNMENT);
+
+  state["ratios"] = CVariant(CVariant::VariantTypeArray);
+  if (const CGUIWindowScreenAlignment* const window = GetScreenAlignmentWindow())
+  {
+    for (const float ratio : window->ShownRatios())
+      state["ratios"].push_back(PublishedAspect(ratio));
+  }
+
+  state["available"] = CVariant(CVariant::VariantTypeArray);
+  for (const KODI::UTILS::AspectRatioEntry& entry : KODI::UTILS::CAspectRatioVocabulary::Entries())
+    state["available"].push_back(PublishedAspect(entry.ratio));
+
+  return state;
 }
 
 JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string &property, CVariant &result)

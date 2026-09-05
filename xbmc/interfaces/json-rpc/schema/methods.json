@@ -7572,6 +7572,69 @@
       "Unavailable"
     ]
   },
+  "GUI.SetScreenAlignment": {
+    "type": "method",
+    "description": "Show or hide the screen alignment frames, and state which aspect ratios are drawn. The frames are drawn at the true shape and at the full size of the display, ignoring the overscan calibration and the interface's proportions, because they exist to be aligned to rather than corrected. Intended for programming motorised masking or lens memory presets with nobody at the keyboard: state one ratio, read back what is on screen, programme the preset against it, then move to the next. Session state only - nothing here is written to disk, and neither the set nor the tool survives a restart.",
+    "transport": "Response",
+    "permission": "ControlGUI",
+    "params": [
+      {
+        "name": "show",
+        "description": "Whether the frames are on screen. Null, or omitted, leaves that as it is, so a set can be stated before the tool is shown, or changed while it is up.",
+        "schema": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "default": null
+        }
+      },
+      {
+        "name": "ratios",
+        "description": "The ratios whose frames are drawn, replacing whatever was drawn before. A ratio the vocabulary does not hold is dropped rather than approximated: an installer naming 2.40 and being shown 2.35 would programme the wrong mask position. An empty array draws no frames; null, or omitted, leaves the set as it is.",
+        "schema": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "number"
+              }
+            }
+          ],
+          "default": null
+        }
+      }
+    ],
+    "returns": {
+      "$ref": "GUI.ScreenAlignment",
+      "description": "The state in force, which is what the answer to GUI.GetScreenAlignment would be"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
+  "GUI.GetScreenAlignment": {
+    "type": "method",
+    "description": "The state of the screen alignment frames, and every ratio one can be drawn for",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [],
+    "returns": {
+      "$ref": "GUI.ScreenAlignment"
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
+  },
   "GUI.GetInfoLabels": {
     "type": "method",
     "description": "Retrieve info labels about Kodi and the system",

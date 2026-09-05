@@ -42,6 +42,17 @@ namespace JSONRPC
                                             const CVariant& parameterObject,
                                             CVariant& result);
 
+    static JSONRPC_STATUS SetScreenAlignment(const std::string& method,
+                                             ITransportLayer* transport,
+                                             IClient* client,
+                                             const CVariant& parameterObject,
+                                             CVariant& result);
+    static JSONRPC_STATUS GetScreenAlignment(const std::string& method,
+                                             ITransportLayer* transport,
+                                             IClient* client,
+                                             const CVariant& parameterObject,
+                                             CVariant& result);
+
     //! Also serves the deprecated XBMC.GetInfoLabels.
     static JSONRPC_STATUS GetInfoLabels(const std::string& method,
                                         ITransportLayer* transport,
@@ -57,6 +68,8 @@ namespace JSONRPC
                                           CVariant& result);
 
   private:
+    static CVariant GetScreenAlignmentState();
+
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
     static CVariant GetStereoModeObjectFromGuiMode(const RenderStereoMode mode);
   };

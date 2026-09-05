@@ -17,6 +17,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestPVREpgFields.cpp
             TestPVRProviderSchema.cpp
             TestPVRRecordingSchema.cpp
+            TestScreenAlignmentSchema.cpp
             TestSetConfiguration.cpp
             TestSettingsLevel.cpp
             TestSettingsValueGate.cpp
