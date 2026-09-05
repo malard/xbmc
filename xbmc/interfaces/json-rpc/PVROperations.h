@@ -82,7 +82,7 @@ namespace JSONRPC
 
   protected:
     /*!
-     \brief Read the optional or required starttime/endtime pair of a request
+     \brief Read the starttime/endtime pair of a request
 
      Both absent leaves start and end invalid (no range) when not required; otherwise both
      must parse and end must not precede start.

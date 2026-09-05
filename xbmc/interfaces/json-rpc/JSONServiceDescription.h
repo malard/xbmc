@@ -69,9 +69,7 @@ namespace JSONRPC
     bool referencedTypeSet = false;
 
     /*!
-     \brief Whether the body has been parsed
-
-     False only while AddType has the type registered ahead of parsing it.
+     \brief False only while AddType has the type registered ahead of parsing it
      */
     bool parsed = true;
 
@@ -87,10 +85,7 @@ namespace JSONRPC
     std::string description;
 
     /*!
-     \brief Whether the value still exists but should no longer be relied on
-
-     The JSON Schema 2020-12 annotation, valid on any schema, so a single property
-     of a type can carry it. The description says what to use instead.
+     \brief Valid on any schema, so a single property of a type can carry it
      */
     bool deprecated = false;
 
@@ -106,10 +101,7 @@ namespace JSONRPC
     std::vector<JSONSchemaTypeDefinitionPtr> unionTypes;
 
     /*!
-     \brief Whether or not the parameter is optional
-
-     Set by the containing object schema's "required" array or the containing
-     content descriptor, never by the schema itself.
+     \brief Set by the containing object's "required" array, never by the schema itself
      */
     bool optional = true;
 
@@ -249,9 +241,6 @@ namespace JSONRPC
     std::string description;
     /*!
      \brief Whether the method still works but should no longer be called
-
-     Reported through JSONRPC.Introspect and as OpenRPC's deprecated flag. The
-     description says what to use instead.
      */
     bool deprecated = false;
     /*!
@@ -263,9 +252,7 @@ namespace JSONRPC
      */
     JSONSchemaTypeDefinitionPtr returns;
     /*!
-     \brief Errors the implementation can return, beyond those any request can receive
-
-     Derived from the handler's source by tools/jsonrpc/method_errors.py.
+     \brief Errors this method can return, beyond those any request can receive
      */
     std::vector<const JsonRpcStatusDescription*> errors;
 

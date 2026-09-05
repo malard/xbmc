@@ -22,8 +22,7 @@ enum class SettingLevel {
 
 /*!
  \ingroup settings
- \brief Names a setting level for callers that have to spell one out.
- \return the name, or nullptr for Internal, which is not a level a viewer can be at
+ \brief Names a setting level, or nullptr for Internal, which is not a level a viewer can be at
  */
 inline const char* SettingLevelToString(SettingLevel level)
 {

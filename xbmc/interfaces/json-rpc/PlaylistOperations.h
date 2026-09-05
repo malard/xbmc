@@ -52,11 +52,10 @@ namespace JSONRPC
     static bool CheckMediaParameter(KODI::PLAYLIST::Id playlistId, const CVariant& itemObject);
 
     /*!
-     \brief Resolves the "item" parameter, reporting the entries that could not be resolved
-     \param playlistId The playlist the items are destined for
-     \param itemParam A single item or an array of them
-     \param items Receives the items that resolved, in request order
-     \param unresolved Each item that did not, with a "reason" of notfound, unavailable or invalid
+     \brief Resolves the "item" parameter, a single item or an array of them
+
+     What resolved arrives in items, in request order. Everything else arrives in unresolved,
+     each with a "reason" of notfound, unavailable or invalid.
      */
     static void HandleItemsParameter(KODI::PLAYLIST::Id playlistId,
                                      const CVariant& itemParam,

@@ -42,22 +42,14 @@ namespace JSONRPC
                                             const CVariant& parameterObject,
                                             CVariant& result);
 
-    /*!
-     \brief Answers the info labels a caller names
-
-     Also serves the deprecated XBMC.GetInfoLabels.
-     */
+    //! Also serves the deprecated XBMC.GetInfoLabels.
     static JSONRPC_STATUS GetInfoLabels(const std::string& method,
                                         ITransportLayer* transport,
                                         IClient* client,
                                         const CVariant& parameterObject,
                                         CVariant& result);
 
-    /*!
-     \brief Answers the boolean info conditions a caller names
-
-     Also serves the deprecated XBMC.GetInfoBooleans.
-     */
+    //! Also serves the deprecated XBMC.GetInfoBooleans.
     static JSONRPC_STATUS GetInfoBooleans(const std::string& method,
                                           ITransportLayer* transport,
                                           IClient* client,

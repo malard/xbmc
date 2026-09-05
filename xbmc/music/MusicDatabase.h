@@ -171,11 +171,6 @@ public:
               const ReplayGain& replayGain);
   bool GetSong(int idSong, CSong& song);
 
-  /*! \brief Retrieve a song, distinguishing a missing song from a failed lookup.
-   \param idSong the database id of the song.
-   \param song [out] the song to fill.
-   \return GetResult::Ok if retrieved, NotFound if there is no such song, Error otherwise.
-   */
   GetResult TryGetSong(int idSong, CSong& song);
 
   /*! \brief Update a song and all its nested entities (genres, artists, contributors)
@@ -318,13 +313,7 @@ public:
    */
   bool GetAlbum(int idAlbum, CAlbum& album, bool getSongs = true);
 
-  /*! \brief Retrieve an album, distinguishing a missing album from a failed lookup.
-   \param idAlbum the database id of the album.
-   \param album [out] the album to fill.
-   \param getSongs whether or not to retrieve songs, defaults to true.
-   \return GetResult::Ok if retrieved, NotFound if there is no such album, Error otherwise.
-           An album with no songs is retrieved with an empty song list.
-   */
+  //! An album with no songs is retrieved with an empty song list, not reported as missing.
   GetResult TryGetAlbum(int idAlbum, CAlbum& album, bool getSongs = true);
   int UpdateAlbum(int idAlbum,
                   const std::string& strAlbum,
@@ -395,20 +384,11 @@ public:
                 bool bScrapedMBID = false);
   bool GetArtist(int idArtist, CArtist& artist, bool fetchAll = false);
 
-  /*! \brief Retrieve an artist, distinguishing a missing artist from a failed lookup.
-   \param idArtist the database id of the artist.
-   \param artist [out] the artist to fill.
-   \param fetchAll whether or not to retrieve the discography and video links.
-   \return GetResult::Ok if retrieved, NotFound if there is no such artist, Error otherwise.
-   */
+  //! fetchAll also retrieves the discography and video links.
   GetResult TryGetArtist(int idArtist, CArtist& artist, bool fetchAll = false);
 
   bool GetArtistExists(int idArtist);
 
-  /*! \brief Establish whether an artist exists, distinguishing a miss from a failed lookup.
-   \param idArtist the database id of the artist.
-   \return GetResult::Ok if the artist exists, NotFound if it does not, Error otherwise.
-   */
   GetResult TryGetArtistExists(int idArtist);
   int GetLastArtist() const;
   int GetArtistFromMBID(const std::string& strMusicBrainzArtistID, std::string& artistname);
@@ -706,10 +686,8 @@ public:
   // Scraper
   /////////////////////////////////////////////////
   /*! \brief Set the information provider for a single artist or album.
-   \param id the database id of the artist or album.
    \param content ARTISTS or ALBUMS.
-   \param scraper the scraper to use; nullptr clears the item's own, and the default applies.
-   \return true on success, false otherwise.
+   \param scraper nullptr clears the item's own, leaving the default to apply.
    */
   bool SetScraper(int id, ADDON::ContentType content, const ADDON::ScraperPtr& scraper);
   bool SetScraperAll(const std::string& strBaseDir, const ADDON::ScraperPtr& scraper);

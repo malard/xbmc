@@ -16,23 +16,12 @@ class CVariant;
 namespace JSONRPC
 {
 
-/*! \brief Translate an EPG tag's cast string into a Video.Cast array.
-
- The EPG format carries names only, so the role is empty and the order is the position in
- the string.
-
- \param cast the cast as CPVREpgInfoTag::Serialize writes it
- \return a Video.Cast array, empty when there are no names
- */
+//! A Video.Cast array. The EPG format carries names only, so every role is empty and the
+//! order is the name's position. Empty when there are no names.
 CVariant TranslateEpgCast(const std::string& cast);
 
-/*! \brief The fields a broadcast nested inside a channel answers with.
-
- Everything PVR.Fields.Broadcast declares, read from the service description so a field
- added there reaches the nested copy.
-
- \return the field names, empty when the service description has not been parsed
- */
+//! Everything PVR.Fields.Broadcast declares, so a field added there reaches the broadcast
+//! nested inside a channel. Empty until the service description has been parsed.
 std::set<std::string> BroadcastFields();
 
 } // namespace JSONRPC

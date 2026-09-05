@@ -94,10 +94,7 @@ namespace JSONRPC
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
 
   protected:
-    /*! \brief Add how a file was played to an item that already says what it is.
-     \param fileDetails the tag filled from the files table
-     \param details the tag to add it to, left otherwise untouched
-    */
+    //! Adds the files table's playback state to an item that already says what it is.
     static void ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details);
 
     struct PlaybackUpdate
@@ -107,10 +104,6 @@ namespace JSONRPC
     };
 
     /*! \brief The playback state a show-level update leaves one of its episodes with.
-     \param show the show's tag, carrying the values the update asked for
-     \param updatePlaycount whether the update named a playcount
-     \param updateLastplayed whether the update named a lastplayed
-     \param episode the episode as the library holds it
      \return what to store, or nothing when the episode is left as it is
     */
     static std::optional<PlaybackUpdate> EpisodePlaybackUpdate(const CVideoInfoTag& show,
@@ -132,17 +125,8 @@ namespace JSONRPC
     static JSONRPC_STATUS HandleItems(const char *idProperty, const char *resultName, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool limit = true);
     static JSONRPC_STATUS RemoveVideo(const CVariant &parameterObject);
 
-    /*! \brief Queue a refresh of the library item an identifier names
-     \param identifier the object carrying the item's library id
-     \param parameterObject the call's parameters, for the options the refresh takes
-    */
     static JSONRPC_STATUS RefreshVideo(const CVariant& identifier, const CVariant& parameterObject);
 
-    /*! \brief Fill in the item a refresh acts on from the identifier naming it
-     \param identifier the object carrying the item's library id
-     \param videodatabase an open video database
-     \param item the item to fill in
-    */
     static JSONRPC_STATUS ResolveRefreshItem(const CVariant& identifier,
                                              CVideoDatabase& videodatabase,
                                              CFileItem& item);

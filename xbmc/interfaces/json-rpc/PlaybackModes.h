@@ -18,44 +18,21 @@ class CVariant;
 namespace JSONRPC
 {
 
-/*! \brief Translate the "shuffle" parameter, a state or "toggle", into the state it asks for.
- \param shuffle the parameter as given by the client
- \param current whether the target is shuffled at the moment
- \return the requested state, or nothing when that is the current state already
- */
+//! Also accepts "toggle". Nothing when the value names no state, or the one already in force.
 std::optional<bool> ParseShuffleState(const CVariant& shuffle, bool current);
 
-/*! \brief Translate the "repeat" parameter into the state it names.
- \param repeat the parameter as given by the client
- \return the named state, or RepeatState::NONE for anything else
- */
+//! Anything the enum does not name reads as RepeatState::NONE.
 KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
 
-/*! \brief Translate the "repeat" parameter into the state it asks for.
- Also accepts "cycle", which steps none -> all -> one -> none from the current state.
- \param repeat the parameter as given by the client
- \param current the state of the target at the moment
- \return the requested state
- */
+//! Also accepts "cycle", which steps none -> all -> one -> none from the current state.
 KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat,
                                              KODI::PLAYLIST::RepeatState current);
 
-/*! \brief Apply the "shuffle" parameter to a playlist.
- \param playlistId the playlist
- \param shuffle the parameter as given by the client
- */
 void ApplyShuffle(KODI::PLAYLIST::Id playlistId, const CVariant& shuffle);
 
-/*! \brief Apply the "repeat" parameter to a playlist.
- \param playlistId the playlist
- \param repeat the parameter as given by the client
- */
 void ApplyRepeat(KODI::PLAYLIST::Id playlistId, const CVariant& repeat);
 
-/*! \brief Apply the "shuffle" parameter to the running slideshow, which cannot be unshuffled.
- \param shuffle the parameter as given by the client
- \return FailedToExecute when asked to unshuffle it
- */
+//! FailedToExecute when asked to unshuffle: a running slideshow cannot be.
 JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle);
 
 } // namespace JSONRPC

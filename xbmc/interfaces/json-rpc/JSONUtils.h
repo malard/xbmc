@@ -67,12 +67,7 @@ namespace JSONRPC
     }
 
   protected:
-    /*!
-     \brief The property names in a list of properties
-
-     \param properties A "properties" array
-     \return Its members, empty when it is not an array
-     */
+    //! Empty when the value is not an array.
     static std::set<std::string> FieldNames(const CVariant& properties)
     {
       std::set<std::string> fields;
@@ -86,12 +81,6 @@ namespace JSONRPC
       return fields;
     }
 
-    /*!
-     \brief The property names a request asks to have filled in
-
-     \param parameterObject The parameters of the call
-     \return The members of its "properties" parameter, empty when it has none
-     */
     static std::set<std::string> RequestedFields(const CVariant& parameterObject)
     {
       return FieldNames(parameterObject["properties"]);
@@ -480,9 +469,6 @@ namespace JSONRPC
       return parameterObject.isMember(key) && !parameterObject[key].isNull();
     }
 
-    /*!
-     \brief The status a method answers for the outcome of a by-id database lookup.
-     */
     static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup)
     {
       switch (lookup)

@@ -149,9 +149,8 @@ void CTCPServer::Process()
 
         // Reading faster than the worker parses would queue without limit, so a connection
         // that is far enough ahead is left unread until the worker catches up. Its receive
-        // window closes and the client waits, which is the backpressure that running the
-        // request on this thread used to provide. Nothing is refused, and a request of any
-        // size still arrives - at the rate it can be consumed.
+        // window closes and the client waits. Nothing is refused, and a request of any size
+        // still arrives - at the rate it can be consumed.
         if (m_connections[i]->Backlogged())
         {
           backlogged = true;

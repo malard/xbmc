@@ -79,14 +79,8 @@ namespace JSONRPC
                                       CVariant& result);
 
   protected:
-    /*!
-     \brief List a directory as a slideshow would, split into its pictures and its playable media
-     \param path The directory
-     \param recursive Whether to descend into subdirectories
-     \param pictures Receives the picture files
-     \param media Receives the video and audio files, in file order
-     \return false if the directory could not be listed
-     */
+    //! Lists a directory as a slideshow would: pictures apart from the playable media,
+    //! which stays in file order.
     static bool ListSlideshowDirectory(const std::string& path,
                                        bool recursive,
                                        CFileItemList& pictures,

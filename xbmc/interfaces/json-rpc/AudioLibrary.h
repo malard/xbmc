@@ -90,14 +90,9 @@ namespace JSONRPC
     /*!
      \brief Resolves the listing an information provider is being applied to.
 
-     Answers the listing itself, dropping the id that names a single item within it, and
-     keeping every other filter the path carries - whether the path spelled it as an option
-     or as a path segment.
-
-     \param path a musicdb:// artists or albums path
-     \param content set to the content type of the listing
-     \param viewPath set to the listing to apply to
-     \return false if the path is not an artists or albums listing
+     Drops the id that names a single item within the listing, and keeps every other filter
+     the path carries, however the path spelled it. False for anything but a musicdb://
+     artists or albums listing.
      */
     static bool ResolveInfoProviderView(const std::string& path,
                                         ADDON::ContentType& content,

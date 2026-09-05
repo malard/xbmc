@@ -57,10 +57,7 @@ public:
    \returns true if we're allowed to access the settings
    */
   bool CheckSettingLevelLock(const SettingLevel& level, bool enforce = false);
-  /*! \brief Whether the given settings level may be entered without a master lock prompt
-   \param level - The level to check
-   \returns true if the level may be entered
-   */
+  //! Whether the level may be entered without a master lock prompt.
   bool IsSettingLevelUnlocked(const SettingLevel& level);
   bool CheckMenuLock(int iWindowID);
   bool IsVideoUnlocked();
