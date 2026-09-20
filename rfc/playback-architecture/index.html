@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playlists, entries and players</title>
+<style>
+:root {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+
+  --serif: Constantia, Cambria, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+
+  --measure: 70ch;
+  --rail: 14.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #0D1013;
+    --surface: #151A1F;
+    --sunk:    #10151A;
+    --ink:     #E4E9ED;
+    --muted:   #8B96A2;
+    --rule:    #252D35;
+    --rule-firm:#38434E;
+    --accent:  #3FB4BE;
+    --accent-soft: #10333A;
+    --lit:     #E0B45C;
+    --lit-soft:#3A2F17;
+    --warn:    #D2854E;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0D1013;
+  --surface: #151A1F;
+  --sunk:    #10151A;
+  --ink:     #E4E9ED;
+  --muted:   #8B96A2;
+  --rule:    #252D35;
+  --rule-firm:#38434E;
+  --accent:  #3FB4BE;
+  --accent-soft: #10333A;
+  --lit:     #E0B45C;
+  --lit-soft:#3A2F17;
+  --warn:    #D2854E;
+}
+:root[data-theme="light"] {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.masthead-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2.75rem 2rem 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+}
+.eyebrow .dot { color: var(--rule-firm); }
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin: 0;
+}
+.standfirst {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0;
+}
+.factbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2.2rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+.fact { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.3rem 0; }
+.fact dt {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fact dd { margin: 0; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- summary band ---------- */
+
+.band { border-bottom: 1px solid var(--rule); background: var(--sunk); }
+.band-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.9rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.5rem 2.5rem;
+}
+.tldr h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.tldr p, .tldr ul { max-width: 46ch; }
+.tldr p { margin: 0; font-size: 0.97rem; }
+.tldr ul { margin: 0; padding-left: 1.1rem; font-size: 0.92rem; }
+.tldr li { margin-bottom: 0.3rem; }
+.tldr li:last-child { margin-bottom: 0; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 3.25rem;
+  align-items: start;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2.25rem 0;
+  border-right: 1px solid var(--rule);
+}
+.rail h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.8rem;
+  font-weight: 600;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.rail li { counter-increment: toc; }
+.rail a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 2rem;
+  font-size: 0.855rem;
+  line-height: 1.3;
+  color: var(--muted);
+  text-decoration: none;
+  position: relative;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+}
+.rail a::before {
+  content: counter(toc, decimal-leading-zero);
+  position: absolute;
+  left: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--rule-firm);
+}
+.rail a:hover { color: var(--ink); }
+.rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rail a.here { color: var(--accent); border-left-color: var(--accent); }
+.rail a.here::before { color: var(--accent); }
+
+/* ---------- content ---------- */
+
+.content { padding: 2.25rem 0 0; min-width: 0; }
+section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
+
+h2.sec {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.3rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+h2.sec .num {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  flex: none;
+}
+.sec-rule { border: 0; border-top: 1px solid var(--rule-firm); margin: 0 0 1.35rem; }
+
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 1.9rem 0 0.55rem;
+}
+
+p, ul, ol.prose { max-width: var(--measure); }
+p { margin: 0 0 0.9rem; }
+ul.prose, ol.prose { margin: 0 0 1rem; padding-left: 1.15rem; }
+ul.prose li, ol.prose li { margin-bottom: 0.35rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+code, .mono { font-family: var(--mono); font-size: 0.875em; }
+p code, li code, td code {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  padding: 0.05em 0.32em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.lead { font-size: 1.05rem; line-height: 1.55; color: var(--ink); max-width: 62ch; }
+
+/* ---------- notes ---------- */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1rem;
+  margin: 1.1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: var(--measure);
+}
+.note.caution { border-left-color: var(--warn); background: var(--lit-soft); }
+.note p { margin: 0 0 0.5rem; max-width: none; }
+.note p:last-child { margin: 0; }
+.note-label {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.note.caution .note-label { color: var(--warn); }
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 34rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--sunk);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.m, th.m { font-family: var(--mono); font-size: 0.79rem; white-space: nowrap; }
+td.w { min-width: 10rem; }
+.chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--rule-firm);
+  color: var(--muted);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chip.brk { border-color: var(--warn); color: var(--warn); }
+.chip.ok { border-color: var(--accent); color: var(--accent); }
+.stamp { margin: 1.35rem 0 -0.6rem; }
+
+/* ---------- code ---------- */
+
+pre {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-firm);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: 1rem 0 1.35rem;
+  tab-size: 2;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; white-space: pre; }
+.c-com { color: var(--muted); font-style: italic; }
+
+/* ---------- figures ---------- */
+
+figure {
+  margin: 1.35rem 0 1.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 1.2rem;
+  max-width: var(--measure);
+}
+figure svg { display: block; width: 100%; height: auto; }
+
+/* ---------- footer ---------- */
+
+footer { border-top: 1px solid var(--rule); background: var(--surface); padding: 2rem 2rem 3rem; }
+.footer-inner { max-width: 76rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
+.footer-inner p { max-width: 60ch; margin: 0; }
+
+/* ---------- theme toggle ---------- */
+
+.toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--rule-firm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.toggle:hover { color: var(--ink); border-color: var(--accent); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rail {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding: 1.35rem 0;
+  }
+  .rail ol { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
+  .rail a { padding-left: 1.6rem; border-left: 0; }
+}
+@media (max-width: 40rem) {
+  .masthead-inner, .band-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">
+      <span>Kodi</span><span class="dot">/</span>
+      <span>Architecture proposal</span><span class="dot">/</span>
+      <span>Draft, open questions inside</span>
+    </div>
+    <h1>Playlists, entries and players</h1>
+    <p class="standfirst">Kodi has no single answer to what is playing and what is playing it, so every part of the application works it out for itself, from whatever source is nearest.</p>
+
+    <dl class="factbar">
+      <div class="fact"><dt>Derivations of "which player"</dt><dd>8, from 4 sources</dd></div>
+      <div class="fact"><dt>Playlist ids with storage</dt><dd>2 of 4</dd></div>
+      <div class="fact"><dt>Public contract for an id</dt><dd>integer, 0-2</dd></div>
+      <div class="fact"><dt>Where it inverted</dt><dd>200e60df99, 2015-03-05</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="band">
+  <div class="band-inner">
+
+    <div class="tldr">
+      <h2>Plainly</h2>
+      <p>A remote control asks Kodi what is playing. Different parts of Kodi answer differently, because each works it out from a different place at a different moment. This sets out one place to hold the answer, and what everyone else asks of it.</p>
+    </div>
+
+    <div class="tldr">
+      <h2>Substance</h2>
+      <ul>
+        <li>A <code>playerid</code> has named the current playlist, not the player, since 2015.</li>
+        <li>A playlist type is not a type: it selects one of two hardcoded members.</li>
+        <li>What an entry needs is static. What is active is state. One number carries both.</li>
+        <li>All twenty <code>Player.*</code> methods require an id the application itself has never needed.</li>
+        <li>Every failure here is a consumer reading the wrong one of those at the wrong moment.</li>
+      </ul>
+    </div>
+
+    <div class="tldr">
+      <h2>Where to look</h2>
+      <ul>
+        <li><a href="#now">&sect;03</a> &mdash; current state, in one diagram.</li>
+        <li><a href="#model">&sect;05</a> &mdash; the proposed model.</li>      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#asked">The questions</a></li>
+      <li><a href="#history">History</a></li>
+      <li><a href="#now">Current state</a></li>
+      <li><a href="#wrong">Failures</a></li>
+      <li><a href="#model">Proposal</a></li>
+      <li><a href="#probing">Playlist queries</a></li>
+      <li><a href="#parties">Publishers, before and after</a></li>
+      <li><a href="#compat">What changes for a client</a></li>
+      <li><a href="#nongoals">Non-goals</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+  <!-- 1 -->
+  <section id="asked">
+    <h2 class="sec"><span class="num">01</span>The questions</h2>
+    <hr class="sec-rule">
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Question</th><th>Nature</th></tr></thead>
+      <tbody>
+        <tr><td>What is playing</td><td>the entry</td></tr>
+        <tr><td>What kind of playback it is</td><td>a classification, which decides what controls to offer</td></tr>
+        <tr><td>Where it came from</td><td>a playlist and a position</td></tr>
+        <tr><td>What phase it is in</td><td>requested, opening, streaming, paused, ended, failed</td></tr>
+        <tr><td>What it contains</td><td>audio, video and subtitle streams</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>The askers are not one client: JSON-RPC, Python add-ons, the GUI info layer and skins, the UPnP renderer, AirPlay, CEC, the OSD, the slideshow, party mode, and the playlist player itself. Consistent has to mean consistent across all of them.</p>
+  </section>
+
+  <!-- 2 -->
+  <section id="history">
+    <h2 class="sec"><span class="num">02</span>History</h2>
+    <hr class="sec-rule">
+    <p class="lead">Three defensible steps and one deliberate inversion.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="m">When</th><th class="w">What</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="m">2010</td>
+          <td>Players addressed by media type name, in <code>AudioPlayer.*</code>, <code>VideoPlayer.*</code>, <code>PicturePlayer.*</code></td>
+          <td>One player core and one playlist per media type. Player identity and playlist identity were the same question.</td>
+        </tr>
+        <tr>
+          <td class="m">2011-08-31<br>c4f161e177</td>
+          <td>The three namespaces merge into <code>Player</code>, "accessed by a unique ID"</td>
+          <td><code>GetPlaylist(PlayerType)</code> is a constant switch. The identity is correct. The debt taken on is spelling the constants with the <code>PLAYLIST_*</code> values, because the numbers matched.</td>
+        </tr>
+        <tr>
+          <td class="m">2015-03-05<br>200e60df99</td>
+          <td>"Keep playlistid=playerid in JSON interface"</td>
+          <td>The constant switch becomes a live query of the current playlist, and <code>GetPlayer</code> gains a round-trip check against it. From here an id names the playlist, and a correct id can resolve to nothing.</td>
+        </tr>
+        <tr>
+          <td class="m">2024-05-10<br>f5a84bc31f</td>
+          <td><code>PLAYLIST::Id</code> becomes an enum class</td>
+          <td>The borrowing hardens into the type system: a playerid is now <em>typed</em> as a playlist id.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>The 2015 change fixed a real complaint, that two numbers clients treated as interchangeable had stopped agreeing. Faced with an invariant coming apart, it kept the invariant and gave up the identity. Everything it protected assumed one player core and one playlist per media type. Since then VideoPlayer absorbed audio playback, party mode went mixed, PVR arrived with radio channels carrying video, and a <code>bluray://</code> path is classified as neither video nor audio, so a disc belongs to no queue at all and the id a client sees comes from the guess.</p>
+  </section>
+
+  <!-- 3 -->
+  <section id="now">
+    <h2 class="sec"><span class="num">03</span>Current state</h2>
+    <hr class="sec-rule">
+    <p class="lead">Three partial sources, no reconciler, and every consumer picking one.</p>
+
+    <figure>
+      <svg viewBox="0 0 660 300" role="img" aria-labelledby="nowtitle">
+        <title id="nowtitle">Today, each consumer derives playback identity for itself</title>
+        <g font-family="Cascadia Mono, Consolas, monospace" font-size="11">
+
+          <rect x="230" y="8" width="180" height="26" fill="none" stroke="currentColor" opacity="0.6"/>
+          <text x="320" y="26" text-anchor="middle" fill="currentColor">play request</text>
+          <line x1="280" y1="34" x2="120" y2="70" stroke="currentColor" opacity="0.4"/>
+          <line x1="360" y1="34" x2="540" y2="70" stroke="currentColor" opacity="0.4"/>
+          <line x1="320" y1="34" x2="320" y2="70" stroke="currentColor" opacity="0.4"/>
+
+          <rect x="0" y="70" width="200" height="50" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="100" y="91" text-anchor="middle" fill="currentColor">CPlayListPlayer</text>
+          <text x="100" y="106" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">two hardcoded queues</text>
+
+          <rect x="230" y="70" width="180" height="50" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="320" y="91" text-anchor="middle" fill="currentColor">CApplication</text>
+          <text x="320" y="106" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">m_itemCurrentFile, set late</text>
+
+          <rect x="440" y="70" width="220" height="50" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="550" y="91" text-anchor="middle" fill="currentColor">CApplicationPlayer</text>
+          <text x="550" y="106" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">VideoPlayer, PAPlayer, External</text>
+
+          <text x="0" y="146" fill="currentColor" font-size="10" opacity="0.6">eight derivations of "which player", from four different sources</text>
+          <line x1="0" y1="154" x2="660" y2="154" stroke="currentColor" opacity="0.25" stroke-dasharray="3 3"/>
+
+          <line x1="60" y1="210" x2="100" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="60" y1="210" x2="520" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="195" y1="210" x2="300" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="330" y1="210" x2="560" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="465" y1="210" x2="140" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="600" y1="210" x2="350" y2="120" stroke="currentColor" opacity="0.5"/>
+          <line x1="600" y1="210" x2="620" y2="120" stroke="currentColor" opacity="0.5"/>
+
+          <rect x="0" y="210" width="120" height="44" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="60" y="231" text-anchor="middle" fill="currentColor" font-size="10">JSON-RPC</text>
+          <text x="60" y="245" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">playlist, player</text>
+
+          <rect x="135" y="210" width="120" height="44" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="195" y="231" text-anchor="middle" fill="currentColor" font-size="10">Python</text>
+          <text x="195" y="245" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">the item</text>
+
+          <rect x="270" y="210" width="120" height="44" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="330" y="231" text-anchor="middle" fill="currentColor" font-size="10">GUI, skins</text>
+          <text x="330" y="245" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">live player state</text>
+
+          <rect x="405" y="210" width="120" height="44" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="465" y="231" text-anchor="middle" fill="currentColor" font-size="10">UPnP, CEC</text>
+          <text x="465" y="245" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">the id in a notice</text>
+
+          <rect x="540" y="210" width="120" height="44" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="600" y="231" text-anchor="middle" fill="currentColor" font-size="10">slideshow,</text>
+          <text x="600" y="245" text-anchor="middle" fill="currentColor" font-size="10">party mode</text>
+
+          <text x="0" y="282" fill="currentColor" font-size="10" opacity="0.6">No arrow is wrong on its own. Nothing reconciles them, and none is marked as a guess.</text>
+        </g>
+      </svg>
+    </figure>
+
+    <h3>Known issues today</h3>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Observed</th><th>Because</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A remote enumerates a video's audio streams correctly and cannot switch any of them.</td>
+          <td>A video played from the music playlist is published as <code>playerid</code> 0. <code>GetProperties</code> serves video and audio from one branch so the menu is right, but <code>SetAudioStream</code> is not served for the audio player, and <code>playerid</code> 1 fails the round-trip against the playlist and resolves to nothing.</td>
+        </tr>
+        <tr>
+          <td>Enabling video party mode advertises a player id that its own methods reject.</td>
+          <td>The announcement is made in the same call that asks for playback, before the player has opened anything, so the player still answers for the previous file or for none.</td>
+        </tr>
+        <tr>
+          <td><code>Playlist.Add</code> on <code>playlistid</code> 2 succeeds and the items are gone.</td>
+          <td>Ids 2 and 3 have no storage. They resolve to a shared list that is cleared on every access.</td>
+        </tr>
+        <tr>
+          <td>Pausing costs two calls, the first of which is the one that answers wrongly.</td>
+          <td>All twenty <code>Player.*</code> methods require <code>playerid</code>, so a client must call <code>Player.GetActivePlayers</code> and hand the id back before it can do anything at all.</td>
+        </tr>
+        <tr>
+          <td>Shuffle and repeat changes carry a playlist id in the <code>playerid</code> field.</td>
+          <td><code>CPlayListPlayer</code> stamps its own id into a player notification.</td>
+        </tr>
+        <tr>
+          <td>A radio channel carrying video is published as two players at once.</td>
+          <td><code>IsPlayingVideo()</code> is true because video is decoding and <code>IsPlayingRadio()</code> is true because it is a radio channel, so both bits are set and one playback is published as two players. The notification for the same playback says <code>0</code>, because the announcement manager rewrites the id from radio or TV.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Where the id comes from</h3>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="m">Site</th><th>Derives "which player" from</th></tr></thead>
+      <tbody>
+        <tr><td class="m">PlayerOperations, GetActivePlayers</td><td>the current playlist, guessing when there is none</td></tr>
+        <tr><td class="m">PlayerOperations, GetPlayer</td><td>the client's id, round-tripped through that same guess</td></tr>
+        <tr><td class="m">ApplicationMessageHandling</td><td><code>IsPlayingVideo()</code></td></tr>
+        <tr><td class="m">ApplicationMessageHandling</td><td><code>VIDEO::IsVideo(item)</code></td></tr>
+        <tr><td class="m">VideoPlayer, four sites</td><td><code>HasVideo()</code></td></tr>
+        <tr><td class="m">CPartyModeManager</td><td><code>IsPlayingVideo()</code></td></tr>
+        <tr><td class="m">CPlayListPlayer</td><td>the playlist id, published as a playerid</td></tr>
+        <tr><td class="m">CAnnouncementManager</td><td>radio or TV, overwriting what the publisher decided</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>There are two playlists. <code>CPlayListPlayer</code> holds <code>m_PlaylistMusic</code> and <code>m_PlaylistVideo</code> as members; <code>TYPE_PICTURE</code> and <code>TYPE_GAME</code> resolve to a shared scratch object that is cleared on every access, so anything added to playlist 2 is discarded the next time anyone reads any unrecognised id. The playlist does nothing with its own type: <code>CPlayList::m_id</code> is read in three places, all of them stamping <code>playlistid</code> into an announcement.</p>
+  </section>
+
+  <!-- 4 -->
+  <section id="wrong">
+    <h2 class="sec"><span class="num">04</span>Failures</h2>
+    <hr class="sec-rule">
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Failure</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td>No authority</td><td>Eight derivations that disagree, and nothing to appeal to.</td></tr>
+        <tr><td>No value</td><td>A playerid is typed <code>PLAYLIST::Id</code>. The contract says it names a player; the type says it names a playlist. A holder cannot tell which it has.</td></tr>
+        <tr><td>No lifecycle</td><td>Events are emitted at implementation moments, not transitions any object owns, so a consumer must ask elsewhere what the state is, inside an interval nobody wrote down.</td></tr>
+        <tr><td>Static question, dynamic answer</td><td><code>IsPlayingVideo()</code> means "has the decoder got video up". Consumers use it to mean "is this a video". They agree only after streams open: while a file is opening the demuxer has not reached the video stream, so it returns a confident <code>false</code>.</td></tr>
+        <tr><td>Many producers, delayed delivery</td><td>Players, the playlist player, party mode and the slideshow each publish; the announcement manager rewrites afterwards; delivery is deferred to one low-priority thread, so a consumer that reads live state on receipt reads a different moment from the one described.</td></tr>
+        <tr><td>A target where none is needed</td><td>Every <code>Player.*</code> method requires a <code>playerid</code>. The application's own control surface, <code>PlayerControl</code>, has taken a verb and nothing else since 2010.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>The root is the last one. <code>playerid</code> is a classification pretending to be a handle - there are not three engines, video and audio are one object classified by what it opened, and picture is a window - and the only reason anything has to classify it at all is that the API asks a client to name a target. Every derivation in the table above exists to answer a question that should not be asked.</p>
+  </section>
+  <!-- 5 -->
+  <section id="model">
+    <h2 class="sec"><span class="num">05</span>Proposal</h2>
+    <hr class="sec-rule">
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Concept</th><th>Owns</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Entry</strong></td><td>What it is, and which players it needs. Static, known from the item, true before anything opens.</td></tr>
+        <tr><td><strong>Playlist</strong></td><td>An ordered set of entries, and its own shuffle and repeat. No type. Answers questions about its own contents.</td></tr>
+        <tr><td><strong>Playback</strong></td><td>What is playing now: the entry, the playlist it came from, the phase, the players in use. The verbs act on it, and everything published comes from it.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 660 330" role="img" aria-labelledby="proptitle">
+        <title id="proptitle">Proposed: entries declare, the playlist aggregates, one authority answers</title>
+        <g font-family="Cascadia Mono, Consolas, monospace" font-size="11">
+
+          <text x="0" y="10" fill="currentColor" font-size="10" opacity="0.6">PLAYLISTS &mdash; any number, no type, one may hold a single entry</text>
+
+          <rect x="0" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="100" y="40" text-anchor="middle" fill="currentColor">playlist 7</text>
+          <text x="100" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">shuffle, repeat, order</text>
+
+          <rect x="230" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="330" y="40" text-anchor="middle" fill="currentColor">playlist 8</text>
+          <text x="330" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">one entry, a direct play</text>
+
+          <rect x="460" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="560" y="40" text-anchor="middle" fill="currentColor">playlist 9</text>
+          <text x="560" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">slides, playing alongside 7</text>
+
+          <line x1="100" y1="66" x2="100" y2="92" stroke="currentColor" opacity="0.5"/>
+          <line x1="330" y1="66" x2="330" y2="92" stroke="currentColor" opacity="0.5"/>
+          <line x1="560" y1="66" x2="560" y2="92" stroke="currentColor" opacity="0.5"/>
+
+          <text x="0" y="86" fill="currentColor" font-size="10" opacity="0.6">ENTRIES &mdash; each declares what it needs, from the item alone</text>
+
+          <rect x="0" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
+          <text x="100" y="117" text-anchor="middle" fill="currentColor">needs { video }</text>
+
+          <rect x="230" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
+          <text x="330" y="117" text-anchor="middle" fill="currentColor">needs { audio }</text>
+
+          <rect x="460" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
+          <text x="560" y="117" text-anchor="middle" fill="currentColor">needs { picture }</text>
+
+          <line x1="100" y1="132" x2="180" y2="166" stroke="currentColor" opacity="0.5"/>
+          <line x1="330" y1="132" x2="330" y2="166" stroke="currentColor" opacity="0.5"/>
+          <line x1="560" y1="132" x2="480" y2="166" stroke="currentColor" opacity="0.5"/>
+
+          <rect x="0" y="166" width="660" height="58" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="330" y="190" text-anchor="middle" fill="currentColor" font-weight="bold">Playback</text>
+          <text x="330" y="208" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.75">current playlist &middot; current entry &middot; phase &middot; active players &middot; streams</text>
+
+          <line x1="60" y1="224" x2="60" y2="258" stroke="currentColor" opacity="0.5"/>
+          <line x1="195" y1="224" x2="195" y2="258" stroke="currentColor" opacity="0.5"/>
+          <line x1="330" y1="224" x2="330" y2="258" stroke="currentColor" opacity="0.5"/>
+          <line x1="465" y1="224" x2="465" y2="258" stroke="currentColor" opacity="0.5"/>
+          <line x1="600" y1="224" x2="600" y2="258" stroke="currentColor" opacity="0.5"/>
+
+          <rect x="0" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="60" y="283" text-anchor="middle" fill="currentColor" font-size="10">JSON-RPC</text>
+
+          <rect x="135" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="195" y="283" text-anchor="middle" fill="currentColor" font-size="10">Python</text>
+
+          <rect x="270" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="330" y="283" text-anchor="middle" fill="currentColor" font-size="10">GUI, skins</text>
+
+          <rect x="405" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="465" y="283" text-anchor="middle" fill="currentColor" font-size="10">UPnP, CEC</text>
+
+          <rect x="540" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="600" y="283" text-anchor="middle" fill="currentColor" font-size="10">slideshow</text>
+
+          <text x="0" y="320" fill="currentColor" font-size="10" opacity="0.6">One producer. A notification carries the facts as of the moment it describes, so no consumer looks up live state on receipt.</text>
+        </g>
+      </svg>
+    </figure>
+
+    <p>While a file is opening there are two answers and both are true: the entry needs video, and nothing is active yet.</p>
+
+    <p>A stack is one entry whose parts are internal. A gapless successor is the next entry. A mid-playback file swap is the playlist advancing. Each of those carries its own special case today; none of them needs one here.</p>
+
+    <h3>How it works</h3>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Step</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>Created</td><td>In <code>PlayFile()</code>, once the item and the player core are resolved and before the file is opened. It records the entry, the players that entry needs, the playlist and position it came from, and its phase.</td></tr>
+        <tr><td>Reported</td><td>The player reports transitions - opening, streaming, ended, failed. It is never asked to classify itself.</td></tr>
+        <tr><td>Published</td><td>A component announcing a player event hands over its property and the playback stamps the facts. They travel in the notification, so a consumer receiving one never looks up live state.</td></tr>
+        <tr><td>Resolved</td><td>Nothing to resolve. A transport verb acts on what is playing; a playlist verb names a playlist.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Publishing. The current site derives the id from the playlist, and guards on a player that may still be describing the previous file.</p>
+
+    <p class="stamp"><span class="chip brk">Before</span></p>
+    <pre><code>void CPartyModeManager::Announce()
+{
+  const auto appPlayer = components.GetComponent&lt;CApplicationPlayer&gt;();
+  if (appPlayer-&gt;IsPlaying())
+  {
+    CVariant data;
+    data["player"]["playerid"] =
+        static_cast&lt;int&gt;(CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist());
+    data["property"]["partymode"] = m_bEnabled;
+    CServiceBroker::GetAnnouncementManager()-&gt;Announce(
+        ANNOUNCEMENT::Player, "OnPropertyChanged", data);
+  }
+}</code></pre>
+
+    <p class="stamp"><span class="chip ok">After</span></p>
+    <pre><code>void CPartyModeManager::Announce()
+{
+  <span class="c-com">// the playback stamps the entry, the playlist, the kinds and the phase</span>
+  CServiceBroker::GetPlayback().Announce(PlayerProperty::PartyMode, m_bEnabled);
+}</code></pre>
+
+    <p>Pausing, from a remote.</p>
+
+    <p class="stamp"><span class="chip brk">Before</span></p>
+    <pre><code>--&gt; Player.GetActivePlayers        <span class="c-com">// the call that has been answering wrongly</span>
+&lt;-- [ { "playerid": 0, "type": "video" } ]
+--&gt; Player.PlayPause { "playerid": 0 }</code></pre>
+
+    <p class="stamp"><span class="chip ok">After</span></p>
+    <pre><code>--&gt; Player.PlayPause {}</code></pre>
+
+    <p>A radio channel carrying a video stream, on the two surfaces that describe it.</p>
+
+    <p class="stamp"><span class="chip brk">Before</span></p>
+    <pre><code><span class="c-com">// Player.GetActivePlayers - one playback, published as two players</span>
+[ { "playerid": 1, "type": "video" },
+  { "playerid": 0, "type": "audio" } ]
+
+<span class="c-com">// Player.OnPlay - the same playback, rewritten to radio</span>
+{ "player": { "playerid": 0, "speed": 1 },
+  "item":   { "type": "channel", "channeltype": "radio" } }</code></pre>
+
+    <p class="stamp"><span class="chip ok">After</span></p>
+    <pre><code><span class="c-com">// one playback, declaring its state</span>
+{ "player": { "players": [ "audio", "video" ], "speed": 1 },
+  "item":   { "type": "channel", "channeltype": "radio" } }</code></pre>
+
+    <h3>Proposed</h3>
+    <ul>
+      <li>Everything is a playlist, including a playlist of one.</li>
+      <li>A playlist has no type. Its identity is a handle.</li>
+      <li>Slideshow and game are real playlists, with storage.</li>
+      <li>An entry declares the players it needs.</li>
+      <li>What an entry needs and what is active are separate questions, separately answered.</li>
+      <li>A client never names a player. Transport verbs act on what is playing, playlist verbs name a playlist, and <code>Open</code> names what to play.</li>
+      <li>A notification declares a playback's state: what it is, the kinds it involves, the phase it is in. Two playbacks running at once each declare their own.</li>
+      <li>Values are typed. A raw integer or a string key is converted once, at the boundary.</li>
+      <li>Aggregates are published where practical. Accuracy is the contract, not completeness.</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section id="probing">
+    <h2 class="sec"><span class="num">06</span>Playlist queries</h2>
+    <hr class="sec-rule">
+    <p class="lead">Removing the type does not make a playlist mute. It makes its answers derived rather than declared.</p>
+
+    <p>A skin or an add-on drawing a view needs to know what it is drawing, and the common case is whether the playlist holds one kind of content or several, because that decides the layout. Nothing answers that at playlist level: <code>Playlist.GetPlaylists</code> returns <code>playlistid</code> and <code>type</code>, and the type names the queue rather than its contents - a mixed party mode is songs in the video queue. A skin holds the items and can count them itself. A remote has to fetch the whole list to learn what the list is.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Asked of a playlist</th><th>Answer comes from</th></tr></thead>
+      <tbody>
+        <tr><td>Is this one kind of content, or hybrid</td><td>the union of what its entries need: one member or several</td></tr>
+        <tr><td>What does it currently contain</td><td>counts per kind over the entries</td></tr>
+        <tr><td>Two 4K videos with two music tracks between them</td><td>the same aggregate, at the resolution a skin wants to draw</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Kodi answers where answering is practical, and what it answers has to be accurate rather than exhaustive. A consumer holding accurate counts can compose whatever else it needs on its own side of the boundary, which is where questions nobody anticipated belong.</p>
+
+    <div class="note">
+      <p class="note-label">Constraint</p>
+      <p>These answers are computed from the entries and are read-only, so they cannot disagree with the contents. They inform presentation. They never select a player - that stays with the entry. The moment anything behavioural reads a playlist-level property to choose a player, the type is back with an extra hop.</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="parties">
+    <h2 class="sec"><span class="num">07</span>Publishers, before and after</h2>
+    <hr class="sec-rule">
+    <p class="lead">The slideshow also subscribes, so it receives its own notifications.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Publisher</th><th>Publishes today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="m">CApplicationMessageHandling</td>
+          <td>Every <code>Player.On*</code> event. Each site sets the id from the current playlist.</td>
+          <td>The same events, none of them setting an id. The player block arrives filled in.</td>
+        </tr>
+        <tr>
+          <td class="m">CVideoPlayer</td>
+          <td>Subtitle and stream property changes. The id comes from a <code>playlist_type_hint</code> property on the item, or <code>-1</code> when nothing set it, which is not a valid id.</td>
+          <td>Reports the change. Playback publishes it.</td>
+        </tr>
+        <tr>
+          <td class="m">CPlayListPlayer</td>
+          <td>Shuffle and repeat changes, with a playlist id in the <code>playerid</code> field.</td>
+          <td>The same changes, carrying <code>playlistid</code> and no <code>playerid</code>.</td>
+        </tr>
+        <tr>
+          <td class="m">CPartyModeManager</td>
+          <td>The party mode property, with the id read from a player that has not opened anything yet.</td>
+          <td>Reports the property. Playback publishes it.</td>
+        </tr>
+        <tr>
+          <td class="m">CGUIWindowSlideShow</td>
+          <td>Its own <code>OnPlay</code>, <code>OnPause</code> and <code>OnStop</code>, with the picture id written in by hand.</td>
+          <td>Its slides are a playlist, so its events come from Playback like everything else.</td>
+        </tr>
+        <tr>
+          <td class="m">CAnnouncementManager</td>
+          <td>Rewrites the <code>playerid</code> for PVR channels, after the publisher has set it.</td>
+          <td>Rewrites nothing.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+  </section>
+  <!-- 8 -->
+  <section id="compat">
+    <h2 class="sec"><span class="num">08</span>What changes for a client</h2>
+    <hr class="sec-rule">
+    <p class="lead">An old call still does what its caller meant, because the verb does. Nothing is carried for its own sake.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Surface</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A <code>playerid</code> sent on a verb</td>
+          <td>Not read. The verb acts on what is playing. <code>Player.Stop</code> with an id for a player that is not running stops what is running, where today it fails.</td>
+        </tr>
+        <tr>
+          <td>A <code>playerid</code> in a notification</td>
+          <td>Not published. <code>players</code> says what the playback involves and <code>item</code> says what it is.</td>
+        </tr>
+        <tr>
+          <td><code>Player.GetActivePlayers</code></td>
+          <td>Its purpose was to vend an id to hand back. Nothing hands an id back.</td>
+        </tr>
+        <tr>
+          <td><code>playlistid</code></td>
+          <td>Unchanged, and now the only id a client sends. Ids <code>0</code> and <code>1</code> name the two queues Kodi has always shipped.</td>
+        </tr>
+        <tr>
+          <td>Playlist ids <code>2</code> and <code>3</code></td>
+          <td>Gain storage. <code>Playlist.Add</code> on <code>2</code> keeps what it is handed, where today it is discarded on the next read of any unrecognised id.</td>
+        </tr>
+        <tr>
+          <td>Event names and moments</td>
+          <td>Unchanged. <code>Player.OnPlay</code> keeps firing on the starting edge, because what it describes is known when the playback is created.</td>
+        </tr>
+        <tr>
+          <td>Python <code>onPlayBackStarted</code></td>
+          <td>Keeps its name and its moment. Its documented warning that "video or audio might not be available at this point" stops being load-bearing, because the callback carries what the entry needs.</td>
+        </tr>
+        <tr>
+          <td>The schema</td>
+          <td>Removing a required field from <code>Player.Notifications.Player</code>, and a required parameter from twenty methods, is breaking. It is a version bump, and it is the point of the exercise.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="nongoals">
+    <h2 class="sec"><span class="num">09</span>Non-goals</h2>
+    <hr class="sec-rule">
+    <p class="lead">Named as decisions, so they are not read as oversights.</p>
+
+    <ul>
+      <li><strong>Not renaming public events.</strong> The names are twelve years old and in every add-on.</li>
+      <li><strong>Not changing when notifications fire.</strong> The identity problem is solved by where the answer comes from, not by moving the moment.</li>
+      <li><strong>Not deciding whether the two permanent queues stay.</strong> This layer provides containers with identity and lifetime. Whether something above it keeps one for music and one for video, and keeps them across playbacks, is that owner's policy. Ids <code>0</code> and <code>1</code> name those two either way.</li>
+      <li><strong>Not touching player core selection.</strong> Which engine opens a file is a separate decision from what kind of playback it is.</li>
+      <li><strong>Not fixing <code>bluray://</code> classification.</strong> A disc path is recognised as neither video nor audio. That is xbmc/xbmc#29086, a defect in item classification rather than in identity.</li>
+      <li><strong>Not deciding PVR radio that carries video.</strong> That is xbmc/xbmc#29211. This proposal makes it expressible; it does not answer it.</li>
+      <li><strong>Not rewriting CVideoPlayer.</strong> It reports; it stops being asked what it is.</li>
+    </ul>
+  </section>
+
+
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p>Not a Team Kodi publication.</p>
+  </div>
+</footer>
+
+<button class="toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme">Theme</button>
+
+<script>
+(function () {
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var root = document.documentElement;
+    var current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var sections = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 120) { best = i; }
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () { mark(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  mark();
+})();
+</script>
+
+</body>
+</html>
