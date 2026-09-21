@@ -421,7 +421,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <div class="eyebrow">
       <span>Kodi</span><span class="dot">/</span>
       <span>Architecture proposal</span><span class="dot">/</span>
-      <span>Draft, open questions inside</span>
+      <span>Draft</span>
     </div>
     <h1>Playlists, entries and players</h1>
     <p class="standfirst">Kodi has no single answer to what is playing and what is playing it, so every part of the application works it out for itself, from whatever source is nearest.</p>
@@ -429,7 +429,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <dl class="factbar">
       <div class="fact"><dt>Derivations of "which player"</dt><dd>8, from 4 sources</dd></div>
       <div class="fact"><dt>Playlist ids with storage</dt><dd>2 of 4</dd></div>
-      <div class="fact"><dt>Public contract for an id</dt><dd>integer, 0-2</dd></div>
+      <div class="fact"><dt>Copies of "the current item"</dt><dd>5</dd></div>
       <div class="fact"><dt>Where it inverted</dt><dd>200e60df99, 2015-03-05</dd></div>
     </dl>
   </div>
@@ -440,7 +440,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
     <div class="tldr">
       <h2>Plainly</h2>
-      <p>A remote control asks Kodi what is playing. Different parts of Kodi answer differently, because each works it out from a different place at a different moment. This sets out one place to hold the answer, and what everyone else asks of it.</p>
+      <p>A remote control asks Kodi what is playing. Different parts of Kodi answer differently, because each works it out from a different place at a different moment. Kodi only ever renders two things, video and audio. This gives each a playlist that always exists, one place that knows what each is doing, and lets everyone else ask it.</p>
     </div>
 
     <div class="tldr">
@@ -448,9 +448,9 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <ul>
         <li>A <code>playerid</code> has named the current playlist, not the player, since 2015.</li>
         <li>A playlist type is not a type: it selects one of two hardcoded members.</li>
-        <li>What an entry needs is static. What is active is state. One number carries both.</li>
+        <li>What an entry claims is static. What is rendering is state. One number carries both.</li>
         <li>All twenty <code>Player.*</code> methods require an id the application itself has never needed.</li>
-        <li>Every failure here is a consumer reading the wrong one of those at the wrong moment.</li>
+        <li><code>CPlayListPlayer</code> is an index store the application drives from outside, and the current item is held in five places.</li>
       </ul>
     </div>
 
@@ -458,7 +458,10 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <h2>Where to look</h2>
       <ul>
         <li><a href="#now">&sect;03</a> &mdash; current state, in one diagram.</li>
-        <li><a href="#model">&sect;05</a> &mdash; the proposed model.</li>      </ul>
+        <li><a href="#model">&sect;05</a> &mdash; the proposed model.</li>
+        <li><a href="#next">&sect;07</a> &mdash; what plays next, and shuffle.</li>
+        <li><a href="#goes">&sect;10</a> &mdash; what is removed.</li>
+      </ul>
     </div>
 
   </div>
@@ -474,8 +477,11 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <li><a href="#now">Current state</a></li>
       <li><a href="#wrong">Failures</a></li>
       <li><a href="#model">Proposal</a></li>
+      <li><a href="#sides">Two sides</a></li>
+      <li><a href="#next">What plays next</a></li>
       <li><a href="#probing">Playlist queries</a></li>
       <li><a href="#parties">Publishers, before and after</a></li>
+      <li><a href="#goes">What goes</a></li>
       <li><a href="#compat">What changes for a client</a></li>
       <li><a href="#nongoals">Non-goals</a></li>
     </ol>
@@ -659,6 +665,8 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     </div>
 
     <p>There are two playlists. <code>CPlayListPlayer</code> holds <code>m_PlaylistMusic</code> and <code>m_PlaylistVideo</code> as members; <code>TYPE_PICTURE</code> and <code>TYPE_GAME</code> resolve to a shared scratch object that is cleared on every access, so anything added to playlist 2 is discarded the next time anyone reads any unrecognised id. The playlist does nothing with its own type: <code>CPlayList::m_id</code> is read in three places, all of them stamping <code>playlistid</code> into an announcement.</p>
+
+    <p><code>CPlayListPlayer</code> does not drive playback. <code>CApplicationMessageHandling</code> does: it calls <code>PlayNext</code> when a file ends, and for a gapless successor it takes the next index, holds it in the application, and writes it back into the playlist player when the file starts. The current item is therefore kept in five places - <code>CApplication::m_itemCurrentFile</code> and <code>m_nextPlaylistItem</code>, <code>CPlayListPlayer::m_iCurrentSong</code>, <code>CGUIInfoManager::m_currentFile</code> and <code>CApplicationStackHelper::m_currentStackPosition</code> - written at different moments for different readers.</p>
   </section>
 
   <!-- 4 -->
@@ -686,103 +694,73 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   <section id="model">
     <h2 class="sec"><span class="num">05</span>Proposal</h2>
     <hr class="sec-rule">
+    <p class="lead">Kodi renders two things, video and audio. Whatever is playing holds one or both, and that is the only classification anything needs.</p>
 
     <div class="table-wrap">
     <table>
-      <thead><tr><th class="w">Concept</th><th>Owns</th></tr></thead>
+      <thead><tr><th class="w">Piece</th><th>Owns</th></tr></thead>
       <tbody>
-        <tr><td><strong>Entry</strong></td><td>What it is, and which players it needs. Static, known from the item, true before anything opens.</td></tr>
-        <tr><td><strong>Playlist</strong></td><td>An ordered set of entries, and its own shuffle and repeat. No type. Answers questions about its own contents.</td></tr>
-        <tr><td><strong>Playback</strong></td><td>What is playing now: the entry, the playlist it came from, the phase, the players in use. The verbs act on it, and everything published comes from it.</td></tr>
+        <tr><td><strong>Entry</strong></td><td>One position in a playlist: the item, a stable id that is never reused, what it claims - Video, Audio or both - and what follows it. Static, known from the item, true before anything opens.</td></tr>
+        <tr><td class="m">CPlayList</td><td>The entries, its own lock, its cursor, its shuffle, and the rule for what happens after the end. It makes its own edits and says so afterwards. No type. Never reordered.</td></tr>
+        <tr><td class="m">IPlayListShuffle</td><td>What follows an entry, and what precedes it. <code>CPlayListNoShuffle</code> when shuffle is off, <code>CPlayListRandomShuffle</code> when it is on. A playlist always has one.</td></tr>
+        <tr><td class="m">CApplicationPlayLists</td><td>The Video playlist and the Audio playlist, which always exist. The phase of each, and whether Audio is following Video. Everything published comes from it. It replaces <code>CPlayListPlayer</code>.</td></tr>
       </tbody>
     </table>
     </div>
 
     <figure>
-      <svg viewBox="0 0 660 330" role="img" aria-labelledby="proptitle">
-        <title id="proptitle">Proposed: entries declare, the playlist aggregates, one authority answers</title>
+      <svg viewBox="0 0 660 300" role="img" aria-labelledby="proptitle">
+        <title id="proptitle">Proposed: two playlists that always exist, one component that knows what each is doing</title>
         <g font-family="Cascadia Mono, Consolas, monospace" font-size="11">
 
-          <text x="0" y="10" fill="currentColor" font-size="10" opacity="0.6">PLAYLISTS &mdash; any number, no type, one may hold a single entry</text>
+          <text x="0" y="10" fill="currentColor" font-size="10" opacity="0.6">PLAYLISTS - one per side, always present, possibly empty</text>
 
-          <rect x="0" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="100" y="40" text-anchor="middle" fill="currentColor">playlist 7</text>
-          <text x="100" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">shuffle, repeat, order</text>
+          <rect x="0" y="20" width="315" height="70" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="157" y="42" text-anchor="middle" fill="currentColor">Video playlist</text>
+          <text x="157" y="59" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">entries &middot; cursor &middot; IPlayListShuffle</text>
+          <text x="157" y="74" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">after-me rule &middot; end rule &middot; play-next request</text>
 
-          <rect x="230" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="330" y="40" text-anchor="middle" fill="currentColor">playlist 8</text>
-          <text x="330" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">one entry, a direct play</text>
+          <rect x="345" y="20" width="315" height="70" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="502" y="42" text-anchor="middle" fill="currentColor">Audio playlist</text>
+          <text x="502" y="59" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">entries &middot; cursor &middot; IPlayListShuffle</text>
+          <text x="502" y="74" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">after-me rule &middot; end rule &middot; play-next request</text>
 
-          <rect x="460" y="20" width="200" height="46" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="560" y="40" text-anchor="middle" fill="currentColor">playlist 9</text>
-          <text x="560" y="55" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.65">slides, playing alongside 7</text>
+          <line x1="157" y1="90" x2="240" y2="130" stroke="currentColor" opacity="0.5"/>
+          <line x1="502" y1="90" x2="420" y2="130" stroke="currentColor" opacity="0.5"/>
 
-          <line x1="100" y1="66" x2="100" y2="92" stroke="currentColor" opacity="0.5"/>
-          <line x1="330" y1="66" x2="330" y2="92" stroke="currentColor" opacity="0.5"/>
-          <line x1="560" y1="66" x2="560" y2="92" stroke="currentColor" opacity="0.5"/>
+          <rect x="0" y="130" width="660" height="62" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="330" y="154" text-anchor="middle" fill="currentColor" font-weight="bold">CApplicationPlayLists</text>
+          <text x="330" y="173" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.75">per side: which playlist is driving it &middot; phase &nbsp;|&nbsp; audio follows video &nbsp;|&nbsp; the one publisher</text>
 
-          <text x="0" y="86" fill="currentColor" font-size="10" opacity="0.6">ENTRIES &mdash; each declares what it needs, from the item alone</text>
+          <line x1="60" y1="192" x2="60" y2="226" stroke="currentColor" opacity="0.5"/>
+          <line x1="195" y1="192" x2="195" y2="226" stroke="currentColor" opacity="0.5"/>
+          <line x1="330" y1="192" x2="330" y2="226" stroke="currentColor" opacity="0.5"/>
+          <line x1="465" y1="192" x2="465" y2="226" stroke="currentColor" opacity="0.5"/>
+          <line x1="600" y1="192" x2="600" y2="226" stroke="currentColor" opacity="0.5"/>
 
-          <rect x="0" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
-          <text x="100" y="117" text-anchor="middle" fill="currentColor">needs { video }</text>
+          <rect x="0" y="226" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="60" y="251" text-anchor="middle" fill="currentColor" font-size="10">JSON-RPC</text>
 
-          <rect x="230" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
-          <text x="330" y="117" text-anchor="middle" fill="currentColor">needs { audio }</text>
+          <rect x="135" y="226" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="195" y="251" text-anchor="middle" fill="currentColor" font-size="10">Python</text>
 
-          <rect x="460" y="92" width="200" height="40" fill="none" stroke="currentColor" opacity="0.65" stroke-dasharray="3 3"/>
-          <text x="560" y="117" text-anchor="middle" fill="currentColor">needs { picture }</text>
+          <rect x="270" y="226" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="330" y="251" text-anchor="middle" fill="currentColor" font-size="10">GUI, skins</text>
 
-          <line x1="100" y1="132" x2="180" y2="166" stroke="currentColor" opacity="0.5"/>
-          <line x1="330" y1="132" x2="330" y2="166" stroke="currentColor" opacity="0.5"/>
-          <line x1="560" y1="132" x2="480" y2="166" stroke="currentColor" opacity="0.5"/>
+          <rect x="405" y="226" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="465" y="251" text-anchor="middle" fill="currentColor" font-size="10">UPnP, CEC</text>
 
-          <rect x="0" y="166" width="660" height="58" fill="none" stroke="currentColor" stroke-width="2"/>
-          <text x="330" y="190" text-anchor="middle" fill="currentColor" font-weight="bold">Playback</text>
-          <text x="330" y="208" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.75">current playlist &middot; current entry &middot; phase &middot; active players &middot; streams</text>
+          <rect x="540" y="226" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
+          <text x="600" y="251" text-anchor="middle" fill="currentColor" font-size="10">slideshow</text>
 
-          <line x1="60" y1="224" x2="60" y2="258" stroke="currentColor" opacity="0.5"/>
-          <line x1="195" y1="224" x2="195" y2="258" stroke="currentColor" opacity="0.5"/>
-          <line x1="330" y1="224" x2="330" y2="258" stroke="currentColor" opacity="0.5"/>
-          <line x1="465" y1="224" x2="465" y2="258" stroke="currentColor" opacity="0.5"/>
-          <line x1="600" y1="224" x2="600" y2="258" stroke="currentColor" opacity="0.5"/>
-
-          <rect x="0" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="60" y="283" text-anchor="middle" fill="currentColor" font-size="10">JSON-RPC</text>
-
-          <rect x="135" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="195" y="283" text-anchor="middle" fill="currentColor" font-size="10">Python</text>
-
-          <rect x="270" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="330" y="283" text-anchor="middle" fill="currentColor" font-size="10">GUI, skins</text>
-
-          <rect x="405" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="465" y="283" text-anchor="middle" fill="currentColor" font-size="10">UPnP, CEC</text>
-
-          <rect x="540" y="258" width="120" height="40" fill="none" stroke="currentColor" opacity="0.65"/>
-          <text x="600" y="283" text-anchor="middle" fill="currentColor" font-size="10">slideshow</text>
-
-          <text x="0" y="320" fill="currentColor" font-size="10" opacity="0.6">One producer. A notification carries the facts as of the moment it describes, so no consumer looks up live state on receipt.</text>
+          <text x="0" y="290" fill="currentColor" font-size="10" opacity="0.6">One producer. A notification carries the facts as of the moment it describes, so no consumer looks up live state on receipt.</text>
         </g>
       </svg>
     </figure>
 
-    <p>While a file is opening there are two answers and both are true: the entry needs video, and nothing is active yet.</p>
+    <p>While a file is opening there are two answers and both are true: the entry claims Video, and nothing is rendering yet.</p>
 
-    <p>A stack is one entry whose parts are internal. A gapless successor is the next entry. A mid-playback file swap is the playlist advancing. Each of those carries its own special case today; none of them needs one here.</p>
-
-    <h3>How it works</h3>
-
-    <div class="table-wrap">
-    <table>
-      <thead><tr><th class="w">Step</th><th>What happens</th></tr></thead>
-      <tbody>
-        <tr><td>Created</td><td>In <code>PlayFile()</code>, once the item and the player core are resolved and before the file is opened. It records the entry, the players that entry needs, the playlist and position it came from, and its phase.</td></tr>
-        <tr><td>Reported</td><td>The player reports transitions - opening, streaming, ended, failed. It is never asked to classify itself.</td></tr>
-        <tr><td>Published</td><td>A component announcing a player event hands over its property and the playback stamps the facts. They travel in the notification, so a consumer receiving one never looks up live state.</td></tr>
-        <tr><td>Resolved</td><td>Nothing to resolve. A transport verb acts on what is playing; a playlist verb names a playlist.</td></tr>
-      </tbody>
-    </table>
-    </div>
+    <p>A stack is one entry whose parts are internal. A gapless successor is the next entry. A direct play is a playlist of one. Each of those carries its own special case today; none of them needs one here.</p>
 
     <p>Publishing. The current site derives the id from the playlist, and guards on a player that may still be describing the previous file.</p>
 
@@ -804,8 +782,8 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <p class="stamp"><span class="chip ok">After</span></p>
     <pre><code>void CPartyModeManager::Announce()
 {
-  <span class="c-com">// the playback stamps the entry, the playlist, the kinds and the phase</span>
-  CServiceBroker::GetPlayback().Announce(PlayerProperty::PartyMode, m_bEnabled);
+  <span class="c-com">// the component stamps the entry, the side, what it holds and the phase</span>
+  components.GetComponent&lt;CApplicationPlayLists&gt;()-&gt;Announce(PlayerProperty::PartyMode, m_bEnabled);
 }</code></pre>
 
     <p>Pausing, from a remote.</p>
@@ -830,54 +808,104 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
   "item":   { "type": "channel", "channeltype": "radio" } }</code></pre>
 
     <p class="stamp"><span class="chip ok">After</span></p>
-    <pre><code><span class="c-com">// one playback, declaring its state</span>
+    <pre><code><span class="c-com">// one playback, declaring what it holds</span>
 { "player": { "players": [ "audio", "video" ], "speed": 1 },
   "item":   { "type": "channel", "channeltype": "radio" } }</code></pre>
-
-    <h3>Proposed</h3>
-    <ul>
-      <li>Everything is a playlist, including a playlist of one.</li>
-      <li>A playlist has no type. Its identity is a handle.</li>
-      <li>Slideshow and game are real playlists, with storage.</li>
-      <li>An entry declares the players it needs.</li>
-      <li>What an entry needs and what is active are separate questions, separately answered.</li>
-      <li>A client never names a player. Transport verbs act on what is playing, playlist verbs name a playlist, and <code>Open</code> names what to play.</li>
-      <li>A notification declares a playback's state: what it is, the kinds it involves, the phase it is in. Two playbacks running at once each declare their own.</li>
-      <li>Values are typed. A raw integer or a string key is converted once, at the boundary.</li>
-      <li>Aggregates are published where practical. Accuracy is the contract, not completeness.</li>
-    </ul>
   </section>
 
   <!-- 6 -->
+  <section id="sides">
+    <h2 class="sec"><span class="num">06</span>Two sides</h2>
+    <hr class="sec-rule">
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Playing</th><th>Holds</th></tr></thead>
+      <tbody>
+        <tr><td>Music, a radio channel</td><td>Audio</td></tr>
+        <tr><td>A film, an episode, a TV channel, a game</td><td>Video and Audio</td></tr>
+        <tr><td>A picture slideshow</td><td>Video</td></tr>
+        <tr><td>A radio channel that turns out to carry video</td><td>Audio, and then Video as well</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Two things run at once only when what they hold does not overlap, which in practice is music under a slideshow. A new claim displaces whoever holds that side. That is what Kodi does today, written as special cases.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Rule</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Each side always has a playlist</td><td>Possibly empty. Queueing before anything plays works as it does now. Whether anything is playing is the phase, not whether a playlist exists.</td></tr>
+        <tr><td>Audio follows Video</td><td>When something on the Video side also claims Audio, Audio follows it for the duration. The Audio side's own playlist is kept and handed back when the film stops - stopped, not resumed, as today. It is the only takeover there is, so it is one flag.</td></tr>
+        <tr><td>A verb names a side</td><td>Video or Audio. With neither named it goes to both when they differ, and once when they are the same playlist.</td></tr>
+        <tr><td>No special cases for a bare verb</td><td>A bare toggle flips each; a bare <code>Next</code> advances both. A caller that cares which names its side. Kodi's own GUI actions are callers like any other, and know which window has focus.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="next">
+    <h2 class="sec"><span class="num">07</span>What plays next</h2>
+    <hr class="sec-rule">
+    <p class="lead">Decided inside the playlist, so it can be tested with no application, no player and no GUI.</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Asked, in order</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>A pending play-next request</td><td>That entry. One-shot: consumed when used, dropped if its target has been removed.</td></tr>
+        <tr><td>The entry's own rule</td><td>Advance, or play this entry again. A user skip leaves this step out, so a repeating entry can always be left.</td></tr>
+        <tr><td class="m">IPlayListShuffle</td><td>What follows this entry in play order.</td></tr>
+        <tr><td>The playlist's end rule</td><td>Stop, go to the first entry, or go to a named entry.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Repeat one and repeat all stop being two values of one setting: the first is a rule about an entry, the second a rule about the end. A sequence that plays through and then holds on its last slide is expressible; the stock GUI has no need to show it, and an add-on can drive it. A repeating entry that will not play stops playback, as now.</p>
+
+    <p>Looking is not moving. A skin's "up next" label and a player queueing its gapless successor ask what would follow; the cursor moves when that entry actually starts.</p>
+
+    <h3>Shuffle</h3>
+
+    <p>The stored list keeps the order it was built in. Shuffle is a routine behind <code>IPlayListShuffle</code> that answers what follows and what precedes an entry, and nothing else. It is told of every change to the list - which entry was added, removed or moved - and decides for itself whether to act. There is no unshuffle: turning shuffle off installs <code>CPlayListNoShuffle</code>, and the current entry is where it always was.</p>
+
+    <p>Uniform random clusters, which is what listeners report as "not random". A routine that spreads artists, or is seeded and reproducible, is a further class inheriting the same interface, written without touching any of this.</p>
+
+    <h3>Entries have ids</h3>
+
+    <p>Every consumer today addresses a playlist by integer position, and the playlist player exists largely to keep one such integer honest across edits. An entry's id survives any edit and resolves to nothing once the entry is gone, so the cursor, a play-next request, an end-rule target and a remote naming an entry are all the same kind of reference. Position is derived when asked for. MPD has worked this way for twenty years: <code>play</code> and <code>playid</code>, <code>delete</code> and <code>deleteid</code>.</p>
+  </section>
+
+  <!-- 8 -->
   <section id="probing">
-    <h2 class="sec"><span class="num">06</span>Playlist queries</h2>
+    <h2 class="sec"><span class="num">08</span>Playlist queries</h2>
     <hr class="sec-rule">
     <p class="lead">Removing the type does not make a playlist mute. It makes its answers derived rather than declared.</p>
-
-    <p>A skin or an add-on drawing a view needs to know what it is drawing, and the common case is whether the playlist holds one kind of content or several, because that decides the layout. Nothing answers that at playlist level: <code>Playlist.GetPlaylists</code> returns <code>playlistid</code> and <code>type</code>, and the type names the queue rather than its contents - a mixed party mode is songs in the video queue. A skin holds the items and can count them itself. A remote has to fetch the whole list to learn what the list is.</p>
 
     <div class="table-wrap">
     <table>
       <thead><tr><th class="w">Asked of a playlist</th><th>Answer comes from</th></tr></thead>
       <tbody>
-        <tr><td>Is this one kind of content, or hybrid</td><td>the union of what its entries need: one member or several</td></tr>
+        <tr><td>Is this one kind of content, or hybrid</td><td>the union of what its entries claim</td></tr>
         <tr><td>What does it currently contain</td><td>counts per kind over the entries</td></tr>
-        <tr><td>Two 4K videos with two music tracks between them</td><td>the same aggregate, at the resolution a skin wants to draw</td></tr>
+        <tr><td>What is current, and where is it</td><td>the cursor; the position is derived from it</td></tr>
       </tbody>
     </table>
     </div>
 
-    <p>Kodi answers where answering is practical, and what it answers has to be accurate rather than exhaustive. A consumer holding accurate counts can compose whatever else it needs on its own side of the boundary, which is where questions nobody anticipated belong.</p>
+    <p>Kodi answers where answering is practical, and what it answers has to be accurate rather than exhaustive. A consumer holding accurate counts can compose whatever else it needs on its own side of the boundary.</p>
 
     <div class="note">
       <p class="note-label">Constraint</p>
-      <p>These answers are computed from the entries and are read-only, so they cannot disagree with the contents. They inform presentation. They never select a player - that stays with the entry. The moment anything behavioural reads a playlist-level property to choose a player, the type is back with an extra hop.</p>
+      <p>These answers are computed from the entries and are read-only, so they cannot disagree with the contents. They inform presentation. They never decide what an entry claims - that stays with the entry.</p>
     </div>
   </section>
 
-  <!-- 7 -->
+  <!-- 9 -->
   <section id="parties">
-    <h2 class="sec"><span class="num">07</span>Publishers, before and after</h2>
+    <h2 class="sec"><span class="num">09</span>Publishers, before and after</h2>
     <hr class="sec-rule">
     <p class="lead">The slideshow also subscribes, so it receives its own notifications.</p>
 
@@ -887,28 +915,28 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <tbody>
         <tr>
           <td class="m">CApplicationMessageHandling</td>
-          <td>Every <code>Player.On*</code> event. Each site sets the id from the current playlist.</td>
-          <td>The same events, none of them setting an id. The player block arrives filled in.</td>
+          <td>Every <code>Player.On*</code> event. Each site sets the id from the current playlist. It also drives the playlist player from outside: <code>PlayNext</code> on ended, and the gapless index written in on started.</td>
+          <td>The same events, none of them setting an id. It asks the playlist for the next entry and opens it.</td>
         </tr>
         <tr>
           <td class="m">CVideoPlayer</td>
           <td>Subtitle and stream property changes. The id comes from a <code>playlist_type_hint</code> property on the item, or <code>-1</code> when nothing set it, which is not a valid id.</td>
-          <td>Reports the change. Playback publishes it.</td>
+          <td>Reports the change. <code>CApplicationPlayLists</code> publishes it.</td>
         </tr>
         <tr>
           <td class="m">CPlayListPlayer</td>
           <td>Shuffle and repeat changes, with a playlist id in the <code>playerid</code> field.</td>
-          <td>The same changes, carrying <code>playlistid</code> and no <code>playerid</code>.</td>
+          <td>Gone. The playlist reports the change; <code>CApplicationPlayLists</code> publishes it.</td>
         </tr>
         <tr>
           <td class="m">CPartyModeManager</td>
           <td>The party mode property, with the id read from a player that has not opened anything yet.</td>
-          <td>Reports the property. Playback publishes it.</td>
+          <td>Reports the property.</td>
         </tr>
         <tr>
           <td class="m">CGUIWindowSlideShow</td>
           <td>Its own <code>OnPlay</code>, <code>OnPause</code> and <code>OnStop</code>, with the picture id written in by hand.</td>
-          <td>Its slides are a playlist, so its events come from Playback like everything else.</td>
+          <td>Its slides are the Video playlist, so its events are published like everything else.</td>
         </tr>
         <tr>
           <td class="m">CAnnouncementManager</td>
@@ -918,11 +946,32 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       </tbody>
     </table>
     </div>
-
   </section>
-  <!-- 8 -->
+
+  <!-- 10 -->
+  <section id="goes">
+    <h2 class="sec"><span class="num">10</span>What goes</h2>
+    <hr class="sec-rule">
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="w">Removed</th><th>Because</th></tr></thead>
+      <tbody>
+        <tr><td class="m">CPlayListPlayer</td><td>Of 40 methods and 19 message cases, 7 and 18 are already plain forwarding, and 15 more become so once the playlist owns its edits, cursor and shuffle. The rest is one job, the current playback, which moves to <code>CApplicationPlayLists</code>. Its transport messages already name no player; they move to the application.</td></tr>
+        <tr><td>Five copies of the current item</td><td><code>m_itemCurrentFile</code>, <code>m_nextPlaylistItem</code>, <code>m_iCurrentSong</code>, the info manager's <code>m_currentFile</code>, and the stack helper's position as a rival cursor. One record, handed to whoever needs it.</td></tr>
+        <tr><td class="m">PLAYLIST::Id, TYPE_MUSIC, TYPE_VIDEO, TYPE_PICTURE</td><td>They were standing in for the two sides. Inside Kodi nothing names a playlist by number.</td></tr>
+        <tr><td class="m">playlist_type_hint</td><td>A playlist type doing duty as a player identity.</td></tr>
+        <tr><td class="m">UnShuffle(), and the order number written onto each item</td><td>The list is never reordered, so there is nothing to undo.</td></tr>
+        <tr><td>The playlist-edit messages and wrappers</td><td><code>CPlayList</code> locks itself, as <code>CFileItemList</code> and most of the tree do, so an edit no longer has to be marshalled onto the application thread.</td></tr>
+        <tr><td class="m">RepeatState</td><td>Replaced by the entry rule and the end rule.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- 11 -->
   <section id="compat">
-    <h2 class="sec"><span class="num">08</span>What changes for a client</h2>
+    <h2 class="sec"><span class="num">11</span>What changes for a client</h2>
     <hr class="sec-rule">
     <p class="lead">An old call still does what its caller meant, because the verb does. Nothing is carried for its own sake.</p>
 
@@ -931,56 +980,65 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <thead><tr><th class="w">Surface</th><th>What happens</th></tr></thead>
       <tbody>
         <tr>
-          <td>A <code>playerid</code> sent on a verb</td>
-          <td>Not read. The verb acts on what is playing. <code>Player.Stop</code> with an id for a player that is not running stops what is running, where today it fails.</td>
+          <td>A target on a verb</td>
+          <td>Video, Audio, or nothing. A bare <code>Player.Stop</code> stops everything.</td>
+        </tr>
+        <tr>
+          <td><code>playerid</code> and <code>playlistid</code></td>
+          <td>An interface-boundary matter only. If the API keeps accepting them, <code>0</code> becomes Audio and <code>1</code> and <code>2</code> become Video, once, at the edge.</td>
         </tr>
         <tr>
           <td>A <code>playerid</code> in a notification</td>
-          <td>Not published. <code>players</code> says what the playback involves and <code>item</code> says what it is.</td>
+          <td>Not published. <code>players</code> says what the playback holds and <code>item</code> says what it is.</td>
         </tr>
         <tr>
           <td><code>Player.GetActivePlayers</code></td>
-          <td>Its purpose was to vend an id to hand back. Nothing hands an id back.</td>
-        </tr>
-        <tr>
-          <td><code>playlistid</code></td>
-          <td>Unchanged, and now the only id a client sends. Ids <code>0</code> and <code>1</code> name the two queues Kodi has always shipped.</td>
+          <td>Removed. Its purpose was to vend an id to hand back, and nothing hands an id back.</td>
         </tr>
         <tr>
           <td>Playlist ids <code>2</code> and <code>3</code></td>
-          <td>Gain storage. <code>Playlist.Add</code> on <code>2</code> keeps what it is handed, where today it is discarded on the next read of any unrecognised id.</td>
+          <td><code>Playlist.Add</code> on <code>2</code> keeps what it is handed, where today it is discarded on the next read of any unrecognised id.</td>
         </tr>
         <tr>
-          <td>Event names and moments</td>
-          <td>Unchanged. <code>Player.OnPlay</code> keeps firing on the starting edge, because what it describes is known when the playback is created.</td>
+          <td>Entries</td>
+          <td>Gain an id. Position-based calls stay; an id-based form beside them cannot go stale.</td>
         </tr>
         <tr>
-          <td>Python <code>onPlayBackStarted</code></td>
-          <td>Keeps its name and its moment. Its documented warning that "video or audio might not be available at this point" stops being load-bearing, because the callback carries what the entry needs.</td>
+          <td>Shuffle</td>
+          <td><code>Playlist.GetItems</code> returns the list as built whether or not shuffle is on. What follows the current entry is a question, not the next row.</td>
+        </tr>
+        <tr>
+          <td>Event moments</td>
+          <td>Unchanged. <code>Player.OnPlay</code> keeps firing on the starting edge, because what it describes is known before anything opens.</td>
+        </tr>
+        <tr>
+          <td>Python</td>
+          <td><code>onPlayBackStarted</code> keeps its name and its moment, and carries what the entry claims. <code>xbmc.PlayList.unshuffle()</code> goes with the concept.</td>
         </tr>
         <tr>
           <td>The schema</td>
-          <td>Removing a required field from <code>Player.Notifications.Player</code>, and a required parameter from twenty methods, is breaking. It is a version bump, and it is the point of the exercise.</td>
+          <td>Removing a required field from <code>Player.Notifications.Player</code>, and a required parameter from twenty methods, is breaking. It is a version bump, and it is the point of the exercise. The JSON-RPC vocabulary around it is open to a clean-up at the same bump.</td>
         </tr>
       </tbody>
     </table>
     </div>
   </section>
 
-  <!-- 9 -->
+  <!-- 12 -->
   <section id="nongoals">
-    <h2 class="sec"><span class="num">09</span>Non-goals</h2>
+    <h2 class="sec"><span class="num">12</span>Non-goals</h2>
     <hr class="sec-rule">
     <p class="lead">Named as decisions, so they are not read as oversights.</p>
 
     <ul>
-      <li><strong>Not renaming public events.</strong> The names are twelve years old and in every add-on.</li>
+      <li><strong>Not touching the player engines.</strong> <code>IPlayerCallback</code> already reports every transition this needs. <code>CVideoPlayer</code> loses four announcement sites and nothing else.</li>
       <li><strong>Not changing when notifications fire.</strong> The identity problem is solved by where the answer comes from, not by moving the moment.</li>
-      <li><strong>Not deciding whether the two permanent queues stay.</strong> This layer provides containers with identity and lifetime. Whether something above it keeps one for music and one for video, and keeps them across playbacks, is that owner's policy. Ids <code>0</code> and <code>1</code> name those two either way.</li>
-      <li><strong>Not touching player core selection.</strong> Which engine opens a file is a separate decision from what kind of playback it is.</li>
-      <li><strong>Not fixing <code>bluray://</code> classification.</strong> A disc path is recognised as neither video nor audio. That is xbmc/xbmc#29086, a defect in item classification rather than in identity.</li>
+      <li><strong>Not renaming Python callbacks.</strong> Add-ons bind to them by name.</li>
+      <li><strong>Not touching player core selection.</strong> Which engine opens a file is a separate decision from what it holds.</li>
       <li><strong>Not deciding PVR radio that carries video.</strong> That is xbmc/xbmc#29211. This proposal makes it expressible; it does not answer it.</li>
-      <li><strong>Not rewriting CVideoPlayer.</strong> It reports; it stops being asked what it is.</li>
+      <li><strong>Not designing smarter shuffles.</strong> The interface is here; the routines are later work.</li>
+      <li><strong>Not moving the file-format loaders out of <code>CPlayList</code>.</strong> Nine subclasses make it both the live queue and a parser. Acknowledged, and left for its own change.</li>
+      <li><strong>Not a rename sweep.</strong> New names follow the <code>CPlayList</code> family; existing ones are normalised only where a change already touches them.</li>
     </ul>
   </section>
 
