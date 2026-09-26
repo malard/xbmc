@@ -127,6 +127,12 @@ public:
   int GetPlayingPosition(KODI::PLAYLIST::Type type) const;
 
   /*!
+   * \brief The playlist for items nobody named one for: Video if any of them is video, else Audio.
+   */
+  static KODI::PLAYLIST::Type ChooseType(const CFileItemList& items);
+  static KODI::PLAYLIST::Type ChooseType(const KODI::PLAYLIST::CPlayList& items);
+
+  /*!
    * \return Where items queued without naming a playlist go: the playlist being played, else the
    * one matching what the player has open, else the fallback.
    */

@@ -44,6 +44,7 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
 
+#include <algorithm>
 #include <mutex>
 
 using namespace KODI;
@@ -219,6 +220,23 @@ int CApplicationPlayLists::GetPlayingPosition(Type type) const
   if (GetPlayingType() != type)
     return -1;
   return GetPlayList(type).GetCurrentPosition();
+}
+
+Type CApplicationPlayLists::ChooseType(const CFileItemList& items)
+{
+  return std::ranges::any_of(items, [](const auto& item) { return VIDEO::IsVideo(*item); })
+             ? PLAYLIST::Video
+             : PLAYLIST::Audio;
+}
+
+Type CApplicationPlayLists::ChooseType(const CPlayList& items)
+{
+  for (int i = 0; i < items.size(); i++)
+  {
+    if (const auto item = items[i]; item && VIDEO::IsVideo(*item))
+      return PLAYLIST::Video;
+  }
+  return PLAYLIST::Audio;
 }
 
 Type CApplicationPlayLists::GetQueueType(Type fallback) const
@@ -959,16 +977,7 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
     if (list->Size() <= 0)
       return;
 
-    // Nobody named a playlist, so the items choose it.
-    Type type = PLAYLIST::Audio;
-    for (int i = 0; i < list->Size(); i++)
-    {
-      if (VIDEO::IsVideo(*list->Get(i)))
-      {
-        type = PLAYLIST::Video;
-        break;
-      }
-    }
+    const Type type = ChooseType(*list);
 
     GetPlayList(type).Clear();
     SetPlayingType(type);

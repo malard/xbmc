@@ -124,6 +124,9 @@ public:
   int  GetMessageMask() override;
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
 
+  /*!
+   * \param type The playlist a playlist file plays on; with none, its contents choose.
+   */
   bool PlayMedia(CFileItem& item,
                  const std::string& player,
                  std::optional<KODI::PLAYLIST::Type> type);

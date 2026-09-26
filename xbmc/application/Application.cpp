@@ -2033,23 +2033,10 @@ bool CApplication::PlayMedia(CFileItem& item,
 
     if (playlist)
     {
-
-      if (type)
-      {
-        int track=0;
-        if (item.HasProperty("playlist_starting_track"))
-          track = (int)item.GetProperty("playlist_starting_track").asInteger();
-        return ProcessAndStartPlaylist(item.GetPath(), *playlist, *type, track);
-      }
-      else
-      {
-        CLog::Log(LOGWARNING,
-                  "CApplication::PlayMedia called to play a playlist {} but no idea which playlist "
-                  "to use, playing first item",
-                  item.GetPath());
-        if (playlist->size())
-          return PlayFile(*(*playlist)[0], "", false);
-      }
+      const int track = static_cast<int>(item.GetProperty("playlist_starting_track").asInteger(0));
+      return ProcessAndStartPlaylist(item.GetPath(), *playlist,
+                                     type.value_or(CApplicationPlayLists::ChooseType(*playlist)),
+                                     track);
     }
   }
   else if (item.IsPVR())

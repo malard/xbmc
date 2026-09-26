@@ -159,6 +159,23 @@ TEST(TestApplicationPlayLists, QueueingReportsWhereTheItemsLanded)
   EXPECT_EQ(4, playLists.Queue(PLAYLIST::Video, items, false));
   EXPECT_EQ(-1, playLists.Queue(PLAYLIST::Video, CFileItemList{}, false));
 }
+TEST(TestApplicationPlayLists, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
+{
+  CFileItemList music;
+  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  music.Add(std::make_shared<CFileItem>("/music/two.mp3", false));
+  EXPECT_EQ(PLAYLIST::Audio, CApplicationPlayLists::ChooseType(music));
+
+  CFileItemList mixed;
+  mixed.Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  mixed.Add(std::make_shared<CFileItem>("/video/one.mkv", false));
+  EXPECT_EQ(PLAYLIST::Video, CApplicationPlayLists::ChooseType(mixed));
+
+  PLAYLIST::CPlayList playList;
+  playList.Add(mixed);
+  EXPECT_EQ(PLAYLIST::Video, CApplicationPlayLists::ChooseType(playList));
+}
+
 // The slideshow publishes, so an announcement manager is registered for the test. An unstarted one
 // only queues.
 class TestApplicationPlayListsSlideShow : public ::testing::Test
