@@ -95,6 +95,17 @@ void StartArtLookup(const CFileItem& item, bool lookupItem, const std::string& p
                                                    static_cast<void*>(update.release()));
                             });
 }
+
+// Whether what plays was put on the Audio side, or, for playback started outside the playlists,
+// whether the player is playing audio only.
+bool IsPlayingAsAudio()
+{
+  const auto& components = CServiceBroker::GetAppComponents();
+  if (const auto side = components.GetComponent<CApplicationPlayLists>()->GetPlayingSide(); side)
+    return *side == PLAYLIST::Side::Audio;
+  return components.GetComponent<CApplicationPlayer>()->IsPlayingAudio();
+}
+
 } // namespace
 
 CVideoGUIInfo::CVideoGUIInfo()
@@ -117,7 +128,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
   if (item && VIDEO::IsVideo(*item))
   {
     // special case where .strm is used to start an audio stream
-    if (NETWORK::IsInternetStream(*item) && m_appPlayer->IsPlayingAudio())
+    if (NETWORK::IsInternetStream(*item) && IsPlayingAsAudio())
       return false;
 
     CLog::Log(LOGDEBUG, "CVideoGUIInfo::InitCurrentItem({})", CURL::GetRedacted(item->GetPath()));

@@ -716,10 +716,8 @@ bool CMusicGUIInfo::GetBool(bool& value,
       break;
     case MUSICPLAYER_PLAYLISTPLAYING:
     {
-      const auto& components = CServiceBroker::GetAppComponents();
-      const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-      if (appPlayer->IsPlayingAudio() &&
-          AudioIsPlaying())
+      if (AudioIsPlaying() &&
+          PlayLists()->GetPhase(PLAYLIST::Side::Audio) != CApplicationPlayLists::Phase::Idle)
       {
         value = true;
         return true;
