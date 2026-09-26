@@ -28,6 +28,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/json-rpc/JSONUtils.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicFileItemClassify.h"
@@ -324,8 +325,86 @@ bool CApplicationPlayLists::IsPlayingChannel() const
   return item && item->HasPVRChannelInfoTag();
 }
 
+void CApplicationPlayLists::PublishPlayback(const CGUIMessage& message)
+{
+  const auto speed = [](int value)
+  {
+    CVariant data;
+    data["player"]["speed"] = value;
+    return data;
+  };
+
+  std::shared_ptr<const CFileItem> item;
+  {
+    std::unique_lock lock(m_critSection);
+    item = m_startedItem;
+  }
+  if (!item)
+  {
+    item = g_application.CurrentFileItemPtr();
+  }
+
+  using enum PlayerEvent;
+  switch (message.GetMessage())
+  {
+    case GUI_MSG_PLAYBACK_STARTED:
+    {
+      const std::shared_ptr<CFileItem> started = OnStarted(message);
+      {
+        std::unique_lock lock(m_critSection);
+        m_startedItem = started;
+      }
+      if (started)
+      {
+        Announce(Play, started, speed(1));
+      }
+      break;
+    }
+    case GUI_MSG_PLAYBACK_AVSTARTED:
+      Announce(AVStart, item, speed(1));
+      break;
+    case GUI_MSG_PLAYBACK_AVCHANGE:
+      Announce(AVChange, item, speed(1));
+      break;
+    case GUI_MSG_PLAYBACK_PAUSED:
+      Announce(Pause, item, speed(0));
+      break;
+    case GUI_MSG_PLAYBACK_RESUMED:
+      Announce(Resume, item, speed(1));
+      break;
+    case GUI_MSG_PLAYBACK_SPEED_CHANGED:
+      Announce(SpeedChanged, item, speed(message.GetParam1()));
+      break;
+    case GUI_MSG_PLAYBACK_SEEKED:
+    {
+      const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
+      CVariant data = speed(static_cast<int>(appPlayer->GetPlaySpeed()));
+      JSONRPC::CJSONUtils::MillisecondsToTimeObject(static_cast<int>(message.GetParam1AsI64()),
+                                                    data["player"]["time"]);
+      JSONRPC::CJSONUtils::MillisecondsToTimeObject(static_cast<int>(message.GetParam2AsI64()),
+                                                    data["player"]["seekoffset"]);
+      Announce(Seek, item, data);
+      break;
+    }
+    case GUI_MSG_PLAYBACK_STOPPED:
+    case GUI_MSG_PLAYBACK_ENDED:
+    {
+      CVariant data(CVariant::VariantTypeObject);
+      data["end"] = message.GetMessage() == GUI_MSG_PLAYBACK_ENDED;
+      Announce(Stop, item, data);
+      std::unique_lock lock(m_critSection);
+      m_startedItem.reset();
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
 {
+  PublishPlayback(message);
+
   switch (message.GetMessage())
   {
     case GUI_MSG_NOTIFY_ALL:
@@ -731,7 +810,7 @@ void CApplicationPlayLists::ClearQueued()
   m_queued = NO_ENTRY;
 }
 
-std::optional<std::shared_ptr<CFileItem>> CApplicationPlayLists::OnQueuedStarted()
+std::shared_ptr<CFileItem> CApplicationPlayLists::OnStarted(const CGUIMessage& message)
 {
   std::optional<Type> type;
   EntryId queued;
@@ -741,13 +820,40 @@ std::optional<std::shared_ptr<CFileItem>> CApplicationPlayLists::OnQueuedStarted
     queued = m_queued;
     m_queued = NO_ENTRY;
   }
+
   if (queued == NO_ENTRY)
-    return std::nullopt;
+  {
+    const auto item = std::static_pointer_cast<CFileItem>(message.GetItem());
+    return item ? std::make_shared<CFileItem>(*item) : nullptr;
+  }
 
-  if (!type || !GetPlayList(*type).SetCurrent(queued))
+  // the player started what it was handed to follow on, which may have left the playlist since
+  if (!type)
+  {
     return nullptr;
+  }
+  CPlayList& playList = GetPlayList(*type);
+  const int previous = playList.GetCurrentPosition();
+  const std::shared_ptr<CFileItem> item = playList.GetItem(queued);
+  if (!item || !playList.SetCurrent(queued))
+  {
+    return nullptr;
+  }
 
-  return GetPlayList(*type).GetItem(queued);
+  if (CGUIComponent* gui = CServiceBroker::GetGUI(); gui)
+  {
+    const int position = playList.GetCurrentPosition();
+    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, GetPlayerId(),
+                    ((previous & 0xffff) << 16) | (position & 0xffff), item);
+    gui->GetWindowManager().SendThreadMessage(msg);
+  }
+  return std::make_shared<CFileItem>(*item);
+}
+
+std::shared_ptr<CFileItem> CApplicationPlayLists::GetStartedItem() const
+{
+  std::unique_lock lock(m_critSection);
+  return m_startedItem;
 }
 
 void CApplicationPlayLists::SetShuffle(Type type, bool shuffle, bool notify /* = false */)
@@ -862,10 +968,16 @@ void CApplicationPlayLists::Announce(PlayerEvent event,
                                      const std::shared_ptr<const CFileItem>& item,
                                      CVariant data) const
 {
+  const auto announcer = CServiceBroker::GetAnnouncementManager();
+  if (!announcer)
+  {
+    return;
+  }
   if (event != PlayerEvent::Stop)
+  {
     data["player"]["playerid"] = GetPlayerId(item.get());
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, EventName(event), item,
-                                                     data);
+  }
+  announcer->Announce(ANNOUNCEMENT::Player, EventName(event), item, data);
 }
 
 void CApplicationPlayLists::OnSlideShow(PlayerEvent event,

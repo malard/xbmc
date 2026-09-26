@@ -259,11 +259,10 @@ public:
   void ClearQueued();
 
   /*!
-   * \brief The player started what OnNextQueued() handed it, so that is now the current entry.
-   * \return Nothing if nothing was queued; otherwise the entry's item, or nullptr if the entry
-   * has gone from the playlist since.
+   * \return What the player last started, as published; nullptr if it was an entry handed on by
+   * OnNextQueued() that has since left the playlist.
    */
-  std::optional<std::shared_ptr<CFileItem>> OnQueuedStarted();
+  std::shared_ptr<CFileItem> GetStartedItem() const;
 
   bool HasPlayedFirstFile() const;
   bool IsSingleItemNonRepeatPlaylist() const;
@@ -312,6 +311,19 @@ private:
   void EndPlayback(bool clearPlayList);
   void Announce(KODI::PLAYLIST::Type type, PlayerProperty property, const CVariant& value) const;
   void OnMediaPlay(KODI::MESSAGING::ThreadMessage* pMsg);
+
+  /*!
+   * \brief Publish what the player reports about playback, as Player notifications. This target
+   * is registered before the application's, so each notification precedes what the application
+   * does in answer, including starting the next entry.
+   */
+  void PublishPlayback(const CGUIMessage& message);
+
+  /*!
+   * \brief What the player started: the entry OnNextQueued() handed it, now current, or else the
+   * item it reports.
+   */
+  std::shared_ptr<CFileItem> OnStarted(const CGUIMessage& message);
   bool IsPlayingChannel() const;
 
   std::array<std::unique_ptr<KODI::PLAYLIST::CPlayList>, 2> m_playLists;
@@ -324,6 +336,7 @@ private:
   bool m_playbackStarted{false};
   bool m_playedFirstFile{false};
   KODI::PLAYLIST::EntryId m_queued{KODI::PLAYLIST::NO_ENTRY};
+  std::shared_ptr<CFileItem> m_startedItem;
   int m_failedSongs{0};
   std::chrono::steady_clock::time_point m_failedSongsStart;
 };

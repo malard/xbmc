@@ -170,6 +170,54 @@ TEST(TestApplicationPlayLists, QueueingReportsWhereTheItemsLanded)
   EXPECT_EQ(4, playLists.Queue(PLAYLIST::Video, items, false));
   EXPECT_EQ(-1, playLists.Queue(PLAYLIST::Video, CFileItemList{}, false));
 }
+
+TEST(TestApplicationPlayLists, WhatStartedIsACopyOfWhatThePlayerReports)
+{
+  CApplicationPlayLists playLists;
+  const auto reported = std::make_shared<CFileItem>("/video/film.mkv", false);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0, reported);
+  playLists.OnMessage(started);
+
+  const auto item = playLists.GetStartedItem();
+  ASSERT_NE(nullptr, item);
+  EXPECT_NE(reported, item);
+  EXPECT_EQ("/video/film.mkv", item->GetPath());
+}
+
+TEST(TestApplicationPlayLists, AHandedOnEntryIsWhatStartedAndBecomesCurrent)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  playLists.SetPlayingType(PLAYLIST::Video);
+  CPlayList& playList = playLists.GetPlayList(PLAYLIST::Video);
+  const EntryId third = playList.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
+
+  playLists.OnNextQueued(third);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
+                      std::make_shared<CFileItem>("/resolved/third.mkv", false));
+  playLists.OnMessage(started);
+
+  EXPECT_EQ(third, playList.GetCurrent());
+  ASSERT_NE(nullptr, playLists.GetStartedItem());
+  EXPECT_EQ("/video/third.mkv", playLists.GetStartedItem()->GetPath());
+}
+
+TEST(TestApplicationPlayLists, AHandedOnEntryThatLeftThePlayListStartsNothing)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  playLists.SetPlayingType(PLAYLIST::Video);
+  CPlayList& playList = playLists.GetPlayList(PLAYLIST::Video);
+  const EntryId third = playList.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
+
+  playLists.OnNextQueued(third);
+  playList.Remove(2);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
+                      std::make_shared<CFileItem>("/video/third.mkv", false));
+  playLists.OnMessage(started);
+
+  EXPECT_EQ(nullptr, playLists.GetStartedItem());
+}
 TEST(TestApplicationPlayLists, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
 {
   CFileItemList music;

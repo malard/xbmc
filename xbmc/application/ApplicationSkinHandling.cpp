@@ -176,9 +176,10 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   CLog::Log(LOGDEBUG, "Load Skin XML: {:.2f} ms", duration.count());
 
   CLog::Log(LOGINFO, "  initialize new skin...");
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(m_msgCb);
+  // The playlists publish what the player reports before the application acts on it.
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
       CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>().get());
+  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(m_msgCb);
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&g_fontManager);
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
       &CServiceBroker::GetGUI()->GetTextureCallbackManager());

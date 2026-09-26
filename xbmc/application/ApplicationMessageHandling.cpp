@@ -38,7 +38,6 @@
 #include "input/actions/Action.h"
 #include "interfaces/builtins/Builtins.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
-#include "interfaces/json-rpc/JSONUtils.h"
 #include "interfaces/python/XBPython.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/ThreadMessage.h"
@@ -575,33 +574,21 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       // @TODO move this away to platform code
       CDarwinUtils::SetScheduling(m_app.GetComponent<CApplicationPlayer>()->IsPlayingVideo());
 #endif
-      m_app.SetCurrentFileItem(
-          std::make_shared<CFileItem>(*std::static_pointer_cast<CFileItem>(message.GetItem())));
+      // the playlists have already decided what started, and published it
+      const std::shared_ptr<CFileItem> started =
+          m_app.GetComponent<CApplicationPlayLists>()->GetStartedItem();
+      m_app.SetCurrentFileItem(started
+                                   ? started
+                                   : std::make_shared<CFileItem>(
+                                         *std::static_pointer_cast<CFileItem>(message.GetItem())));
       m_app.ResetPlayerEvent();
 
       CServiceBroker::GetPVRManager().OnPlaybackStarted(m_app.CurrentFileItem());
 
-      const auto playLists = m_app.GetComponent<CApplicationPlayLists>();
-      const std::optional<PLAYLIST::Type> type = playLists->GetPlayingType();
-      const int previousPosition = type ? playLists->GetPlayList(*type).GetCurrentPosition() : -1;
+      // a handed-on entry that has left the playlist; the player may be stopped already
+      if (!started)
+        return true;
 
-      // Update our infoManager with the new details etc.
-      if (const auto queued = playLists->OnQueuedStarted(); queued)
-      {
-        // playing an item which is not in the list - player might be stopped already
-        // so do nothing
-        const std::shared_ptr<CFileItem>& item = *queued;
-        if (!item)
-          return true;
-
-        // we've started a previously queued item
-        const int position = playLists->GetPlayList(*type).GetCurrentPosition();
-        const int param = ((previousPosition & 0xffff) << 16) | (position & 0xffff);
-        CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, playLists->GetPlayerId(), param,
-                        item);
-        CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
-        m_app.SetCurrentFileItem(std::make_shared<CFileItem>(*item));
-      }
       CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*m_app.m_itemCurrentFile);
       g_partyModeManager.OnSongChange(true);
 
@@ -610,12 +597,6 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       // (does nothing if python is not loaded)
       CServiceBroker::GetXBPython().OnPlayBackStarted(*m_app.m_itemCurrentFile);
 #endif
-
-      CVariant param;
-      param["player"]["speed"] = 1;
-
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Play, m_app.CurrentFileItemPtr(), param);
 
       // we don't want a busy dialog when switching channels
       const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
@@ -719,11 +700,6 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       CServiceBroker::GetPVRManager().OnPlaybackStopped(m_app.CurrentFileItem());
       CServiceBroker::GetFavouritesService().OnPlaybackStopped(m_app.CurrentFileItem());
 
-      CVariant data(CVariant::VariantTypeObject);
-      data["end"] = false;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Stop, m_app.CurrentFileItemPtr(), data);
-
       const CPlaycountIncrementedHandler playCountIncrementedHandler{m_app.CurrentFileItem()};
 
       m_app.m_playerEvent.Set();
@@ -742,11 +718,6 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     {
       CServiceBroker::GetPVRManager().OnPlaybackEnded(m_app.CurrentFileItem());
       CServiceBroker::GetFavouritesService().OnPlaybackEnded(m_app.CurrentFileItem());
-
-      CVariant data(CVariant::VariantTypeObject);
-      data["end"] = true;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Stop, m_app.CurrentFileItemPtr(), data);
 
       m_app.m_playerEvent.Set();
 
@@ -798,10 +769,6 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_AVSTARTED:
     {
-      CVariant param;
-      param["player"]["speed"] = 1;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::AVStart, m_app.CurrentFileItemPtr(), param);
       m_app.m_playerEvent.Set();
 #ifdef HAS_PYTHON
       // informs python script currently running playback has started
@@ -818,57 +785,12 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       // (does nothing if python is not loaded)
       CServiceBroker::GetXBPython().OnAVChange();
 #endif
-      CVariant param;
-      param["player"]["speed"] = 1;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::AVChange, m_app.CurrentFileItemPtr(), param);
-      return true;
-    }
-
-    case GUI_MSG_PLAYBACK_PAUSED:
-    {
-      CVariant param;
-      param["player"]["speed"] = 0;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Pause, m_app.CurrentFileItemPtr(), param);
-      return true;
-    }
-
-    case GUI_MSG_PLAYBACK_RESUMED:
-    {
-      CVariant param;
-      param["player"]["speed"] = 1;
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Resume, m_app.CurrentFileItemPtr(), param);
       return true;
     }
 
     case GUI_MSG_PLAYBACK_SEEKED:
     {
-      CVariant param;
-      const int64_t iTime = message.GetParam1AsI64();
-      const int64_t seekOffset = message.GetParam2AsI64();
-      JSONRPC::CJSONUtils::MillisecondsToTimeObject(static_cast<int>(iTime),
-                                                    param["player"]["time"]);
-      JSONRPC::CJSONUtils::MillisecondsToTimeObject(static_cast<int>(seekOffset),
-                                                    param["player"]["seekoffset"]);
-      const auto& components = CServiceBroker::GetAppComponents();
-      const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-      param["player"]["speed"] = static_cast<int>(appPlayer->GetPlaySpeed());
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::Seek, m_app.CurrentFileItemPtr(), param);
-
-      CDataCacheCore::GetInstance().SeekFinished(static_cast<int>(seekOffset));
-
-      return true;
-    }
-
-    case GUI_MSG_PLAYBACK_SPEED_CHANGED:
-    {
-      CVariant param;
-      param["player"]["speed"] = message.GetParam1();
-      m_app.GetComponent<CApplicationPlayLists>()->Announce(
-          CApplicationPlayLists::PlayerEvent::SpeedChanged, m_app.CurrentFileItemPtr(), param);
+      CDataCacheCore::GetInstance().SeekFinished(static_cast<int>(message.GetParam2AsI64()));
 
       return true;
     }
