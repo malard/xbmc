@@ -36,7 +36,6 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/Action.h"
-#include "interfaces/AnnouncementManager.h"
 #include "interfaces/builtins/Builtins.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "interfaces/json-rpc/JSONUtils.h"
@@ -615,10 +614,9 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
       CVariant param;
       param["player"]["speed"] = 1;
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
 
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPlay",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Play, m_app.CurrentFileItemPtr(), param);
 
       // we don't want a busy dialog when switching channels
       const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
@@ -724,8 +722,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
       CVariant data(CVariant::VariantTypeObject);
       data["end"] = false;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnStop",
-                                                         m_app.CurrentFileItemPtr(), data);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Stop, m_app.CurrentFileItemPtr(), data);
 
       const CPlaycountIncrementedHandler playCountIncrementedHandler{m_app.CurrentFileItem()};
 
@@ -748,8 +746,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
       CVariant data(CVariant::VariantTypeObject);
       data["end"] = true;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnStop",
-                                                         m_app.CurrentFileItemPtr(), data);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Stop, m_app.CurrentFileItemPtr(), data);
 
       m_app.m_playerEvent.Set();
 
@@ -803,9 +801,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     {
       CVariant param;
       param["player"]["speed"] = 1;
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnAVStart",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::AVStart, m_app.CurrentFileItemPtr(), param);
       m_app.m_playerEvent.Set();
 #ifdef HAS_PYTHON
       // informs python script currently running playback has started
@@ -824,9 +821,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 #endif
       CVariant param;
       param["player"]["speed"] = 1;
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnAVChange",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::AVChange, m_app.CurrentFileItemPtr(), param);
       return true;
     }
 
@@ -834,9 +830,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     {
       CVariant param;
       param["player"]["speed"] = 0;
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPause",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Pause, m_app.CurrentFileItemPtr(), param);
       return true;
     }
 
@@ -844,9 +839,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     {
       CVariant param;
       param["player"]["speed"] = 1;
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnResume",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Resume, m_app.CurrentFileItemPtr(), param);
       return true;
     }
 
@@ -859,12 +853,11 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
                                                     param["player"]["time"]);
       JSONRPC::CJSONUtils::MillisecondsToTimeObject(static_cast<int>(seekOffset),
                                                     param["player"]["seekoffset"]);
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
       const auto& components = CServiceBroker::GetAppComponents();
       const auto appPlayer = components.GetComponent<CApplicationPlayer>();
       param["player"]["speed"] = static_cast<int>(appPlayer->GetPlaySpeed());
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnSeek",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::Seek, m_app.CurrentFileItemPtr(), param);
 
       CDataCacheCore::GetInstance().SeekFinished(static_cast<int>(seekOffset));
 
@@ -875,9 +868,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     {
       CVariant param;
       param["player"]["speed"] = message.GetParam1();
-      param["player"]["playerid"] = m_app.GetComponent<CApplicationPlayLists>()->GetPlayerId();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnSpeedChanged",
-                                                         m_app.CurrentFileItemPtr(), param);
+      m_app.GetComponent<CApplicationPlayLists>()->Announce(
+          CApplicationPlayLists::PlayerEvent::SpeedChanged, m_app.CurrentFileItemPtr(), param);
 
       return true;
     }

@@ -72,6 +72,21 @@ public:
     Repeat
   };
 
+  /*!
+   * \brief A transition of what is playing.
+   */
+  enum class PlayerEvent
+  {
+    Play,
+    AVStart,
+    AVChange,
+    Pause,
+    Resume,
+    Seek,
+    SpeedChanged,
+    Stop
+  };
+
   CApplicationPlayLists();
   ~CApplicationPlayLists() override;
 
@@ -182,6 +197,15 @@ public:
    * plays.
    */
   void Announce(PlayerProperty property, const CVariant& value) const;
+
+  /*!
+   * \brief Publish a transition of the given item.
+   * \param data What the event carries besides the player's identity: the player's speed, time
+   * and so on under "player", or whether playback ended for Stop.
+   */
+  void Announce(PlayerEvent event,
+                const std::shared_ptr<const CFileItem>& item,
+                CVariant data) const;
 
 private:
   void OnPlayListChanged(KODI::PLAYLIST::Side side,

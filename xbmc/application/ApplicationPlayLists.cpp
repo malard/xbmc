@@ -76,6 +76,31 @@ std::string PropertyName(CApplicationPlayLists::PlayerProperty property)
   return {};
 }
 
+std::string EventName(CApplicationPlayLists::PlayerEvent event)
+{
+  using enum CApplicationPlayLists::PlayerEvent;
+  switch (event)
+  {
+    case Play:
+      return "OnPlay";
+    case AVStart:
+      return "OnAVStart";
+    case AVChange:
+      return "OnAVChange";
+    case Pause:
+      return "OnPause";
+    case Resume:
+      return "OnResume";
+    case Seek:
+      return "OnSeek";
+    case SpeedChanged:
+      return "OnSpeedChanged";
+    case Stop:
+      return "OnStop";
+  }
+  return {};
+}
+
 void SendPlayListChanged()
 {
   if (CGUIComponent* gui = CServiceBroker::GetGUI(); gui)
@@ -684,6 +709,16 @@ void CApplicationPlayLists::Announce(PlayerProperty property, const CVariant& va
   data["player"]["playerid"] = GetPlayerId();
   data["property"][PropertyName(property)] = value;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
+                                                     data);
+}
+
+void CApplicationPlayLists::Announce(PlayerEvent event,
+                                     const std::shared_ptr<const CFileItem>& item,
+                                     CVariant data) const
+{
+  if (event != PlayerEvent::Stop)
+    data["player"]["playerid"] = GetPlayerId();
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, EventName(event), item,
                                                      data);
 }
 
