@@ -8,8 +8,10 @@
 
 #include "FileItem.h"
 #include "GUIUserMessages.h"
+#include "ServiceBroker.h"
 #include "application/ApplicationPlayLists.h"
 #include "guilib/GUIMessage.h"
+#include "interfaces/AnnouncementManager.h"
 #include "playlists/PlayList.h"
 
 #include <memory>
@@ -111,4 +113,53 @@ TEST(TestApplicationPlayLists, ClearingThePlayingPlayListLeavesThePlaybackToItsS
   CGUIMessage stopped(GUI_MSG_PLAYBACK_STOPPED, 0, 0);
   EXPECT_TRUE(playLists.OnMessage(stopped));
   EXPECT_FALSE(playLists.GetPlayingSide());
+}
+
+// The slideshow publishes, so an announcement manager is registered for the test. An unstarted one
+// only queues.
+class TestApplicationPlayListsSlideShow : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    m_previous = CServiceBroker::GetAnnouncementManager();
+    CServiceBroker::RegisterAnnouncementManager(
+        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
+  }
+
+  void TearDown() override
+  {
+    CServiceBroker::UnregisterAnnouncementManager();
+    if (m_previous)
+      CServiceBroker::RegisterAnnouncementManager(m_previous);
+  }
+
+private:
+  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previous;
+};
+
+TEST_F(TestApplicationPlayListsSlideShow, ASlideShowHoldsTheVideoSideUnderMusic)
+{
+  using enum CApplicationPlayLists::Phase;
+  CApplicationPlayLists playLists;
+  const auto slide = std::make_shared<CFileItem>("/pictures/one.jpg", false);
+
+  playLists.OnSlideShow(CApplicationPlayLists::PlayerEvent::Play, slide, true);
+  EXPECT_EQ(Playing, playLists.GetPhase(Side::Video));
+
+  playLists.GetPlayList(Side::Audio).Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  playLists.GetPlayList(Side::Audio).SetCurrentPosition(0);
+  playLists.SetPlayingSide(Side::Audio);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
+  playLists.OnMessage(started);
+
+  EXPECT_EQ(Playing, playLists.GetPhase(Side::Audio));
+  EXPECT_EQ(Playing, playLists.GetPhase(Side::Video)) << "music does not take the slideshow's side";
+
+  playLists.OnSlideShow(CApplicationPlayLists::PlayerEvent::Pause, slide, false);
+  EXPECT_EQ(Paused, playLists.GetPhase(Side::Video));
+  EXPECT_EQ(Playing, playLists.GetPhase(Side::Audio));
+
+  playLists.OnSlideShow(CApplicationPlayLists::PlayerEvent::Stop, slide, false);
+  EXPECT_EQ(Idle, playLists.GetPhase(Side::Video));
 }

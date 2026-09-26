@@ -200,6 +200,15 @@ public:
   void ClearPlayLists();
 
   /*!
+   * \brief The picture slideshow reports what it does. It keeps its own list and cursor, and holds
+   * the Video side while it runs.
+   * \param running Whether the slides advance by themselves, for Play.
+   */
+  void OnSlideShow(PlayerEvent event, const std::shared_ptr<const CFileItem>& slide, bool running);
+  void OnSlideShow(PlayerProperty property, const CVariant& value) const;
+  void OnSlideShowListChanged(const KODI::PLAYLIST::PlayListChange& change) const;
+
+  /*!
    * \brief Publish a change to a property of what is playing. Nothing is published while nothing
    * plays.
    */
@@ -232,6 +241,7 @@ private:
   mutable CCriticalSection m_critSection;
   std::optional<KODI::PLAYLIST::Side> m_playingSide;
   std::array<Phase, 2> m_phase{Phase::Idle, Phase::Idle};
+  Phase m_slideShowPhase{Phase::Idle};
   bool m_audioFollowsVideo{false};
   bool m_playbackStarted{false};
   bool m_playedFirstFile{false};

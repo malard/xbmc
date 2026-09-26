@@ -203,6 +203,8 @@ void CApplicationPlayLists::SetPlayingSide(std::optional<Side> side)
 CApplicationPlayLists::Phase CApplicationPlayLists::GetPhase(Side side) const
 {
   std::unique_lock lock(m_critSection);
+  if (side == Side::Video && m_phase[Index(side)] == Phase::Idle)
+    return m_slideShowPhase;
   return m_phase[Index(side)];
 }
 
@@ -740,6 +742,67 @@ void CApplicationPlayLists::Announce(PlayerEvent event,
     data["player"]["playerid"] = GetPlayerId();
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, EventName(event), item,
                                                      data);
+}
+
+void CApplicationPlayLists::OnSlideShow(PlayerEvent event,
+                                        const std::shared_ptr<const CFileItem>& slide,
+                                        bool running)
+{
+  CVariant data;
+  data["player"]["playerid"] = static_cast<int>(Id::TYPE_PICTURE);
+  {
+    std::unique_lock lock(m_critSection);
+    switch (event)
+    {
+      case PlayerEvent::Play:
+        m_slideShowPhase = running ? Phase::Playing : Phase::Paused;
+        data["player"]["speed"] = running ? 1 : 0;
+        break;
+      case PlayerEvent::Pause:
+        m_slideShowPhase = Phase::Paused;
+        data["player"]["speed"] = 0;
+        break;
+      case PlayerEvent::Stop:
+        m_slideShowPhase = Phase::Idle;
+        data["end"] = true;
+        break;
+      default:
+        return;
+    }
+  }
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, EventName(event), slide,
+                                                     data);
+}
+
+void CApplicationPlayLists::OnSlideShow(PlayerProperty property, const CVariant& value) const
+{
+  if (value.isNull())
+    return;
+
+  CVariant data;
+  data["player"]["playerid"] = static_cast<int>(Id::TYPE_PICTURE);
+  data["property"][PropertyName(property)] = value;
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
+                                                     data);
+}
+
+void CApplicationPlayLists::OnSlideShowListChanged(const PlayListChange& change) const
+{
+  CVariant data;
+  data["playlistid"] = static_cast<int>(Id::TYPE_PICTURE);
+  switch (change.type)
+  {
+    case PlayListChange::Type::Added:
+      data["position"] = change.position;
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnAdd",
+                                                         change.item, data);
+      break;
+    case PlayListChange::Type::Cleared:
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnClear", data);
+      break;
+    default:
+      break;
+  }
 }
 
 void CApplicationPlayLists::Announce(Side side, PlayerProperty property, const CVariant& value) const
