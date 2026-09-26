@@ -5,6 +5,7 @@ set(SOURCES TestPlayList.cpp
             TestPlayListFileItemClassify.cpp
             TestPlayListWPL.cpp
             TestPlayListXML.cpp
-            TestPlayListXSPF.cpp)
+            TestPlayListXSPF.cpp
+            TestSmartPlayList.cpp)
 
 core_add_test_library(playlists_test)

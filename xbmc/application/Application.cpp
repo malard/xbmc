@@ -2006,13 +2006,7 @@ bool CApplication::PlayMedia(CFileItem& item,
       smartpl.OpenAndReadName(item.GetURL());
       PLAYLIST::CPlayList playlist;
       playlist.Add(items);
-      PLAYLIST::Type smartplType = PLAYLIST::Video;
-
-      if (smartpl.GetType() == "songs" || smartpl.GetType() == "albums" ||
-          smartpl.GetType() == "artists")
-        smartplType = PLAYLIST::Audio;
-
-      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartplType);
+      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartpl.GetPlayListType());
     }
   }
   else if ((PLAYLIST::IsPlayList(item) && !item.IsGame()) || NETWORK::IsInternetStream(item))
