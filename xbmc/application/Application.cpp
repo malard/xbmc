@@ -2792,25 +2792,22 @@ bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
                                            PLAYLIST::Type type,
                                            int track)
 {
-  CLog::Log(LOGDEBUG, "CApplication::ProcessAndStartPlaylist({}, {})", strPlayList,
-            type == PLAYLIST::Video ? "video" : "audio");
+  CLog::Log(LOGDEBUG, "CApplication::ProcessAndStartPlaylist({}, {})", strPlayList, type);
 
-  // initial exit conditions
-  // no songs in playlist just return
-  if (playlist.size() == 0)
+  if (playlist.empty())
     return false;
 
   const auto playLists = GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& sidePlayList = playLists->GetPlayList(type);
-  sidePlayList.Clear();
+  PLAYLIST::CPlayList& target = playLists->GetPlayList(type);
+  target.Clear();
 
   // if the playlist contains an internet stream, this file will be used
   // to generate a thumbnail for musicplayer.cover
   m_strPlayListFile = strPlayList;
 
-  sidePlayList.Add(playlist);
+  target.Add(playlist);
 
-  if (sidePlayList.empty())
+  if (target.empty())
     return false;
 
   playLists->Play(type, track > 0 ? std::optional<int>(track) : std::nullopt);

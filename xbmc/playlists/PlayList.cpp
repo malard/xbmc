@@ -681,7 +681,7 @@ bool CPlayList::Expand(int position)
       (*playlist)[i]->SetProperty("BasePath", playlist->m_strBasePath);
   }
 
-  if (playlist->size() <= 0)
+  if (playlist->empty())
     return false;
 
   Changes changes;

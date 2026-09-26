@@ -9,6 +9,9 @@
 #pragma once
 
 #include <optional>
+#include <string_view>
+
+#include <fmt/format.h>
 
 namespace KODI::PLAYLIST
 {
@@ -112,3 +115,14 @@ enum class ExcludeUsedPlaylists : bool
 };
 
 } // namespace KODI::PLAYLIST
+
+template<>
+struct fmt::formatter<KODI::PLAYLIST::Type> : fmt::formatter<std::string_view>
+{
+  template<typename FormatContext>
+  constexpr auto format(KODI::PLAYLIST::Type type, FormatContext& ctx) const
+  {
+    using enum KODI::PLAYLIST::Type;
+    return fmt::formatter<std::string_view>::format(type == Video ? "video" : "audio", ctx);
+  }
+};
