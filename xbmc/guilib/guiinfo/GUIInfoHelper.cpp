@@ -46,7 +46,7 @@ std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Type> type /* = s
     }
     case PLAYLIST_POSITION:
     {
-      const int currentSong = type ? playLists->GetPlayList(*type).GetCurrentPosition() : -1;
+      const int currentSong = type ? playLists->GetPlayingPosition(*type) : -1;
       if (currentSong > -1)
         return std::to_string(currentSong + 1);
       break;

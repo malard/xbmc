@@ -263,8 +263,7 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (playLists->GetPlayingType() == PLAYLIST::Audio ||
-        !playLists->GetPlayList(PLAYLIST::Audio).empty())
+    if (playLists->IsPlaying(PLAYLIST::Audio) || !playLists->GetPlayList(PLAYLIST::Audio).empty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
       return true;
@@ -658,11 +657,7 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
     */
 
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(PLAYLIST::Audio).Clear();
-    playLists->GetPlayList(PLAYLIST::Audio).Add(queuedItems);
-
-    // play!
-    playLists->Play(PLAYLIST::Audio);
+    playLists->Play(PLAYLIST::Audio, queuedItems);
   }
   else if (PLAYLIST::IsPlayList(*pItem))
   {

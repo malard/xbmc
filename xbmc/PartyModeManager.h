@@ -56,7 +56,7 @@ private:
   void ClearState();
   void UpdateStats();
   void Announce();
-  KODI::PLAYLIST::Type GetSide() const;
+  KODI::PLAYLIST::Type GetPlayListType() const;
 
   // state
   bool m_bEnabled;

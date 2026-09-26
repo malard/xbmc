@@ -461,15 +461,21 @@ EntryId CPlayList::PlayNext(const std::shared_ptr<CFileItem>& item)
   return entry;
 }
 
-void CPlayList::PlayNext(const CFileItemList& items)
+EntryId CPlayList::PlayNext(const CFileItemList& items)
 {
   Changes changes;
+  EntryId first = NO_ENTRY;
   {
     std::unique_lock lock(m_critSection);
     for (int i = 0; i < items.Size(); i++)
-      PlayNextLocked(items[i], changes);
+    {
+      const EntryId entry = PlayNextLocked(items[i], changes);
+      if (first == NO_ENTRY)
+        first = entry;
+    }
   }
   Notify(changes);
+  return first;
 }
 
 void CPlayList::SetShuffle(std::unique_ptr<IPlayListShuffle> shuffle)

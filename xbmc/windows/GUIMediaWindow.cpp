@@ -1568,16 +1568,12 @@ bool CGUIMediaWindow::OnPlayAndQueueMedia(const CFileItemPtr& item, const std::s
                                                   item->GetMusicInfoTag()->GetTrackAndDiscNumber();
                                          }));
 
-    // Add to playlist
-    const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(*type).Clear();
-    playLists->GetPlayList(*type).Add(playlist);
-
     // Save current window and directory to know where the selected item was
     if (m_guiState)
       m_guiState->SetPlaylistDirectory(m_vecItems->GetPath());
 
-    playLists->Play(*type, mediaToPlay, player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        *type, playlist, mediaToPlay, player);
   }
   return true;
 }

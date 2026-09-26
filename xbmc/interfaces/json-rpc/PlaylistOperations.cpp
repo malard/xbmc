@@ -186,12 +186,12 @@ JSONRPC_STATUS CPlaylistOperations::Remove(const std::string &method, ITransport
     return FailedToExecute;
 
   const PLAYLIST::Type type = *PLAYLIST::TypeFromId(playlistId);
-  PLAYLIST::CPlayList& playList = PlayLists()->GetPlayList(type);
+  const auto playLists = PlayLists();
   int position = (int)parameterObject["position"].asInteger();
-  if (PlayLists()->GetPlayingType() == type && playList.GetCurrentPosition() == position)
+  if (playLists->GetPlayingPosition(type) == position)
     return InvalidParams;
 
-  playList.Remove(position);
+  playLists->GetPlayList(type).Remove(position);
 
   return ACK;
 }

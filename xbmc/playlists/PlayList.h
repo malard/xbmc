@@ -162,7 +162,10 @@ public:
    * and play it next.
    */
   EntryId PlayNext(const std::shared_ptr<CFileItem>& item);
-  void PlayNext(const CFileItemList& items);
+  /*!
+   * \return The first of the entries inserted, or NO_ENTRY if there were none.
+   */
+  EntryId PlayNext(const CFileItemList& items);
 
   void SetShuffle(std::unique_ptr<IPlayListShuffle> shuffle);
   void SetShuffled(bool shuffled);

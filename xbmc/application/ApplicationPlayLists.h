@@ -115,6 +115,23 @@ public:
    */
   void SetPlayingType(std::optional<KODI::PLAYLIST::Type> type);
 
+  /*!
+   * \return Whether the player is working through this playlist and it is not idle.
+   */
+  bool IsPlaying(KODI::PLAYLIST::Type type) const;
+
+  /*!
+   * \return The position of this playlist's current entry while the player is working through
+   * it, or -1.
+   */
+  int GetPlayingPosition(KODI::PLAYLIST::Type type) const;
+
+  /*!
+   * \return Where items queued without naming a playlist go: the playlist being played, else the
+   * one matching what the player has open, else the fallback.
+   */
+  KODI::PLAYLIST::Type GetQueueType(KODI::PLAYLIST::Type fallback) const;
+
   Phase GetPhase(KODI::PLAYLIST::Type type) const;
   bool IsAudioFollowingVideo() const;
 
@@ -144,11 +161,27 @@ public:
             bool playPreviousOnFail = false);
 
   /*!
+   * \brief Replace the playlist's contents with the items, and play it.
+   * \param position As for Play(type, position, ...).
+   */
+  bool Play(KODI::PLAYLIST::Type type,
+            const CFileItemList& items,
+            std::optional<int> position = std::nullopt,
+            const std::string& player = "");
+
+  /*!
    * \brief Replace the playlist's contents with one item, and play it.
    */
   bool Play(KODI::PLAYLIST::Type type,
             const std::shared_ptr<CFileItem>& item,
             const std::string& player);
+
+  /*!
+   * \brief Add items to a playlist without starting it.
+   * \param playNext Play them next if the playlist is playing, rather than after the rest.
+   * \return The position of the first of them, or -1 if there were none.
+   */
+  int Queue(KODI::PLAYLIST::Type type, const CFileItemList& items, bool playNext);
 
   /*!
    * \brief Play an item nobody has put on a playlist, choosing the playlist from what the item is.
@@ -163,15 +196,16 @@ public:
   bool PlayPrevious();
 
   /*!
+   * \brief Make this the playlist the player works through, and move it on or back.
+   */
+  bool PlayNext(KODI::PLAYLIST::Type type);
+  bool PlayPrevious(KODI::PLAYLIST::Type type);
+
+  /*!
    * \brief Play the entry the given number of entries ahead of the current one in play order,
    * or behind it for a negative offset.
    */
   bool PlayOffset(int offset);
-
-  /*!
-   * \brief What would play after the current entry of the playing playlist, without moving to it.
-   */
-  std::shared_ptr<CFileItem> PeekNextItem(int steps = 1) const;
 
   KODI::PLAYLIST::EntryId PeekNextEntry() const;
 

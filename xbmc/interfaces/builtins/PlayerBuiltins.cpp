@@ -600,33 +600,25 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
       if (!items.IsEmpty())
       {
         const auto playLists = PlayLists();
-        PLAYLIST::CPlayList& playList = playLists->GetPlayList(type);
 
         // Play vs. Queue (+Play)
         if (forcePlay)
         {
-          playList.Clear();
-          playList.Add(items);
-          playLists->Play(type, hasPlayOffset ? std::optional<int>(playOffset) : std::nullopt);
+          playLists->Play(type, items,
+                          hasPlayOffset ? std::optional<int>(playOffset) : std::nullopt);
         }
         else
         {
-          const int oldSize = playList.size();
+          const int first = playLists->Queue(type, items, playNext);
 
-          const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-          if (playNext && appPlayer->IsPlaying())
-            playList.PlayNext(items);
-          else
-            playList.Add(items);
-
-          if (!appPlayer->IsPlaying())
+          if (!components.GetComponent<CApplicationPlayer>()->IsPlaying())
           {
             playLists->SetPlayingType(type);
 
             if (containsMusic)
             {
               // video does not auto play on queue like music
-              playLists->Play(type, hasPlayOffset ? playOffset : oldSize);
+              playLists->Play(type, hasPlayOffset ? playOffset : first);
             }
           }
         }

@@ -17,7 +17,6 @@
 #include "Util.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
-#include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogBusy.h"
 #include "filesystem/Directory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
@@ -356,11 +355,6 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   CFileItemList queuedItems;
   VIDEO::UTILS::GetItemsForPlayList(itemToQueue, queuedItems, mode);
 
-  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(PLAYLIST::Video);
-  playList.Clear();
-  playList.Add(queuedItems);
-
   // figure out where to start playback
   int pos = 0;
   if (itemToPlay)
@@ -376,7 +370,8 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
     }
   }
 
-  playLists->Play(PLAYLIST::Video, pos, player);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+      PLAYLIST::Video, queuedItems, pos, player);
 }
 
 } // unnamed namespace
@@ -462,14 +457,10 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
     item->SetCanQueue(true);
   }
 
-  auto& components = CServiceBroker::GetAppComponents();
-  const auto playLists = components.GetComponent<CApplicationPlayLists>();
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
 
   // Determine the proper list to queue this element
-  const PLAYLIST::Type type = playLists->GetPlayingType().value_or(
-      PLAYLIST::TypeFromId(components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist())
-          .value_or(PLAYLIST::Video));
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(type);
+  const PLAYLIST::Type type = playLists->GetQueueType(PLAYLIST::Video);
 
   CFileItemList queuedItems;
   GetItemsForPlayList(item, queuedItems, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
@@ -481,12 +472,7 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
     return;
   }
 
-  if (pos == QueuePosition::POSITION_BEGIN &&
-      components.GetComponent<CApplicationPlayer>()->IsPlaying())
-    playList.PlayNext(queuedItems);
-  else
-    playList.Add(queuedItems);
-
+  playLists->Queue(type, queuedItems, pos == QueuePosition::POSITION_BEGIN);
   playLists->SetPlayingType(type);
 
   // Note: video does not auto play on queue like music

@@ -1838,10 +1838,10 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
       case Video:
       case Audio: /* Return the position of current item if there is an active playlist */
       {
-        if (const std::optional<PLAYLIST::Type> type = PlayLists()->GetPlayingType();
-            !IsPVRChannel() && type && type == PLAYLIST::TypeFromId(playlistId))
+        if (const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromId(playlistId);
+            !IsPVRChannel() && type)
         {
-          result = PlayLists()->GetPlayList(*type).GetCurrentPosition();
+          result = PlayLists()->GetPlayingPosition(*type);
         }
         else
           result = -1;

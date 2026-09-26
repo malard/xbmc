@@ -10,6 +10,10 @@
 
 #include "GUIWindowMusicBase.h"
 
+#include <memory>
+
+class CApplicationPlayLists;
+
 class CGUIWindowMusicPlayList : public CGUIWindowMusicBase
 {
 public:
@@ -39,6 +43,7 @@ protected:
 
   bool MoveCurrentPlayListItem(int iItem, int iAction, bool bUpdate = true);
 
+  const std::shared_ptr<CApplicationPlayLists> m_playLists;
   int m_movingFrom;
   std::vector<CMediaSource> m_shares;
 };

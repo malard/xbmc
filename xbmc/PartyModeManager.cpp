@@ -174,7 +174,7 @@ bool CPartyModeManager::Enable(PartyModeContext context /*= PARTYMODECONTEXT_MUS
   CLog::Log(LOGINFO,"PARTY MODE MANAGER: Party mode enabled!");
 
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(GetSide());
+  PLAYLIST::CPlayList& playList = playLists->GetPlayList(GetPlayListType());
   playList.Clear();
   playList.SetShuffle(std::make_unique<PLAYLIST::CPlayListNoShuffle>());
   playList.ClearRepeats();
@@ -194,7 +194,7 @@ bool CPartyModeManager::Enable(PartyModeContext context /*= PARTYMODECONTEXT_MUS
   CLog::Log(LOGDEBUG, "{} time for song fetch: {} ms", __FUNCTION__, duration.count());
 
   // start playing
-  playLists->SetPlayingType(GetSide());
+  playLists->SetPlayingType(GetPlayListType());
   Play(0);
 
   pDialog->Close();
@@ -218,7 +218,10 @@ void CPartyModeManager::Disable()
   m_bEnabled = false;
   Announce();
   // The playing song runs to its end.
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(GetSide()).Clear();
+  CServiceBroker::GetAppComponents()
+      .GetComponent<CApplicationPlayLists>()
+      ->GetPlayList(GetPlayListType())
+      .Clear();
   CLog::Log(LOGINFO,"PARTY MODE MANAGER: Party mode disabled.");
 }
 
@@ -240,7 +243,7 @@ void CPartyModeManager::AddUserSongs(CFileItemList& tempList, bool bPlay /* = fa
             tempList.Size());
 
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  playLists->GetPlayList(GetSide()).PlayNext(tempList);
+  playLists->GetPlayList(GetPlayListType()).PlayNext(tempList);
 
   if (bPlay)
     playLists->PlayNext();
@@ -258,9 +261,9 @@ bool CPartyModeManager::AddRandomSongs()
   if (static_cast<int>(m_songIDCache.size()) == m_iMatchingSongsPicked)
     return false;
 
-  const PLAYLIST::CPlayList& playlist = CServiceBroker::GetAppComponents()
-                                             .GetComponent<CApplicationPlayLists>()
-                                             ->GetPlayList(GetSide());
+  const PLAYLIST::CPlayList& playlist =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(
+          GetPlayListType());
   const int ahead = playlist.size() - playlist.GetCurrentPosition() - 1;
   int iMissingSongs = QUEUE_DEPTH - ahead;
 
@@ -359,7 +362,8 @@ bool CPartyModeManager::AddRandomSongs()
 void CPartyModeManager::Add(CFileItemPtr &pItem)
 {
   PLAYLIST::CPlayList& playlist =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(GetSide());
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(
+          GetPlayListType());
   playlist.Add(pItem);
   CLog::Log(LOGINFO, "PARTY MODE MANAGER: Adding randomly selected song at {}:[{}]",
             playlist.size() - 1, pItem->GetPath());
@@ -375,7 +379,8 @@ void CPartyModeManager::SendUpdateMessage()
 void CPartyModeManager::Play(int iPos)
 {
   // Playlist filled up by OnSongChange call from application GUI_MSG_PLAYBACK_STARTED processing
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(GetSide(), iPos);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(GetPlayListType(),
+                                                                                 iPos);
   CLog::Log(LOGINFO, "PARTY MODE MANAGER: Playing song at {}", iPos);
 }
 
@@ -476,7 +481,7 @@ void CPartyModeManager::Announce()
       CApplicationPlayLists::PlayerProperty::PartyMode, m_bEnabled);
 }
 
-PLAYLIST::Type CPartyModeManager::GetSide() const
+PLAYLIST::Type CPartyModeManager::GetPlayListType() const
 {
   return m_bIsVideo ? PLAYLIST::Video : PLAYLIST::Audio;
 }

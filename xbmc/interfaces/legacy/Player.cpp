@@ -45,11 +45,6 @@ std::shared_ptr<CApplicationPlayer> getAppPlayerMut()
   return res;
 }
 
-std::shared_ptr<CApplicationPlayLists> PlayLists()
-{
-  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-}
-
 } // namespace
 
 namespace XBMCAddon
@@ -134,10 +129,12 @@ namespace XBMCAddon
 
       // play current file in playlist
       const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromId(PLAYLIST::Id{iPlayList});
-      PlayLists()->SetPlayingType(type);
-      CServiceBroker::GetAppMessenger()->SendMsg(
-          TMSG_PLAYLISTPLAYER_PLAY,
-          type ? PlayLists()->GetPlayList(*type).GetCurrentPosition() : -1);
+      CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PLAY, iPlayList,
+                                                 type ? CServiceBroker::GetAppComponents()
+                                                            .GetComponent<CApplicationPlayLists>()
+                                                            ->GetPlayList(*type)
+                                                            .GetCurrentPosition()
+                                                      : -1);
     }
 
     void Player::playPlaylist(const PlayList* playlist, bool windowed, int startpos)
@@ -151,11 +148,7 @@ namespace XBMCAddon
 
         // play a python playlist (the Video or Audio playlist)
         iPlayList = playlist->getPlayListId();
-        const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromId(PLAYLIST::Id{iPlayList});
-        PlayLists()->SetPlayingType(type);
-        if (type && startpos > -1)
-          PlayLists()->GetPlayList(*type).SetCurrentPosition(startpos);
-        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, startpos);
+        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PLAY, iPlayList, startpos);
       }
       else
         playCurrent(windowed);
@@ -194,12 +187,7 @@ namespace XBMCAddon
       XBMC_TRACE;
       DelayedCallGuard dc(languageHook);
 
-      const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromId(PLAYLIST::Id{iPlayList});
-      PlayLists()->SetPlayingType(type);
-      if (type)
-        PlayLists()->GetPlayList(*type).SetCurrentPosition(selected);
-
-      CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, selected);
+      CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PLAY, iPlayList, selected);
     }
 
     void Player::OnPlayBackStarted(const CFileItem &file)

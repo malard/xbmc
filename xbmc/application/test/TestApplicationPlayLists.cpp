@@ -7,6 +7,7 @@
  */
 
 #include "FileItem.h"
+#include "FileItemList.h"
 #include "GUIUserMessages.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationPlayLists.h"
@@ -116,6 +117,48 @@ TEST(TestApplicationPlayLists, ClearingThePlayingPlayListLeavesThePlaybackToItsS
   EXPECT_FALSE(playLists.GetPlayingType());
 }
 
+TEST(TestApplicationPlayLists, APlayListIsPlayingOnlyOnceItHasStarted)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  playLists.SetPlayingType(PLAYLIST::Video);
+  EXPECT_FALSE(playLists.IsPlaying(PLAYLIST::Video)) << "chosen but not started";
+
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
+  playLists.OnMessage(started);
+  EXPECT_TRUE(playLists.IsPlaying(PLAYLIST::Video));
+  EXPECT_FALSE(playLists.IsPlaying(PLAYLIST::Audio)) << "following is not playing its own list";
+}
+
+TEST(TestApplicationPlayLists, ThePlayingPositionIsOnlyThePlayingPlayList)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  EXPECT_EQ(-1, playLists.GetPlayingPosition(PLAYLIST::Video));
+
+  playLists.SetPlayingType(PLAYLIST::Video);
+  EXPECT_EQ(1, playLists.GetPlayingPosition(PLAYLIST::Video));
+  EXPECT_EQ(-1, playLists.GetPlayingPosition(PLAYLIST::Audio));
+}
+
+TEST(TestApplicationPlayLists, QueueingReportsWhereTheItemsLanded)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  CFileItemList items;
+  items.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
+
+  EXPECT_EQ(2, playLists.Queue(PLAYLIST::Video, items, true)) << "nothing plays, so at the end";
+
+  playLists.SetPlayingType(PLAYLIST::Video);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
+  playLists.OnMessage(started);
+  playLists.GetPlayList(PLAYLIST::Video).SetCurrentPosition(0);
+
+  EXPECT_EQ(1, playLists.Queue(PLAYLIST::Video, items, true)) << "straight after the current";
+  EXPECT_EQ(4, playLists.Queue(PLAYLIST::Video, items, false));
+  EXPECT_EQ(-1, playLists.Queue(PLAYLIST::Video, CFileItemList{}, false));
+}
 // The slideshow publishes, so an announcement manager is registered for the test. An unstarted one
 // only queues.
 class TestApplicationPlayListsSlideShow : public ::testing::Test

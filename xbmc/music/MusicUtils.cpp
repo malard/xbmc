@@ -678,11 +678,6 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   CFileItemList queuedItems;
   MUSIC_UTILS::GetItemsForPlayList(itemToQueue, queuedItems);
 
-  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(PLAYLIST::Audio);
-  playList.Clear();
-  playList.Add(queuedItems);
-
   // figure out where to start playback
   int pos = 0;
   if (itemToPlay)
@@ -693,7 +688,8 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
     pos = static_cast<int>(std::distance(queuedItems.begin(), it));
   }
 
-  playLists->Play(PLAYLIST::Audio, pos, player);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+      PLAYLIST::Audio, queuedItems, pos, player);
 }
 } // unnamed namespace
 
@@ -786,10 +782,7 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
   auto& components = CServiceBroker::GetAppComponents();
   const auto playLists = components.GetComponent<CApplicationPlayLists>();
 
-  const PLAYLIST::Type type = playLists->GetPlayingType().value_or(
-      PLAYLIST::TypeFromId(components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist())
-          .value_or(PLAYLIST::Audio));
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(type);
+  const PLAYLIST::Type type = playLists->GetQueueType(PLAYLIST::Audio);
 
   // Check for the partymode playlist item, do nothing when "PartyMode.xsp" not exists
   if (PLAYLIST::IsSmartPlayList(*item) && !CFileUtils::Exists(item->GetPath()))
@@ -798,8 +791,6 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
     if (item->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp"))
       return;
   }
-
-  const int oldSize = playList.size();
 
   CFileItemList queuedItems;
   GetItemsForPlayList(item, queuedItems);
@@ -811,16 +802,11 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
     return;
   }
 
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-
-  if (pos == QueuePosition::POSITION_BEGIN && appPlayer->IsPlaying())
-    playList.PlayNext(queuedItems);
-  else
-    playList.Add(queuedItems);
+  const int first = playLists->Queue(type, queuedItems, pos == QueuePosition::POSITION_BEGIN);
 
   bool playbackStarted = false;
 
-  if (!appPlayer->IsPlaying() && !playList.empty())
+  if (!components.GetComponent<CApplicationPlayer>()->IsPlaying() && first >= 0)
   {
     const int winID = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
     if (winID == WINDOW_MUSIC_NAV)
@@ -830,7 +816,7 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
         viewState->SetPlaylistDirectory("playlistmusic://");
     }
 
-    playLists->Play(type, oldSize); // start playing at the first new item
+    playLists->Play(type, first);
 
     playbackStarted = true;
   }

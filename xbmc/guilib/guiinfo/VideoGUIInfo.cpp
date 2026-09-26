@@ -96,20 +96,11 @@ void StartArtLookup(const CFileItem& item, bool lookupItem, const std::string& p
                             });
 }
 
-// Whether what plays was put on the Audio playlist, or, for playback started outside the playlists,
-// whether the player is playing audio only.
-bool IsPlayingAsAudio()
-{
-  const auto& components = CServiceBroker::GetAppComponents();
-  if (const auto type = components.GetComponent<CApplicationPlayLists>()->GetPlayingType(); type)
-    return *type == PLAYLIST::Audio;
-  return components.GetComponent<CApplicationPlayer>()->IsPlayingAudio();
-}
-
 } // namespace
 
 CVideoGUIInfo::CVideoGUIInfo()
-  : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>())
+  : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()),
+    m_playLists(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>())
 {
 }
 
@@ -121,6 +112,15 @@ int CVideoGUIInfo::GetPercentPlayed(const CVideoInfoTag* tag) const
                        static_cast<float>(bookmark.totalTimeInSeconds) * 100.0f);
   else
     return 0;
+}
+
+// Whether what plays was put on the Audio playlist, or, for playback started outside the playlists,
+// whether the player is playing audio only.
+bool CVideoGUIInfo::IsPlayingAsAudio() const
+{
+  if (const auto type = m_playLists->GetPlayingType(); type)
+    return *type == PLAYLIST::Audio;
+  return m_appPlayer->IsPlayingAudio();
 }
 
 bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
@@ -687,18 +687,14 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
     // VIDEOPLAYER_*
     ///////////////////////////////////////////////////////////////////////////////////////////////
     case VIDEOPLAYER_PLAYLISTLEN:
-      if (CServiceBroker::GetAppComponents()
-              .GetComponent<CApplicationPlayLists>()
-              ->GetPlayingType() == PLAYLIST::Video)
+      if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
         value = GUIINFO::GetPlaylistLabel(PLAYLIST_LENGTH);
         return true;
       }
       break;
     case VIDEOPLAYER_PLAYLISTPOS:
-      if (CServiceBroker::GetAppComponents()
-              .GetComponent<CApplicationPlayLists>()
-              ->GetPlayingType() == PLAYLIST::Video)
+      if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
         value = GUIINFO::GetPlaylistLabel(PLAYLIST_POSITION);
         return true;
@@ -816,15 +812,14 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
 
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
-  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  const PLAYLIST::CPlayList& playlist = playLists->GetPlayList(PLAYLIST::Video);
+  const PLAYLIST::CPlayList& playlist = m_playLists->GetPlayList(PLAYLIST::Video);
   if (playlist.empty())
     return false;
 
   int index = info.GetData2();
   if (info.GetData1() == 1)
   { // relative index (requires the Video playlist to be playing)
-    if (playLists->GetPlayingType() != PLAYLIST::Video)
+    if (!m_playLists->IsPlaying(PLAYLIST::Video))
       return false;
 
     index = playlist.GetPosition(playlist.PeekOffset(index));

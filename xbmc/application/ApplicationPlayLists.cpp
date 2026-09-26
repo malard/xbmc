@@ -209,6 +209,27 @@ CApplicationPlayLists::Phase CApplicationPlayLists::GetPhase(Type type) const
   return m_phase[Index(type)];
 }
 
+bool CApplicationPlayLists::IsPlaying(Type type) const
+{
+  return GetPlayingType() == type && GetPhase(type) != Phase::Idle;
+}
+
+int CApplicationPlayLists::GetPlayingPosition(Type type) const
+{
+  if (GetPlayingType() != type)
+    return -1;
+  return GetPlayList(type).GetCurrentPosition();
+}
+
+Type CApplicationPlayLists::GetQueueType(Type fallback) const
+{
+  if (const std::optional<Type> type = GetPlayingType(); type)
+    return *type;
+
+  const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
+  return TypeFromId(appPlayer->GetPreferredPlaylist()).value_or(fallback);
+}
+
 bool CApplicationPlayLists::IsAudioFollowingVideo() const
 {
   std::unique_lock lock(m_critSection);
@@ -401,6 +422,30 @@ bool CApplicationPlayLists::Play(Type type,
 }
 
 bool CApplicationPlayLists::Play(Type type,
+                                 const CFileItemList& items,
+                                 std::optional<int> position /* = std::nullopt */,
+                                 const std::string& player /* = "" */)
+{
+  GetPlayList(type).Clear();
+  GetPlayList(type).Add(items);
+  return Play(type, position, player);
+}
+
+int CApplicationPlayLists::Queue(Type type, const CFileItemList& items, bool playNext)
+{
+  if (items.IsEmpty())
+    return -1;
+
+  CPlayList& playList = GetPlayList(type);
+  if (playNext && IsPlaying(type))
+    return playList.GetPosition(playList.PlayNext(items));
+
+  const int first = playList.size();
+  playList.Add(items);
+  return first;
+}
+
+bool CApplicationPlayLists::Play(Type type,
                                  const std::shared_ptr<CFileItem>& item,
                                  const std::string& player)
 {
@@ -538,6 +583,18 @@ bool CApplicationPlayLists::PlayNext(Advance advance /* = Advance::User */)
   return PlayEntry(*type, next, appPlayer->GetName(), false, false);
 }
 
+bool CApplicationPlayLists::PlayNext(Type type)
+{
+  SetPlayingType(type);
+  return PlayNext();
+}
+
+bool CApplicationPlayLists::PlayPrevious(Type type)
+{
+  SetPlayingType(type);
+  return PlayPrevious();
+}
+
 bool CApplicationPlayLists::PlayPrevious()
 {
   const std::optional<Type> type = GetPlayingType();
@@ -574,16 +631,6 @@ bool CApplicationPlayLists::PlayOffset(int offset)
 
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
   return PlayEntry(*type, entry, appPlayer->GetName(), false, false);
-}
-
-std::shared_ptr<CFileItem> CApplicationPlayLists::PeekNextItem(int steps /* = 1 */) const
-{
-  const std::optional<Type> type = GetPlayingType();
-  if (!type)
-    return nullptr;
-
-  const CPlayList& playList = GetPlayList(*type);
-  return playList.GetItem(playList.PeekNext(Advance::Automatic, steps));
 }
 
 EntryId CApplicationPlayLists::PeekNextEntry() const

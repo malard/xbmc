@@ -245,10 +245,8 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (!options.startFromBeginning && !item->GetVideoInfoTag()->m_strFileNameAndPath.empty())
             item->SetStartOffset(STARTOFFSET_RESUME);
 
-          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
           PlayLists()->SetShuffle(PLAYLIST::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Video).Add(item);
-          PlayLists()->Play(PLAYLIST::Video, 0);
+          PlayLists()->Play(PLAYLIST::Video, item, "");
           return true;
         }
 
@@ -282,10 +280,8 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (options.forceSelection)
             item->SetProperty("force_playlist_selection", true);
 
-          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
           PlayLists()->SetShuffle(PLAYLIST::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Video).Add(item);
-          PlayLists()->Play(PLAYLIST::Video, 0);
+          PlayLists()->Play(PLAYLIST::Video, item, "");
           return true;
         }
 
@@ -398,10 +394,8 @@ bool CAutorun::RunDisc(IDirectory* pDir,
 
           //  internal *.evo playback.
           CLog::Log(LOGINFO,"HD DVD: Internal multifile playback initiated.");
-          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
           PlayLists()->SetShuffle(PLAYLIST::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Video).Add(items);
-          PlayLists()->Play(PLAYLIST::Video, 0);
+          PlayLists()->Play(PLAYLIST::Video, items, 0);
           return true;
         }
 
@@ -420,9 +414,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (items.Size())
           {
             items.Sort(SortBy::LABEL, SortOrder::ASCENDING);
-            PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
-            PlayLists()->GetPlayList(PLAYLIST::Video).Add(items);
-            PlayLists()->Play(PLAYLIST::Video, 0);
+            PlayLists()->Play(PLAYLIST::Video, items, 0);
             return true;
           }
         }
@@ -481,9 +473,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
         if (!g_passwordManager.IsMasterLockUnlocked(true))
           return false;
       }
-      PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
-      PlayLists()->GetPlayList(PLAYLIST::Video).Add(itemlist);
-      PlayLists()->Play(PLAYLIST::Video, 0);
+      PlayLists()->Play(PLAYLIST::Video, itemlist, 0);
     }
   }
 

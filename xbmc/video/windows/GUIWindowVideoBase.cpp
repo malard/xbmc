@@ -111,8 +111,7 @@ bool CGUIWindowVideoBase::OnAction(const CAction &action)
   else if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (playLists->GetPlayingType() == PLAYLIST::Video ||
-        !playLists->GetPlayList(PLAYLIST::Video).empty())
+    if (playLists->IsPlaying(PLAYLIST::Video) || !playLists->GetPlayList(PLAYLIST::Video).empty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
       return true;
@@ -1153,9 +1152,7 @@ bool CGUIWindowVideoBase::PlayItem(const std::shared_ptr<CFileItem>& pItem,
                                       ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
 
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(PLAYLIST::Video).Clear();
-    playLists->GetPlayList(PLAYLIST::Video).Add(queuedItems);
-    playLists->Play(PLAYLIST::Video);
+    playLists->Play(PLAYLIST::Video, queuedItems);
     return true;
   }
   else if (PLAYLIST::IsPlayList(*pItem) && !pItem->IsType(".strm"))
