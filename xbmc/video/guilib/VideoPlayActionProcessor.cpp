@@ -17,7 +17,6 @@
 #include "filesystem/Directory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
-#include "playlists/PlayListTypes.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
@@ -243,7 +242,6 @@ void CVideoPlayActionProcessor::Play(const std::string& player)
     item->SetFolder(false);
   }
 
-  item->SetProperty("playlist_type_hint", static_cast<int>(KODI::PLAYLIST::Id::TYPE_VIDEO));
   const ContentUtils::PlayMode mode{item->GetProperty("CheckAutoPlayNextItem").asBoolean()
                                         ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
                                         : ContentUtils::PlayMode::PLAY_ONLY_THIS};

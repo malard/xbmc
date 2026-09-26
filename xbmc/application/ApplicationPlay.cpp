@@ -10,9 +10,10 @@
 
 #include "ApplicationStackHelper.h"
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "Util.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/DirectoryFactory.h"
@@ -289,7 +290,8 @@ bool ShouldGoFullScreen(PlayMediaType mediaType)
 
   const auto settings{CServiceBroker::GetSettingsComponent()};
   const bool fullScreenOnMovieStart{settings->GetAdvancedSettings()->m_fullScreenOnMovieStart};
-  const bool hasPlayedFirstFile{CServiceBroker::GetPlaylistPlayer().HasPlayedFirstFile()};
+  const bool hasPlayedFirstFile{
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->HasPlayedFirstFile()};
 
   using enum PlayMediaType;
   switch (mediaType)
@@ -312,14 +314,15 @@ bool ShouldGoFullScreen(PlayMediaType mediaType)
 void CApplicationPlay::DetermineFullScreen()
 {
   // Get current playlist info
-  const auto playlistId{CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist()};
+  const auto playLists{CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()};
+  const auto type{playLists->GetPlayingType()};
 
   // Determine fullscreen status based on media type and playlist
   using enum PlayMediaType;
-  if (MUSIC::IsAudio(m_item) && playlistId == PLAYLIST::Id::TYPE_MUSIC)
+  if (MUSIC::IsAudio(m_item) && type == PLAYLIST::Audio)
     m_options.fullscreen = ShouldGoFullScreen(MUSIC_PLAYLIST);
-  else if (VIDEO::IsVideo(m_item) && playlistId == PLAYLIST::Id::TYPE_VIDEO &&
-           CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId).size() > 1)
+  else if (VIDEO::IsVideo(m_item) && type == PLAYLIST::Video &&
+           playLists->GetPlayList(*type).size() > 1)
   {
     m_options.fullscreen = ShouldGoFullScreen(VIDEO_PLAYLIST);
   }

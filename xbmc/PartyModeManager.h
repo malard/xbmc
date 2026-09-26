@@ -17,8 +17,7 @@ class CFileItem; typedef std::shared_ptr<CFileItem> CFileItemPtr;
 class CFileItemList;
 namespace KODI::PLAYLIST
 {
-enum class Id;
-class CPlayList;
+enum class Type;
 }
 
 enum class PartyModeContext
@@ -38,7 +37,6 @@ public:
   void Disable();
   void Play(int iPos);
   void OnSongChange(bool bUpdatePlayed = false);
-  void AddUserSongs(KODI::PLAYLIST::CPlayList& tempList, bool bPlay = false);
   void AddUserSongs(CFileItemList& tempList, bool bPlay = false);
   bool IsEnabled(PartyModeContext context = PartyModeContext::UNKNOWN) const;
   int GetSongsPlayed();
@@ -53,19 +51,16 @@ private:
   void Process();
   bool AddRandomSongs();
   void Add(CFileItemPtr &pItem);
-  bool ReapSongs();
-  bool MovePlaying();
   void SendUpdateMessage();
   void OnError(int iError, const std::string& strLogMessage);
   void ClearState();
   void UpdateStats();
   void Announce();
-  KODI::PLAYLIST::Id GetPlaylistId() const;
+  KODI::PLAYLIST::Type GetPlayListType() const;
 
   // state
   bool m_bEnabled;
   bool m_bIsVideo;
-  int m_iLastUserSong;
   std::string m_type;
 
   // statistics

@@ -31,14 +31,14 @@ constexpr const int GUI_MSG_PLAYBACK_ENDED         = GUI_MSG_USER + 6;
 //  Playback stopped by user
 constexpr const int GUI_MSG_PLAYBACK_STOPPED       = GUI_MSG_USER + 7;
 
-//  Message is send by the playlistplayer when it starts a playlist
+//  Message is sent by the playlists when it starts a playlist
 //  Parameter:
 //  dwParam1 = Current Playlist, can be PLAYLIST::TYPE_MUSIC or PLAYLIST::TYPE_VIDEO
 //  dwParam2 = Item started in the playlist
 //  lpVoid = Playlistitem started playing
 constexpr const int GUI_MSG_PLAYLISTPLAYER_STARTED  = GUI_MSG_USER + 8;
 
-//  Message is send by playlistplayer when next/previous item is started
+//  Message is sent by the playlists when next/previous item is started
 //  Parameter:
 //  dwParam1 = Current Playlist, can be PLAYLIST::TYPE_MUSIC or PLAYLIST::TYPE_VIDEO
 //  dwParam2 = LOWORD Position of the current playlistitem
@@ -46,7 +46,7 @@ constexpr const int GUI_MSG_PLAYLISTPLAYER_STARTED  = GUI_MSG_USER + 8;
 //  lpVoid = Current Playlistitem
 constexpr const int GUI_MSG_PLAYLISTPLAYER_CHANGED  = GUI_MSG_USER + 9;
 
-//  Message is send by the playlistplayer when the last item to play ended
+//  Message is sent by the playlists when the last item to play ended
 //  Parameter:
 //  dwParam1 = Current Playlist, can be PLAYLIST::TYPE_MUSIC or PLAYLIST::TYPE_VIDEO
 //  dwParam2 = Playlistitem played when stopping

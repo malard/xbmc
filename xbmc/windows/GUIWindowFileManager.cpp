@@ -11,12 +11,12 @@
 #include "Autorun.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -628,27 +628,26 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
   // start playlists from file manager
   if (PLAYLIST::IsPlayList(*pItem))
   {
-    const std::string& strPlayList = pItem->GetPath();
-    std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-    if (nullptr != pPlayList)
+    const auto playList = PLAYLIST::CPlayListFactory::Load(*pItem);
+    if (!playList)
     {
-      if (!pPlayList->Load(strPlayList))
-      {
-        HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-        return;
-      }
+      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+      return;
     }
-    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Id::TYPE_MUSIC);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+        CApplicationPlayLists::ChooseType(*playList), pItem->GetPath(), *playList);
     return;
   }
   if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem))
   {
-    CServiceBroker::GetPlaylistPlayer().Play(std::make_shared<CFileItem>(*pItem), player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        std::make_shared<CFileItem>(*pItem), player);
     return;
   }
   if (pItem->IsGame())
   {
-    g_application.PlayFile(*pItem, player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        std::make_shared<CFileItem>(*pItem), player);
     return ;
   }
 #ifdef HAS_PYTHON

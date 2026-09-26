@@ -15,7 +15,6 @@
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
@@ -31,6 +30,7 @@
 #ifdef HAS_CDDA_RIPPER
 #include "cdrip/CDDARipper.h"
 #endif
+#include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
@@ -262,8 +262,8 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
 {
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
-    if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_MUSIC ||
-        CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_MUSIC).size() > 0)
+    const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+    if (playLists->IsPlaying(PLAYLIST::Audio) || !playLists->GetPlayList(PLAYLIST::Audio).IsEmpty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
       return true;
@@ -656,13 +656,8 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
     URIUtils::RemoveSlashAtEnd(strPlayListDirectory);
     */
 
-    CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id::TYPE_MUSIC);
-    CServiceBroker::GetPlaylistPlayer().Reset();
-    CServiceBroker::GetPlaylistPlayer().Add(PLAYLIST::Id::TYPE_MUSIC, queuedItems);
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_MUSIC);
-
-    // play!
-    CServiceBroker::GetPlaylistPlayer().Play();
+    const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+    playLists->Play(PLAYLIST::Audio, queuedItems);
   }
   else if (PLAYLIST::IsPlayList(*pItem))
   {
@@ -683,21 +678,16 @@ void CGUIWindowMusicBase::LoadPlayList(const std::string& strPlayList)
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
 
-  // load a playlist like .m3u, .pls
-  // first get correct factory to load playlist
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (pPlayList)
+  const auto playList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!playList)
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return;
   }
 
-  int iSize = pPlayList->size();
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Id::TYPE_MUSIC))
+  const int iSize = playList->size();
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+          PLAYLIST::Audio, strPlayList, *playList))
   {
     if (m_guiState)
       m_guiState->SetPlaylistDirectory("playlistmusic://");
@@ -716,9 +706,9 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
   // party mode
   if (g_partyModeManager.IsEnabled())
   {
-    PLAYLIST::CPlayList playlistTemp;
-    playlistTemp.Add(pItem);
-    g_partyModeManager.AddUserSongs(playlistTemp, !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICPLAYER_QUEUEBYDEFAULT));
+    CFileItemList items;
+    items.Add(pItem);
+    g_partyModeManager.AddUserSongs(items, !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICPLAYER_QUEUEBYDEFAULT));
     return true;
   }
   else if (!PLAYLIST::IsPlayList(*pItem) && !NETWORK::IsInternetStream(*pItem))
@@ -731,8 +721,8 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
       OnQueueItem(iItem);
       return true;
     }
-    pItem->SetProperty("playlist_type_hint", static_cast<int>(m_guiState->GetPlaylist()));
-    CServiceBroker::GetPlaylistPlayer().Play(pItem, player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, player);
     return true;
   }
   return CGUIMediaWindow::OnPlayMedia(iItem, player);

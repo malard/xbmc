@@ -24,6 +24,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,11 +58,6 @@ namespace ANNOUNCEMENT
 namespace MEDIA_DETECT
 {
   class CAutorun;
-}
-
-namespace KODI::PLAYLIST
-{
-  class CPlayList;
 }
 
 namespace ActiveAE
@@ -123,11 +119,13 @@ public:
   int  GetMessageMask() override;
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
 
-  bool PlayMedia(CFileItem& item, const std::string& player, KODI::PLAYLIST::Id playlistId);
-  bool ProcessAndStartPlaylist(const std::string& strPlayList,
-                               KODI::PLAYLIST::CPlayList& playlist,
-                               KODI::PLAYLIST::Id playlistId,
-                               int track = 0);
+  /*!
+   * \param type The playlist the item plays on; with none, the item, a smart playlist or a
+   * playlist file's contents choose.
+   */
+  bool PlayMedia(CFileItem& item,
+                 const std::string& player,
+                 std::optional<KODI::PLAYLIST::Type> type);
   bool PlayFile(CFileItem item, const std::string& player, bool bRestart = false);
   void StopPlaying();
   void Restart(bool bSamePosition = true);
@@ -174,8 +172,6 @@ public:
   std::unique_ptr<MEDIA_DETECT::CAutorun> m_Autorun;
 #endif
 
-  std::string m_strPlayListFile;
-
   bool IsAppFocused() const { return m_AppFocused; }
 
   bool GetRenderGUI() const override;
@@ -220,7 +216,6 @@ protected:
   std::string m_prevMedia;
   bool m_bInitializing = true;
 
-  int m_nextPlaylistItem = -1;
   bool m_cancelPlayback{false};
 
   std::chrono::time_point<std::chrono::steady_clock> m_lastRenderTime;

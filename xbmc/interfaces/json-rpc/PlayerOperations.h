@@ -24,7 +24,6 @@ class CPVREpgInfoTag;
 namespace KODI::PLAYLIST
 {
 enum class Id;
-enum class RepeatState;
 } // namespace PLAYLIST
 
 namespace JSONRPC
@@ -100,7 +99,6 @@ namespace JSONRPC
     static void SendSlideshowAction(int actionID);
     static JSONRPC_STATUS GetPropertyValue(PlayerType player, const std::string &property, CVariant &result);
 
-    static KODI::PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat);
     static bool IsPVRChannel();
     static std::shared_ptr<PVR::CPVREpgInfoTag> GetCurrentEpg();
   };

@@ -8,9 +8,18 @@
 
 #pragma once
 
+#include <optional>
+#include <string_view>
+
+#include <fmt/format.h>
+
 namespace KODI::PLAYLIST
 {
 
+/*!
+ * \brief The playlist ids of the JSON-RPC and Python interfaces. Inside Kodi a playlist is named
+ * by its Type; see TypeFromId() and IdFromType().
+ */
 enum class Id : int
 {
   TYPE_NONE = -1,
@@ -21,13 +30,82 @@ enum class Id : int
 };
 
 /*!
- * \brief Manages playlist playing.
+ * \brief The two playlists, one for each thing Kodi renders. Whatever is playing holds video,
+ * audio or both, and the playlist an entry is put on is what it claims.
  */
-enum class RepeatState
+enum class Type
 {
-  NONE,
-  ONE,
-  ALL
+  Video,
+  Audio
+};
+using enum Type;
+
+inline std::optional<Type> TypeFromId(Id id)
+{
+  switch (id)
+  {
+    case Id::TYPE_MUSIC:
+      return Audio;
+    case Id::TYPE_VIDEO:
+    case Id::TYPE_PICTURE:
+    case Id::TYPE_GAME:
+      return Video;
+    default:
+      return std::nullopt;
+  }
+}
+
+inline Id IdFromType(std::optional<Type> type)
+{
+  if (!type)
+    return Id::TYPE_NONE;
+  return *type == Audio ? Id::TYPE_MUSIC : Id::TYPE_VIDEO;
+}
+
+/*!
+ * \brief Identifies one entry of one playlist. Never reused within that playlist, so a stale id
+ * resolves to nothing rather than to a different entry.
+ */
+using EntryId = unsigned int;
+constexpr EntryId NO_ENTRY = 0;
+
+/*!
+ * \brief Why the playlist is moving on. A user skip leaves out the current entry's repeat mark,
+ * so a repeating entry can always be left.
+ */
+enum class Advance
+{
+  Automatic,
+  User
+};
+
+/*!
+ * \brief What the playlist does once nothing follows the last entry in play order.
+ */
+class Wrap
+{
+public:
+  enum class Kind
+  {
+    None,
+    ToStart,
+    ToEntry
+  };
+
+  static Wrap None() { return Wrap(Kind::None, NO_ENTRY); }
+  static Wrap ToStart() { return Wrap(Kind::ToStart, NO_ENTRY); }
+  static Wrap To(EntryId entry) { return Wrap(Kind::ToEntry, entry); }
+
+  Kind GetKind() const { return m_kind; }
+  EntryId GetTarget() const { return m_target; }
+
+  bool operator==(const Wrap& other) const = default;
+
+private:
+  Wrap(Kind kind, EntryId target) : m_kind(kind), m_target(target) {}
+
+  Kind m_kind;
+  EntryId m_target;
 };
 
 enum class ExcludeUsedPlaylists : bool
@@ -37,3 +115,14 @@ enum class ExcludeUsedPlaylists : bool
 };
 
 } // namespace KODI::PLAYLIST
+
+template<>
+struct fmt::formatter<KODI::PLAYLIST::Type> : fmt::formatter<std::string_view>
+{
+  template<typename FormatContext>
+  constexpr auto format(KODI::PLAYLIST::Type type, FormatContext& ctx) const
+  {
+    using enum KODI::PLAYLIST::Type;
+    return fmt::formatter<std::string_view>::format(type == Video ? "video" : "audio", ctx);
+  }
+};

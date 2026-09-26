@@ -12,7 +12,6 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIPassword.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "ViewDatabase.h"
@@ -21,6 +20,8 @@
 #include "addons/PluginSource.h"
 #include "addons/addoninfo/AddonType.h"
 #include "addons/gui/GUIViewStateAddonBrowser.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "events/windows/GUIViewStateEventLog.h"
 #include "favourites/GUIViewStateFavourites.h"
@@ -199,7 +200,6 @@ CGUIViewState::CGUIViewState(const CFileItemList& items) : m_items(items)
 {
   m_currentViewAsControl = 0;
   m_currentSortMethod = 0;
-  m_playlist = PLAYLIST::Id::TYPE_NONE;
 }
 
 CGUIViewState::~CGUIViewState() = default;
@@ -433,9 +433,9 @@ bool CGUIViewState::DisableAddSourceButtons()
   return true;
 }
 
-PLAYLIST::Id CGUIViewState::GetPlaylist() const
+std::optional<PLAYLIST::Type> CGUIViewState::GetPlayListType() const
 {
-  return m_playlist;
+  return m_playListType;
 }
 
 const std::string& CGUIViewState::GetPlaylistDirectory()
@@ -451,7 +451,8 @@ void CGUIViewState::SetPlaylistDirectory(const std::string& strDirectory)
 
 bool CGUIViewState::IsCurrentPlaylistDirectory(const std::string& strDirectory)
 {
-  if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist()!=GetPlaylist())
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayingType() !=
+      GetPlayListType())
     return false;
 
   std::string strDir = strDirectory;
@@ -511,7 +512,7 @@ void CGUIViewState::SetSortOrder(SortOrder sortOrder)
 
 bool CGUIViewState::AutoPlayNextVideoItem() const
 {
-  if (GetPlaylist() != PLAYLIST::Id::TYPE_VIDEO)
+  if (GetPlayListType() != PLAYLIST::Video)
     return false;
 
   return VIDEO::UTILS::IsAutoPlayNextItem(m_items.GetContent());
@@ -602,9 +603,9 @@ CGUIViewStateFromItems::CGUIViewStateFromItems(const CFileItemList &items) : CGU
     {
       const auto plugin = std::static_pointer_cast<CPluginSource>(addon);
       if (plugin->Provides(CPluginSource::Content::AUDIO))
-        m_playlist = PLAYLIST::Id::TYPE_MUSIC;
+        m_playListType = PLAYLIST::Audio;
       if (plugin->Provides(CPluginSource::Content::VIDEO))
-        m_playlist = PLAYLIST::Id::TYPE_VIDEO;
+        m_playListType = PLAYLIST::Video;
     }
   }
 

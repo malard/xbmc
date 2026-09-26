@@ -13,6 +13,7 @@
 #include <memory>
 
 class CApplicationPlayer;
+class CApplicationPlayLists;
 class CVideoInfoTag;
 
 namespace KODI::GUILIB::GUIINFO
@@ -50,8 +51,10 @@ public:
 private:
   int GetPercentPlayed(const CVideoInfoTag* tag) const;
   bool GetPlaylistInfo(std::string& value, const CGUIInfo& info) const;
+  bool IsPlayingAsAudio() const;
 
   const std::shared_ptr<CApplicationPlayer> m_appPlayer;
+  const std::shared_ptr<CApplicationPlayLists> m_playLists;
 };
 
 } // namespace KODI::GUILIB::GUIINFO

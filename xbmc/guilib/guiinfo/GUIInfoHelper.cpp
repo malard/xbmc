@@ -9,16 +9,12 @@
 #include "GUIInfoHelper.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindow.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/IGUIContainer.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
-#include "playlists/PlayList.h"
-#include "resources/LocalizeStrings.h"
-#include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "windows/GUIMediaWindow.h"
@@ -29,49 +25,6 @@ namespace KODI::GUILIB::GUIINFO
 // conditions for window retrieval
 static const int WINDOW_CONDITION_HAS_LIST_ITEMS = 1;
 static const int WINDOW_CONDITION_IS_MEDIA_WINDOW = 2;
-
-std::string GetPlaylistLabel(int item, PLAYLIST::Id playlistId /* = TYPE_NONE */)
-{
-  PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
-
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
-    playlistId = player.GetCurrentPlaylist();
-
-  switch (item)
-  {
-    case PLAYLIST_LENGTH:
-    {
-      return std::to_string(player.GetPlaylist(playlistId).size());
-    }
-    case PLAYLIST_POSITION:
-    {
-      int currentSong = player.GetCurrentItemIdx();
-      if (currentSong > -1)
-        return std::to_string(currentSong + 1);
-      break;
-    }
-    case PLAYLIST_RANDOM:
-    {
-      if (player.IsShuffled(playlistId))
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16041); // 16041: On
-      else
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(591); // 591: Off
-    }
-    case PLAYLIST_REPEAT:
-    {
-      PLAYLIST::RepeatState state = player.GetRepeat(playlistId);
-      if (state == PLAYLIST::RepeatState::ONE)
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(592); // 592: One
-      else if (state == PLAYLIST::RepeatState::ALL)
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(593); // 593: All
-      else
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(594); // 594: Off
-    }
-    default:
-      break;
-  }
-  return std::string();
-}
 
 namespace
 {

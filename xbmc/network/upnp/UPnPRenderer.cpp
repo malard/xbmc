@@ -17,6 +17,8 @@
 #include "UPnPInternal.h"
 #include "URL.h"
 #include "application/Application.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "filesystem/SpecialProtocol.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -28,6 +30,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayList.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -632,15 +635,9 @@ NPT_Result CUPnPRenderer::OnSetNextAVTransportURI(PLT_ActionReference& action)
       CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
   {
 
-    PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_MUSIC;
-    if (VIDEO::IsVideo(*item))
-      playlistId = PLAYLIST::Id::TYPE_VIDEO;
-
-    // note: auto-deleted when the message is consumed
-    auto playlist = new CFileItemList();
-    playlist->AddFront(item, 0);
-    CServiceBroker::GetAppMessenger()->PostMsg(
-        TMSG_PLAYLISTPLAYER_ADD, static_cast<int>(playlistId), -1, static_cast<void*>(playlist));
+    const PLAYLIST::Type type = VIDEO::IsVideo(*item) ? PLAYLIST::Video : PLAYLIST::Audio;
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(type).Add(
+        item);
 
     service->SetStateVariable("NextAVTransportURI", uri);
     service->SetStateVariable("NextAVTransportURIMetaData", meta);

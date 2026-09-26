@@ -9,10 +9,13 @@
 #include "PlayList.h"
 
 #include "FileItemList.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
+#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/PlayListShuffle.h"
 #include "utils/URIUtils.h"
 
 using namespace KODI;
@@ -26,12 +29,14 @@ namespace XBMCAddon
     PlayList::PlayList(int playList) :
       iPlayList(playList), pPlayList(NULL)
     {
-      // we do not create our own playlist, just using the ones from playlistplayer
+      // we do not create our own playlist, just using the Video and Audio ones
       if (PLAYLIST::Id{iPlayList} != PLAYLIST::Id::TYPE_MUSIC &&
           PLAYLIST::Id{iPlayList} != PLAYLIST::Id::TYPE_VIDEO)
         throw PlayListException("PlayList does not exist");
 
-      pPlayList = &CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id{playList});
+      pPlayList =
+          &CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(
+              *PLAYLIST::TypeFromId(PLAYLIST::Id{playList}));
       iPlayList = playList;
     }
 
@@ -80,9 +85,9 @@ namespace XBMCAddon
             return false;
 
           // clear current playlist
-          CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id{this->iPlayList});
+          this->pPlayList->Clear();
 
-          // add each item of the playlist to the playlistplayer
+          // add each item of the playlist to ours
           for (int i=0; i < pPlayList->size(); ++i)
           {
             CFileItemPtr playListItem =(*pPlayList)[i];
@@ -117,17 +122,17 @@ namespace XBMCAddon
 
     void PlayList::shuffle()
     {
-      pPlayList->Shuffle();
+      pPlayList->SetShuffle(std::make_unique<PLAYLIST::CPlayListRandomShuffle>());
     }
 
     void PlayList::unshuffle()
     {
-      pPlayList->UnShuffle();
+      pPlayList->SetShuffled(false);
     }
 
     int PlayList::getposition()
     {
-      return CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+      return pPlayList->GetCurrentPosition();
     }
 
     XBMCAddon::xbmcgui::ListItem* PlayList::operator [](long i)

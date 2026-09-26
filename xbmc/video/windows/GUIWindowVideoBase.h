@@ -93,7 +93,7 @@ protected:
   bool OnPlayAndQueueMedia(const CFileItemPtr& item, const std::string& player = "") override;
   using CGUIMediaWindow::LoadPlayList;
   void LoadPlayList(const std::string& strPlayList,
-                    KODI::PLAYLIST::Id playlistId = KODI::PLAYLIST::Id::TYPE_VIDEO);
+                    KODI::PLAYLIST::Type type = KODI::PLAYLIST::Video);
 
   /*!
    \brief Lookup the information of an item and display an Info dialog

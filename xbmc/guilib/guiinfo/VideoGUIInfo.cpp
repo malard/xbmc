@@ -9,12 +9,11 @@
 #include "guilib/guiinfo/VideoGUIInfo.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
-#include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/DataCacheCore.h"
 #include "cores/VideoPlayer/DVDFileInfo.h"
@@ -95,10 +94,12 @@ void StartArtLookup(const CFileItem& item, bool lookupItem, const std::string& p
                                                    static_cast<void*>(update.release()));
                             });
 }
+
 } // namespace
 
 CVideoGUIInfo::CVideoGUIInfo()
-  : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>())
+  : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()),
+    m_playLists(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>())
 {
 }
 
@@ -112,12 +113,21 @@ int CVideoGUIInfo::GetPercentPlayed(const CVideoInfoTag* tag) const
     return 0;
 }
 
+// Whether what plays was put on the Audio playlist, or, for playback started outside the playlists,
+// whether the player is playing audio only.
+bool CVideoGUIInfo::IsPlayingAsAudio() const
+{
+  if (const auto type = m_playLists->GetPlayingType(); type)
+    return *type == PLAYLIST::Audio;
+  return m_appPlayer->IsPlayingAudio();
+}
+
 bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 {
   if (item && VIDEO::IsVideo(*item))
   {
     // special case where .strm is used to start an audio stream
-    if (NETWORK::IsInternetStream(*item) && m_appPlayer->IsPlayingAudio())
+    if (NETWORK::IsInternetStream(*item) && IsPlayingAsAudio())
       return false;
 
     CLog::Log(LOGDEBUG, "CVideoGUIInfo::InitCurrentItem({})", CURL::GetRedacted(item->GetPath()));
@@ -132,7 +142,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 
     // find a thumb for this stream
     const std::string playlistFile =
-        NETWORK::IsInternetStream(*item) ? g_application.m_strPlayListFile : std::string{};
+        NETWORK::IsInternetStream(*item) ? m_playLists->GetPlayingSourcePath() : std::string{};
     if (!playlistFile.empty())
       CLog::Log(LOGDEBUG, "Streaming media detected... using {} to find a thumb",
                 CURL::GetRedacted(playlistFile));
@@ -676,16 +686,17 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
     // VIDEOPLAYER_*
     ///////////////////////////////////////////////////////////////////////////////////////////////
     case VIDEOPLAYER_PLAYLISTLEN:
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+      if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_LENGTH);
+        value = std::to_string(m_playLists->GetPlayList(PLAYLIST::Video).size());
         return true;
       }
       break;
     case VIDEOPLAYER_PLAYLISTPOS:
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+      if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_POSITION);
+        const int position = m_playLists->GetPlayingPosition(PLAYLIST::Video);
+        value = position < 0 ? std::string{} : std::to_string(position + 1);
         return true;
       }
       break;
@@ -801,24 +812,16 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
 
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
-  const PLAYLIST::CPlayList& playlist =
-      CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  if (playlist.size() < 1)
+  // data1 1: data2 counts from the playing entry; otherwise it is a position
+  const int index = info.GetData1() == 1
+                        ? m_playLists->GetPlayingPosition(PLAYLIST::Video, info.GetData2())
+                        : info.GetData2();
+  const PLAYLIST::CPlayList& playlist = m_playLists->GetPlayList(PLAYLIST::Video);
+  const CFileItemPtr playlistItem = playlist.GetItem(playlist.GetEntryId(index));
+  if (!playlistItem)
+  {
     return false;
-
-  int index = info.GetData2();
-  if (info.GetData1() == 1)
-  { // relative index (requires current playlist is TYPE_VIDEO)
-    if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() != PLAYLIST::Id::TYPE_VIDEO)
-      return false;
-
-    index = CServiceBroker::GetPlaylistPlayer().GetNextItemIdx(index);
   }
-
-  if (index < 0 || index >= playlist.size())
-    return false;
-
-  const CFileItemPtr playlistItem = playlist[index];
   // try to set a thumbnail
   if (!playlistItem->HasArt("thumb"))
   {

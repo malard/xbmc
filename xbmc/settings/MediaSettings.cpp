@@ -8,9 +8,10 @@
 
 #include "MediaSettings.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/RetroPlayer/RetroPlayerUtils.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "interfaces/AnnouncementManager.h"
@@ -145,13 +146,10 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
   }
 
   // Set music playlist player repeat and shuffle from loaded settings
-  if (m_musicPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_MUSIC, m_musicPlaylistShuffle);
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+  playLists->SetRepeat(PLAYLIST::Audio, m_musicPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                                              : CApplicationPlayLists::Repeat::Off);
+  playLists->SetShuffle(PLAYLIST::Audio, m_musicPlaylistShuffle);
 
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
@@ -178,13 +176,9 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
   }
 
   // Set video playlist player repeat and shuffle from loaded settings
-  if (m_videoPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_VIDEO, m_videoPlaylistShuffle);
+  playLists->SetRepeat(PLAYLIST::Video, m_videoPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                                              : CApplicationPlayLists::Repeat::Off);
+  playLists->SetShuffle(PLAYLIST::Video, m_videoPlaylistShuffle);
 
   return true;
 }

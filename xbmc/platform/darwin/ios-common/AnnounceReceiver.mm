@@ -9,10 +9,11 @@
 #import "platform/darwin/ios-common/AnnounceReceiver.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
 #include "application/Application.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "filesystem/SpecialProtocol.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
@@ -141,13 +142,16 @@ void AnnounceBridge(ANNOUNCEMENT::AnnouncementFlag flag,
     if (duration > 0)
       item[@"duration"] = @(duration);
     item[@"elapsed"] = @(g_application.GetTime());
-    int current = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
-    if (current >= 0)
+    const auto playLists =
+        CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+    if (const std::optional<KODI::PLAYLIST::Type> type = playLists->GetPlayingType(); type)
     {
-      item[@"current"] = @(current);
-      item[@"total"] = @(CServiceBroker::GetPlaylistPlayer()
-                             .GetPlaylist(CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist())
-                             .size());
+      const KODI::PLAYLIST::CPlayList& playList = playLists->GetPlayList(*type);
+      if (const int current = playList.GetCurrentPosition(); current >= 0)
+      {
+        item[@"current"] = @(current);
+        item[@"total"] = @(playList.size());
+      }
     }
 
     // Music properties

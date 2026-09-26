@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "playlists/PlayListTypes.h"
-
 #include <memory>
 #include <string>
 
@@ -23,8 +21,6 @@ class CGUIWindow;
 
 namespace KODI::GUILIB::GUIINFO
 {
-
-std::string GetPlaylistLabel(int item, PLAYLIST::Id playlistid = PLAYLIST::Id::TYPE_NONE);
 
 CGUIWindow* GetWindow(int contextWindow);
 CGUIControl* GetActiveContainer(int containerId, int contextWindow);

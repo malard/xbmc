@@ -12,6 +12,7 @@
 #include "utils/LabelFormatter.h"
 #include "utils/SortUtils.h"
 
+#include <optional>
 #include <vector>
 
 class CViewState; // forward
@@ -19,7 +20,7 @@ class CFileItemList;
 
 namespace KODI::PLAYLIST
 {
-enum class Id;
+enum class Type;
 } // namespace KODI::PLAYLIST
 
 class CGUIViewState
@@ -50,7 +51,7 @@ public:
   virtual bool HideParentDirItems();
   virtual bool DisableAddSourceButtons();
 
-  virtual KODI::PLAYLIST::Id GetPlaylist() const;
+  virtual std::optional<KODI::PLAYLIST::Type> GetPlayListType() const;
   const std::string& GetPlaylistDirectory();
   void SetPlaylistDirectory(const std::string& strDirectory);
   bool IsCurrentPlaylistDirectory(const std::string& strDirectory);
@@ -98,7 +99,7 @@ protected:
   const CFileItemList& m_items;
 
   int m_currentViewAsControl;
-  KODI::PLAYLIST::Id m_playlist;
+  std::optional<KODI::PLAYLIST::Type> m_playListType;
 
   std::vector<GUIViewSortDetails> m_sortMethods;
   int m_currentSortMethod;

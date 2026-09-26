@@ -14,13 +14,13 @@
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
 #include "addons/gui/GUIDialogAddonInfo.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogSelect.h"
@@ -110,8 +110,8 @@ bool CGUIWindowVideoBase::OnAction(const CAction &action)
     return OnContextButton(m_viewControl.GetSelectedItem(),CONTEXT_BUTTON_SCAN);
   else if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
-    if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO ||
-        CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_VIDEO).size() > 0)
+    const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+    if (playLists->IsPlaying(PLAYLIST::Video) || !playLists->GetPlayList(PLAYLIST::Video).IsEmpty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
       return true;
@@ -970,16 +970,11 @@ bool CGUIWindowVideoBase::OnPlayMedia(const std::shared_ptr<CFileItem>& pItem,
   // party mode
   if (g_partyModeManager.IsEnabled(PartyModeContext::VIDEO))
   {
-    PLAYLIST::CPlayList playlistTemp;
-    playlistTemp.Add(pItem);
-    g_partyModeManager.AddUserSongs(playlistTemp, true);
+    CFileItemList items;
+    items.Add(pItem);
+    g_partyModeManager.AddUserSongs(items, true);
     return true;
   }
-
-  // Reset Playlistplayer, playback started now does
-  // not use the playlistplayer.
-  CServiceBroker::GetPlaylistPlayer().Reset();
-  CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_NONE);
 
   auto itemCopy = std::make_shared<CFileItem>(*pItem);
 
@@ -990,12 +985,14 @@ bool CGUIWindowVideoBase::OnPlayMedia(const std::shared_ptr<CFileItem>& pItem,
   }
   CLog::Log(LOGDEBUG, "{} {}", __FUNCTION__, CURL::GetRedacted(itemCopy->GetPath()));
 
-  itemCopy->SetProperty("playlist_type_hint", static_cast<int>(m_guiState->GetPlaylist()));
-
   if (m_thumbLoader.IsLoading())
     m_thumbLoader.StopAsync();
 
-  CServiceBroker::GetPlaylistPlayer().Play(itemCopy, player);
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+  if (const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType(); type)
+    playLists->Play(*type, itemCopy, player);
+  else
+    playLists->Play(itemCopy, player);
 
   // Reset force selection flag
   pItem->ClearProperty("force_playlist_selection");
@@ -1019,11 +1016,11 @@ bool CGUIWindowVideoBase::OnPlayMedia(int iItem, const std::string& player)
 bool CGUIWindowVideoBase::OnPlayAndQueueMedia(const CFileItemPtr& item, const std::string& player)
 {
   // Get the current playlist and make sure it is not shuffled
-  PLAYLIST::Id playlistId = m_guiState->GetPlaylist();
-  if (playlistId != PLAYLIST::Id::TYPE_NONE &&
-      CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+  if (const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType();
+      type && playLists->IsShuffled(*type))
   {
-    CServiceBroker::GetPlaylistPlayer().SetShuffle(playlistId, false);
+    playLists->SetShuffle(*type, false);
   }
 
   CFileItemPtr movieItem(new CFileItem(*item));
@@ -1068,26 +1065,21 @@ void CGUIWindowVideoBase::OnDeleteItem(const CFileItemPtr& item)
 }
 
 void CGUIWindowVideoBase::LoadPlayList(const std::string& strPlayList,
-                                       PLAYLIST::Id playlistId /* = PLAYLIST::TYPE_VIDEO */)
+                                       PLAYLIST::Type type /* = PLAYLIST::Video */)
 {
   // if partymode is active, we disable it
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
 
-  // load a playlist like .m3u, .pls
-  // first get correct factory to load playlist
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (pPlayList)
+  const auto playList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!playList)
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return;
   }
 
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, playlistId))
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+          type, strPlayList, *playList))
   {
     if (m_guiState)
       m_guiState->SetPlaylistDirectory("playlistvideo://");
@@ -1154,11 +1146,8 @@ bool CGUIWindowVideoBase::PlayItem(const std::shared_ptr<CFileItem>& pItem,
     VIDEO::UTILS::GetItemsForPlayList(item, queuedItems,
                                       ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
 
-    CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-    CServiceBroker::GetPlaylistPlayer().Reset();
-    CServiceBroker::GetPlaylistPlayer().Add(PLAYLIST::Id::TYPE_VIDEO, queuedItems);
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-    CServiceBroker::GetPlaylistPlayer().Play();
+    const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+    playLists->Play(PLAYLIST::Video, queuedItems);
     return true;
   }
   else if (PLAYLIST::IsPlayList(*pItem) && !pItem->IsType(".strm"))
@@ -1166,7 +1155,7 @@ bool CGUIWindowVideoBase::PlayItem(const std::shared_ptr<CFileItem>& pItem,
     // Note: strm files being somehow special playlists need to be handled in OnPlay*Media
 
     // load the playlist the old way
-    LoadPlayList(pItem->GetDynPath(), PLAYLIST::Id::TYPE_VIDEO);
+    LoadPlayList(pItem->GetDynPath(), PLAYLIST::Video);
     return true;
   }
   else if (m_guiState.get() && m_guiState->AutoPlayNextItem() && !g_partyModeManager.IsEnabled())

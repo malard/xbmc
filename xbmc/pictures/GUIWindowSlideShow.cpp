@@ -17,6 +17,7 @@
 #include "URL.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "filesystem/Directory.h"
@@ -32,6 +33,7 @@
 #include "pictures/GUIViewStatePictures.h"
 #include "pictures/PictureThumbLoader.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayList.h"
 #include "playlists/PlayListTypes.h"
 #include "rendering/RenderSystem.h"
 #include "resources/LocalizeStrings.h"
@@ -54,6 +56,14 @@ using namespace KODI::VIDEO;
 using namespace MESSAGING;
 using namespace XFILE;
 using namespace std::chrono_literals;
+
+namespace
+{
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+}
+} // namespace
 
 #define MAX_ZOOM_FACTOR                     10
 #define MAX_PICTURE_SIZE             2048*2048
@@ -176,53 +186,34 @@ void CGUIWindowSlideShow::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
 void CGUIWindowSlideShow::AnnouncePlayerPlay(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["speed"] = m_bSlideShow && !m_bPause ? 1 : 0;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPlay", item, param);
+  PlayLists()->OnSlideShow(CApplicationPlayLists::PlayerEvent::Play, item,
+                           m_bSlideShow && !m_bPause);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerPause(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["speed"] = 0;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPause", item, param);
+  PlayLists()->OnSlideShow(CApplicationPlayLists::PlayerEvent::Pause, item, false);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerStop(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  param["end"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnStop", item, param);
+  PlayLists()->OnSlideShow(CApplicationPlayLists::PlayerEvent::Stop, item, false);
 }
 
 void CGUIWindowSlideShow::AnnouncePlaylistClear()
 {
-  CVariant data;
-  data["playlistid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnClear", data);
+  PlayLists()->OnSlideShowListChanged({PLAYLIST::PlayListChange::Type::Cleared});
 }
 
 void CGUIWindowSlideShow::AnnouncePlaylistAdd(const CFileItemPtr& item, int pos)
 {
-  CVariant data;
-  data["playlistid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  data["position"] = pos;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnAdd", item, data);
+  PlayLists()->OnSlideShowListChanged(
+      {PLAYLIST::PlayListChange::Type::Added, PLAYLIST::NO_ENTRY, pos, item});
 }
 
-void CGUIWindowSlideShow::AnnouncePropertyChanged(const std::string &strProperty, const CVariant &value)
+void CGUIWindowSlideShow::AnnounceShuffled()
 {
-  if (strProperty.empty() || value.isNull())
-    return;
-
-  CVariant data;
-  data["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  data["property"][strProperty] = value;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  PlayLists()->OnSlideShow(CApplicationPlayLists::PlayerProperty::Shuffled, true);
 }
 
 bool CGUIWindowSlideShow::IsPlaying() const
@@ -1292,7 +1283,7 @@ void CGUIWindowSlideShow::Shuffle()
   m_iNextSlide = GetNextSlide();
   m_bShuffled = true;
 
-  AnnouncePropertyChanged("shuffled", true);
+  AnnounceShuffled();
 }
 
 int CGUIWindowSlideShow::NumSlides() const
