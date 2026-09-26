@@ -32,6 +32,7 @@
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "pvr/channels/PVRChannel.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
@@ -217,6 +218,14 @@ bool CApplicationPlayLists::IsAudioFollowingVideo() const
 int CApplicationPlayLists::GetPlayerId() const
 {
   return static_cast<int>(IdFromSide(GetPlayingSide()));
+}
+
+int CApplicationPlayLists::GetPlayerId(const CFileItem* item) const
+{
+  if (item && item->HasPVRChannelInfoTag())
+    return static_cast<int>(item->GetPVRChannelInfoTag()->IsRadio() ? Id::TYPE_MUSIC
+                                                                    : Id::TYPE_VIDEO);
+  return GetPlayerId();
 }
 
 bool CApplicationPlayLists::HasPlayedFirstFile() const
@@ -739,7 +748,7 @@ void CApplicationPlayLists::Announce(PlayerEvent event,
                                      CVariant data) const
 {
   if (event != PlayerEvent::Stop)
-    data["player"]["playerid"] = GetPlayerId();
+    data["player"]["playerid"] = GetPlayerId(item.get());
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, EventName(event), item,
                                                      data);
 }

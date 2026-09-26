@@ -124,6 +124,12 @@ public:
   int GetPlayerId() const;
 
   /*!
+   * \return The playerid the JSON-RPC interface publishes for the given item: a channel's is
+   * whether it is radio or TV, whoever plays it.
+   */
+  int GetPlayerId(const CFileItem* item) const;
+
+  /*!
    * \brief Start playing a side's playlist.
    * \param position A position in list order, whose entry then leads the play order; with none,
    * the playlist plays from the start of its play order.
