@@ -141,6 +141,17 @@ TEST(TestApplicationPlayLists, ThePlayingPositionIsOnlyThePlayingPlayList)
   EXPECT_EQ(-1, playLists.GetPlayingPosition(PLAYLIST::Audio));
 }
 
+TEST(TestApplicationPlayLists, APlayingPositionCanBeCountedFromTheCurrentEntry)
+{
+  CApplicationPlayLists playLists;
+  FillVideo(playLists);
+  EXPECT_EQ(-1, playLists.GetPlayingPosition(PLAYLIST::Video, -1)) << "not playing";
+
+  playLists.SetPlayingType(PLAYLIST::Video);
+  EXPECT_EQ(0, playLists.GetPlayingPosition(PLAYLIST::Video, -1));
+  EXPECT_EQ(-1, playLists.GetPlayingPosition(PLAYLIST::Video, 1)) << "nothing follows the last";
+}
+
 TEST(TestApplicationPlayLists, QueueingReportsWhereTheItemsLanded)
 {
   CApplicationPlayLists playLists;

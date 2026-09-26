@@ -216,11 +216,18 @@ bool CApplicationPlayLists::IsPlaying(Type type) const
   return GetPlayingType() == type && GetPhase(type) != Phase::Idle;
 }
 
-int CApplicationPlayLists::GetPlayingPosition(Type type) const
+int CApplicationPlayLists::GetPlayingPosition(Type type, int offset /* = 0 */) const
 {
   if (GetPlayingType() != type)
+  {
     return -1;
-  return GetPlayList(type).GetCurrentPosition();
+  }
+  const CPlayList& playList = GetPlayList(type);
+  if (offset == 0)
+  {
+    return playList.GetCurrentPosition();
+  }
+  return playList.GetPosition(playList.PeekOffset(offset));
 }
 
 Type CApplicationPlayLists::ChooseType(const CFileItemList& items)

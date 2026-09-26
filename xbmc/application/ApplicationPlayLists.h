@@ -121,10 +121,11 @@ public:
   bool IsPlaying(KODI::PLAYLIST::Type type) const;
 
   /*!
-   * \return The position of this playlist's current entry while the player is working through
-   * it, or -1.
+   * \return While the player is working through this playlist, the position in list order of the
+   * entry the given number of entries ahead of the current one in play order, or behind it for a
+   * negative offset; otherwise, or if there is no such entry, -1.
    */
-  int GetPlayingPosition(KODI::PLAYLIST::Type type) const;
+  int GetPlayingPosition(KODI::PLAYLIST::Type type, int offset = 0) const;
 
   /*!
    * \brief The playlist for items nobody named one for: Video if any of them is video, else Audio.

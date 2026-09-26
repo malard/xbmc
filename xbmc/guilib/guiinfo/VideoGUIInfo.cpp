@@ -812,25 +812,16 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
 
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
+  // data1 1: data2 counts from the playing entry; otherwise it is a position
+  const int index = info.GetData1() == 1
+                        ? m_playLists->GetPlayingPosition(PLAYLIST::Video, info.GetData2())
+                        : info.GetData2();
   const PLAYLIST::CPlayList& playlist = m_playLists->GetPlayList(PLAYLIST::Video);
-  if (playlist.IsEmpty())
-    return false;
-
-  int index = info.GetData2();
-  if (info.GetData1() == 1)
-  { // relative index (requires the Video playlist to be playing)
-    if (!m_playLists->IsPlaying(PLAYLIST::Video))
-      return false;
-
-    index = playlist.GetPosition(playlist.PeekOffset(index));
-  }
-
-  if (index < 0 || index >= playlist.size())
-    return false;
-
-  const CFileItemPtr playlistItem = playlist[index];
+  const CFileItemPtr playlistItem = playlist.GetItem(playlist.GetEntryId(index));
   if (!playlistItem)
+  {
     return false;
+  }
   // try to set a thumbnail
   if (!playlistItem->HasArt("thumb"))
   {
