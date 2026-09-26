@@ -649,7 +649,8 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
   }
   if (pItem->IsGame())
   {
-    g_application.PlayFile(*pItem, player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        std::make_shared<CFileItem>(*pItem), player);
     return ;
   }
 #ifdef HAS_PYTHON

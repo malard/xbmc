@@ -176,6 +176,14 @@ TEST(TestApplicationPlayLists, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
   EXPECT_EQ(PLAYLIST::Video, CApplicationPlayLists::ChooseType(playList));
 }
 
+TEST(TestApplicationPlayLists, AnItemNobodyPlacedGoesOnAudioOnlyIfItHoldsOnlyAudio)
+{
+  EXPECT_EQ(PLAYLIST::Audio,
+            CApplicationPlayLists::ChooseType(CFileItem("/music/one.flac", false)));
+  EXPECT_EQ(PLAYLIST::Video, CApplicationPlayLists::ChooseType(CFileItem("/video/one.mkv", false)));
+  EXPECT_EQ(PLAYLIST::Video, CApplicationPlayLists::ChooseType(CFileItem("/other/unknown", false)));
+}
+
 // The slideshow publishes, so an announcement manager is registered for the test. An unstarted one
 // only queues.
 class TestApplicationPlayListsSlideShow : public ::testing::Test

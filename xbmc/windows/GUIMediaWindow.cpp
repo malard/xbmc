@@ -1511,9 +1511,6 @@ void CGUIMediaWindow::SetHistoryForPath(const std::string& strDirectory)
  */
 bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 {
-  // Playback started now does not use a playlist.
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->SetPlayingType(
-      std::nullopt);
   CFileItemPtr pItem=m_vecItems->Get(iItem);
 
   CLog::Log(LOGDEBUG, "{} {}", __FUNCTION__, CURL::GetRedacted(pItem->GetPath()));
@@ -1522,7 +1519,9 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
   if (NETWORK::IsInternetStream(*pItem) || PLAYLIST::IsPlayList(*pItem))
     bResult = g_application.PlayMedia(*pItem, player, m_guiState->GetPlayListType());
   else
-    bResult = g_application.PlayFile(*pItem, player);
+    bResult = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        m_guiState->GetPlayListType().value_or(CApplicationPlayLists::ChooseType(*pItem)),
+        std::make_shared<CFileItem>(*pItem), player);
 
   if (pItem->GetStartOffset() == STARTOFFSET_RESUME)
     pItem->SetStartOffset(0);

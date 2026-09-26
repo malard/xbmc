@@ -430,10 +430,8 @@ bool CGUIWindowMusicPlayList::OnPlayMedia(int iItem, const std::string& player)
     }
     else
     {
-      // Playback started now does not use a playlist.
-      CFileItemPtr pItem = m_vecItems->Get(iItem);
-      m_playLists->SetPlayingType(std::nullopt);
-      g_application.PlayFile(*pItem, player);
+      m_playLists->Play(PLAYLIST::Audio, std::make_shared<CFileItem>(*m_vecItems->Get(iItem)),
+                        player);
     }
   }
 

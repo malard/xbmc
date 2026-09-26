@@ -133,6 +133,12 @@ public:
   static KODI::PLAYLIST::Type ChooseType(const KODI::PLAYLIST::CPlayList& items);
 
   /*!
+   * \brief The playlist for an item nobody named one for: a channel's is whether it is radio or
+   * TV, an item holding only audio goes on Audio, and anything else on Video.
+   */
+  static KODI::PLAYLIST::Type ChooseType(const CFileItem& item);
+
+  /*!
    * \return Where items queued without naming a playlist go: the playlist being played, else the
    * one matching what the player has open, else the fallback.
    */
@@ -177,10 +183,12 @@ public:
 
   /*!
    * \brief Replace the playlist's contents with one item, and play it.
+   * \param replace As for Play(type, position, ...).
    */
   bool Play(KODI::PLAYLIST::Type type,
             const std::shared_ptr<CFileItem>& item,
-            const std::string& player);
+            const std::string& player,
+            bool replace = false);
 
   /*!
    * \brief Add items to a playlist without starting it.
@@ -190,7 +198,7 @@ public:
   int Queue(KODI::PLAYLIST::Type type, const CFileItemList& items, bool playNext);
 
   /*!
-   * \brief Play an item nobody has put on a playlist, choosing the playlist from what the item is.
+   * \brief Play an item nobody has put on a playlist, on the playlist ChooseType() gives it.
    */
   bool Play(const std::shared_ptr<CFileItem>& item, const std::string& player);
 
@@ -281,6 +289,7 @@ private:
   void EndPlayback(bool clearPlayList);
   void Announce(KODI::PLAYLIST::Type type, PlayerProperty property, const CVariant& value) const;
   void OnMediaPlay(KODI::MESSAGING::ThreadMessage* pMsg);
+  bool IsPlayingChannel() const;
 
   std::array<std::unique_ptr<KODI::PLAYLIST::CPlayList>, 2> m_playLists;
 

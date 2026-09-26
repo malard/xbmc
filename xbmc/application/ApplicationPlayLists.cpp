@@ -19,6 +19,7 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/ApplicationStackHelper.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "filesystem/PluginDirectory.h"
 #include "filesystem/VideoDatabaseFile.h"
@@ -239,6 +240,13 @@ Type CApplicationPlayLists::ChooseType(const CPlayList& items)
   return PLAYLIST::Audio;
 }
 
+Type CApplicationPlayLists::ChooseType(const CFileItem& item)
+{
+  if (item.HasPVRChannelInfoTag())
+    return item.GetPVRChannelInfoTag()->IsRadio() ? PLAYLIST::Audio : PLAYLIST::Video;
+  return MUSIC::IsAudio(item) && !VIDEO::IsVideo(item) ? PLAYLIST::Audio : PLAYLIST::Video;
+}
+
 Type CApplicationPlayLists::GetQueueType(Type fallback) const
 {
   if (const std::optional<Type> type = GetPlayingType(); type)
@@ -296,8 +304,17 @@ bool CApplicationPlayLists::IsSingleItemNonRepeatPlaylist() const
     return true;
 
   const CPlayList& playList = GetPlayList(*type);
-  return playList.size() <= 1 && !playList.IsRepeat(playList.GetCurrent()) &&
-         playList.GetWrap().GetKind() == Wrap::Kind::None;
+  return IsPlayingChannel() || (playList.size() <= 1 && !playList.IsRepeat(playList.GetCurrent()) &&
+                                playList.GetWrap().GetKind() == Wrap::Kind::None);
+}
+
+bool CApplicationPlayLists::IsPlayingChannel() const
+{
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
+    return false;
+  const auto item = GetPlayList(*type).GetCurrentItem();
+  return item && item->HasPVRChannelInfoTag();
 }
 
 bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
@@ -465,27 +482,17 @@ int CApplicationPlayLists::Queue(Type type, const CFileItemList& items, bool pla
 
 bool CApplicationPlayLists::Play(Type type,
                                  const std::shared_ptr<CFileItem>& item,
-                                 const std::string& player)
+                                 const std::string& player,
+                                 bool replace /* = false */)
 {
   GetPlayList(type).Clear();
   GetPlayList(type).Add(item);
-  return Play(type, std::nullopt, player);
+  return Play(type, std::nullopt, player, replace);
 }
 
 bool CApplicationPlayLists::Play(const std::shared_ptr<CFileItem>& item, const std::string& player)
 {
-  const bool isVideo{VIDEO::IsVideo(*item)};
-  const bool isAudio{MUSIC::IsAudio(*item)};
-
-  if (isVideo == isAudio)
-  {
-    CLog::LogF(LOGWARNING, "ListItem type must be audio or video type. The type can be specified "
-                           "by using ListItem::getVideoInfoTag or ListItem::getMusicInfoTag, in "
-                           "the case of playlist entries by adding #KODIPROP mimetype value.");
-    return false;
-  }
-
-  return Play(isVideo ? PLAYLIST::Video : PLAYLIST::Audio, item, player);
+  return Play(ChooseType(*item), item, player);
 }
 
 bool CApplicationPlayLists::PlayEntry(
@@ -584,8 +591,9 @@ bool CApplicationPlayLists::PlayEntry(
 bool CApplicationPlayLists::PlayNext(Advance advance /* = Advance::User */)
 {
   const std::optional<Type> type = GetPlayingType();
+  // What follows a channel is PVR's business: its channel navigator and EPG, never the playlist.
   EntryId next = NO_ENTRY;
-  if (type && GetPlayList(*type).GetPlayable() > 0)
+  if (type && !IsPlayingChannel() && GetPlayList(*type).GetPlayable() > 0)
     next = GetPlayList(*type).Next(advance);
 
   if (next == NO_ENTRY)
@@ -948,26 +956,17 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
   appPower->ResetScreenSaver();
   appPower->WakeUpScreenSaverAndDPMS();
 
-  // first check if we were called from the PlayFile() function
+  // A single item replaces its playlist, unless it is a stack moving to another of its parts.
   if (pMsg->lpVoid && pMsg->param2 == 0)
   {
-    // Leave the current entry, if TMSG_MEDIA_PLAY gets posted with just a single item.
-    // Otherwise items may fail to play, when started while a playlist is playing.
-    // But a single item in a stack is allowed.
-    if (const std::optional<Type> type = GetPlayingType(); type)
-    {
-      const auto current = GetPlayList(*type).GetCurrentItem();
-      if (!current || !URIUtils::IsStack(current->GetDynPath()))
-      {
-        GetPlayList(*type).ClearCurrent();
-        std::unique_lock lock(m_critSection);
-        m_playedFirstFile = false;
-        m_playbackStarted = false;
-      }
-    }
-
-    const std::unique_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
-    g_application.PlayFile(*item, "", pMsg->param1 != 0);
+    const std::shared_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
+    const bool replace = pMsg->param1 != 0;
+    if (CServiceBroker::GetAppComponents()
+            .GetComponent<CApplicationStackHelper>()
+            ->IsSeekingParts())
+      g_application.PlayFile(*item, "", replace);
+    else
+      Play(ChooseType(*item), item, "", replace);
     return;
   }
 

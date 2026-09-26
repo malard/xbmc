@@ -2051,13 +2051,15 @@ bool CApplication::PlayMedia(CFileItem& item,
     if (CServiceBroker::GetAddonMgr().GetAddon(path.GetHostName(), addon, AddonType::GAMEDLL,
                                                OnlyEnabled::CHOICE_YES))
     {
-      CFileItem addonItem(addon);
-      return PlayFile(addonItem, player, false);
+      const auto addonItem = std::make_shared<CFileItem>(addon);
+      return GetComponent<CApplicationPlayLists>()->Play(
+          type.value_or(CApplicationPlayLists::ChooseType(*addonItem)), addonItem, player);
     }
   }
 
-  //nothing special just play
-  return PlayFile(item, player, false);
+  return GetComponent<CApplicationPlayLists>()->Play(
+      type.value_or(CApplicationPlayLists::ChooseType(item)), std::make_shared<CFileItem>(item),
+      player);
 }
 
 bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRestart /* = false */)
@@ -2127,9 +2129,6 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
   if (CGUIComponent * gui{CServiceBroker::GetGUI()}; gui)
     gui->GetAudioManager().Enable(false);
 #endif
-
-  if (item.HasPVRChannelInfoTag())
-    GetComponent<CApplicationPlayLists>()->SetPlayingType(std::nullopt);
 
   return true;
 }
@@ -2284,7 +2283,7 @@ bool CApplication::ExecuteXBMCAction(std::string actionStr,
 #endif
         if (MUSIC::IsAudio(item) || VIDEO::IsVideo(item) || item.IsGame())
     { // an audio or video file
-      PlayFile(item, "");
+      GetComponent<CApplicationPlayLists>()->Play(std::make_shared<CFileItem>(item), "");
     }
     else
     {
