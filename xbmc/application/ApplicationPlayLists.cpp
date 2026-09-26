@@ -61,6 +61,21 @@ const std::string& Localize(uint32_t code)
   return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(code);
 }
 
+std::string PropertyName(CApplicationPlayLists::PlayerProperty property)
+{
+  using enum CApplicationPlayLists::PlayerProperty;
+  switch (property)
+  {
+    case PartyMode:
+      return "partymode";
+    case Shuffled:
+      return "shuffled";
+    case Repeat:
+      return "repeat";
+  }
+  return {};
+}
+
 void SendPlayListChanged()
 {
   if (CGUIComponent* gui = CServiceBroker::GetGUI(); gui)
@@ -592,7 +607,7 @@ void CApplicationPlayLists::SetShuffle(Side side, bool shuffle, bool notify /* =
   }
 
   SendPlayListChanged();
-  AnnouncePropertyChanged(side, "shuffled", playList.IsShuffled());
+  Announce(side, PlayerProperty::Shuffled, playList.IsShuffled());
 }
 
 bool CApplicationPlayLists::IsShuffled(Side side) const
@@ -640,7 +655,7 @@ void CApplicationPlayLists::SetRepeat(Side side, Repeat repeat, bool notify /* =
       data = "off";
       break;
   }
-  AnnouncePropertyChanged(side, "repeat", data);
+  Announce(side, PlayerProperty::Repeat, data);
 }
 
 CApplicationPlayLists::Repeat CApplicationPlayLists::GetRepeat(Side side) const
@@ -659,21 +674,24 @@ void CApplicationPlayLists::ClearPlayLists()
     playList->Clear();
 }
 
-void CApplicationPlayLists::AnnouncePropertyChanged(Side side,
-                                                    const std::string& property,
-                                                    const CVariant& value) const
+void CApplicationPlayLists::Announce(PlayerProperty property, const CVariant& value) const
 {
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-  if (property.empty() || value.isNull() ||
-      (side == Side::Video && !appPlayer->IsPlayingVideo()) ||
-      (side == Side::Audio && !appPlayer->IsPlayingAudio()))
+  if (value.isNull() || !appPlayer->IsPlaying())
     return;
 
   CVariant data;
-  data["player"]["playerid"] = static_cast<int>(IdFromSide(side));
-  data["property"][property] = value;
+  data["player"]["playerid"] = GetPlayerId();
+  data["property"][PropertyName(property)] = value;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
                                                      data);
+}
+
+void CApplicationPlayLists::Announce(Side side, PlayerProperty property, const CVariant& value) const
+{
+  // A playlist's own settings are published only while it is the one playing.
+  if (GetPlayingSide() == side && GetPhase(side) != Phase::Idle)
+    Announce(property, value);
 }
 
 int CApplicationPlayLists::GetMessageMask()

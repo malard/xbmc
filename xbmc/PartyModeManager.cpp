@@ -14,11 +14,9 @@
 #include "ServiceBroker.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
-#include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
-#include "interfaces/AnnouncementManager.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
@@ -474,18 +472,8 @@ bool CPartyModeManager::IsEnabled(PartyModeContext context /* = PARTYMODECONTEXT
 
 void CPartyModeManager::Announce()
 {
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-  if (appPlayer->IsPlaying())
-  {
-    CVariant data;
-
-    data["player"]["playerid"] =
-        CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
-    data["property"]["partymode"] = m_bEnabled;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                       data);
-  }
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
+      CApplicationPlayLists::PlayerProperty::PartyMode, m_bEnabled);
 }
 
 PLAYLIST::Side CPartyModeManager::GetSide() const

@@ -62,6 +62,16 @@ public:
     All
   };
 
+  /*!
+   * \brief A property of what is playing that changed.
+   */
+  enum class PlayerProperty
+  {
+    PartyMode,
+    Shuffled,
+    Repeat
+  };
+
   CApplicationPlayLists();
   ~CApplicationPlayLists() override;
 
@@ -167,6 +177,12 @@ public:
 
   void ClearPlayLists();
 
+  /*!
+   * \brief Publish a change to a property of what is playing. Nothing is published while nothing
+   * plays.
+   */
+  void Announce(PlayerProperty property, const CVariant& value) const;
+
 private:
   void OnPlayListChanged(KODI::PLAYLIST::Side side,
                          const std::vector<KODI::PLAYLIST::PlayListChange>& changes);
@@ -176,9 +192,7 @@ private:
                  bool replace,
                  bool playPreviousOnFail);
   void EndPlayback(bool clearPlayList);
-  void AnnouncePropertyChanged(KODI::PLAYLIST::Side side,
-                               const std::string& property,
-                               const CVariant& value) const;
+  void Announce(KODI::PLAYLIST::Side side, PlayerProperty property, const CVariant& value) const;
   void OnMediaPlay(KODI::MESSAGING::ThreadMessage* pMsg);
 
   std::array<std::unique_ptr<KODI::PLAYLIST::CPlayList>, 2> m_playLists;
