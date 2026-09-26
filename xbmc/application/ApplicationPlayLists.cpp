@@ -72,6 +72,14 @@ std::string PropertyName(CApplicationPlayLists::PlayerProperty property)
       return "shuffled";
     case Repeat:
       return "repeat";
+    case SubtitleEnabled:
+      return "subtitleenabled";
+    case CurrentSubtitle:
+      return "currentsubtitle";
+    case CurrentAudioStream:
+      return "currentaudiostream";
+    case CurrentVideoStream:
+      return "currentvideostream";
   }
   return {};
 }
@@ -701,13 +709,25 @@ void CApplicationPlayLists::ClearPlayLists()
 
 void CApplicationPlayLists::Announce(PlayerProperty property, const CVariant& value) const
 {
+  Announce(PlayerProperties{{property, value}});
+}
+
+void CApplicationPlayLists::Announce(const PlayerProperties& properties) const
+{
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-  if (value.isNull() || !appPlayer->IsPlaying())
+  if (!appPlayer->IsPlaying())
     return;
 
   CVariant data;
+  for (const auto& [property, value] : properties)
+  {
+    if (!value.isNull())
+      data["property"][PropertyName(property)] = value;
+  }
+  if (!data.isMember("property"))
+    return;
+
   data["player"]["playerid"] = GetPlayerId();
-  data["property"][PropertyName(property)] = value;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
                                                      data);
 }

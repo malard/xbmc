@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 class CAction;
@@ -69,8 +70,14 @@ public:
   {
     PartyMode,
     Shuffled,
-    Repeat
+    Repeat,
+    SubtitleEnabled,
+    CurrentSubtitle,
+    CurrentAudioStream,
+    CurrentVideoStream
   };
+
+  using PlayerProperties = std::vector<std::pair<PlayerProperty, CVariant>>;
 
   /*!
    * \brief A transition of what is playing.
@@ -197,6 +204,7 @@ public:
    * plays.
    */
   void Announce(PlayerProperty property, const CVariant& value) const;
+  void Announce(const PlayerProperties& properties) const;
 
   /*!
    * \brief Publish a transition of the given item.

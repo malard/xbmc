@@ -4007,12 +4007,8 @@ void CVideoPlayer::SetSubtitleVisible(bool bVisible)
   m_messenger.Put(
       std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_SET_SUBTITLESTREAM_VISIBLE, bVisible));
   m_processInfo->GetVideoSettingsLocked().SetSubtitleVisible(bVisible);
-  CVariant data;
-  data["player"]["playerid"] =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
-  data["property"]["subtitleenabled"] = bVisible;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
+      CApplicationPlayLists::PlayerProperty::SubtitleEnabled, bVisible);
 }
 
 void CVideoPlayer::SetEnableStream(CCurrentStream& current, bool isEnabled)
@@ -6371,12 +6367,11 @@ void CVideoPlayer::SetUpdateStreamDetails()
 
 void CVideoPlayer::NotifySubtitleUpdate(int flags)
 {
-  CVariant data;
-  data["player"]["playerid"] =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
+  using enum CApplicationPlayLists::PlayerProperty;
+  CApplicationPlayLists::PlayerProperties properties;
   if ((flags & SubtitleChange::FLAG_STATUS_CHANGE) != 0)
   {
-    data["property"]["subtitleenabled"] = m_processInfo->GetVideoSettings().m_SubtitleOn;
+    properties.emplace_back(SubtitleEnabled, m_processInfo->GetVideoSettings().m_SubtitleOn);
   }
   if ((flags & SubtitleChange::FLAG_STREAMINFO_CHANGE) != 0)
   {
@@ -6400,11 +6395,10 @@ void CVideoPlayer::NotifySubtitleUpdate(int flags)
       contentEntry["isimpaired"] = (info.flags & StreamFlags::FLAG_VISUAL_IMPAIRED) != 0;
       contentEntry["language"] = info.language.AsBcp47();
       contentEntry["name"] = info.name;
-      data["property"]["currentsubtitle"] = contentEntry;
+      properties.emplace_back(CurrentSubtitle, contentEntry);
     }
   }
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(properties);
 }
 
 void CVideoPlayer::NotifyAudioUpdate()
@@ -6414,9 +6408,6 @@ void CVideoPlayer::NotifyAudioUpdate()
   GetAudioStreamInfo(stream, info);
   if (!info.valid)
     return;
-  CVariant data;
-  data["player"]["playerid"] =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   CVariant contentEntry(CVariant::VariantTypeObject);
   contentEntry["index"] = stream;
   contentEntry["bitrate"] = info.bitrate;
@@ -6427,9 +6418,8 @@ void CVideoPlayer::NotifyAudioUpdate()
   contentEntry["isoriginal"] = (info.flags & StreamFlags::FLAG_ORIGINAL) != 0;
   contentEntry["language"] = info.language.AsBcp47();
   contentEntry["name"] = info.name;
-  data["property"]["currentaudiostream"] = contentEntry;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
+      CApplicationPlayLists::PlayerProperty::CurrentAudioStream, contentEntry);
 }
 
 void CVideoPlayer::NotifyVideoUpdate()
@@ -6439,9 +6429,6 @@ void CVideoPlayer::NotifyVideoUpdate()
   GetVideoStreamInfo(stream, info);
   if (!info.valid)
     return;
-  CVariant data;
-  data["player"]["playerid"] =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   CVariant contentEntry(CVariant::VariantTypeObject);
   contentEntry["index"] = stream;
   contentEntry["codec"] = info.codecName;
@@ -6449,7 +6436,6 @@ void CVideoPlayer::NotifyVideoUpdate()
   contentEntry["width"] = info.width;
   contentEntry["language"] = info.language.AsBcp47();
   contentEntry["name"] = info.name;
-  data["property"]["currentvideostream"] = contentEntry;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
+      CApplicationPlayLists::PlayerProperty::CurrentVideoStream, contentEntry);
 }
