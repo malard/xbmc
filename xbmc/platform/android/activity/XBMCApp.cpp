@@ -23,6 +23,7 @@
 #include "application/AppParams.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/AudioEngine/AESinkFactory.h"
@@ -66,10 +67,12 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <utility>
 
 #include <android/bitmap.h>
 #include <android/configuration.h>
@@ -276,6 +279,20 @@ void CXBMCApp::onStart()
 
 namespace
 {
+// Whether what plays holds video and audio: from the side its entry was put on, or, for playback
+// started outside the playlists, from what the player has opened.
+std::pair<bool, bool> PlayingVideoAndAudio()
+{
+  const auto& components = CServiceBroker::GetAppComponents();
+  const auto playLists = components.GetComponent<CApplicationPlayLists>();
+  if (const std::optional<KODI::PLAYLIST::Side> side = playLists->GetPlayingSide(); side)
+    return {*side == KODI::PLAYLIST::Side::Video,
+            *side == KODI::PLAYLIST::Side::Audio || playLists->IsAudioFollowingVideo()};
+
+  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
+  return {appPlayer->HasVideo(), appPlayer->HasAudio()};
+}
+
 bool isHeadsetPlugged()
 {
   CJNIAudioManager audioManager(CXBMCApp::getSystemService(CJNIContext::AUDIO_SERVICE));
@@ -868,12 +885,13 @@ void CXBMCApp::UpdateSessionState()
   uint32_t oldPlayState = m_playback_state;
   if (m_playback_state != PLAYBACK_STATE_STOPPED)
   {
-    if (appPlayer->HasVideo())
+    const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+    if (hasVideo)
       m_playback_state |= PLAYBACK_STATE_VIDEO;
     else
       m_playback_state &= ~PLAYBACK_STATE_VIDEO;
 
-    if (appPlayer->HasAudio())
+    if (hasAudio)
       m_playback_state |= PLAYBACK_STATE_AUDIO;
     else
       m_playback_state &= ~PLAYBACK_STATE_AUDIO;
@@ -905,9 +923,10 @@ void CXBMCApp::OnPlayBackStarted()
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_playback_state = PLAYBACK_STATE_PLAYING;
-  if (appPlayer->HasVideo())
+  const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+  if (hasVideo)
     m_playback_state |= PLAYBACK_STATE_VIDEO;
-  if (appPlayer->HasAudio())
+  if (hasAudio)
     m_playback_state |= PLAYBACK_STATE_AUDIO;
   if (!appPlayer->CanPause())
     m_playback_state |= PLAYBACK_STATE_CANNOT_PAUSE;
