@@ -638,7 +638,7 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
         return;
       }
     }
-    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Side::Audio);
+    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Audio);
     return;
   }
   if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem))

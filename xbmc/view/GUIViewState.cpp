@@ -433,9 +433,9 @@ bool CGUIViewState::DisableAddSourceButtons()
   return true;
 }
 
-std::optional<PLAYLIST::Side> CGUIViewState::GetPlayListSide() const
+std::optional<PLAYLIST::Type> CGUIViewState::GetPlayListType() const
 {
-  return m_playListSide;
+  return m_playListType;
 }
 
 const std::string& CGUIViewState::GetPlaylistDirectory()
@@ -451,8 +451,8 @@ void CGUIViewState::SetPlaylistDirectory(const std::string& strDirectory)
 
 bool CGUIViewState::IsCurrentPlaylistDirectory(const std::string& strDirectory)
 {
-  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayingSide() !=
-      GetPlayListSide())
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayingType() !=
+      GetPlayListType())
     return false;
 
   std::string strDir = strDirectory;
@@ -512,7 +512,7 @@ void CGUIViewState::SetSortOrder(SortOrder sortOrder)
 
 bool CGUIViewState::AutoPlayNextVideoItem() const
 {
-  if (GetPlayListSide() != PLAYLIST::Side::Video)
+  if (GetPlayListType() != PLAYLIST::Video)
     return false;
 
   return VIDEO::UTILS::IsAutoPlayNextItem(m_items.GetContent());
@@ -603,9 +603,9 @@ CGUIViewStateFromItems::CGUIViewStateFromItems(const CFileItemList &items) : CGU
     {
       const auto plugin = std::static_pointer_cast<CPluginSource>(addon);
       if (plugin->Provides(CPluginSource::Content::AUDIO))
-        m_playListSide = PLAYLIST::Side::Audio;
+        m_playListType = PLAYLIST::Audio;
       if (plugin->Provides(CPluginSource::Content::VIDEO))
-        m_playListSide = PLAYLIST::Side::Video;
+        m_playListType = PLAYLIST::Video;
     }
   }
 

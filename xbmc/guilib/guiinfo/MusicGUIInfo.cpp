@@ -48,12 +48,12 @@ std::shared_ptr<CApplicationPlayLists> PlayLists()
 
 const PLAYLIST::CPlayList& AudioPlayList()
 {
-  return PlayLists()->GetPlayList(PLAYLIST::Side::Audio);
+  return PlayLists()->GetPlayList(PLAYLIST::Audio);
 }
 
 bool AudioIsPlaying()
 {
-  return PlayLists()->GetPlayingSide() == PLAYLIST::Side::Audio;
+  return PlayLists()->GetPlayingType() == PLAYLIST::Audio;
 }
 } // namespace
 
@@ -596,14 +596,14 @@ bool CMusicGUIInfo::GetPartyModeLabel(std::string& value, const CGUIInfo& info) 
 bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  const PLAYLIST::CPlayList& playlist = playLists->GetPlayList(PLAYLIST::Side::Audio);
+  const PLAYLIST::CPlayList& playlist = playLists->GetPlayList(PLAYLIST::Audio);
   if (playlist.empty())
     return false;
 
   int index = info.GetData2();
   if (info.GetData1() == 1)
   { // relative index (requires the Audio playlist to be playing)
-    if (playLists->GetPlayingSide() != PLAYLIST::Side::Audio)
+    if (playLists->GetPlayingType() != PLAYLIST::Audio)
       return false;
 
     index = playlist.GetPosition(playlist.PeekOffset(index));
@@ -717,7 +717,7 @@ bool CMusicGUIInfo::GetBool(bool& value,
     case MUSICPLAYER_PLAYLISTPLAYING:
     {
       if (AudioIsPlaying() &&
-          PlayLists()->GetPhase(PLAYLIST::Side::Audio) != CApplicationPlayLists::Phase::Idle)
+          PlayLists()->GetPhase(PLAYLIST::Audio) != CApplicationPlayLists::Phase::Idle)
       {
         value = true;
         return true;

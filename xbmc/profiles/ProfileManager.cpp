@@ -402,7 +402,7 @@ void CProfileManager::FinalizeLoadProfile()
   if (m_lastUsedProfile != m_currentProfile)
   {
     playLists.ClearPlayLists();
-    playLists.SetPlayingSide(std::nullopt);
+    playLists.SetPlayingType(std::nullopt);
   }
 
   networkManager.NetworkMessage(CNetworkBase::SERVICES_UP, 1);

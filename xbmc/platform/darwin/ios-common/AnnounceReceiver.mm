@@ -144,9 +144,9 @@ void AnnounceBridge(ANNOUNCEMENT::AnnouncementFlag flag,
     item[@"elapsed"] = @(g_application.GetTime());
     const auto playLists =
         CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (const std::optional<KODI::PLAYLIST::Side> side = playLists->GetPlayingSide(); side)
+    if (const std::optional<KODI::PLAYLIST::Type> type = playLists->GetPlayingType(); type)
     {
-      const KODI::PLAYLIST::CPlayList& playList = playLists->GetPlayList(*side);
+      const KODI::PLAYLIST::CPlayList& playList = playLists->GetPlayList(*type);
       if (const int current = playList.GetCurrentPosition(); current >= 0)
       {
         item[@"current"] = @(current);

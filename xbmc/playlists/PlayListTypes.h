@@ -15,7 +15,7 @@ namespace KODI::PLAYLIST
 
 /*!
  * \brief The playlist ids of the JSON-RPC and Python interfaces. Inside Kodi a playlist is named
- * by the side it plays on; see Side, SideFromId() and IdFromSide().
+ * by its Type; see TypeFromId() and IdFromType().
  */
 enum class Id : int
 {
@@ -27,35 +27,36 @@ enum class Id : int
 };
 
 /*!
- * \brief The two things Kodi renders. Whatever is playing holds one or both, and the side an
- * entry is put on is what it claims.
+ * \brief The two playlists, one for each thing Kodi renders. Whatever is playing holds video,
+ * audio or both, and the playlist an entry is put on is what it claims.
  */
-enum class Side
+enum class Type
 {
   Video,
   Audio
 };
+using enum Type;
 
-inline std::optional<Side> SideFromId(Id id)
+inline std::optional<Type> TypeFromId(Id id)
 {
   switch (id)
   {
     case Id::TYPE_MUSIC:
-      return Side::Audio;
+      return Audio;
     case Id::TYPE_VIDEO:
     case Id::TYPE_PICTURE:
     case Id::TYPE_GAME:
-      return Side::Video;
+      return Video;
     default:
       return std::nullopt;
   }
 }
 
-inline Id IdFromSide(std::optional<Side> side)
+inline Id IdFromType(std::optional<Type> type)
 {
-  if (!side)
+  if (!type)
     return Id::TYPE_NONE;
-  return *side == Side::Audio ? Id::TYPE_MUSIC : Id::TYPE_VIDEO;
+  return *type == Audio ? Id::TYPE_MUSIC : Id::TYPE_VIDEO;
 }
 
 /*!

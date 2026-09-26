@@ -122,7 +122,7 @@ bool CAutorun::PlayDisc(const std::string& path, const PlayDiscOptions& options)
   if (!options.bypassSettings && cdAction != AutoCDAction::PLAY && dvdAction != AutoDVDAction::PLAY)
     return false;
 
-  int nSize = PlayLists()->GetPlayList(PLAYLIST::Side::Audio).size();
+  int nSize = PlayLists()->GetPlayList(PLAYLIST::Audio).size();
   int nAddedToPlaylist = 0;
 
   std::string mediaPath;
@@ -157,7 +157,7 @@ bool CAutorun::PlayDisc(const std::string& path, const PlayDiscOptions& options)
     CGUIMessage msg( GUI_MSG_PLAYLIST_CHANGED, 0, 0 );
     CServiceBroker::GetGUI()->GetWindowManager().SendMessage( msg );
     // Start playing the items we inserted
-    return PlayLists()->Play(PLAYLIST::Side::Audio, nSize);
+    return PlayLists()->Play(PLAYLIST::Audio, nSize);
   }
 
   return bPlaying;
@@ -245,10 +245,10 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (!options.startFromBeginning && !item->GetVideoInfoTag()->m_strFileNameAndPath.empty())
             item->SetStartOffset(STARTOFFSET_RESUME);
 
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Clear();
-          PlayLists()->SetShuffle(PLAYLIST::Side::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Add(item);
-          PlayLists()->Play(PLAYLIST::Side::Video, 0);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
+          PlayLists()->SetShuffle(PLAYLIST::Video, false);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Add(item);
+          PlayLists()->Play(PLAYLIST::Video, 0);
           return true;
         }
 
@@ -282,10 +282,10 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (options.forceSelection)
             item->SetProperty("force_playlist_selection", true);
 
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Clear();
-          PlayLists()->SetShuffle(PLAYLIST::Side::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Add(item);
-          PlayLists()->Play(PLAYLIST::Side::Video, 0);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
+          PlayLists()->SetShuffle(PLAYLIST::Video, false);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Add(item);
+          PlayLists()->Play(PLAYLIST::Video, 0);
           return true;
         }
 
@@ -398,10 +398,10 @@ bool CAutorun::RunDisc(IDirectory* pDir,
 
           //  internal *.evo playback.
           CLog::Log(LOGINFO,"HD DVD: Internal multifile playback initiated.");
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Clear();
-          PlayLists()->SetShuffle(PLAYLIST::Side::Video, false);
-          PlayLists()->GetPlayList(PLAYLIST::Side::Video).Add(items);
-          PlayLists()->Play(PLAYLIST::Side::Video, 0);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
+          PlayLists()->SetShuffle(PLAYLIST::Video, false);
+          PlayLists()->GetPlayList(PLAYLIST::Video).Add(items);
+          PlayLists()->Play(PLAYLIST::Video, 0);
           return true;
         }
 
@@ -420,9 +420,9 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (items.Size())
           {
             items.Sort(SortBy::LABEL, SortOrder::ASCENDING);
-            PlayLists()->GetPlayList(PLAYLIST::Side::Video).Clear();
-            PlayLists()->GetPlayList(PLAYLIST::Side::Video).Add(items);
-            PlayLists()->Play(PLAYLIST::Side::Video, 0);
+            PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
+            PlayLists()->GetPlayList(PLAYLIST::Video).Add(items);
+            PlayLists()->Play(PLAYLIST::Video, 0);
             return true;
           }
         }
@@ -481,9 +481,9 @@ bool CAutorun::RunDisc(IDirectory* pDir,
         if (!g_passwordManager.IsMasterLockUnlocked(true))
           return false;
       }
-      PlayLists()->GetPlayList(PLAYLIST::Side::Video).Clear();
-      PlayLists()->GetPlayList(PLAYLIST::Side::Video).Add(itemlist);
-      PlayLists()->Play(PLAYLIST::Side::Video, 0);
+      PlayLists()->GetPlayList(PLAYLIST::Video).Clear();
+      PlayLists()->GetPlayList(PLAYLIST::Video).Add(itemlist);
+      PlayLists()->Play(PLAYLIST::Video, 0);
     }
   }
 
@@ -499,7 +499,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
       if (!pItem->IsFolder() && MUSIC::IsAudio(*pItem))
       {
         nAddedToPlaylist++;
-        PlayLists()->GetPlayList(PLAYLIST::Side::Audio).Add(pItem);
+        PlayLists()->GetPlayList(PLAYLIST::Audio).Add(pItem);
       }
     }
   }

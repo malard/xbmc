@@ -25,17 +25,17 @@ CPlaylistDirectory::~CPlaylistDirectory() = default;
 
 bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 {
-  std::optional<PLAYLIST::Side> side;
+  std::optional<PLAYLIST::Type> type;
   if (url.IsProtocol("playlistmusic"))
-    side = PLAYLIST::Side::Audio;
+    type = PLAYLIST::Audio;
   else if (url.IsProtocol("playlistvideo"))
-    side = PLAYLIST::Side::Video;
+    type = PLAYLIST::Video;
 
-  if (!side)
+  if (!type)
     return false;
 
   const PLAYLIST::CPlayList& playlist =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(*side);
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(*type);
   items.Reserve(playlist.size());
 
   for (int i = 0; i < playlist.size(); ++i)
@@ -44,7 +44,7 @@ bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
     if (!item)
       break;
     item->SetProperty("playlistposition", i);
-    item->SetProperty("playlisttype", static_cast<int>(PLAYLIST::IdFromSide(side)));
+    item->SetProperty("playlisttype", static_cast<int>(PLAYLIST::IdFromType(type)));
     items.Add(item);
   }
 

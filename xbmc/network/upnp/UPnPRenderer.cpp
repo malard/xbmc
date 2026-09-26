@@ -635,8 +635,8 @@ NPT_Result CUPnPRenderer::OnSetNextAVTransportURI(PLT_ActionReference& action)
       CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
   {
 
-    const PLAYLIST::Side side = VIDEO::IsVideo(*item) ? PLAYLIST::Side::Video : PLAYLIST::Side::Audio;
-    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(side).Add(
+    const PLAYLIST::Type type = VIDEO::IsVideo(*item) ? PLAYLIST::Video : PLAYLIST::Audio;
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(type).Add(
         item);
 
     service->SetStateVariable("NextAVTransportURI", uri);

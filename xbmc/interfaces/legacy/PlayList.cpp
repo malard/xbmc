@@ -34,9 +34,9 @@ namespace XBMCAddon
           PLAYLIST::Id{iPlayList} != PLAYLIST::Id::TYPE_VIDEO)
         throw PlayListException("PlayList does not exist");
 
-      pPlayList = &CServiceBroker::GetAppComponents()
-                       .GetComponent<CApplicationPlayLists>()
-                       ->GetPlayList(*PLAYLIST::SideFromId(PLAYLIST::Id{playList}));
+      pPlayList =
+          &CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(
+              *PLAYLIST::TypeFromId(PLAYLIST::Id{playList}));
       iPlayList = playList;
     }
 

@@ -263,8 +263,8 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (playLists->GetPlayingSide() == PLAYLIST::Side::Audio ||
-        !playLists->GetPlayList(PLAYLIST::Side::Audio).empty())
+    if (playLists->GetPlayingType() == PLAYLIST::Audio ||
+        !playLists->GetPlayList(PLAYLIST::Audio).empty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
       return true;
@@ -658,11 +658,11 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
     */
 
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(PLAYLIST::Side::Audio).Clear();
-    playLists->GetPlayList(PLAYLIST::Side::Audio).Add(queuedItems);
+    playLists->GetPlayList(PLAYLIST::Audio).Clear();
+    playLists->GetPlayList(PLAYLIST::Audio).Add(queuedItems);
 
     // play!
-    playLists->Play(PLAYLIST::Side::Audio);
+    playLists->Play(PLAYLIST::Audio);
   }
   else if (PLAYLIST::IsPlayList(*pItem))
   {
@@ -697,7 +697,7 @@ void CGUIWindowMusicBase::LoadPlayList(const std::string& strPlayList)
   }
 
   int iSize = pPlayList->size();
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Side::Audio))
+  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Audio))
   {
     if (m_guiState)
       m_guiState->SetPlaylistDirectory("playlistmusic://");
@@ -732,7 +732,7 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
       return true;
     }
     CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
-        m_guiState->GetPlayListSide().value_or(PLAYLIST::Side::Audio), pItem, player);
+        m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, player);
     return true;
   }
   return CGUIMediaWindow::OnPlayMedia(iItem, player);

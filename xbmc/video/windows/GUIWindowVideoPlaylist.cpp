@@ -61,13 +61,13 @@ std::shared_ptr<CApplicationPlayLists> PlayLists()
 
 PLAYLIST::CPlayList& VideoPlayList()
 {
-  return PlayLists()->GetPlayList(PLAYLIST::Side::Video);
+  return PlayLists()->GetPlayList(PLAYLIST::Video);
 }
 
 // The position of the entry playing from the Video playlist, or -1.
 int PlayingPosition()
 {
-  if (PlayLists()->GetPlayingSide() != PLAYLIST::Side::Video)
+  if (PlayLists()->GetPlayingType() != PLAYLIST::Video)
     return -1;
   return VideoPlayList().GetCurrentPosition();
 }
@@ -164,10 +164,9 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
       {
         if (!g_partyModeManager.IsEnabled())
         {
-          PlayLists()->SetShuffle(PLAYLIST::Side::Video,
-                                  !PlayLists()->IsShuffled(PLAYLIST::Side::Video));
+          PlayLists()->SetShuffle(PLAYLIST::Video, !PlayLists()->IsShuffled(PLAYLIST::Video));
           CMediaSettings::GetInstance().SetVideoPlaylistShuffled(
-              PlayLists()->IsShuffled(PLAYLIST::Side::Video));
+              PlayLists()->IsShuffled(PLAYLIST::Video));
           CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
           UpdateButtons();
           Refresh();
@@ -183,34 +182,34 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
       }
       else if (iControl == CONTROL_BTNPLAY)
       {
-        PlayLists()->Play(PLAYLIST::Side::Video, m_viewControl.GetSelectedItem());
+        PlayLists()->Play(PLAYLIST::Video, m_viewControl.GetSelectedItem());
         UpdateButtons();
       }
       else if (iControl == CONTROL_BTNNEXT)
       {
-        PlayLists()->SetPlayingSide(PLAYLIST::Side::Video);
+        PlayLists()->SetPlayingType(PLAYLIST::Video);
         PlayLists()->PlayNext();
       }
       else if (iControl == CONTROL_BTNPREVIOUS)
       {
-        PlayLists()->SetPlayingSide(PLAYLIST::Side::Video);
+        PlayLists()->SetPlayingType(PLAYLIST::Video);
         PlayLists()->PlayPrevious();
       }
       else if (iControl == CONTROL_BTNREPEAT)
       {
         // increment repeat state
         using enum CApplicationPlayLists::Repeat;
-        const CApplicationPlayLists::Repeat state = PlayLists()->GetRepeat(PLAYLIST::Side::Video);
+        const CApplicationPlayLists::Repeat state = PlayLists()->GetRepeat(PLAYLIST::Video);
         if (state == Off)
-          PlayLists()->SetRepeat(PLAYLIST::Side::Video, All);
+          PlayLists()->SetRepeat(PLAYLIST::Video, All);
         else if (state == All)
-          PlayLists()->SetRepeat(PLAYLIST::Side::Video, One);
+          PlayLists()->SetRepeat(PLAYLIST::Video, One);
         else
-          PlayLists()->SetRepeat(PLAYLIST::Side::Video, Off);
+          PlayLists()->SetRepeat(PLAYLIST::Video, Off);
 
         // save settings
         CMediaSettings::GetInstance().SetVideoPlaylistRepeat(
-            PlayLists()->GetRepeat(PLAYLIST::Side::Video) == All);
+            PlayLists()->GetRepeat(PLAYLIST::Video) == All);
         CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 
         UpdateButtons();
@@ -299,8 +298,8 @@ void CGUIWindowVideoPlaylist::ClearPlayList()
 {
   ClearFileItems();
   VideoPlayList().Clear();
-  if (PlayLists()->GetPlayingSide() == PLAYLIST::Side::Video)
-    PlayLists()->SetPlayingSide(std::nullopt);
+  if (PlayLists()->GetPlayingType() == PLAYLIST::Video)
+    PlayLists()->SetPlayingType(std::nullopt);
   m_viewControl.SetItems(*m_vecItems);
   UpdateButtons();
   SET_CONTROL_FOCUS(CONTROL_BTNVIEWASICONS, 0);
@@ -319,7 +318,7 @@ void CGUIWindowVideoPlaylist::UpdateButtons()
 
     const auto& components = CServiceBroker::GetAppComponents();
     const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-    if (appPlayer->IsPlayingVideo() && PlayLists()->GetPlayingSide() == PLAYLIST::Side::Video)
+    if (appPlayer->IsPlayingVideo() && PlayLists()->GetPlayingType() == PLAYLIST::Video)
     {
       CONTROL_ENABLE(CONTROL_BTNNEXT);
       CONTROL_ENABLE(CONTROL_BTNPREVIOUS);
@@ -345,11 +344,11 @@ void CGUIWindowVideoPlaylist::UpdateButtons()
 
   // update buttons
   CONTROL_DESELECT(CONTROL_BTNSHUFFLE);
-  if (PlayLists()->IsShuffled(PLAYLIST::Side::Video))
+  if (PlayLists()->IsShuffled(PLAYLIST::Video))
     CONTROL_SELECT(CONTROL_BTNSHUFFLE);
 
   // update repeat button
-  const CApplicationPlayLists::Repeat repState = PlayLists()->GetRepeat(PLAYLIST::Side::Video);
+  const CApplicationPlayLists::Repeat repState = PlayLists()->GetRepeat(PLAYLIST::Video);
   int iLocalizedString;
   if (repState == CApplicationPlayLists::Repeat::Off)
     iLocalizedString = 595; // Repeat: Off
@@ -386,13 +385,13 @@ protected:
       playlistItem->GetVideoInfoTag()->SetResumePoint(
           GetItem()->GetVideoInfoTag()->GetResumePoint());
 
-    PlayLists()->Play(PLAYLIST::Side::Video, m_itemIndex, m_player);
+    PlayLists()->Play(PLAYLIST::Video, m_itemIndex, m_player);
     return true;
   }
 
   bool OnPlaySelected() override
   {
-    PlayLists()->Play(PLAYLIST::Side::Video, m_itemIndex, m_player);
+    PlayLists()->Play(PLAYLIST::Video, m_itemIndex, m_player);
     return true;
   }
 

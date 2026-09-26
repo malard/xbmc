@@ -42,9 +42,9 @@ std::string CGUIViewStateWindowVideo::GetExtensions()
   return CServiceBroker::GetFileExtensionProvider().GetVideoExtensions();
 }
 
-std::optional<PLAYLIST::Side> CGUIViewStateWindowVideo::GetPlayListSide() const
+std::optional<PLAYLIST::Type> CGUIViewStateWindowVideo::GetPlayListType() const
 {
-  return PLAYLIST::Side::Video;
+  return PLAYLIST::Video;
 }
 
 std::vector<CMediaSource>& CGUIViewStateWindowVideo::GetSources()

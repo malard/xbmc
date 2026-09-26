@@ -1512,7 +1512,7 @@ void CGUIMediaWindow::SetHistoryForPath(const std::string& strDirectory)
 bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 {
   // Playback started now does not use a playlist.
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->SetPlayingSide(
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->SetPlayingType(
       std::nullopt);
   CFileItemPtr pItem=m_vecItems->Get(iItem);
 
@@ -1520,7 +1520,7 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 
   bool bResult = false;
   if (NETWORK::IsInternetStream(*pItem) || PLAYLIST::IsPlayList(*pItem))
-    bResult = g_application.PlayMedia(*pItem, player, m_guiState->GetPlayListSide());
+    bResult = g_application.PlayMedia(*pItem, player, m_guiState->GetPlayListType());
   else
     bResult = g_application.PlayFile(*pItem, player);
 
@@ -1541,7 +1541,7 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 bool CGUIMediaWindow::OnPlayAndQueueMedia(const CFileItemPtr& item, const std::string& player)
 {
   //play and add current directory to temporary playlist
-  if (const std::optional<PLAYLIST::Side> side = m_guiState->GetPlayListSide(); side)
+  if (const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType(); type)
   {
     // Remove ZIP, RAR files and folders
     CFileItemList playlist;
@@ -1570,14 +1570,14 @@ bool CGUIMediaWindow::OnPlayAndQueueMedia(const CFileItemPtr& item, const std::s
 
     // Add to playlist
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(*side).Clear();
-    playLists->GetPlayList(*side).Add(playlist);
+    playLists->GetPlayList(*type).Clear();
+    playLists->GetPlayList(*type).Add(playlist);
 
     // Save current window and directory to know where the selected item was
     if (m_guiState)
       m_guiState->SetPlaylistDirectory(m_vecItems->GetPath());
 
-    playLists->Play(*side, mediaToPlay, player);
+    playLists->Play(*type, mediaToPlay, player);
   }
   return true;
 }
@@ -1605,13 +1605,13 @@ void CGUIMediaWindow::UpdateFileList()
   //  set the currently playing item as selected, if its in this directory
   if (m_guiState.get() && m_guiState->IsCurrentPlaylistDirectory(m_vecItems->GetPath()))
   {
-    const std::optional<PLAYLIST::Side> side = m_guiState->GetPlayListSide();
-    if (!side)
+    const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType();
+    if (!type)
       return;
 
-    PLAYLIST::CPlayList& playList = CServiceBroker::GetAppComponents()
-                                        .GetComponent<CApplicationPlayLists>()
-                                        ->GetPlayList(*side);
+    PLAYLIST::CPlayList& playList =
+        CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(
+            *type);
     const std::shared_ptr<CFileItem> playlistItem = playList.GetCurrentItem();
     playList.Clear();
 

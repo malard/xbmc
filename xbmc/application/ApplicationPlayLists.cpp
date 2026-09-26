@@ -52,9 +52,9 @@ using namespace KODI::PLAYLIST;
 
 namespace
 {
-size_t Index(Side side)
+size_t Index(Type type)
 {
-  return side == Side::Video ? 0 : 1;
+  return type == PLAYLIST::Video ? 0 : 1;
 }
 
 const std::string& Localize(uint32_t code)
@@ -123,12 +123,12 @@ void SendPlayListChanged()
 CApplicationPlayLists::CApplicationPlayLists()
   : m_failedSongsStart(std::chrono::steady_clock::now())
 {
-  for (const Side side : {Side::Video, Side::Audio})
+  for (const Type type : {PLAYLIST::Video, PLAYLIST::Audio})
   {
-    auto& playList = m_playLists[Index(side)];
+    auto& playList = m_playLists[Index(type)];
     playList = std::make_unique<CPlayList>();
-    playList->SetObserver([this, side](const std::vector<PlayListChange>& changes)
-                          { OnPlayListChanged(side, changes); });
+    playList->SetObserver([this, type](const std::vector<PlayListChange>& changes)
+                          { OnPlayListChanged(type, changes); });
   }
 }
 
@@ -138,23 +138,23 @@ CApplicationPlayLists::~CApplicationPlayLists()
     playList->SetObserver(nullptr);
 }
 
-CPlayList& CApplicationPlayLists::GetPlayList(Side side)
+CPlayList& CApplicationPlayLists::GetPlayList(Type type)
 {
-  return *m_playLists[Index(side)];
+  return *m_playLists[Index(type)];
 }
 
-const CPlayList& CApplicationPlayLists::GetPlayList(Side side) const
+const CPlayList& CApplicationPlayLists::GetPlayList(Type type) const
 {
-  return *m_playLists[Index(side)];
+  return *m_playLists[Index(type)];
 }
 
-void CApplicationPlayLists::OnPlayListChanged(Side side, const std::vector<PlayListChange>& changes)
+void CApplicationPlayLists::OnPlayListChanged(Type type, const std::vector<PlayListChange>& changes)
 {
   const auto announcer = CServiceBroker::GetAnnouncementManager();
   for (const auto& change : changes)
   {
     CVariant data;
-    data["playlistid"] = static_cast<int>(IdFromSide(side));
+    data["playlistid"] = static_cast<int>(IdFromType(type));
     switch (change.type)
     {
       case PlayListChange::Type::Added:
@@ -180,20 +180,20 @@ void CApplicationPlayLists::OnPlayListChanged(Side side, const std::vector<PlayL
   SendPlayListChanged();
 }
 
-std::optional<Side> CApplicationPlayLists::GetPlayingSide() const
+std::optional<Type> CApplicationPlayLists::GetPlayingType() const
 {
   std::unique_lock lock(m_critSection);
-  return m_playingSide;
+  return m_playingType;
 }
 
-void CApplicationPlayLists::SetPlayingSide(std::optional<Side> side)
+void CApplicationPlayLists::SetPlayingType(std::optional<Type> type)
 {
   {
     std::unique_lock lock(m_critSection);
-    if (side == m_playingSide)
+    if (type == m_playingType)
       return;
 
-    m_playingSide = side;
+    m_playingType = type;
     m_playedFirstFile = false;
   }
 
@@ -201,12 +201,12 @@ void CApplicationPlayLists::SetPlayingSide(std::optional<Side> side)
     g_partyModeManager.Disable();
 }
 
-CApplicationPlayLists::Phase CApplicationPlayLists::GetPhase(Side side) const
+CApplicationPlayLists::Phase CApplicationPlayLists::GetPhase(Type type) const
 {
   std::unique_lock lock(m_critSection);
-  if (side == Side::Video && m_phase[Index(side)] == Phase::Idle)
+  if (type == PLAYLIST::Video && m_phase[Index(type)] == Phase::Idle)
     return m_slideShowPhase;
-  return m_phase[Index(side)];
+  return m_phase[Index(type)];
 }
 
 bool CApplicationPlayLists::IsAudioFollowingVideo() const
@@ -217,7 +217,7 @@ bool CApplicationPlayLists::IsAudioFollowingVideo() const
 
 int CApplicationPlayLists::GetPlayerId() const
 {
-  return static_cast<int>(IdFromSide(GetPlayingSide()));
+  return static_cast<int>(IdFromType(GetPlayingType()));
 }
 
 int CApplicationPlayLists::GetPlayerId(const CFileItem* item) const
@@ -252,11 +252,11 @@ bool CApplicationPlayLists::OnAction(const CAction& action)
 
 bool CApplicationPlayLists::IsSingleItemNonRepeatPlaylist() const
 {
-  const std::optional<Side> side = GetPlayingSide();
-  if (!side)
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
     return true;
 
-  const CPlayList& playList = GetPlayList(*side);
+  const CPlayList& playList = GetPlayList(*type);
   return playList.size() <= 1 && !playList.IsRepeat(playList.GetCurrent()) &&
          playList.GetWrap().GetKind() == Wrap::Kind::None;
 }
@@ -280,15 +280,15 @@ bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
       m_playbackStarted = true;
       m_phase = {Phase::Idle, Phase::Idle};
       m_audioFollowsVideo = false;
-      if (m_playingSide)
+      if (m_playingType)
       {
-        m_phase[Index(*m_playingSide)] = Phase::Playing;
-        if (*m_playingSide == Side::Video)
+        m_phase[Index(*m_playingType)] = Phase::Playing;
+        if (*m_playingType == PLAYLIST::Video)
         {
-          const auto item = GetPlayList(Side::Video).GetCurrentItem();
+          const auto item = GetPlayList(PLAYLIST::Video).GetCurrentItem();
           m_audioFollowsVideo = item && !item->HasPictureInfoTag();
           if (m_audioFollowsVideo)
-            m_phase[Index(Side::Audio)] = Phase::Playing;
+            m_phase[Index(PLAYLIST::Audio)] = Phase::Playing;
         }
       }
       break;
@@ -324,7 +324,7 @@ bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
         std::unique_lock lock(m_critSection);
         m_phase = {Phase::Idle, Phase::Idle};
         m_audioFollowsVideo = false;
-        wasPlaying = m_playingSide && m_playbackStarted;
+        wasPlaying = m_playingType && m_playbackStarted;
       }
       if (wasPlaying)
       {
@@ -340,48 +340,48 @@ bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
 
 void CApplicationPlayLists::EndPlayback(bool clearPlayList)
 {
-  std::optional<Side> side;
+  std::optional<Type> type;
   {
     std::unique_lock lock(m_critSection);
-    side = m_playingSide;
-    m_playingSide.reset();
+    type = m_playingType;
+    m_playingType.reset();
     m_playedFirstFile = false;
     m_playbackStarted = false;
     m_queued = NO_ENTRY;
   }
 
-  const int position = side ? GetPlayList(*side).GetCurrentPosition() : -1;
+  const int position = type ? GetPlayList(*type).GetCurrentPosition() : -1;
   if (CGUIComponent* gui = CServiceBroker::GetGUI(); gui)
   {
-    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STOPPED, 0, 0, static_cast<int>(IdFromSide(side)),
+    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STOPPED, 0, 0, static_cast<int>(IdFromType(type)),
                     position);
     gui->GetWindowManager().SendThreadMessage(msg);
   }
 
-  if (side)
+  if (type)
   {
     if (clearPlayList)
-      GetPlayList(*side).Clear();
+      GetPlayList(*type).Clear();
     else
-      GetPlayList(*side).ClearCurrent();
+      GetPlayList(*type).ClearCurrent();
   }
 
   SendPlayListChanged();
 }
 
-bool CApplicationPlayLists::Play(Side side,
+bool CApplicationPlayLists::Play(Type type,
                                  std::optional<int> position /* = std::nullopt */,
                                  const std::string& player /* = "" */,
                                  bool replace /* = false */,
                                  bool playPreviousOnFail /* = false */)
 {
-  SetPlayingSide(side);
+  SetPlayingType(type);
   {
     std::unique_lock lock(m_critSection);
     m_playedFirstFile = false;
   }
 
-  CPlayList& playList = GetPlayList(side);
+  CPlayList& playList = GetPlayList(type);
   if (playList.empty())
     return false;
 
@@ -397,16 +397,16 @@ bool CApplicationPlayLists::Play(Side side,
     playList.ClearCurrent();
     entry = playList.PeekNext(Advance::User);
   }
-  return PlayEntry(side, entry, player, replace, playPreviousOnFail);
+  return PlayEntry(type, entry, player, replace, playPreviousOnFail);
 }
 
-bool CApplicationPlayLists::Play(Side side,
+bool CApplicationPlayLists::Play(Type type,
                                  const std::shared_ptr<CFileItem>& item,
                                  const std::string& player)
 {
-  GetPlayList(side).Clear();
-  GetPlayList(side).Add(item);
-  return Play(side, std::nullopt, player);
+  GetPlayList(type).Clear();
+  GetPlayList(type).Add(item);
+  return Play(type, std::nullopt, player);
 }
 
 bool CApplicationPlayLists::Play(const std::shared_ptr<CFileItem>& item, const std::string& player)
@@ -422,16 +422,13 @@ bool CApplicationPlayLists::Play(const std::shared_ptr<CFileItem>& item, const s
     return false;
   }
 
-  return Play(isVideo ? Side::Video : Side::Audio, item, player);
+  return Play(isVideo ? PLAYLIST::Video : PLAYLIST::Audio, item, player);
 }
 
-bool CApplicationPlayLists::PlayEntry(Side side,
-                                      EntryId entry,
-                                      const std::string& player,
-                                      bool replace,
-                                      bool playPreviousOnFail)
+bool CApplicationPlayLists::PlayEntry(
+    Type type, EntryId entry, const std::string& player, bool replace, bool playPreviousOnFail)
 {
-  CPlayList& playList = GetPlayList(side);
+  CPlayList& playList = GetPlayList(type);
   const int position = playList.GetPosition(entry);
   if (position < 0)
     return false;
@@ -523,10 +520,10 @@ bool CApplicationPlayLists::PlayEntry(Side side,
 
 bool CApplicationPlayLists::PlayNext(Advance advance /* = Advance::User */)
 {
-  const std::optional<Side> side = GetPlayingSide();
+  const std::optional<Type> type = GetPlayingType();
   EntryId next = NO_ENTRY;
-  if (side && GetPlayList(*side).GetPlayable() > 0)
-    next = GetPlayList(*side).Next(advance);
+  if (type && GetPlayList(*type).GetPlayable() > 0)
+    next = GetPlayList(*type).Next(advance);
 
   if (next == NO_ENTRY)
   {
@@ -538,16 +535,16 @@ bool CApplicationPlayLists::PlayNext(Advance advance /* = Advance::User */)
   }
 
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-  return PlayEntry(*side, next, appPlayer->GetName(), false, false);
+  return PlayEntry(*type, next, appPlayer->GetName(), false, false);
 }
 
 bool CApplicationPlayLists::PlayPrevious()
 {
-  const std::optional<Side> side = GetPlayingSide();
-  if (!side)
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
     return false;
 
-  const EntryId previous = GetPlayList(*side).Previous();
+  const EntryId previous = GetPlayList(*type).Previous();
   if (previous == NO_ENTRY)
   {
     CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, Localize(559),
@@ -555,16 +552,16 @@ bool CApplicationPlayLists::PlayPrevious()
     return false;
   }
 
-  return PlayEntry(*side, previous, "", false, true);
+  return PlayEntry(*type, previous, "", false, true);
 }
 
 bool CApplicationPlayLists::PlayOffset(int offset)
 {
-  const std::optional<Side> side = GetPlayingSide();
-  if (!side)
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
     return false;
 
-  const CPlayList& playList = GetPlayList(*side);
+  const CPlayList& playList = GetPlayList(*type);
   const EntryId entry = offset >= 0 ? playList.PeekNext(Advance::User, offset)
                                     : playList.PeekPrevious(-offset);
   if (entry == NO_ENTRY)
@@ -576,26 +573,26 @@ bool CApplicationPlayLists::PlayOffset(int offset)
   }
 
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-  return PlayEntry(*side, entry, appPlayer->GetName(), false, false);
+  return PlayEntry(*type, entry, appPlayer->GetName(), false, false);
 }
 
 std::shared_ptr<CFileItem> CApplicationPlayLists::PeekNextItem(int steps /* = 1 */) const
 {
-  const std::optional<Side> side = GetPlayingSide();
-  if (!side)
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
     return nullptr;
 
-  const CPlayList& playList = GetPlayList(*side);
+  const CPlayList& playList = GetPlayList(*type);
   return playList.GetItem(playList.PeekNext(Advance::Automatic, steps));
 }
 
 EntryId CApplicationPlayLists::PeekNextEntry() const
 {
-  const std::optional<Side> side = GetPlayingSide();
-  if (!side)
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
     return NO_ENTRY;
 
-  return GetPlayList(*side).PeekNext(Advance::Automatic);
+  return GetPlayList(*type).PeekNext(Advance::Automatic);
 }
 
 void CApplicationPlayLists::OnNextQueued(EntryId entry)
@@ -606,8 +603,8 @@ void CApplicationPlayLists::OnNextQueued(EntryId entry)
 
 void CApplicationPlayLists::SkipQueued(EntryId entry)
 {
-  if (const std::optional<Side> side = GetPlayingSide(); side)
-    GetPlayList(*side).SetCurrent(entry);
+  if (const std::optional<Type> type = GetPlayingType(); type)
+    GetPlayList(*type).SetCurrent(entry);
 }
 
 void CApplicationPlayLists::ClearQueued()
@@ -618,26 +615,26 @@ void CApplicationPlayLists::ClearQueued()
 
 std::optional<std::shared_ptr<CFileItem>> CApplicationPlayLists::OnQueuedStarted()
 {
-  std::optional<Side> side;
+  std::optional<Type> type;
   EntryId queued;
   {
     std::unique_lock lock(m_critSection);
-    side = m_playingSide;
+    type = m_playingType;
     queued = m_queued;
     m_queued = NO_ENTRY;
   }
   if (queued == NO_ENTRY)
     return std::nullopt;
 
-  if (!side || !GetPlayList(*side).SetCurrent(queued))
+  if (!type || !GetPlayList(*type).SetCurrent(queued))
     return nullptr;
 
-  return GetPlayList(*side).GetItem(queued);
+  return GetPlayList(*type).GetItem(queued);
 }
 
-void CApplicationPlayLists::SetShuffle(Side side, bool shuffle, bool notify /* = false */)
+void CApplicationPlayLists::SetShuffle(Type type, bool shuffle, bool notify /* = false */)
 {
-  CPlayList& playList = GetPlayList(side);
+  CPlayList& playList = GetPlayList(type);
   if (shuffle != playList.IsShuffled())
   {
     playList.SetShuffled(shuffle);
@@ -651,19 +648,19 @@ void CApplicationPlayLists::SetShuffle(Side side, bool shuffle, bool notify /* =
   }
 
   SendPlayListChanged();
-  Announce(side, PlayerProperty::Shuffled, playList.IsShuffled());
+  Announce(type, PlayerProperty::Shuffled, playList.IsShuffled());
 }
 
-bool CApplicationPlayLists::IsShuffled(Side side) const
+bool CApplicationPlayLists::IsShuffled(Type type) const
 {
-  return GetPlayList(side).IsShuffled();
+  return GetPlayList(type).IsShuffled();
 }
 
-void CApplicationPlayLists::SetRepeat(Side side, Repeat repeat, bool notify /* = false */)
+void CApplicationPlayLists::SetRepeat(Type type, Repeat repeat, bool notify /* = false */)
 {
-  const Repeat previous = GetRepeat(side);
+  const Repeat previous = GetRepeat(type);
 
-  CPlayList& playList = GetPlayList(side);
+  CPlayList& playList = GetPlayList(type);
   playList.ClearRepeats();
   playList.SetWrap(Wrap::None());
   if (repeat == Repeat::One)
@@ -687,7 +684,7 @@ void CApplicationPlayLists::SetRepeat(Side side, Repeat repeat, bool notify /* =
   SendPlayListChanged();
 
   CVariant data;
-  switch (GetRepeat(side))
+  switch (GetRepeat(type))
   {
     case Repeat::One:
       data = "one";
@@ -699,12 +696,12 @@ void CApplicationPlayLists::SetRepeat(Side side, Repeat repeat, bool notify /* =
       data = "off";
       break;
   }
-  Announce(side, PlayerProperty::Repeat, data);
+  Announce(type, PlayerProperty::Repeat, data);
 }
 
-CApplicationPlayLists::Repeat CApplicationPlayLists::GetRepeat(Side side) const
+CApplicationPlayLists::Repeat CApplicationPlayLists::GetRepeat(Type type) const
 {
-  const CPlayList& playList = GetPlayList(side);
+  const CPlayList& playList = GetPlayList(type);
   if (playList.IsRepeat(playList.GetCurrent()))
     return Repeat::One;
   if (playList.GetWrap().GetKind() == Wrap::Kind::ToStart)
@@ -814,10 +811,12 @@ void CApplicationPlayLists::OnSlideShowListChanged(const PlayListChange& change)
   }
 }
 
-void CApplicationPlayLists::Announce(Side side, PlayerProperty property, const CVariant& value) const
+void CApplicationPlayLists::Announce(Type type,
+                                     PlayerProperty property,
+                                     const CVariant& value) const
 {
   // A playlist's own settings are published only while it is the one playing.
-  if (GetPlayingSide() == side && GetPhase(side) != Phase::Idle)
+  if (GetPlayingType() == type && GetPhase(type) != Phase::Idle)
     Announce(property, value);
 }
 
@@ -832,20 +831,20 @@ void CApplicationPlayLists::OnApplicationMessage(ThreadMessage* pMsg)
   {
     case TMSG_PLAYLISTPLAYER_PLAY:
     {
-      const std::optional<Side> side = GetPlayingSide();
-      if (!side)
+      const std::optional<Type> type = GetPlayingType();
+      if (!type)
         break;
       if (pMsg->param1 == -1)
       {
-        Play(*side);
+        Play(*type);
       }
       else
       {
-        const CPlayList& playList = GetPlayList(*side);
+        const CPlayList& playList = GetPlayList(*type);
         if (!playList.empty())
         {
           const int position = std::clamp(pMsg->param1, 0, playList.size() - 1);
-          PlayEntry(*side, playList.GetEntryId(position), "", false, false);
+          PlayEntry(*type, playList.GetEntryId(position), "", false, false);
         }
       }
       break;
@@ -860,13 +859,13 @@ void CApplicationPlayLists::OnApplicationMessage(ThreadMessage* pMsg)
       break;
 
     case TMSG_PLAYLISTPLAYER_SHUFFLE:
-      if (const std::optional<Side> side = SideFromId(Id{pMsg->param1}); side)
-        SetShuffle(*side, pMsg->param2 > 0);
+      if (const std::optional<Type> type = TypeFromId(Id{pMsg->param1}); type)
+        SetShuffle(*type, pMsg->param2 > 0);
       break;
 
     case TMSG_PLAYLISTPLAYER_REPEAT:
-      if (const std::optional<Side> side = SideFromId(Id{pMsg->param1}); side)
-        SetRepeat(*side, static_cast<Repeat>(pMsg->param2));
+      if (const std::optional<Type> type = TypeFromId(Id{pMsg->param1}); type)
+        SetRepeat(*type, static_cast<Repeat>(pMsg->param2));
       break;
 
     case TMSG_MEDIA_PLAY:
@@ -890,12 +889,12 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
     // Leave the current entry, if TMSG_MEDIA_PLAY gets posted with just a single item.
     // Otherwise items may fail to play, when started while a playlist is playing.
     // But a single item in a stack is allowed.
-    if (const std::optional<Side> side = GetPlayingSide(); side)
+    if (const std::optional<Type> type = GetPlayingType(); type)
     {
-      const auto current = GetPlayList(*side).GetCurrentItem();
+      const auto current = GetPlayList(*type).GetCurrentItem();
       if (!current || !URIUtils::IsStack(current->GetDynPath()))
       {
-        GetPlayList(*side).ClearCurrent();
+        GetPlayList(*type).ClearCurrent();
         std::unique_lock lock(m_critSection);
         m_playedFirstFile = false;
         m_playbackStarted = false;
@@ -913,19 +912,19 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
     if (list->Size() <= 0)
       return;
 
-    // Nobody named a side, so the items choose it.
-    Side side = Side::Audio;
+    // Nobody named a playlist, so the items choose it.
+    Type type = PLAYLIST::Audio;
     for (int i = 0; i < list->Size(); i++)
     {
       if (VIDEO::IsVideo(*list->Get(i)))
       {
-        side = Side::Video;
+        type = PLAYLIST::Video;
         break;
       }
     }
 
-    GetPlayList(side).Clear();
-    SetPlayingSide(side);
+    GetPlayList(type).Clear();
+    SetPlayingType(type);
     if (list->Size() == 1 && !PLAYLIST::IsPlayList(*list->Get(0)))
     {
       const std::shared_ptr<CFileItem> item = (*list)[0];
@@ -946,29 +945,29 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
                      item->GetPath());
           return;
         }
-        Play(side, item, pMsg->strParam);
+        Play(type, item, pMsg->strParam);
       }
       else
-        g_application.PlayMedia(*item, pMsg->strParam, side);
+        g_application.PlayMedia(*item, pMsg->strParam, type);
     }
     else
     {
       // Handle "shuffled" option if present
       if (list->HasProperty("shuffled") && list->GetProperty("shuffled").isBoolean())
-        SetShuffle(side, list->GetProperty("shuffled").asBoolean(), false);
+        SetShuffle(type, list->GetProperty("shuffled").asBoolean(), false);
       // Handle "repeat" option if present
       if (list->HasProperty("repeat") && list->GetProperty("repeat").isInteger())
-        SetRepeat(side, static_cast<Repeat>(list->GetProperty("repeat").asInteger()), false);
+        SetRepeat(type, static_cast<Repeat>(list->GetProperty("repeat").asInteger()), false);
 
-      GetPlayList(side).Add(*list);
-      Play(side, pMsg->param1 < 0 ? std::nullopt : std::optional<int>(pMsg->param1),
+      GetPlayList(type).Add(*list);
+      Play(type, pMsg->param1 < 0 ? std::nullopt : std::optional<int>(pMsg->param1),
            pMsg->strParam);
     }
   }
-  else if (const std::optional<Side> side = SideFromId(Id{pMsg->param1});
-           side && (Id{pMsg->param1} == Id::TYPE_MUSIC || Id{pMsg->param1} == Id::TYPE_VIDEO))
+  else if (const std::optional<Type> type = TypeFromId(Id{pMsg->param1});
+           type && (Id{pMsg->param1} == Id::TYPE_MUSIC || Id{pMsg->param1} == Id::TYPE_VIDEO))
   {
-    SetPlayingSide(*side);
+    SetPlayingType(*type);
     CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, pMsg->param2);
   }
 }

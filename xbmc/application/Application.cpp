@@ -1492,14 +1492,14 @@ bool CApplication::OnAction(const CAction &action)
   }
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
-    const std::optional<PLAYLIST::Side> side =
-        GetComponent<CApplicationPlayLists>()->GetPlayingSide();
-    if (side == PLAYLIST::Side::Video &&
+    const std::optional<PLAYLIST::Type> type =
+        GetComponent<CApplicationPlayLists>()->GetPlayingType();
+    if (type == PLAYLIST::Video &&
         CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_VIDEO_PLAYLIST)
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
     }
-    else if (side == PLAYLIST::Side::Audio &&
+    else if (type == PLAYLIST::Audio &&
              CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() !=
                  WINDOW_MUSIC_PLAYLIST)
     {
@@ -1661,8 +1661,8 @@ int CApplication::Run()
   if (playlist.Size() > 0)
   {
     const auto playLists = GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(PLAYLIST::Side::Audio).Add(playlist);
-    playLists->SetPlayingSide(PLAYLIST::Side::Audio);
+    playLists->GetPlayList(PLAYLIST::Audio).Add(playlist);
+    playLists->SetPlayingType(PLAYLIST::Audio);
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_PLAY, -1);
   }
 
@@ -1989,7 +1989,7 @@ private:
 
 bool CApplication::PlayMedia(CFileItem& item,
                              const std::string& player,
-                             std::optional<PLAYLIST::Side> side)
+                             std::optional<PLAYLIST::Type> type)
 {
   // if the item is a plugin we need to resolve the plugin paths
   if (URIUtils::HasPluginPath(item) && !XFILE::CPluginDirectory::GetResolvedPluginResult(item))
@@ -2006,13 +2006,13 @@ bool CApplication::PlayMedia(CFileItem& item,
       smartpl.OpenAndReadName(item.GetURL());
       PLAYLIST::CPlayList playlist;
       playlist.Add(items);
-      PLAYLIST::Side smartplSide = PLAYLIST::Side::Video;
+      PLAYLIST::Type smartplType = PLAYLIST::Video;
 
       if (smartpl.GetType() == "songs" || smartpl.GetType() == "albums" ||
           smartpl.GetType() == "artists")
-        smartplSide = PLAYLIST::Side::Audio;
+        smartplType = PLAYLIST::Audio;
 
-      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartplSide);
+      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartplType);
     }
   }
   else if ((PLAYLIST::IsPlayList(item) && !item.IsGame()) || NETWORK::IsInternetStream(item))
@@ -2040,12 +2040,12 @@ bool CApplication::PlayMedia(CFileItem& item,
     if (playlist)
     {
 
-      if (side)
+      if (type)
       {
         int track=0;
         if (item.HasProperty("playlist_starting_track"))
           track = (int)item.GetProperty("playlist_starting_track").asInteger();
-        return ProcessAndStartPlaylist(item.GetPath(), *playlist, *side, track);
+        return ProcessAndStartPlaylist(item.GetPath(), *playlist, *type, track);
       }
       else
       {
@@ -2148,7 +2148,7 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
 #endif
 
   if (item.HasPVRChannelInfoTag())
-    GetComponent<CApplicationPlayLists>()->SetPlayingSide(std::nullopt);
+    GetComponent<CApplicationPlayLists>()->SetPlayingType(std::nullopt);
 
   return true;
 }
@@ -2185,8 +2185,7 @@ void CApplication::PlaybackCleanup()
 
   const auto appPower = GetComponent<CApplicationPowerHandling>();
 
-  if (!appPlayer->IsPlayingAudio() &&
-      !GetComponent<CApplicationPlayLists>()->GetPlayingSide() &&
+  if (!appPlayer->IsPlayingAudio() && !GetComponent<CApplicationPlayLists>()->GetPlayingType() &&
       CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VISUALISATION)
   {
     CServiceBroker::GetSettingsComponent()->GetSettings()->Save();  // save vis settings
@@ -2810,11 +2809,11 @@ void CApplication::UpdateCurrentPlayArt()
 
 bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
                                            PLAYLIST::CPlayList& playlist,
-                                           PLAYLIST::Side side,
+                                           PLAYLIST::Type type,
                                            int track)
 {
   CLog::Log(LOGDEBUG, "CApplication::ProcessAndStartPlaylist({}, {})", strPlayList,
-            side == PLAYLIST::Side::Video ? "video" : "audio");
+            type == PLAYLIST::Video ? "video" : "audio");
 
   // initial exit conditions
   // no songs in playlist just return
@@ -2822,7 +2821,7 @@ bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
     return false;
 
   const auto playLists = GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& sidePlayList = playLists->GetPlayList(side);
+  PLAYLIST::CPlayList& sidePlayList = playLists->GetPlayList(type);
   sidePlayList.Clear();
 
   // if the playlist contains an internet stream, this file will be used
@@ -2834,7 +2833,7 @@ bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
   if (sidePlayList.empty())
     return false;
 
-  playLists->Play(side, track > 0 ? std::optional<int>(track) : std::nullopt);
+  playLists->Play(type, track > 0 ? std::optional<int>(track) : std::nullopt);
   return true;
 }
 

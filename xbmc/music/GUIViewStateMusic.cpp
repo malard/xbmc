@@ -33,9 +33,9 @@ using namespace KODI;
 using namespace XFILE;
 using namespace MUSICDATABASEDIRECTORY;
 
-std::optional<PLAYLIST::Side> CGUIViewStateWindowMusic::GetPlayListSide() const
+std::optional<PLAYLIST::Type> CGUIViewStateWindowMusic::GetPlayListType() const
 {
-  return PLAYLIST::Side::Audio;
+  return PLAYLIST::Audio;
 }
 
 bool CGUIViewStateWindowMusic::AutoPlayNextItem()
@@ -728,9 +728,9 @@ void CGUIViewStateWindowMusicPlaylist::SaveViewState()
   SaveViewToDb(m_items.GetPath(), WINDOW_MUSIC_PLAYLIST);
 }
 
-std::optional<PLAYLIST::Side> CGUIViewStateWindowMusicPlaylist::GetPlayListSide() const
+std::optional<PLAYLIST::Type> CGUIViewStateWindowMusicPlaylist::GetPlayListType() const
 {
-  return PLAYLIST::Side::Audio;
+  return PLAYLIST::Audio;
 }
 
 bool CGUIViewStateWindowMusicPlaylist::AutoPlayNextItem()

@@ -34,11 +34,11 @@ struct PlayListChange;
 } // namespace KODI::PLAYLIST
 
 /*!
- * \brief The Video and Audio playlists, and what each side is doing.
+ * \brief The Video and Audio playlists, and what each is doing.
  *
  * Both playlists always exist, possibly empty. The player works through one of them at a time;
- * while it plays something on the Video side that also holds audio, the Audio side follows the
- * Video side, and its own playlist waits.
+ * while it plays something from the Video playlist that also holds audio, Audio follows Video,
+ * and the Audio playlist waits.
  */
 class CApplicationPlayLists : public IApplicationComponent,
                               public IMsgTargetCallback,
@@ -102,20 +102,20 @@ public:
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
   bool OnAction(const CAction& action);
 
-  KODI::PLAYLIST::CPlayList& GetPlayList(KODI::PLAYLIST::Side side);
-  const KODI::PLAYLIST::CPlayList& GetPlayList(KODI::PLAYLIST::Side side) const;
+  KODI::PLAYLIST::CPlayList& GetPlayList(KODI::PLAYLIST::Type type);
+  const KODI::PLAYLIST::CPlayList& GetPlayList(KODI::PLAYLIST::Type type) const;
 
   /*!
-   * \return The side whose playlist the player is working through, if any.
+   * \return The playlist the player is working through, if any.
    */
-  std::optional<KODI::PLAYLIST::Side> GetPlayingSide() const;
+  std::optional<KODI::PLAYLIST::Type> GetPlayingType() const;
 
   /*!
    * \brief Choose the playlist the player works through. Choosing another one ends party mode.
    */
-  void SetPlayingSide(std::optional<KODI::PLAYLIST::Side> side);
+  void SetPlayingType(std::optional<KODI::PLAYLIST::Type> type);
 
-  Phase GetPhase(KODI::PLAYLIST::Side side) const;
+  Phase GetPhase(KODI::PLAYLIST::Type type) const;
   bool IsAudioFollowingVideo() const;
 
   /*!
@@ -130,33 +130,33 @@ public:
   int GetPlayerId(const CFileItem* item) const;
 
   /*!
-   * \brief Start playing a side's playlist.
+   * \brief Start playing a playlist.
    * \param position A position in list order, whose entry then leads the play order; with none,
    * the playlist plays from the start of its play order.
    * \param replace whether this item should replace the currently playing item. See
    * CApplication::PlayFile.
    * \param playPreviousOnFail whether to go back to the previous entry if playback fails.
    */
-  bool Play(KODI::PLAYLIST::Side side,
+  bool Play(KODI::PLAYLIST::Type type,
             std::optional<int> position = std::nullopt,
             const std::string& player = "",
             bool replace = false,
             bool playPreviousOnFail = false);
 
   /*!
-   * \brief Replace the side's playlist with a playlist of one item, and play it.
+   * \brief Replace the playlist's contents with one item, and play it.
    */
-  bool Play(KODI::PLAYLIST::Side side,
+  bool Play(KODI::PLAYLIST::Type type,
             const std::shared_ptr<CFileItem>& item,
             const std::string& player);
 
   /*!
-   * \brief Play an item nobody has put on a side, choosing the side from what the item is.
+   * \brief Play an item nobody has put on a playlist, choosing the playlist from what the item is.
    */
   bool Play(const std::shared_ptr<CFileItem>& item, const std::string& player);
 
   /*!
-   * \brief Move the playing side on and play what follows.
+   * \brief Move the playing playlist on and play what follows.
    * \param advance Automatic when the current entry ended by itself.
    */
   bool PlayNext(KODI::PLAYLIST::Advance advance = KODI::PLAYLIST::Advance::User);
@@ -169,7 +169,7 @@ public:
   bool PlayOffset(int offset);
 
   /*!
-   * \brief What would play after the current entry of the playing side, without moving to it.
+   * \brief What would play after the current entry of the playing playlist, without moving to it.
    */
   std::shared_ptr<CFileItem> PeekNextItem(int steps = 1) const;
 
@@ -197,17 +197,17 @@ public:
   bool HasPlayedFirstFile() const;
   bool IsSingleItemNonRepeatPlaylist() const;
 
-  void SetShuffle(KODI::PLAYLIST::Side side, bool shuffle, bool notify = false);
-  bool IsShuffled(KODI::PLAYLIST::Side side) const;
+  void SetShuffle(KODI::PLAYLIST::Type type, bool shuffle, bool notify = false);
+  bool IsShuffled(KODI::PLAYLIST::Type type) const;
 
-  void SetRepeat(KODI::PLAYLIST::Side side, Repeat repeat, bool notify = false);
-  Repeat GetRepeat(KODI::PLAYLIST::Side side) const;
+  void SetRepeat(KODI::PLAYLIST::Type type, Repeat repeat, bool notify = false);
+  Repeat GetRepeat(KODI::PLAYLIST::Type type) const;
 
   void ClearPlayLists();
 
   /*!
    * \brief The picture slideshow reports what it does. It keeps its own list and cursor, and holds
-   * the Video side while it runs.
+   * Video while it runs.
    * \param running Whether the slides advance by themselves, for Play.
    */
   void OnSlideShow(PlayerEvent event, const std::shared_ptr<const CFileItem>& slide, bool running);
@@ -231,21 +231,21 @@ public:
                 CVariant data) const;
 
 private:
-  void OnPlayListChanged(KODI::PLAYLIST::Side side,
+  void OnPlayListChanged(KODI::PLAYLIST::Type type,
                          const std::vector<KODI::PLAYLIST::PlayListChange>& changes);
-  bool PlayEntry(KODI::PLAYLIST::Side side,
+  bool PlayEntry(KODI::PLAYLIST::Type type,
                  KODI::PLAYLIST::EntryId entry,
                  const std::string& player,
                  bool replace,
                  bool playPreviousOnFail);
   void EndPlayback(bool clearPlayList);
-  void Announce(KODI::PLAYLIST::Side side, PlayerProperty property, const CVariant& value) const;
+  void Announce(KODI::PLAYLIST::Type type, PlayerProperty property, const CVariant& value) const;
   void OnMediaPlay(KODI::MESSAGING::ThreadMessage* pMsg);
 
   std::array<std::unique_ptr<KODI::PLAYLIST::CPlayList>, 2> m_playLists;
 
   mutable CCriticalSection m_critSection;
-  std::optional<KODI::PLAYLIST::Side> m_playingSide;
+  std::optional<KODI::PLAYLIST::Type> m_playingType;
   std::array<Phase, 2> m_phase{Phase::Idle, Phase::Idle};
   Phase m_slideShowPhase{Phase::Idle};
   bool m_audioFollowsVideo{false};

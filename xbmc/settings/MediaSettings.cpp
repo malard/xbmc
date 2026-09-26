@@ -147,10 +147,9 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
 
   // Set music playlist player repeat and shuffle from loaded settings
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  playLists->SetRepeat(PLAYLIST::Side::Audio, m_musicPlaylistRepeat
-                                                  ? CApplicationPlayLists::Repeat::All
-                                                  : CApplicationPlayLists::Repeat::Off);
-  playLists->SetShuffle(PLAYLIST::Side::Audio, m_musicPlaylistShuffle);
+  playLists->SetRepeat(PLAYLIST::Audio, m_musicPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                                              : CApplicationPlayLists::Repeat::Off);
+  playLists->SetShuffle(PLAYLIST::Audio, m_musicPlaylistShuffle);
 
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
@@ -177,10 +176,9 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
   }
 
   // Set video playlist player repeat and shuffle from loaded settings
-  playLists->SetRepeat(PLAYLIST::Side::Video, m_videoPlaylistRepeat
-                                                  ? CApplicationPlayLists::Repeat::All
-                                                  : CApplicationPlayLists::Repeat::Off);
-  playLists->SetShuffle(PLAYLIST::Side::Video, m_videoPlaylistShuffle);
+  playLists->SetRepeat(PLAYLIST::Video, m_videoPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                                              : CApplicationPlayLists::Repeat::Off);
+  playLists->SetShuffle(PLAYLIST::Video, m_videoPlaylistShuffle);
 
   return true;
 }

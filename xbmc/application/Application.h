@@ -126,10 +126,10 @@ public:
 
   bool PlayMedia(CFileItem& item,
                  const std::string& player,
-                 std::optional<KODI::PLAYLIST::Side> side);
+                 std::optional<KODI::PLAYLIST::Type> type);
   bool ProcessAndStartPlaylist(const std::string& strPlayList,
                                KODI::PLAYLIST::CPlayList& playlist,
-                               KODI::PLAYLIST::Side side,
+                               KODI::PLAYLIST::Type type,
                                int track = 0);
   bool PlayFile(CFileItem item, const std::string& player, bool bRestart = false);
   void StopPlaying();

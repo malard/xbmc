@@ -279,15 +279,15 @@ void CXBMCApp::onStart()
 
 namespace
 {
-// Whether what plays holds video and audio: from the side its entry was put on, or, for playback
+// Whether what plays holds video and audio: from the playlist its entry was put on, or, for playback
 // started outside the playlists, from what the player has opened.
 std::pair<bool, bool> PlayingVideoAndAudio()
 {
   const auto& components = CServiceBroker::GetAppComponents();
   const auto playLists = components.GetComponent<CApplicationPlayLists>();
-  if (const std::optional<KODI::PLAYLIST::Side> side = playLists->GetPlayingSide(); side)
-    return {*side == KODI::PLAYLIST::Side::Video,
-            *side == KODI::PLAYLIST::Side::Audio || playLists->IsAudioFollowingVideo()};
+  if (const std::optional<KODI::PLAYLIST::Type> type = playLists->GetPlayingType(); type)
+    return {*type == KODI::PLAYLIST::Video,
+            *type == KODI::PLAYLIST::Audio || playLists->IsAudioFollowingVideo()};
 
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   return {appPlayer->HasVideo(), appPlayer->HasAudio()};

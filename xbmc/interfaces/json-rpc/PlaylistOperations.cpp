@@ -34,9 +34,9 @@ std::shared_ptr<CApplicationPlayLists> PlayLists()
   return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
 }
 
-void GetPlayListItems(PLAYLIST::Side side, CFileItemList& list)
+void GetPlayListItems(PLAYLIST::Type type, CFileItemList& list)
 {
-  const PLAYLIST::CPlayList& playList = PlayLists()->GetPlayList(side);
+  const PLAYLIST::CPlayList& playList = PlayLists()->GetPlayList(type);
   for (int i = 0; i < playList.size(); i++)
   {
     if (const std::shared_ptr<CFileItem> item = playList[i]; item)
@@ -91,7 +91,7 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const std::string &method, ITranspo
   {
     case PLAYLIST::Id::TYPE_VIDEO:
     case PLAYLIST::Id::TYPE_MUSIC:
-      GetPlayListItems(*PLAYLIST::SideFromId(playlistId), list);
+      GetPlayListItems(*PLAYLIST::TypeFromId(playlistId), list);
       break;
 
     case PLAYLIST::Id::TYPE_PICTURE:
@@ -139,7 +139,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const std::string &method, ITransportLay
   {
     case PLAYLIST::Id::TYPE_VIDEO:
     case PLAYLIST::Id::TYPE_MUSIC:
-      PlayLists()->GetPlayList(*PLAYLIST::SideFromId(playlistId)).Add(list);
+      PlayLists()->GetPlayList(*PLAYLIST::TypeFromId(playlistId)).Add(list);
       break;
     case PLAYLIST::Id::TYPE_PICTURE:
     {
@@ -173,7 +173,7 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const std::string &method, ITransport
     return InvalidParams;
 
   PlayLists()
-      ->GetPlayList(*PLAYLIST::SideFromId(playlistId))
+      ->GetPlayList(*PLAYLIST::TypeFromId(playlistId))
       .Insert(list, static_cast<int>(parameterObject["position"].asInteger()));
 
   return ACK;
@@ -185,10 +185,10 @@ JSONRPC_STATUS CPlaylistOperations::Remove(const std::string &method, ITransport
   if (playlistId != PLAYLIST::Id::TYPE_MUSIC && playlistId != PLAYLIST::Id::TYPE_VIDEO)
     return FailedToExecute;
 
-  const PLAYLIST::Side side = *PLAYLIST::SideFromId(playlistId);
-  PLAYLIST::CPlayList& playList = PlayLists()->GetPlayList(side);
+  const PLAYLIST::Type type = *PLAYLIST::TypeFromId(playlistId);
+  PLAYLIST::CPlayList& playList = PlayLists()->GetPlayList(type);
   int position = (int)parameterObject["position"].asInteger();
-  if (PlayLists()->GetPlayingSide() == side && playList.GetCurrentPosition() == position)
+  if (PlayLists()->GetPlayingType() == type && playList.GetCurrentPosition() == position)
     return InvalidParams;
 
   playList.Remove(position);
@@ -203,7 +203,7 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const std::string &method, ITransportL
   {
     case PLAYLIST::Id::TYPE_MUSIC:
     case PLAYLIST::Id::TYPE_VIDEO:
-      PlayLists()->GetPlayList(*PLAYLIST::SideFromId(playlistId)).Clear();
+      PlayLists()->GetPlayList(*PLAYLIST::TypeFromId(playlistId)).Clear();
       break;
 
     case PLAYLIST::Id::TYPE_PICTURE:
@@ -229,7 +229,7 @@ JSONRPC_STATUS CPlaylistOperations::Swap(const std::string &method, ITransportLa
     return FailedToExecute;
 
   PlayLists()
-      ->GetPlayList(*PLAYLIST::SideFromId(playlistId))
+      ->GetPlayList(*PLAYLIST::TypeFromId(playlistId))
       .Swap(static_cast<int>(parameterObject["position1"].asInteger()),
             static_cast<int>(parameterObject["position2"].asInteger()));
 
@@ -277,7 +277,7 @@ JSONRPC_STATUS CPlaylistOperations::GetPropertyValue(PLAYLIST::Id playlistId,
     {
       case PLAYLIST::Id::TYPE_MUSIC:
       case PLAYLIST::Id::TYPE_VIDEO:
-        result = PlayLists()->GetPlayList(*PLAYLIST::SideFromId(playlistId)).size();
+        result = PlayLists()->GetPlayList(*PLAYLIST::TypeFromId(playlistId)).size();
         break;
       case PLAYLIST::Id::TYPE_PICTURE:
       {

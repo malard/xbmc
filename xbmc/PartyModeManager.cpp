@@ -194,7 +194,7 @@ bool CPartyModeManager::Enable(PartyModeContext context /*= PARTYMODECONTEXT_MUS
   CLog::Log(LOGDEBUG, "{} time for song fetch: {} ms", __FUNCTION__, duration.count());
 
   // start playing
-  playLists->SetPlayingSide(GetSide());
+  playLists->SetPlayingType(GetSide());
   Play(0);
 
   pDialog->Close();
@@ -476,7 +476,7 @@ void CPartyModeManager::Announce()
       CApplicationPlayLists::PlayerProperty::PartyMode, m_bEnabled);
 }
 
-PLAYLIST::Side CPartyModeManager::GetSide() const
+PLAYLIST::Type CPartyModeManager::GetSide() const
 {
-  return m_bIsVideo ? PLAYLIST::Side::Video : PLAYLIST::Side::Audio;
+  return m_bIsVideo ? PLAYLIST::Video : PLAYLIST::Audio;
 }

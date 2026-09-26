@@ -17,7 +17,7 @@ class CFileItem; typedef std::shared_ptr<CFileItem> CFileItemPtr;
 class CFileItemList;
 namespace KODI::PLAYLIST
 {
-enum class Side;
+enum class Type;
 }
 
 enum class PartyModeContext
@@ -56,7 +56,7 @@ private:
   void ClearState();
   void UpdateStats();
   void Announce();
-  KODI::PLAYLIST::Side GetSide() const;
+  KODI::PLAYLIST::Type GetSide() const;
 
   // state
   bool m_bEnabled;

@@ -31,29 +31,29 @@ namespace KODI::GUILIB::GUIINFO
 static const int WINDOW_CONDITION_HAS_LIST_ITEMS = 1;
 static const int WINDOW_CONDITION_IS_MEDIA_WINDOW = 2;
 
-std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Side> side /* = std::nullopt */)
+std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Type> type /* = std::nullopt */)
 {
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
 
-  if (!side)
-    side = playLists->GetPlayingSide();
+  if (!type)
+    type = playLists->GetPlayingType();
 
   switch (item)
   {
     case PLAYLIST_LENGTH:
     {
-      return std::to_string(side ? playLists->GetPlayList(*side).size() : 0);
+      return std::to_string(type ? playLists->GetPlayList(*type).size() : 0);
     }
     case PLAYLIST_POSITION:
     {
-      const int currentSong = side ? playLists->GetPlayList(*side).GetCurrentPosition() : -1;
+      const int currentSong = type ? playLists->GetPlayList(*type).GetCurrentPosition() : -1;
       if (currentSong > -1)
         return std::to_string(currentSong + 1);
       break;
     }
     case PLAYLIST_RANDOM:
     {
-      if (side && playLists->IsShuffled(*side))
+      if (type && playLists->IsShuffled(*type))
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16041); // 16041: On
       else
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(591); // 591: Off
@@ -61,7 +61,7 @@ std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Side> side /* = s
     case PLAYLIST_REPEAT:
     {
       const CApplicationPlayLists::Repeat state =
-          side ? playLists->GetRepeat(*side) : CApplicationPlayLists::Repeat::Off;
+          type ? playLists->GetRepeat(*type) : CApplicationPlayLists::Repeat::Off;
       if (state == CApplicationPlayLists::Repeat::One)
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(592); // 592: One
       else if (state == CApplicationPlayLists::Repeat::All)

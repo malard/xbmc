@@ -447,7 +447,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     {
       const std::unique_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
       m_app.PlayMedia(*item, pMsg->strParam,
-                      PLAYLIST::SideFromId(static_cast<PLAYLIST::Id>(pMsg->param1)));
+                      PLAYLIST::TypeFromId(static_cast<PLAYLIST::Id>(pMsg->param1)));
       break;
     }
 
@@ -531,8 +531,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       {
         // Update general playlist: Remove DVD playlist items
         const auto playLists = m_app.GetComponent<CApplicationPlayLists>();
-        for (const PLAYLIST::Side side : {PLAYLIST::Side::Video, PLAYLIST::Side::Audio})
-          playLists->GetPlayList(side).RemoveDVDItems();
+        for (const PLAYLIST::Type type : {PLAYLIST::Video, PLAYLIST::Audio})
+          playLists->GetPlayList(type).RemoveDVDItems();
         // stop the file if it's on dvd (will set the resume point etc)
         if (m_app.CurrentFileItem().IsOnDVD())
           m_app.StopPlaying();
@@ -582,9 +582,8 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       CServiceBroker::GetPVRManager().OnPlaybackStarted(m_app.CurrentFileItem());
 
       const auto playLists = m_app.GetComponent<CApplicationPlayLists>();
-      const std::optional<PLAYLIST::Side> side = playLists->GetPlayingSide();
-      const int previousPosition =
-          side ? playLists->GetPlayList(*side).GetCurrentPosition() : -1;
+      const std::optional<PLAYLIST::Type> type = playLists->GetPlayingType();
+      const int previousPosition = type ? playLists->GetPlayList(*type).GetCurrentPosition() : -1;
 
       // Update our infoManager with the new details etc.
       if (const auto queued = playLists->OnQueuedStarted(); queued)
@@ -596,7 +595,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
           return true;
 
         // we've started a previously queued item
-        const int position = playLists->GetPlayList(*side).GetCurrentPosition();
+        const int position = playLists->GetPlayList(*type).GetCurrentPosition();
         const int param = ((previousPosition & 0xffff) << 16) | (position & 0xffff);
         CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, playLists->GetPlayerId(), param,
                         item);
@@ -634,9 +633,9 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       // and if so, we check whether our current player wants the file
       const auto playLists = m_app.GetComponent<CApplicationPlayLists>();
       const PLAYLIST::EntryId next = playLists->PeekNextEntry();
-      const std::optional<PLAYLIST::Side> side = playLists->GetPlayingSide();
+      const std::optional<PLAYLIST::Type> type = playLists->GetPlayingType();
       const std::shared_ptr<CFileItem> nextItem =
-          side ? playLists->GetPlayList(*side).GetItem(next) : nullptr;
+          type ? playLists->GetPlayList(*type).GetItem(next) : nullptr;
       if (!nextItem)
       {
         m_app.GetComponent<CApplicationPlayer>()->OnNothingToQueueNotify();

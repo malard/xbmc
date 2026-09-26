@@ -315,14 +315,14 @@ void CApplicationPlay::DetermineFullScreen()
 {
   // Get current playlist info
   const auto playLists{CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()};
-  const auto side{playLists->GetPlayingSide()};
+  const auto type{playLists->GetPlayingType()};
 
   // Determine fullscreen status based on media type and playlist
   using enum PlayMediaType;
-  if (MUSIC::IsAudio(m_item) && side == PLAYLIST::Side::Audio)
+  if (MUSIC::IsAudio(m_item) && type == PLAYLIST::Audio)
     m_options.fullscreen = ShouldGoFullScreen(MUSIC_PLAYLIST);
-  else if (VIDEO::IsVideo(m_item) && side == PLAYLIST::Side::Video &&
-           playLists->GetPlayList(*side).size() > 1)
+  else if (VIDEO::IsVideo(m_item) && type == PLAYLIST::Video &&
+           playLists->GetPlayList(*type).size() > 1)
   {
     m_options.fullscreen = ShouldGoFullScreen(VIDEO_PLAYLIST);
   }

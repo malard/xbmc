@@ -357,7 +357,7 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   VIDEO::UTILS::GetItemsForPlayList(itemToQueue, queuedItems, mode);
 
   const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(PLAYLIST::Side::Video);
+  PLAYLIST::CPlayList& playList = playLists->GetPlayList(PLAYLIST::Video);
   playList.Clear();
   playList.Add(queuedItems);
 
@@ -376,7 +376,7 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
     }
   }
 
-  playLists->Play(PLAYLIST::Side::Video, pos, player);
+  playLists->Play(PLAYLIST::Video, pos, player);
 }
 
 } // unnamed namespace
@@ -440,7 +440,7 @@ void PlayItem(
     {
       // single item, play it
       CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
-          PLAYLIST::Side::Video, item, player);
+          PLAYLIST::Video, item, player);
     }
   }
   else
@@ -466,10 +466,10 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
   const auto playLists = components.GetComponent<CApplicationPlayLists>();
 
   // Determine the proper list to queue this element
-  const PLAYLIST::Side side = playLists->GetPlayingSide().value_or(
-      PLAYLIST::SideFromId(components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist())
-          .value_or(PLAYLIST::Side::Video));
-  PLAYLIST::CPlayList& playList = playLists->GetPlayList(side);
+  const PLAYLIST::Type type = playLists->GetPlayingType().value_or(
+      PLAYLIST::TypeFromId(components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist())
+          .value_or(PLAYLIST::Video));
+  PLAYLIST::CPlayList& playList = playLists->GetPlayList(type);
 
   CFileItemList queuedItems;
   GetItemsForPlayList(item, queuedItems, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
@@ -487,7 +487,7 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
   else
     playList.Add(queuedItems);
 
-  playLists->SetPlayingSide(side);
+  playLists->SetPlayingType(type);
 
   // Note: video does not auto play on queue like music
 }
