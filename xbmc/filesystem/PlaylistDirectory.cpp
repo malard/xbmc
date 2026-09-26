@@ -10,9 +10,10 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "playlists/PlayList.h"
 
 using namespace KODI;
@@ -24,24 +25,26 @@ CPlaylistDirectory::~CPlaylistDirectory() = default;
 
 bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 {
-  PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
+  std::optional<PLAYLIST::Side> side;
   if (url.IsProtocol("playlistmusic"))
-    playlistId = PLAYLIST::Id::TYPE_MUSIC;
+    side = PLAYLIST::Side::Audio;
   else if (url.IsProtocol("playlistvideo"))
-    playlistId = PLAYLIST::Id::TYPE_VIDEO;
+    side = PLAYLIST::Side::Video;
 
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
+  if (!side)
     return false;
 
-  const PLAYLIST::CPlayList& playlist = CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId);
+  const PLAYLIST::CPlayList& playlist =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayList(*side);
   items.Reserve(playlist.size());
 
   for (int i = 0; i < playlist.size(); ++i)
   {
     CFileItemPtr item = playlist[i];
+    if (!item)
+      break;
     item->SetProperty("playlistposition", i);
-    item->SetProperty("playlisttype", static_cast<int>(playlistId));
-    //item->SetProgramCount(i); // the programCount is set as items are added!
+    item->SetProperty("playlisttype", static_cast<int>(PLAYLIST::IdFromSide(side)));
     items.Add(item);
   }
 

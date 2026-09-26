@@ -33,6 +33,8 @@
 #include "VideoPlayerRadioRDS.h"
 #include "VideoPlayerVideo.h"
 #include "application/Application.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/DataCacheCore.h"
 #include "cores/EdlEdit.h"
 #include "cores/FFmpeg.h"
@@ -4006,7 +4008,8 @@ void CVideoPlayer::SetSubtitleVisible(bool bVisible)
       std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_SET_SUBTITLESTREAM_VISIBLE, bVisible));
   m_processInfo->GetVideoSettingsLocked().SetSubtitleVisible(bVisible);
   CVariant data;
-  data["player"]["playerid"] = m_item.GetProperty("playlist_type_hint").asInteger32(-1);
+  data["player"]["playerid"] =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   data["property"]["subtitleenabled"] = bVisible;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
                                                      data);
@@ -6369,7 +6372,8 @@ void CVideoPlayer::SetUpdateStreamDetails()
 void CVideoPlayer::NotifySubtitleUpdate(int flags)
 {
   CVariant data;
-  data["player"]["playerid"] = m_item.GetProperty("playlist_type_hint").asInteger32(-1);
+  data["player"]["playerid"] =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   if ((flags & SubtitleChange::FLAG_STATUS_CHANGE) != 0)
   {
     data["property"]["subtitleenabled"] = m_processInfo->GetVideoSettings().m_SubtitleOn;
@@ -6411,7 +6415,8 @@ void CVideoPlayer::NotifyAudioUpdate()
   if (!info.valid)
     return;
   CVariant data;
-  data["player"]["playerid"] = m_item.GetProperty("playlist_type_hint").asInteger32(-1);
+  data["player"]["playerid"] =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   CVariant contentEntry(CVariant::VariantTypeObject);
   contentEntry["index"] = stream;
   contentEntry["bitrate"] = info.bitrate;
@@ -6435,7 +6440,8 @@ void CVideoPlayer::NotifyVideoUpdate()
   if (!info.valid)
     return;
   CVariant data;
-  data["player"]["playerid"] = m_item.GetProperty("playlist_type_hint").asInteger32(-1);
+  data["player"]["playerid"] =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayerId();
   CVariant contentEntry(CVariant::VariantTypeObject);
   contentEntry["index"] = stream;
   contentEntry["codec"] = info.codecName;

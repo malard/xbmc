@@ -14,15 +14,16 @@
 #include "GUIUserMessages.h"
 #include "ListItem.h"
 #include "PlayList.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/IPlayer.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "messaging/ApplicationMessenger.h"
+#include "playlists/PlayList.h"
 #include "settings/MediaSettings.h"
 
 using namespace KODI;
@@ -42,6 +43,11 @@ std::shared_ptr<CApplicationPlayer> getAppPlayerMut()
   auto& components = CServiceBroker::GetAppComponents();
   auto res = components.GetComponent<CApplicationPlayer>();
   return res;
+}
+
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
 }
 
 } // namespace
@@ -127,10 +133,11 @@ namespace XBMCAddon
       CMediaSettings::GetInstance().SetMediaStartWindowed(windowed);
 
       // play current file in playlist
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() != PLAYLIST::Id{iPlayList})
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id{iPlayList});
+      const std::optional<PLAYLIST::Side> side = PLAYLIST::SideFromId(PLAYLIST::Id{iPlayList});
+      PlayLists()->SetPlayingSide(side);
       CServiceBroker::GetAppMessenger()->SendMsg(
-          TMSG_PLAYLISTPLAYER_PLAY, CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx());
+          TMSG_PLAYLISTPLAYER_PLAY,
+          side ? PlayLists()->GetPlayList(*side).GetCurrentPosition() : -1);
     }
 
     void Player::playPlaylist(const PlayList* playlist, bool windowed, int startpos)
@@ -142,11 +149,12 @@ namespace XBMCAddon
         // set fullscreen or windowed
         CMediaSettings::GetInstance().SetMediaStartWindowed(windowed);
 
-        // play a python playlist (a playlist from playlistplayer.cpp)
+        // play a python playlist (the Video or Audio playlist)
         iPlayList = playlist->getPlayListId();
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id{iPlayList});
-        if (startpos > -1)
-          CServiceBroker::GetPlaylistPlayer().SetCurrentItemIdx(startpos);
+        const std::optional<PLAYLIST::Side> side = PLAYLIST::SideFromId(PLAYLIST::Id{iPlayList});
+        PlayLists()->SetPlayingSide(side);
+        if (side && startpos > -1)
+          PlayLists()->GetPlayList(*side).SetCurrentPosition(startpos);
         CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, startpos);
       }
       else
@@ -186,15 +194,12 @@ namespace XBMCAddon
       XBMC_TRACE;
       DelayedCallGuard dc(languageHook);
 
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() != PLAYLIST::Id{iPlayList})
-      {
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id{iPlayList});
-      }
-      CServiceBroker::GetPlaylistPlayer().SetCurrentItemIdx(selected);
+      const std::optional<PLAYLIST::Side> side = PLAYLIST::SideFromId(PLAYLIST::Id{iPlayList});
+      PlayLists()->SetPlayingSide(side);
+      if (side)
+        PlayLists()->GetPlayList(*side).SetCurrentPosition(selected);
 
       CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, selected);
-      //CServiceBroker::GetPlaylistPlayer().Play(selected);
-      //CLog::Log(LOGINFO, "Current Song After Play: {}", CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx());
     }
 
     void Player::OnPlayBackStarted(const CFileItem &file)

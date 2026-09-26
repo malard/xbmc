@@ -9,12 +9,12 @@
 #include "guilib/guiinfo/VideoGUIInfo.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/DataCacheCore.h"
 #include "cores/VideoPlayer/DVDFileInfo.h"
@@ -676,14 +676,16 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
     // VIDEOPLAYER_*
     ///////////////////////////////////////////////////////////////////////////////////////////////
     case VIDEOPLAYER_PLAYLISTLEN:
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+      if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayingSide() ==
+          PLAYLIST::Side::Video)
       {
         value = GUIINFO::GetPlaylistLabel(PLAYLIST_LENGTH);
         return true;
       }
       break;
     case VIDEOPLAYER_PLAYLISTPOS:
-      if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+      if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->GetPlayingSide() ==
+          PLAYLIST::Side::Video)
       {
         value = GUIINFO::GetPlaylistLabel(PLAYLIST_POSITION);
         return true;
@@ -801,24 +803,26 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
 
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
-  const PLAYLIST::CPlayList& playlist =
-      CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  if (playlist.size() < 1)
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+  const PLAYLIST::CPlayList& playlist = playLists->GetPlayList(PLAYLIST::Side::Video);
+  if (playlist.empty())
     return false;
 
   int index = info.GetData2();
   if (info.GetData1() == 1)
-  { // relative index (requires current playlist is TYPE_VIDEO)
-    if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() != PLAYLIST::Id::TYPE_VIDEO)
+  { // relative index (requires the Video playlist to be playing)
+    if (playLists->GetPlayingSide() != PLAYLIST::Side::Video)
       return false;
 
-    index = CServiceBroker::GetPlaylistPlayer().GetNextItemIdx(index);
+    index = playlist.GetPosition(playlist.PeekOffset(index));
   }
 
   if (index < 0 || index >= playlist.size())
     return false;
 
   const CFileItemPtr playlistItem = playlist[index];
+  if (!playlistItem)
+    return false;
   // try to set a thumbnail
   if (!playlistItem->HasArt("thumb"))
   {

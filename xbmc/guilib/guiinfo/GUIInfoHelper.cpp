@@ -9,8 +9,9 @@
 #include "GUIInfoHelper.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindow.h"
 #include "guilib/GUIWindowManager.h"
@@ -30,39 +31,40 @@ namespace KODI::GUILIB::GUIINFO
 static const int WINDOW_CONDITION_HAS_LIST_ITEMS = 1;
 static const int WINDOW_CONDITION_IS_MEDIA_WINDOW = 2;
 
-std::string GetPlaylistLabel(int item, PLAYLIST::Id playlistId /* = TYPE_NONE */)
+std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Side> side /* = std::nullopt */)
 {
-  PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
 
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
-    playlistId = player.GetCurrentPlaylist();
+  if (!side)
+    side = playLists->GetPlayingSide();
 
   switch (item)
   {
     case PLAYLIST_LENGTH:
     {
-      return std::to_string(player.GetPlaylist(playlistId).size());
+      return std::to_string(side ? playLists->GetPlayList(*side).size() : 0);
     }
     case PLAYLIST_POSITION:
     {
-      int currentSong = player.GetCurrentItemIdx();
+      const int currentSong = side ? playLists->GetPlayList(*side).GetCurrentPosition() : -1;
       if (currentSong > -1)
         return std::to_string(currentSong + 1);
       break;
     }
     case PLAYLIST_RANDOM:
     {
-      if (player.IsShuffled(playlistId))
+      if (side && playLists->IsShuffled(*side))
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16041); // 16041: On
       else
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(591); // 591: Off
     }
     case PLAYLIST_REPEAT:
     {
-      PLAYLIST::RepeatState state = player.GetRepeat(playlistId);
-      if (state == PLAYLIST::RepeatState::ONE)
+      const CApplicationPlayLists::Repeat state =
+          side ? playLists->GetRepeat(*side) : CApplicationPlayLists::Repeat::Off;
+      if (state == CApplicationPlayLists::Repeat::One)
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(592); // 592: One
-      else if (state == PLAYLIST::RepeatState::ALL)
+      else if (state == CApplicationPlayLists::Repeat::All)
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(593); // 593: All
       else
         return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(594); // 594: Off

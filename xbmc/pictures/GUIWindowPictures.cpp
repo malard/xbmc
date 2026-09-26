@@ -543,7 +543,7 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
     }
   }
 
-  PLAYLIST::CPlayList playlist = *pPlayList;
+  const PLAYLIST::CPlayList& playlist = *pPlayList;
   if (playlist.size() > 0)
   {
     //! @todo this should be reactive, based on a given event app player should stop the playback

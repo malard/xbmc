@@ -13,11 +13,11 @@
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "application/Application.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "guilib/GUIComponent.h"
@@ -54,12 +54,20 @@
 
 using namespace KODI;
 
+namespace
+{
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+}
+} // namespace
+
 /*! \brief Clear current playlist
  *  \param params (ignored)
  */
 static int ClearPlaylist(const std::vector<std::string>& params)
 {
-  CServiceBroker::GetPlaylistPlayer().Clear();
+  PlayLists()->ClearPlayLists();
 
   return 0;
 }
@@ -82,25 +90,24 @@ static int PlayOffset(const std::vector<std::string>& params)
     std::string strPlaylist = params[0];
     strPos = params[1];
 
-    PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
+    std::optional<PLAYLIST::Side> side;
     if (paramlow == "music")
-      playlistId = PLAYLIST::Id::TYPE_MUSIC;
+      side = PLAYLIST::Side::Audio;
     else if (paramlow == "video")
-      playlistId = PLAYLIST::Id::TYPE_VIDEO;
+      side = PLAYLIST::Side::Video;
 
     // unknown playlist
-    if (playlistId == PLAYLIST::Id::TYPE_NONE)
+    if (!side)
     {
       CLog::Log(LOGERROR, "Playlist.PlayOffset called with unknown playlist: {}", strPlaylist);
       return false;
     }
 
     // user wants to play the 'other' playlist
-    if (playlistId != CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist())
+    if (side != PlayLists()->GetPlayingSide())
     {
       g_application.StopPlaying();
-      CServiceBroker::GetPlaylistPlayer().Reset();
-      CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(playlistId);
+      PlayLists()->SetPlayingSide(side);
     }
   }
   // play the desired offset
@@ -110,10 +117,10 @@ static int PlayOffset(const std::vector<std::string>& params)
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   // playlist is already playing
   if (appPlayer->IsPlaying())
-    CServiceBroker::GetPlaylistPlayer().PlayNext(pos);
+    PlayLists()->PlayOffset(pos);
   // we start playing the 'other' playlist so we need to use play to initialize the player state
-  else
-    CServiceBroker::GetPlaylistPlayer().Play(pos, "");
+  else if (const std::optional<PLAYLIST::Side> side = PlayLists()->GetPlayingSide(); side)
+    PlayLists()->Play(*side, pos);
 
   return 0;
 }
@@ -297,88 +304,74 @@ static int PlayerControl(const std::vector<std::string>& params)
   else if (paramlow == "random" || paramlow == "randomoff" || paramlow == "randomon")
   {
     // get current playlist
-    PLAYLIST::Id playlistId = CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist();
+    const std::optional<PLAYLIST::Side> side = PlayLists()->GetPlayingSide();
+    if (!side)
+      return 0;
 
     // reverse the current setting
-    bool shuffled = CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId);
+    const bool shuffled = PlayLists()->IsShuffled(*side);
     if ((shuffled && paramlow == "randomon") || (!shuffled && paramlow == "randomoff"))
       return 0;
 
     // check to see if we should notify the user
     bool notify = (params.size() == 2 && StringUtils::EqualsNoCase(params[1], "notify"));
-    CServiceBroker::GetPlaylistPlayer().SetShuffle(playlistId, !shuffled, notify);
+    PlayLists()->SetShuffle(*side, !shuffled, notify);
 
     // save settings for now playing windows
-    switch (playlistId)
-    {
-      case PLAYLIST::Id::TYPE_MUSIC:
-        CMediaSettings::GetInstance().SetMusicPlaylistShuffled(
-            CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId));
-        CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
-        break;
-      case PLAYLIST::Id::TYPE_VIDEO:
-        CMediaSettings::GetInstance().SetVideoPlaylistShuffled(
-            CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId));
-        CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
-      default:
-        break;
-    }
+    if (*side == PLAYLIST::Side::Audio)
+      CMediaSettings::GetInstance().SetMusicPlaylistShuffled(PlayLists()->IsShuffled(*side));
+    else
+      CMediaSettings::GetInstance().SetVideoPlaylistShuffled(PlayLists()->IsShuffled(*side));
+    CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 
     // send message
-    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_RANDOM, 0, 0, static_cast<int>(playlistId),
-                    CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId));
+    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_RANDOM, 0, 0, static_cast<int>(PLAYLIST::IdFromSide(side)),
+                    PlayLists()->IsShuffled(*side));
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
   }
   else if (StringUtils::StartsWithNoCase(params[0], "repeat"))
   {
     // get current playlist
-    PLAYLIST::Id playlistId = CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist();
-    PLAYLIST::RepeatState prevRepeatState =
-        CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId);
+    const std::optional<PLAYLIST::Side> side = PlayLists()->GetPlayingSide();
+    if (!side)
+      return 0;
+
+    using enum CApplicationPlayLists::Repeat;
+    const CApplicationPlayLists::Repeat prevRepeatState = PlayLists()->GetRepeat(*side);
 
     std::string paramlow(params[0]);
     StringUtils::ToLower(paramlow);
 
-    PLAYLIST::RepeatState repeatState;
+    CApplicationPlayLists::Repeat repeatState;
     if (paramlow == "repeatall")
-      repeatState = PLAYLIST::RepeatState::ALL;
+      repeatState = All;
     else if (paramlow == "repeatone")
-      repeatState = PLAYLIST::RepeatState::ONE;
+      repeatState = One;
     else if (paramlow == "repeatoff")
-      repeatState = PLAYLIST::RepeatState::NONE;
-    else if (prevRepeatState == PLAYLIST::RepeatState::NONE)
-      repeatState = PLAYLIST::RepeatState::ALL;
-    else if (prevRepeatState == PLAYLIST::RepeatState::ALL)
-      repeatState = PLAYLIST::RepeatState::ONE;
+      repeatState = Off;
+    else if (prevRepeatState == Off)
+      repeatState = All;
+    else if (prevRepeatState == All)
+      repeatState = One;
     else
-      repeatState = PLAYLIST::RepeatState::NONE;
+      repeatState = Off;
 
     if (repeatState == prevRepeatState)
       return 0;
 
     // check to see if we should notify the user
     bool notify = (params.size() == 2 && StringUtils::EqualsNoCase(params[1], "notify"));
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(playlistId, repeatState, notify);
+    PlayLists()->SetRepeat(*side, repeatState, notify);
 
     // save settings for now playing windows
-    switch (playlistId)
-    {
-      case PLAYLIST::Id::TYPE_MUSIC:
-        CMediaSettings::GetInstance().SetMusicPlaylistRepeat(repeatState ==
-                                                             PLAYLIST::RepeatState::ALL);
-        CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
-        break;
-      case PLAYLIST::Id::TYPE_VIDEO:
-        CMediaSettings::GetInstance().SetVideoPlaylistRepeat(repeatState ==
-                                                             PLAYLIST::RepeatState::ALL);
-        CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
-        break;
-      default:
-        break;
-    }
+    if (*side == PLAYLIST::Side::Audio)
+      CMediaSettings::GetInstance().SetMusicPlaylistRepeat(repeatState == All);
+    else
+      CMediaSettings::GetInstance().SetVideoPlaylistRepeat(repeatState == All);
+    CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 
     // send messages so now playing window can get updated
-    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_REPEAT, 0, 0, static_cast<int>(playlistId),
+    CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_REPEAT, 0, 0, static_cast<int>(PLAYLIST::IdFromSide(side)),
                     static_cast<int>(repeatState));
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
   }
@@ -400,8 +393,8 @@ static int PlayerControl(const std::vector<std::string>& params)
 
       CFileItem playItem(groupMember);
       if (!g_application.PlayMedia(playItem, "",
-                                   channel->IsRadio() ? PLAYLIST::Id::TYPE_MUSIC
-                                                      : PLAYLIST::Id::TYPE_VIDEO))
+                                   channel->IsRadio() ? PLAYLIST::Side::Audio
+                                                      : PLAYLIST::Side::Video))
       {
         CLog::Log(LOGERROR, "ResumeLiveTv could not play channel: {}", channel->ChannelName());
         return false;
@@ -459,15 +452,13 @@ void GetItemsForPlayList(const std::shared_ptr<CFileItem>& item, CFileItemList& 
     MUSIC_UTILS::GetItemsForPlayList(item, queuedItems);
 }
 
-PLAYLIST::Id GetPlayListId(const CFileItem& item)
+std::optional<PLAYLIST::Side> GetPlayListSide(const CFileItem& item)
 {
-  PLAYLIST::Id playlistId{PLAYLIST::Id::TYPE_NONE};
   if (VIDEO::IsVideo(item))
-    playlistId = PLAYLIST::Id::TYPE_VIDEO;
-  else if (MUSIC::IsAudio(item))
-    playlistId = PLAYLIST::Id::TYPE_MUSIC;
-
-  return playlistId;
+    return PLAYLIST::Side::Video;
+  if (MUSIC::IsAudio(item))
+    return PLAYLIST::Side::Audio;
+  return std::nullopt;
 }
 
 int PlayOrQueueMedia(const std::vector<std::string>& params,
@@ -514,6 +505,7 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
   int playOffset = 0;
   bool hasPlayOffset = false;
   bool playNext = true;
+  std::optional<PLAYLIST::Side> namedSide;
   for (unsigned int i = 1 ; i < params.size() ; i++)
   {
     if (StringUtils::EqualsNoCase(params[i], "isdir"))
@@ -545,8 +537,7 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
     else if (StringUtils::StartsWithNoCase(params[i], "playlist_type_hint="))
     {
       // Set the playlist type for the playlist file (e.g. STRM)
-      int playlistTypeHint = std::stoi(params[i].substr(19));
-      item.SetProperty("playlist_type_hint", playlistTypeHint);
+      namedSide = PLAYLIST::SideFromId(static_cast<PLAYLIST::Id>(std::stoi(params[i].substr(19))));
     }
     else if (StringUtils::EqualsNoCase(params[i], "playnext"))
     {
@@ -591,12 +582,12 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
           break;
       }
 
-      PLAYLIST::Id playlistId = containsVideo ? PLAYLIST::Id::TYPE_VIDEO : PLAYLIST::Id::TYPE_MUSIC;
+      PLAYLIST::Side side = containsVideo ? PLAYLIST::Side::Video : PLAYLIST::Side::Audio;
       // Mixed playlist item played by music player, mixed content folder has music removed
       if (containsMusic && containsVideo)
       {
         if (PLAYLIST::IsPlayList(item))
-          playlistId = PLAYLIST::Id::TYPE_MUSIC;
+          side = PLAYLIST::Side::Audio;
         else
         {
           for (int i = items.Size() - 1; i >= 0; i--) //remove music entries
@@ -609,42 +600,34 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
 
       if (!items.IsEmpty())
       {
-        auto& playlistPlayer = CServiceBroker::GetPlaylistPlayer();
+        const auto playLists = PlayLists();
+        PLAYLIST::CPlayList& playList = playLists->GetPlayList(side);
 
         // Play vs. Queue (+Play)
         if (forcePlay)
         {
-          playlistPlayer.ClearPlaylist(playlistId);
-          playlistPlayer.Reset();
-          playlistPlayer.Add(playlistId, items);
-          playlistPlayer.SetCurrentPlaylist(playlistId);
-          playlistPlayer.Play(playOffset, "");
+          playList.Clear();
+          playList.Add(items);
+          playLists->Play(side, hasPlayOffset ? std::optional<int>(playOffset) : std::nullopt);
         }
         else
         {
-          const int oldSize = playlistPlayer.GetPlaylist(playlistId).size();
+          const int oldSize = playList.size();
 
           const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-          if (playNext)
-          {
-            if (appPlayer->IsPlaying())
-              playlistPlayer.Insert(playlistId, items, playlistPlayer.GetCurrentItemIdx() + 1);
-            else
-              playlistPlayer.Add(playlistId, items);
-          }
+          if (playNext && appPlayer->IsPlaying())
+            playList.PlayNext(items);
           else
-          {
-            playlistPlayer.Add(playlistId, items);
-          }
+            playList.Add(items);
 
           if (!appPlayer->IsPlaying())
           {
-            playlistPlayer.SetCurrentPlaylist(playlistId);
+            playLists->SetPlayingSide(side);
 
             if (containsMusic)
             {
               // video does not auto play on queue like music
-              playlistPlayer.Play(hasPlayOffset ? playOffset : oldSize, "");
+              playLists->Play(side, hasPlayOffset ? playOffset : oldSize);
             }
           }
         }
@@ -663,14 +646,16 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
     if ((MUSIC::IsAudio(item) || VIDEO::IsVideo(item)) && !PLAYLIST::IsSmartPlayList(item) &&
         !item.IsPVR())
     {
-      if (!item.HasProperty("playlist_type_hint"))
-        item.SetProperty("playlist_type_hint", static_cast<int>(GetPlayListId(item)));
-
-      CServiceBroker::GetPlaylistPlayer().Play(std::make_shared<CFileItem>(item), "");
+      const auto itemToPlay = std::make_shared<CFileItem>(item);
+      if (const std::optional<PLAYLIST::Side> side = namedSide ? namedSide : GetPlayListSide(item);
+          side)
+        PlayLists()->Play(*side, itemToPlay, "");
+      else
+        PlayLists()->Play(itemToPlay, "");
     }
     else
     {
-      g_application.PlayMedia(item, "", GetPlayListId(item));
+      g_application.PlayMedia(item, "", GetPlayListSide(item));
     }
   }
   else

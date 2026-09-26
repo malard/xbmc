@@ -11,6 +11,7 @@
 #include "playlists/PlayListTypes.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 class CFileItem;
@@ -24,7 +25,7 @@ class CGUIWindow;
 namespace KODI::GUILIB::GUIINFO
 {
 
-std::string GetPlaylistLabel(int item, PLAYLIST::Id playlistid = PLAYLIST::Id::TYPE_NONE);
+std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Side> side = std::nullopt);
 
 CGUIWindow* GetWindow(int contextWindow);
 CGUIControl* GetActiveContainer(int containerId, int contextWindow);

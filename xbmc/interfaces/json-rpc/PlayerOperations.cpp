@@ -14,13 +14,13 @@
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "VideoLibrary.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
@@ -35,6 +35,7 @@
 #include "music/MusicFileItemClassify.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayList.h"
 #include "pvr/PVRManager.h"
 #include "pvr/PVRPlaybackState.h"
 #include "pvr/channels/PVRChannel.h"
@@ -65,6 +66,21 @@ using namespace PVR;
 
 namespace
 {
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+}
+
+CApplicationPlayLists::Repeat ParseRepeat(const CVariant& repeat)
+{
+  const std::string strState = repeat.asString();
+  if (strState == "one")
+    return CApplicationPlayLists::Repeat::One;
+  if (strState == "all")
+    return CApplicationPlayLists::Repeat::All;
+  return CApplicationPlayLists::Repeat::Off;
+}
+
 
 void AppendAudioStreamFlagsAsBooleans(CVariant& list, StreamFlags flags)
 {
@@ -881,12 +897,12 @@ JSONRPC_STATUS CPlayerOperations::Open(const std::string &method, ITransportLaye
     if (playlistid == PLAYLIST::Id::TYPE_MUSIC || playlistid == PLAYLIST::Id::TYPE_VIDEO)
     {
       // Apply the "shuffled" option if available
+      const PLAYLIST::Side side = *PLAYLIST::SideFromId(playlistid);
       if (optionShuffled.isBoolean())
-        CServiceBroker::GetPlaylistPlayer().SetShuffle(playlistid, optionShuffled.asBoolean(), false);
+        PlayLists()->SetShuffle(side, optionShuffled.asBoolean(), false);
       // Apply the "repeat" option if available
       if (!optionRepeat.isNull())
-        CServiceBroker::GetPlaylistPlayer().SetRepeat(playlistid, ParseRepeatState(optionRepeat),
-                                                      false);
+        PlayLists()->SetRepeat(side, ParseRepeat(optionRepeat), false);
     }
 
     int playlistStartPosition = (int)parameterObject["item"]["position"].asInteger();
@@ -1085,7 +1101,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const std::string &method, ITransportLaye
           list.SetProperty("shuffled", optionShuffled);
         // Handle "repeat" option
         if (!optionRepeat.isNull())
-          list.SetProperty("repeat", static_cast<int>(ParseRepeatState(optionRepeat)));
+          list.SetProperty("repeat", static_cast<int>(ParseRepeat(optionRepeat)));
         // Handle "resume" option
         if (list.Size() == 1)
           HandleResumeOption(optionResume, *list[0]);
@@ -1184,7 +1200,7 @@ JSONRPC_STATUS CPlayerOperations::SetShuffle(const std::string &method, ITranspo
         return FailedToExecute;
 
       PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
-      if (CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistid))
+      if (PlayLists()->IsShuffled(*PLAYLIST::SideFromId(playlistid)))
       {
         if ((shuffle.isBoolean() && !shuffle.asBoolean()) ||
             (shuffle.isString() && shuffle.asString() == "toggle"))
@@ -1243,21 +1259,22 @@ JSONRPC_STATUS CPlayerOperations::SetRepeat(const std::string &method, ITranspor
       if (IsPVRChannel())
         return FailedToExecute;
 
-      PLAYLIST::RepeatState repeat = PLAYLIST::RepeatState::NONE;
+      using enum CApplicationPlayLists::Repeat;
+      CApplicationPlayLists::Repeat repeat = Off;
       PLAYLIST::Id playlistid = GetPlaylist(GetPlayer(parameterObject["playerid"]));
       if (parameterObject["repeat"].asString() == "cycle")
       {
-        PLAYLIST::RepeatState repeatPrev =
-            CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistid);
-        if (repeatPrev == PLAYLIST::RepeatState::NONE)
-          repeat = PLAYLIST::RepeatState::ALL;
-        else if (repeatPrev == PLAYLIST::RepeatState::ALL)
-          repeat = PLAYLIST::RepeatState::ONE;
+        const CApplicationPlayLists::Repeat repeatPrev =
+            PlayLists()->GetRepeat(*PLAYLIST::SideFromId(playlistid));
+        if (repeatPrev == Off)
+          repeat = All;
+        else if (repeatPrev == All)
+          repeat = One;
         else
-          repeat = PLAYLIST::RepeatState::NONE;
+          repeat = Off;
       }
       else
-        repeat = ParseRepeatState(parameterObject["repeat"]);
+        repeat = ParseRepeat(parameterObject["repeat"]);
 
       CServiceBroker::GetAppMessenger()->SendMsg(
           TMSG_PLAYLISTPLAYER_REPEAT, static_cast<int>(playlistid), static_cast<int>(repeat));
@@ -1567,7 +1584,7 @@ PlayerType CPlayerOperations::GetPlayer(const CVariant &player)
 
 PLAYLIST::Id CPlayerOperations::GetPlaylist(PlayerType player)
 {
-  PLAYLIST::Id playlistId = CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist();
+  PLAYLIST::Id playlistId = PLAYLIST::IdFromSide(PlayLists()->GetPlayingSide());
   if (playlistId == PLAYLIST::Id::TYPE_NONE) // No active playlist, try guessing
   {
     const auto& components = CServiceBroker::GetAppComponents();
@@ -1821,10 +1838,10 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
       case Video:
       case Audio: /* Return the position of current item if there is an active playlist */
       {
-        if (!IsPVRChannel() &&
-            CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == playlistId)
+        if (const std::optional<PLAYLIST::Side> side = PlayLists()->GetPlayingSide();
+            !IsPVRChannel() && side && side == PLAYLIST::SideFromId(playlistId))
         {
-          result = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+          result = PlayLists()->GetPlayList(*side).GetCurrentPosition();
         }
         else
           result = -1;
@@ -1858,12 +1875,12 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
           break;
         }
 
-        switch (CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))
+        switch (PlayLists()->GetRepeat(*PLAYLIST::SideFromId(playlistId)))
         {
-          case PLAYLIST::RepeatState::ONE:
+          case CApplicationPlayLists::Repeat::One:
             result = "one";
             break;
-          case PLAYLIST::RepeatState::ALL:
+          case CApplicationPlayLists::Repeat::All:
             result = "all";
             break;
           default:
@@ -1891,7 +1908,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
           break;
         }
 
-        result = CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId);
+        result = PlayLists()->IsShuffled(*PLAYLIST::SideFromId(playlistId));
         break;
       }
       case Picture:
@@ -2261,19 +2278,6 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
     return InvalidParams;
 
   return OK;
-}
-
-PLAYLIST::RepeatState CPlayerOperations::ParseRepeatState(const CVariant& repeat)
-{
-  PLAYLIST::RepeatState state = PLAYLIST::RepeatState::NONE;
-  std::string strState = repeat.asString();
-
-  if (strState.compare("one") == 0)
-    state = PLAYLIST::RepeatState::ONE;
-  else if (strState.compare("all") == 0)
-    state = PLAYLIST::RepeatState::ALL;
-
-  return state;
 }
 
 bool CPlayerOperations::IsPVRChannel()

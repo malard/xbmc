@@ -24,6 +24,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -123,10 +124,12 @@ public:
   int  GetMessageMask() override;
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
 
-  bool PlayMedia(CFileItem& item, const std::string& player, KODI::PLAYLIST::Id playlistId);
+  bool PlayMedia(CFileItem& item,
+                 const std::string& player,
+                 std::optional<KODI::PLAYLIST::Side> side);
   bool ProcessAndStartPlaylist(const std::string& strPlayList,
                                KODI::PLAYLIST::CPlayList& playlist,
-                               KODI::PLAYLIST::Id playlistId,
+                               KODI::PLAYLIST::Side side,
                                int track = 0);
   bool PlayFile(CFileItem item, const std::string& player, bool bRestart = false);
   void StopPlaying();
@@ -220,7 +223,6 @@ protected:
   std::string m_prevMedia;
   bool m_bInitializing = true;
 
-  int m_nextPlaylistItem = -1;
   bool m_cancelPlayback{false};
 
   std::chrono::time_point<std::chrono::steady_clock> m_lastRenderTime;

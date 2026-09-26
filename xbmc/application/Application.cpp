@@ -20,7 +20,6 @@
 #include "HDRStatus.h"
 #include "LangInfo.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "SectionLoader.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
@@ -42,6 +41,7 @@
 #include "application/ApplicationActionListeners.h"
 #include "application/ApplicationMessageHandling.h"
 #include "application/ApplicationPlay.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "application/ApplicationSkinHandling.h"
@@ -238,6 +238,7 @@ CApplication::CApplication(void)
   RegisterComponent(std::make_shared<CApplicationSkinHandling>(this, this, m_bInitializing));
   RegisterComponent(std::make_shared<CApplicationVolumeHandling>());
   RegisterComponent(std::make_shared<CApplicationStackHelper>());
+  RegisterComponent(std::make_shared<CApplicationPlayLists>());
 }
 
 CApplication::~CApplication(void)
@@ -292,7 +293,7 @@ bool CApplication::Create()
   // here we register all global classes for the CApplicationMessenger,
   // after that we can send messages to the corresponding modules
   appMessenger->RegisterReceiver(this);
-  appMessenger->RegisterReceiver(&CServiceBroker::GetPlaylistPlayer());
+  appMessenger->RegisterReceiver(GetComponent<CApplicationPlayLists>().get());
   appMessenger->SetGUIThread(CThread::GetCurrentThreadId());
   appMessenger->SetProcessThread(CThread::GetCurrentThreadId());
 
@@ -1151,7 +1152,7 @@ bool CApplication::OnAction(const CAction &action)
       // Asynchronously update song userrating in music library
       MUSIC_UTILS::UpdateSongRatingJob(m_itemCurrentFile, userrating);
 
-      // Tell all windows (e.g. playlistplayer, media windows) to update the fileitem
+      // Tell all windows (e.g. the playlists, media windows) to update the fileitem
       CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_itemCurrentFile);
       CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
     }
@@ -1181,7 +1182,7 @@ bool CApplication::OnAction(const CAction &action)
       // Asynchronously update song userrating in music library
       MUSIC_UTILS::UpdateSongRatingJob(m_itemCurrentFile, m_itemCurrentFile->GetMusicInfoTag()->GetUserrating());
 
-      // send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
+      // send a message to all windows to tell them to update the fileitem (eg the playlists, media windows)
       CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_itemCurrentFile);
       CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
     }
@@ -1216,7 +1217,7 @@ bool CApplication::OnAction(const CAction &action)
                               m_itemCurrentFile->GetVideoInfoTag()->m_type);
         db.Close();
       }
-      // send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
+      // send a message to all windows to tell them to update the fileitem (eg the playlists, media windows)
       CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_itemCurrentFile);
       CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
     }
@@ -1228,7 +1229,7 @@ bool CApplication::OnAction(const CAction &action)
   if (!(action.GetID() == ACTION_PREV_ITEM && appPlayer->CanSeek() &&
         GetTime() > ACTION_PREV_ITEM_THRESHOLD))
   {
-    if (CServiceBroker::GetPlaylistPlayer().OnAction(action))
+    if (GetComponent<CApplicationPlayLists>()->OnAction(action))
       return true;
   }
 
@@ -1491,13 +1492,14 @@ bool CApplication::OnAction(const CAction &action)
   }
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
-    const PLAYLIST::Id playlistId = CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist();
-    if (playlistId == PLAYLIST::Id::TYPE_VIDEO &&
+    const std::optional<PLAYLIST::Side> side =
+        GetComponent<CApplicationPlayLists>()->GetPlayingSide();
+    if (side == PLAYLIST::Side::Video &&
         CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_VIDEO_PLAYLIST)
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
     }
-    else if (playlistId == PLAYLIST::Id::TYPE_MUSIC &&
+    else if (side == PLAYLIST::Side::Audio &&
              CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() !=
                  WINDOW_MUSIC_PLAYLIST)
     {
@@ -1658,8 +1660,9 @@ int CApplication::Run()
   CFileItemList& playlist = CServiceBroker::GetAppParams()->GetPlaylist();
   if (playlist.Size() > 0)
   {
-    CServiceBroker::GetPlaylistPlayer().Add(PLAYLIST::Id::TYPE_MUSIC, playlist);
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_MUSIC);
+    const auto playLists = GetComponent<CApplicationPlayLists>();
+    playLists->GetPlayList(PLAYLIST::Side::Audio).Add(playlist);
+    playLists->SetPlayingSide(PLAYLIST::Side::Audio);
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_PLAY, -1);
   }
 
@@ -1754,7 +1757,7 @@ bool CApplication::Cleanup()
     g_directoryCache.Clear();
     //CServiceBroker::GetInputManager().ClearKeymaps(); //! @todo
     CEventServer::RemoveInstance();
-    CServiceBroker::GetPlaylistPlayer().Clear();
+    GetComponent<CApplicationPlayLists>()->ClearPlayLists();
 
     if (m_ServiceManager)
       m_ServiceManager->DeinitStageTwo();
@@ -1984,7 +1987,9 @@ private:
 };
 } // namespace
 
-bool CApplication::PlayMedia(CFileItem& item, const std::string& player, PLAYLIST::Id playlistId)
+bool CApplication::PlayMedia(CFileItem& item,
+                             const std::string& player,
+                             std::optional<PLAYLIST::Side> side)
 {
   // if the item is a plugin we need to resolve the plugin paths
   if (URIUtils::HasPluginPath(item) && !XFILE::CPluginDirectory::GetResolvedPluginResult(item))
@@ -2001,13 +2006,13 @@ bool CApplication::PlayMedia(CFileItem& item, const std::string& player, PLAYLIS
       smartpl.OpenAndReadName(item.GetURL());
       PLAYLIST::CPlayList playlist;
       playlist.Add(items);
-      PLAYLIST::Id smartplPlaylistId = PLAYLIST::Id::TYPE_VIDEO;
+      PLAYLIST::Side smartplSide = PLAYLIST::Side::Video;
 
       if (smartpl.GetType() == "songs" || smartpl.GetType() == "albums" ||
           smartpl.GetType() == "artists")
-        smartplPlaylistId = PLAYLIST::Id::TYPE_MUSIC;
+        smartplSide = PLAYLIST::Side::Audio;
 
-      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartplPlaylistId);
+      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartplSide);
     }
   }
   else if ((PLAYLIST::IsPlayList(item) && !item.IsGame()) || NETWORK::IsInternetStream(item))
@@ -2035,12 +2040,12 @@ bool CApplication::PlayMedia(CFileItem& item, const std::string& player, PLAYLIS
     if (playlist)
     {
 
-      if (playlistId != PLAYLIST::Id::TYPE_NONE)
+      if (side)
       {
         int track=0;
         if (item.HasProperty("playlist_starting_track"))
           track = (int)item.GetProperty("playlist_starting_track").asInteger();
-        return ProcessAndStartPlaylist(item.GetPath(), *playlist, playlistId, track);
+        return ProcessAndStartPlaylist(item.GetPath(), *playlist, *side, track);
       }
       else
       {
@@ -2083,7 +2088,7 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
   {
     appPlayer->SetPlaySpeed(1);
 
-    m_nextPlaylistItem = -1;
+    GetComponent<CApplicationPlayLists>()->ClearQueued();
     stackHelper->Clear();
 
     if (VIDEO::IsVideo(item))
@@ -2143,7 +2148,7 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
 #endif
 
   if (item.HasPVRChannelInfoTag())
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_NONE);
+    GetComponent<CApplicationPlayLists>()->SetPlayingSide(std::nullopt);
 
   return true;
 }
@@ -2181,7 +2186,7 @@ void CApplication::PlaybackCleanup()
   const auto appPower = GetComponent<CApplicationPowerHandling>();
 
   if (!appPlayer->IsPlayingAudio() &&
-      CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_NONE &&
+      !GetComponent<CApplicationPlayLists>()->GetPlayingSide() &&
       CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VISUALISATION)
   {
     CServiceBroker::GetSettingsComponent()->GetSettings()->Save();  // save vis settings
@@ -2805,41 +2810,32 @@ void CApplication::UpdateCurrentPlayArt()
 
 bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
                                            PLAYLIST::CPlayList& playlist,
-                                           PLAYLIST::Id playlistId,
+                                           PLAYLIST::Side side,
                                            int track)
 {
   CLog::Log(LOGDEBUG, "CApplication::ProcessAndStartPlaylist({}, {})", strPlayList,
-            static_cast<int>(playlistId));
+            side == PLAYLIST::Side::Video ? "video" : "audio");
 
   // initial exit conditions
   // no songs in playlist just return
   if (playlist.size() == 0)
     return false;
 
-  // illegal playlist
-  if (playlistId == PLAYLIST::Id::TYPE_NONE || playlistId == PLAYLIST::Id::TYPE_PICTURE)
-    return false;
-
-  // setup correct playlist
-  CServiceBroker::GetPlaylistPlayer().ClearPlaylist(playlistId);
+  const auto playLists = GetComponent<CApplicationPlayLists>();
+  PLAYLIST::CPlayList& sidePlayList = playLists->GetPlayList(side);
+  sidePlayList.Clear();
 
   // if the playlist contains an internet stream, this file will be used
   // to generate a thumbnail for musicplayer.cover
   m_strPlayListFile = strPlayList;
 
-  // add the items to the playlist player
-  CServiceBroker::GetPlaylistPlayer().Add(playlistId, playlist);
+  sidePlayList.Add(playlist);
 
-  // if we have a playlist
-  if (CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId).size())
-  {
-    // start playing it
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(playlistId);
-    CServiceBroker::GetPlaylistPlayer().Reset();
-    CServiceBroker::GetPlaylistPlayer().Play(track, "");
-    return true;
-  }
-  return false;
+  if (sidePlayList.empty())
+    return false;
+
+  playLists->Play(side, track > 0 ? std::optional<int>(track) : std::nullopt);
+  return true;
 }
 
 bool CApplication::GetRenderGUI() const

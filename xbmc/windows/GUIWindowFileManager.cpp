@@ -11,12 +11,12 @@
 #include "Autorun.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -638,12 +638,13 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
         return;
       }
     }
-    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Id::TYPE_MUSIC);
+    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Side::Audio);
     return;
   }
   if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem))
   {
-    CServiceBroker::GetPlaylistPlayer().Play(std::make_shared<CFileItem>(*pItem), player);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+        std::make_shared<CFileItem>(*pItem), player);
     return;
   }
   if (pItem->IsGame())

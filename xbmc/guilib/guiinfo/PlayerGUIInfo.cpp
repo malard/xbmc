@@ -9,12 +9,12 @@
 #include "guilib/guiinfo/PlayerGUIInfo.h"
 
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationVolumeHandling.h"
 #include "cores/AudioEngine/Utils/AEUtil.h"
@@ -26,6 +26,7 @@
 #include "guilib/guiinfo/GUIInfo.h"
 #include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
+#include "playlists/PlayList.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
@@ -40,6 +41,28 @@
 #include <memory>
 
 using namespace KODI::GUILIB::GUIINFO;
+
+namespace
+{
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+}
+
+// The side a playlist condition names, or the playing side when it names none.
+std::optional<KODI::PLAYLIST::Side> InfoSide(const CGUIInfo& info)
+{
+  using namespace KODI;
+  if (info.GetData2() > 0)
+  {
+    if (const std::optional<PLAYLIST::Side> side =
+            PLAYLIST::SideFromId(PLAYLIST::Id{static_cast<int>(info.GetData1())});
+        side)
+      return side;
+  }
+  return PlayLists()->GetPlayingSide();
+}
+} // namespace
 
 CPlayerGUIInfo::CPlayerGUIInfo()
   : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()),
@@ -393,8 +416,8 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     case PLAYLIST_POSITION:
     case PLAYLIST_RANDOM:
     case PLAYLIST_REPEAT:
-      value = GUIINFO::GetPlaylistLabel(info.GetInfo(),
-                                        PLAYLIST::Id{static_cast<int>(info.GetData1())});
+      value = GUIINFO::GetPlaylistLabel(
+          info.GetInfo(), PLAYLIST::SideFromId(PLAYLIST::Id{static_cast<int>(info.GetData1())}));
       return true;
     default:
       break;
@@ -621,32 +644,20 @@ bool CPlayerGUIInfo::GetBool(bool& value,
     ///////////////////////////////////////////////////////////////////////////////////////////////
     case PLAYLIST_ISRANDOM:
     {
-      const PLAYLIST::CPlayListPlayer& player{CServiceBroker::GetPlaylistPlayer()};
-      const PLAYLIST::Id playlistid{static_cast<int>(info.GetData1())};
-      if (info.GetData2() > 0 && playlistid != PLAYLIST::Id::TYPE_NONE)
-        value = player.IsShuffled(playlistid);
-      else
-        value = player.IsShuffled(player.GetCurrentPlaylist());
+      const std::optional<PLAYLIST::Side> side = InfoSide(info);
+      value = side && PlayLists()->IsShuffled(*side);
       return true;
     }
     case PLAYLIST_ISREPEAT:
     {
-      const PLAYLIST::CPlayListPlayer& player{CServiceBroker::GetPlaylistPlayer()};
-      const PLAYLIST::Id playlistid{static_cast<int>(info.GetData1())};
-      if (info.GetData2() > 0 && playlistid != PLAYLIST::Id::TYPE_NONE)
-        value = (player.GetRepeat(playlistid) == PLAYLIST::RepeatState::ALL);
-      else
-        value = player.GetRepeat(player.GetCurrentPlaylist()) == PLAYLIST::RepeatState::ALL;
+      const std::optional<PLAYLIST::Side> side = InfoSide(info);
+      value = side && PlayLists()->GetRepeat(*side) == CApplicationPlayLists::Repeat::All;
       return true;
     }
     case PLAYLIST_ISREPEATONE:
     {
-      const PLAYLIST::CPlayListPlayer& player{CServiceBroker::GetPlaylistPlayer()};
-      const PLAYLIST::Id playlistid{static_cast<int>(info.GetData1())};
-      if (info.GetData2() > 0 && playlistid != PLAYLIST::Id::TYPE_NONE)
-        value = (player.GetRepeat(playlistid) == PLAYLIST::RepeatState::ONE);
-      else
-        value = player.GetRepeat(player.GetCurrentPlaylist()) == PLAYLIST::RepeatState::ONE;
+      const std::optional<PLAYLIST::Side> side = InfoSide(info);
+      value = side && PlayLists()->GetRepeat(*side) == CApplicationPlayLists::Repeat::One;
       return true;
     }
 
@@ -666,10 +677,11 @@ bool CPlayerGUIInfo::GetBool(bool& value,
       {
         if (item->HasProperty("playlistposition"))
         {
-          value = PLAYLIST::Id{item->GetProperty("playlisttype").asInteger32()} ==
-                      CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() &&
+          const std::optional<PLAYLIST::Side> side = PLAYLIST::SideFromId(
+              PLAYLIST::Id{item->GetProperty("playlisttype").asInteger32()});
+          value = side && side == PlayLists()->GetPlayingSide() &&
                   static_cast<int>(item->GetProperty("playlistposition").asInteger()) ==
-                      CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+                      PlayLists()->GetPlayList(*side).GetCurrentPosition();
           return true;
         }
         else if (item->HasProperty("isplaying"))

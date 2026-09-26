@@ -16,7 +16,7 @@ public:
   explicit CGUIViewStateWindowMusic(const CFileItemList& items) : CGUIViewState(items) {}
 protected:
   std::vector<CMediaSource>& GetSources() override;
-  KODI::PLAYLIST::Id GetPlaylist() const override;
+  std::optional<KODI::PLAYLIST::Side> GetPlayListSide() const override;
   bool AutoPlayNextItem() override;
   std::string GetLockType() override;
   std::string GetExtensions() override;
@@ -78,7 +78,7 @@ public:
 
 protected:
   void SaveViewState() override;
-  KODI::PLAYLIST::Id GetPlaylist() const override;
+  std::optional<KODI::PLAYLIST::Side> GetPlayListSide() const override;
   bool AutoPlayNextItem() override;
   bool HideParentDirItems() override;
   std::vector<CMediaSource>& GetSources() override;

@@ -13,10 +13,10 @@
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogBusy.h"
 #include "filesystem/Directory.h"
@@ -356,13 +356,12 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   CFileItemList queuedItems;
   VIDEO::UTILS::GetItemsForPlayList(itemToQueue, queuedItems, mode);
 
-  auto& playlistPlayer = CServiceBroker::GetPlaylistPlayer();
-  playlistPlayer.ClearPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  playlistPlayer.Reset();
-  playlistPlayer.Add(PLAYLIST::Id::TYPE_VIDEO, queuedItems);
+  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+  PLAYLIST::CPlayList& playList = playLists->GetPlayList(PLAYLIST::Side::Video);
+  playList.Clear();
+  playList.Add(queuedItems);
 
   // figure out where to start playback
-  PLAYLIST::CPlayList& playList = playlistPlayer.GetPlaylist(PLAYLIST::Id::TYPE_VIDEO);
   int pos = 0;
   if (itemToPlay)
   {
@@ -377,14 +376,7 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
     }
   }
 
-  if (playlistPlayer.IsShuffled(PLAYLIST::Id::TYPE_VIDEO))
-  {
-    playList.Swap(0, playList.FindOrder(pos));
-    pos = 0;
-  }
-
-  playlistPlayer.SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  playlistPlayer.Play(pos, player);
+  playLists->Play(PLAYLIST::Side::Video, pos, player);
 }
 
 } // unnamed namespace
@@ -447,10 +439,8 @@ void PlayItem(
     else // mode == PlayMode::PLAY_ONLY_THIS
     {
       // single item, play it
-      auto& playlistPlayer = CServiceBroker::GetPlaylistPlayer();
-      playlistPlayer.Reset();
-      playlistPlayer.SetCurrentPlaylist(PLAYLIST::Id::TYPE_NONE);
-      playlistPlayer.Play(item, player);
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Play(
+          PLAYLIST::Side::Video, item, player);
     }
   }
   else
@@ -472,16 +462,14 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
     item->SetCanQueue(true);
   }
 
-  auto& player = CServiceBroker::GetPlaylistPlayer();
-  const auto& components = CServiceBroker::GetAppComponents();
+  auto& components = CServiceBroker::GetAppComponents();
+  const auto playLists = components.GetComponent<CApplicationPlayLists>();
 
   // Determine the proper list to queue this element
-  PLAYLIST::Id playlistId = player.GetCurrentPlaylist();
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
-    playlistId = components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist();
-
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
-    playlistId = PLAYLIST::Id::TYPE_VIDEO;
+  const PLAYLIST::Side side = playLists->GetPlayingSide().value_or(
+      PLAYLIST::SideFromId(components.GetComponent<CApplicationPlayer>()->GetPreferredPlaylist())
+          .value_or(PLAYLIST::Side::Video));
+  PLAYLIST::CPlayList& playList = playLists->GetPlayList(side);
 
   CFileItemList queuedItems;
   GetItemsForPlayList(item, queuedItems, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
@@ -495,11 +483,11 @@ void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
 
   if (pos == QueuePosition::POSITION_BEGIN &&
       components.GetComponent<CApplicationPlayer>()->IsPlaying())
-    player.Insert(playlistId, queuedItems, player.GetCurrentItemIdx() + 1);
+    playList.PlayNext(queuedItems);
   else
-    player.Add(playlistId, queuedItems);
+    playList.Add(queuedItems);
 
-  player.SetCurrentPlaylist(playlistId);
+  playLists->SetPlayingSide(side);
 
   // Note: video does not auto play on queue like music
 }

@@ -32,7 +32,7 @@ namespace XFILE
       if (!pPlayList->Load(url.Get()))
         return false; //hmmm unable to load playlist?
 
-      PLAYLIST::CPlayList playlist = *pPlayList;
+      const PLAYLIST::CPlayList& playlist = *pPlayList;
       // convert playlist items to songs
       for (int i = 0; i < playlist.size(); ++i)
       {

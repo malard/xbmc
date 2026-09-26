@@ -11,10 +11,10 @@
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
 #include "PartyModeManager.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
 #include "guilib/GUIComponent.h"
@@ -22,6 +22,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
+#include "playlists/PlayList.h"
 #include "playlists/PlayListM3U.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -50,6 +51,27 @@
 #define CONTROL_BTNREPEAT 26
 
 using namespace KODI;
+
+namespace
+{
+std::shared_ptr<CApplicationPlayLists> PlayLists()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
+}
+
+PLAYLIST::CPlayList& VideoPlayList()
+{
+  return PlayLists()->GetPlayList(PLAYLIST::Side::Video);
+}
+
+// The position of the entry playing from the Video playlist, or -1.
+int PlayingPosition()
+{
+  if (PlayLists()->GetPlayingSide() != PLAYLIST::Side::Video)
+    return -1;
+  return VideoPlayList().GetCurrentPosition();
+}
+} // namespace
 
 CGUIWindowVideoPlaylist::CGUIWindowVideoPlaylist()
   : CGUIWindowVideoBase(WINDOW_VIDEO_PLAYLIST, "MyPlaylist.xml")
@@ -124,10 +146,9 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
 
       const auto& components = CServiceBroker::GetAppComponents();
       const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-      if (appPlayer->IsPlayingVideo() &&
-          CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+      if (appPlayer->IsPlayingVideo())
       {
-        int iSong = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+        const int iSong = PlayingPosition();
         if (iSong >= 0 && iSong <= m_vecItems->Size())
           m_viewControl.SetSelectedItem(iSong);
       }
@@ -143,11 +164,10 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
       {
         if (!g_partyModeManager.IsEnabled())
         {
-          CServiceBroker::GetPlaylistPlayer().SetShuffle(
-              PLAYLIST::Id::TYPE_VIDEO,
-              !(CServiceBroker::GetPlaylistPlayer().IsShuffled(PLAYLIST::Id::TYPE_VIDEO)));
+          PlayLists()->SetShuffle(PLAYLIST::Side::Video,
+                                  !PlayLists()->IsShuffled(PLAYLIST::Side::Video));
           CMediaSettings::GetInstance().SetVideoPlaylistShuffled(
-              CServiceBroker::GetPlaylistPlayer().IsShuffled(PLAYLIST::Id::TYPE_VIDEO));
+              PlayLists()->IsShuffled(PLAYLIST::Side::Video));
           CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
           UpdateButtons();
           Refresh();
@@ -163,40 +183,34 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
       }
       else if (iControl == CONTROL_BTNPLAY)
       {
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-        CServiceBroker::GetPlaylistPlayer().Reset();
-        CServiceBroker::GetPlaylistPlayer().Play(m_viewControl.GetSelectedItem(), "");
+        PlayLists()->Play(PLAYLIST::Side::Video, m_viewControl.GetSelectedItem());
         UpdateButtons();
       }
       else if (iControl == CONTROL_BTNNEXT)
       {
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-        CServiceBroker::GetPlaylistPlayer().PlayNext();
+        PlayLists()->SetPlayingSide(PLAYLIST::Side::Video);
+        PlayLists()->PlayNext();
       }
       else if (iControl == CONTROL_BTNPREVIOUS)
       {
-        CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-        CServiceBroker::GetPlaylistPlayer().PlayPrevious();
+        PlayLists()->SetPlayingSide(PLAYLIST::Side::Video);
+        PlayLists()->PlayPrevious();
       }
       else if (iControl == CONTROL_BTNREPEAT)
       {
         // increment repeat state
-        PLAYLIST::RepeatState state =
-            CServiceBroker::GetPlaylistPlayer().GetRepeat(PLAYLIST::Id::TYPE_VIDEO);
-        if (state == PLAYLIST::RepeatState::NONE)
-          CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                        PLAYLIST::RepeatState::ALL);
-        else if (state == PLAYLIST::RepeatState::ALL)
-          CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                        PLAYLIST::RepeatState::ONE);
+        using enum CApplicationPlayLists::Repeat;
+        const CApplicationPlayLists::Repeat state = PlayLists()->GetRepeat(PLAYLIST::Side::Video);
+        if (state == Off)
+          PlayLists()->SetRepeat(PLAYLIST::Side::Video, All);
+        else if (state == All)
+          PlayLists()->SetRepeat(PLAYLIST::Side::Video, One);
         else
-          CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                        PLAYLIST::RepeatState::NONE);
+          PlayLists()->SetRepeat(PLAYLIST::Side::Video, Off);
 
         // save settings
         CMediaSettings::GetInstance().SetVideoPlaylistRepeat(
-            CServiceBroker::GetPlaylistPlayer().GetRepeat(PLAYLIST::Id::TYPE_VIDEO) ==
-            PLAYLIST::RepeatState::ALL);
+            PlayLists()->GetRepeat(PLAYLIST::Side::Video) == All);
         CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 
         UpdateButtons();
@@ -271,31 +285,8 @@ bool CGUIWindowVideoPlaylist::MoveCurrentPlayListItem(int iItem,
   else
     iNew++;
 
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-  // is the currently playing item affected?
-  bool bFixCurrentSong = false;
-  if ((CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO) &&
-      appPlayer->IsPlayingVideo() &&
-      ((CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx() == iSelected) ||
-       (CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx() == iNew)))
-    bFixCurrentSong = true;
-
-  PLAYLIST::CPlayList& playlist =
-      CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  if (playlist.Swap(iSelected, iNew))
+  if (VideoPlayList().Swap(iSelected, iNew))
   {
-    // Correct the current playing song in playlistplayer
-    if (bFixCurrentSong)
-    {
-      int iCurrentSong = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
-      if (iSelected == iCurrentSong)
-        iCurrentSong = iNew;
-      else if (iNew == iCurrentSong)
-        iCurrentSong = iSelected;
-      CServiceBroker::GetPlaylistPlayer().SetCurrentItemIdx(iCurrentSong);
-    }
-
     if (bUpdate)
       Refresh();
     return true;
@@ -307,12 +298,9 @@ bool CGUIWindowVideoPlaylist::MoveCurrentPlayListItem(int iItem,
 void CGUIWindowVideoPlaylist::ClearPlayList()
 {
   ClearFileItems();
-  CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-  if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
-  {
-    CServiceBroker::GetPlaylistPlayer().Reset();
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_NONE);
-  }
+  VideoPlayList().Clear();
+  if (PlayLists()->GetPlayingSide() == PLAYLIST::Side::Video)
+    PlayLists()->SetPlayingSide(std::nullopt);
   m_viewControl.SetItems(*m_vecItems);
   UpdateButtons();
   SET_CONTROL_FOCUS(CONTROL_BTNVIEWASICONS, 0);
@@ -331,8 +319,7 @@ void CGUIWindowVideoPlaylist::UpdateButtons()
 
     const auto& components = CServiceBroker::GetAppComponents();
     const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-    if (appPlayer->IsPlayingVideo() &&
-        CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO)
+    if (appPlayer->IsPlayingVideo() && PlayLists()->GetPlayingSide() == PLAYLIST::Side::Video)
     {
       CONTROL_ENABLE(CONTROL_BTNNEXT);
       CONTROL_ENABLE(CONTROL_BTNPREVIOUS);
@@ -358,16 +345,15 @@ void CGUIWindowVideoPlaylist::UpdateButtons()
 
   // update buttons
   CONTROL_DESELECT(CONTROL_BTNSHUFFLE);
-  if (CServiceBroker::GetPlaylistPlayer().IsShuffled(PLAYLIST::Id::TYPE_VIDEO))
+  if (PlayLists()->IsShuffled(PLAYLIST::Side::Video))
     CONTROL_SELECT(CONTROL_BTNSHUFFLE);
 
   // update repeat button
-  PLAYLIST::RepeatState repState =
-      CServiceBroker::GetPlaylistPlayer().GetRepeat(PLAYLIST::Id::TYPE_VIDEO);
+  const CApplicationPlayLists::Repeat repState = PlayLists()->GetRepeat(PLAYLIST::Side::Video);
   int iLocalizedString;
-  if (repState == PLAYLIST::RepeatState::NONE)
+  if (repState == CApplicationPlayLists::Repeat::Off)
     iLocalizedString = 595; // Repeat: Off
-  else if (repState == PLAYLIST::RepeatState::ONE)
+  else if (repState == CApplicationPlayLists::Repeat::One)
     iLocalizedString = 596; // Repeat: One
   else
     iLocalizedString = 597; // Repeat: All
@@ -394,24 +380,19 @@ public:
 protected:
   bool OnResumeSelected() override
   {
-    auto& playlistPlayer = CServiceBroker::GetPlaylistPlayer();
-    playlistPlayer.SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-
-    const auto playlistItem{playlistPlayer.GetPlaylist(PLAYLIST::Id::TYPE_VIDEO)[m_itemIndex]};
+    const auto playlistItem{VideoPlayList()[m_itemIndex]};
     playlistItem->SetStartOffset(STARTOFFSET_RESUME);
     if (playlistItem->HasVideoInfoTag() && GetItem()->HasVideoInfoTag())
       playlistItem->GetVideoInfoTag()->SetResumePoint(
           GetItem()->GetVideoInfoTag()->GetResumePoint());
 
-    playlistPlayer.Play(m_itemIndex, m_player);
+    PlayLists()->Play(PLAYLIST::Side::Video, m_itemIndex, m_player);
     return true;
   }
 
   bool OnPlaySelected() override
   {
-    auto& playlistPlayer = CServiceBroker::GetPlaylistPlayer();
-    playlistPlayer.SetCurrentPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-    playlistPlayer.Play(m_itemIndex, m_player);
+    PlayLists()->Play(PLAYLIST::Side::Video, m_itemIndex, m_player);
     return true;
   }
 
@@ -445,12 +426,10 @@ void CGUIWindowVideoPlaylist::RemovePlayListItem(int iItem)
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   // The current playing song can't be removed
-  if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_VIDEO &&
-      appPlayer->IsPlayingVideo() &&
-      CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx() == iItem)
+  if (appPlayer->IsPlayingVideo() && PlayingPosition() == iItem)
     return;
 
-  CServiceBroker::GetPlaylistPlayer().Remove(PLAYLIST::Id::TYPE_VIDEO, iItem);
+  VideoPlayList().Remove(iItem);
 
   Refresh();
 
@@ -492,7 +471,7 @@ void CGUIWindowVideoPlaylist::SavePlayList()
 
 void CGUIWindowVideoPlaylist::GetContextButtons(int itemNumber, CContextButtons& buttons)
 {
-  int itemPlaying = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+  const int itemPlaying = PlayingPosition();
   if (m_movingFrom >= 0)
   {
     if (itemNumber != m_movingFrom && (!g_partyModeManager.IsEnabled() || itemNumber > itemPlaying))
@@ -501,7 +480,7 @@ void CGUIWindowVideoPlaylist::GetContextButtons(int itemNumber, CContextButtons&
   }
   else
   {
-    if (itemNumber > (g_partyModeManager.IsEnabled() ? 1 : 0))
+    if (itemNumber > (g_partyModeManager.IsEnabled() ? itemPlaying + 1 : 0))
       buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_UP, 13332);
     if (itemNumber + 1 < m_vecItems->Size())
       buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_DOWN, 13333);
@@ -614,9 +593,9 @@ void CGUIWindowVideoPlaylist::MarkPlaying()
     m_vecItems->Get(i)->Select(false);
 
   // mark the currently playing item
-  if ((CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == TYPE_VIDEO) && (g_application.GetAppPlayer().IsPlayingVideo()))
+  if (g_application.GetAppPlayer().IsPlayingVideo())
   {
-    int iSong = CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+    int iSong = PlayingPosition();
     if (iSong >= 0 && iSong <= m_vecItems->Size())
       m_vecItems->Get(iSong)->Select(true);
   }*/

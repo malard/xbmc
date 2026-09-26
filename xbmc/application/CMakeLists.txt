@@ -6,6 +6,7 @@ set(SOURCES AppEnvironment.cpp
             ApplicationPlay.cpp
             ApplicationPlayer.cpp
             ApplicationPlayerCallback.cpp
+            ApplicationPlayLists.cpp
             ApplicationPowerHandling.cpp
             ApplicationSettingsHandling.cpp
             ApplicationSkinHandling.cpp
@@ -23,6 +24,7 @@ set(HEADERS AppEnvironment.h
             ApplicationPlay.h
             ApplicationPlayer.h
             ApplicationPlayerCallback.h
+            ApplicationPlayLists.h
             ApplicationPowerHandling.h
             ApplicationSettingsHandling.h
             ApplicationSkinHandling.h

@@ -113,7 +113,7 @@ bool CPlayListB4S::LoadData(std::istream& stream)
 
 void CPlayListB4S::Save(const std::string& strFileName) const
 {
-  if (m_vecItems.empty())
+  if (m_entries.empty())
     return;
   std::string strPlaylist = strFileName;
   strPlaylist = CUtil::MakeLegalPath(strPlaylist);
@@ -128,10 +128,10 @@ void CPlayListB4S::Save(const std::string& strFileName) const
                                34, 34, 34);
   write += StringUtils::Format("<WinampXML>\n");
   write += StringUtils::Format("  <playlist num_entries=\"{0}\" label=\"{1}\">\n",
-                               m_vecItems.size(), m_strPlayListName);
-  for (int i = 0; i < (int)m_vecItems.size(); ++i)
+                               m_entries.size(), m_strPlayListName);
+  for (int i = 0; i < (int)m_entries.size(); ++i)
   {
-    const CFileItemPtr item = m_vecItems[i];
+    const CFileItemPtr item = m_entries[i].item;
     write += StringUtils::Format("    <entry Playstring={}file:{}{}>\n", 34, item->GetPath(), 34);
     write += StringUtils::Format("      <Name>{}</Name>\n", item->GetLabel().c_str());
     write +=
