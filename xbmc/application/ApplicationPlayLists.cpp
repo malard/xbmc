@@ -77,14 +77,6 @@ std::string PropertyName(CApplicationPlayLists::PlayerProperty property)
       return "shuffled";
     case Repeat:
       return "repeat";
-    case SubtitleEnabled:
-      return "subtitleenabled";
-    case CurrentSubtitle:
-      return "currentsubtitle";
-    case CurrentAudioStream:
-      return "currentaudiostream";
-    case CurrentVideoStream:
-      return "currentvideostream";
   }
   return {};
 }
@@ -941,27 +933,35 @@ void CApplicationPlayLists::ClearPlayLists()
 
 void CApplicationPlayLists::Announce(PlayerProperty property, const CVariant& value) const
 {
-  Announce(PlayerProperties{{property, value}});
+  CVariant properties(CVariant::VariantTypeObject);
+  properties[PropertyName(property)] = value;
+  OnPlayerPropertiesChanged(properties);
 }
 
-void CApplicationPlayLists::Announce(const PlayerProperties& properties) const
+void CApplicationPlayLists::OnPlayerPropertiesChanged(const CVariant& properties) const
 {
+  const auto announcer = CServiceBroker::GetAnnouncementManager();
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-  if (!appPlayer->IsPlaying())
+  if (!announcer || !appPlayer->IsPlaying())
+  {
     return;
+  }
 
   CVariant data;
-  for (const auto& [property, value] : properties)
+  for (auto it = properties.begin_map(); it != properties.end_map(); ++it)
   {
-    if (!value.isNull())
-      data["property"][PropertyName(property)] = value;
+    if (!it->second.isNull())
+    {
+      data["property"][it->first] = it->second;
+    }
   }
   if (!data.isMember("property"))
+  {
     return;
+  }
 
   data["player"]["playerid"] = GetPlayerId();
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  announcer->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged", data);
 }
 
 void CApplicationPlayLists::Announce(PlayerEvent event,

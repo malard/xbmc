@@ -64,20 +64,14 @@ public:
   };
 
   /*!
-   * \brief A property of what is playing that changed.
+   * \brief A property of how the playlists play that changed.
    */
   enum class PlayerProperty
   {
     PartyMode,
     Shuffled,
-    Repeat,
-    SubtitleEnabled,
-    CurrentSubtitle,
-    CurrentAudioStream,
-    CurrentVideoStream
+    Repeat
   };
-
-  using PlayerProperties = std::vector<std::pair<PlayerProperty, CVariant>>;
 
   /*!
    * \brief A transition of what is playing.
@@ -289,7 +283,12 @@ public:
    * plays.
    */
   void Announce(PlayerProperty property, const CVariant& value) const;
-  void Announce(const PlayerProperties& properties) const;
+
+  /*!
+   * \brief Publish properties the player reports changed, an object keyed by their published
+   * names. Nothing is published while nothing plays.
+   */
+  void OnPlayerPropertiesChanged(const CVariant& properties) const;
 
   /*!
    * \brief Publish a transition of the given item.

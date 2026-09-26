@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 class CFileItem;
+class CVariant;
 class CBookmark;
 
 class IPlayerCallback
@@ -32,6 +33,11 @@ public:
   virtual void OnPlayBackSpeedChanged(int iSpeed) {}
   virtual void OnAVChange() {}
   virtual void OnAVStarted(const CFileItem& file) {}
+  /*!
+   * \brief Properties of what is playing changed, such as the selected streams: an object keyed
+   * by their published names.
+   */
+  virtual void OnPropertiesChanged(const CVariant& properties) {}
   virtual void RequestVideoSettings(const CFileItem& fileItem) {}
   virtual void StoreVideoSettings(const CFileItem& fileItem, const CVideoSettings& vs) {}
 };

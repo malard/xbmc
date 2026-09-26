@@ -33,8 +33,6 @@
 #include "VideoPlayerRadioRDS.h"
 #include "VideoPlayerVideo.h"
 #include "application/Application.h"
-#include "application/ApplicationComponents.h"
-#include "application/ApplicationPlayLists.h"
 #include "cores/DataCacheCore.h"
 #include "cores/EdlEdit.h"
 #include "cores/FFmpeg.h"
@@ -4007,8 +4005,9 @@ void CVideoPlayer::SetSubtitleVisible(bool bVisible)
   m_messenger.Put(
       std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_SET_SUBTITLESTREAM_VISIBLE, bVisible));
   m_processInfo->GetVideoSettingsLocked().SetSubtitleVisible(bVisible);
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
-      CApplicationPlayLists::PlayerProperty::SubtitleEnabled, bVisible);
+  CVariant properties(CVariant::VariantTypeObject);
+  properties["subtitleenabled"] = bVisible;
+  m_callback.OnPropertiesChanged(properties);
 }
 
 void CVideoPlayer::SetEnableStream(CCurrentStream& current, bool isEnabled)
@@ -6367,11 +6366,10 @@ void CVideoPlayer::SetUpdateStreamDetails()
 
 void CVideoPlayer::NotifySubtitleUpdate(int flags)
 {
-  using enum CApplicationPlayLists::PlayerProperty;
-  CApplicationPlayLists::PlayerProperties properties;
+  CVariant properties(CVariant::VariantTypeObject);
   if ((flags & SubtitleChange::FLAG_STATUS_CHANGE) != 0)
   {
-    properties.emplace_back(SubtitleEnabled, m_processInfo->GetVideoSettings().m_SubtitleOn);
+    properties["subtitleenabled"] = m_processInfo->GetVideoSettings().m_SubtitleOn;
   }
   if ((flags & SubtitleChange::FLAG_STREAMINFO_CHANGE) != 0)
   {
@@ -6395,10 +6393,10 @@ void CVideoPlayer::NotifySubtitleUpdate(int flags)
       contentEntry["isimpaired"] = (info.flags & StreamFlags::FLAG_VISUAL_IMPAIRED) != 0;
       contentEntry["language"] = info.language.AsBcp47();
       contentEntry["name"] = info.name;
-      properties.emplace_back(CurrentSubtitle, contentEntry);
+      properties["currentsubtitle"] = contentEntry;
     }
   }
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(properties);
+  m_callback.OnPropertiesChanged(properties);
 }
 
 void CVideoPlayer::NotifyAudioUpdate()
@@ -6418,8 +6416,9 @@ void CVideoPlayer::NotifyAudioUpdate()
   contentEntry["isoriginal"] = (info.flags & StreamFlags::FLAG_ORIGINAL) != 0;
   contentEntry["language"] = info.language.AsBcp47();
   contentEntry["name"] = info.name;
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
-      CApplicationPlayLists::PlayerProperty::CurrentAudioStream, contentEntry);
+  CVariant properties(CVariant::VariantTypeObject);
+  properties["currentaudiostream"] = contentEntry;
+  m_callback.OnPropertiesChanged(properties);
 }
 
 void CVideoPlayer::NotifyVideoUpdate()
@@ -6436,6 +6435,7 @@ void CVideoPlayer::NotifyVideoUpdate()
   contentEntry["width"] = info.width;
   contentEntry["language"] = info.language.AsBcp47();
   contentEntry["name"] = info.name;
-  CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->Announce(
-      CApplicationPlayLists::PlayerProperty::CurrentVideoStream, contentEntry);
+  CVariant properties(CVariant::VariantTypeObject);
+  properties["currentvideostream"] = contentEntry;
+  m_callback.OnPropertiesChanged(properties);
 }

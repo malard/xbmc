@@ -14,6 +14,7 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationStackHelper.h"
 #ifdef HAVE_LIBBLURAY
@@ -504,6 +505,13 @@ void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVSTARTED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
+}
+
+void CApplicationPlayerCallback::OnPropertiesChanged(const CVariant& properties)
+{
+  CServiceBroker::GetAppComponents()
+      .GetComponent<CApplicationPlayLists>()
+      ->OnPlayerPropertiesChanged(properties);
 }
 
 void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
