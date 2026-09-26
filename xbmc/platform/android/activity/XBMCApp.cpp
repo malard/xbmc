@@ -12,7 +12,6 @@
 #include "CompileInfo.h"
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
 #include "utils/Mime.h"
 // Audio Engine includes for Factory and interfaces
@@ -1432,23 +1431,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         }
 
         auto list = std::make_unique<CFileItemList>();
-
-        std::unique_ptr<KODI::PLAYLIST::CPlayList> playlist(
-            KODI::PLAYLIST::CPlayListFactory::Create(*item));
-
-        if (playlist && playlist->Load(item->GetPath()))
-        {
-          for (int i = 0; i < playlist->size(); i++)
-          {
-            list->Add((*playlist)[i]);
-          }
-        }
-        else
-        {
-          // Fallback: If playlist parsing fails, append the original item
-          // to prevent sending an empty list to TMSG_MEDIA_PLAY
-          list->Add(std::make_shared<CFileItem>(*item));
-        }
+        list->Add(std::move(item));
 
         CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1,
                                                    static_cast<void*>(list.release()));

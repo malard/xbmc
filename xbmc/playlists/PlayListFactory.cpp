@@ -121,6 +121,21 @@ CPlayList* CPlayListFactory::Create(const CFileItem& item)
 
 }
 
+std::unique_ptr<CPlayList> CPlayListFactory::Load(const CFileItem& item)
+{
+  std::unique_ptr<CPlayList> playlist(Create(item));
+  if (!playlist || !playlist->Load(item.GetPath()))
+  {
+    return nullptr;
+  }
+  return playlist;
+}
+
+std::unique_ptr<CPlayList> CPlayListFactory::Load(const std::string& filename)
+{
+  return Load(CFileItem(filename, false));
+}
+
 bool CPlayListFactory::IsPlaylist(const CFileItem& item)
 {
   std::string strMimeType = item.GetMimeType();

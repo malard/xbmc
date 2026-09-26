@@ -191,6 +191,28 @@ public:
             bool replace = false);
 
   /*!
+   * \brief Replace the playlist's contents with what a playlist file or smart playlist holds, and
+   * play it.
+   * \param path Where the items were read from; see GetPlayingSourcePath().
+   * \param position As for Play(type, position, ...).
+   */
+  bool PlaySource(KODI::PLAYLIST::Type type,
+                  const std::string& path,
+                  const KODI::PLAYLIST::CPlayList& items,
+                  std::optional<int> position = std::nullopt,
+                  const std::string& player = "");
+  bool PlaySource(KODI::PLAYLIST::Type type,
+                  const std::string& path,
+                  const CFileItemList& items,
+                  std::optional<int> position = std::nullopt,
+                  const std::string& player = "");
+
+  /*!
+   * \return The playlist file or smart playlist that the playing playlist was read from, or empty.
+   */
+  std::string GetPlayingSourcePath() const;
+
+  /*!
    * \brief Add items to a playlist without starting it.
    * \param playNext Play them next if the playlist is playing, rather than after the rest.
    * \return The position of the first of them, or -1 if there were none.

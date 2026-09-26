@@ -111,7 +111,7 @@ bool CGUIWindowVideoBase::OnAction(const CAction &action)
   else if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (playLists->IsPlaying(PLAYLIST::Video) || !playLists->GetPlayList(PLAYLIST::Video).empty())
+    if (playLists->IsPlaying(PLAYLIST::Video) || !playLists->GetPlayList(PLAYLIST::Video).IsEmpty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
       return true;
@@ -1071,20 +1071,15 @@ void CGUIWindowVideoBase::LoadPlayList(const std::string& strPlayList,
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
 
-  // load a playlist like .m3u, .pls
-  // first get correct factory to load playlist
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (pPlayList)
+  const auto playList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!playList)
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return;
   }
 
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, type))
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+          type, strPlayList, *playList))
   {
     if (m_guiState)
       m_guiState->SetPlaylistDirectory("playlistvideo://");

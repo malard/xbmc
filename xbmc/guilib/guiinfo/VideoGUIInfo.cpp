@@ -12,7 +12,6 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
-#include "application/Application.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
@@ -143,7 +142,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 
     // find a thumb for this stream
     const std::string playlistFile =
-        NETWORK::IsInternetStream(*item) ? g_application.m_strPlayListFile : std::string{};
+        NETWORK::IsInternetStream(*item) ? m_playLists->GetPlayingSourcePath() : std::string{};
     if (!playlistFile.empty())
       CLog::Log(LOGDEBUG, "Streaming media detected... using {} to find a thumb",
                 CURL::GetRedacted(playlistFile));
@@ -689,14 +688,15 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
     case VIDEOPLAYER_PLAYLISTLEN:
       if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_LENGTH);
+        value = std::to_string(m_playLists->GetPlayList(PLAYLIST::Video).size());
         return true;
       }
       break;
     case VIDEOPLAYER_PLAYLISTPOS:
       if (m_playLists->IsPlaying(PLAYLIST::Video))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_POSITION);
+        const int position = m_playLists->GetPlayingPosition(PLAYLIST::Video);
+        value = position < 0 ? std::string{} : std::to_string(position + 1);
         return true;
       }
       break;
@@ -813,7 +813,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
   const PLAYLIST::CPlayList& playlist = m_playLists->GetPlayList(PLAYLIST::Video);
-  if (playlist.empty())
+  if (playlist.IsEmpty())
     return false;
 
   int index = info.GetData2();

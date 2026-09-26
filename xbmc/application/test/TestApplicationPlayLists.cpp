@@ -37,8 +37,8 @@ void FillVideo(CApplicationPlayLists& playLists)
 TEST(TestApplicationPlayLists, BothPlayListsAlwaysExist)
 {
   CApplicationPlayLists playLists;
-  EXPECT_TRUE(playLists.GetPlayList(PLAYLIST::Video).empty());
-  EXPECT_TRUE(playLists.GetPlayList(PLAYLIST::Audio).empty());
+  EXPECT_TRUE(playLists.GetPlayList(PLAYLIST::Video).IsEmpty());
+  EXPECT_TRUE(playLists.GetPlayList(PLAYLIST::Audio).IsEmpty());
   EXPECT_NE(&playLists.GetPlayList(PLAYLIST::Video), &playLists.GetPlayList(PLAYLIST::Audio));
 }
 

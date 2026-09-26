@@ -60,11 +60,6 @@ namespace MEDIA_DETECT
   class CAutorun;
 }
 
-namespace KODI::PLAYLIST
-{
-  class CPlayList;
-}
-
 namespace ActiveAE
 {
   class CActiveAE;
@@ -125,16 +120,12 @@ public:
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
 
   /*!
-   * \param type The playlist the item plays on; with none, the item, or a playlist file's
-   * contents, choose.
+   * \param type The playlist the item plays on; with none, the item, a smart playlist or a
+   * playlist file's contents choose.
    */
   bool PlayMedia(CFileItem& item,
                  const std::string& player,
                  std::optional<KODI::PLAYLIST::Type> type);
-  bool ProcessAndStartPlaylist(const std::string& strPlayList,
-                               KODI::PLAYLIST::CPlayList& playlist,
-                               KODI::PLAYLIST::Type type,
-                               int track = 0);
   bool PlayFile(CFileItem item, const std::string& player, bool bRestart = false);
   void StopPlaying();
   void Restart(bool bSamePosition = true);
@@ -180,8 +171,6 @@ public:
 #ifdef HAS_OPTICAL_DRIVE
   std::unique_ptr<MEDIA_DETECT::CAutorun> m_Autorun;
 #endif
-
-  std::string m_strPlayListFile;
 
   bool IsAppFocused() const { return m_AppFocused; }
 

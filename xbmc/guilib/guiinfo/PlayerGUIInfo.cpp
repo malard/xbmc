@@ -44,7 +44,7 @@ using namespace KODI::GUILIB::GUIINFO;
 
 namespace
 {
-// The playlist a condition names, or the playing one when it names none.
+// The playlist an info names, or the playing one when it names none.
 std::optional<KODI::PLAYLIST::Type> InfoType(const CApplicationPlayLists& playLists,
                                              const CGUIInfo& info)
 {
@@ -57,6 +57,21 @@ std::optional<KODI::PLAYLIST::Type> InfoType(const CApplicationPlayLists& playLi
       return type;
   }
   return playLists.GetPlayingType();
+}
+
+uint32_t RepeatLabel(CApplicationPlayLists::Repeat repeat)
+{
+  using enum CApplicationPlayLists::Repeat;
+  switch (repeat)
+  {
+    case One:
+      return 592;
+    case All:
+      return 593;
+    case Off:
+      break;
+  }
+  return 594;
 }
 } // namespace
 
@@ -410,12 +425,32 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     // PLAYLIST_*
     ///////////////////////////////////////////////////////////////////////////////////////////////
     case PLAYLIST_LENGTH:
-    case PLAYLIST_POSITION:
-    case PLAYLIST_RANDOM:
-    case PLAYLIST_REPEAT:
-      value = GUIINFO::GetPlaylistLabel(
-          info.GetInfo(), PLAYLIST::TypeFromId(PLAYLIST::Id{static_cast<int>(info.GetData1())}));
+    {
+      const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
+      value = std::to_string(type ? m_playLists->GetPlayList(*type).size() : 0);
       return true;
+    }
+    case PLAYLIST_POSITION:
+    {
+      const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
+      const int position = type ? m_playLists->GetPlayingPosition(*type) : -1;
+      value = position < 0 ? std::string{} : std::to_string(position + 1);
+      return true;
+    }
+    case PLAYLIST_RANDOM:
+    {
+      const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
+      value = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+          type && m_playLists->IsShuffled(*type) ? 16041 : 591); // On, Off
+      return true;
+    }
+    case PLAYLIST_REPEAT:
+    {
+      const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
+      value = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+          RepeatLabel(type ? m_playLists->GetRepeat(*type) : CApplicationPlayLists::Repeat::Off));
+      return true;
+    }
     default:
       break;
   }
@@ -689,16 +724,10 @@ bool CPlayerGUIInfo::GetBool(bool& value,
         }
         else if (m_currentItem && !m_currentItem->GetPath().empty())
         {
-          if (!g_application.m_strPlayListFile.empty())
-          {
-            //playlist file that is currently playing or the playlistitem that is currently playing.
-            value =
-                item->IsPath(g_application.m_strPlayListFile) || m_currentItem->IsSamePath(item);
-          }
-          else
-          {
-            value = m_currentItem->IsSamePath(item);
-          }
+          // the playing entry, or the playlist file it came from
+          const std::string sourcePath = m_playLists->GetPlayingSourcePath();
+          value =
+              m_currentItem->IsSamePath(item) || (!sourcePath.empty() && item->IsPath(sourcePath));
           return true;
         }
       }

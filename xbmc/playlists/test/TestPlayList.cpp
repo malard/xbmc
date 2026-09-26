@@ -78,6 +78,15 @@ TEST_F(TestPlayList, EntryIdsAreNeverReused)
   EXPECT_NE(added, m_playList.Add(Item("f")));
 }
 
+TEST_F(TestPlayList, TheSourcePathGoesWithTheEntries)
+{
+  m_playList.SetSourcePath("/media/list.m3u");
+  EXPECT_EQ("/media/list.m3u", m_playList.GetSourcePath());
+
+  m_playList.Clear();
+  EXPECT_EQ("", m_playList.GetSourcePath());
+}
+
 TEST_F(TestPlayList, TwoCopiesOfOneItemAreTwoEntries)
 {
   const auto item = Item("e");

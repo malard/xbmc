@@ -181,6 +181,7 @@ void CPlayList::Clear()
     m_requests.clear();
     m_shuffle->Reset({}, NO_ENTRY);
     m_strPlayListName.clear();
+    m_sourcePath.clear();
   }
   Notify(changes);
 }
@@ -521,6 +522,18 @@ std::string CPlayList::GetName() const
   return m_strPlayListName;
 }
 
+void CPlayList::SetSourcePath(const std::string& path)
+{
+  std::unique_lock lock(m_critSection);
+  m_sourcePath = path;
+}
+
+std::string CPlayList::GetSourcePath() const
+{
+  std::unique_lock lock(m_critSection);
+  return m_sourcePath;
+}
+
 void CPlayList::Remove(const std::string& strFileName)
 {
   Changes changes;
@@ -681,7 +694,7 @@ bool CPlayList::Expand(int position)
       (*playlist)[i]->SetProperty("BasePath", playlist->m_strBasePath);
   }
 
-  if (playlist->empty())
+  if (playlist->IsEmpty())
     return false;
 
   Changes changes;

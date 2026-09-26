@@ -544,7 +544,7 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
   }
 
   const PLAYLIST::CPlayList& playlist = *pPlayList;
-  if (!playlist.empty())
+  if (!playlist.IsEmpty())
   {
     //! @todo this should be reactive, based on a given event app player should stop the playback
     const auto& components = CServiceBroker::GetAppComponents();

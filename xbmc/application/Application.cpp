@@ -1492,18 +1492,15 @@ bool CApplication::OnAction(const CAction &action)
   }
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
-    const std::optional<PLAYLIST::Type> type =
-        GetComponent<CApplicationPlayLists>()->GetPlayingType();
-    if (type == PLAYLIST::Video &&
-        CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_VIDEO_PLAYLIST)
+    if (const std::optional<PLAYLIST::Type> type =
+            GetComponent<CApplicationPlayLists>()->GetPlayingType())
     {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
-    }
-    else if (type == PLAYLIST::Audio &&
-             CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() !=
-                 WINDOW_MUSIC_PLAYLIST)
-    {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
+      const int window = *type == PLAYLIST::Video ? WINDOW_VIDEO_PLAYLIST : WINDOW_MUSIC_PLAYLIST;
+      CGUIWindowManager& windowManager = CServiceBroker::GetGUI()->GetWindowManager();
+      if (windowManager.GetActiveWindow() != window)
+      {
+        windowManager.ActivateWindow(window);
+      }
     }
     return true;
   }
@@ -1657,13 +1654,12 @@ int CApplication::Run()
   std::chrono::milliseconds frameTime;
   const unsigned int noRenderFrameTime = 15; // Simulates ~66fps
 
-  CFileItemList& playlist = CServiceBroker::GetAppParams()->GetPlaylist();
-  if (playlist.Size() > 0)
+  if (const CFileItemList& playlist = CServiceBroker::GetAppParams()->GetPlaylist();
+      !playlist.IsEmpty())
   {
-    const auto playLists = GetComponent<CApplicationPlayLists>();
-    playLists->GetPlayList(PLAYLIST::Audio).Add(playlist);
-    playLists->SetPlayingType(PLAYLIST::Audio);
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_PLAY, -1);
+    auto* items = new CFileItemList;
+    items->Copy(playlist);
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1, static_cast<void*>(items));
   }
 
   // Run the app
@@ -1971,15 +1967,7 @@ public:
   {
   }
 
-  void Run() override
-  {
-    std::unique_ptr<PLAYLIST::CPlayList> playlist(PLAYLIST::CPlayListFactory::Create(m_item));
-    if (playlist)
-    {
-      if (playlist->Load(m_item.GetPath()))
-        m_playlist = std::move(playlist);
-    }
-  }
+  void Run() override { m_playlist = PLAYLIST::CPlayListFactory::Load(m_item); }
 
 private:
   const CFileItem& m_item;
@@ -1995,19 +1983,21 @@ bool CApplication::PlayMedia(CFileItem& item,
   if (URIUtils::HasPluginPath(item) && !XFILE::CPluginDirectory::GetResolvedPluginResult(item))
     return false;
 
+  const auto playLists = GetComponent<CApplicationPlayLists>();
+
   if (PLAYLIST::IsSmartPlayList(item))
   {
     CFileItemList items;
     CUtil::GetRecursiveListing(item.GetPath(), items, "", DIR_FLAG_NO_FILE_DIRS);
-    if (items.Size())
+    if (items.IsEmpty())
     {
-      PLAYLIST::CSmartPlaylist smartpl;
-      //get name and type of smartplaylist, this will always succeed as GetDirectory also did this.
-      smartpl.OpenAndReadName(item.GetURL());
-      PLAYLIST::CPlayList playlist;
-      playlist.Add(items);
-      return ProcessAndStartPlaylist(smartpl.GetName(), playlist, smartpl.GetPlayListType());
+      return false;
     }
+
+    PLAYLIST::CSmartPlaylist smartPlayList;
+    smartPlayList.OpenAndReadName(item.GetURL());
+    return playLists->PlaySource(type.value_or(smartPlayList.GetPlayListType()), item.GetPath(),
+                                 items, std::nullopt, player);
   }
   else if ((PLAYLIST::IsPlayList(item) && !item.IsGame()) || NETWORK::IsInternetStream(item))
   {
@@ -2034,9 +2024,9 @@ bool CApplication::PlayMedia(CFileItem& item,
     if (playlist)
     {
       const int track = static_cast<int>(item.GetProperty("playlist_starting_track").asInteger(0));
-      return ProcessAndStartPlaylist(item.GetPath(), *playlist,
-                                     type.value_or(CApplicationPlayLists::ChooseType(*playlist)),
-                                     track);
+      return playLists->PlaySource(type.value_or(CApplicationPlayLists::ChooseType(*playlist)),
+                                   item.GetPath(), *playlist,
+                                   track > 0 ? std::optional<int>(track) : std::nullopt, player);
     }
   }
   else if (item.IsPVR())
@@ -2052,14 +2042,13 @@ bool CApplication::PlayMedia(CFileItem& item,
                                                OnlyEnabled::CHOICE_YES))
     {
       const auto addonItem = std::make_shared<CFileItem>(addon);
-      return GetComponent<CApplicationPlayLists>()->Play(
-          type.value_or(CApplicationPlayLists::ChooseType(*addonItem)), addonItem, player);
+      return playLists->Play(type.value_or(CApplicationPlayLists::ChooseType(*addonItem)),
+                             addonItem, player);
     }
   }
 
-  return GetComponent<CApplicationPlayLists>()->Play(
-      type.value_or(CApplicationPlayLists::ChooseType(item)), std::make_shared<CFileItem>(item),
-      player);
+  return playLists->Play(type.value_or(CApplicationPlayLists::ChooseType(item)),
+                         std::make_shared<CFileItem>(item), player);
 }
 
 bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRestart /* = false */)
@@ -2785,33 +2774,6 @@ void CApplication::UpdateCurrentPlayArt()
   loader.LoadItem(m_itemCurrentFile.get());
   // Mirror changes to GUI item
   CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*m_itemCurrentFile);
-}
-
-bool CApplication::ProcessAndStartPlaylist(const std::string& strPlayList,
-                                           PLAYLIST::CPlayList& playlist,
-                                           PLAYLIST::Type type,
-                                           int track)
-{
-  CLog::Log(LOGDEBUG, "CApplication::ProcessAndStartPlaylist({}, {})", strPlayList, type);
-
-  if (playlist.empty())
-    return false;
-
-  const auto playLists = GetComponent<CApplicationPlayLists>();
-  PLAYLIST::CPlayList& target = playLists->GetPlayList(type);
-  target.Clear();
-
-  // if the playlist contains an internet stream, this file will be used
-  // to generate a thumbnail for musicplayer.cover
-  m_strPlayListFile = strPlayList;
-
-  target.Add(playlist);
-
-  if (target.empty())
-    return false;
-
-  playLists->Play(type, track > 0 ? std::optional<int>(track) : std::nullopt);
-  return true;
 }
 
 bool CApplication::GetRenderGUI() const

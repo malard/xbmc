@@ -628,17 +628,14 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
   // start playlists from file manager
   if (PLAYLIST::IsPlayList(*pItem))
   {
-    const std::string& strPlayList = pItem->GetPath();
-    std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-    if (nullptr != pPlayList)
+    const auto playList = PLAYLIST::CPlayListFactory::Load(*pItem);
+    if (!playList)
     {
-      if (!pPlayList->Load(strPlayList))
-      {
-        HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-        return;
-      }
+      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+      return;
     }
-    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Audio);
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+        CApplicationPlayLists::ChooseType(*playList), pItem->GetPath(), *playList);
     return;
   }
   if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem))

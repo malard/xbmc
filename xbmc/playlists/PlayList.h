@@ -89,13 +89,21 @@ public:
   EntryId Insert(const std::shared_ptr<CFileItem>& item, int iPosition = -1);
 
   std::string GetName() const;
+
+  /*!
+   * \brief The playlist file or smart playlist the entries were read from, if any. Cleared with
+   * the entries.
+   */
+  void SetSourcePath(const std::string& path);
+  std::string GetSourcePath() const;
+
   void Remove(const std::string& strFileName);
   void Remove(int position);
   bool Swap(int position1, int position2);
   bool Expand(int position); // expands any playlist at position into this playlist
   void Clear();
   int size() const;
-  bool empty() const { return size() == 0; }
+  bool IsEmpty() const { return size() == 0; }
   int RemoveDVDItems();
 
   std::shared_ptr<CFileItem> operator[](int iItem) const;
@@ -216,6 +224,7 @@ private:
   EntryId m_lastId{NO_ENTRY};
   EntryId m_current{NO_ENTRY};
   Wrap m_wrap{Wrap::None()};
+  std::string m_sourcePath;
   std::deque<Request> m_requests;
   std::unique_ptr<IPlayListShuffle> m_shuffle;
   bool m_shuffled{false};

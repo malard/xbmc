@@ -13,7 +13,6 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
-#include "application/Application.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
@@ -63,11 +62,10 @@ bool CMusicGUIInfo::InitCurrentItem(CFileItem* item)
     // find a thumb for this file.
     if (NETWORK::IsInternetStream(*item) && !MUSIC::IsMusicDb(*item))
     {
-      if (!g_application.m_strPlayListFile.empty())
+      if (const std::string sourcePath = m_playLists->GetPlayingSourcePath(); !sourcePath.empty())
       {
-        CLog::Log(LOGDEBUG, "Streaming media detected... using {} to find a thumb",
-                  g_application.m_strPlayListFile);
-        CFileItem streamingItem(g_application.m_strPlayListFile, false);
+        CLog::Log(LOGDEBUG, "Streaming media detected... using {} to find a thumb", sourcePath);
+        CFileItem streamingItem(sourcePath, false);
 
         CMusicThumbLoader loader;
         loader.FillThumb(streamingItem);
@@ -462,14 +460,15 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
     case MUSICPLAYER_PLAYLISTLEN:
       if (m_playLists->IsPlaying(PLAYLIST::Audio))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_LENGTH);
+        value = std::to_string(m_playLists->GetPlayList(PLAYLIST::Audio).size());
         return true;
       }
       break;
     case MUSICPLAYER_PLAYLISTPOS:
       if (m_playLists->IsPlaying(PLAYLIST::Audio))
       {
-        value = GUIINFO::GetPlaylistLabel(PLAYLIST_POSITION);
+        const int position = m_playLists->GetPlayingPosition(PLAYLIST::Audio);
+        value = position < 0 ? std::string{} : std::to_string(position + 1);
         return true;
       }
       break;
@@ -584,7 +583,7 @@ bool CMusicGUIInfo::GetPartyModeLabel(std::string& value, const CGUIInfo& info) 
 bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
   const PLAYLIST::CPlayList& playlist = m_playLists->GetPlayList(PLAYLIST::Audio);
-  if (playlist.empty())
+  if (playlist.IsEmpty())
     return false;
 
   int index = info.GetData2();

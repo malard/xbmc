@@ -263,7 +263,7 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
   if (action.GetID() == ACTION_SHOW_PLAYLIST)
   {
     const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-    if (playLists->IsPlaying(PLAYLIST::Audio) || !playLists->GetPlayList(PLAYLIST::Audio).empty())
+    if (playLists->IsPlaying(PLAYLIST::Audio) || !playLists->GetPlayList(PLAYLIST::Audio).IsEmpty())
     {
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
       return true;
@@ -678,21 +678,16 @@ void CGUIWindowMusicBase::LoadPlayList(const std::string& strPlayList)
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
 
-  // load a playlist like .m3u, .pls
-  // first get correct factory to load playlist
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (pPlayList)
+  const auto playList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!playList)
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return;
   }
 
-  int iSize = pPlayList->size();
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Audio))
+  const int iSize = playList->size();
+  if (CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>()->PlaySource(
+          PLAYLIST::Audio, strPlayList, *playList))
   {
     if (m_guiState)
       m_guiState->SetPlaylistDirectory("playlistmusic://");

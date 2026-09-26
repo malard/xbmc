@@ -32,6 +32,7 @@
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayList.h"
+#include "playlists/PlayListFactory.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "pvr/channels/PVRChannel.h"
 #include "resources/LocalizeStrings.h"
@@ -170,7 +171,6 @@ void CApplicationPlayLists::OnPlayListChanged(Type type, const std::vector<PlayL
           announcer->Announce(ANNOUNCEMENT::Playlist, "OnRemove", data);
         break;
       case PlayListChange::Type::Cleared:
-        g_application.m_strPlayListFile.clear();
         if (announcer)
           announcer->Announce(ANNOUNCEMENT::Playlist, "OnClear", data);
         break;
@@ -438,7 +438,7 @@ bool CApplicationPlayLists::Play(Type type,
   }
 
   CPlayList& playList = GetPlayList(type);
-  if (playList.empty())
+  if (playList.IsEmpty())
     return false;
 
   EntryId entry;
@@ -464,6 +464,44 @@ bool CApplicationPlayLists::Play(Type type,
   GetPlayList(type).Clear();
   GetPlayList(type).Add(items);
   return Play(type, position, player);
+}
+
+bool CApplicationPlayLists::PlaySource(Type type,
+                                       const std::string& path,
+                                       const CPlayList& items,
+                                       std::optional<int> position /* = std::nullopt */,
+                                       const std::string& player /* = "" */)
+{
+  CLog::Log(LOGDEBUG, "Playlist: playing {} on {}", CURL::GetRedacted(path), type);
+  CPlayList& playList = GetPlayList(type);
+  playList.Clear();
+  playList.Add(items);
+  playList.SetSourcePath(path);
+  return Play(type, position, player);
+}
+
+bool CApplicationPlayLists::PlaySource(Type type,
+                                       const std::string& path,
+                                       const CFileItemList& items,
+                                       std::optional<int> position /* = std::nullopt */,
+                                       const std::string& player /* = "" */)
+{
+  CLog::Log(LOGDEBUG, "Playlist: playing {} on {}", CURL::GetRedacted(path), type);
+  CPlayList& playList = GetPlayList(type);
+  playList.Clear();
+  playList.Add(items);
+  playList.SetSourcePath(path);
+  return Play(type, position, player);
+}
+
+std::string CApplicationPlayLists::GetPlayingSourcePath() const
+{
+  const std::optional<Type> type = GetPlayingType();
+  if (!type)
+  {
+    return {};
+  }
+  return GetPlayList(*type).GetSourcePath();
 }
 
 int CApplicationPlayLists::Queue(Type type, const CFileItemList& items, bool playNext)
@@ -914,7 +952,7 @@ void CApplicationPlayLists::OnApplicationMessage(ThreadMessage* pMsg)
       else
       {
         const CPlayList& playList = GetPlayList(*type);
-        if (!playList.empty())
+        if (!playList.IsEmpty())
         {
           const int position = std::clamp(pMsg->param1, 0, playList.size() - 1);
           PlayEntry(*type, playList.GetEntryId(position), "", false, false);
@@ -973,50 +1011,71 @@ void CApplicationPlayLists::OnMediaPlay(ThreadMessage* pMsg)
   if (pMsg->lpVoid)
   {
     const std::unique_ptr<CFileItemList> list{static_cast<CFileItemList*>(pMsg->lpVoid)};
-    if (list->Size() <= 0)
-      return;
-
-    const Type type = ChooseType(*list);
-
-    GetPlayList(type).Clear();
-    SetPlayingType(type);
-    if (list->Size() == 1 && !PLAYLIST::IsPlayList(*list->Get(0)))
+    if (list->IsEmpty())
     {
-      const std::shared_ptr<CFileItem> item = (*list)[0];
-      // if the item is a plugin we need to resolve the URL to ensure the infotags are filled.
-      if (URIUtils::HasPluginPath(*item) &&
-          !XFILE::CPluginDirectory::GetResolvedPluginResult(*item))
+      return;
+    }
+
+    const auto applyOptions = [this, &list](Type type)
+    {
+      if (list->HasProperty("shuffled") && list->GetProperty("shuffled").isBoolean())
       {
-        return;
+        SetShuffle(type, list->GetProperty("shuffled").asBoolean(), false);
       }
-      const bool isVideo{VIDEO::IsVideo(*item)};
-      const bool isAudio{MUSIC::IsAudio(*item)};
-      if (isAudio || isVideo)
+      if (list->HasProperty("repeat") && list->GetProperty("repeat").isInteger())
       {
-        if ((isVideo && !g_passwordManager.IsVideoUnlocked()) ||
-            (isAudio && !g_passwordManager.IsMusicUnlocked()))
-        {
-          CLog::LogF(LOGERROR, "MasterCode or MediaSource-code is wrong: {} will not be played.",
-                     item->GetPath());
-          return;
-        }
-        Play(type, item, pMsg->strParam);
+        SetRepeat(type, static_cast<Repeat>(list->GetProperty("repeat").asInteger()), false);
+      }
+    };
+    const std::optional<int> position =
+        pMsg->param1 < 0 ? std::nullopt : std::optional<int>(pMsg->param1);
+
+    if (list->Size() > 1)
+    {
+      const Type type = ChooseType(*list);
+      applyOptions(type);
+      Play(type, *list, position, pMsg->strParam);
+      return;
+    }
+
+    const std::shared_ptr<CFileItem> item = (*list)[0];
+    if (PLAYLIST::IsPlayList(*item))
+    {
+      // Which playlist a playlist file belongs on is only known once it has been read.
+      if (const auto playList = CPlayListFactory::Load(*item))
+      {
+        const Type type = ChooseType(*playList);
+        applyOptions(type);
+        PlaySource(type, item->GetPath(), *playList, position, pMsg->strParam);
       }
       else
-        g_application.PlayMedia(*item, pMsg->strParam, type);
+      {
+        g_application.PlayMedia(*item, pMsg->strParam, std::nullopt);
+      }
+      return;
+    }
+
+    // if the item is a plugin we need to resolve the URL to ensure the infotags are filled.
+    if (URIUtils::HasPluginPath(*item) && !XFILE::CPluginDirectory::GetResolvedPluginResult(*item))
+    {
+      return;
+    }
+    const bool isVideo{VIDEO::IsVideo(*item)};
+    const bool isAudio{MUSIC::IsAudio(*item)};
+    if (isAudio || isVideo)
+    {
+      if ((isVideo && !g_passwordManager.IsVideoUnlocked()) ||
+          (isAudio && !g_passwordManager.IsMusicUnlocked()))
+      {
+        CLog::LogF(LOGERROR, "MasterCode or MediaSource-code is wrong: {} will not be played.",
+                   item->GetPath());
+        return;
+      }
+      Play(ChooseType(*item), item, pMsg->strParam);
     }
     else
     {
-      // Handle "shuffled" option if present
-      if (list->HasProperty("shuffled") && list->GetProperty("shuffled").isBoolean())
-        SetShuffle(type, list->GetProperty("shuffled").asBoolean(), false);
-      // Handle "repeat" option if present
-      if (list->HasProperty("repeat") && list->GetProperty("repeat").isInteger())
-        SetRepeat(type, static_cast<Repeat>(list->GetProperty("repeat").asInteger()), false);
-
-      GetPlayList(type).Add(*list);
-      Play(type, pMsg->param1 < 0 ? std::nullopt : std::optional<int>(pMsg->param1),
-           pMsg->strParam);
+      g_application.PlayMedia(*item, pMsg->strParam, std::nullopt);
     }
   }
   else if (const std::optional<Type> type = TypeFromId(Id{pMsg->param1});

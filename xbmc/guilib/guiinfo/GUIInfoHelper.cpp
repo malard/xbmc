@@ -10,16 +10,11 @@
 
 #include "FileItem.h"
 #include "ServiceBroker.h"
-#include "application/ApplicationComponents.h"
-#include "application/ApplicationPlayLists.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindow.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/IGUIContainer.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
-#include "playlists/PlayList.h"
-#include "resources/LocalizeStrings.h"
-#include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "windows/GUIMediaWindow.h"
@@ -30,50 +25,6 @@ namespace KODI::GUILIB::GUIINFO
 // conditions for window retrieval
 static const int WINDOW_CONDITION_HAS_LIST_ITEMS = 1;
 static const int WINDOW_CONDITION_IS_MEDIA_WINDOW = 2;
-
-std::string GetPlaylistLabel(int item, std::optional<PLAYLIST::Type> type /* = std::nullopt */)
-{
-  const auto playLists = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayLists>();
-
-  if (!type)
-    type = playLists->GetPlayingType();
-
-  switch (item)
-  {
-    case PLAYLIST_LENGTH:
-    {
-      return std::to_string(type ? playLists->GetPlayList(*type).size() : 0);
-    }
-    case PLAYLIST_POSITION:
-    {
-      const int currentSong = type ? playLists->GetPlayingPosition(*type) : -1;
-      if (currentSong > -1)
-        return std::to_string(currentSong + 1);
-      break;
-    }
-    case PLAYLIST_RANDOM:
-    {
-      if (type && playLists->IsShuffled(*type))
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16041); // 16041: On
-      else
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(591); // 591: Off
-    }
-    case PLAYLIST_REPEAT:
-    {
-      const CApplicationPlayLists::Repeat state =
-          type ? playLists->GetRepeat(*type) : CApplicationPlayLists::Repeat::Off;
-      if (state == CApplicationPlayLists::Repeat::One)
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(592); // 592: One
-      else if (state == CApplicationPlayLists::Repeat::All)
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(593); // 593: All
-      else
-        return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(594); // 594: Off
-    }
-    default:
-      break;
-  }
-  return std::string();
-}
 
 namespace
 {

@@ -35,3 +35,18 @@ TEST(TestPlayListFactory, XSPF)
     delete playlist;
   }
 }
+
+TEST(TestPlayListFactory, LoadReadsAPlayListFile)
+{
+  const auto playlist =
+      PLAYLIST::CPlayListFactory::Load(XBMC_REF_FILE_PATH("/xbmc/playlists/test/test.xspf"));
+  ASSERT_NE(nullptr, playlist);
+  EXPECT_EQ(5, playlist->size());
+}
+
+TEST(TestPlayListFactory, LoadGivesNothingForWhatIsNotAReadablePlayList)
+{
+  EXPECT_EQ(nullptr, PLAYLIST::CPlayListFactory::Load("/media/film.mkv"));
+  EXPECT_EQ(nullptr, PLAYLIST::CPlayListFactory::Load(
+                         XBMC_REF_FILE_PATH("/xbmc/playlists/test/missing.xspf")));
+}
