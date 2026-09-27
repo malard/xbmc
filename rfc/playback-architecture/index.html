@@ -703,7 +703,8 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
         <tr><td><strong>Entry</strong></td><td>One position in a playlist: the item, an id never reused within that playlist, a repeat mark and a playable flag. Per-position state lives here, never on the shared item. What the entry holds (video, audio or both) is recorded once when it is placed, from the item, or from its playlist when the item does not say; a song on a mixed list on Video is still audio. The playlist it is on is what it claims; nothing classifies it after the fact.</td></tr>
         <tr><td class="m">CPlayList</td><td>The entries, its own lock, its cursor, its shuffle, its wrap, and a queue of play-next requests. It makes its own edits and reports each one - added, removed, moved, cleared - to one observer after releasing its lock. No type. Never reordered by shuffling.</td></tr>
         <tr><td class="m">IPlayListShuffle</td><td>What follows an entry, and what precedes it. It can be told to start over from the whole list, the current entry leading. <code>CPlayListNoShuffle</code> when shuffle is off, <code>CPlayListRandomShuffle</code> when it is on. A playlist always has one.</td></tr>
-        <tr><td class="m">CApplicationPlayLists</td><td>The Video playlist and the Audio playlist, which always exist; which one the player works through, at most one; the phase of each - idle, playing, paused - and whether Audio is following Video. Every play request goes through it, and it publishes the Player and Playlist notifications that name a player or playlist. It replaces <code>CPlayListPlayer</code>. Notifications that name no player - <code>OnCommercial</code>, <code>OnMenu</code>, stream and source-state reports - stay with <code>CVideoPlayer</code>.</td></tr>
+        <tr><td class="m">CApplicationPlayLists</td><td>The Video playlist and the Audio playlist, which always exist; which one the player works through, at most one; the phase of each - idle, playing, paused - and whether Audio is following Video. Every play request goes through it. It replaces <code>CPlayListPlayer</code>.</td></tr>
+        <tr><td class="m">CPlaybackAnnouncer</td><td>The one publisher of the Player and Playlist notifications that name a player or playlist, the slideshow's included, and the record of what started. The playlists report what started and what changed on them; it asks them what an entry claims and the player what it renders. Notifications that name no player - <code>OnCommercial</code>, <code>OnMenu</code>, stream and source-state reports - stay with <code>CVideoPlayer</code>.</td></tr>
       </tbody>
     </table>
     </div>
@@ -730,7 +731,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
 
           <rect x="0" y="130" width="660" height="62" fill="none" stroke="currentColor" stroke-width="2"/>
           <text x="330" y="154" text-anchor="middle" fill="currentColor" font-weight="bold">CApplicationPlayLists</text>
-          <text x="330" y="173" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.75">which playlist the player works through &middot; phase of each &nbsp;|&nbsp; audio follows video &nbsp;|&nbsp; the one publisher</text>
+          <text x="330" y="173" text-anchor="middle" fill="currentColor" font-size="9" opacity="0.75">which playlist plays &middot; phase of each &nbsp;|&nbsp; audio follows video &nbsp;|&nbsp; reports to CPlaybackAnnouncer</text>
 
           <line x1="60" y1="192" x2="60" y2="226" stroke="currentColor" opacity="0.5"/>
           <line x1="195" y1="192" x2="195" y2="226" stroke="currentColor" opacity="0.5"/>
@@ -782,8 +783,9 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <p class="stamp"><span class="chip ok">After</span></p>
     <pre><code>void CPartyModeManager::Announce()
 {
-  <span class="c-com">// the component stamps the playerid, from one place</span>
-  CServiceBroker::GetPlayLists()-&gt;Announce(CApplicationPlayLists::PlayerProperty::PartyMode, m_bEnabled);
+  <span class="c-com">// the announcer says what is playing, from one place</span>
+  components.GetComponent&lt;CPlaybackAnnouncer&gt;()-&gt;Announce(
+      CPlaybackAnnouncer::PlayerProperty::PartyMode, m_bEnabled);
 }</code></pre>
 
     <p>Pausing, from a remote.</p>
@@ -919,17 +921,17 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
         <tr>
           <td class="m">CApplicationMessageHandling</td>
           <td>Every <code>Player.On*</code> event. Each site sets the id from the current playlist. It also drives the playlist player from outside: <code>PlayNext</code> on ended, and the gapless index written in on started.</td>
-          <td>Publishes nothing. <code>CApplicationPlayLists</code> publishes from the <code>GUI_MSG_PLAYBACK_*</code> messages, registered ahead of the application so <code>OnPlay</code> precedes <code>OnAVStart</code> and <code>OnStop</code> precedes the next <code>OnPlay</code>.</td>
+          <td>Publishes nothing. <code>CPlaybackAnnouncer</code> publishes from the <code>GUI_MSG_PLAYBACK_*</code> messages, registered straight after <code>CApplicationPlayLists</code> and ahead of the application so <code>OnPlay</code> precedes <code>OnAVStart</code> and <code>OnStop</code> precedes the next <code>OnPlay</code>.</td>
         </tr>
         <tr>
           <td class="m">CVideoPlayer</td>
           <td>Subtitle and stream property changes. The id comes from a <code>playlist_type_hint</code> property on the item, or <code>-1</code> when nothing set it, which is not a valid id.</td>
-          <td>Reports the change through <code>IPlayerCallback</code>; <code>CApplicationPlayLists</code> publishes it.</td>
+          <td>Reports the change through <code>IPlayerCallback</code>; <code>CPlaybackAnnouncer</code> publishes it.</td>
         </tr>
         <tr>
           <td class="m">CPlayListPlayer</td>
           <td>Shuffle and repeat changes, with a playlist id in the <code>playerid</code> field.</td>
-          <td>Gone. The playlist reports the change; <code>CApplicationPlayLists</code> publishes it.</td>
+          <td>Gone. The playlist reports the change; <code>CPlaybackAnnouncer</code> publishes it.</td>
         </tr>
         <tr>
           <td class="m">CPartyModeManager</td>
@@ -939,12 +941,12 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
         <tr>
           <td class="m">CGUIWindowSlideShow</td>
           <td>Its own <code>OnPlay</code>, <code>OnPause</code> and <code>OnStop</code>, with the picture id written in by hand.</td>
-          <td>Reports started, paused and stopped; the component publishes. It keeps its own list, cursor and timer for now, and holds Video as a phase of its own; the Video playlist is untouched.</td>
+          <td>Reports started, paused and stopped; <code>CPlaybackAnnouncer</code> publishes. It keeps its own list, cursor and timer for now, and holds Video as a phase of its own; the Video playlist is untouched.</td>
         </tr>
         <tr>
           <td class="m">CAnnouncementManager</td>
           <td>Rewrites the <code>playerid</code> for PVR channels, after the publisher has set it.</td>
-          <td>Rewrites nothing. The channel rule is the component's, applied where it stamps the id.</td>
+          <td>Rewrites nothing. The channel rule is <code>CPlaybackAnnouncer</code>'s, applied where it says what is playing.</td>
         </tr>
       </tbody>
     </table>
@@ -962,7 +964,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <tbody>
         <tr><td class="m">CPlayListPlayer</td><td>Of 40 methods and 19 message cases, 7 and 18 are already plain forwarding, and 15 more become so once the playlist owns its edits, cursor and shuffle. The rest is one job, the current playback, which moves to <code>CApplicationPlayLists</code>. Its transport messages already name no player; they move to the application.</td></tr>
         <tr><td>Five copies of the current item</td><td><code>m_itemCurrentFile</code>, <code>m_nextPlaylistItem</code>, <code>m_iCurrentSong</code>, the info manager's <code>m_currentFile</code>, and the stack helper's position as a rival cursor. One record, held by <code>CApplicationPlayLists</code> and handed to whoever needs it. The info manager keeps a display copy rebuilt from it, since the GUI thread decorates it (default icon, art, rating edits); the stack helper's parts are a different fact.</td></tr>
-        <tr><td class="m">PLAYLIST::Id, TYPE_MUSIC, TYPE_VIDEO, TYPE_PICTURE</td><td>They were standing in for the two playlists. Inside Kodi a playlist is <code>PLAYLIST::Type</code>; <code>PLAYLIST::Id</code> stays for the JSON-RPC and Python numbering until the boundary work.</td></tr>
+        <tr><td class="m">PLAYLIST::Id, TYPE_MUSIC, TYPE_VIDEO, TYPE_PICTURE</td><td>They were standing in for the two playlists. Inside Kodi a playlist is <code>PLAYLIST::Type</code>. JSON-RPC names it; Python's <code>PLAYLIST_MUSIC</code> and <code>PLAYLIST_VIDEO</code> and the <code>PlayMedia</code> hint keep their numbers, read where they come in.</td></tr>
         <tr><td class="m">playlist_type_hint</td><td>It carried, as a string property, the one fact its writers already knew: which queue. The item property is gone; each writer puts the entry on its playlist. The <code>PlayMedia</code> builtin still accepts <code>playlist_type_hint=</code>, music or video only, to name one.</td></tr>
         <tr><td class="m">ReapSongs, MovePlaying</td><td>Party mode pruned and reordered the list to keep the current song at index 0. With a cursor that is not an index there is nothing to keep.</td></tr>
         <tr><td class="m">UnShuffle(), and the order number written onto each item</td><td>The list is never reordered, so there is nothing to undo.</td></tr>
@@ -989,7 +991,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
         </tr>
         <tr>
           <td><code>playerid</code> and <code>playlistid</code></td>
-          <td>An interface-boundary matter only. If the API keeps accepting them, <code>0</code> becomes Audio and <code>1</code> and <code>2</code> become Video, once, at the edge.</td>
+          <td>Not accepted. JSON-RPC names a playlist: <code>"video"</code>, <code>"audio"</code>, or <code>"picture"</code> for the slideshow. Python and the <code>PlayMedia</code> builtin keep their numbers, <code>0</code> Audio and <code>1</code> Video, read once at their own edge.</td>
         </tr>
         <tr>
           <td>A <code>playerid</code> in a notification</td>
