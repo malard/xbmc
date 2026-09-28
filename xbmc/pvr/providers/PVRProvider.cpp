@@ -19,8 +19,17 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 using namespace PVR;
+
+namespace
+{
+std::vector<std::string> Tokenize(const std::string& str)
+{
+  return StringUtils::Split(str, PROVIDER_STRING_TOKEN_SEPARATOR);
+}
+} // unnamed namespace
 
 const std::string CPVRProvider::IMAGE_OWNER_PATTERN = "pvrprovider";
 
@@ -187,6 +196,12 @@ bool CPVRProvider::SetIconPath(const std::string& strIconPath)
   return false;
 }
 
+std::vector<std::string> CPVRProvider::GetCountries() const
+{
+  std::unique_lock lock(m_critSection);
+  return Tokenize(m_strCountries);
+}
+
 std::string CPVRProvider::GetCountriesDBString() const
 {
   std::unique_lock lock(m_critSection);
@@ -203,6 +218,12 @@ bool CPVRProvider::SetCountriesFromDBString(std::string_view strCountries)
   }
 
   return false;
+}
+
+std::vector<std::string> CPVRProvider::GetLanguages() const
+{
+  std::unique_lock lock(m_critSection);
+  return Tokenize(m_strLanguages);
 }
 
 std::string CPVRProvider::GetLanguagesDBString() const

@@ -1629,10 +1629,8 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const std::string& method,
                               target.itemId);
       CServiceBroker::GetAppMessenger()->SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr, cmd);
     }
-    else if (target.content == ADDON::ContentType::ARTISTS)
-      CMusicLibraryQueue::GetInstance().StartArtistScan(target.viewPath, true);
     else
-      CMusicLibraryQueue::GetInstance().StartAlbumScan(target.viewPath, true);
+      CMusicLibraryQueue::GetInstance().StartScan(target.content, target.viewPath, true);
   }
 
   return ACK;

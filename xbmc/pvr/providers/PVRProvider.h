@@ -11,6 +11,7 @@
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_providers.h"
 #include "pvr/PVRCachedImage.h"
 #include "threads/CriticalSection.h"
+#include "utils/ISerializable.h"
 #include "utils/ISortable.h"
 
 #include <memory>
@@ -30,7 +31,7 @@ enum class ProviderUpdateMode
 static constexpr int PVR_PROVIDER_ADDON_UID = -1;
 static constexpr int PVR_PROVIDER_INVALID_DB_ID = -1;
 
-class CPVRProvider final : public ISortable
+class CPVRProvider final : public ISerializable, public ISortable
 {
 public:
   static const std::string IMAGE_OWNER_PATTERN;
@@ -43,6 +44,8 @@ public:
                const std::string& addonThumbPath);
 
   bool operator==(const CPVRProvider& right) const;
+
+  void Serialize(CVariant& value) const override;
 
   // ISortable implementation
   void ToSortable(SortItem& sortable, Field field) const override;
@@ -132,6 +135,12 @@ public:
    * @brief Get this provider's country codes (ISO 3166) as a string.
    * @return This provider's country codes.
    */
+  /*!
+   * @brief Get this provider's country codes (ISO 3166).
+   * @return This provider's country codes.
+   */
+  std::vector<std::string> GetCountries() const;
+
   std::string GetCountriesDBString() const;
 
   /*!
@@ -145,6 +154,12 @@ public:
    * @brief Get this provider's language codes (RFC 5646) as a string.
    * @return This provider's language codes.
    */
+  /*!
+   * @brief Get this provider's language codes (RFC 5646).
+   * @return This provider's language codes
+   */
+  std::vector<std::string> GetLanguages() const;
+
   std::string GetLanguagesDBString() const;
 
   /*!
