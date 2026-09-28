@@ -53,13 +53,12 @@ bool CGUIWindowGames::OnMessage(CGUIMessage& message)
   {
     case GUI_MSG_WINDOW_INIT:
     {
-      m_rootDir.AllowNonLocalSources(true); //! @todo
+      m_rootDir.AllowNonLocalSources(true);
 
       // Is this the first time the window is opened?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
         message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource("games"));
 
-      //! @todo
       m_dlgProgress = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(
           WINDOW_DIALOG_PROGRESS);
 
@@ -370,16 +369,6 @@ void CGUIWindowGames::OnItemInfo(int itemNumber)
       CGUIDialogAddonInfo::ShowForItem(item);
   }
 
-  //! @todo
-  /*
-  CGUIDialogGameInfo* gameInfo =
-  CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogGameInfo>(WINDOW_DIALOG_PICTURE_INFO);
-  if (gameInfo)
-  {
-    gameInfo->SetGame(item);
-    gameInfo->Open();
-  }
-  */
 }
 
 bool CGUIWindowGames::PlayGame(const CFileItem& item)
@@ -395,12 +384,10 @@ bool CGUIWindowGames::PlayGame(const CFileItem& item)
     itemCopy.GetGameInfoTag();
   }
 
-  PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
-  if (PLAYLIST::IsPlayList(item))
-    playlistId = PLAYLIST::Id::TYPE_GAME;
-
-  CServiceBroker::GetAppMessenger()->PostMsg(
-      TMSG_APPLICATION_PLAY_MEDIA, static_cast<int>(playlistId), -1, new CFileItem(itemCopy), "");
+  // a playlist of games plays on the Video playlist; anything else lets the item choose
+  const int playlist = PLAYLIST::IsPlayList(item) ? static_cast<int>(PLAYLIST::Video) : -1;
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_APPLICATION_PLAY_MEDIA, playlist, -1,
+                                             new CFileItem(itemCopy), "");
   return true;
 }
 

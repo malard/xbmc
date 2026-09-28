@@ -10,10 +10,13 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
+#include "application/ApplicationPlayLists.h"
 #include "playlists/PlayList.h"
+
+#include <map>
+#include <vector>
 
 using namespace KODI;
 using namespace XFILE;
@@ -24,25 +27,37 @@ CPlaylistDirectory::~CPlaylistDirectory() = default;
 
 bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 {
-  PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
+  std::optional<PLAYLIST::Type> type;
   if (url.IsProtocol("playlistmusic"))
-    playlistId = PLAYLIST::Id::TYPE_MUSIC;
+    type = PLAYLIST::Audio;
   else if (url.IsProtocol("playlistvideo"))
-    playlistId = PLAYLIST::Id::TYPE_VIDEO;
+    type = PLAYLIST::Video;
 
-  if (playlistId == PLAYLIST::Id::TYPE_NONE)
+  if (!type)
     return false;
 
-  const PLAYLIST::CPlayList& playlist = CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId);
-  items.Reserve(playlist.size());
+  const PLAYLIST::CPlayList& playList = CServiceBroker::GetPlayLists()->GetPlayList(*type);
+  const std::vector<PLAYLIST::PlayListEntry> entries = playList.GetEntries();
+  std::map<PLAYLIST::EntryId, int> positions;
+  for (int i = 0; i < static_cast<int>(entries.size()); ++i)
+    positions.emplace(entries[i].id, i);
+  items.Reserve(static_cast<int>(entries.size()));
 
-  for (int i = 0; i < playlist.size(); ++i)
+  // Rows are listed in play order and carry the entry's position in the list, which is what acts
+  // on it. Each row is a copy: what a window loads or formats onto its rows stays off the
+  // playlist, and an item on the playlist twice lists twice.
+  int displayOrder = 0;
+  for (const PLAYLIST::EntryId id : playList.GetPlayOrder())
   {
-    CFileItemPtr item = playlist[i];
-    item->SetProperty("playlistposition", i);
-    item->SetProperty("playlisttype", static_cast<int>(playlistId));
-    //item->SetProgramCount(i); // the programCount is set as items are added!
-    items.Add(item);
+    const auto position = positions.find(id);
+    if (position == positions.end())
+      continue;
+    auto row = std::make_shared<CFileItem>(*entries[position->second].item);
+    row->SetProperty("playlistentry", id);
+    row->SetProperty("playlistposition", position->second);
+    row->SetProperty("playlistdisplayorder", displayOrder++);
+    row->SetProperty("playlisttype", static_cast<int>(*type));
+    items.Add(std::move(row));
   }
 
   return true;

@@ -11,7 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIPassword.h"
-#include "PartyModeManager.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "dialogs/GUIDialogMediaSource.h"
@@ -191,19 +191,15 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
       int iControl = message.GetSenderId();
       if (iControl == CONTROL_BTNPARTYMODE)
       {
-        if (g_partyModeManager.IsEnabled())
-          g_partyModeManager.Disable();
+        if (PARTYMODE::IsRunning(PLAYLIST::Video))
+          PARTYMODE::Stop();
         else
         {
-          if (!g_partyModeManager.Enable(PartyModeContext::VIDEO))
+          if (!PARTYMODE::Start(PLAYLIST::Video))
           {
             SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE,false);
             return false;
           }
-
-          // Playlist directory is the root of the playlist window
-          if (m_guiState)
-            m_guiState->SetPlaylistDirectory("playlistvideo://");
 
           return true;
         }
@@ -626,7 +622,7 @@ void CGUIWindowVideoNav::UpdateButtons()
 
   SET_CONTROL_SELECTED(GetID(), CONTROL_BTNSHOWALL, m_watchedMode != WatchedMode::ALL);
 
-  SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
+  SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, PARTYMODE::IsRunning(PLAYLIST::Video));
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_UPDATE_LIBRARY, !m_vecItems->IsAddonsPath() && !m_vecItems->IsPlugin() && !m_vecItems->IsScript());
 }
@@ -973,7 +969,7 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
                                                                         m_vecItems->Get(itemNumber)->GetVideoInfoTag()->m_strTitle),
                                                                         song))
       {
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, 0, 0,
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0,
                                                    static_cast<void*>(new CFileItem(song)));
       }
       return true;

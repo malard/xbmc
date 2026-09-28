@@ -14,8 +14,7 @@
 #include "GUIInfoManager.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "PartyModeManager.h"
-#include "PlayListPlayer.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
@@ -31,6 +30,7 @@
 #ifdef HAS_CDDA_RIPPER
 #include "cdrip/CDDARipper.h"
 #endif
+#include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
@@ -54,7 +54,6 @@
 #include "music/infoscanner/MusicInfoScanner.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayList.h"
-#include "playlists/PlayListFactory.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -73,6 +72,7 @@
 #include "video/VideoInfoTag.h"
 #include "video/dialogs/GUIDialogVideoInfo.h"
 #include "view/GUIViewState.h"
+#include "windows/GUIWindowPlayList.h"
 
 #include <algorithm>
 #include <memory>
@@ -260,16 +260,6 @@ bool CGUIWindowMusicBase::OnMessage(CGUIMessage& message)
 
 bool CGUIWindowMusicBase::OnAction(const CAction &action)
 {
-  if (action.GetID() == ACTION_SHOW_PLAYLIST)
-  {
-    if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist() == PLAYLIST::Id::TYPE_MUSIC ||
-        CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id::TYPE_MUSIC).size() > 0)
-    {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
-      return true;
-    }
-  }
-
   if (action.GetID() == ACTION_SCAN_ITEM)
   {
     int item = m_viewControl.GetSelectedItem();
@@ -389,20 +379,12 @@ void CGUIWindowMusicBase::RetrieveMusicInfo()
   CLog::Log(LOGDEBUG, "RetrieveMusicInfo() took {} ms", duration.count());
 }
 
-/// \brief Add selected list/thumb control item to playlist and start playing
-/// \param iItem Selected Item in list/thumb control
 void CGUIWindowMusicBase::OnQueueItem(int iItem, bool first)
 {
-  // don't re-queue items from playlist window
-  if (iItem < 0 || iItem >= m_vecItems->Size() || GetID() == WINDOW_MUSIC_PLAYLIST)
+  if (iItem < 0 || iItem >= m_vecItems->Size())
     return;
 
-  // add item 2 playlist
   const auto item = m_vecItems->Get(iItem);
-
-  if (item->IsRAR() || item->IsZIP())
-    return;
-
   MUSIC_UTILS::QueueItem(item, first ? MUSIC_UTILS::QueuePosition::POSITION_BEGIN
                                      : MUSIC_UTILS::QueuePosition::POSITION_END);
 
@@ -530,7 +512,7 @@ bool CGUIWindowMusicBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
     }
 
   case CONTEXT_BUTTON_PLAY_PARTYMODE:
-    g_partyModeManager.Enable(PartyModeContext::MUSIC, item->GetPath());
+    PARTYMODE::Start(item->GetPath());
     return true;
 
   case CONTEXT_BUTTON_RIP_CD:
@@ -631,38 +613,13 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
   // if its a folder, build a playlist
   if (pItem->IsFolder() && !pItem->IsPlugin())
   {
-    // make a copy so that we can alter the queue state
-    CFileItemPtr item(new CFileItem(*m_vecItems->Get(iItem)));
-
-    //  Allow queuing of unqueueable items
-    //  when we try to queue them directly
-    if (!item->CanQueue())
-      item->SetCanQueue(true);
-
     // skip ".."
-    if (item->IsParentFolder())
+    if (pItem->IsParentFolder())
       return;
 
     CFileItemList queuedItems;
-    MUSIC_UTILS::GetItemsForPlayList(item, queuedItems);
-    if (g_partyModeManager.IsEnabled())
-    {
-      g_partyModeManager.AddUserSongs(queuedItems, true);
-      return;
-    }
-
-    /*
-    std::string strPlayListDirectory = m_vecItems->GetPath();
-    URIUtils::RemoveSlashAtEnd(strPlayListDirectory);
-    */
-
-    CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id::TYPE_MUSIC);
-    CServiceBroker::GetPlaylistPlayer().Reset();
-    CServiceBroker::GetPlaylistPlayer().Add(PLAYLIST::Id::TYPE_MUSIC, queuedItems);
-    CServiceBroker::GetPlaylistPlayer().SetCurrentPlaylist(PLAYLIST::Id::TYPE_MUSIC);
-
-    // play!
-    CServiceBroker::GetPlaylistPlayer().Play();
+    MUSIC_UTILS::GetItemsForPlayList(pItem, queuedItems);
+    CServiceBroker::GetPlayLists()->PlayItems(PLAYLIST::Audio, queuedItems);
   }
   else if (PLAYLIST::IsPlayList(*pItem))
   {
@@ -679,60 +636,33 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
 
 void CGUIWindowMusicBase::LoadPlayList(const std::string& strPlayList)
 {
-  // if partymode is active, we disable it
-  if (g_partyModeManager.IsEnabled())
-    g_partyModeManager.Disable();
-
-  // load a playlist like .m3u, .pls
-  // first get correct factory to load playlist
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (pPlayList)
+  if (!g_application.PlayMedia(CFileItem(strPlayList, false), "", PLAYLIST::Audio))
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return;
   }
 
-  int iSize = pPlayList->size();
-  if (g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Id::TYPE_MUSIC))
-  {
-    if (m_guiState)
-      m_guiState->SetPlaylistDirectory("playlistmusic://");
-    // activate the playlist window if its not activated yet
-    if (GetID() == CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() && iSize > 1)
-    {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
-    }
-  }
+  // activate the playlist window if its not activated yet
+  if (GetID() == CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() &&
+      CServiceBroker::GetPlayLists()->GetPlayList(PLAYLIST::Audio).Size() > 1)
+    ShowPlayListWindow(PLAYLIST::Audio);
 }
 
 bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
 {
   CFileItemPtr pItem = m_vecItems->Get(iItem);
 
-  // party mode
-  if (g_partyModeManager.IsEnabled())
-  {
-    PLAYLIST::CPlayList playlistTemp;
-    playlistTemp.Add(pItem);
-    g_partyModeManager.AddUserSongs(playlistTemp, !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICPLAYER_QUEUEBYDEFAULT));
-    return true;
-  }
-  else if (!PLAYLIST::IsPlayList(*pItem) && !NETWORK::IsInternetStream(*pItem))
+  if (!PLAYLIST::IsPlayList(*pItem) && !NETWORK::IsInternetStream(*pItem))
   { // single music file - if we get here then we have autoplaynextitem turned off or queuebydefault
-    // turned on, but we still want to use the playlist player in order to handle more queued items
-    // following etc.
+    // turned on, but we still play it on a playlist so that queued items follow
     if ( (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICPLAYER_QUEUEBYDEFAULT) && CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_MUSIC_PLAYLIST_EDITOR) )
     {
       //! @todo Should the playlist be cleared if nothing is already playing?
       OnQueueItem(iItem);
       return true;
     }
-    pItem->SetProperty("playlist_type_hint", static_cast<int>(m_guiState->GetPlaylist()));
-    CServiceBroker::GetPlaylistPlayer().Play(pItem, player);
+    CServiceBroker::GetPlayLists()->PlayItem(
+        m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, {.player = player});
     return true;
   }
   return CGUIMediaWindow::OnPlayMedia(iItem, player);
