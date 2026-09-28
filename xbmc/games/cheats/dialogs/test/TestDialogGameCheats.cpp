@@ -8,7 +8,7 @@
 
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
-#include "LangInfo.h"
+#include "language/LangInfo.h"
 #include "ServiceBroker.h"
 #include "games/cheats/dialogs/DialogGameCheats.h"
 #include "guilib/GUIButtonControl.h"

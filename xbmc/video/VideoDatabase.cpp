@@ -37,6 +37,7 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "language/LanguageTag.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/Artist.h"
 #include "playlists/SmartPlayList.h"
@@ -3459,7 +3460,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
           idFile, static_cast<int>(CStreamDetail::VIDEO), details.GetVideoCodec(i).c_str(),
           static_cast<double>(details.GetVideoAspect(i)), details.GetVideoWidth(i),
           details.GetVideoHeight(i), details.GetVideoDuration(i), details.GetStereoMode(i).c_str(),
-          details.GetVideoLanguage(i).c_str(), details.GetVideoHdrType(i).c_str(),
+          details.GetVideoLanguage(i).AsIso6392B().c_str(), details.GetVideoHdrType(i).c_str(),
           details.GetVideoHdrDetail(i).c_str(),
           static_cast<int>(details.GetSource(CStreamDetail::VIDEO, i)),
           details.GetVersion(CStreamDetail::VIDEO, i)));
@@ -3472,7 +3473,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
           "strAudioLanguage, iSource, iVersion, iFlags) "
           "VALUES (%i,%i,'%s',%i,'%s',%i, %i, %i)",
           idFile, static_cast<int>(CStreamDetail::AUDIO), details.GetAudioCodec(i).c_str(),
-          details.GetAudioChannels(i), details.GetAudioLanguage(i).c_str(),
+          details.GetAudioChannels(i), details.GetAudioLanguage(i).AsIso6392B().c_str(),
           static_cast<int>(details.GetSource(CStreamDetail::AUDIO, i)),
           details.GetVersion(CStreamDetail::AUDIO, i), static_cast<int>(details.GetAudioFlags(i))));
     }
@@ -3483,7 +3484,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
                              "iFlags) "
                              "VALUES (%i,%i,'%s',%i, %i, %i)",
                              idFile, static_cast<int>(CStreamDetail::SUBTITLE),
-                             details.GetSubtitleLanguage(i).c_str(),
+                             details.GetSubtitleLanguage(i).AsIso6392B().c_str(),
                              static_cast<int>(details.GetSource(CStreamDetail::SUBTITLE, i)),
                              details.GetVersion(CStreamDetail::SUBTITLE, i),
                              static_cast<int>(details.GetSubtitleFlags(i))));
@@ -4873,7 +4874,7 @@ bool CVideoDatabase::AddStreamDetailFromRow(Dataset& ds, CStreamDetails& details
       p->m_iHeight = ds.fv(5).get_asInt();
       p->m_iDuration = ds.fv(10).get_asInt();
       p->m_strStereoMode = ds.fv(11).get_asString();
-      p->m_strLanguage = ds.fv(12).get_asString();
+      p->m_language = KODI::LANGUAGE::CLanguageTag::Parse(ds.fv(12).get_asString());
       p->m_strHdrType = ds.fv(13).get_asString();
       p->m_strHdrDetail = ds.fv(14).get_asString();
       p->m_source = static_cast<CStreamDetail::Source>(ds.fv(15).get_asInt());
@@ -4889,7 +4890,7 @@ bool CVideoDatabase::AddStreamDetailFromRow(Dataset& ds, CStreamDetails& details
         p->m_iChannels = -1;
       else
         p->m_iChannels = ds.fv(7).get_asInt();
-      p->m_strLanguage = ds.fv(8).get_asString();
+      p->m_language = KODI::LANGUAGE::CLanguageTag::Parse(ds.fv(8).get_asString());
       p->m_source = static_cast<CStreamDetail::Source>(ds.fv(15).get_asInt());
       p->m_version = ds.fv(16).get_asInt();
       if (!ds.fv(17).get_isNull())
@@ -4900,7 +4901,7 @@ bool CVideoDatabase::AddStreamDetailFromRow(Dataset& ds, CStreamDetails& details
     case CStreamDetail::SUBTITLE:
     {
       auto* p = new CStreamDetailSubtitle();
-      p->m_strLanguage = ds.fv(9).get_asString();
+      p->m_language = KODI::LANGUAGE::CLanguageTag::Parse(ds.fv(9).get_asString());
       p->m_source = static_cast<CStreamDetail::Source>(ds.fv(15).get_asInt());
       p->m_version = ds.fv(16).get_asInt();
       if (!ds.fv(17).get_isNull())

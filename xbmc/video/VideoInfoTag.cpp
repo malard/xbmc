@@ -10,13 +10,14 @@
 
 #include "ServiceBroker.h"
 #include "imagefiles/ImageFileURL.h"
+#include "language/Language.h"
+#include "language/LanguageTag.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Archive.h"
-#include "utils/LangCodeExpander.h"
 #include "utils/StreamUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -28,10 +29,39 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace
 {
+/*!
+ * \brief Read the <language> of one stream in an NFO.
+ * \note Kept as written even where it names no language - unlike a language a container states,
+ *       which becomes und, an NFO is the user's own file and rewriting it must not silently
+ *       discard what its author put there. The warning is the only way they learn that a value
+ *       they wrote states nothing.
+ * \param value The text of the element.
+ * \param streamType The kind of stream it describes, for the warning.
+ * \return The language.
+ */
+KODI::LANGUAGE::CLanguageTag LanguageFromNfo(const std::string& value, std::string_view streamType)
+{
+  // Trimmed and lower case whether or not it names a language: that is the form the
+  // streamdetails column holds, and a smart playlist rule compares against the column as stored
+  std::string text{StringUtils::ToLower(value)};
+  StringUtils::Trim(text);
+
+  KODI::LANGUAGE::CLanguageTag language{KODI::LANGUAGE::CLanguageTag::Parse(text)};
+  if (!language.IsValid())
+  {
+    CLog::Log(LOGWARNING,
+              "CVideoInfoTag: the {} stream of an NFO states a language of '{}', which names none",
+              streamType, value);
+  }
+
+  return language;
+}
+
 /*!
  * \brief Read the <flags> block of one <audio> or <subtitle> stream in an NFO.
  * \param nodeDetail The stream element to read from.
@@ -305,7 +335,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     {
       TiXmlElement stream("audio");
       XMLUtils::SetString(&stream, "codec", m_streamDetails.GetAudioCodec(iStream));
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetAudioLanguage(iStream));
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetAudioLanguage(iStream).AsIso6392B());
       XMLUtils::SetInt(&stream, "channels", m_streamDetails.GetAudioChannels(iStream));
       if (m_streamDetails.GetVersion(CStreamDetail::AUDIO, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
@@ -321,7 +352,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     for (int iStream=1; iStream<=m_streamDetails.GetSubtitleStreamCount(); iStream++)
     {
       TiXmlElement stream("subtitle");
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetSubtitleLanguage(iStream));
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetSubtitleLanguage(iStream).AsIso6392B());
       if (m_streamDetails.GetVersion(CStreamDetail::SUBTITLE, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
       {
@@ -1076,12 +1108,12 @@ void CVideoInfoTag::ToSortable(SortItem& sortable, Field field) const
       else if (field == Field::AUDIO_CODEC)
         sortable[Field::AUDIO_CODEC] = m_streamDetails.GetAudioCodec(idx);
       else
-        sortable[Field::AUDIO_LANGUAGE] = m_streamDetails.GetAudioLanguage(idx);
+        sortable[Field::AUDIO_LANGUAGE] = m_streamDetails.GetAudioLanguage(idx).ToString();
       break;
     }
 
     case Field::SUBTITLE_LANGUAGE:
-      sortable[Field::SUBTITLE_LANGUAGE] = m_streamDetails.GetSubtitleLanguage();
+      sortable[Field::SUBTITLE_LANGUAGE] = m_streamDetails.GetSubtitleLanguage().ToString();
       break;
 
     case Field::IN_PROGRESS:
@@ -1583,14 +1615,13 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
           p->m_strCodec = StringUtils::Trim(value);
 
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "audio");
 
         XMLUtils::GetInt(nodeDetail, "channels", p->m_iChannels);
 
         p->m_flags = ParseStreamFlags(nodeDetail);
 
         StringUtils::ToLower(p->m_strCodec);
-        StringUtils::ToLower(p->m_strLanguage);
         p->m_strCodec = StreamUtils::NormalizeAudioCodecName(p->m_strCodec);
         m_streamDetails.AddStream(p);
       }
@@ -1608,7 +1639,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
         if (XMLUtils::GetString(nodeDetail, "stereomode", value))
           p->m_strStereoMode = StringUtils::Trim(value);
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "video");
         if (XMLUtils::GetString(nodeDetail, "hdrtype", value))
           p->m_strHdrType = StringUtils::Trim(value);
         if (XMLUtils::GetString(nodeDetail, "hdrdetail", value))
@@ -1616,7 +1647,6 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
 
         StringUtils::ToLower(p->m_strCodec);
         StringUtils::ToLower(p->m_strStereoMode);
-        StringUtils::ToLower(p->m_strLanguage);
         StringUtils::ToLower(p->m_strHdrType);
         StringUtils::ToLower(p->m_strHdrDetail);
         m_streamDetails.AddStream(p);
@@ -1626,11 +1656,10 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
       {
         auto* p = new CStreamDetailSubtitle();
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "subtitle");
 
         p->m_flags = ParseStreamFlags(nodeDetail);
 
-        StringUtils::ToLower(p->m_strLanguage);
         m_streamDetails.AddStream(p);
       }
     }
@@ -1965,10 +1994,9 @@ bool CVideoInfoTag::SetOriginalLanguage(std::string language, LanguageTagSource 
     return true;
   }
 
-  StringUtils::Trim(language);
-  if (CLangCodeExpander::ConvertToBcp47(language, language))
+  if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
   {
-    m_originalLanguage = std::move(language);
+    m_originalLanguage = tag->ToString();
     return true;
   }
 

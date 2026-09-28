@@ -14,7 +14,6 @@
 #include "pvr/addons/PVRClient.h"
 #include "pvr/addons/PVRClients.h"
 #include "utils/StringUtils.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
 
 #include <memory>
@@ -188,41 +187,6 @@ bool CPVRProvider::SetIconPath(const std::string& strIconPath)
   return false;
 }
 
-namespace
-{
-
-std::vector<std::string> Tokenize(const std::string& str)
-{
-  return StringUtils::Split(str, PROVIDER_STRING_TOKEN_SEPARATOR);
-}
-
-std::string DeTokenize(const std::vector<std::string>& tokens)
-{
-  return StringUtils::Join(tokens, PROVIDER_STRING_TOKEN_SEPARATOR);
-}
-
-} // unnamed namespace
-
-std::vector<std::string> CPVRProvider::GetCountries() const
-{
-  std::unique_lock lock(m_critSection);
-
-  return Tokenize(m_strCountries);
-}
-
-bool CPVRProvider::SetCountries(const std::vector<std::string>& countries)
-{
-  std::unique_lock lock(m_critSection);
-  const std::string strCountries = DeTokenize(countries);
-  if (m_strCountries != strCountries)
-  {
-    m_strCountries = strCountries;
-    return true;
-  }
-
-  return false;
-}
-
 std::string CPVRProvider::GetCountriesDBString() const
 {
   std::unique_lock lock(m_critSection);
@@ -235,25 +199,6 @@ bool CPVRProvider::SetCountriesFromDBString(std::string_view strCountries)
   if (m_strCountries != strCountries)
   {
     m_strCountries = strCountries;
-    return true;
-  }
-
-  return false;
-}
-
-std::vector<std::string> CPVRProvider::GetLanguages() const
-{
-  std::unique_lock lock(m_critSection);
-  return Tokenize(m_strLanguages);
-}
-
-bool CPVRProvider::SetLanguages(const std::vector<std::string>& languages)
-{
-  std::unique_lock lock(m_critSection);
-  const std::string strLanguages = DeTokenize(languages);
-  if (m_strLanguages != strLanguages)
-  {
-    m_strLanguages = strLanguages;
     return true;
   }
 
