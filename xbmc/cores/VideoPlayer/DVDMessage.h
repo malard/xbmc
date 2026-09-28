@@ -55,6 +55,7 @@ public:
     PLAYER_REPORT_STATE,
     PLAYER_FRAME_ADVANCE,
     PLAYER_DISPLAY_RESET,           // report display reset event
+    PLAYER_AUDIO_FORMAT_CHANGE,     // the audio sink was reconfigured for a passthrough format
 
     // demuxer related messages
     DEMUXER_PACKET,                 // data packet
