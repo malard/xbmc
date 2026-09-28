@@ -10,6 +10,7 @@
 
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
+#include "addons/Scraper.h"
 
 #include <memory>
 #include <set>
@@ -79,6 +80,49 @@ namespace JSONRPC
                                        IClient* client,
                                        const CVariant& parameterObject,
                                        CVariant& result);
+    static JSONRPC_STATUS SetInfoProvider(const std::string& method,
+                                          ITransportLayer* transport,
+                                          IClient* client,
+                                          const CVariant& parameterObject,
+                                          CVariant& result);
+
+  protected:
+    /*!
+     \brief Resolves the listing an information provider is being applied to.
+
+     Drops the id that names a single item within the listing, and keeps every other filter
+     the path carries, however the path spelled it. False for anything but a musicdb://
+     artists or albums listing.
+     */
+    static bool ResolveInfoProviderView(const std::string& path,
+                                        ADDON::ContentType& content,
+                                        std::string& viewPath);
+
+    //! What SetInfoProvider's "applyto" names, and the scope's own parameters.
+    struct InfoProviderTarget
+    {
+      enum class Scope
+      {
+        Item, //!< one artist or album, named by itemId
+        View, //!< the listing at viewPath
+        Default, //!< the content type's default provider, and viewPath is every row of it
+      };
+
+      Scope scope{Scope::Item};
+      ADDON::ContentType content{ADDON::ContentType::NONE};
+      int itemId{-1};
+      std::string viewPath;
+    };
+
+    /*!
+     \brief Reads SetInfoProvider's scope parameters into the target it names.
+
+     Answers NotFound for an item that does not exist, so the caller does not reach the
+     database again to find that out.
+     */
+    static JSONRPC_STATUS ResolveInfoProviderTarget(const CVariant& parameterObject,
+                                                    CMusicDatabase& musicdatabase,
+                                                    InfoProviderTarget& target);
 
   private:
     static void FillAlbumItem(const CAlbum& album,

@@ -305,6 +305,45 @@ public:
   bool GetSetInfo(int idSet, CVideoInfoTag& details, CFileItem* item = nullptr);
   bool GetFileInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idFile = -1);
 
+  //! The path is ignored when idMovie is given.
+  GetResult TryGetMovieInfo(const std::string& strFilenameAndPath,
+                            CVideoInfoTag& details,
+                            int idMovie = -1,
+                            int idVersion = -1,
+                            int idFile = -1,
+                            int getDetails = VideoDbDetailsAll);
+
+  //! The path is ignored when idTvShow is given.
+  GetResult TryGetTvShowInfo(const std::string& strPath,
+                             CVideoInfoTag& details,
+                             int idTvShow = -1,
+                             CFileItem* item = nullptr,
+                             int getDetails = VideoDbDetailsAll);
+
+  //! allDetails fills from the season view rather than the season row.
+  GetResult TryGetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails = true);
+
+  GetResult TryGetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item);
+
+  //! The path is ignored when idEpisode is given.
+  GetResult TryGetEpisodeInfo(const std::string& strFilenameAndPath,
+                              CVideoInfoTag& details,
+                              int idEpisode = -1,
+                              int getDetails = VideoDbDetailsAll);
+
+  //! The path is ignored when idMVideo is given.
+  GetResult TryGetMusicVideoInfo(const std::string& strFilenameAndPath,
+                                 CVideoInfoTag& details,
+                                 int idMVideo = -1,
+                                 int getDetails = VideoDbDetailsAll);
+
+  GetResult TryGetSetInfo(int idSet, CVideoInfoTag& details, CFileItem* item = nullptr);
+
+  //! The path is ignored when idFile is given. Adds to details rather than replacing them.
+  GetResult TryGetFileInfo(const std::string& strFilenameAndPath,
+                           CVideoInfoTag& details,
+                           int idFile = -1);
+
   int GetPathId(const std::string& strPath);
   /*! \brief Get the id of a path, also accepting the zip:// or archive:// equivalent of an
    *         archive path (AddPath() stores these interchangeably).
@@ -642,6 +681,26 @@ public:
   bool GetSubPaths(const std::string& basepath,
                    std::vector<std::pair<int, std::string>>& subpaths,
                    bool excludeDiscPaths = true);
+
+  /*! \brief Normalise a directory to the form the path table stores it in.
+   \param directory the directory as it was given
+   \return the same directory with platform separators and a trailing separator
+   */
+  static std::string ToStoredPath(const std::string& directory);
+
+  /*! \brief Resolve the path ids a library clean should cover.
+   \param directory a directory to restrict the clean to, empty for the whole library.
+                    Normalised with ToStoredPath before matching.
+   \param content the content type to clean for ("movies", "tvshows", "musicvideos"),
+                  empty for any. With a directory, "tvshows" also matches paths
+                  resolving to "seasons" or "episodes".
+   \param paths the matching path ids, including subpaths. Left empty when nothing
+                matches.
+   \return true on success (even with no matches), false on a database error
+   */
+  bool GetPathsForCleaning(const std::string& directory,
+                           const std::string& content,
+                           std::set<int>& paths);
 
   bool GetSourcePath(const std::string &path, std::string &sourcePath);
   bool GetSourcePath(const std::string& path,
@@ -1302,6 +1361,10 @@ private:
   static bool AddStreamDetailFromRow(dbiplus::Dataset& ds, CStreamDetails& details);
 
   bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails, CFileItem* item);
+  GetResult TryGetSeasonInfo(int idSeason,
+                             CVideoInfoTag& details,
+                             bool allDetails,
+                             CFileItem* item);
 
   int GetMinSchemaVersion() const override { return 75; }
   int GetSchemaVersion() const override;
