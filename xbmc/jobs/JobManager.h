@@ -241,6 +241,9 @@ private:
    */
   CJob* PopJob();
 
+  /*! \brief Workers that are unavailable: running a job, or still in its callbacks.
+   Must be called with m_section held.
+   */
   size_t GetBusyCount() const { return m_processing.size() + m_completing; }
 
   void StartWorkers(CJob::PRIORITY priority);
@@ -275,6 +278,7 @@ private:
   Processing m_processing;
   size_t m_completing{0};
   Workers m_workers;
+  // Incremented only across the m_jobEvent wait, always under m_section.
   size_t m_idleWorkers{0};
 
   // Jobs CancelJobs has taken off the queues whose abort callbacks have not run yet, and the

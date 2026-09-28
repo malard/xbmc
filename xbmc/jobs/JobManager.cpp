@@ -265,6 +265,9 @@ void CJobManager::StartWorkers(CJob::PRIORITY priority)
   if (m_idleWorkers >= wanted)
     return;
 
+  // Bounds the pool. A worker in neither count is starting up or returning from a callback and
+  // will take a queued job; one that has timed out but not yet removed itself will not, which is
+  // a known gap.
   if (m_workers.size() >= GetMaxWorkers(priority))
     return;
 
