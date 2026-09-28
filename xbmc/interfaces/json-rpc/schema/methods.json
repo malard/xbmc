@@ -263,13 +263,13 @@
             "required": true,
             "additionalProperties": false,
             "properties": {
-              "playlistid": {
-                "$ref": "Playlist.Id",
+              "playlist": {
+                "$ref": "Playlist.Name",
                 "required": true
               },
               "position": {
                 "$ref": "Playlist.Position",
-                "default": 0
+                "description": "The entry to start at; with none, the start of the play order"
               }
             }
           },
@@ -420,39 +420,6 @@
     ],
     "returns": "string"
   },
-  "Player.GetActivePlayers": {
-    "type": "method",
-    "description": "Returns all active players",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [],
-    "returns": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "properties": {
-          "playerid": {
-            "$ref": "Player.Id",
-            "required": true
-          },
-          "type": {
-            "$ref": "Player.Type",
-            "required": true
-          },
-          "playertype": {
-            "type": "string",
-            "enum": [
-              "internal",
-              "external",
-              "remote"
-            ],
-            "required": true
-          }
-        }
-      }
-    }
-  },
   "Player.GetPlayers": {
     "type": "method",
     "description": "Get a list of available players",
@@ -508,11 +475,6 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "properties",
         "type": "array",
         "uniqueItems": true,
@@ -520,6 +482,10 @@
         "items": {
           "$ref": "Player.Property.Name"
         }
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -534,13 +500,12 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "properties",
         "$ref": "List.Fields.All"
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -560,14 +525,13 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "play",
         "$ref": "Global.Toggle",
         "default": "toggle"
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -581,9 +545,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -612,11 +575,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "offset",
         "type": [
           {
@@ -631,6 +589,10 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -650,11 +612,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "speed",
         "type": [
@@ -683,6 +640,10 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -696,11 +657,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "tempo",
         "type": [
           {
@@ -713,6 +669,10 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -725,11 +685,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "value",
         "required": true,
@@ -789,6 +744,10 @@
             "required": true
           }
         ]
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": {
@@ -814,11 +773,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "direction",
         "type": "string",
         "enum": [
@@ -828,6 +782,10 @@
           "down"
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -838,11 +796,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "zoom",
         "type": [
@@ -863,6 +816,10 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -931,11 +888,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "value",
         "type": "string",
         "enum": [
@@ -943,6 +895,10 @@
           "counterclockwise"
         ],
         "default": "clockwise"
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -953,11 +909,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "to",
         "type": [
@@ -976,25 +927,28 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
   },
   "Player.SetShuffle": {
     "type": "method",
-    "description": "Shuffle/Unshuffle items in the player",
+    "description": "Turn shuffled play order on or off",
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "shuffle",
         "$ref": "Global.Toggle",
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1005,11 +959,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "repeat",
         "type": [
@@ -1026,6 +975,10 @@
           }
         ],
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1037,14 +990,13 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "partymode",
         "$ref": "Global.Toggle",
         "required": true
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1055,11 +1007,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "stream",
         "required": true,
@@ -1077,6 +1024,10 @@
             "description": "Index of the audio stream to play"
           }
         ]
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1087,11 +1038,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "stream",
         "required": true,
@@ -1109,6 +1055,10 @@
             "description": "Index of the video stream to play"
           }
         ]
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1120,15 +1070,14 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
-      {
         "name": "subtitle",
         "type": "string",
         "required": true,
         "description": "Local path or remote URL to the subtitle file to load"
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1139,11 +1088,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "$ref": "Player.Id",
-        "required": true
-      },
       {
         "name": "subtitle",
         "required": true,
@@ -1169,6 +1113,10 @@
         "type": "boolean",
         "default": false,
         "description": "Whether to enable subtitles to be displayed after setting the new subtitle"
+      },
+      {
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "returns": "string"
@@ -1185,8 +1133,8 @@
       "items": {
         "type": "object",
         "properties": {
-          "playlistid": {
-            "$ref": "Playlist.Id",
+          "playlist": {
+            "$ref": "Playlist.Name",
             "required": true
           },
           "type": {
@@ -1204,8 +1152,8 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1225,13 +1173,13 @@
   },
   "Playlist.GetItems": {
     "type": "method",
-    "description": "Get all items from playlist",
+    "description": "Get all items from playlist, in list order",
     "transport": "Response",
     "permission": "ReadData",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1257,7 +1205,7 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "List.Item.All"
+            "$ref": "Playlist.Entry"
           },
           "required": true
         }
@@ -1271,8 +1219,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1303,8 +1251,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1340,8 +1288,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1359,8 +1307,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       }
     ],
@@ -1374,8 +1322,8 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
-        "$ref": "Playlist.Id",
+        "name": "playlist",
+        "$ref": "Playlist.Name",
         "required": true
       },
       {
@@ -1396,9 +1344,8 @@
     "description": "Returns the chapters of the currently playing item for the given player",
     "params": [
       {
-        "$ref": "Player.Id",
-        "name": "playerid",
-        "required": true
+        "name": "playlist",
+        "$ref": "Player.Playlist"
       }
     ],
     "permission": "ReadData",

@@ -9,29 +9,45 @@
 #include "PlayList.h"
 
 #include "FileItemList.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
-#include "playlists/PlayListFactory.h"
+#include "application/ApplicationPlayLists.h"
+#include "playlists/PlayList.h"
+#include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "utils/URIUtils.h"
 
 using namespace KODI;
 
+namespace
+{
+PLAYLIST::Type TypeOf(int playList)
+{
+  return *XBMCAddon::xbmc::PlayListFromId(playList);
+}
+} // namespace
+
 namespace XBMCAddon
 {
   namespace xbmc
   {
-    //! @todo need a means to check for a valid construction
-    //!  either by throwing an exception or by an "isValid" check
+  std::optional<PLAYLIST::Type> PlayListFromId(int playList)
+  {
+    if (playList == PLAYLIST_MUSIC_ID)
+      return PLAYLIST::Audio;
+    if (playList == PLAYLIST_VIDEO_ID)
+      return PLAYLIST::Video;
+    return std::nullopt;
+  }
+
     PlayList::PlayList(int playList) :
       iPlayList(playList), pPlayList(NULL)
     {
-      // we do not create our own playlist, just using the ones from playlistplayer
-      if (PLAYLIST::Id{iPlayList} != PLAYLIST::Id::TYPE_MUSIC &&
-          PLAYLIST::Id{iPlayList} != PLAYLIST::Id::TYPE_VIDEO)
+      const std::optional<PLAYLIST::Type> type = PlayListFromId(playList);
+      if (!type)
         throw PlayListException("PlayList does not exist");
 
-      pPlayList = &CServiceBroker::GetPlaylistPlayer().GetPlaylist(PLAYLIST::Id{playList});
+      // a Python playlist wraps the Video or Audio playlist rather than owning one
+      pPlayList = &CServiceBroker::GetPlayLists()->GetPlayList(*type);
       iPlayList = playList;
     }
 
@@ -57,41 +73,28 @@ namespace XBMCAddon
         items.Add(item);
       }
 
-      pPlayList->Insert(items, index);
+      CServiceBroker::GetPlayLists()->Insert(TypeOf(iPlayList), items, index);
     }
 
     bool PlayList::load(const char* cFileName)
     {
-      CFileItem item(cFileName);
-      item.SetPath(cFileName);
+      const auto item = std::make_shared<CFileItem>(cFileName, false);
 
-      if (PLAYLIST::IsPlayList(item))
+      if (PLAYLIST::HoldsEntries(*item))
       {
-        // load playlist and copy al items to existing playlist
+        // replace this playlist's contents with the file's entries
+        PLAYLIST::CEntriesAsListed asListed;
+        CFileItemList items;
+        CApplicationPlayLists::ExpandToEntries(item, asListed, nullptr, items);
+        if (items.IsEmpty())
+          return false;
 
-        // load a playlist like .m3u, .pls
-        // first get correct factory to load playlist
-        std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(item));
-        if (nullptr != pPlayList)
+        for (const auto& entry : items)
         {
-          // load it
-          if (!pPlayList->Load(item.GetPath()))
-            //hmmm unable to load playlist?
-            return false;
-
-          // clear current playlist
-          CServiceBroker::GetPlaylistPlayer().ClearPlaylist(PLAYLIST::Id{this->iPlayList});
-
-          // add each item of the playlist to the playlistplayer
-          for (int i=0; i < pPlayList->size(); ++i)
-          {
-            CFileItemPtr playListItem =(*pPlayList)[i];
-            if (playListItem->GetLabel().empty())
-              playListItem->SetLabel(URIUtils::GetFileName(playListItem->GetPath()));
-
-            this->pPlayList->Add(playListItem);
-          }
+          if (entry->GetLabel().empty())
+            entry->SetLabel(URIUtils::GetFileName(entry->GetPath()));
         }
+        CServiceBroker::GetPlayLists()->Replace(TypeOf(iPlayList), items);
       }
       else
         // filename is not a valid playlist
@@ -102,32 +105,28 @@ namespace XBMCAddon
 
     void PlayList::remove(const char* filename)
     {
-      pPlayList->Remove(filename);
+      CServiceBroker::GetPlayLists()->Remove(TypeOf(iPlayList), std::string{filename});
     }
 
     void PlayList::clear()
     {
-      pPlayList->Clear();
+      CServiceBroker::GetPlayLists()->Clear(TypeOf(iPlayList));
     }
 
     int PlayList::size()
     {
-      return pPlayList->size();
+      return pPlayList->Size();
     }
 
     void PlayList::shuffle()
     {
-      pPlayList->Shuffle();
-    }
-
-    void PlayList::unshuffle()
-    {
-      pPlayList->UnShuffle();
+      CServiceBroker::GetPlayLists()->SetShuffle(TypeOf(iPlayList), true,
+                                                 CApplicationPlayLists::Persist::No);
     }
 
     int PlayList::getposition()
     {
-      return CServiceBroker::GetPlaylistPlayer().GetCurrentItemIdx();
+      return pPlayList->GetCurrentPosition();
     }
 
     XBMCAddon::xbmcgui::ListItem* PlayList::operator [](long i)
@@ -140,9 +139,11 @@ namespace XBMCAddon
       if (pos < 0 || pos >= iPlayListSize)
         throw PlayListException("array out of bound");
 
-      CFileItemPtr ptr((*pPlayList)[pos]);
-
-      return new XBMCAddon::xbmcgui::ListItem(ptr);
+      // a copy: the playlist owns its items, and nothing outside it changes one in place
+      const std::shared_ptr<CFileItem> item = (*pPlayList)[pos];
+      if (!item)
+        throw PlayListException("array out of bound");
+      return new XBMCAddon::xbmcgui::ListItem(std::make_shared<CFileItem>(*item));
     }
   }
 }

@@ -202,8 +202,8 @@
         "type": "object",
         "required": true,
         "properties": {
-          "playlistid": {
-            "$ref": "Playlist.Id",
+          "playlist": {
+            "$ref": "Playlist.Name",
             "required": true
           },
           "item": {
@@ -231,8 +231,8 @@
         "type": "object",
         "required": true,
         "properties": {
-          "playlistid": {
-            "$ref": "Playlist.Id",
+          "playlist": {
+            "$ref": "Playlist.Name",
             "required": true
           },
           "position": {
@@ -257,8 +257,8 @@
         "type": "object",
         "required": true,
         "properties": {
-          "playlistid": {
-            "$ref": "Playlist.Id",
+          "playlist": {
+            "$ref": "Playlist.Name",
             "required": true
           }
         }

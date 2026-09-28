@@ -12,12 +12,24 @@
 #include "Exception.h"
 #include "ListItem.h"
 #include "playlists/PlayList.h"
+#include "playlists/PlayListTypes.h"
+
+#include <optional>
 
 namespace XBMCAddon
 {
   namespace xbmc
   {
     XBMCCOMMONS_STANDARD_EXCEPTION(PlayListException);
+
+#ifndef SWIG
+    // the values of xbmc.PLAYLIST_MUSIC and xbmc.PLAYLIST_VIDEO
+    constexpr int PLAYLIST_MUSIC_ID = 0;
+    constexpr int PLAYLIST_VIDEO_ID = 1;
+
+    // the playlist a Python playlist id names, if it names one
+    std::optional<KODI::PLAYLIST::Type> PlayListFromId(int playList);
+#endif
 
     //
     /// \defgroup python_PlayList PlayList
@@ -45,11 +57,14 @@ namespace XBMCAddon
     /// play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
     /// ...
     /// ~~~~~~~~~~~~~
+    ///
+    /// @python_v23 Removed **unshuffle()**. A playlist keeps the order it was built in; shuffle
+    /// only chooses the play order, and PlayerControl(RandomOff) turns it off.
     //
     class PlayList : public AddonClass
     {
       int iPlayList;
-      KODI::PLAYLIST::CPlayList* pPlayList;
+      const KODI::PLAYLIST::CPlayList* pPlayList;
 
     public:
       explicit PlayList(int playList);
@@ -158,7 +173,7 @@ namespace XBMCAddon
       ///
       /// \ingroup python_PlayList
       /// @brief \python_func{ shuffle() }
-      /// Shuffle the playlist.
+      /// Turn on shuffled play order. The items keep their positions.
       ///
       shuffle();
 #else
@@ -168,21 +183,10 @@ namespace XBMCAddon
 #ifdef DOXYGEN_SHOULD_USE_THIS
       ///
       /// \ingroup python_PlayList
-      /// @brief \python_func{ unshuffle() }
-      /// Unshuffle the playlist.
-      ///
-      unshuffle();
-#else
-      void unshuffle();
-#endif
-
-#ifdef DOXYGEN_SHOULD_USE_THIS
-      ///
-      /// \ingroup python_PlayList
       /// @brief \python_func{ getposition() }
-      /// Returns the position of the current song in this playlist.
+      /// Returns the position of the current entry in this playlist.
       ///
-      /// @return                    Position of the current song
+      /// @return                    Position of the current entry
       ///
       getposition();
 #else
