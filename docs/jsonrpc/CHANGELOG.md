@@ -71,9 +71,9 @@ in 14.
   database is `InternalError` on every one of those methods and on
   `Files.SetFileDetails`; version 13 reported it as `NotFound`, or as
   `InvalidParams` on `Files.SetFileDetails`.
-- Every `PVR` method that names a channel, channel group, broadcast, timer,
-  recording or provider by id answers `NotFound` (-32098) for an id nothing
-  has, in place of `InvalidParams`.
+- Every `PVR` method that names a channel, channel group, broadcast, timer or
+  recording by id answers `NotFound` (-32098) for an id nothing has, in place
+  of `InvalidParams`.
 - A `playerid` names a player, however that player was started, and a
   `Player` method answers `Unavailable` (-32097) for a player that is not
   running. Version 13 accepted an idle `playerid` when the playlist in use
@@ -152,8 +152,6 @@ and in `openrpc.json`. The description names the replacement.
   channel group within a time range, answered per channel.
 - `PVR.GetPlayableBroadcasts` - the playable broadcasts of a channel within a
   time range, for catchup availability.
-- `PVR.GetProviders` and `PVR.GetProviderDetails`, with `PVR.Details.Provider`,
-  `PVR.Fields.Provider` and `PVR.Provider.Type`.
 - `Player.GetChapters` - the chapters of the playing item, with
   `Player.Chapter`.
 - `Playlist.SetShuffle` and `Playlist.SetRepeat`.

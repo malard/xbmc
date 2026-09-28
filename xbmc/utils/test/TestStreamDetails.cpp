@@ -1133,7 +1133,7 @@ TEST(TestStreamDetails, DefaultAudio_NamesTheStreamTheMediaNominates)
                                {"eng", "dts", 6, StreamFlags::FLAG_NONE}})};
 
   EXPECT_EQ(2, details.GetDefaultAudioStreamIndex());
-  EXPECT_EQ("fra", details.GetAudioLanguage(details.GetDefaultAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("fre", details.GetAudioLanguage(details.GetDefaultAudioStreamIndex()).AsIso6392B());
   EXPECT_EQ("ac3", details.GetAudioCodec(details.GetDefaultAudioStreamIndex()));
 }
 

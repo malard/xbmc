@@ -49,8 +49,8 @@ reach. New in 14: `Files.GetDirectory`, `Files.GetFileDetails`,
 `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
 `AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
 `Settings.SetSettingValue`, `Settings.ResetSettingValue`, and every `PVR`
-method that takes a channel, channel group, broadcast, timer, recording or
-provider id.
+method that takes a channel, channel group, broadcast, timer or recording
+id.
 
 The three `Settings` calls also stop refusing a *hidden* setting. If you
 relied on `InvalidParams` to mean "hidden on this installation", read
@@ -363,9 +363,8 @@ New since Kodi 21 and safe to ignore until you want it. The
   (`Playlist.OnPropertyChanged`).
 - **Skin lifecycle notifications**: `GUI.OnSkinLoaded`,
   `GUI.OnSkinLoadFailed` and `GUI.OnSkinUnloading`.
-- **PVR providers** are listable via `PVR.GetProviders` and
-  `PVR.GetProviderDetails`, and `PVR.GetPlayableBroadcasts` answers which
-  broadcasts in a time range can be played back.
+- **`PVR.GetPlayableBroadcasts`** answers which broadcasts in a time range can
+  be played back.
 - **`VideoLibrary.SetSourceContent`** assigns a content type and scraper to a
   source path, which previously only the "Set content" dialog could do.
 - **`Player.GetChapters`** returns the playing item's chapters.

@@ -16,7 +16,6 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestPVRBroadcastRange.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
-            TestPVRProviderSchema.cpp
             TestPVRRecordingSchema.cpp
             TestSetConfiguration.cpp
             TestSettingsLevel.cpp

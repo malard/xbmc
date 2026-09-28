@@ -2,7 +2,7 @@
   "openrpc": "1.3.2",
   "info": {
     "title": "Kodi JSON-RPC API",
-    "version": "13.1001.0",
+    "version": "15.0.0",
     "description": "Kodi's JSON-RPC 2.0 API. All methods are served from a single endpoint over HTTP POST and over WebSocket/TCP. Server-initiated notifications are only delivered over WebSocket/TCP and are documented separately in asyncapi.json.",
     "license": {
       "name": "GPL-2.0-or-later"
@@ -510,19 +510,19 @@
             "anyOf": [
               {
                 "type": "object",
+                "required": [
+                  "playlist"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "playlistid": {
-                    "$ref": "#/components/schemas/Playlist.Id"
+                  "playlist": {
+                    "$ref": "#/components/schemas/Playlist.Name"
                   },
                   "position": {
                     "$ref": "#/components/schemas/Playlist.Position",
-                    "default": 0
+                    "description": "The entry to start at; with none, the start of the play order"
                   }
-                },
-                "required": [
-                  "playlistid"
-                ]
+                }
               },
               {
                 "$ref": "#/components/schemas/Playlist.Item"
@@ -573,39 +573,39 @@
               },
               {
                 "type": "object",
+                "required": [
+                  "broadcastid"
+                ],
                 "additionalProperties": false,
                 "properties": {
                   "broadcastid": {
                     "$ref": "#/components/schemas/Library.Id"
                   }
-                },
-                "required": [
-                  "broadcastid"
-                ]
+                }
               },
               {
                 "type": "object",
+                "required": [
+                  "channelid"
+                ],
                 "additionalProperties": false,
                 "properties": {
                   "channelid": {
                     "$ref": "#/components/schemas/Library.Id"
                   }
-                },
-                "required": [
-                  "channelid"
-                ]
+                }
               },
               {
                 "type": "object",
+                "required": [
+                  "recordingid"
+                ],
                 "additionalProperties": false,
                 "properties": {
                   "recordingid": {
                     "$ref": "#/components/schemas/Library.Id"
                   }
-                },
-                "required": [
-                  "recordingid"
-                ]
+                }
               }
             ]
           }
@@ -665,6 +665,10 @@
                   }
                 ],
                 "default": false
+              },
+              "geometry": {
+                "$ref": "#/components/schemas/Player.Geometry",
+                "description": "Room geometry to apply for this playback. Reverts when it ends."
               }
             }
           }
@@ -703,71 +707,6 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "Player.GetActivePlayers",
-      "summary": "Returns all active players",
-      "tags": [
-        {
-          "name": "Player"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "object",
-            "properties": {
-              "playerid": {
-                "$ref": "#/components/schemas/Player.Id"
-              },
-              "playlistid": {
-                "$ref": "#/components/schemas/Playlist.Id"
-              },
-              "type": {
-                "$ref": "#/components/schemas/Player.Type"
-              },
-              "playertype": {
-                "type": "string",
-                "enum": [
-                  "internal",
-                  "external",
-                  "remote"
-                ]
-              }
-            },
-            "required": [
-              "playerid",
-              "playlistid",
-              "type",
-              "playertype"
-            ]
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
       "x-kodi-transport": "Response"
     },
     {
@@ -859,13 +798,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "properties",
           "required": true,
           "schema": {
@@ -877,10 +809,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -924,23 +855,15 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "properties",
           "schema": {
             "$ref": "#/components/schemas/List.Fields.All"
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -995,13 +918,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "play",
           "schema": {
             "$ref": "#/components/schemas/Global.Toggle",
@@ -1009,10 +925,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1056,17 +971,9 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
-          "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1091,6 +998,42 @@
         },
         {
           "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Player.NotifyAudioChainReady",
+      "summary": "Report that the downstream audio chain has finished settling, releasing a playback hold early. Intended for an add-on that can observe an AV processor or receiver directly; ignored when nothing is holding",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
         },
         {
           "$ref": "#/components/errors/BadPermission"
@@ -1155,13 +1098,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "offset",
           "required": true,
           "schema": {
@@ -1177,10 +1113,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1233,13 +1168,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "speed",
           "required": true,
           "schema": {
@@ -1269,10 +1197,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1316,13 +1243,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "tempo",
           "required": true,
           "schema": {
@@ -1337,10 +1257,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1384,13 +1303,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "value",
           "required": true,
           "schema": {
@@ -1403,10 +1315,10 @@
                     "description": "Percentage value to seek to"
                   }
                 },
+                "additionalProperties": false,
                 "required": [
                   "percentage"
-                ],
-                "additionalProperties": false
+                ]
               },
               {
                 "type": "object",
@@ -1416,10 +1328,10 @@
                     "description": "Time to seek to"
                   }
                 },
+                "additionalProperties": false,
                 "required": [
                   "time"
-                ],
-                "additionalProperties": false
+                ]
               },
               {
                 "type": "object",
@@ -1435,10 +1347,10 @@
                     "description": "Seek by predefined jumps"
                   }
                 },
+                "additionalProperties": false,
                 "required": [
                   "step"
-                ],
-                "additionalProperties": false
+                ]
               },
               {
                 "type": "object",
@@ -1448,19 +1360,18 @@
                     "description": "Seek by the given number of seconds"
                   }
                 },
+                "additionalProperties": false,
                 "required": [
                   "seconds"
-                ],
-                "additionalProperties": false
+                ]
               }
             ]
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1515,13 +1426,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "direction",
           "required": true,
           "schema": {
@@ -1535,10 +1439,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1582,13 +1485,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "zoom",
           "required": true,
           "schema": {
@@ -1610,10 +1506,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1700,6 +1595,116 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Player.SetGeometry",
+      "summary": "Change the room geometry in force partway through a title, for a system driving a motorised room. Takes effect on the next frame and announces Player.OnContentGeometryChange carrying what Kodi actually did, which is not necessarily what was asked for. A stated raster reaches the layout by the same path the corresponding setting does, so the interface re-selects the layout it holds for the new shape - a change no other field here causes. Everything stated here reverts when playback ends, so an instruction given for one title cannot leave the room in a shape nothing on screen explains. Equivalent to the geometry option of Player.Open, which covers the play-time case without a second call.",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "geometry",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Player.Geometry"
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Player.GetGeometry",
+      "summary": "The room geometry in force. Reports what was stated for this playback separately from what is actually in effect, because the two differ wherever nothing was stated and the viewer's setting is standing in. An automation that reconnects partway through a title needs both: what it previously asked for, and what the room is doing now.",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "stated": {
+              "$ref": "#/components/schemas/Player.Geometry",
+              "description": "What was stated for this playback. Zero, and null for osdplacement, mean nothing was stated and the setting applies."
+            },
+            "raster": {
+              "type": "number",
+              "description": "The raster in force, whether it came from an override or from the setting. Zero means the same as the display."
+            },
+            "osdplacement": {
+              "$ref": "#/components/schemas/Player.OsdPlacement",
+              "description": "The OSD placement in force, from whichever of the two stated it."
+            },
+            "screen": {
+              "$ref": "#/components/schemas/Player.ScreenGeometry",
+              "description": "Where the instruction actually put the picture. Absent while nothing is drawn, which is the same moment the rectangle in contentrect is absent and for the same reason."
+            }
+          },
+          "required": [
+            "stated",
+            "raster",
+            "osdplacement"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Player.GetViewMode",
       "summary": "Get view mode of video player",
       "tags": [
@@ -1760,6 +1765,126 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Player.SetDeclaredAspectRatio",
+      "summary": "Declare the aspect ratio of the content being played, overriding what is detected. Pass \"auto\" to withdraw a declaration",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "aspectratio",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Display aspect ratio. Normalised to the nearest ratio Kodi recognises; a value close to none of them is rejected"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "auto"
+                ],
+                "description": "Withdraw the declaration and return to detection"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Player.GetDeclaredAspectRatio",
+      "summary": "Get the aspect ratio declared for the content being played, if any",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "declared": {
+              "type": "boolean",
+              "description": "False when no ratio has been declared and detection applies"
+            },
+            "aspectratio": {
+              "type": "number",
+              "description": "Only present when declared is true"
+            },
+            "label": {
+              "type": "string",
+              "description": "The canonical label Kodi reports for the declared ratio"
+            },
+            "name": {
+              "type": "string",
+              "description": "What that ratio is called, empty when it has no established name"
+            },
+            "declaredon": {
+              "type": "string",
+              "description": "When the declaration was made"
+            }
+          },
+          "required": [
+            "declared"
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Player.Rotate",
       "summary": "Rotates current picture",
       "tags": [
@@ -1769,13 +1894,6 @@
       ],
       "paramStructure": "either",
       "params": [
-        {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
         {
           "name": "value",
           "schema": {
@@ -1788,10 +1906,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1835,13 +1952,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "to",
           "required": true,
           "schema": {
@@ -1861,10 +1971,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1899,7 +2008,7 @@
     },
     {
       "name": "Player.SetShuffle",
-      "summary": "Shuffle/Unshuffle items in the player",
+      "summary": "Turn shuffled play order on or off",
       "tags": [
         {
           "name": "Player"
@@ -1908,13 +2017,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "shuffle",
           "required": true,
           "schema": {
@@ -1922,10 +2024,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -1969,13 +2070,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "repeat",
           "required": true,
           "schema": {
@@ -1993,10 +2087,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2040,13 +2133,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "partymode",
           "required": true,
           "schema": {
@@ -2054,10 +2140,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2101,13 +2186,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "stream",
           "required": true,
           "schema": {
@@ -2128,10 +2206,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2175,13 +2252,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "stream",
           "required": true,
           "schema": {
@@ -2202,10 +2272,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2249,25 +2318,17 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "subtitle",
-          "required": true,
           "description": "Local path or remote URL to the subtitle file to load",
+          "required": true,
           "schema": {
             "type": "string"
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2311,13 +2372,6 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
           "name": "subtitle",
           "required": true,
           "schema": {
@@ -2348,10 +2402,9 @@
           }
         },
         {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -2402,15 +2455,15 @@
           "items": {
             "type": "object",
             "properties": {
-              "playlistid": {
-                "$ref": "#/components/schemas/Playlist.Id"
+              "playlist": {
+                "$ref": "#/components/schemas/Playlist.Name"
               },
               "type": {
                 "$ref": "#/components/schemas/Playlist.Type"
               }
             },
             "required": [
-              "playlistid",
+              "playlist",
               "type"
             ]
           }
@@ -2447,10 +2500,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2493,7 +2546,7 @@
     },
     {
       "name": "Playlist.GetItems",
-      "summary": "Get all items from playlist",
+      "summary": "Get all items from playlist, in list order",
       "tags": [
         {
           "name": "Playlist"
@@ -2502,10 +2555,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2538,7 +2591,7 @@
             "items": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/List.Item.All"
+                "$ref": "#/components/schemas/Playlist.Entry"
               }
             }
           },
@@ -2579,10 +2632,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2643,10 +2696,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2717,10 +2770,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2771,10 +2824,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         }
       ],
@@ -2815,10 +2868,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2870,7 +2923,7 @@
     },
     {
       "name": "Playlist.SetShuffle",
-      "summary": "Shuffle or unshuffle the playlist, whether or not it is currently being played. The items are reordered immediately, and the state persists unless overridden by the shuffled option of Player.Open. For picture playlists (aka slideshows) shuffling is only possible while a slideshow is running and cannot be undone.",
+      "summary": "Shuffle or unshuffle the play order of the playlist, whether or not it is being played; the list itself keeps its order. The state persists unless overridden by the shuffled option of Player.Open. A picture playlist (a slideshow) can only be shuffled while it runs, and cannot be unshuffled.",
       "tags": [
         {
           "name": "Playlist"
@@ -2879,10 +2932,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2933,10 +2986,10 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playlistid",
+          "name": "playlist",
           "required": true,
           "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Playlist.Name"
           }
         },
         {
@@ -2994,17 +3047,9 @@
       "paramStructure": "either",
       "params": [
         {
-          "name": "playerid",
-          "description": "The player. Exactly one of playerid and playlistid is given",
+          "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Player.Id"
-          }
-        },
-        {
-          "name": "playlistid",
-          "description": "The playlist a player is working through, in place of playerid",
-          "schema": {
-            "$ref": "#/components/schemas/Playlist.Id"
+            "$ref": "#/components/schemas/Player.Playlist"
           }
         }
       ],
@@ -9787,6 +9832,120 @@
       "deprecated": true
     },
     {
+      "name": "VideoLibrary.RefreshContentGeometry",
+      "summary": "Measure the content geometry of the file behind the given item again, replacing whatever is stored for it. Unlike the background sweep this does not ask whether the work is needed, so it is the only way to revisit a file that was measured successfully and got the wrong answer. Fails when content geometry detection is disabled, rather than reporting success for work it did not do",
+      "tags": [
+        {
+          "name": "VideoLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "movieid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "movieid"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "episodeid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "episodeid"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "musicvideoid": {
+                    "$ref": "#/components/schemas/Library.Id"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "musicvideoid"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Path to the file itself. Content geometry is stored per file, so this is the only form that can name one version of a movie that has several"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "file"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "thorough",
+          "description": "Sample far more densely than the setting asks for. A sequence shot in another ratio can sit entirely between two ordinary sample points, which is how a title cut in three ratios is recorded as having one shape; at this density it cannot. Costs roughly a second per point, so it is meant for one title at a time rather than for a library.",
+          "schema": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
+        }
+      ],
+      "x-kodi-permission": "UpdateData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "VideoLibrary.RefreshMusicVideo",
       "summary": "Refresh the given music video in the library. Use VideoLibrary.Refresh instead.",
       "tags": [
@@ -11001,6 +11160,103 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "GUI.SetScreenAlignment",
+      "summary": "Show or hide the screen alignment frames, and state which aspect ratios are drawn. The frames are drawn at the true shape and at the full size of the display, ignoring the raster, the overscan calibration and the interface's proportions, because they exist to be aligned to rather than corrected. Intended for programming motorised masking or lens memory presets with nobody at the keyboard: state one ratio, read back what is on screen, programme the preset against it, then move to the next. Session state only - nothing here is written to disk, and neither the set nor the tool survives a restart.",
+      "tags": [
+        {
+          "name": "GUI"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "show",
+          "description": "Whether the frames are on screen. Omitted leaves that as it is, so a set can be stated before the tool is shown, or changed while it is up",
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "ratios",
+          "description": "The ratios whose frames are drawn, replacing whatever was drawn before. A ratio the vocabulary does not hold is dropped rather than approximated: an installer naming 2.40 and being shown 2.35 would programme the wrong mask position. An empty array draws no frames",
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/GUI.ScreenAlignment",
+          "description": "The state in force, which is what the answer to GUI.GetScreenAlignment would be"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlGUI",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "GUI.GetScreenAlignment",
+      "summary": "The state of the screen alignment frames, and every ratio one can be drawn for",
+      "tags": [
+        {
+          "name": "GUI"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/GUI.ScreenAlignment"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Addons.GetAddons",
       "summary": "Gets all available addons",
       "tags": [
@@ -11686,134 +11942,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "PVR.GetProviders",
-      "summary": "Retrieves the providers of the enabled PVR clients",
-      "tags": [
-        {
-          "name": "PVR"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/PVR.Fields.Provider"
-          }
-        },
-        {
-          "name": "limits",
-          "schema": {
-            "$ref": "#/components/schemas/List.Limits"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "limits": {
-              "$ref": "#/components/schemas/List.LimitsReturned"
-            },
-            "providers": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/PVR.Details.Provider"
-              }
-            }
-          },
-          "required": [
-            "limits",
-            "providers"
-          ]
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "PVR.GetProviderDetails",
-      "summary": "Retrieves the details of a specific provider",
-      "tags": [
-        {
-          "name": "PVR"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "providerid",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/PVR.Fields.Provider"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "providerdetails": {
-              "$ref": "#/components/schemas/PVR.Details.Provider"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -13937,6 +14065,9 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
           "$ref": "#/components/errors/BadPermission"
         }
       ],
@@ -13990,6 +14121,9 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
           "$ref": "#/components/errors/BadPermission"
         }
       ],
@@ -14033,6 +14167,9 @@
         },
         {
           "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
         },
         {
           "$ref": "#/components/errors/BadPermission"
@@ -15472,12 +15609,6 @@
           "radio"
         ]
       },
-      "Playlist.Id": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 2,
-        "default": -1
-      },
       "Playlist.Type": {
         "type": "string",
         "enum": [
@@ -15702,12 +15833,6 @@
           }
         ]
       },
-      "Player.Id": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 2,
-        "default": -1
-      },
       "Player.Type": {
         "type": "string",
         "enum": [
@@ -15860,6 +15985,107 @@
           "all"
         ]
       },
+      "Player.OsdPlacement": {
+        "type": "string",
+        "enum": [
+          "raster",
+          "picture"
+        ]
+      },
+      "Player.Geometry": {
+        "type": "object",
+        "description": "What a system driving the room has told Kodi to do for this playback, overriding the corresponding settings. Every field is independent: state only the ones you are driving and the viewer's own choices stand for the rest. An override lasts for this playback only and reverts when it ends. A field omitted, or given as null, is left exactly as it is - so an automation moving the lens need not restate an OSD placement it set earlier. To withdraw a single override without ending playback, give zero for a ratio or \"setting\" for the placement.",
+        "additionalProperties": false,
+        "properties": {
+          "raster": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "minimum": 0
+              }
+            ],
+            "default": null,
+            "description": "The aspect ratio of the area Kodi may operate in. This is the whole of the lens control: nothing Kodi draws ever exceeds the raster, so a motorised room does not opt out of that constraint, it moves it. Both choices for a given title are legitimate and the cost is yours to weigh - a 16:9 title in a 1.78 raster fills the display and the lens zooms in, while the same title in a 2.40 raster is pillarboxed and costs resolution because the lens is zoomed out. Zero means the same as the display."
+          },
+          "osdplacement": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "raster",
+                  "picture",
+                  "setting"
+                ]
+              }
+            ],
+            "default": null,
+            "description": "Whether the interface is laid out against the whole raster or against the picture as it was actually drawn. \"setting\" withdraws the override and returns this to the viewer's own choice, which is what zero does for the two ratios."
+          },
+          "maintain": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "minimum": 0
+              }
+            ],
+            "default": null,
+            "description": "Render this title into the area of the raster with this ratio, so that the picture and the lens memory about to be selected correspond. This is a rendering target, not a claim about the content: a 2.35 film maintained at 1.78 is a valid instruction, and it neither reads nor disturbs any aspect ratio declared for the file. The target nests inside the raster rather than replacing it, so the picture cannot be pushed off the screen. Content wider than the maintained ratio is letterboxed within the target and content taller is pillarboxed within it; content taller than the maintained ratio is unaffected, because it binds on a height the target already has. Zero maintains nothing."
+          }
+        }
+      },
+      "Player.ScreenRect": {
+        "type": "object",
+        "description": "A rectangle in screen pixels.",
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ]
+      },
+      "Player.ScreenGeometry": {
+        "type": "object",
+        "description": "Where Kodi actually put the picture, in screen pixels. This is what was done rather than what the content is: a raster and a maintained ratio together decide the rectangle, and neither of those ratios says where the picture landed. Present only while something is drawn.",
+        "additionalProperties": false,
+        "properties": {
+          "picture": {
+            "$ref": "#/components/schemas/Player.ScreenRect",
+            "description": "The content on the screen. Black bars coded into the video are outside it, as are the bars Kodi itself is showing around it - this is the lit rectangle, which is what a mask is driven to."
+          },
+          "raster": {
+            "$ref": "#/components/schemas/Player.ScreenRect",
+            "description": "The area Kodi is operating in, which the picture is contained by and never exceeds. This is what a lens is driven to, and it is not the picture whenever the content is narrower than the room."
+          }
+        },
+        "required": [
+          "picture",
+          "raster"
+        ]
+      },
       "Player.Audio.Stream": {
         "type": "object",
         "properties": {
@@ -15872,7 +16098,7 @@
           },
           "language": {
             "type": "string",
-            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, und where it declares one that names no language"
           },
           "codec": {
             "type": "string"
@@ -15925,7 +16151,7 @@
           },
           "language": {
             "type": "string",
-            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, und where it declares one that names no language"
           },
           "codec": {
             "type": "string"
@@ -15958,7 +16184,7 @@
           },
           "language": {
             "type": "string",
-            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, passed through unchanged when unrecognized"
+            "description": "BCP 47 language tag (e.g. en, en-AU), empty when the stream declares none, und where it declares one that names no language"
           },
           "codec": {
             "type": "string"
@@ -15992,8 +16218,9 @@
           "time",
           "percentage",
           "totaltime",
-          "playlistid",
+          "playlist",
           "position",
+          "displayorder",
           "repeat",
           "shuffled",
           "canseek",
@@ -16011,7 +16238,9 @@
           "live",
           "currentvideostream",
           "videostreams",
-          "cachepercentage"
+          "cachepercentage",
+          "playertype",
+          "contentrect"
         ]
       },
       "Player.Property.Value": {
@@ -16035,11 +16264,15 @@
           "totaltime": {
             "$ref": "#/components/schemas/Global.Time"
           },
-          "playlistid": {
-            "$ref": "#/components/schemas/Playlist.Id"
+          "playlist": {
+            "$ref": "#/components/schemas/Playlist.Name"
           },
           "position": {
             "$ref": "#/components/schemas/Playlist.Position"
+          },
+          "displayorder": {
+            "$ref": "#/components/schemas/Playlist.Position",
+            "description": "The current entry's place in play order, which is list order unless shuffled"
           },
           "repeat": {
             "$ref": "#/components/schemas/Player.Repeat"
@@ -16124,6 +16357,18 @@
           },
           "cachepercentage": {
             "$ref": "#/components/schemas/Player.Position.Percentage"
+          },
+          "playertype": {
+            "type": "string",
+            "enum": [
+              "internal",
+              "external",
+              "remote"
+            ]
+          },
+          "contentrect": {
+            "$ref": "#/components/schemas/Video.ContentRect",
+            "description": "Where the picture sits inside the frame, and what shape it is. A property of the player rather than of a stream, because it describes what is on the screen: it is served whether or not a video stream is selected, and it outlives any one stream within a playback."
           }
         }
       },
@@ -16305,19 +16550,18 @@
       "Player.Notifications.Player": {
         "type": "object",
         "properties": {
-          "playerid": {
-            "$ref": "#/components/schemas/Player.Id"
-          },
-          "playlistid": {
-            "$ref": "#/components/schemas/Playlist.Id"
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Player.Playlist"
+            }
           },
           "speed": {
             "type": "integer"
           }
         },
         "required": [
-          "playerid",
-          "playlistid"
+          "players"
         ]
       },
       "Player.Notifications.Player.Seek": {
@@ -17494,6 +17738,119 @@
           "additionalProperties": false
         }
       },
+      "Video.ContentRect": {
+        "type": "object",
+        "description": "The picture within the frame, after pixel aspect correction. Black bars coded into the video are outside it. The rectangle is absent when there is no frame behind it, which is the case while nothing is playing and Kodi is reporting the shape it rests at; aspect, label and name are always present, and are what a consumer acting on the shape rather than on the pixels should read.",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "Absent when there is no frame behind the rectangle, along with the five below - which is the case while nothing is playing and Kodi is reporting the shape it rests at. A library row carries no rectangle at all until its file is measured, so it is never the shape this describes."
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "framewidth": {
+            "type": "number",
+            "description": "The whole frame, in the same space, which the rectangle is contained by"
+          },
+          "frameheight": {
+            "type": "number"
+          },
+          "aspect": {
+            "type": "number",
+            "description": "The ratio the content was shot at"
+          },
+          "label": {
+            "type": "string",
+            "description": "Kodi's name for that ratio, empty when it corresponds to none"
+          },
+          "name": {
+            "type": "string",
+            "description": "What that ratio is called, empty when it has no established name. Served beside label rather than instead of it, and never translated, so it can be compared against."
+          },
+          "varies": {
+            "type": "boolean",
+            "description": "The title changes shape partway through, so one rectangle cannot describe all of it"
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "Measured by a superseded detector, and served rather than discarded"
+          },
+          "rejected": {
+            "type": "boolean",
+            "description": "A measurement existed and the plausibility gate refused it, so the frame is being served instead. The only thing that tells that apart from never having measured at all, which is otherwise identical: both report source container and both serve the frame. Which of the two it is decides whether the answer is to measure the file or to look at why detection failed on it."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "container",
+              "cached",
+              "live",
+              "declared"
+            ],
+            "description": "container means nothing is known and the frame is the answer"
+          },
+          "sections": {
+            "type": "array",
+            "description": "Every geometry the title was measured in, dominant first, in the same space and frame as the rectangle above. Present whatever decided the rectangle: a declared ratio pins the answer without erasing what was measured, and a measurement the plausibility gate refused is still what detection saw. Empty when nothing was measured, and when the answer is a live reading on a file no stored measurement retained the shapes of. This is what varies can be acted on with.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                },
+                "aspect": {
+                  "type": "number"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Kodi's name for that ratio, empty when it corresponds to none"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "What that ratio is called, empty when it has no established name"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y",
+                "width",
+                "height",
+                "aspect",
+                "label",
+                "name"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "aspect",
+          "label",
+          "name",
+          "varies",
+          "stale",
+          "rejected",
+          "source",
+          "sections"
+        ]
+      },
       "Video.Streams": {
         "type": "object",
         "properties": {
@@ -17508,7 +17865,7 @@
                 },
                 "language": {
                   "type": "string",
-                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, und where it declares one that names no language"
                 },
                 "channels": {
                   "type": "integer"
@@ -17562,7 +17919,7 @@
                 },
                 "language": {
                   "type": "string",
-                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, und where it declares one that names no language"
                 },
                 "hdrtype": {
                   "type": "string"
@@ -17584,6 +17941,10 @@
                 "version": {
                   "type": "integer",
                   "description": "Version of the stream details record"
+                },
+                "contentrect": {
+                  "$ref": "#/components/schemas/Video.ContentRect",
+                  "description": "Present only when the picture rectangle has been measured for this file. Absent means it has not been, not that the picture fills the frame."
                 }
               },
               "additionalProperties": false
@@ -17597,7 +17958,7 @@
               "properties": {
                 "language": {
                   "type": "string",
-                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, passed through unchanged when unrecognized"
+                  "description": "BCP 47 language tag (e.g. en), a language only in library values, empty when the stream declares none, und where it declares one that names no language"
                 },
                 "source": {
                   "type": "integer",
@@ -18490,72 +18851,6 @@
         },
         "required": [
           "clientid"
-        ]
-      },
-      "PVR.Provider.Type": {
-        "type": "string",
-        "enum": [
-          "unknown",
-          "addon",
-          "satellite",
-          "cable",
-          "aerial",
-          "iptv",
-          "other"
-        ]
-      },
-      "PVR.Fields.Provider": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Item.Fields.Base"
-          }
-        ],
-        "items": {
-          "type": "string",
-          "enum": [
-            "clientid",
-            "providername",
-            "providertype",
-            "iconpath",
-            "countries",
-            "languages"
-          ]
-        }
-      },
-      "PVR.Details.Provider": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Item.Details.Base"
-          }
-        ],
-        "properties": {
-          "providerid": {
-            "$ref": "#/components/schemas/Library.Id"
-          },
-          "clientid": {
-            "$ref": "#/components/schemas/Library.Id"
-          },
-          "providername": {
-            "type": "string"
-          },
-          "providertype": {
-            "$ref": "#/components/schemas/PVR.Provider.Type"
-          },
-          "iconpath": {
-            "type": "string",
-            "description": "Image URL for the provider's own icon, servable by the web server's /image/ endpoint."
-          },
-          "countries": {
-            "$ref": "#/components/schemas/Array.String",
-            "description": "ISO 3166 country codes this provider serves."
-          },
-          "languages": {
-            "$ref": "#/components/schemas/Array.String",
-            "description": "RFC 5646 language codes this provider broadcasts in."
-          }
-        },
-        "required": [
-          "providerid"
         ]
       },
       "PVR.TimerState": {
@@ -20224,6 +20519,37 @@
           }
         }
       },
+      "GUI.ScreenAlignment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "showing": {
+            "type": "boolean",
+            "description": "Whether the frames are on the screen now"
+          },
+          "ratios": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "number"
+            },
+            "description": "The ratios whose frames are drawn, ascending. Reported whether or not the tool is showing, because a set may be stated before it is brought up"
+          },
+          "available": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "number"
+            },
+            "description": "Every ratio a frame can be drawn for, ascending. This is Kodi's aspect ratio vocabulary, which a viewer may add to in userdata, so it is read rather than assumed"
+          }
+        },
+        "required": [
+          "showing",
+          "ratios",
+          "available"
+        ]
+      },
       "System.Property.Name": {
         "type": "string",
         "enum": [
@@ -20305,7 +20631,8 @@
           "version",
           "sorttokens",
           "language",
-          "loglevel"
+          "loglevel",
+          "contentrect"
         ]
       },
       "Application.Property.Value": {
@@ -20370,7 +20697,11 @@
           "language": {
             "type": "string",
             "minLength": 1,
-            "description": "Current language code and region e.g. en_GB"
+            "description": "The interface language as a BCP 47 language tag e.g. en-GB"
+          },
+          "contentrect": {
+            "$ref": "#/components/schemas/Video.ContentRect",
+            "description": "The shape on the screen, which is the picture while something is playing and the shape Kodi rests at otherwise. Answerable at any time, unlike the copy on Player.GetProperties, which describes a stream and so requires one to exist."
           }
         }
       },
@@ -21179,6 +21510,42 @@
           "tvshow",
           "episode",
           "musicvideo"
+        ]
+      },
+      "Playlist.Name": {
+        "type": "string",
+        "enum": [
+          "video",
+          "audio",
+          "picture"
+        ]
+      },
+      "Playlist.Entry": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/List.Item.All"
+          }
+        ],
+        "properties": {
+          "position": {
+            "$ref": "#/components/schemas/Playlist.Position",
+            "description": "The entry's place in the list, which Player.GoTo and Playlist.Remove take"
+          },
+          "displayorder": {
+            "$ref": "#/components/schemas/Playlist.Position",
+            "description": "The entry's place in play order, which is list order unless shuffled"
+          }
+        },
+        "required": [
+          "position",
+          "displayorder"
+        ]
+      },
+      "Player.Playlist": {
+        "type": "string",
+        "enum": [
+          "video",
+          "audio"
         ]
       },
       "Addon.Types": {

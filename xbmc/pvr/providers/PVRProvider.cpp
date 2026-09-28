@@ -19,17 +19,8 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <vector>
 
 using namespace PVR;
-
-namespace
-{
-std::vector<std::string> Tokenize(const std::string& str)
-{
-  return StringUtils::Split(str, PROVIDER_STRING_TOKEN_SEPARATOR);
-}
-} // unnamed namespace
 
 const std::string CPVRProvider::IMAGE_OWNER_PATTERN = "pvrprovider";
 
@@ -69,40 +60,6 @@ CPVRProvider::CPVRProvider(int iClientId,
 bool CPVRProvider::operator==(const CPVRProvider& right) const
 {
   return (m_iUniqueId == right.m_iUniqueId && m_iClientId == right.m_iClientId);
-}
-
-void CPVRProvider::Serialize(CVariant& value) const
-{
-  value["providerid"] = m_iDatabaseId;
-  value["clientid"] = m_iClientId;
-  value["providername"] = m_strName;
-  switch (m_type)
-  {
-    case PVR_PROVIDER_TYPE_ADDON:
-      value["providertype"] = "addon";
-      break;
-    case PVR_PROVIDER_TYPE_SATELLITE:
-      value["providertype"] = "satellite";
-      break;
-    case PVR_PROVIDER_TYPE_CABLE:
-      value["providertype"] = "cable";
-      break;
-    case PVR_PROVIDER_TYPE_AERIAL:
-      value["providertype"] = "aerial";
-      break;
-    case PVR_PROVIDER_TYPE_IPTV:
-      value["providertype"] = "iptv";
-      break;
-    case PVR_PROVIDER_TYPE_OTHER:
-      value["providertype"] = "other";
-      break;
-    default:
-      value["providertype"] = "unknown";
-      break;
-  }
-  value["iconpath"] = GetIconPath();
-  value["countries"] = GetCountries();
-  value["languages"] = GetLanguages();
 }
 
 int CPVRProvider::GetDatabaseId() const
@@ -196,12 +153,6 @@ bool CPVRProvider::SetIconPath(const std::string& strIconPath)
   return false;
 }
 
-std::vector<std::string> CPVRProvider::GetCountries() const
-{
-  std::unique_lock lock(m_critSection);
-  return Tokenize(m_strCountries);
-}
-
 std::string CPVRProvider::GetCountriesDBString() const
 {
   std::unique_lock lock(m_critSection);
@@ -218,12 +169,6 @@ bool CPVRProvider::SetCountriesFromDBString(std::string_view strCountries)
   }
 
   return false;
-}
-
-std::vector<std::string> CPVRProvider::GetLanguages() const
-{
-  std::unique_lock lock(m_critSection);
-  return Tokenize(m_strLanguages);
 }
 
 std::string CPVRProvider::GetLanguagesDBString() const

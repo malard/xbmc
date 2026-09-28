@@ -243,7 +243,8 @@ void CJobManager::CancelJob(unsigned int jobID)
 
   // or its completion callback is, which the owner must outlive just the same
   const auto completing = m_completingJobs.find(jobID);
-  if (completing != m_completingJobs.cend() && completing->second != std::this_thread::get_id())
+  if (completing != m_completingJobs.cend() &&
+      completing->second.thread != std::this_thread::get_id())
   {
     m_completeDone.wait(lock, [this, jobID] { return !m_completingJobs.contains(jobID); });
     return;
@@ -270,13 +271,12 @@ void CJobManager::StartWorkers(CJob::PRIORITY priority)
   // Do we have any sleeping threads?
   if (m_idleWorkers > 0)
     m_jobEvent.Set();
-  if (m_idleWorkers >= wanted)
-    return;
 
-  // Bounds the pool. A worker in neither count is starting up or returning from a callback and
-  // will take a queued job; one that has timed out but not yet removed itself will not, which is
-  // a known gap.
-  if (m_workers.size() >= GetMaxWorkers(priority))
+  // A worker that is not busy is parked, starting up or returning from a callback, and will take a
+  // queued job; one that has timed out but not yet removed itself will not, which is a known gap.
+  const size_t busy{GetBusyCount()};
+  const size_t free{m_workers.size() > busy ? m_workers.size() - busy : 0};
+  if (free >= wanted)
     return;
 
   // Everyone is busy - we need more workers
@@ -423,7 +423,8 @@ void CJobManager::OnJobComplete(bool success, CJob* job)
       // when another thread modifies m_processing during callback execution
       item.emplace(std::move(*i));
       m_processing.erase(i);
-      m_completingJobs.emplace(item->GetId(), std::this_thread::get_id());
+      m_completingJobs.emplace(item->GetId(),
+                               CompletingJob{std::this_thread::get_id(), item->GetPriority()});
     }
     return item;
   }();
@@ -517,14 +518,16 @@ unsigned int CJobManager::GetMaxPausableWorkers()
 bool CJobManager::CanStart(CJob::PRIORITY priority) const
 {
   // PRIORITY_LOW_PAUSABLE is background work that spends its time waiting on a source rather than
-  // on a core. Currently only used for texture cache.
-  const auto pausable{static_cast<size_t>(
-      std::ranges::count_if(m_processing, [](const CWorkItem& item)
-                            { return item.GetPriority() == CJob::PRIORITY_LOW_PAUSABLE; }))};
+  // on a core. Currently only used for texture cache. A job finishing still holds its worker.
+  const auto pausable{static_cast<size_t>(std::ranges::count_if(
+                          m_processing, [](const CWorkItem& item)
+                          { return item.GetPriority() == CJob::PRIORITY_LOW_PAUSABLE; })) +
+                      static_cast<size_t>(std::ranges::count_if(
+                          m_completingJobs, [](const auto& completing)
+                          { return completing.second.priority == CJob::PRIORITY_LOW_PAUSABLE; }))};
 
   if (priority == CJob::PRIORITY_LOW_PAUSABLE)
     return pausable < GetMaxWorkers(priority);
 
-  // a job finishing still holds its worker
   return GetBusyCount() - pausable < GetMaxWorkers(priority);
 }

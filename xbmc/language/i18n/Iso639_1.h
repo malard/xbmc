@@ -27,6 +27,13 @@ public:
   static bool ListLanguages(std::map<std::string, std::string>& langMap);
 
   /*!
+   * \brief Provide the withdrawn ISO 639-1 codes, which media may still be tagged with
+   * \param[in] langMap map to add languages to
+   * \return true for success, false otherwise
+   */
+  static bool ListWithdrawnLanguages(std::map<std::string, std::string>& langMap);
+
+  /*!
    * \brief Provide every name an ISO 639-1 language is known by, mapped to its code
    * \param[in] nameMap map to add the names to; an entry already present is kept
    * \return true for success, false otherwise

@@ -484,7 +484,7 @@ TEST_F(AudioSortKeyTester, DescribedStreamFollowsTheLanguageDetailsSetting)
   EXPECT_EQ("eng", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_DEFAULT);
-  EXPECT_EQ("fra", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("fre", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_BEST);
   EXPECT_EQ("ger", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
@@ -516,7 +516,7 @@ TEST_F(AudioSortKeyTester, SortKeyFollowsTheLanguageDetailsSetting)
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_BEST);
   tag.ToSortable(sortable, Field::AUDIO_LANGUAGE);
-  EXPECT_EQ("ger", sortable[Field::AUDIO_LANGUAGE].asString());
+  EXPECT_EQ("de", sortable[Field::AUDIO_LANGUAGE].asString());
 }
 
 //! Content geometry survives the export and import round trip.

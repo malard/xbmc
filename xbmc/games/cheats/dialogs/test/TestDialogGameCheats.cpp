@@ -8,7 +8,7 @@
 
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
-#include "language/LangInfo.h"
+#include "language/LanguageLoader.h"
 #include "ServiceBroker.h"
 #include "games/cheats/dialogs/DialogGameCheats.h"
 #include "guilib/GUIButtonControl.h"
@@ -233,7 +233,7 @@ protected:
   void SetUp() override
   {
     ASSERT_TRUE(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Load(
-        g_langInfo.GetLanguagePath(), LANGUAGE_DEFAULT));
+        KODI::LANGUAGE::CLanguageLoader::GetLanguagePath(), LANGUAGE_DEFAULT));
   }
 
   void TearDown() override { CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Clear(); }

@@ -21,7 +21,6 @@ namespace PVR
 class CPVRChannelGroup;
 class CPVREpg;
 class CPVREpgInfoTag;
-class CPVRProvider;
 }
 
 namespace JSONRPC
@@ -39,16 +38,6 @@ namespace JSONRPC
                                      IClient* client,
                                      const CVariant& parameterObject,
                                      CVariant& result);
-    static JSONRPC_STATUS GetProviders(const std::string& method,
-                                       ITransportLayer* transport,
-                                       IClient* client,
-                                       const CVariant& parameterObject,
-                                       CVariant& result);
-    static JSONRPC_STATUS GetProviderDetails(const std::string& method,
-                                             ITransportLayer* transport,
-                                             IClient* client,
-                                             const CVariant& parameterObject,
-                                             CVariant& result);
     static JSONRPC_STATUS GetBroadcasts(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetBroadcastsByChannelGroup(const std::string& method,
                                                       ITransportLayer* transport,
@@ -105,9 +94,5 @@ namespace JSONRPC
         const CVariant& parameterObject,
         CVariant& result,
         bool append = false);
-    static void FillProviderDetails(const std::shared_ptr<const PVR::CPVRProvider>& provider,
-                                    const CVariant& parameterObject,
-                                    CVariant& result,
-                                    bool append = false);
   };
 }

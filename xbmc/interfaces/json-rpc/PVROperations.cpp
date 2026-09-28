@@ -25,8 +25,6 @@
 #include "pvr/epg/EpgInfoTag.h"
 #include "pvr/guilib/PVRGUIActionsChannels.h"
 #include "pvr/guilib/PVRGUIActionsTimers.h"
-#include "pvr/providers/PVRProvider.h"
-#include "pvr/providers/PVRProviders.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
 #include "pvr/timers/PVRTimers.h"
@@ -212,78 +210,6 @@ JSONRPC_STATUS CPVROperations::GetClients(const std::string& method,
   }
 
   return OK;
-}
-
-JSONRPC_STATUS CPVROperations::GetProviders(const std::string& method,
-                                            ITransportLayer* transport,
-                                            IClient* client,
-                                            const CVariant& parameterObject,
-                                            CVariant& result)
-{
-  if (!CServiceBroker::GetPVRManager().IsStarted())
-    return FailedToExecute;
-
-  const std::shared_ptr<const CPVRProviders> providers{CServiceBroker::GetPVRManager().Providers()};
-  if (!providers)
-    return FailedToExecute;
-
-  const std::vector<std::shared_ptr<CPVRProvider>> providerList{providers->GetProviders()};
-
-  int start{0};
-  int end{0};
-  HandleLimits(parameterObject, result, static_cast<int>(providerList.size()), start, end);
-
-  result["providers"] = CVariant{CVariant::VariantTypeArray};
-
-  for (int index = start; index < end; ++index)
-  {
-    FillProviderDetails(providerList[index], parameterObject, result["providers"], true);
-  }
-
-  return OK;
-}
-
-JSONRPC_STATUS CPVROperations::GetProviderDetails(const std::string& method,
-                                                  ITransportLayer* transport,
-                                                  IClient* client,
-                                                  const CVariant& parameterObject,
-                                                  CVariant& result)
-{
-  if (!CServiceBroker::GetPVRManager().IsStarted())
-    return FailedToExecute;
-
-  const std::shared_ptr<const CPVRProviders> providers{CServiceBroker::GetPVRManager().Providers()};
-  if (!providers)
-    return FailedToExecute;
-
-  const std::shared_ptr<const CPVRProvider> provider{
-      providers->GetById(static_cast<int>(parameterObject["providerid"].asInteger()))};
-  if (!provider)
-    return NotFound;
-
-  FillProviderDetails(provider, parameterObject, result["providerdetails"], false);
-
-  return OK;
-}
-
-void CPVROperations::FillProviderDetails(const std::shared_ptr<const CPVRProvider>& provider,
-                                         const CVariant& parameterObject,
-                                         CVariant& result,
-                                         bool append /* = false */)
-{
-  CVariant object{CVariant::VariantTypeObject};
-  object["providerid"] = provider->GetDatabaseId();
-  object["label"] = provider->GetName();
-
-  std::set<std::string> fields{RequestedFields(parameterObject)};
-
-  // A provider has no file item, so the serialized values are all there is to answer from.
-  FillDetails(provider.get(), {}, fields, object);
-
-  if (append)
-    result.append(object);
-  else
-    result = object;
 }
 
 JSONRPC_STATUS CPVROperations::GetBroadcasts(const std::string& method,

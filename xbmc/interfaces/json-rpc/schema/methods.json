@@ -638,7 +638,8 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [],
-    "returns": "string"
+    "returns": "string",
+    "errors": []
   },
   "Player.GetAudioDelay": {
     "type": "method",
@@ -1002,7 +1003,10 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.GetGeometry": {
     "type": "method",
@@ -1036,7 +1040,10 @@
         "raster",
         "osdplacement"
       ]
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Player.GetViewMode": {
     "type": "method",
@@ -1099,7 +1106,11 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
   },
   "Player.GetDeclaredAspectRatio": {
     "type": "method",
@@ -1134,7 +1145,8 @@
       "required": [
         "declared"
       ]
-    }
+    },
+    "errors": []
   },
   "Player.Rotate": {
     "type": "method",
@@ -1805,11 +1817,11 @@
         "chapters"
       ]
     },
-    "transport": "Response",
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "transport": "Response"
   },
   "Files.GetSources": {
     "type": "method",
@@ -6953,7 +6965,13 @@
         }
       }
     ],
-    "returns": "string"
+    "returns": "string",
+    "errors": [
+      "InternalError",
+      "FailedToExecute",
+      "NotFound",
+      "Unavailable"
+    ]
   },
   "VideoLibrary.RefreshMusicVideo": {
     "type": "method",
@@ -7202,48 +7220,6 @@
       "InternalError",
       "NotFound"
     ]
-  },
-  "VideoLibrary.RelocatePath": {
-    "type": "method",
-    "description": "Rewrites the location the library stores for items whose files have moved, keeping each item, its identifiers, its playback state and its artwork",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "from",
-        "type": "string",
-        "required": true,
-        "minLength": 1,
-        "description": "Path prefix the library currently stores. A trailing separator is added if missing"
-      },
-      {
-        "name": "to",
-        "type": "string",
-        "required": true,
-        "minLength": 1,
-        "description": "Path prefix to store in its place. Must lie within a video source"
-      }
-    ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "paths": {
-          "type": "integer",
-          "required": true,
-          "description": "Number of stored paths rewritten"
-        },
-        "items": {
-          "type": "integer",
-          "required": true,
-          "description": "Number of library items whose stored location changed"
-        },
-        "art": {
-          "type": "integer",
-          "required": true,
-          "description": "Number of artwork locations rewritten"
-        }
-      }
-    }
   },
   "VideoLibrary.Export": {
     "type": "method",
@@ -7696,7 +7672,10 @@
     "returns": {
       "$ref": "#/$defs/GUI.ScreenAlignment",
       "description": "The state in force, which is what the answer to GUI.GetScreenAlignment would be"
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "GUI.GetScreenAlignment": {
     "type": "method",
@@ -7706,7 +7685,10 @@
     "params": [],
     "returns": {
       "$ref": "#/$defs/GUI.ScreenAlignment"
-    }
+    },
+    "errors": [
+      "FailedToExecute"
+    ]
   },
   "Addons.GetAddons": {
     "type": "method",
@@ -8138,80 +8120,6 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
-  },
-  "PVR.GetProviders": {
-    "type": "method",
-    "description": "Retrieves the providers of the enabled PVR clients",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/PVR.Fields.Provider"
-        }
-      },
-      {
-        "name": "limits",
-        "schema": {
-          "$ref": "#/$defs/List.Limits"
-        }
-      }
-    ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "limits": {
-          "$ref": "#/$defs/List.LimitsReturned"
-        },
-        "providers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PVR.Details.Provider"
-          }
-        }
-      },
-      "required": [
-        "limits",
-        "providers"
-      ]
-    },
-    "errors": [
-      "FailedToExecute"
-    ]
-  },
-  "PVR.GetProviderDetails": {
-    "type": "method",
-    "description": "Retrieves the details of a specific provider",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "providerid",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/PVR.Fields.Provider"
-        }
-      }
-    ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "providerdetails": {
-          "$ref": "#/$defs/PVR.Details.Provider"
-        }
-      }
-    },
-    "errors": [
-      "FailedToExecute",
-      "NotFound"
     ]
   },
   "PVR.GetBroadcasts": {
@@ -9227,7 +9135,8 @@
       "$ref": "#/$defs/Application.Property.Value"
     },
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "FailedToExecute"
     ]
   },
   "Application.SetVolume": {
@@ -9255,7 +9164,8 @@
     ],
     "returns": "integer",
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "FailedToExecute"
     ]
   },
   "Application.SetMute": {
@@ -9277,7 +9187,8 @@
       "description": "Mute state"
     },
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "FailedToExecute"
     ]
   },
   "Application.SetLogLevel": {

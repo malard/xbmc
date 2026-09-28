@@ -36,7 +36,10 @@ std::set<std::string> SerializedProperties(const CStreamDetail& detail)
 
 TEST(TestVideoStreamsSchema, VideoDeclaresWhatTheSerializerEmits)
 {
-  EXPECT_EQ(SerializedProperties(CStreamDetailVideo{}), DeclaredProperties("video"));
+  // CVideoInfoTag adds contentrect to the first video stream when it holds a content geometry
+  std::set<std::string> declared{DeclaredProperties("video")};
+  EXPECT_EQ(1, declared.erase("contentrect"));
+  EXPECT_EQ(SerializedProperties(CStreamDetailVideo{}), declared);
 }
 
 TEST(TestVideoStreamsSchema, AudioDeclaresWhatTheSerializerEmits)

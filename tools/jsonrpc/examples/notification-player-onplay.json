@@ -13,7 +13,9 @@
           "year": 1999
         },
         "player": {
-          "playerid": 1,
+          "players": [
+            "video"
+          ],
           "speed": 1
         }
       }

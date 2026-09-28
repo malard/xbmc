@@ -287,10 +287,14 @@ private:
   std::thread::id m_abortingThread;
   std::condition_variable_any m_abortDone;
 
-  // Jobs out of m_processing whose completion callbacks are running, against the thread
-  // running each. They are neither processing nor free, and an owner cancelling one has to
-  // outlive its callback.
-  std::unordered_map<unsigned int, std::thread::id> m_completingJobs;
+  // Jobs out of m_processing whose completion callbacks are running. They are neither processing
+  // nor free, and an owner cancelling one has to outlive its callback.
+  struct CompletingJob
+  {
+    std::thread::id thread;
+    CJob::PRIORITY priority;
+  };
+  std::unordered_map<unsigned int, CompletingJob> m_completingJobs;
   std::condition_variable_any m_completeDone;
 
   mutable CCriticalSection m_section;

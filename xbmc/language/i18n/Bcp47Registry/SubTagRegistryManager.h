@@ -35,11 +35,6 @@ public:
   CSubTagRegistryManager() = default;
   ~CSubTagRegistryManager();
 
-  /*!
-   * \brief The registry every tag is validated against, loaded on first use.
-   */
-  static const CSubTagRegistryManager& GetInstance();
-
   bool Initialize(std::unique_ptr<IRegistryRecordProvider> provider = nullptr);
   void Deinitialize();
 

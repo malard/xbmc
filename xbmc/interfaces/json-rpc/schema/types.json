@@ -3557,72 +3557,6 @@
       "clientid"
     ]
   },
-  "PVR.Provider.Type": {
-    "type": "string",
-    "enum": [
-      "unknown",
-      "addon",
-      "satellite",
-      "cable",
-      "aerial",
-      "iptv",
-      "other"
-    ]
-  },
-  "PVR.Fields.Provider": {
-    "allOf": [
-      {
-        "$ref": "#/$defs/Item.Fields.Base"
-      }
-    ],
-    "items": {
-      "type": "string",
-      "enum": [
-        "clientid",
-        "providername",
-        "providertype",
-        "iconpath",
-        "countries",
-        "languages"
-      ]
-    }
-  },
-  "PVR.Details.Provider": {
-    "allOf": [
-      {
-        "$ref": "#/$defs/Item.Details.Base"
-      }
-    ],
-    "properties": {
-      "providerid": {
-        "$ref": "#/$defs/Library.Id"
-      },
-      "clientid": {
-        "$ref": "#/$defs/Library.Id"
-      },
-      "providername": {
-        "type": "string"
-      },
-      "providertype": {
-        "$ref": "#/$defs/PVR.Provider.Type"
-      },
-      "iconpath": {
-        "type": "string",
-        "description": "Image URL for the provider's own icon, servable by the web server's /image/ endpoint."
-      },
-      "countries": {
-        "$ref": "#/$defs/Array.String",
-        "description": "ISO 3166 country codes this provider serves."
-      },
-      "languages": {
-        "$ref": "#/$defs/Array.String",
-        "description": "RFC 5646 language codes this provider broadcasts in."
-      }
-    },
-    "required": [
-      "providerid"
-    ]
-  },
   "PVR.TimerState": {
     "type": "string",
     "enum": [
@@ -6291,7 +6225,11 @@
     ]
   },
   "Playlist.Entry": {
-    "extends": "List.Item.All",
+    "allOf": [
+      {
+        "$ref": "#/$defs/List.Item.All"
+      }
+    ],
     "properties": {
       "position": {
         "$ref": "#/$defs/Playlist.Position",

@@ -42,6 +42,11 @@ NPT_SET_LOCAL_LOGGER("xbmc.upnp.player")
 namespace UPNP
 {
 
+namespace
+{
+constexpr std::chrono::milliseconds QUEUE_NEXT_LEAD = 10s;
+} // unnamed namespace
+
 CUPnPPlayer::CUPnPPlayer(IPlayerCallback& callback, const char* uuid)
   : IPlayer(callback),
     CThread("UPnPPlayer"),
