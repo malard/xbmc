@@ -8,6 +8,9 @@
 
 #include "FileItem.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "pvr/channels/PVRChannel.h"
+#include "pvr/channels/PVRChannelGroupMember.h"
+#include "pvr/recordings/PVRRecording.h"
 #include "utils/Variant.h"
 
 #include <array>
@@ -80,4 +83,50 @@ TEST(TestPlayListFileItemClassify, IsSmartPlayList)
   EXPECT_TRUE(PLAYLIST::IsSmartPlayList(item2));
   CFileItem item3("/some/where.xsp", true);
   EXPECT_TRUE(PLAYLIST::IsSmartPlayList(item3));
+}
+
+TEST(TestPlayListFileItemClassify, HoldsEntries)
+{
+  EXPECT_TRUE(PLAYLIST::HoldsEntries(CFileItem("/some/where.xsp", false)));
+  EXPECT_FALSE(PLAYLIST::HoldsEntries(CFileItem("/some/where.flac", false)));
+  EXPECT_TRUE(PLAYLIST::HoldsEntries(CFileItem("/some/where.m3u", false)));
+
+  CFileItem discs("/roms/game.m3u", false);
+  discs.GetGameInfoTag();
+  EXPECT_FALSE(PLAYLIST::HoldsEntries(discs)) << "a game's list of discs";
+}
+
+namespace
+{
+std::shared_ptr<PVR::CPVRRecording> MakeRecording(bool radio)
+{
+  PVR_RECORDING recording{};
+  recording.channelType = radio ? PVR_RECORDING_CHANNEL_TYPE_RADIO : PVR_RECORDING_CHANNEL_TYPE_TV;
+  return std::make_shared<PVR::CPVRRecording>(recording, 1);
+}
+
+std::shared_ptr<PVR::CPVRChannelGroupMember> MakeChannel(bool radio)
+{
+  return std::make_shared<PVR::CPVRChannelGroupMember>("group", 1, 0,
+                                                       std::make_shared<PVR::CPVRChannel>(radio));
+}
+} // namespace
+
+TEST(TestPlayListFileItemClassify, TypeForAnOrdinaryItemFollowsWhatItHolds)
+{
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/home/user/a.avi", false)));
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem("/home/user/a.mp3", false)));
+}
+
+// CFileItem's PVR constructors reach CServiceBroker::GetPVRManager(), which the test environment
+// does not stand up, so these fault rather than fail. Disabled and skipped so that neither plain
+// runs nor --gtest_also_run_disabled_tests can execute them until it does.
+TEST(TestPlayListFileItemClassify, DISABLED_APvrItemAnswersFromItsTagNotItsStreams)
+{
+  GTEST_SKIP() << "constructing a CFileItem from a PVR tag needs a PVR manager";
+
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem(MakeRecording(true))));
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem(MakeRecording(false))));
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem(MakeChannel(true))));
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem(MakeChannel(false))));
 }
