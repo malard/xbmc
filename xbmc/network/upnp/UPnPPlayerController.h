@@ -167,6 +167,14 @@ public:
       Complete(res, "OnStopResult");
     }
 
+    void OnSetNextAVTransportURIResult(NPT_Result res,
+                                       PLT_DeviceDataReference& device,
+                                       void* userdata) override
+    {
+      m_owner.m_nextRefused = NPT_FAILED(res);
+      Complete(res, "OnSetNextAVTransportURIResult");
+    }
+
     void OnGetTransportInfoResult(NPT_Result res,
                                   PLT_DeviceDataReference& device,
                                   PLT_TransportInfo* info,
@@ -303,6 +311,15 @@ public:
   NPT_UInt32 m_instance = 0;
 
   PLT_PositionInfo m_posinfo;
+
+  PLT_PositionInfo GetPosition() const
+  {
+    std::unique_lock lock(m_section);
+    return m_posinfo;
+  }
+
+  //! Whether the renderer refused the file last queued to play next.
+  std::atomic<bool> m_nextRefused{false};
 
 private:
   void Release(CAction& action)
