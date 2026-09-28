@@ -9,6 +9,8 @@
 #pragma once
 
 #include "JSONRPCUtils.h"
+#include "interfaces/PlaybackValues.h"
+#include "playlists/PlayListTypes.h"
 #include "playlists/SmartPlayList.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
@@ -16,11 +18,16 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <optional>
 #include <stdlib.h>
 #include <string.h>
+#include <string_view>
 #include <vector>
 
 class CDateTime;
+struct AudioStreamInfo;
+struct SubtitleStreamInfo;
+struct VideoStreamInfo;
 
 namespace JSONRPC
 {
@@ -48,19 +55,7 @@ namespace JSONRPC
   public:
     static void MillisecondsToTimeObject(int time, CVariant &result)
     {
-      int ms = time % 1000;
-      result["milliseconds"] = ms;
-      time = (time - ms) / 1000;
-
-      int s = time % 60;
-      result["seconds"] = s;
-      time = (time - s) / 60;
-
-      int m = time % 60;
-      result["minutes"] = m;
-      time = (time -m) / 60;
-
-      result["hours"] = time;
+      KODI::INTERFACES::MillisecondsToTimeObject(time, result);
     }
 
   protected:

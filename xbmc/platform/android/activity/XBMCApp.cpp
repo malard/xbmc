@@ -12,7 +12,6 @@
 #include "CompileInfo.h"
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
 #include "utils/Mime.h"
 // Audio Engine includes for Factory and interfaces
@@ -23,6 +22,7 @@
 #include "application/AppParams.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/AudioEngine/AESinkFactory.h"
@@ -66,10 +66,12 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <utility>
 
 #include <android/bitmap.h>
 #include <android/configuration.h>
@@ -276,6 +278,23 @@ void CXBMCApp::onStart()
 
 namespace
 {
+// Whether what plays holds video and audio: from what the playing entry holds, or, for playback
+// started outside the playlists, from what the player has opened.
+std::pair<bool, bool> PlayingVideoAndAudio()
+{
+  using KODI::PLAYLIST::Holds;
+  const auto& components = CServiceBroker::GetAppComponents();
+  const auto playLists = CServiceBroker::GetPlayLists();
+  if (const std::optional<KODI::PLAYLIST::Type> type = playLists->GetPlayingType(); type)
+  {
+    const Holds holds = playLists->GetHolds(*type, playLists->GetPlayingEntry(*type));
+    return {holds != Holds::Audio, holds != Holds::Video || playLists->IsAudioFollowingVideo()};
+  }
+
+  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
+  return {appPlayer->HasVideo(), appPlayer->HasAudio()};
+}
+
 bool isHeadsetPlugged()
 {
   CJNIAudioManager audioManager(CXBMCApp::getSystemService(CJNIContext::AUDIO_SERVICE));
@@ -820,11 +839,7 @@ void CXBMCApp::UpdateSessionMetadata()
                  infoMgr.GetLabel(PLAYER_TITLE, INFO::DEFAULT_CONTEXT))
       .putString(CJNIMediaMetadata::METADATA_KEY_TITLE,
                  infoMgr.GetLabel(PLAYER_TITLE, INFO::DEFAULT_CONTEXT))
-      .putLong(CJNIMediaMetadata::METADATA_KEY_DURATION, appPlayer->GetTotalTime())
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_ART_URI, thumb)
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_DISPLAY_ICON_URI, thumb)
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_ALBUM_ART_URI, thumb)
-      ;
+      .putLong(CJNIMediaMetadata::METADATA_KEY_DURATION, appPlayer->GetTotalTime());
 
   std::string thumb;
   if (m_playback_state & PLAYBACK_STATE_VIDEO)
@@ -868,12 +883,13 @@ void CXBMCApp::UpdateSessionState()
   uint32_t oldPlayState = m_playback_state;
   if (m_playback_state != PLAYBACK_STATE_STOPPED)
   {
-    if (appPlayer->HasVideo())
+    const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+    if (hasVideo)
       m_playback_state |= PLAYBACK_STATE_VIDEO;
     else
       m_playback_state &= ~PLAYBACK_STATE_VIDEO;
 
-    if (appPlayer->HasAudio())
+    if (hasAudio)
       m_playback_state |= PLAYBACK_STATE_AUDIO;
     else
       m_playback_state &= ~PLAYBACK_STATE_AUDIO;
@@ -905,9 +921,10 @@ void CXBMCApp::OnPlayBackStarted()
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_playback_state = PLAYBACK_STATE_PLAYING;
-  if (appPlayer->HasVideo())
+  const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+  if (hasVideo)
     m_playback_state |= PLAYBACK_STATE_VIDEO;
-  if (appPlayer->HasAudio())
+  if (hasAudio)
     m_playback_state |= PLAYBACK_STATE_AUDIO;
   if (!appPlayer->CanPause())
     m_playback_state |= PLAYBACK_STATE_CANNOT_PAUSE;
@@ -1157,7 +1174,6 @@ int CXBMCApp::GetMaxSystemVolume()
   {
     maxVolume = GetMaxSystemVolume(env);
   }
-  //android_printf("CXBMCApp::GetMaxSystemVolume: %i",maxVolume);
   return maxVolume;
 }
 
@@ -1413,25 +1429,9 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         }
 
         auto list = std::make_unique<CFileItemList>();
+        list->Add(std::move(item));
 
-        std::unique_ptr<KODI::PLAYLIST::CPlayList> playlist(
-            KODI::PLAYLIST::CPlayListFactory::Create(*item));
-
-        if (playlist && playlist->Load(item->GetPath()))
-        {
-          for (int i = 0; i < playlist->size(); i++)
-          {
-            list->Add((*playlist)[i]);
-          }
-        }
-        else
-        {
-          // Fallback: If playlist parsing fails, append the original item
-          // to prevent sending an empty list to TMSG_MEDIA_PLAY
-          list->Add(std::make_shared<CFileItem>(*item));
-        }
-
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1,
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
                                                    static_cast<void*>(list.release()));
       }
       else
@@ -1443,7 +1443,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
           item->SetPath(item->GetVideoInfoTag()->m_strFileNameAndPath);
         }
 
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, 0, 0, static_cast<void*>(item));
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0,
+                                                   static_cast<void*>(item));
       }
     }
   }

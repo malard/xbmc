@@ -18,7 +18,7 @@ class CApplicationStackHelper;
 
 /*!
  * \brief Helper class to gather all playback details for a file item.
- * Usage: Construct with stack helper → call GatherPlaybackDetails() → retrieve results via getters
+ * Usage: Construct with stack helper -> call GatherPlaybackDetails() -> retrieve results via getters
  */
 class CApplicationPlay
 {
@@ -41,11 +41,14 @@ public:
    * \param player The default player to be used for playback
    * \param restart A flag indicating whether file shall be played from the beginning, ignoring
    * possibly existing resume points.
+   * \param startsRun Whether this playback starts a run rather than continuing one; see
+   * KODI::APPLICATION::StartsRun.
    * \return the result
    */
   GatherPlaybackDetailsResult GatherPlaybackDetails(const CFileItem& item,
                                                     std::string player,
-                                                    bool restart);
+                                                    bool restart,
+                                                    bool startsRun);
 
   /*!
    * \brief Get the resolved item, that is to be used for playback.
@@ -86,9 +89,11 @@ private:
   bool GetPlaylistIfDisc();
 
   /*!
-   * \brief Determine if playback should go fullscreen based on media type and settings
+   * \brief Whether a run that starts here goes fullscreen: audio by the music select-action
+   * setting, anything else by the start-movies-fullscreen setting.
+   * \param startsRun Only the start of a run may go fullscreen.
    */
-  void DetermineFullScreen();
+  void DetermineFullScreen(bool startsRun);
 
   CApplicationStackHelper& m_stackHelper;
   CFileItem m_item;

@@ -121,22 +121,23 @@ CPlayList* CPlayListFactory::Create(const CFileItem& item)
 
 }
 
+std::unique_ptr<CPlayList> CPlayListFactory::Load(const CFileItem& item)
+{
+  std::unique_ptr<CPlayList> playlist(Create(item));
+  if (!playlist || !playlist->Load(item.GetPath()))
+    return nullptr;
+  return playlist;
+}
+
+std::unique_ptr<CPlayList> CPlayListFactory::Load(const std::string& filename)
+{
+  return Load(CFileItem(filename, false));
+}
+
 bool CPlayListFactory::IsPlaylist(const CFileItem& item)
 {
   std::string strMimeType = item.GetMimeType();
   StringUtils::ToLower(strMimeType);
-
-/* These are a bit uncertain
-  if(strMimeType == "video/x-ms-asf"
-  || strMimeType == "video/x-ms-asx"
-  || strMimeType == "video/x-ms-wmv"
-  || strMimeType == "video/x-ms-wma"
-  || strMimeType == "video/x-ms-wfs"
-  || strMimeType == "video/x-ms-wvx"
-  || strMimeType == "video/x-ms-wax"
-  || strMimeType == "video/x-ms-asf")
-    return true;
-*/
 
   // online m3u8 files are hls:// -- do not treat as playlist
   if (NETWORK::IsInternetStream(item) && item.IsType(".m3u8"))

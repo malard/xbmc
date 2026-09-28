@@ -304,11 +304,13 @@
       "radio"
     ]
   },
-  "Playlist.Id": {
-    "type": "integer",
-    "minimum": 0,
-    "maximum": 2,
-    "default": -1
+  "Playlist.Name": {
+    "type": "string",
+    "enum": [
+      "video",
+      "audio",
+      "picture"
+    ]
   },
   "Playlist.Type": {
     "type": "string",
@@ -343,6 +345,21 @@
     "type": "integer",
     "minimum": 0,
     "default": -1
+  },
+  "Playlist.Entry": {
+    "extends": "List.Item.All",
+    "properties": {
+      "position": {
+        "$ref": "Playlist.Position",
+        "required": true,
+        "description": "The entry's place in the list, which Player.GoTo and Playlist.Remove take"
+      },
+      "displayorder": {
+        "$ref": "Playlist.Position",
+        "required": true,
+        "description": "The entry's place in play order, which is list order unless shuffled"
+      }
+    }
   },
   "Playlist.Item": {
     "type": [
@@ -459,11 +476,12 @@
       }
     ]
   },
-  "Player.Id": {
-    "type": "integer",
-    "minimum": 0,
-    "maximum": 2,
-    "default": -1
+  "Player.Playlist": {
+    "type": "string",
+    "enum": [
+      "video",
+      "audio"
+    ]
   },
   "Player.Type": {
     "type": "string",
@@ -750,8 +768,9 @@
       "time",
       "percentage",
       "totaltime",
-      "playlistid",
+      "playlist",
       "position",
+      "displayorder",
       "repeat",
       "shuffled",
       "canseek",
@@ -769,7 +788,8 @@
       "live",
       "currentvideostream",
       "videostreams",
-      "cachepercentage"
+      "cachepercentage",
+      "playertype"
     ]
   },
   "Player.Property.Value": {
@@ -793,11 +813,15 @@
       "totaltime": {
         "$ref": "Global.Time"
       },
-      "playlistid": {
-        "$ref": "Playlist.Id"
+      "playlist": {
+        "$ref": "Playlist.Name"
       },
       "position": {
         "$ref": "Playlist.Position"
+      },
+      "displayorder": {
+        "$ref": "Playlist.Position",
+        "description": "The current entry's place in play order, which is list order unless shuffled"
       },
       "repeat": {
         "$ref": "Player.Repeat"
@@ -861,6 +885,14 @@
       },
       "cachepercentage": {
         "$ref": "Player.Position.Percentage"
+      },
+      "playertype": {
+        "type": "string",
+        "enum": [
+          "internal",
+          "external",
+          "remote"
+        ]
       }
     }
   },
@@ -1027,8 +1059,11 @@
   "Player.Notifications.Player": {
     "type": "object",
     "properties": {
-      "playerid": {
-        "$ref": "Player.Id",
+      "players": {
+        "type": "array",
+        "items": {
+          "$ref": "Player.Playlist"
+        },
         "required": true
       },
       "speed": {

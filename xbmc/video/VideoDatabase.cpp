@@ -394,13 +394,13 @@ bool CVideoDatabase::GetSubPaths(const std::string& basepath,
       filePath = filePath.substr(udfPrefixLength); // Remove udf://
 
       // Return encoded media paths for content removal
-      // clang format-off
+      // clang-format off
       for (const std::string& prefix : {blurayIsoPath, "bluray://" + filePath, "zip://" + filePath,
                                         "rar://" + filePath, "archive://" + filePath})
       {
         sql += " OR " + startsWith(prefix);
       }
-      // clang format-on
+      // clang-format on
     }
 
     m_pDS->query(sql);
@@ -1947,7 +1947,8 @@ void CVideoDatabase::GetMusicVideosByArtist(const std::string& strArtist, CFileI
       return;
 
     std::string strSQL;
-    if (strArtist.empty())  //! @todo SMARTPLAYLISTS what is this here for???
+    //! @todo an empty artist lists every music video with an actor; confirm that is intended
+    if (strArtist.empty())
       strSQL=PrepareSQL("select distinct * from musicvideo_view join actor_link on actor_link.media_id=musicvideo_view.idMVideo AND actor_link.media_type='musicvideo' join actor on actor.actor_id=actor_link.actor_id");
     else // same artist OR same director
       strSQL = PrepareSQL(
@@ -2439,7 +2440,7 @@ int CVideoDatabase::SetDetailsForMovie(CVideoInfoTag& details,
     AddActorLinksToItem(idMovie, MediaTypeMovie, "director", details.m_director);
     AddActorLinksToItem(idMovie, MediaTypeMovie, "writer", details.m_writingCredits);
 
-    // add ratingsu
+    // add ratings
     details.m_iIdRating = AddRatings(idMovie, MediaTypeMovie, details.m_ratings, details.GetDefaultRating());
 
     // add unique ids
@@ -3544,7 +3545,6 @@ void CVideoDatabase::GetBookMarksForFile(const std::string& strFilenameAndPath, 
       }
       m_pDS->next();
     }
-    //sort(bookmarks.begin(), bookmarks.end(), SortBookmarks);
     m_pDS->close();
   }
   catch (...)
@@ -3797,7 +3797,7 @@ bool CVideoDatabase::GetEpisodeMap(int idShow,
                                                        pDS.fv("strFileName").get_asString())};
       const std::string baseFile{URIUtils::IsBlurayPath(file) ? URIUtils::GetDiscFile(file) : file};
       // Different scrapers put duration in different places
-      // @todo: this has been fixed in latest tmdb scraper and this (+SQL) can be simplified after PR #27769 is merged
+      //! @todo simplify this (and its SQL) once scrapers agree where the duration is stored
       const unsigned int streamDetailsDuration{pDS.fv("duration").get_asUInt()};
       const unsigned int episodeViewDuration{
           pDS.fv(StringUtils::Format("c{:02}", VIDEODB_ID_EPISODE_RUNTIME).c_str()).get_asUInt()};
@@ -4441,7 +4441,7 @@ void CVideoDatabase::GetSameVideoItems(const CFileItem& item,
     // note: old records may have the type 'unknown'
     // note 2: for type 'tmdb' the same value may be used for a movie and a tv episode, only
     // distinguished by media_type.
-    // @todo make the (value,type) pairs truly unique
+    //! @todo make the (value,type) pairs truly unique
     std::unordered_set<int> itemIds;
     std::string sql;
     if (matchingMask & UniqueId)
@@ -5016,8 +5016,6 @@ CVideoInfoTag CVideoDatabase::GetDetailsForTvShow(const dbiplus::sql_record* con
                               CVideoInfoTag::LanguageTagSource::SOURCE_INTERNAL);
   details.SetTagLine(record->at(VIDEODB_DETAILS_TVSHOW_TAGLINE).get_asString());
 
-  //! @todo videotag member + guiinfo int needed?
-  //! -- Currently not needed; having it available as item prop seems sufficient for skinning
   const int inProgressEpisodes = record->at(VIDEODB_DETAILS_TVSHOW_NUM_INPROGRESS).get_asInt();
 
   if (getDetails)
@@ -5333,8 +5331,6 @@ bool CVideoDatabase::GetVideoSettings(const CFileItem &item, CVideoSettings &set
   return GetVideoSettings(GetFileId(item), settings);
 }
 
-/// \brief GetVideoSettings() obtains any saved video settings for the current file.
-/// \retval Returns true if the settings exist, false otherwise.
 bool CVideoDatabase::GetVideoSettings(const std::string &filePath, CVideoSettings &settings)
 {
   return GetVideoSettings(GetFileId(filePath), settings);
@@ -5402,7 +5398,6 @@ void CVideoDatabase::SetVideoSettings(const CFileItem &item, const CVideoSetting
   SetVideoSettings(idFile, settings);
 }
 
-/// \brief Sets the settings for a particular video file
 void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
 {
   try
@@ -6018,8 +6013,6 @@ std::vector<std::string> CVideoDatabase::GetAvailableArtTypesForItem(int mediaId
   return {};
 }
 
-/// \brief GetStackTimes() obtains any saved video times for the stacked file
-/// \retval Returns true if the stack times exist, false otherwise.
 bool CVideoDatabase::GetStackTimes(const std::string& filePath,
                                    std::vector<std::chrono::milliseconds>& times)
 {
@@ -6059,7 +6052,6 @@ bool CVideoDatabase::GetStackTimes(const std::string& filePath,
   return false;
 }
 
-/// \brief Sets the stack times for a particular video file
 void CVideoDatabase::SetStackTimes(const std::string& filePath,
                                    const std::vector<std::chrono::milliseconds>& times)
 {
@@ -6708,7 +6700,6 @@ bool CVideoDatabase::UpdateVideoSortTitle(int idDb,
   return false;
 }
 
-/// \brief EraseVideoSettings() Erases the videoSettings table and reconstructs it
 void CVideoDatabase::EraseVideoSettings(const CFileItem &item)
 {
   int idFile = GetFileId(item);
@@ -8255,8 +8246,6 @@ bool CVideoDatabase::GetMoviesByWhere(const std::string& strBaseDir, const Filte
             itemUrl.AddOption("assetType", static_cast<int>(VideoAssetType::VERSION));
             //! @todo reset hasvideoversions/hasvideoextras or not? have to let the implementation
             //! mature to decide.
-            //item->GetVideoInfoTag()->SetHasVideoVersions(false);
-            //item->GetVideoInfoTag()->SetHasVideoExtras(false);
           }
           else if (!flattenVersions && (movie.HasVideoVersions() || movie.HasVideoExtras()))
           {
@@ -8849,7 +8838,6 @@ ScraperPtr CVideoDatabase::GetScraperForPath(const std::string& strPath,
       content = TranslateContent(strcontent);
 
       //FIXME paths stored should not have empty strContent
-      //assert(content != ContentType::CONTENT_NONE);
       std::string scraperID = m_pDS->fv("path.strScraper").get_asString();
 
       if (!scraperID.empty())
@@ -9549,7 +9537,8 @@ bool CVideoDatabase::GetMusicVideosByWhere(const std::string &baseDir, const Fil
   return false;
 }
 
-unsigned int CVideoDatabase::GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<std::pair<int,int> > &songIDs)
+unsigned int CVideoDatabase::GetRandomMusicVideoIDs(const std::string& strWhere,
+                                                    std::vector<int>& musicVideoIDs)
 {
   try
   {
@@ -9564,20 +9553,20 @@ unsigned int CVideoDatabase::GetRandomMusicVideoIDs(const std::string& strWhere,
     strSQL += PrepareSQL(" ORDER BY RANDOM()");
 
     if (!m_pDS->query(strSQL)) return 0;
-    songIDs.clear();
+    musicVideoIDs.clear();
     if (m_pDS->num_rows() == 0)
     {
       m_pDS->close();
       return 0;
     }
-    songIDs.reserve(m_pDS->num_rows());
+    musicVideoIDs.reserve(m_pDS->num_rows());
     while (!m_pDS->eof())
     {
-      songIDs.emplace_back(std::make_pair<int, int>(2, m_pDS->fv(0).get_asInt()));
+      musicVideoIDs.push_back(m_pDS->fv(0).get_asInt());
       m_pDS->next();
-    }    // cleanup
+    }
     m_pDS->close();
-    return static_cast<unsigned int>(songIDs.size());
+    return static_cast<unsigned int>(musicVideoIDs.size());
   }
   catch (...)
   {
@@ -9787,10 +9776,6 @@ void CVideoDatabase::GetEpisodesByName(const std::string& strSearch, CFileItemLi
 
 void CVideoDatabase::GetMusicVideosByName(const std::string& strSearch, CFileItemList& items)
 {
-// Alternative searching - not quite as fast though due to
-// retrieving all information
-//  Filter filter(PrepareSQL("c%02d like '%s%%' or c%02d like '%% %s%%'", VIDEODB_ID_MUSICVIDEO_TITLE, strSearch.c_str(), VIDEODB_ID_MUSICVIDEO_TITLE, strSearch.c_str()));
-//  GetMusicVideosByWhere("videodb://musicvideos/titles/", filter, items);
   std::string strSQL;
 
   try
@@ -9864,13 +9849,6 @@ std::string CVideoDatabase::GetPlotByShowId(int idShow)
 
 void CVideoDatabase::GetEpisodesByPlot(const std::string& strSearch, CFileItemList& items)
 {
-// Alternative searching - not quite as fast though due to
-// retrieving all information
-//  Filter filter;
-//  filter.where = PrepareSQL("c%02d like '%s%%' or c%02d like '%% %s%%'", VIDEODB_ID_EPISODE_PLOT, strSearch.c_str(), VIDEODB_ID_EPISODE_PLOT, strSearch.c_str());
-//  filter.where += PrepareSQL("or c%02d like '%s%%' or c%02d like '%% %s%%'", VIDEODB_ID_EPISODE_TITLE, strSearch.c_str(), VIDEODB_ID_EPISODE_TITLE, strSearch.c_str());
-//  GetEpisodesByWhere("videodb://tvshows/titles/", filter, items);
-//  return;
   std::string strSQL;
 
   try
@@ -12592,7 +12570,7 @@ CDateTime CVideoDatabase::GetDateAdded(const std::string& filename,
         dateAdded = CFileUtils::GetModificationDate(filename, true);
     }
 
-    // 0 use the current datetime if non of the above match or one returns an invalid datetime
+    // 0 use the current datetime if none of the above match or one returns an invalid datetime
     if (!dateAdded.IsValid())
       dateAdded = CDateTime::GetCurrentDateTime();
     }
