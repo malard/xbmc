@@ -431,8 +431,11 @@ void CFileCache::Process()
       // Published for CancelStalledSourceRead
       m_sourceReadStart = SteadyMilliseconds();
       iRead = m_source->Read(buffer.get(), maxSourceRead);
+      const int64_t answeredIn = SteadyMilliseconds() - m_sourceReadStart;
+      const bool wasCancelled = m_sourceReadCancelled;
       m_sourceReadStart = 0;
       m_sourceReadCancelled = false;
+      ReportSourceOutage(answeredIn, iRead, wasCancelled);
     }
     if (iRead <= 0)
     {
@@ -604,6 +607,26 @@ bool CFileCache::Exists(const CURL& url)
 int CFileCache::Stat(const CURL& url, struct __stat64* buffer)
 {
   return CFile::Stat(url.Get(), buffer);
+}
+
+void CFileCache::ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled)
+{
+  // Below this a source is merely slow; above it, playback was carried by the cache alone
+  constexpr int64_t worthReporting = 2000;
+
+  if (answeredInMs < worthReporting)
+    return;
+
+  const int64_t forward = m_pCache ? m_pCache->WaitForData(0, 0ms) : 0;
+  const double cover = m_writeRate > 0 ? static_cast<double>(forward) / m_writeRate : 0.0;
+
+  CLog::LogF(LOGINFO,
+             "<{}> the source went quiet for {:.1f} s at {} of {} and then {}; the cache still "
+             "holds {:.1f} s of content",
+             m_sourcePath, answeredInMs / 1000.0, m_writePos, m_fileSize.load(),
+             iRead > 0 ? "answered"
+                       : (wasCancelled ? "was cancelled to force a reconnect" : "failed"),
+             cover);
 }
 
 void CFileCache::CancelStalledSourceRead()

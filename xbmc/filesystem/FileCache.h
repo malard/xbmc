@@ -91,6 +91,7 @@ public:
     CFileCache(unsigned int flags, std::unique_ptr<IFileCacheSource> source);
 
   private:
+    void ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled);
     //! Cancels a source read left unanswered for longer than a healthy source takes
     void CancelStalledSourceRead();
     //! Replaces the source with a new connection at the position; false leaves it closed
