@@ -28,6 +28,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/json-rpc/MessengerPayload.h"
 #include "messaging/ApplicationMessenger.h"
 #include "music/tags/MusicInfoTag.h"
 #include "network/Network.h"
@@ -44,6 +45,7 @@
 
 #include <cstring>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -159,13 +161,13 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
       g_application.CurrentFileItem().GetPath() == ServerInstance->m_pPipe->GetName())
   {
     // UpdateInfo copies the mime type and the art; an empty url clears the previous thumbnail.
-    CFileItem* item = new CFileItem();
+    auto item = std::make_unique<CFileItem>();
     item->SetPath(ServerInstance->m_pPipe->GetName());
     item->SetMimeType("audio/x-xbmc-pcm");
     item->SetArt("thumb", CFile::Exists(coverArtFile) ? coverArtFile : "");
 
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,
-                                               static_cast<void*>(item));
+                                               JSONRPC::TransferToMessenger(std::move(item)));
   }
 }
 
