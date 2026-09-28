@@ -102,7 +102,8 @@ namespace JSONRPC
        * \brief Whether this connection has more accepted but unparsed input than it should.
        *
        * The server thread stops reading a backlogged connection, which closes the receive
-       * window and holds the client back.
+       * window and holds the client back. Running the request on the server thread used to do
+       * that on its own.
        */
       bool Backlogged();
 

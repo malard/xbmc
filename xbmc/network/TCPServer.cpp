@@ -18,6 +18,7 @@
 #include "utils/log.h"
 #include "websocket/WebSocketManager.h"
 
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <stdio.h>
@@ -136,7 +137,7 @@ void CTCPServer::Process()
           max_fd = it;
       }
 
-      for (int i = m_connections.size() - 1; i >= 0; i--)
+      for (int i = static_cast<int>(m_connections.size()) - 1; i >= 0; i--)
       {
         if (m_connections[i]->Closing())
         {
@@ -149,8 +150,7 @@ void CTCPServer::Process()
 
         // Reading faster than the worker parses would queue without limit, so a connection
         // that is far enough ahead is left unread until the worker catches up. Its receive
-        // window closes and the client waits. Nothing is refused, and a request of any size
-        // still arrives - at the rate it can be consumed.
+        // window closes and the client waits.
         if (m_connections[i]->Backlogged())
         {
           backlogged = true;
@@ -180,7 +180,7 @@ void CTCPServer::Process()
       // Re-acquire for the I/O and accept passes; both modify m_connections.
       std::unique_lock lock(m_connectionsCritSection);
 
-      for (int i = m_connections.size() - 1; i >= 0; i--)
+      for (int i = static_cast<int>(m_connections.size()) - 1; i >= 0; i--)
       {
         int socket = m_connections[i]->m_socket;
         if (FD_ISSET(socket, &rfds))
@@ -587,6 +587,7 @@ int CTCPServer::CTCPClient::GetAnnouncementFlags()
 
 bool CTCPServer::CTCPClient::SetAnnouncementFlags(int flags)
 {
+  std::unique_lock lock(m_critSection);
   m_announcementflags = flags;
   return true;
 }
@@ -691,7 +692,20 @@ void CTCPServer::CTCPClient::StopWorker()
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
 {
-  RunRequests(self, host.get());
+  // This is a bare thread entry point: an escaping exception calls std::terminate. Executing
+  // inline used to run under CThread, which catches, so nothing below has been asked to.
+  try
+  {
+    RunRequests(self, host.get());
+  }
+  catch (const std::exception& error)
+  {
+    CLog::Log(LOGERROR, "JSONRPC Server: Request worker failed: {}", error.what());
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "JSONRPC Server: Request worker failed");
+  }
 
   {
     std::lock_guard lock(host->m_workersMutex);
@@ -805,8 +819,11 @@ void CTCPServer::CTCPClient::Disconnect()
 {
   if (m_socket > 0)
   {
-    std::unique_lock lock(m_critSection);
+    // Send() holds m_critSection across a blocking send(), so a peer that has stopped reading
+    // would hold the server thread here. Shutting the socket down first makes that send fail.
     shutdown(m_socket, SHUT_RDWR);
+
+    std::unique_lock lock(m_critSection);
     closesocket(m_socket);
     m_socket = INVALID_SOCKET;
   }
@@ -946,7 +963,8 @@ void CTCPServer::CWebSocketClient::Disconnect()
         Send(closeFrame->GetFrameData(), (unsigned int)closeFrame->GetFrameLength());
     }
 
-    if (m_websocket->GetState() == WebSocketStateClosed)
-      CTCPClient::Disconnect();
+    // The caller is dropping this connection, so the descriptor goes with it even when the
+    // peer never answers the close frame.
+    CTCPClient::Disconnect();
   }
 }
