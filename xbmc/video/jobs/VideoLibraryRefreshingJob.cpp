@@ -37,6 +37,7 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoDownloader.h"
 #include "video/VideoInfoScanner.h"
+#include "video/geometry/ContentGeometryScanner.h"
 #include "video/tags/IVideoInfoTagLoader.h"
 #include "video/tags/VideoInfoTagLoaderFactory.h"
 #include "video/tags/VideoTagLoaderNFO.h"
@@ -551,6 +552,9 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
       const auto videoTag{m_item->GetVideoInfoTag()};
       db.UpdateAssetsOwner(videoTag->m_type, origDbId, videoTag->m_iDbId);
     }
+
+    GEOMETRY::RemeasureContentGeometry(*m_item, GEOMETRY::SamplingDepth::Normal,
+                                       [this]() { return CProgressJob::IsCancelled(); });
 
     // we're finally done
     MarkFinished();

@@ -26,6 +26,8 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoLibraryQueue.h"
+#include "video/geometry/ContentGeometryScanner.h"
+#include "video/geometry/GeometrySettings.h"
 
 #include <algorithm>
 #include <memory>
@@ -952,6 +954,57 @@ JSONRPC_STATUS CVideoLibrary::RefreshMusicVideo(const std::string& method,
                                                 CVariant& result)
 {
   return RefreshVideo(parameterObject, parameterObject);
+}
+
+JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const std::string& method,
+                                                     ITransportLayer* transport,
+                                                     IClient* client,
+                                                     const CVariant& parameterObject,
+                                                     CVariant& result)
+{
+  if (!KODI::VIDEO::GEOMETRY::ContentGeometryEnabledFromSettings())
+    return FailedToExecute;
+
+  const CVariant& item = parameterObject["item"];
+
+  CVideoDatabase videodatabase;
+  if (!videodatabase.Open())
+    return InternalError;
+
+  // A path is taken as given; an id is resolved to the file behind it.
+  CFileItem fileItem;
+  if (item.isMember("file"))
+  {
+    fileItem.SetPath(item["file"].asString());
+  }
+  else
+  {
+    CVideoInfoTag infos;
+    bool found = false;
+    if (item.isMember("movieid"))
+      found =
+          videodatabase.GetMovieInfo("", infos, static_cast<int>(item["movieid"].asInteger()), -1);
+    else if (item.isMember("episodeid"))
+      found =
+          videodatabase.GetEpisodeInfo("", infos, static_cast<int>(item["episodeid"].asInteger()));
+    else
+      found = videodatabase.GetMusicVideoInfo("", infos,
+                                              static_cast<int>(item["musicvideoid"].asInteger()));
+
+    if (!found || infos.m_iDbId <= 0)
+      return NotFound;
+
+    fileItem.SetFromVideoInfoTag(infos);
+  }
+
+  const KODI::VIDEO::GEOMETRY::SamplingDepth depth{
+      parameterObject["thorough"].asBoolean(false) ? KODI::VIDEO::GEOMETRY::SamplingDepth::Thorough
+                                                   : KODI::VIDEO::GEOMETRY::SamplingDepth::Normal};
+
+  if (!KODI::VIDEO::GEOMETRY::RemeasureContentGeometry(fileItem, depth))
+    return Unavailable;
+
+  return ACK;
 }
 
 JSONRPC_STATUS CVideoLibrary::RemoveMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)

@@ -1,5 +1,7 @@
-set(SOURCES TestRadioRDSCountries.cpp
+set(SOURCES TestLiveGeometryMonitor.cpp
+            TestRadioRDSCountries.cpp
             TestRadioRDSLanguages.cpp
+            TestSubtitleMargins.cpp
             TestVideoCodecPictureFormat.cpp
             TestVideoPlayer.cpp)
 

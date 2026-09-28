@@ -13,6 +13,7 @@
 #include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationContentGeometry.h"
 #include "application/ApplicationVolumeHandling.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
@@ -24,6 +25,7 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
+#include "video/geometry/GeometryPublication.h"
 
 #include <array>
 #include <cmath>
@@ -269,6 +271,15 @@ JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string &prope
   }
   else if (property == "loglevel")
     result = LogLevelValue();
+  else if (property == "contentrect")
+  {
+    const auto& components = CServiceBroker::GetAppComponents();
+    const auto contentGeometry = components.GetComponent<CApplicationContentGeometry>();
+    if (!contentGeometry)
+      return FailedToExecute;
+
+    KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(contentGeometry->Get(), result);
+  }
   else
     return InvalidParams;
 
