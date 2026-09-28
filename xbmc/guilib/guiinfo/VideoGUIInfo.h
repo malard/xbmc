@@ -8,11 +8,14 @@
 
 #pragma once
 
+#include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoProvider.h"
+#include "playlists/PlayListTypes.h"
 
 #include <memory>
 
 class CApplicationPlayer;
+class CApplicationPlayLists;
 class CVideoInfoTag;
 
 namespace KODI::GUILIB::GUIINFO
@@ -49,9 +52,12 @@ public:
 
 private:
   int GetPercentPlayed(const CVideoInfoTag* tag) const;
+  static bool IsPlaylistInfo(const CGUIInfo& info);
   bool GetPlaylistInfo(std::string& value, const CGUIInfo& info) const;
 
   const std::shared_ptr<CApplicationPlayer> m_appPlayer;
+  const std::shared_ptr<CApplicationPlayLists> m_playLists;
+  mutable CLookedUpItems m_lookedUp;
 };
 
 } // namespace KODI::GUILIB::GUIINFO
