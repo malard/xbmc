@@ -244,7 +244,7 @@ private:
   /*! \brief Workers that are unavailable: running a job, or still in its callbacks.
    Must be called with m_section held.
    */
-  size_t GetBusyCount() const { return m_processing.size() + m_completing; }
+  size_t GetBusyCount() const { return m_processing.size() + m_completingJobs.size(); }
 
   void StartWorkers(CJob::PRIORITY priority);
   void RemoveWorker(const CJobWorker* worker);
@@ -276,7 +276,6 @@ private:
   std::array<JobQueue, CJob::PRIORITY_DEDICATED + 1> m_jobQueue;
   bool m_pauseJobs{false};
   Processing m_processing;
-  size_t m_completing{0};
   Workers m_workers;
   // Incremented only across the m_jobEvent wait, always under m_section.
   size_t m_idleWorkers{0};
@@ -287,6 +286,12 @@ private:
   std::optional<unsigned int> m_abortingId;
   std::thread::id m_abortingThread;
   std::condition_variable_any m_abortDone;
+
+  // Jobs out of m_processing whose completion callbacks are running, against the thread
+  // running each. They are neither processing nor free, and an owner cancelling one has to
+  // outlive its callback.
+  std::unordered_map<unsigned int, std::thread::id> m_completingJobs;
+  std::condition_variable_any m_completeDone;
 
   mutable CCriticalSection m_section;
   CEvent m_jobEvent;

@@ -241,6 +241,14 @@ void CJobManager::CancelJob(unsigned int jobID)
     return;
   }
 
+  // or its completion callback is, which the owner must outlive just the same
+  const auto completing = m_completingJobs.find(jobID);
+  if (completing != m_completingJobs.cend() && completing->second != std::this_thread::get_id())
+  {
+    m_completeDone.wait(lock, [this, jobID] { return !m_completingJobs.contains(jobID); });
+    return;
+  }
+
   // or if we're processing it
   const auto it =
       std::ranges::find_if(m_processing, [jobID](const auto& wi) { return wi.GetId() == jobID; });
@@ -415,7 +423,7 @@ void CJobManager::OnJobComplete(bool success, CJob* job)
       // when another thread modifies m_processing during callback execution
       item.emplace(std::move(*i));
       m_processing.erase(i);
-      ++m_completing;
+      m_completingJobs.emplace(item->GetId(), std::this_thread::get_id());
     }
     return item;
   }();
@@ -457,10 +465,14 @@ void CJobManager::OnJobComplete(bool success, CJob* job)
       }
     }
 
+    const unsigned int id = item->GetId();
     item->FreeJob();
 
-    std::unique_lock lock(m_section);
-    --m_completing;
+    {
+      std::unique_lock lock(m_section);
+      m_completingJobs.erase(id);
+    }
+    m_completeDone.notify_all();
   }
 }
 
