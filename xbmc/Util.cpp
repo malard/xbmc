@@ -339,10 +339,10 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
   // use above to get the filename
   std::string path(url.Get());
   URIUtils::RemoveSlashAtEnd(path);
-  // Only a URL can carry percent escapes.
-  std::string strFilename = URIUtils::IsURL(path)
-                                ? URIUtils::DecodePathEscapes(URIUtils::GetFileName(path))
-                                : URIUtils::GetFileName(path);
+  // A VFS path carries percent escapes; a local path and the friendly names assigned
+  // below do not, so only this one is decoded.
+  std::string strFilename =
+      URIUtils::IsURL(path) ? URIUtils::GetDecodedFileName(path) : URIUtils::GetFileName(path);
 
 #ifdef HAS_UPNP
   // UPNP
