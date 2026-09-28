@@ -16,6 +16,7 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationStackHelper.h"
+#include "application/PlaybackAnnouncer.h"
 #ifdef HAVE_LIBBLURAY
 #include "filesystem/BlurayDirectory.h"
 #endif
@@ -23,6 +24,7 @@
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h"
+#include "interfaces/PlaybackValues.h"
 #include "interfaces/python/XBPython.h"
 #include "jobs/JobManager.h"
 #include "music/MusicFileItemClassify.h"
@@ -439,7 +441,7 @@ void CApplicationPlayerCallback::OnPlayBackStopped()
 
 void CApplicationPlayerCallback::OnPlayBackError()
 {
-  //@todo Playlists can be continued by calling OnPlaybackEnded instead
+  //! @todo Playlists could continue by calling OnPlayBackEnded() instead
   // open error dialog
   CGUIMessage msg(GUI_MSG_PLAYBACK_ERROR, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
@@ -504,6 +506,32 @@ void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVSTARTED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
+}
+
+void CApplicationPlayerCallback::OnSubtitleVisibilityChanged(bool visible)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::SubtitleEnabled, visible);
+}
+
+void CApplicationPlayerCallback::OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentSubtitle, INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnAudioStreamChanged(int index, const AudioStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentAudioStream,
+      INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnVideoStreamChanged(int index, const VideoStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentVideoStream,
+      INTERFACES::StreamToObject(index, info));
 }
 
 void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)

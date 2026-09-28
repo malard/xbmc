@@ -107,29 +107,24 @@ bool CPVRGUIActionsPlayback::PlayRecording(const CFileItem& item) const
       parentItem->SetStartOffset(STARTOFFSET_RESUME);
 
     auto queuedItems{std::make_unique<CFileItemList>()};
+    int start{-1};
     VIDEO::UTILS::GetItemsForPlayList(parentItem, *queuedItems,
-                                      ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
-
-    // figure out where to start playback
-    int pos{0};
-    for (const std::shared_ptr<CFileItem>& queuedItem : *queuedItems)
+                                      ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM,
+                                      std::make_shared<CFileItem>(item), &start);
+    if (start >= 0)
     {
-      if (queuedItem->IsSamePath(&item))
-        break;
-
-      pos++;
+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, start, -1,
+                                                 static_cast<void*>(queuedItems.release()));
+      CheckAndSwitchToFullscreen(true);
+      return true;
     }
+  }
 
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, pos, -1,
-                                               static_cast<void*>(queuedItems.release()));
-  }
-  else
-  {
-    auto itemToPlay{std::make_unique<CFileItem>(recording)};
-    itemToPlay->SetStartOffset(item.GetStartOffset());
-    CServiceBroker::GetPVRManager().PlaybackState()->StartPlayback(
-        itemToPlay, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
-  }
+  // played on its own, including when it did not make the folder's list
+  auto itemToPlay{std::make_unique<CFileItem>(recording)};
+  itemToPlay->SetStartOffset(item.GetStartOffset());
+  CServiceBroker::GetPVRManager().PlaybackState()->StartPlayback(
+      itemToPlay, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
 
   CheckAndSwitchToFullscreen(true);
   return true;

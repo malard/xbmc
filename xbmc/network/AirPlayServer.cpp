@@ -25,7 +25,6 @@
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
-#include "playlists/PlayListTypes.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Digest.h"
@@ -173,10 +172,7 @@ void CAirPlayServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   {
     if (message == "OnStop")
     {
-      bool shouldRestoreVolume = true;
-      if (data.isMember("player") && data["player"].isMember("playerid"))
-        shouldRestoreVolume =
-            (data["player"]["playerid"] != static_cast<int>(PLAYLIST::Id::TYPE_PICTURE));
+      const bool shouldRestoreVolume = data["item"]["type"].asString() != "picture";
 
       if (shouldRestoreVolume)
         restoreVolume();
@@ -985,7 +981,8 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
 
       CFileItemList *l = new CFileItemList; //don't delete,
       l->Add(std::make_shared<CFileItem>(fileToPlay));
-      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1, static_cast<void*>(l));
+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
+                                                 static_cast<void*>(l));
 
       // allow starting the player paused in ios8 mode (needed by camera roll app)
       if (!startPlayback)

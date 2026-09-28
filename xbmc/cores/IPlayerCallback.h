@@ -14,6 +14,9 @@
 
 class CFileItem;
 class CBookmark;
+struct AudioStreamInfo;
+struct SubtitleStreamInfo;
+struct VideoStreamInfo;
 
 class IPlayerCallback
 {
@@ -32,6 +35,10 @@ public:
   virtual void OnPlayBackSpeedChanged(int iSpeed) {}
   virtual void OnAVChange() {}
   virtual void OnAVStarted(const CFileItem& file) {}
+  virtual void OnSubtitleVisibilityChanged(bool visible) {}
+  virtual void OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info) {}
+  virtual void OnAudioStreamChanged(int index, const AudioStreamInfo& info) {}
+  virtual void OnVideoStreamChanged(int index, const VideoStreamInfo& info) {}
   virtual void RequestVideoSettings(const CFileItem& fileItem) {}
   virtual void StoreVideoSettings(const CFileItem& fileItem, const CVideoSettings& vs) {}
 };
