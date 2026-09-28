@@ -202,7 +202,15 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   {
     // Wait for the reply before reading the state, or the first pass sees the old file's state.
     NPT_CHECK_LABEL_SEVERE(m_delegate->SendGetTransportInfo(action), failed_waitplaying);
-    NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed_waitplaying);
+    if (NPT_FAILED(m_delegate->WaitForReply(*action, timeout)))
+    {
+      // Reaching the deadline ends this loop, it does not fail the open - that is what the loop
+      // condition below did before the wait honoured a deadline of its own. A wait that ends
+      // while the deadline is still live is the user cancelling.
+      if (timeout.IsTimePast())
+        break;
+      goto failed_waitplaying;
+    }
 
     const NPT_String transportStatus = action->GetTransportStatus();
     const NPT_String transportState = action->GetTransportState();

@@ -35,7 +35,7 @@ inline NPT_Result WaitOnEvent(CEvent& event, XbmcThreads::EndTime<>& timeout)
   if (event.Wait(std::chrono::milliseconds(0)))
     return NPT_SUCCESS;
 
-  if (!CGUIDialogBusy::WaitOnEvent(event))
+  if (!CGUIDialogBusy::WaitOnEvent(event, 100, true, timeout.GetTimeLeft()))
     return NPT_FAILURE;
 
   return NPT_SUCCESS;
