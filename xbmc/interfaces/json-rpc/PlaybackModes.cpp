@@ -8,8 +8,8 @@
 
 #include "PlaybackModes.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
+#include "application/ApplicationPlayLists.h"
 #include "messaging/ApplicationMessenger.h"
 #include "pictures/SlideShowDelegator.h"
 #include "utils/Variant.h"
@@ -21,80 +21,48 @@ using namespace KODI;
 namespace JSONRPC
 {
 
-std::optional<bool> ParseShuffleState(const CVariant& shuffle, bool current)
+JSONRPC_STATUS ApplyShuffle(PLAYLIST::Type type, const CVariant& shuffle)
 {
-  bool requested;
-  if (shuffle.isBoolean())
-    requested = shuffle.asBoolean();
-  else if (shuffle.isString() && shuffle.asString() == "toggle")
-    requested = !current;
-  else
-    return std::nullopt;
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const bool before = playLists->IsShuffled(type);
+  if (!shuffle.isBoolean() || shuffle.asBoolean() != before)
+    CServiceBroker::GetAppMessenger()->SendMsg(
+        TMSG_PLAYLISTPLAYER_SHUFFLE, static_cast<int>(type),
+        shuffle.isBoolean() ? static_cast<int>(shuffle.asBoolean()) : -1);
 
-  if (requested == current)
-    return std::nullopt;
-
-  return requested;
+  const bool after = playLists->IsShuffled(type);
+  if (shuffle.isBoolean() ? after != shuffle.asBoolean() : after == before)
+    return FailedToExecute;
+  return ACK;
 }
 
-PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat)
+JSONRPC_STATUS ApplyRepeat(PLAYLIST::Type type, const CVariant& repeat)
 {
-  const std::string state = repeat.asString();
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const std::string wanted = repeat.asString();
+  const CApplicationPlayLists::Repeat before = playLists->GetRepeat(type);
 
-  if (state == "one")
-    return PLAYLIST::RepeatState::ONE;
-  if (state == "all")
-    return PLAYLIST::RepeatState::ALL;
+  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT, static_cast<int>(type), -1,
+                                             nullptr, wanted);
 
-  return PLAYLIST::RepeatState::NONE;
-}
-
-PLAYLIST::RepeatState ParseRepeatState(const CVariant& repeat, PLAYLIST::RepeatState current)
-{
-  if (repeat.asString() != "cycle")
-    return ParseRepeatState(repeat);
-
-  switch (current)
-  {
-    case PLAYLIST::RepeatState::NONE:
-      return PLAYLIST::RepeatState::ALL;
-    case PLAYLIST::RepeatState::ALL:
-      return PLAYLIST::RepeatState::ONE;
-    default:
-      return PLAYLIST::RepeatState::NONE;
-  }
-}
-
-void ApplyShuffle(PLAYLIST::Id playlistId, const CVariant& shuffle)
-{
-  const std::optional<bool> requested{
-      ParseShuffleState(shuffle, CServiceBroker::GetPlaylistPlayer().IsShuffled(playlistId))};
-  if (requested.has_value())
-  {
-    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_SHUFFLE,
-                                               static_cast<int>(playlistId), *requested ? 1 : 0);
-  }
-}
-
-void ApplyRepeat(PLAYLIST::Id playlistId, const CVariant& repeat)
-{
-  const PLAYLIST::RepeatState state{
-      ParseRepeatState(repeat, CServiceBroker::GetPlaylistPlayer().GetRepeat(playlistId))};
-  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT,
-                                             static_cast<int>(playlistId), static_cast<int>(state));
+  const CApplicationPlayLists::Repeat after = playLists->GetRepeat(type);
+  if (wanted == "cycle")
+    return after == before ? FailedToExecute : ACK;
+  return CApplicationPlayLists::ParseRepeat(wanted) == after ? ACK : FailedToExecute;
 }
 
 JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle)
 {
   CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
-  const std::optional<bool> requested{ParseShuffleState(shuffle, slideShow.IsShuffled())};
-  if (!requested.has_value())
-    return ACK;
-
-  if (!*requested)
+  if (slideShow.NumSlides() < 0)
     return FailedToExecute;
 
-  slideShow.Shuffle();
+  const bool toggle = shuffle.isString() && shuffle.asString() == "toggle";
+  if (slideShow.IsShuffled())
+    return (shuffle.isBoolean() && !shuffle.asBoolean()) || toggle ? FailedToExecute : ACK;
+
+  if ((shuffle.isBoolean() && shuffle.asBoolean()) || toggle)
+    slideShow.Shuffle();
   return ACK;
 }
 

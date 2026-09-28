@@ -428,7 +428,7 @@ protected:
   bool OpenRadioRDSStream(CDVDStreamInfo& hint);
   bool OpenAudioID3Stream(CDVDStreamInfo& hint);
 
-  /** \brief Switches forced subtitles to forced subtitles matching the language of the current audio track.
+  /*! \brief Switches forced subtitles to forced subtitles matching the language of the current audio track.
   *          If these are not available, subtitles are disabled.
   */
   void AdaptForcedSubtitles();
@@ -454,17 +454,13 @@ protected:
 
   void SetSubtitleVisibleInternal(bool bVisible);
 
-  enum SubtitleChange
-  {
-    FLAG_STATUS_CHANGE = 0x0001,
-    FLAG_STREAMINFO_CHANGE = 0x0002,
-  };
-  void NotifySubtitleUpdate(int flags);
+  void NotifySubtitleUpdate();
   void NotifyAudioUpdate();
   void NotifyVideoUpdate();
 
-  /**
-   * one of the DVD_PLAYSPEED defines
+  /*!
+   * \brief Set the play speed.
+   * \param iSpeed One of the DVD_PLAYSPEED values.
    */
   void SetPlaySpeed(int iSpeed);
 

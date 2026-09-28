@@ -1,9 +1,11 @@
-set(SOURCES TestPlayListASX.cpp
+set(SOURCES TestPlayList.cpp
+            TestPlayListASX.cpp
             TestPlayListB4S.cpp
             TestPlayListFactory.cpp
             TestPlayListFileItemClassify.cpp
             TestPlayListWPL.cpp
             TestPlayListXML.cpp
-            TestPlayListXSPF.cpp)
+            TestPlayListXSPF.cpp
+            TestSmartPlayList.cpp)
 
 core_add_test_library(playlists_test)

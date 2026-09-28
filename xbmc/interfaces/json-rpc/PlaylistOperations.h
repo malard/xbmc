@@ -11,13 +11,10 @@
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
 
+#include <string_view>
+
 class CFileItemList;
 class CVariant;
-
-namespace KODI::PLAYLIST
-{
-enum class Id;
-} // namespace KODI::PLAYLIST
 
 namespace JSONRPC
 {
@@ -45,21 +42,14 @@ namespace JSONRPC
                                     CVariant& result);
 
   private:
-    static KODI::PLAYLIST::Id GetPlaylist(const CVariant& playlist);
-    static JSONRPC_STATUS GetPropertyValue(KODI::PLAYLIST::Id playlistId,
-                                           const std::string& property,
-                                           CVariant& result);
-    static bool CheckMediaParameter(KODI::PLAYLIST::Id playlistId, const CVariant& itemObject);
-
     /*!
-     \brief Resolves the "item" parameter, a single item or an array of them
-
-     What resolved arrives in items, in request order. Everything else arrives in unresolved,
-     each with a "reason" of notfound, unavailable or invalid.
+     * \brief Read the items a request names, as the media the playlist takes. What resolved
+     * arrives in items, in request order; everything else arrives in unresolved, each with a
+     * "reason" of notfound, unavailable or invalid.
      */
-    static void HandleItemsParameter(KODI::PLAYLIST::Id playlistId,
-                                     const CVariant& itemParam,
-                                     CFileItemList& items,
-                                     CVariant& unresolved);
+    static void ReadItems(std::string_view media,
+                          const CVariant& itemParam,
+                          CFileItemList& items,
+                          CVariant& unresolved);
   };
 }

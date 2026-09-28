@@ -314,8 +314,8 @@
         "schema": {
           "type": "object",
           "properties": {
-            "playlistid": {
-              "$ref": "#/$defs/Playlist.Id"
+            "playlist": {
+              "$ref": "#/$defs/Playlist.Name"
             },
             "item": {
               "$ref": "#/$defs/Notifications.Item"
@@ -325,7 +325,7 @@
             }
           },
           "required": [
-            "playlistid"
+            "playlist"
           ]
         }
       }
@@ -349,15 +349,15 @@
         "schema": {
           "type": "object",
           "properties": {
-            "playlistid": {
-              "$ref": "#/$defs/Playlist.Id"
+            "playlist": {
+              "$ref": "#/$defs/Playlist.Name"
             },
             "position": {
               "$ref": "#/$defs/Playlist.Position"
             }
           },
           "required": [
-            "playlistid"
+            "playlist"
           ]
         }
       }
@@ -381,12 +381,12 @@
         "schema": {
           "type": "object",
           "properties": {
-            "playlistid": {
-              "$ref": "#/$defs/Playlist.Id"
+            "playlist": {
+              "$ref": "#/$defs/Playlist.Name"
             }
           },
           "required": [
-            "playlistid"
+            "playlist"
           ]
         }
       }
@@ -410,15 +410,15 @@
         "schema": {
           "type": "object",
           "properties": {
-            "playlistid": {
-              "$ref": "#/$defs/Playlist.Id"
+            "playlist": {
+              "$ref": "#/$defs/Playlist.Name"
             },
             "property": {
               "$ref": "#/$defs/Playlist.Property.Value"
             }
           },
           "required": [
-            "playlistid",
+            "playlist",
             "property"
           ]
         }

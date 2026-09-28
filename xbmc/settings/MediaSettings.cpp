@@ -8,9 +8,9 @@
 
 #include "MediaSettings.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/RetroPlayer/RetroPlayerUtils.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "interfaces/AnnouncementManager.h"
@@ -145,14 +145,14 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_musicNeedsUpdate = 0;
   }
 
-  // Set music playlist player repeat and shuffle from loaded settings
-  if (m_musicPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_MUSIC, m_musicPlaylistShuffle);
+  // Apply the loaded music playlist repeat and shuffle
+  const auto playLists = CServiceBroker::GetPlayLists();
+  playLists->SetRepeat(PLAYLIST::Audio,
+                       m_musicPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                             : CApplicationPlayLists::Repeat::Off,
+                       CApplicationPlayLists::Persist::No);
+  playLists->SetShuffle(PLAYLIST::Audio, m_musicPlaylistShuffle,
+                        CApplicationPlayLists::Persist::No);
 
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
@@ -178,14 +178,13 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_videoNeedsUpdate = 0;
   }
 
-  // Set video playlist player repeat and shuffle from loaded settings
-  if (m_videoPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_VIDEO, m_videoPlaylistShuffle);
+  // Apply the loaded video playlist repeat and shuffle
+  playLists->SetRepeat(PLAYLIST::Video,
+                       m_videoPlaylistRepeat ? CApplicationPlayLists::Repeat::All
+                                             : CApplicationPlayLists::Repeat::Off,
+                       CApplicationPlayLists::Persist::No);
+  playLists->SetShuffle(PLAYLIST::Video, m_videoPlaylistShuffle,
+                        CApplicationPlayLists::Persist::No);
 
   return true;
 }

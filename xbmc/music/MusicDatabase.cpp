@@ -371,8 +371,8 @@ void CMusicDatabase::CreateAnalytics()
      the trigger (to avoid recursion), but can set NEW column values before insert or update.
      Meanwhile SQLite triggers cannot set NEW column values in that way, but can update same table.
      Recursion avoided using WHEN but SQLite has PRAGMA recursive-triggers off by default anyway.
-     @todo: once on SQLite v3.31 we could use a generated column for dateModified as real
   */
+  //! @todo once on SQLite v3.31 we could use a generated column for dateModified as real
   bool bisMySQL = StringUtils::EqualsNoCase(
       CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_databaseMusic.type, "mysql");
 
@@ -608,8 +608,8 @@ void CMusicDatabase::CreateNativeDBFunctions()
   /* Functions to do the natural number sorting and all ascii symbol char at top adjustments to
      default utf8_general_ci collation that SQLite does via a collation sequence callback
      function to StringUtils::AlphaNumericCompare
-     !@todo: the video needs these defined too for sorting in DB, then creation can be made common
   */
+  //! @todo the video needs these defined too for sorting in DB, then creation can be made common
   // clang-format off
   // udfFirstNumberPos finds the position of the first digit in a string
   m_pDS->exec("DROP FUNCTION IF EXISTS udfFirstNumberPos");
@@ -1988,7 +1988,7 @@ int CMusicDatabase::AddArtist(const std::string& strArtist,
       }
 
       // 2) No MusicBrainz - search for any artist (MB ID or non) with the same name.
-      //    With MusicBrainz IDs this could return multiple artists and is non-determinstic
+      //    With MusicBrainz IDs this could return multiple artists and is non-deterministic
       //    Always pick the first artist ID returned by the DB to return.
     }
     else
@@ -2083,8 +2083,6 @@ int CMusicDatabase::UpdateArtist(int idArtist,
                       " strYearsActive = '%s', strImage = '%s', "
                       " lastScraped = '%s', bScrapedMBID = %i",
                       strArtist.c_str(),
-                      /* strSortName.c_str(),*/
-                      /* strMusicBrainzArtistID.c_str(), */
                       strType.c_str(), strGender.c_str(), strDisambiguation.c_str(), //
                       strBorn.c_str(), strFormed.c_str(), strGenres.c_str(), //
                       strMoods.c_str(), strStyles.c_str(), strInstruments.c_str(), //
@@ -6080,7 +6078,7 @@ bool CMusicDatabase::GetDiscsByWhere(CMusicDbUrl& musicUrl,
 
     // If there are extra songview WHERE conditions adjust to song or albumview
     // fields, and join Path table for strPath
-    // ! @todo: convert songview fields into to song or albumview fields
+    //! @todo convert songview fields into song or albumview fields
     // But not sure we ever get songview fields in filter - REMOVE??
     if (extFilter.where.find("songview.strPath") != std::string::npos)
     {
@@ -6420,7 +6418,6 @@ bool CMusicDatabase::GetSongsFullByWhere(const std::string& baseDir,
     int songId = -1;
     std::vector<CArtistCredit> artistCredits;
     const dbiplus::query_data& data = m_pDS->get_result_set().records;
-    int count = 0;
     for (const auto& i : results)
     {
       const auto targetRow = static_cast<unsigned int>(i.at(Field::ROW).asInteger());
@@ -6439,9 +6436,6 @@ bool CMusicDatabase::GetSongsFullByWhere(const std::string& baseDir,
           songId = record->at(song_idSong).get_asInt();
           auto item{std::make_shared<CFileItem>()};
           GetFileItemFromDataset(record, item.get(), musicUrl);
-          //! @todo remove hack to use program count for sorting by database returned order
-          count++;
-          item->SetProgramCount(count);
           // Set icon now to avoid slow per item processing in FillInDefaultIcon later
           item->SetProperty("icon_never_overlay", true);
           item->SetArt("icon", "DefaultAudio.png");
@@ -6479,7 +6473,7 @@ bool CMusicDatabase::GetSongsFullByWhere(const std::string& baseDir,
     // navigation. Order is read later from view state and list sorting is then triggered by
     // CGUIMediaWindow::Update in both cases.
     // So sorting here is currently redundant, but the consistent place to do it.
-    // !@ todo: do sorting once, preferably in SQL
+    //! @todo do sorting once, preferably in SQL
     if (sorting.sortBy == SortBy::RANDOM && artistData)
       items.Sort(sorting);
 
@@ -6617,7 +6611,7 @@ bool CMusicDatabase::GetArtistsByWhereJSON(const std::set<std::string, std::less
     Filter extFilter;
     CMusicDbUrl musicUrl;
     SortDescription sorting = sortDescription;
-    //! @todo: replace GetFilter to avoid exists as well as JOIn to albm_artist and song_artist tables
+    //! @todo replace GetFilter to avoid exists as well as JOIN to album_artist and song_artist tables
     if (!musicUrl.FromString(baseDir) || !GetFilter(musicUrl, extFilter, sorting))
       return false;
 
@@ -6710,7 +6704,7 @@ bool CMusicDatabase::GetArtistsByWhereJSON(const std::set<std::string, std::less
             dbfieldindex.emplace_back(-1);
           else
             dbfieldindex.emplace_back(i);
-          // Field from scaler subquery
+          // Field from scalar subquery
           if (!JSONtoDBArtist[i].SQL.empty())
             extFilter.AppendField(PrepareSQL(JSONtoDBArtist[i].SQL));
           else
@@ -7424,7 +7418,7 @@ bool CMusicDatabase::GetAlbumsByWhereJSON(const std::set<std::string, std::less<
           else
             dbfieldindex.emplace_back(i);
           if (!JSONtoDBAlbum[i].SQL.empty())
-            // Field from scaler subquery
+            // Field from scalar subquery
             extFilter.AppendField(PrepareSQL(JSONtoDBAlbum[i].SQL));
           else
             // Field from album table
@@ -7883,7 +7877,7 @@ bool CMusicDatabase::GetSongsByWhereJSON(
           else
             dbfieldindex.emplace_back(i);
           if (!JSONtoDBSong[i].SQL.empty())
-            // Field from scaler subquery
+            // Field from scalar subquery
             extFilter.AppendField(PrepareSQL(JSONtoDBSong[i].SQL));
           else
             // Field from song table
@@ -8441,7 +8435,7 @@ std::string CMusicDatabase::AlphanumericSortSQL(const std::string& strField,
 {
   /*
   Use custom collation ALPHANUM in SQLite. This handles natural number order, case sensitivity
-  and locale UFT-8 order for accents using the same functionality as fileitem list sorting.
+  and locale UTF-8 order for accents using the same functionality as fileitem list sorting.
   Natural number order is not significant for where clause comparison and use of calculated fields
   means there is no advantage in defining as column default in table create than per query (which
   also makes looking at the db with other tools difficult).
@@ -9565,8 +9559,7 @@ std::string CMusicDatabase::GetArtistsLastModified() const
   return GetSingleValue("SELECT MAX(dateModified) FROM artist");
 }
 
-unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter,
-                                              std::vector<std::pair<int, int>>& songIDs)
+unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs)
 {
   try
   {
@@ -9591,9 +9584,9 @@ unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter,
     songIDs.reserve(m_pDS->num_rows());
     while (!m_pDS->eof())
     {
-      songIDs.push_back(std::make_pair<int, int>(1, m_pDS->fv(song_idSong).get_asInt()));
+      songIDs.push_back(m_pDS->fv(song_idSong).get_asInt());
       m_pDS->next();
-    } // cleanup
+    }
     m_pDS->close();
     return static_cast<unsigned int>(songIDs.size());
   }
@@ -9881,8 +9874,8 @@ bool CMusicDatabase::GetAlbumFolder(const CAlbum& album,
     }
   }
   // Create a valid unique folder name from album title
-  // @todo: Does UFT8 matter or need normalizing?
-  // @todo: Simplify punctuation removing unicode appostraphes, "..." etc.?
+  //! @todo Does UTF-8 matter or need normalizing?
+  //! @todo Simplify punctuation removing unicode apostrophes, "..." etc.?
   strFolder = CUtil::MakeLegalFileName(album.strAlbum, LegalPath::WIN32_COMPAT);
   StringUtils::Replace(strFolder, " _ ", "_");
 
@@ -9920,8 +9913,8 @@ bool CMusicDatabase::GetArtistFolderName(const std::string& strArtist,
     return false;
 
   // Create a valid unique folder name for artist
-  // @todo: Does UFT8 matter or need normalizing?
-  // @todo: Simplify punctuation removing unicode appostraphes, "..." etc.?
+  //! @todo Does UTF-8 matter or need normalizing?
+  //! @todo Simplify punctuation removing unicode apostrophes, "..." etc.?
   strFolder = CUtil::MakeLegalFileName(strArtist, LegalPath::WIN32_COMPAT);
   StringUtils::Replace(strFolder, " _ ", "_");
 
@@ -10298,7 +10291,6 @@ bool CMusicDatabase::MigrateSources()
     // Fill source and source paths tables
     for (const auto& source : sources)
     {
-      // AddSource(source.strName, source.strPath, source.vecPaths);
       // Add new source
       strSQL = PrepareSQL("INSERT INTO source (idSource, strName, strMultipath) "
                           "VALUES(NULL, '%s', '%s')",
@@ -10511,7 +10503,7 @@ bool CMusicDatabase::GetSourcesByAlbum(int idAlbum, CFileItem* item)
     }
     else
     {
-      //! @todo: handle singles, or don't waste time checking songs
+      //! @todo handle singles, or don't waste time checking songs
       // Album does have any sources, may be a single??
       // Check via song paths, check each source path individually
       // usually fewer source paths than songs
@@ -12386,7 +12378,7 @@ void CMusicDatabase::ImportFromXML(const std::string& xmlFile, CGUIDialogProgres
         importedArtist.Load(entry);
         strTitle = importedArtist.strArtist;
 
-        // Match by mbid first (that is definatively unique), then name (no mbid), finally by just name
+        // Match by mbid first (that is definitively unique), then name (no mbid), finally by just name
         int idArtist = GetArtistByMatch(importedArtist);
         if (idArtist > -1)
         {
@@ -12405,7 +12397,7 @@ void CMusicDatabase::ImportFromXML(const std::string& xmlFile, CGUIDialogProgres
         CAlbum importedAlbum;
         importedAlbum.Load(entry);
         strTitle = importedAlbum.strAlbum;
-        // Match by mbid first (that is definatively unique), then title and artist desc (no mbid), finally by just name and artist
+        // Match by mbid first (that is definitively unique), then title and artist desc (no mbid), finally by just name and artist
         int idAlbum = GetAlbumByMatch(importedAlbum);
         if (idAlbum > -1)
         {
@@ -13246,7 +13238,7 @@ int CMusicDatabase::GetOrderFilter(const std::string& type,
     DESC = " DESC";
 
   if (sorting.sortBy == SortBy::RANDOM)
-    orderfields.emplace_back(PrepareSQL("RANDOM()")); //Adjusts styntax for MySQL
+    orderfields.emplace_back(PrepareSQL("RANDOM()")); //Adjusts syntax for MySQL
   else
   {
     FieldList fields;

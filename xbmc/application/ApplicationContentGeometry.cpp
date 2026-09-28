@@ -8,14 +8,13 @@
 
 #include "ApplicationContentGeometry.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationSettingsHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
 #include "cores/VideoSettings.h"
-#include "interfaces/AnnouncementManager.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -84,7 +83,7 @@ CApplicationContentGeometry::CApplicationContentGeometry() : m_current(AtRestGeo
 void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
                                            const DrawnGeometry& drawn)
 {
-  const auto announcer = CServiceBroker::GetAnnouncementManager();
+  const auto announcer = CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>();
   if (!announcer)
     return;
 
@@ -94,11 +93,7 @@ void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
   if (drawn.Drawn())
     SerializeDrawnGeometry(drawn, data["screen"]);
 
-  const int playlist = static_cast<int>(CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist());
-  if (playlist >= 0)
-    data["player"]["playerid"] = playlist;
-
-  announcer->Announce(ANNOUNCEMENT::Player, "OnContentGeometryChange", data);
+  announcer->OnContentGeometryChanged(std::move(data));
 }
 
 void CApplicationContentGeometry::Set(const EffectiveGeometry& geometry)

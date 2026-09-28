@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoProvider.h"
 #include "threads/CriticalSection.h"
 #include "video/geometry/EffectiveGeometry.h"
+#include "playlists/PlayListTypes.h"
 
 #include <deque>
 #include <memory>
@@ -18,6 +20,7 @@
 #include <unordered_map>
 
 class CApplicationPlayer;
+class CApplicationPlayLists;
 class CVideoInfoTag;
 
 namespace KODI::GUILIB::GUIINFO
@@ -57,6 +60,7 @@ public:
 
 private:
   int GetPercentPlayed(const CVideoInfoTag* tag) const;
+  static bool IsPlaylistInfo(const CGUIInfo& info);
   bool GetPlaylistInfo(std::string& value, const CGUIInfo& info) const;
 
   //! \brief Answer one content geometry member for \p item, or for the player when it is null.
@@ -82,6 +86,8 @@ private:
   mutable std::deque<std::string> m_itemAspectOrder;
 
   const std::shared_ptr<CApplicationPlayer> m_appPlayer;
+  const std::shared_ptr<CApplicationPlayLists> m_playLists;
+  mutable CLookedUpItems m_lookedUp;
 };
 
 } // namespace KODI::GUILIB::GUIINFO

@@ -428,6 +428,12 @@ void CFileItemHandler::HandleFileItem(const char* ID,
       fields.erase(fileField);
     }
 
+    if (item->HasProperty("playlistdisplayorder"))
+    {
+      object["position"] = item->GetProperty("playlistposition");
+      object["displayorder"] = item->GetProperty("playlistdisplayorder");
+    }
+
     fileField = fields.find("mediapath");
     if (fileField != fields.end())
     {

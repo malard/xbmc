@@ -335,7 +335,7 @@ void CGUIDialogVideoInfo::SetUserrating(int userrating) const
   {
     m_movieItem->GetVideoInfoTag()->SetUserrating(userrating);
 
-    // send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
+    // send a message to all windows to tell them to update the fileitem (eg the playlists, media windows)
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_movieItem);
     CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
   }
@@ -1927,8 +1927,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
     itemRemote->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13513));
     items.Add(itemRemote);
 
-    //! @todo Do we need to clear the cached image?
-    //    CServiceBroker::GetTextureCache()->ClearCachedImage(remoteArt[i]);
+    //! @todo Do we need to clear the cached image of remoteArt[i]?
   }
 
   const std::string localArt = asyncArtHandler.GetLocalArt();

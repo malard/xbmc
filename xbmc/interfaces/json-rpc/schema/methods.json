@@ -295,19 +295,19 @@
           "anyOf": [
             {
               "type": "object",
+              "required": [
+                "playlist"
+              ],
               "additionalProperties": false,
               "properties": {
-                "playlistid": {
-                  "$ref": "#/$defs/Playlist.Id"
+                "playlist": {
+                  "$ref": "#/$defs/Playlist.Name"
                 },
                 "position": {
                   "$ref": "#/$defs/Playlist.Position",
-                  "default": 0
+                  "description": "The entry to start at; with none, the start of the play order"
                 }
-              },
-              "required": [
-                "playlistid"
-              ]
+              }
             },
             {
               "$ref": "#/$defs/Playlist.Item"
@@ -358,39 +358,39 @@
             },
             {
               "type": "object",
+              "required": [
+                "broadcastid"
+              ],
               "additionalProperties": false,
               "properties": {
                 "broadcastid": {
                   "$ref": "#/$defs/Library.Id"
                 }
-              },
-              "required": [
-                "broadcastid"
-              ]
+              }
             },
             {
               "type": "object",
+              "required": [
+                "channelid"
+              ],
               "additionalProperties": false,
               "properties": {
                 "channelid": {
                   "$ref": "#/$defs/Library.Id"
                 }
-              },
-              "required": [
-                "channelid"
-              ]
+              }
             },
             {
               "type": "object",
+              "required": [
+                "recordingid"
+              ],
               "additionalProperties": false,
               "properties": {
                 "recordingid": {
                   "$ref": "#/$defs/Library.Id"
                 }
-              },
-              "required": [
-                "recordingid"
-              ]
+              }
             }
           ]
         }
@@ -467,46 +467,6 @@
       "Unavailable"
     ]
   },
-  "Player.GetActivePlayers": {
-    "type": "method",
-    "description": "Returns all active players",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [],
-    "returns": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "properties": {
-          "playerid": {
-            "$ref": "#/$defs/Player.Id"
-          },
-          "playlistid": {
-            "$ref": "#/$defs/Playlist.Id"
-          },
-          "type": {
-            "$ref": "#/$defs/Player.Type"
-          },
-          "playertype": {
-            "type": "string",
-            "enum": [
-              "internal",
-              "external",
-              "remote"
-            ]
-          }
-        },
-        "required": [
-          "playerid",
-          "playlistid",
-          "type",
-          "playertype"
-        ]
-      }
-    },
-    "errors": []
-  },
   "Player.GetPlayers": {
     "type": "method",
     "description": "Get a list of available players",
@@ -567,13 +527,6 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "properties",
         "required": true,
         "schema": {
@@ -585,10 +538,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -607,23 +559,15 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "properties",
         "schema": {
           "$ref": "#/$defs/List.Fields.All"
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -650,13 +594,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "play",
         "schema": {
           "$ref": "#/$defs/Global.Toggle",
@@ -664,10 +601,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -685,17 +621,9 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
-        "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -731,13 +659,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "offset",
         "required": true,
         "schema": {
@@ -753,10 +674,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -783,13 +703,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "speed",
         "required": true,
@@ -820,10 +733,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -842,13 +754,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "tempo",
         "required": true,
         "schema": {
@@ -863,10 +768,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -885,13 +789,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "value",
         "required": true,
         "schema": {
@@ -904,10 +801,10 @@
                   "description": "Percentage value to seek to"
                 }
               },
+              "additionalProperties": false,
               "required": [
                 "percentage"
-              ],
-              "additionalProperties": false
+              ]
             },
             {
               "type": "object",
@@ -917,10 +814,10 @@
                   "description": "Time to seek to"
                 }
               },
+              "additionalProperties": false,
               "required": [
                 "time"
-              ],
-              "additionalProperties": false
+              ]
             },
             {
               "type": "object",
@@ -936,10 +833,10 @@
                   "description": "Seek by predefined jumps"
                 }
               },
+              "additionalProperties": false,
               "required": [
                 "step"
-              ],
-              "additionalProperties": false
+              ]
             },
             {
               "type": "object",
@@ -949,19 +846,18 @@
                   "description": "Seek by the given number of seconds"
                 }
               },
+              "additionalProperties": false,
               "required": [
                 "seconds"
-              ],
-              "additionalProperties": false
+              ]
             }
           ]
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -991,13 +887,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "direction",
         "required": true,
         "schema": {
@@ -1011,10 +900,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1030,13 +918,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "zoom",
         "required": true,
@@ -1059,10 +940,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1255,13 +1135,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "value",
         "schema": {
           "type": "string",
@@ -1273,10 +1146,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1291,13 +1163,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "to",
         "required": true,
@@ -1318,10 +1183,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1333,17 +1197,10 @@
   },
   "Player.SetShuffle": {
     "type": "method",
-    "description": "Shuffle/Unshuffle items in the player",
+    "description": "Turn shuffled play order on or off",
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "shuffle",
         "required": true,
@@ -1352,10 +1209,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1370,13 +1226,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "repeat",
         "required": true,
@@ -1395,10 +1244,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1414,13 +1262,6 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "partymode",
         "required": true,
         "schema": {
@@ -1428,10 +1269,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1447,13 +1287,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "stream",
         "required": true,
@@ -1475,10 +1308,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1494,13 +1326,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "stream",
         "required": true,
@@ -1522,10 +1347,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1542,25 +1366,17 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
         "name": "subtitle",
-        "required": true,
         "description": "Local path or remote URL to the subtitle file to load",
+        "required": true,
         "schema": {
           "type": "string"
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1575,13 +1391,6 @@
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
-      {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
-        "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
       {
         "name": "subtitle",
         "required": true,
@@ -1613,10 +1422,9 @@
         }
       },
       {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1638,15 +1446,15 @@
       "items": {
         "type": "object",
         "properties": {
-          "playlistid": {
-            "$ref": "#/$defs/Playlist.Id"
+          "playlist": {
+            "$ref": "#/$defs/Playlist.Name"
           },
           "type": {
             "$ref": "#/$defs/Playlist.Type"
           }
         },
         "required": [
-          "playlistid",
+          "playlist",
           "type"
         ]
       }
@@ -1660,10 +1468,10 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1687,15 +1495,15 @@
   },
   "Playlist.GetItems": {
     "type": "method",
-    "description": "Get all items from playlist",
+    "description": "Get all items from playlist, in list order",
     "transport": "Response",
     "permission": "ReadData",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1726,7 +1534,7 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/List.Item.All"
+            "$ref": "#/$defs/Playlist.Entry"
           }
         }
       },
@@ -1744,10 +1552,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1783,10 +1591,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1830,10 +1638,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1857,10 +1665,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       }
     ],
@@ -1874,10 +1682,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1905,15 +1713,15 @@
   },
   "Playlist.SetShuffle": {
     "type": "method",
-    "description": "Shuffle or unshuffle the playlist, whether or not it is currently being played. The items are reordered immediately, and the state persists unless overridden by the shuffled option of Player.Open. For picture playlists (aka slideshows) shuffling is only possible while a slideshow is running and cannot be undone.",
+    "description": "Shuffle or unshuffle the play order of the playlist, whether or not it is being played; the list itself keeps its order. The state persists unless overridden by the shuffled option of Player.Open. A picture playlist (a slideshow) can only be shuffled while it runs, and cannot be unshuffled.",
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1937,10 +1745,10 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "playlistid",
+        "name": "playlist",
         "required": true,
         "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Playlist.Name"
         }
       },
       {
@@ -1966,20 +1774,11 @@
   "Player.GetChapters": {
     "type": "method",
     "description": "Returns the chapters of the currently playing item for the given player",
-    "transport": "Response",
     "params": [
       {
-        "name": "playerid",
-        "description": "The player. Exactly one of playerid and playlistid is given",
+        "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Id"
-        }
-      },
-      {
-        "name": "playlistid",
-        "description": "The playlist a player is working through, in place of playerid",
-        "schema": {
-          "$ref": "#/$defs/Playlist.Id"
+          "$ref": "#/$defs/Player.Playlist"
         }
       }
     ],
@@ -1998,6 +1797,7 @@
         "chapters"
       ]
     },
+    "transport": "Response",
     "errors": [
       "InvalidParams",
       "FailedToExecute"
@@ -7091,7 +6891,10 @@
                   "$ref": "#/$defs/Library.Id"
                 }
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "required": [
+                "movieid"
+              ]
             },
             {
               "type": "object",
@@ -7100,7 +6903,10 @@
                   "$ref": "#/$defs/Library.Id"
                 }
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "required": [
+                "episodeid"
+              ]
             },
             {
               "type": "object",
@@ -7109,7 +6915,10 @@
                   "$ref": "#/$defs/Library.Id"
                 }
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "required": [
+                "musicvideoid"
+              ]
             },
             {
               "type": "object",
@@ -7119,7 +6928,10 @@
                   "description": "Path to the file itself. Content geometry is stored per file, so this is the only form that can name one version of a movie that has several"
                 }
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "required": [
+                "file"
+              ]
             }
           ]
         }

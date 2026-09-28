@@ -13,7 +13,6 @@
 #include "GUIInfoManager.h"
 #include "GUILargeTextureManager.h"
 #include "GUIUserMessages.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
 #include "URL.h"
@@ -22,9 +21,11 @@
 #include "addons/Skin.h"
 #include "addons/addoninfo/AddonType.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "application/ApplicationSettingsHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "dialogs/GUIDialogButtonMenu.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogSubMenu.h"
@@ -177,8 +178,12 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   CLog::Log(LOGDEBUG, "Load Skin XML: {:.2f} ms", duration.count());
 
   CLog::Log(LOGINFO, "  initialize new skin...");
+  // The playlists record what the player reports, then it is published, before the application
+  // acts on it.
+  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(CServiceBroker::GetPlayLists().get());
+  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
+      CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>().get());
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(m_msgCb);
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&CServiceBroker::GetPlaylistPlayer());
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&g_fontManager);
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
       &CServiceBroker::GetGUI()->GetTextureCallbackManager());
@@ -186,7 +191,7 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
       &CServiceBroker::GetGUI()->GetStereoscopicsManager());
   CServiceBroker::GetGUI()->GetWindowManager().SetCallback(*m_wCb);
 
-  //@todo should be done by GUIComponents
+  //! @todo should be done by GUIComponents
   CServiceBroker::GetGUI()->GetWindowManager().Initialize();
   CServiceBroker::GetGUI()->GetAudioManager().Enable(true);
   CServiceBroker::GetGUI()->GetAudioManager().Load();

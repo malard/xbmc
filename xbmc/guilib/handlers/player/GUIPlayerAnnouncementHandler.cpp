@@ -68,7 +68,8 @@ void CGUIPlayerAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag
                                                  WINDOW_DIALOG_PLAYER_PROCESS_INFO, 0);
     }
   }
-  else if (message == "OnPlaybackFailed")
+  // A failure the playlists report carries a reason and is shown by whoever refused it
+  else if (message == "OnPlaybackFailed" && !data.isMember("reason"))
   {
     CGUIDialogKaiToast::QueueNotification(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16026),

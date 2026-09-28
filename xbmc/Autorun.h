@@ -31,6 +31,7 @@ namespace XFILE
   class IDirectory;
 }
 
+class CFileItemList;
 class CSetting;
 
 enum class AutoCDAction : uint8_t
@@ -84,9 +85,13 @@ public:
                                                   int& current);
 
 protected:
+  /*!
+   * \brief Play what the disc in the given drive holds: video directly, audio tracks by collecting
+   * them into tracks for the caller to play.
+   */
   static bool RunDisc(XFILE::IDirectory* pDir,
                       const std::string& strDrive,
-                      int& nAddedToPlaylist,
+                      CFileItemList& tracks,
                       bool bRoot,
                       const PlayDiscOptions& options);
   bool m_bEnable;

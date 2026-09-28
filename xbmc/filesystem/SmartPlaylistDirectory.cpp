@@ -16,7 +16,6 @@
 #include "filesystem/FileDirectoryFactory.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicDbUrl.h"
-#include "playlists/PlayListTypes.h"
 #include "playlists/SmartPlayList.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -82,8 +81,6 @@ namespace XFILE
     std::string option = !filter ? "xsp" : "filter";
     std::string group = playlist.GetGroup();
     bool isGrouped = !group.empty() && !StringUtils::EqualsNoCase(group, "none") && !playlist.IsGroupMixed();
-    // Hint for playlist files like STRM
-    PLAYLIST::Id playlistTypeHint = PLAYLIST::Id::TYPE_NONE;
 
     // get all virtual folders and add them to the item list
     playlist.GetVirtualFolders(virtualFolders);
@@ -104,7 +101,6 @@ namespace XFILE
         playlist.GetType() == "tvshows" ||
         playlist.GetType() == "episodes")
     {
-      playlistTypeHint = PLAYLIST::Id::TYPE_VIDEO;
       CVideoDatabase db;
       if (db.Open())
       {
@@ -160,7 +156,6 @@ namespace XFILE
     }
     else if (playlist.IsMusicType() || playlist.GetType().empty())
     {
-      playlistTypeHint = PLAYLIST::Id::TYPE_MUSIC;
       CMusicDatabase db;
       if (db.Open())
       {
@@ -218,7 +213,6 @@ namespace XFILE
 
     if (playlist.GetType() == "musicvideos" || playlist.GetType() == "mixed")
     {
-      playlistTypeHint = PLAYLIST::Id::TYPE_VIDEO;
       CVideoDatabase db;
       if (db.Open())
       {
@@ -273,13 +267,6 @@ namespace XFILE
           items.SetPath(videoUrl.ToString());
 
         items.Append(items2);
-        if (items2.Size())
-        {
-          if (items.Size() > items2.Size())
-            items.SetContent("mixed");
-          else
-            items.SetContent("musicvideos");
-        }
         items.SetProperty(PROPERTY_PATH_DB, videoUrl.ToString());
       }
     }
@@ -319,14 +306,6 @@ namespace XFILE
 
     if (auto watchedMode = playlist.GetWatchedMode(); watchedMode.has_value())
       items.SetProperty(PROPERTY_WATCHED_MODE, static_cast<int>(watchedMode.value()));
-
-    // go through and set the playlist order
-    for (int i = 0; i < items.Size(); i++)
-    {
-      CFileItemPtr item = items[i];
-      item->SetProgramCount(i); //! @todo remove this hack for playlist order
-      item->SetProperty("playlist_type_hint", static_cast<int>(playlistTypeHint));
-    }
 
     if (playlist.GetType() == "mixed")
       return success || success2;

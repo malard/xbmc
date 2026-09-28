@@ -9,10 +9,8 @@
 #include "AnnouncementManager.h"
 
 #include "FileItem.h"
-#include "interfaces/json-rpc/PlayerIds.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
-#include "playlists/PlayListTypes.h"
 #include "pvr/channels/PVRChannel.h"
 #include "threads/SingleLock.h"
 #include "utils/StringUtils.h"
@@ -34,19 +32,13 @@ const std::string CAnnouncementManager::ANNOUNCEMENT_SENDER = "xbmc";
 namespace
 {
 
-void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, bool copyPlayerId, CVariant& object)
+void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
 {
   auto& objItem = object["item"];
 
   objItem["type"] = "channel";
   objItem["title"] = channel.ChannelName();
   objItem["channeltype"] = channel.IsRadio() ? "radio" : "tv";
-
-  if (copyPlayerId)
-  {
-    JSONRPC::DescribePlayer(object["player"], channel.IsRadio() ? JSONRPC::Audio : JSONRPC::Video,
-                            PLAYLIST::Id::TYPE_NONE);
-  }
 
   objItem["id"] = channel.ChannelID();
 }
@@ -190,8 +182,7 @@ CVariant CreateDataObjectFromItem(CFileItem& item, const CVariant& data)
 
   if (item.HasPVRChannelInfoTag())
   {
-    const bool copyPlayerId = data.isMember("player") && data["player"].isMember("playerid");
-    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), copyPlayerId, object);
+    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), object);
   }
   else if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
   {

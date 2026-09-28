@@ -32,14 +32,7 @@ namespace XFILE
       if (!pPlayList->Load(url.Get()))
         return false; //hmmm unable to load playlist?
 
-      PLAYLIST::CPlayList playlist = *pPlayList;
-      // convert playlist items to songs
-      for (int i = 0; i < playlist.size(); ++i)
-      {
-        CFileItemPtr item = playlist[i];
-        item->SetProgramCount(i); //! @todo remove this hack for playlist order
-        items.Add(item);
-      }
+      pPlayList->GetItems(items);
     }
     return true;
   }
@@ -53,7 +46,7 @@ namespace XFILE
       if (!pPlayList->Load(url.Get()))
         return false; //hmmm unable to load playlist?
 
-      return (pPlayList->size() > 1);
+      return pPlayList->Size() > 1;
     }
     return false;
   }

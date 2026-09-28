@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 class CFileItem;
@@ -23,6 +24,14 @@ namespace KODI::PLAYLIST
     static CPlayList* Create(const CURL& url);
     static CPlayList* Create(const std::string& filename);
     static CPlayList* Create(const CFileItem& item);
+
+    /*!
+     * \return The playlist file at the item's path, read, or nullptr if it is not a playlist Kodi
+     * can read or reading it failed.
+     */
+    static std::unique_ptr<CPlayList> Load(const CFileItem& item);
+    static std::unique_ptr<CPlayList> Load(const std::string& filename);
+
     static bool IsPlaylist(const CURL& url);
     static bool IsPlaylist(const std::string& filename);
     static bool IsPlaylist(const CFileItem& item);

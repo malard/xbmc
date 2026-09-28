@@ -80,10 +80,14 @@ public:
    */
   std::string LocalizeWatchedMode(WatchedMode mode);
 
+  bool GetMusicPlaylistRepeat() const { return m_musicPlaylistRepeat; }
   void SetMusicPlaylistRepeat(bool repeats) { m_musicPlaylistRepeat = repeats; }
+  bool GetMusicPlaylistShuffled() const { return m_musicPlaylistShuffle; }
   void SetMusicPlaylistShuffled(bool shuffled) { m_musicPlaylistShuffle = shuffled; }
 
+  bool GetVideoPlaylistRepeat() const { return m_videoPlaylistRepeat; }
   void SetVideoPlaylistRepeat(bool repeats) { m_videoPlaylistRepeat = repeats; }
+  bool GetVideoPlaylistShuffled() const { return m_videoPlaylistShuffle; }
   void SetVideoPlaylistShuffled(bool shuffled) { m_videoPlaylistShuffle = shuffled; }
 
   bool DoesMediaStartWindowed() const { return m_mediaStartWindowed; }

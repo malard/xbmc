@@ -11,8 +11,8 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
-            TestPlayerIds.cpp
             TestPlayerOpenDirectory.cpp
+            TestPlayerTargets.cpp
             TestPVRBroadcastRange.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
@@ -23,6 +23,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestSettingsValueGate.cpp
             TestSettingsValueRefusal.cpp
             TestSharedFieldDeclarations.cpp
+            TestStreamObjects.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp
