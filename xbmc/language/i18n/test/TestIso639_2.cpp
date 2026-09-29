@@ -28,15 +28,8 @@ TEST(TestI18nIso639_2, TCodeToBCode)
 
 TEST(TestI18nIso639_2, BCodeToTCode)
 {
-  std::optional<uint32_t> result;
+  EXPECT_EQ(CIso639_2::BCodeToTCode("tib"), "bod");
 
-  uint32_t longCode = StringToLongCode("tib");
-  result = CIso639_2::BCodeToTCode(longCode);
-  EXPECT_TRUE(result.has_value());
-  EXPECT_EQ(*result, StringToLongCode("bod"));
-
-  // ISO 639-2 T Code that doesn't have a matching B code
-  longCode = StringToLongCode("zha");
-  result = CIso639_2::BCodeToTCode(longCode);
-  EXPECT_FALSE(result.has_value());
+  // ISO 639-2 B Code that doesn't have a different T code
+  EXPECT_FALSE(CIso639_2::BCodeToTCode("zha").has_value());
 }

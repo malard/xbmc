@@ -392,10 +392,7 @@ std::string CLanguageTag::AsIso6392T() const
     return iso6392B;
 
   // Only the languages whose two forms are spelled differently have a mapping to follow
-  if (const auto tCode = CIso639_2::BCodeToTCode(StringToLongCode(iso6392B)); tCode.has_value())
-    return LongCodeToString(*tCode);
-
-  return iso6392B;
+  return CIso639_2::BCodeToTCode(iso6392B).value_or(iso6392B);
 }
 
 CTerritory CLanguageTag::GetTerritory() const

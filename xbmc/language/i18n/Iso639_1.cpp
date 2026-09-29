@@ -16,16 +16,14 @@
 
 using namespace KODI::LANGUAGE::I18N;
 
-bool CIso639_1::ListLanguages(std::map<std::string, std::string>& langMap)
+void CIso639_1::ListLanguages(std::map<std::string, std::string>& langMap)
 {
   std::ranges::transform(TableISO639_1ByName, std::inserter(langMap, langMap.end()),
                          [](const LCENTRY& e)
                          { return std::make_pair(LongCodeToString(e.code), std::string{e.name}); });
-
-  return true;
 }
 
-bool CIso639_1::ListLanguageNames(std::map<std::string, std::string>& nameMap)
+void CIso639_1::ListLanguageNames(std::map<std::string, std::string>& nameMap)
 {
   std::ranges::transform(TableISO639_1ByName, std::inserter(nameMap, nameMap.end()),
                          [](const LCENTRY& e)
@@ -34,6 +32,4 @@ bool CIso639_1::ListLanguageNames(std::map<std::string, std::string>& nameMap)
   std::ranges::transform(TableISO639_1_DeprByName, std::inserter(nameMap, nameMap.end()),
                          [](const LCENTRY& e)
                          { return std::make_pair(std::string{e.name}, LongCodeToString(e.code)); });
-
-  return true;
 }

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>
@@ -23,29 +22,27 @@ public:
 
   /*!
    * \brief Provide a list of defined ISO 639-2 languages, including B/T variants
-   * \param[in] langMap map to add languages to
-   * \return true for success, false otherwise
+   * \param[in,out] langMap map to add languages to
    */
-  static bool ListLanguages(std::map<std::string, std::string>& langMap);
+  static void ListLanguages(std::map<std::string, std::string>& langMap);
 
   /*!
    * \brief Provide every name an ISO 639-2 language is known by, main and alternative alike,
    *        mapped to its ISO 639-2/T code
-   * \param[in] nameMap map to add the names to; an entry already present is kept
-   * \return true for success, false otherwise
+   * \param[in,out] nameMap map to add the names to; an entry already present is kept
    */
-  static bool ListLanguageNames(std::map<std::string, std::string>& nameMap);
+  static void ListLanguageNames(std::map<std::string, std::string>& nameMap);
 
   /*!
    * \brief Retrieve the ISO 639-2/T code for an ISO 639-2/B code
-   * \param bCode the ISO 639-2/B code, coded as a 32 bit unsigned integer
+   * \param bCode the ISO 639-2/B code
    * \return The matching ISO 639-2/T code, nullopt if there isn't one.
    */
-  static std::optional<uint32_t> BCodeToTCode(uint32_t bCode);
+  static std::optional<std::string> BCodeToTCode(std::string_view bCode);
 
   /*!
    * \brief Retrieve the ISO 639-2/B code for an ISO 639-2/T code
-   * \param tCode the ISO 639-2/T code, coded as a 32 bit unsigned integer
+   * \param tCode the ISO 639-2/T code
    * \return The matching ISO 639-2/B code, nullopt if there isn't one.
    */
   static std::optional<std::string> TCodeToBCode(std::string_view tCode);

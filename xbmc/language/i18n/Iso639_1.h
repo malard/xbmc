@@ -21,16 +21,14 @@ public:
   /*!
    * \brief Provide a list of active ISO 639-1 codes and Kodi's additions.
    *        Deprecated language codes are excluded.
-   * \param[in] langMap map to add languages to
-   * \return true for success, false otherwise
+   * \param[in,out] langMap map to add languages to
    */
-  static bool ListLanguages(std::map<std::string, std::string>& langMap);
+  static void ListLanguages(std::map<std::string, std::string>& langMap);
 
   /*!
    * \brief Provide every name an ISO 639-1 language is known by, mapped to its code
-   * \param[in] nameMap map to add the names to; an entry already present is kept
-   * \return true for success, false otherwise
+   * \param[in,out] nameMap map to add the names to; an entry already present is kept
    */
-  static bool ListLanguageNames(std::map<std::string, std::string>& nameMap);
+  static void ListLanguageNames(std::map<std::string, std::string>& nameMap);
 };
 } // namespace KODI::LANGUAGE::I18N

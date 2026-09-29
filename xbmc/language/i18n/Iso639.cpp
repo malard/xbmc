@@ -11,7 +11,6 @@
 #include "language/i18n/Iso639_2.h"
 #include "language/i18n/IsoCodes.h"
 #include "language/i18n/TableLanguageCodes.h"
-#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <climits>
@@ -22,13 +21,6 @@ namespace
 {
 //! The low byte of a packed code, which is its last character
 constexpr uint32_t LONG_CODE_CHAR_MASK{(1u << CHAR_BIT) - 1};
-
-std::string Code(std::string_view text)
-{
-  std::string code{StringUtils::ToLower(text)};
-  StringUtils::Trim(code);
-  return code;
-}
 } // namespace
 
 namespace KODI::LANGUAGE::I18N
@@ -51,9 +43,8 @@ std::string LongCodeToString(uint32_t code)
   return ret;
 }
 
-std::optional<std::string> CIso639::Alpha2ToAlpha3B(std::string_view alpha2)
+std::optional<std::string> CIso639::Alpha2ToAlpha3B(std::string_view code)
 {
-  const std::string code{Code(alpha2)};
   if (code.length() != ALPHA2_CODE_LENGTH)
     return std::nullopt;
 
@@ -69,14 +60,13 @@ std::optional<std::string> CIso639::Alpha2ToAlpha3B(std::string_view alpha2)
   return std::nullopt;
 }
 
-std::optional<std::string> CIso639::Alpha3ToAlpha2(std::string_view alpha3)
+std::optional<std::string> CIso639::Alpha3ToAlpha2(std::string_view code)
 {
-  const std::string code{Code(alpha3)};
   if (code.length() != ALPHA3_CODE_LENGTH)
     return std::nullopt;
 
   // The table is keyed by the bibliographic form, so a terminological code is mapped over first
-  const std::string bCode{CIso639_2::TCodeToBCode(code).value_or(code)};
+  const std::string bCode{CIso639_2::TCodeToBCode(code).value_or(std::string{code})};
 
   const auto it = std::ranges::lower_bound(LanguageCodesByIso639_2b, bCode, {}, &ISO639::iso639_2b);
   if (it != LanguageCodesByIso639_2b.end() && it->iso639_2b == bCode && !it->iso639_1.empty())

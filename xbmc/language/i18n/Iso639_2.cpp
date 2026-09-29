@@ -8,9 +8,9 @@
 
 #include "language/i18n/Iso639_2.h"
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Iso639.h"
 #include "language/i18n/Iso639_2_Table.h"
+#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <array>
@@ -56,7 +56,7 @@ CIso639_2_Initializer g_initializer;
 
 using namespace KODI::LANGUAGE::I18N;
 
-bool CIso639_2::ListLanguages(std::map<std::string, std::string>& langMap)
+void CIso639_2::ListLanguages(std::map<std::string, std::string>& langMap)
 {
   // ISO 639-2/T codes, under the name the standard gives as the language's own rather than
   // whichever of its alternative names happens to sort first
@@ -76,25 +76,23 @@ bool CIso639_2::ListLanguages(std::map<std::string, std::string>& langMap)
     if (it != TableISO639_2ByCode.end() && tb.terminological == it->code)
       langMap[bCode] = std::string(it->name);
   }
-
-  return true;
 }
 
-bool CIso639_2::ListLanguageNames(std::map<std::string, std::string>& nameMap)
+void CIso639_2::ListLanguageNames(std::map<std::string, std::string>& nameMap)
 {
   std::ranges::transform(g_TableISO639_2AllNames, std::inserter(nameMap, nameMap.end()),
                          [](const LCENTRY& e)
                          { return std::make_pair(std::string{e.name}, LongCodeToString(e.code)); });
-
-  return true;
 }
 
-std::optional<uint32_t> CIso639_2::BCodeToTCode(uint32_t bCode)
+std::optional<std::string> CIso639_2::BCodeToTCode(std::string_view bCode)
 {
+  const uint32_t longCode = StringToLongCode(bCode);
+
   auto it =
-      std::ranges::lower_bound(ISO639_2_TB_MappingsByB, bCode, {}, &ISO639_2_TB::bibliographic);
-  if (it != ISO639_2_TB_MappingsByB.end() && bCode == it->bibliographic)
-    return it->terminological;
+      std::ranges::lower_bound(ISO639_2_TB_MappingsByB, longCode, {}, &ISO639_2_TB::bibliographic);
+  if (it != ISO639_2_TB_MappingsByB.end() && longCode == it->bibliographic)
+    return LongCodeToString(it->terminological);
 
   return std::nullopt;
 }

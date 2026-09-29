@@ -49,13 +49,6 @@ TEST(TestIso639, NamesTheAlpha2CodeOfAnAlpha3One)
   EXPECT_EQ(CIso639::Alpha3ToAlpha2("tib"), CIso639::Alpha3ToAlpha2("bod"));
 }
 
-TEST(TestIso639, IgnoresCaseAndSurroundingSpace)
-{
-  EXPECT_EQ(CIso639::Alpha3ToAlpha2(" eng "), "en");
-  EXPECT_EQ(CIso639::Alpha3ToAlpha2("ENG"), "en");
-  EXPECT_EQ(CIso639::Alpha2ToAlpha3B(" EN "), "eng");
-}
-
 TEST(TestIso639, AnswersNothingForACodeOutsideTheStandard)
 {
   // Each direction takes only the code length its standard assigns
@@ -74,7 +67,7 @@ TEST(TestIso639, AnswersNothingForACodeOutsideTheStandard)
 TEST(TestIso639, ListsOnlyTheIso6391CodesInUse)
 {
   std::map<std::string, std::string> langMap;
-  EXPECT_TRUE(CIso639_1::ListLanguages(langMap));
+  CIso639_1::ListLanguages(langMap);
 
   ASSERT_TRUE(langMap.contains("aa"));
   EXPECT_EQ(langMap.at("aa"), "Afar");

@@ -45,20 +45,20 @@ public:
 
   /*!
    * \brief The ISO 639-2/B code of a language given by its ISO 639-1 code.
-   * \param[in] alpha2 The alpha-2 code, including the spellings ISO 639-1 has since withdrawn.
-   *            Case and surrounding whitespace are not significant.
+   * \param[in] code The alpha-2 code in lowercase, including the spellings ISO 639-1 has since
+   *            withdrawn.
    * \return The alpha-3 code, or nullopt when the text is not an ISO 639-1 code.
    */
-  static std::optional<std::string> Alpha2ToAlpha3B(std::string_view alpha2);
+  static std::optional<std::string> Alpha2ToAlpha3B(std::string_view code);
 
   /*!
    * \brief The ISO 639-1 code of a language given by an ISO 639-2 code.
-   * \param[in] alpha3 The alpha-3 code, in either the bibliographic or the terminological form.
-   *            Case and surrounding whitespace are not significant.
+   * \param[in] code The alpha-3 code in lowercase, in either the bibliographic or the
+   *            terminological form.
    * \return The alpha-2 code, or nullopt when the text is not an ISO 639-2 code or names a
    *         language ISO 639-1 gives no code to.
    */
-  static std::optional<std::string> Alpha3ToAlpha2(std::string_view alpha3);
+  static std::optional<std::string> Alpha3ToAlpha2(std::string_view code);
 };
 
 } // namespace KODI::LANGUAGE::I18N
