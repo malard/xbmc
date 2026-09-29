@@ -357,10 +357,39 @@
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
               "description": "True if the update is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "AudioLibrary.OnItemAdded": {
+    "type": "notification",
+    "description": "A music library item was added.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Audio.Item"
             },
-            "added": {
+            "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the item was newly added."
+              "description": "True if the update is being performed within a transaction."
             }
           },
           "required": [
@@ -549,10 +578,39 @@
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
               "description": "True if the update is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "VideoLibrary.OnItemAdded": {
+    "type": "notification",
+    "description": "A video library item was added.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Video.Item"
             },
-            "added": {
+            "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the item was newly added."
+              "description": "True if the update is being performed within a transaction."
             }
           },
           "required": [

@@ -773,15 +773,24 @@ using the names `GetItemProperties` answers with.
 + {"method": "VideoLibrary.OnItemPropertiesChanged", "params": {"data": {"item": {"kind": "episode", "id": 12}, "properties": {"playCount": 1}}}}
 ```
 
-`properties` is absent when Kodi does not say what changed, as after a scan
-or a refresh; read the item again then. `transaction` and `added` are
-carried as before. An update to a file that is not a library item used to
-arrive with `id` -1; it is no longer sent. A change made with
-`SetItemProperties` is announced to every client once, with the values it set.
+`properties` is absent when Kodi does not say what changed, as after a
+refresh; read the item again then. `transaction` is carried as before. An
+update to a file that is not a library item used to arrive with `id` -1; it
+is no longer sent. A change made with `SetItemProperties` is announced to
+every client once, with the values it set.
+
+A newly added item, which arrived as `OnUpdate` with `added`, is an event of
+its own: `VideoLibrary.OnItemAdded` and `AudioLibrary.OnItemAdded`, carrying
+the item and `transaction`. `OnItemPropertiesChanged` never carries `added`.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",    "params": {"data": {"item": {"id": 9, "type": "movie"}, "added": true, "transaction": true}}}
++ {"method": "VideoLibrary.OnItemAdded", "params": {"data": {"item": {"kind": "movie", "id": 9}, "transaction": true}}}
+```
 
 **What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
 into what you hold for the item, or read it with `GetItemProperties` when
-there is none.
+there is none. Listen for `OnItemAdded` to learn of new items.
 
 ## 20. `GetInProgressTVShows` sorts and limits as asked
 

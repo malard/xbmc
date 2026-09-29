@@ -85,8 +85,9 @@ private:
   }
 
   /*!
-   \brief Sends a library update as the item's OnItemPropertiesChanged, carrying the properties
-   it names under the names GetItemProperties answers with, when it names any.
+   \brief Sends a library update as the item's OnItemAdded when it adds the item, and otherwise as
+   its OnItemPropertiesChanged, carrying the properties it names under the names GetItemProperties
+   answers with, when it names any.
 
    The announcement keeps its name inside Kodi, where components react to it.
 
@@ -105,20 +106,21 @@ private:
     if (id <= 0)
       return false;
 
+    const bool added = data["added"].asBoolean(false);
     CVariant changed(CVariant::VariantTypeObject);
     changed["item"]["kind"] = item["type"];
     changed["item"]["id"] = id;
-    if (data.isMember("properties"))
-      changed["properties"] = data["properties"];
-    else if (data.isMember("playcount"))
-      changed["properties"]["playCount"] = data["playcount"];
-    for (const char* marker : {"transaction", "added"})
+    if (!added)
     {
-      if (data.isMember(marker))
-        changed[marker] = data[marker];
+      if (data.isMember("properties"))
+        changed["properties"] = data["properties"];
+      else if (data.isMember("playcount"))
+        changed["properties"]["playCount"] = data["playcount"];
     }
+    if (data.isMember("transaction"))
+      changed["transaction"] = data["transaction"];
 
-    method = "OnItemPropertiesChanged";
+    method = added ? "OnItemAdded" : "OnItemPropertiesChanged";
     data = std::move(changed);
     return true;
   }

@@ -70,6 +70,9 @@
         "AudioLibrary.OnItemPropertiesChanged": {
           "$ref": "#/components/messages/AudioLibrary.OnItemPropertiesChanged"
         },
+        "AudioLibrary.OnItemAdded": {
+          "$ref": "#/components/messages/AudioLibrary.OnItemAdded"
+        },
         "AudioLibrary.OnRemove": {
           "$ref": "#/components/messages/AudioLibrary.OnRemove"
         },
@@ -90,6 +93,9 @@
         },
         "VideoLibrary.OnItemPropertiesChanged": {
           "$ref": "#/components/messages/VideoLibrary.OnItemPropertiesChanged"
+        },
+        "VideoLibrary.OnItemAdded": {
+          "$ref": "#/components/messages/VideoLibrary.OnItemAdded"
         },
         "VideoLibrary.OnExport": {
           "$ref": "#/components/messages/VideoLibrary.OnExport"
@@ -293,6 +299,17 @@
         }
       ]
     },
+    "AudioLibrary.OnItemAdded": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnItemAdded"
+        }
+      ]
+    },
     "AudioLibrary.OnRemove": {
       "action": "send",
       "channel": {
@@ -367,6 +384,17 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemPropertiesChanged"
+        }
+      ]
+    },
+    "VideoLibrary.OnItemAdded": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemAdded"
         }
       ]
     },
@@ -1142,10 +1170,54 @@
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
                       "description": "True if the update is being performed within a transaction."
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "AudioLibrary.OnItemAdded": {
+        "name": "AudioLibrary.OnItemAdded",
+        "summary": "A music library item was added.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "AudioLibrary.OnItemAdded"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Audio.Item"
                     },
-                    "added": {
+                    "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the item was newly added."
+                      "description": "True if the update is being performed within a transaction."
                     }
                   },
                   "required": [
@@ -1439,10 +1511,54 @@
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
                       "description": "True if the update is being performed within a transaction."
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "VideoLibrary.OnItemAdded": {
+        "name": "VideoLibrary.OnItemAdded",
+        "summary": "A video library item was added.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "VideoLibrary.OnItemAdded"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Video.Item"
                     },
-                    "added": {
+                    "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the item was newly added."
+                      "description": "True if the update is being performed within a transaction."
                     }
                   },
                   "required": [

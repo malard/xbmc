@@ -69,7 +69,8 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are `OnItemPropertiesChanged`, carrying the
   item as `{"kind", "id"}` and, when known, what changed under `properties` (`playCount`, not
   `playcount`). An update to no library item (`id` -1) is not sent. A `SetItemProperties` change
-  is announced once, with the values it set.
+  is announced once, with the values it set. An update that added the item, which carried
+  `added`, is `OnItemAdded` instead, carrying the item and `transaction`.
 - `VideoLibrary.GetInProgressTVShows` applies `sort` and `limits`; it answered every in-progress
   show in title order whatever they said.
 - Every library list method (`VideoLibrary.GetMovies`, `GetRecentlyAddedMovies`,
@@ -119,6 +120,7 @@ Methods:
 Notifications:
 
 - `GUI.OnSkinLoaded`, `GUI.OnSkinLoadFailed`, `GUI.OnSkinUnloading`
+- `VideoLibrary.OnItemAdded`, `AudioLibrary.OnItemAdded`
 - `Player.OnPlaybackFailed`
 - `Player.OnContentGeometryChange`
 - `Playlist.OnPropertiesChanged`

@@ -147,7 +147,6 @@ TEST(TestAnnouncementToJSONRPC, TheChangedPropertiesAnUpdateNamesAreCarried)
   data["id"] = 3;
   data["type"] = "song";
   data["properties"]["title"] = "Retitled";
-  data["added"] = true;
 
   const CVariant notification =
       CTestAnnouncer::Notification(ANNOUNCEMENT::AudioLibrary, "OnUpdate", data);
@@ -156,7 +155,52 @@ TEST(TestAnnouncementToJSONRPC, TheChangedPropertiesAnUpdateNamesAreCarried)
   const CVariant& changed = notification["params"]["data"];
   EXPECT_EQ("song", changed["item"]["kind"].asString());
   EXPECT_EQ("Retitled", changed["properties"]["title"].asString());
-  EXPECT_TRUE(changed["added"].asBoolean());
+}
+
+TEST(TestAnnouncementToJSONRPC, AnAddedItemIsItsOwnEvent)
+{
+  CVariant scanned;
+  scanned["item"]["id"] = 9;
+  scanned["item"]["type"] = "movie";
+  scanned["added"] = true;
+  scanned["transaction"] = true;
+
+  const CVariant movie =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::VideoLibrary, "OnUpdate", scanned);
+
+  EXPECT_EQ("VideoLibrary.OnItemAdded", movie["method"].asString());
+  const CVariant& added = movie["params"]["data"];
+  EXPECT_EQ("movie", added["item"]["kind"].asString());
+  EXPECT_EQ(9, added["item"]["id"].asInteger());
+  EXPECT_TRUE(added["transaction"].asBoolean());
+  EXPECT_FALSE(added.isMember("added"));
+  EXPECT_FALSE(added.isMember("properties"));
+
+  CVariant song;
+  song["id"] = 4;
+  song["type"] = "song";
+  song["added"] = true;
+
+  const CVariant notification =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::AudioLibrary, "OnUpdate", song);
+
+  EXPECT_EQ("AudioLibrary.OnItemAdded", notification["method"].asString());
+  EXPECT_EQ("song", notification["params"]["data"]["item"]["kind"].asString());
+  EXPECT_FALSE(notification["params"]["data"].isMember("transaction"));
+}
+
+TEST(TestAnnouncementToJSONRPC, AnUpdateThatAddsNothingCarriesNoAddedMarker)
+{
+  CVariant data;
+  data["id"] = 5;
+  data["type"] = "episode";
+  data["added"] = false;
+
+  const CVariant notification =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::VideoLibrary, "OnUpdate", data);
+
+  EXPECT_EQ("VideoLibrary.OnItemPropertiesChanged", notification["method"].asString());
+  EXPECT_FALSE(notification["params"]["data"].isMember("added"));
 }
 
 TEST(TestAnnouncementToJSONRPC, AnUpdateToNoLibraryItemIsNotSent)
@@ -171,6 +215,9 @@ TEST(TestAnnouncementToJSONRPC, AnUpdateToNoLibraryItemIsNotSent)
   CVariant unknown;
   unknown["id"] = -1;
   unknown["type"] = "";
+  EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnUpdate", unknown).empty());
+
+  unknown["added"] = true;
   EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnUpdate", unknown).empty());
 }
 
