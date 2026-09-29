@@ -49,6 +49,17 @@ TEST_F(LanguageTableTest, NamesTheStandardLanguages)
   EXPECT_FALSE(Table().NameOf("qaa").has_value());
 }
 
+TEST_F(LanguageTableTest, ADeclarationWithABlankHalfDeclaresNothing)
+{
+  Table().Declare({{" ", "Blank Code"}, {"xbl", " "}});
+  Table().DeclareNames({{" ", "Blank Addon Code"}});
+
+  EXPECT_FALSE(Table().NameOf(" ").has_value());
+  EXPECT_FALSE(Table().NameOf("xbl").has_value());
+  EXPECT_FALSE(Table().CodeOf("Blank Code").has_value());
+  EXPECT_FALSE(Table().CodeOf("Blank Addon Code").has_value());
+}
+
 TEST_F(LanguageTableTest, PrefersTheAlpha2CodeOfANamedLanguage)
 {
   EXPECT_EQ(Table().CodeOf("English"), "en");

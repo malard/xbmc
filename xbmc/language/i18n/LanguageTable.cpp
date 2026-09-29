@@ -64,10 +64,13 @@ void CLanguageTable::Declare(const std::map<std::string, std::string>& languages
   for (const auto& [code, name] : languages)
   {
     const std::string key{Key(code)};
+    const std::string nameKey{Key(name)};
+    if (key.empty() || nameKey.empty())
+      continue;
 
     m_declared[key] = name;
     m_names[key] = name;
-    m_codes[Key(name)] = key;
+    m_codes[nameKey] = key;
   }
 }
 
@@ -77,13 +80,14 @@ void CLanguageTable::DeclareNames(const std::map<std::string, std::string>& lang
 
   for (const auto& [code, name] : languages)
   {
-    if (code.empty() || name.empty())
+    const std::string key{Key(code)};
+    const std::string nameKey{Key(name)};
+    if (key.empty() || nameKey.empty())
       continue;
 
     // try_emplace, not assignment: whatever already names this language outranks an addon
-    const std::string key{Key(code)};
     m_names.try_emplace(key, name);
-    m_codes.try_emplace(Key(name), key);
+    m_codes.try_emplace(nameKey, key);
   }
 }
 
@@ -100,9 +104,6 @@ void CLanguageTable::Reset()
 
 std::optional<std::string> CLanguageTable::NameOf(std::string_view code) const
 {
-  if (code.empty())
-    return std::nullopt;
-
   std::shared_lock lock(m_section);
   if (const auto it = m_names.find(Key(code)); it != m_names.end())
     return it->second;
@@ -112,9 +113,6 @@ std::optional<std::string> CLanguageTable::NameOf(std::string_view code) const
 
 std::optional<std::string> CLanguageTable::CodeOf(std::string_view name) const
 {
-  if (name.empty())
-    return std::nullopt;
-
   std::shared_lock lock(m_section);
   if (const auto it = m_codes.find(Key(name)); it != m_codes.end())
     return it->second;
@@ -124,11 +122,7 @@ std::optional<std::string> CLanguageTable::CodeOf(std::string_view name) const
 
 void CLanguageTable::List(std::map<std::string, std::string>& languages) const
 {
-  std::map<std::string, std::string> iso;
-  CIso639_1::ListLanguages(iso);
-
-  for (const auto& [code, name] : iso)
-    languages.insert_or_assign(code, name);
+  CIso639_1::ListLanguages(languages);
 
   std::shared_lock lock(m_section);
   for (const auto& [code, name] : m_declared)
