@@ -6,10 +6,10 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "filesystem/SpecialProtocol.h"
 #include "settings/AdvancedSettings.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
+#include "video/test/VideoDatabaseTestBase.h"
 
 #include <gtest/gtest.h>
 
@@ -21,28 +21,12 @@ using GetResult = CDatabase::GetResult;
 // An id that no test ever inserts, so every lookup of it misses.
 constexpr int MISSING_ID = 4242;
 
-DatabaseSettings SqliteSettings()
-{
-  DatabaseSettings settings;
-  settings.type = "sqlite3";
-  settings.host = CSpecialProtocol::TranslatePath("special://temp/");
-  return settings;
-}
-
 } // namespace
 
-class VideoDatabaseGetResultTest : public ::testing::Test
+class VideoDatabaseGetResultTest : public VideoDatabaseTestBase
 {
 protected:
-  void SetUp() override
-  {
-    ASSERT_EQ(m_db.Connect("TestVideoDatabaseGetResult", SqliteSettings(), true),
-              CDatabase::ConnectionState::STATE_CONNECTED);
-  }
-
-  void TearDown() override { m_db.Close(); }
-
-  CVideoDatabase m_db;
+  VideoDatabaseGetResultTest() : VideoDatabaseTestBase("TestVideoDatabaseGetResult", "/test/") {}
 };
 
 TEST(VideoDatabaseGetResultUnconnectedTest, EveryGetterReportsError)
@@ -99,7 +83,7 @@ TEST_F(VideoDatabaseGetResultTest, NegativeIdIsNotFound)
 TEST(VideoDatabaseTransactionTest, CommitSucceedsWithoutAGui)
 {
   CVideoDatabase db;
-  ASSERT_EQ(db.Connect("TestVideoDatabaseTransaction", SqliteSettings(), true),
+  ASSERT_EQ(db.Connect("TestVideoDatabaseTransaction", TestDatabaseSettings(), true),
             CDatabase::ConnectionState::STATE_CONNECTED);
 
   db.BeginTransaction();
@@ -112,7 +96,7 @@ TEST(VideoDatabaseGetResultQueryFailureTest, FailedQueryReportsError)
 {
   CVideoDatabase db;
   // A database of this test's own, because it damages the schema.
-  ASSERT_EQ(db.Connect("TestVideoDatabaseGetResultQueryFailure", SqliteSettings(), true),
+  ASSERT_EQ(db.Connect("TestVideoDatabaseGetResultQueryFailure", TestDatabaseSettings(), true),
             CDatabase::ConnectionState::STATE_CONNECTED);
 
   // Remove what each getter selects from, so the query itself fails.

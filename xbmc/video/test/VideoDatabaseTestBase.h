@@ -17,6 +17,15 @@
 
 #include <gtest/gtest.h>
 
+//! \brief Where a test database lives: an sqlite file in special://temp/.
+inline DatabaseSettings TestDatabaseSettings()
+{
+  DatabaseSettings settings;
+  settings.type = "sqlite3";
+  settings.host = CSpecialProtocol::TranslatePath("special://temp/");
+  return settings;
+}
+
 /*!
  * \brief A fixture holding a private video database in special://temp/.
  *
@@ -35,14 +44,11 @@ protected:
 
   void SetUp() override
   {
-    DatabaseSettings settings;
-    settings.type = "sqlite3";
-    settings.host = CSpecialProtocol::TranslatePath("special://temp/");
-
     const std::string name{StringUtils::Format(
         "{}{}", m_namePrefix, ::testing::UnitTest::GetInstance()->current_test_info()->name())};
 
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED, m_db.Connect(name, settings, true))
+    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
+              m_db.Connect(name, TestDatabaseSettings(), true))
         << "could not create a video database for this test";
   }
 
