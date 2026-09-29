@@ -38,6 +38,21 @@ using namespace JSONRPC;
 using namespace PVR;
 using namespace KODI::MESSAGING;
 
+namespace
+{
+//! The group a channelGroupId names: an id, or "allTv" or "allRadio" for every channel of
+//! that kind.
+std::shared_ptr<const CPVRChannelGroup> ChannelGroupFrom(const CPVRChannelGroupsContainer& groups,
+                                                         const CVariant& id)
+{
+  if (id.isInteger())
+    return groups.GetByIdFromAll(static_cast<int>(id.asInteger()));
+  if (id.isString())
+    return groups.GetGroupAll(id.asString() == "allRadio");
+  return nullptr;
+}
+} // namespace
+
 JSONRPC_STATUS CPVROperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
   if (!CServiceBroker::GetPVRManager().IsStarted())
@@ -83,13 +98,8 @@ JSONRPC_STATUS CPVROperations::GetChannelGroupDetails(const CVariant& parameterO
   if (!channelGroupContainer)
     return FailedToExecute;
 
-  std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelGroupId"]};
-  if (id.isInteger())
-    channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
-  else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
-
+  const std::shared_ptr<const CPVRChannelGroup> channelGroup{
+      ChannelGroupFrom(*channelGroupContainer, parameterObject["channelGroupId"])};
   if (!channelGroup)
     return NotFound;
 
@@ -108,13 +118,8 @@ JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVar
   if (!channelGroupContainer)
     return FailedToExecute;
 
-  std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelGroupId"]};
-  if (id.isInteger())
-    channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
-  else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
-
+  const std::shared_ptr<const CPVRChannelGroup> channelGroup{
+      ChannelGroupFrom(*channelGroupContainer, parameterObject["channelGroupId"])};
   if (!channelGroup)
     return NotFound;
 
@@ -228,13 +233,8 @@ JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& param
   if (rangeStatus != OK)
     return rangeStatus;
 
-  std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelGroupId"]};
-  if (id.isInteger())
-    channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
-  else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
-
+  const std::shared_ptr<const CPVRChannelGroup> channelGroup{
+      ChannelGroupFrom(*channelGroupContainer, parameterObject["channelGroupId"])};
   if (!channelGroup)
     return NotFound;
 
