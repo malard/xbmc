@@ -26,12 +26,12 @@ TEST(TestFailureReasons, AVideoScreenshotWithNothingPlayingIsNothingPlaying)
 }
 
 //! \brief Screenshot deletion is off unless advancedsettings turns it on
-TEST(TestFailureReasons, DeletingScreenshotsWhileItIsOffIsDisabled)
+TEST(TestFailureReasons, DeletingScreenshotsWhileItIsOffIsFeatureDisabled)
 {
   CVariant result;
   EXPECT_EQ(Unavailable,
             CGUIOperations::DeleteScreenshots(CVariant(CVariant::VariantTypeObject), result));
-  EXPECT_EQ("disabled", result["reason"].asString());
+  EXPECT_EQ("feature-disabled", result["reason"].asString());
 }
 
 //! \brief The test environment opens only the add-on database

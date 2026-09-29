@@ -147,11 +147,11 @@ Failure reasons:
   recording, timer or channel scan. `Player.Open`: `playback-refused` when PVR playback does not
   start, and `pvr-not-started`.
 - `GUI.TakeScreenshot`: `nothing-playing` or `not-applicable` for the video frame with no video,
-  `no-screenshot-folder`, `capture-failed`. `GUI.DeleteScreenshots`: `disabled`, `no-such-path`,
+  `no-screenshot-folder`, `capture-failed`. `GUI.DeleteScreenshots`: `feature-disabled`, `no-such-path`,
   `delete-failed`.
 - `System.Shutdown`, `Suspend`, `Hibernate`, `Reboot`: `not-supported`.
   `Application.GetDatabaseName`: `database-not-open`. `VideoLibrary.RefreshContentGeometry`:
-  `disabled`, `measure-failed`. `Playlist.SetShuffle`: `not-applicable` for unshuffling a
+  `feature-disabled`, `measure-failed`. `Playlist.SetShuffle`: `not-applicable` for unshuffling a
   slideshow. `Files.PrepareDownload` and `Files.Download`: `no-such-path`.
 
 Properties and types:

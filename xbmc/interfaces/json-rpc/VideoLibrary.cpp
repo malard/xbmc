@@ -841,7 +841,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
                                                      CVariant& result)
 {
   if (!KODI::VIDEO::GEOMETRY::ContentGeometryEnabledFromSettings())
-    return Fail(result, FailedToExecute, Reason::Disabled);
+    return Fail(result, FailedToExecute, Reason::FeatureDisabled);
 
   const CVariant& item = parameterObject["item"];
 

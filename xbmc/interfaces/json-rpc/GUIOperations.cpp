@@ -203,7 +203,7 @@ JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, C
 JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const CVariant& parameterObject, CVariant& result)
 {
   if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonAllowScreenshotDeletion)
-    return Fail(result, Unavailable, Reason::Disabled);
+    return Fail(result, Unavailable, Reason::FeatureDisabled);
 
   const CScreenShot::ScreenshotDeletion removed =
       CScreenShot::DeleteScreenshots(parameterObject["file"].asString());

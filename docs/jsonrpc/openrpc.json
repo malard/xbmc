@@ -10555,7 +10555,7 @@
       "x-kodi-reasons": {
         "FailedToExecute": [
           {
-            "$ref": "#/components/x-kodi-reasons/disabled"
+            "$ref": "#/components/x-kodi-reasons/feature-disabled"
           }
         ],
         "NotFound": [
@@ -11748,7 +11748,7 @@
         ],
         "Unavailable": [
           {
-            "$ref": "#/components/x-kodi-reasons/disabled"
+            "$ref": "#/components/x-kodi-reasons/feature-disabled"
           }
         ]
       },
@@ -22609,7 +22609,7 @@
       "playback-refused": {
         "description": "Playback did not start, as when a parental lock is not unlocked or a prompt is cancelled."
       },
-      "disabled": {
+      "feature-disabled": {
         "description": "A setting on this installation turns the feature off."
       },
       "no-screenshot-folder": {
