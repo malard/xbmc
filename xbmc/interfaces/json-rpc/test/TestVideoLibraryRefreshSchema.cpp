@@ -21,7 +21,7 @@ namespace
 
 //! \brief The identifiers VideoLibrary.Refresh accepts, one per kind of library item
 constexpr std::array<const char*, 6> IDENTIFIERS{
-    "movieid", "setid", "tvshowid", "seasonid", "episodeid", "musicvideoid",
+    "movieId", "setId", "tvShowId", "seasonId", "episodeId", "musicVideoId",
 };
 
 } // unnamed namespace
@@ -57,10 +57,10 @@ TEST_F(TestVideoLibraryRefreshSchema, EveryKindOfLibraryItemCanBeNamed)
 TEST_F(TestVideoLibraryRefreshSchema, TheDeprecatedMethodsStillTakeWhatTheyAlwaysDid)
 {
   CVariant output;
-  EXPECT_EQ(OK, Call("VideoLibrary.RefreshMovie", R"({"movieid": 7})", output));
-  EXPECT_EQ(OK, Call("VideoLibrary.RefreshTVShow", R"({"tvshowid": 7})", output));
-  EXPECT_EQ(OK, Call("VideoLibrary.RefreshEpisode", R"({"episodeid": 7})", output));
-  EXPECT_EQ(OK, Call("VideoLibrary.RefreshMusicVideo", R"({"musicvideoid": 7})", output));
+  EXPECT_EQ(OK, Call("VideoLibrary.RefreshMovie", R"({"movieId": 7})", output));
+  EXPECT_EQ(OK, Call("VideoLibrary.RefreshTVShow", R"({"tvShowId": 7})", output));
+  EXPECT_EQ(OK, Call("VideoLibrary.RefreshEpisode", R"({"episodeId": 7})", output));
+  EXPECT_EQ(OK, Call("VideoLibrary.RefreshMusicVideo", R"({"musicVideoId": 7})", output));
 }
 
 TEST_F(TestVideoLibraryRefreshSchema, AnItemNamesOneKindAndNamesItProperly)
@@ -69,28 +69,28 @@ TEST_F(TestVideoLibraryRefreshSchema, AnItemNamesOneKindAndNamesItProperly)
   EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({})", output));
   EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({"item": {}})", output));
   EXPECT_EQ(InvalidParams,
-            Call("VideoLibrary.Refresh", R"({"item": {"movieid": 7, "tvshowid": 7}})", output));
+            Call("VideoLibrary.Refresh", R"({"item": {"movieId": 7, "tvShowId": 7}})", output));
 
   // Not a library item this method can refresh, however well formed
-  EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({"item": {"albumid": 7}})", output));
+  EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({"item": {"albumId": 7}})", output));
 
   // A library id starts at 1, so the id no row can have is refused rather than looked up
-  EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({"item": {"movieid": 0}})", output));
+  EXPECT_EQ(InvalidParams, Call("VideoLibrary.Refresh", R"({"item": {"movieId": 0}})", output));
 }
 
 TEST_F(TestVideoLibraryRefreshSchema, TheRefreshOptionsCarryOverWithTheirDefaults)
 {
   CVariant output;
-  ASSERT_EQ(OK, Call("VideoLibrary.Refresh", R"({"item": {"tvshowid": 7}})", output));
-  EXPECT_FALSE(output["ignorenfo"].asBoolean());
-  EXPECT_FALSE(output["refreshepisodes"].asBoolean());
+  ASSERT_EQ(OK, Call("VideoLibrary.Refresh", R"({"item": {"tvShowId": 7}})", output));
+  EXPECT_FALSE(output["ignoreNfo"].asBoolean());
+  EXPECT_FALSE(output["refreshEpisodes"].asBoolean());
   EXPECT_EQ("", output["title"].asString());
 
   ASSERT_EQ(OK, Call("VideoLibrary.Refresh",
-                     R"({"item": {"tvshowid": 7}, "ignorenfo": true, "refreshepisodes": true,
+                     R"({"item": {"tvShowId": 7}, "ignoreNfo": true, "refreshEpisodes": true,
                          "title": "Planetes"})",
                      output));
-  EXPECT_TRUE(output["ignorenfo"].asBoolean());
-  EXPECT_TRUE(output["refreshepisodes"].asBoolean());
+  EXPECT_TRUE(output["ignoreNfo"].asBoolean());
+  EXPECT_TRUE(output["refreshEpisodes"].asBoolean());
   EXPECT_EQ("Planetes", output["title"].asString());
 }

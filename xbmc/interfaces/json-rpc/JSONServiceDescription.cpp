@@ -522,8 +522,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       for (unsigned int requiredIndex = 0; requiredIndex < value["required"].size();
            requiredIndex++)
       {
-        std::string propertyName = value["required"][requiredIndex].asString();
-        StringUtils::ToLower(propertyName);
+        const std::string propertyName = value["required"][requiredIndex].asString();
         CJsonSchemaPropertiesMap::JSONSchemaPropertiesIterator propertyIterator =
             properties.find(propertyName);
         if (propertyIterator == properties.end())
@@ -1197,9 +1196,7 @@ JSONSchemaTypeDefinition::CJsonSchemaPropertiesMap::CJsonSchemaPropertiesMap()
 void JSONSchemaTypeDefinition::CJsonSchemaPropertiesMap::add(
     const JSONSchemaTypeDefinitionPtr& property)
 {
-  std::string name = property->name;
-  StringUtils::ToLower(name);
-  m_propertiesmap[name] = property;
+  m_propertiesmap[property->name] = property;
 }
 
 JSONSchemaTypeDefinition::CJsonSchemaPropertiesMap::JSONSchemaPropertiesIterator

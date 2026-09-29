@@ -6,21 +6,21 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "getdescriptions",
+        "name": "getDescriptions",
         "schema": {
           "type": "boolean",
           "default": true
         }
       },
       {
-        "name": "getmetadata",
+        "name": "getMetadata",
         "schema": {
           "type": "boolean",
           "default": false
         }
       },
       {
-        "name": "filterbytransport",
+        "name": "filterByTransport",
         "schema": {
           "type": "boolean",
           "default": true
@@ -46,7 +46,7 @@
               ],
               "description": "Type of the given name"
             },
-            "getreferences": {
+            "getReferences": {
               "type": "boolean",
               "default": true,
               "description": "Whether or not to print the schema for referenced types"
@@ -339,7 +339,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "partymode": {
+                "partyMode": {
                   "anyOf": [
                     {
                       "type": "string",
@@ -360,11 +360,11 @@
             {
               "type": "object",
               "required": [
-                "broadcastid"
+                "broadcastId"
               ],
               "additionalProperties": false,
               "properties": {
-                "broadcastid": {
+                "broadcastId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               }
@@ -372,11 +372,11 @@
             {
               "type": "object",
               "required": [
-                "channelid"
+                "channelId"
               ],
               "additionalProperties": false,
               "properties": {
-                "channelid": {
+                "channelId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               }
@@ -384,11 +384,11 @@
             {
               "type": "object",
               "required": [
-                "recordingid"
+                "recordingId"
               ],
               "additionalProperties": false,
               "properties": {
-                "recordingid": {
+                "recordingId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               }
@@ -402,7 +402,7 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "playername": {
+            "playerName": {
               "anyOf": [
                 {
                   "type": "null"
@@ -504,18 +504,18 @@
               "remote"
             ]
           },
-          "playsvideo": {
+          "playsVideo": {
             "type": "boolean"
           },
-          "playsaudio": {
+          "playsAudio": {
             "type": "boolean"
           }
         },
         "required": [
           "name",
           "type",
-          "playsvideo",
-          "playsaudio"
+          "playsVideo",
+          "playsAudio"
         ]
       }
     },
@@ -900,10 +900,10 @@
                 "step": {
                   "type": "string",
                   "enum": [
-                    "smallforward",
-                    "smallbackward",
-                    "bigforward",
-                    "bigbackward"
+                    "smallForward",
+                    "smallBackward",
+                    "bigForward",
+                    "bigBackward"
                   ],
                   "description": "Seek by predefined jumps"
                 }
@@ -945,7 +945,7 @@
         "time": {
           "$ref": "#/$defs/Global.Time"
         },
-        "totaltime": {
+        "totalTime": {
           "$ref": "#/$defs/Global.Time"
         }
       }
@@ -1034,7 +1034,7 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "viewmode",
+        "name": "viewMode",
         "required": true,
         "schema": {
           "anyOf": [
@@ -1086,25 +1086,25 @@
       "properties": {
         "stated": {
           "$ref": "#/$defs/Player.Geometry",
-          "description": "What was stated for this playback. Zero, and null for osdplacement, mean nothing was stated and the setting applies."
+          "description": "What was stated for this playback. Zero, and null for osdPlacement, mean nothing was stated and the setting applies."
         },
         "raster": {
           "type": "number",
           "description": "The raster in force, whether it came from an override or from the setting. Zero means the same as the display."
         },
-        "osdplacement": {
+        "osdPlacement": {
           "$ref": "#/$defs/Player.OsdPlacement",
           "description": "The OSD placement in force, from whichever of the two stated it."
         },
         "screen": {
           "$ref": "#/$defs/Player.ScreenGeometry",
-          "description": "Where the instruction actually put the picture. Absent while nothing is drawn, which is the same moment the rectangle in contentrect is absent and for the same reason."
+          "description": "Where the instruction actually put the picture. Absent while nothing is drawn, which is the same moment the rectangle in contentRect is absent and for the same reason."
         }
       },
       "required": [
         "stated",
         "raster",
-        "osdplacement"
+        "osdPlacement"
       ]
     },
     "errors": [
@@ -1120,28 +1120,28 @@
     "returns": {
       "type": "object",
       "properties": {
-        "viewmode": {
+        "viewMode": {
           "$ref": "#/$defs/Player.ViewMode"
         },
         "zoom": {
           "type": "number"
         },
-        "pixelratio": {
+        "pixelRatio": {
           "type": "number"
         },
-        "verticalshift": {
+        "verticalShift": {
           "type": "number"
         },
-        "nonlinearstretch": {
+        "nonlinearStretch": {
           "type": "boolean"
         }
       },
       "required": [
-        "viewmode",
+        "viewMode",
         "zoom",
-        "pixelratio",
-        "verticalshift",
-        "nonlinearstretch"
+        "pixelRatio",
+        "verticalShift",
+        "nonlinearStretch"
       ]
     },
     "errors": []
@@ -1153,7 +1153,7 @@
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "aspectratio",
+        "name": "aspectRatio",
         "required": true,
         "schema": {
           "anyOf": [
@@ -1191,7 +1191,7 @@
           "type": "boolean",
           "description": "False when no ratio has been declared and detection applies"
         },
-        "aspectratio": {
+        "aspectRatio": {
           "type": "number",
           "description": "Only present when declared is true"
         },
@@ -1203,7 +1203,7 @@
           "type": "string",
           "description": "What that ratio is called, empty when it has no established name"
         },
-        "declaredon": {
+        "declaredOn": {
           "type": "string",
           "description": "When the declaration was made"
         }
@@ -1283,12 +1283,12 @@
   },
   "Player.SetPartymode": {
     "type": "method",
-    "description": "Turn partymode on or off",
+    "description": "Turn partyMode on or off",
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [
       {
-        "name": "partymode",
+        "name": "partyMode",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Global.Toggle"
@@ -2039,12 +2039,12 @@
     "returns": {
       "type": "object",
       "properties": {
-        "filedetails": {
+        "fileDetails": {
           "$ref": "#/$defs/List.Item.File"
         }
       },
       "required": [
-        "filedetails"
+        "fileDetails"
       ]
     },
     "errors": [
@@ -2076,14 +2076,14 @@
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
       },
       {
-        "name": "lastplayed",
-        "description": "Setting a valid lastplayed without a playcount will force playcount to 1.",
+        "name": "lastPlayed",
+        "description": "Setting a valid lastPlayed without a playCount will force playCount to 1.",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -2138,12 +2138,12 @@
   },
   "AudioLibrary.GetArtists": {
     "type": "method",
-    "description": "Retrieve all artists. For backward compatibility by default this implicitly does not include those that only contribute other roles, however absolutely all artists can be returned using allroles=true",
+    "description": "Retrieve all artists. For backward compatibility by default this implicitly does not include those that only contribute other roles, however absolutely all artists can be returned using allRoles=true",
     "transport": "Response",
     "permission": "ReadData",
     "params": [
       {
-        "name": "albumartistsonly",
+        "name": "albumArtistsOnly",
         "description": "Whether or not to only include album artists rather than the artists of only individual songs as well. If the parameter is not passed or is passed as null the GUI setting will be used",
         "schema": {
           "$ref": "#/$defs/Optional.Boolean"
@@ -2174,50 +2174,50 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id",
                   "deprecated": true,
-                  "description": "Use songgenreid instead. Filter for existence of songs with this genre"
+                  "description": "Use songGenreId instead. Filter for existence of songs with this genre"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songgenreid": {
+                "songGenreId": {
                   "$ref": "#/$defs/Library.Id",
-                  "description": "Song genreid. Filter for existence of songs with this genre"
+                  "description": "Song genreId. Filter for existence of songs with this genre"
                 }
               },
               "required": [
-                "songgenreid"
+                "songGenreId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songgenreid": {
+                "songGenreId": {
                   "$ref": "#/$defs/Library.Id"
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "songgenreid",
-                "roleid"
+                "songGenreId",
+                "roleId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songgenreid": {
+                "songGenreId": {
                   "$ref": "#/$defs/Library.Id"
                 },
                 "role": {
@@ -2226,7 +2226,7 @@
                 }
               },
               "required": [
-                "songgenreid",
+                "songGenreId",
                 "role"
               ],
               "additionalProperties": false
@@ -2238,7 +2238,7 @@
                   "type": "string",
                   "minLength": 1,
                   "deprecated": true,
-                  "description": "Use songgenre instead. Filter for existence of songs with this genre"
+                  "description": "Use songGenre instead. Filter for existence of songs with this genre"
                 }
               },
               "required": [
@@ -2249,38 +2249,38 @@
             {
               "type": "object",
               "properties": {
-                "songgenre": {
+                "songGenre": {
                   "type": "string",
                   "minLength": 1,
                   "description": "Song genre. Filter for existence of songs with this genre"
                 }
               },
               "required": [
-                "songgenre"
+                "songGenre"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songgenre": {
+                "songGenre": {
                   "type": "string",
                   "minLength": 1
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "songgenre",
-                "roleid"
+                "songGenre",
+                "roleId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songgenre": {
+                "songGenre": {
                   "type": "string",
                   "minLength": 1
                 },
@@ -2290,7 +2290,7 @@
                 }
               },
               "required": [
-                "songgenre",
+                "songGenre",
                 "role"
               ],
               "additionalProperties": false
@@ -2298,12 +2298,12 @@
             {
               "type": "object",
               "properties": {
-                "albumid": {
+                "albumId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "albumid"
+                "albumId"
               ],
               "additionalProperties": false
             },
@@ -2323,35 +2323,35 @@
             {
               "type": "object",
               "properties": {
-                "songid": {
+                "songId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "songid"
+                "songId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songid": {
+                "songId": {
                   "$ref": "#/$defs/Library.Id"
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "songid",
-                "roleid"
+                "songId",
+                "roleId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "songid": {
+                "songId": {
                   "$ref": "#/$defs/Library.Id"
                 },
                 "role": {
@@ -2360,7 +2360,7 @@
                 }
               },
               "required": [
-                "songid",
+                "songId",
                 "role"
               ],
               "additionalProperties": false
@@ -2368,13 +2368,13 @@
             {
               "type": "object",
               "properties": {
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id",
-                  "description": "Role contributed by artist. Overridden by allroles parameter"
+                  "description": "Role contributed by artist. Overridden by allRoles parameter"
                 }
               },
               "required": [
-                "roleid"
+                "roleId"
               ],
               "additionalProperties": false
             },
@@ -2384,7 +2384,7 @@
                 "role": {
                   "type": "string",
                   "minLength": 1,
-                  "description": "Role contributed by artist. Overridden by allroles parameter"
+                  "description": "Role contributed by artist. Overridden by allRoles parameter"
                 }
               },
               "required": [
@@ -2399,7 +2399,7 @@
         }
       },
       {
-        "name": "allroles",
+        "name": "allRoles",
         "description": "Whether or not to include all artists irrespective of the role they contributed. When true it overrides any role filter value.",
         "schema": {
           "type": "boolean",
@@ -2436,7 +2436,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "artistid",
+        "name": "artistId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -2452,7 +2452,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "artistdetails": {
+        "artistDetails": {
           "$ref": "#/$defs/Audio.Details.Artist"
         }
       }
@@ -2493,13 +2493,13 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id",
                   "description": "Song genre. Filter for existence of songs with this genre"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -2520,35 +2520,35 @@
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid"
+                "artistId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid",
-                "roleid"
+                "artistId",
+                "roleId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 },
                 "role": {
@@ -2557,7 +2557,7 @@
                 }
               },
               "required": [
-                "artistid",
+                "artistId",
                 "role"
               ],
               "additionalProperties": false
@@ -2582,13 +2582,13 @@
                   "type": "string",
                   "minLength": 1
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
                 "artist",
-                "roleid"
+                "roleId"
               ],
               "additionalProperties": false
             },
@@ -2617,14 +2617,14 @@
         }
       },
       {
-        "name": "includesingles",
+        "name": "includeSingles",
         "schema": {
           "type": "boolean",
           "default": false
         }
       },
       {
-        "name": "allroles",
+        "name": "allRoles",
         "description": "Whether or not to include all roles when filtering by artist, rather than the default of excluding other contributions. When true it overrides any role filter value.",
         "schema": {
           "type": "boolean",
@@ -2661,7 +2661,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "albumid",
+        "name": "albumId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -2677,7 +2677,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "albumdetails": {
+        "albumDetails": {
           "$ref": "#/$defs/Audio.Details.Album"
         }
       }
@@ -2718,13 +2718,13 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id",
                   "description": "Song genre. Filter for existence of songs with this genre"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -2745,35 +2745,35 @@
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid"
+                "artistId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid",
-                "roleid"
+                "artistId",
+                "roleId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 },
                 "role": {
@@ -2782,7 +2782,7 @@
                 }
               },
               "required": [
-                "artistid",
+                "artistId",
                 "role"
               ],
               "additionalProperties": false
@@ -2807,13 +2807,13 @@
                   "type": "string",
                   "minLength": 1
                 },
-                "roleid": {
+                "roleId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
                 "artist",
-                "roleid"
+                "roleId"
               ],
               "additionalProperties": false
             },
@@ -2838,12 +2838,12 @@
             {
               "type": "object",
               "properties": {
-                "albumid": {
+                "albumId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "albumid"
+                "albumId"
               ],
               "additionalProperties": false
             },
@@ -2867,15 +2867,15 @@
         }
       },
       {
-        "name": "includesingles",
-        "description": "Only songs from albums are returned when false, but overridden when singlesonly parameter is true",
+        "name": "includeSingles",
+        "description": "Only songs from albums are returned when false, but overridden when singlesOnly parameter is true",
         "schema": {
           "type": "boolean",
           "default": true
         }
       },
       {
-        "name": "allroles",
+        "name": "allRoles",
         "description": "Whether or not to include all roles when filtering by artist, rather than default of excluding other contributors. When true it overrides any role filter value.",
         "schema": {
           "type": "boolean",
@@ -2883,8 +2883,8 @@
         }
       },
       {
-        "name": "singlesonly",
-        "description": "Only singles are returned when true, and overrides includesingles parameter",
+        "name": "singlesOnly",
+        "description": "Only singles are returned when true, and overrides includeSingles parameter",
         "schema": {
           "type": "boolean",
           "default": false
@@ -2920,7 +2920,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "songid",
+        "name": "songId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -2936,7 +2936,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "songdetails": {
+        "songDetails": {
           "$ref": "#/$defs/Audio.Details.Song"
         }
       }
@@ -2999,7 +2999,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "albumlimit",
+        "name": "albumLimit",
         "description": "The amount of recently added albums from which to return the songs",
         "schema": {
           "$ref": "#/$defs/List.Amount"
@@ -3292,24 +3292,24 @@
             {
               "type": "object",
               "properties": {
-                "albumid": {
+                "albumId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "albumid"
+                "albumId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid"
+                "artistId"
               ],
               "additionalProperties": false
             }
@@ -3320,7 +3320,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "availablearttypes": {
+        "availableArtTypes": {
           "type": "array",
           "items": {
             "type": "string"
@@ -3328,7 +3328,7 @@
         }
       },
       "required": [
-        "availablearttypes"
+        "availableArtTypes"
       ]
     },
     "errors": [
@@ -3349,24 +3349,24 @@
             {
               "type": "object",
               "properties": {
-                "albumid": {
+                "albumId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "albumid"
+                "albumId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "artistid": {
+                "artistId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "artistid"
+                "artistId"
               ],
               "additionalProperties": false
             }
@@ -3374,7 +3374,7 @@
         }
       },
       {
-        "name": "arttype",
+        "name": "artType",
         "schema": {
           "type": "string"
         }
@@ -3383,7 +3383,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "availableart": {
+        "availableArt": {
           "type": "array",
           "items": {
             "type": "object",
@@ -3392,23 +3392,23 @@
                 "type": "string",
                 "description": "URL to the original image"
               },
-              "arttype": {
+              "artType": {
                 "type": "string"
               },
-              "previewurl": {
+              "previewUrl": {
                 "type": "string",
                 "description": "URL to a preview thumbnail of the image"
               }
             },
             "required": [
               "url",
-              "arttype"
+              "artType"
             ]
           }
         }
       },
       "required": [
-        "availableart"
+        "availableArt"
       ]
     },
     "errors": [
@@ -3422,7 +3422,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "artistid",
+        "name": "artistId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -3521,7 +3521,7 @@
         }
       },
       {
-        "name": "yearsactive",
+        "name": "yearsActive",
         "schema": {
           "anyOf": [
             {
@@ -3535,13 +3535,13 @@
         }
       },
       {
-        "name": "musicbrainzartistid",
+        "name": "musicBrainzArtistId",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "sortname",
+        "name": "sortName",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3592,7 +3592,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "albumid",
+        "name": "albumId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -3687,7 +3687,7 @@
         }
       },
       {
-        "name": "albumlabel",
+        "name": "albumLabel",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3705,7 +3705,7 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -3717,31 +3717,31 @@
         }
       },
       {
-        "name": "musicbrainzalbumid",
+        "name": "musicBrainzAlbumId",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "musicbrainzreleasegroupid",
+        "name": "musicBrainzReleaseGroupId",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "sortartist",
+        "name": "sortArtist",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "displayartist",
+        "name": "displayArtist",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "musicbrainzalbumartistid",
+        "name": "musicBrainzAlbumArtistId",
         "schema": {
           "anyOf": [
             {
@@ -3769,19 +3769,19 @@
         }
       },
       {
-        "name": "isboxset",
+        "name": "isBoxSet",
         "schema": {
           "$ref": "#/$defs/Optional.Boolean"
         }
       },
       {
-        "name": "releasedate",
+        "name": "releaseDate",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "originaldate",
+        "name": "originalDate",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3800,7 +3800,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "songid",
+        "name": "songId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -3877,31 +3877,31 @@
         }
       },
       {
-        "name": "musicbrainztrackid",
+        "name": "musicBrainzTrackId",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "musicbrainzartistid",
+        "name": "musicBrainzArtistId",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
       },
       {
-        "name": "lastplayed",
+        "name": "lastPlayed",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -3913,13 +3913,13 @@
         }
       },
       {
-        "name": "displayartist",
+        "name": "displayArtist",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "sortartist",
+        "name": "sortArtist",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3945,19 +3945,19 @@
         }
       },
       {
-        "name": "disctitle",
+        "name": "discTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "releasedate",
+        "name": "releaseDate",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "originaldate",
+        "name": "originalDate",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3969,7 +3969,7 @@
         }
       },
       {
-        "name": "songvideourl",
+        "name": "songVideoUrl",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -3988,7 +3988,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "artistid",
+        "name": "artistId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4008,7 +4008,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "albumid",
+        "name": "albumId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4028,9 +4028,9 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "applyto",
+        "name": "applyTo",
         "required": true,
-        "description": "\"item\" binds one artist or album named by artistid or albumid. \"view\" binds every artist or album listed by path. \"default\" makes the scraper the default for content and clears every item's own binding so that the default applies everywhere",
+        "description": "\"item\" binds one artist or album named by artistId or albumId. \"view\" binds every artist or album listed by path. \"default\" makes the scraper the default for content and clears every item's own binding so that the default applies everywhere",
         "schema": {
           "type": "string",
           "enum": [
@@ -4041,7 +4041,7 @@
         }
       },
       {
-        "name": "scraperid",
+        "name": "scraperId",
         "description": "Addon id of the scraper, of the kind the target needs: an artists scraper for artists, an albums scraper for albums. Empty for \"item\" or \"view\" clears the binding so that the default applies; required for \"default\"",
         "schema": {
           "type": "string",
@@ -4049,7 +4049,7 @@
         }
       },
       {
-        "name": "scrapersettings",
+        "name": "scraperSettings",
         "description": "Scraper settings as XML. Scraper defaults are used when empty",
         "schema": {
           "type": "string",
@@ -4057,22 +4057,22 @@
         }
       },
       {
-        "name": "artistid",
-        "description": "The artist, for \"item\". Exactly one of artistid and albumid",
+        "name": "artistId",
+        "description": "The artist, for \"item\". Exactly one of artistId and albumId",
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "albumid",
-        "description": "The album, for \"item\". Exactly one of artistid and albumid",
+        "name": "albumId",
+        "description": "The album, for \"item\". Exactly one of artistId and albumId",
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
         "name": "path",
-        "description": "A musicdb://artists/ or musicdb://albums/ path, for \"view\". Its filter options select the items; an artistid or albumid option and the item in the path are ignored, since the view is the listing. An albums path leaves singles out unless it carries show_singles=true",
+        "description": "A musicdb://artists/ or musicdb://albums/ path, for \"view\". Its filter options select the items; an artistId or albumId option and the item in the path are ignored, since the view is the listing. An albums path leaves singles out unless it carries show_singles=true",
         "schema": {
           "type": "string",
           "default": ""
@@ -4116,7 +4116,7 @@
         }
       },
       {
-        "name": "showdialogs",
+        "name": "showDialogs",
         "description": "Whether or not to show the progress bar or any other GUI dialog",
         "schema": {
           "type": "boolean",
@@ -4181,7 +4181,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "showdialogs",
+        "name": "showDialogs",
         "description": "Whether or not to show the progress bar or any other GUI dialog",
         "schema": {
           "type": "boolean",
@@ -4223,12 +4223,12 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -4313,12 +4313,12 @@
             {
               "type": "object",
               "properties": {
-                "setid": {
+                "setId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "setid"
+                "setId"
               ],
               "additionalProperties": false
             },
@@ -4384,7 +4384,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "movieid",
+        "name": "movieId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4400,7 +4400,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "moviedetails": {
+        "movieDetails": {
           "$ref": "#/$defs/Video.Details.Movie"
         }
       }
@@ -4463,7 +4463,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "setid",
+        "name": "setId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4496,7 +4496,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "setdetails": {
+        "setDetails": {
           "$ref": "#/$defs/Video.Details.MovieSet.Extended"
         }
       }
@@ -4537,12 +4537,12 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -4624,7 +4624,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "tvshows": {
+        "tvShows": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.TVShow"
@@ -4647,7 +4647,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4663,7 +4663,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "tvshowdetails": {
+        "tvShowDetails": {
           "$ref": "#/$defs/Video.Details.TVShow"
         }
       }
@@ -4680,7 +4680,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
@@ -4732,7 +4732,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "seasonid",
+        "name": "seasonId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4748,7 +4748,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "seasondetails": {
+        "seasonDetails": {
           "$ref": "#/$defs/Video.Details.Season"
         }
       }
@@ -4765,7 +4765,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
@@ -4803,13 +4803,13 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id",
-                  "description": "Requires tvshowid to be set"
+                  "description": "Requires tvShowId to be set"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -4819,7 +4819,7 @@
                 "genre": {
                   "type": "string",
                   "minLength": 1,
-                  "description": "Requires tvshowid to be set"
+                  "description": "Requires tvShowId to be set"
                 }
               },
               "required": [
@@ -4846,7 +4846,7 @@
                 "actor": {
                   "type": "string",
                   "minLength": 1,
-                  "description": "Requires tvshowid to be set"
+                  "description": "Requires tvShowId to be set"
                 }
               },
               "required": [
@@ -4903,7 +4903,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "episodeid",
+        "name": "episodeId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -4919,7 +4919,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "episodedetails": {
+        "episodeDetails": {
           "$ref": "#/$defs/Video.Details.Episode"
         }
       }
@@ -4973,12 +4973,12 @@
             {
               "type": "object",
               "properties": {
-                "genreid": {
+                "genreId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "genreid"
+                "genreId"
               ],
               "additionalProperties": false
             },
@@ -5060,7 +5060,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "musicvideos": {
+        "musicVideos": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.MusicVideo"
@@ -5083,7 +5083,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "musicvideoid",
+        "name": "musicVideoId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -5099,7 +5099,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "musicvideodetails": {
+        "musicVideoDetails": {
           "$ref": "#/$defs/Video.Details.MusicVideo"
         }
       }
@@ -5232,7 +5232,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "musicvideos": {
+        "musicVideos": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.MusicVideo"
@@ -5278,7 +5278,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "tvshows": {
+        "tvShows": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.TVShow"
@@ -5425,72 +5425,72 @@
             {
               "type": "object",
               "properties": {
-                "episodeid": {
+                "episodeId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "episodeid"
+                "episodeId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "tvshowid": {
+                "tvShowId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "tvshowid"
+                "tvShowId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "seasonid": {
+                "seasonId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "seasonid"
+                "seasonId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "movieid": {
+                "movieId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "movieid"
+                "movieId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "setid": {
+                "setId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "setid"
+                "setId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "musicvideoid": {
+                "musicVideoId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "musicvideoid"
+                "musicVideoId"
               ],
               "additionalProperties": false
             }
@@ -5501,7 +5501,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "availablearttypes": {
+        "availableArtTypes": {
           "type": "array",
           "items": {
             "type": "string"
@@ -5509,7 +5509,7 @@
         }
       },
       "required": [
-        "availablearttypes"
+        "availableArtTypes"
       ]
     },
     "errors": [
@@ -5530,72 +5530,72 @@
             {
               "type": "object",
               "properties": {
-                "episodeid": {
+                "episodeId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "episodeid"
+                "episodeId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "tvshowid": {
+                "tvShowId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "tvshowid"
+                "tvShowId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "seasonid": {
+                "seasonId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "seasonid"
+                "seasonId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "movieid": {
+                "movieId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "movieid"
+                "movieId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "setid": {
+                "setId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "setid"
+                "setId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "musicvideoid": {
+                "musicVideoId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "musicvideoid"
+                "musicVideoId"
               ],
               "additionalProperties": false
             }
@@ -5603,7 +5603,7 @@
         }
       },
       {
-        "name": "arttype",
+        "name": "artType",
         "schema": {
           "type": "string"
         }
@@ -5612,7 +5612,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "availableart": {
+        "availableArt": {
           "type": "array",
           "items": {
             "type": "object",
@@ -5621,23 +5621,23 @@
                 "type": "string",
                 "description": "URL to the original image"
               },
-              "arttype": {
+              "artType": {
                 "type": "string"
               },
-              "previewurl": {
+              "previewUrl": {
                 "type": "string",
                 "description": "URL to a preview thumbnail of the image"
               }
             },
             "required": [
               "url",
-              "arttype"
+              "artType"
             ]
           }
         }
       },
       "required": [
-        "availableart"
+        "availableArt"
       ]
     },
     "errors": [
@@ -5651,7 +5651,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "movieid",
+        "name": "movieId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -5664,7 +5664,7 @@
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -5744,7 +5744,7 @@
         }
       },
       {
-        "name": "imdbnumber",
+        "name": "imdbNumber",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -5756,13 +5756,13 @@
         }
       },
       {
-        "name": "lastplayed",
+        "name": "lastPlayed",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "originaltitle",
+        "name": "originalTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -5780,7 +5780,7 @@
         }
       },
       {
-        "name": "plotoutline",
+        "name": "plotOutline",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -5820,7 +5820,7 @@
         }
       },
       {
-        "name": "sorttitle",
+        "name": "sortTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -5832,7 +5832,7 @@
         }
       },
       {
-        "name": "showlink",
+        "name": "showLink",
         "schema": {
           "anyOf": [
             {
@@ -5900,7 +5900,7 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -5912,7 +5912,7 @@
         }
       },
       {
-        "name": "dateadded",
+        "name": "dateAdded",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -5925,7 +5925,7 @@
         }
       },
       {
-        "name": "uniqueid",
+        "name": "uniqueId",
         "schema": {
           "anyOf": [
             {
@@ -5952,7 +5952,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "setid",
+        "name": "setId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -5998,7 +5998,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -6011,7 +6011,7 @@
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6063,7 +6063,7 @@
         }
       },
       {
-        "name": "imdbnumber",
+        "name": "imdbNumber",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6081,13 +6081,13 @@
         }
       },
       {
-        "name": "lastplayed",
+        "name": "lastPlayed",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "originaltitle",
+        "name": "originalTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6099,13 +6099,13 @@
         }
       },
       {
-        "name": "sorttitle",
+        "name": "sortTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "episodeguide",
+        "name": "episodeGuide",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6151,7 +6151,7 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6163,7 +6163,7 @@
         }
       },
       {
-        "name": "dateadded",
+        "name": "dateAdded",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6183,7 +6183,7 @@
         }
       },
       {
-        "name": "uniqueid",
+        "name": "uniqueId",
         "schema": {
           "anyOf": [
             {
@@ -6210,7 +6210,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "seasonid",
+        "name": "seasonId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -6231,7 +6231,7 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6256,7 +6256,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "episodeid",
+        "name": "episodeId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -6269,7 +6269,7 @@
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6314,7 +6314,7 @@
         }
       },
       {
-        "name": "lastplayed",
+        "name": "lastPlayed",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6334,13 +6334,13 @@
         }
       },
       {
-        "name": "firstaired",
+        "name": "firstAired",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "productioncode",
+        "name": "productionCode",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6358,7 +6358,7 @@
         }
       },
       {
-        "name": "originaltitle",
+        "name": "originalTitle",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6404,7 +6404,7 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6416,13 +6416,13 @@
         }
       },
       {
-        "name": "dateadded",
+        "name": "dateAdded",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
       },
       {
-        "name": "uniqueid",
+        "name": "uniqueId",
         "schema": {
           "anyOf": [
             {
@@ -6449,7 +6449,7 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "musicvideoid",
+        "name": "musicVideoId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -6462,7 +6462,7 @@
         }
       },
       {
-        "name": "playcount",
+        "name": "playCount",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
@@ -6555,7 +6555,7 @@
         }
       },
       {
-        "name": "lastplayed",
+        "name": "lastPlayed",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6621,13 +6621,13 @@
         }
       },
       {
-        "name": "userrating",
+        "name": "userRating",
         "schema": {
           "$ref": "#/$defs/Optional.Integer"
         }
       },
       {
-        "name": "dateadded",
+        "name": "dateAdded",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -6640,7 +6640,7 @@
         }
       },
       {
-        "name": "uniqueid",
+        "name": "uniqueId",
         "schema": {
           "anyOf": [
             {
@@ -6675,72 +6675,72 @@
             {
               "type": "object",
               "properties": {
-                "movieid": {
+                "movieId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "movieid"
+                "movieId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "setid": {
+                "setId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "setid"
+                "setId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "tvshowid": {
+                "tvShowId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "tvshowid"
+                "tvShowId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "seasonid": {
+                "seasonId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "seasonid"
+                "seasonId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "episodeid": {
+                "episodeId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "episodeid"
+                "episodeId"
               ],
               "additionalProperties": false
             },
             {
               "type": "object",
               "properties": {
-                "musicvideoid": {
+                "musicVideoId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "required": [
-                "musicvideoid"
+                "musicVideoId"
               ],
               "additionalProperties": false
             }
@@ -6748,7 +6748,7 @@
         }
       },
       {
-        "name": "ignorenfo",
+        "name": "ignoreNfo",
         "description": "Whether or not to ignore a local NFO if present.",
         "schema": {
           "type": "boolean",
@@ -6756,7 +6756,7 @@
         }
       },
       {
-        "name": "refreshepisodes",
+        "name": "refreshEpisodes",
         "description": "Whether or not to refresh all episodes belonging to the item. Applies to a tv show or a season.",
         "schema": {
           "type": "boolean",
@@ -6787,14 +6787,14 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "movieid",
+        "name": "movieId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "ignorenfo",
+        "name": "ignoreNfo",
         "description": "Whether or not to ignore a local NFO if present.",
         "schema": {
           "type": "boolean",
@@ -6825,14 +6825,14 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "ignorenfo",
+        "name": "ignoreNfo",
         "description": "Whether or not to ignore a local NFO if present.",
         "schema": {
           "type": "boolean",
@@ -6840,7 +6840,7 @@
         }
       },
       {
-        "name": "refreshepisodes",
+        "name": "refreshEpisodes",
         "description": "Whether or not to refresh all episodes belonging to the TV show.",
         "schema": {
           "type": "boolean",
@@ -6871,14 +6871,14 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "episodeid",
+        "name": "episodeId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "ignorenfo",
+        "name": "ignoreNfo",
         "description": "Whether or not to ignore a local NFO if present.",
         "schema": {
           "type": "boolean",
@@ -6915,37 +6915,37 @@
             {
               "type": "object",
               "properties": {
-                "movieid": {
+                "movieId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "additionalProperties": false,
               "required": [
-                "movieid"
+                "movieId"
               ]
             },
             {
               "type": "object",
               "properties": {
-                "episodeid": {
+                "episodeId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "additionalProperties": false,
               "required": [
-                "episodeid"
+                "episodeId"
               ]
             },
             {
               "type": "object",
               "properties": {
-                "musicvideoid": {
+                "musicVideoId": {
                   "$ref": "#/$defs/Library.Id"
                 }
               },
               "additionalProperties": false,
               "required": [
-                "musicvideoid"
+                "musicVideoId"
               ]
             },
             {
@@ -6989,14 +6989,14 @@
     "permission": "UpdateData",
     "params": [
       {
-        "name": "musicvideoid",
+        "name": "musicVideoId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "ignorenfo",
+        "name": "ignoreNfo",
         "description": "Whether or not to ignore a local NFO if present.",
         "schema": {
           "type": "boolean",
@@ -7026,7 +7026,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "movieid",
+        "name": "movieId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -7045,7 +7045,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "tvshowid",
+        "name": "tvShowId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -7064,7 +7064,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "episodeid",
+        "name": "episodeId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -7083,7 +7083,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "musicvideoid",
+        "name": "musicVideoId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -7109,7 +7109,7 @@
         }
       },
       {
-        "name": "showdialogs",
+        "name": "showDialogs",
         "description": "Whether or not to show the progress bar or any other GUI dialog",
         "schema": {
           "type": "boolean",
@@ -7153,7 +7153,7 @@
         }
       },
       {
-        "name": "scraperid",
+        "name": "scraperId",
         "description": "Addon id of the scraper. Required unless content is \"none\"",
         "schema": {
           "type": "string",
@@ -7161,7 +7161,7 @@
         }
       },
       {
-        "name": "scrapersettings",
+        "name": "scraperSettings",
         "description": "Scraper settings as XML. Scraper defaults are used when empty",
         "schema": {
           "type": "string",
@@ -7169,15 +7169,15 @@
         }
       },
       {
-        "name": "scanrecursive",
-        "description": "Scan sub folders. Ignored for tvshows and when containssingleitem is set",
+        "name": "scanRecursive",
+        "description": "Scan sub folders. Ignored for tvshows and when containsSingleItem is set",
         "schema": {
           "type": "boolean",
           "default": true
         }
       },
       {
-        "name": "usedirectorynames",
+        "name": "useDirectoryNames",
         "description": "Take the item name from the containing folder. Ignored for tvshows",
         "schema": {
           "type": "boolean",
@@ -7185,7 +7185,7 @@
         }
       },
       {
-        "name": "containssingleitem",
+        "name": "containsSingleItem",
         "description": "The path holds one item, named after the folder the scan started in",
         "schema": {
           "type": "boolean",
@@ -7193,7 +7193,7 @@
         }
       },
       {
-        "name": "noupdate",
+        "name": "noUpdate",
         "description": "Exclude the path from library updates",
         "schema": {
           "type": "boolean",
@@ -7201,7 +7201,7 @@
         }
       },
       {
-        "name": "clearmode",
+        "name": "clearMode",
         "description": "Only used when content is \"none\". \"clear\" unbinds the scraper, \"exclude\" also excludes the path from scanning, \"remove\" additionally deletes the items already scraped from it",
         "schema": {
           "type": "string",
@@ -7267,7 +7267,7 @@
                   "default": false,
                   "description": "Whether to export thumbnails and fanart images"
                 },
-                "actorthumbs": {
+                "actorThumbs": {
                   "type": "boolean",
                   "default": false,
                   "description": "Whether to export actor thumbnails"
@@ -7288,7 +7288,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "showdialogs",
+        "name": "showDialogs",
         "description": "Whether or not to show the progress bar or any other GUI dialog",
         "schema": {
           "type": "boolean",
@@ -7394,7 +7394,7 @@
         }
       },
       {
-        "name": "displaytime",
+        "name": "displayTime",
         "description": "The time in milliseconds the notification will be visible",
         "schema": {
           "type": "integer",
@@ -7498,7 +7498,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "stereoscopicmodes": {
+        "stereoscopicModes": {
           "type": "array",
           "uniqueItems": true,
           "items": {
@@ -7790,7 +7790,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "addonid",
+        "name": "addonId",
         "required": true,
         "schema": {
           "type": "string"
@@ -7829,7 +7829,7 @@
     "permission": "ManageAddon",
     "params": [
       {
-        "name": "addonid",
+        "name": "addonId",
         "required": true,
         "schema": {
           "type": "string"
@@ -7855,7 +7855,7 @@
     "permission": "ExecuteAddon",
     "params": [
       {
-        "name": "addonid",
+        "name": "addonId",
         "required": true,
         "schema": {
           "type": "string"
@@ -7931,7 +7931,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channeltype",
+        "name": "channelType",
         "required": true,
         "schema": {
           "$ref": "#/$defs/PVR.Channel.Type"
@@ -7950,7 +7950,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "channelgroups": {
+        "channelGroups": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PVR.Details.ChannelGroup"
@@ -7959,7 +7959,7 @@
       },
       "required": [
         "limits",
-        "channelgroups"
+        "channelGroups"
       ]
     },
     "errors": [
@@ -7973,7 +7973,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelgroupid",
+        "name": "channelGroupId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/PVR.ChannelGroup.Id"
@@ -7997,7 +7997,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "channelgroupdetails": {
+        "channelGroupDetails": {
           "$ref": "#/$defs/PVR.Details.ChannelGroup.Extended"
         }
       }
@@ -8014,7 +8014,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelgroupid",
+        "name": "channelGroupId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/PVR.ChannelGroup.Id"
@@ -8069,7 +8069,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelid",
+        "name": "channelId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -8085,7 +8085,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "channeldetails": {
+        "channelDetails": {
           "$ref": "#/$defs/PVR.Details.Channel"
         }
       }
@@ -8137,22 +8137,22 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelid",
+        "name": "channelId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "starttime",
-        "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime; given with endtime, restricts the result to broadcasts overlapping the range",
+        "name": "startTime",
+        "description": "start of the time range, in the same format as PVR.Details.Broadcast.startTime; given with endTime, restricts the result to broadcasts overlapping the range",
         "schema": {
           "type": "string"
         }
       },
       {
-        "name": "endtime",
-        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime; given with starttime, restricts the result to broadcasts overlapping the range",
+        "name": "endTime",
+        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endTime; given with startTime, restricts the result to broadcasts overlapping the range",
         "schema": {
           "type": "string"
         }
@@ -8202,24 +8202,24 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelgroupid",
+        "name": "channelGroupId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/PVR.ChannelGroup.Id"
         }
       },
       {
-        "name": "starttime",
+        "name": "startTime",
         "required": true,
-        "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime",
+        "description": "start of the time range, in the same format as PVR.Details.Broadcast.startTime",
         "schema": {
           "type": "string"
         }
       },
       {
-        "name": "endtime",
+        "name": "endTime",
         "required": true,
-        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime",
+        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endTime",
         "schema": {
           "type": "string"
         }
@@ -8239,7 +8239,7 @@
           "items": {
             "type": "object",
             "properties": {
-              "channelid": {
+              "channelId": {
                 "$ref": "#/$defs/Library.Id"
               },
               "broadcasts": {
@@ -8250,7 +8250,7 @@
               }
             },
             "required": [
-              "channelid",
+              "channelId",
               "broadcasts"
             ]
           }
@@ -8273,7 +8273,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "broadcastid",
+        "name": "broadcastId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -8289,7 +8289,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "broadcastdetails": {
+        "broadcastDetails": {
           "$ref": "#/$defs/PVR.Details.Broadcast"
         }
       }
@@ -8306,7 +8306,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "broadcastid",
+        "name": "broadcastId",
         "required": true,
         "description": "the id of the broadcast to check for playability",
         "schema": {
@@ -8327,24 +8327,24 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "channelid",
+        "name": "channelId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
         }
       },
       {
-        "name": "starttime",
+        "name": "startTime",
         "required": true,
-        "description": "start of the time range, in the same format as PVR.Details.Broadcast.starttime",
+        "description": "start of the time range, in the same format as PVR.Details.Broadcast.startTime",
         "schema": {
           "type": "string"
         }
       },
       {
-        "name": "endtime",
+        "name": "endTime",
         "required": true,
-        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endtime",
+        "description": "end of the time range, in the same format as PVR.Details.Broadcast.endTime",
         "schema": {
           "type": "string"
         }
@@ -8363,7 +8363,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "broadcastids": {
+        "broadcastIds": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Library.Id"
@@ -8372,7 +8372,7 @@
       },
       "required": [
         "limits",
-        "broadcastids"
+        "broadcastIds"
       ]
     },
     "errors": [
@@ -8436,7 +8436,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "timerid",
+        "name": "timerId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -8452,7 +8452,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "timerdetails": {
+        "timerDetails": {
           "$ref": "#/$defs/PVR.Details.Timer"
         }
       }
@@ -8469,7 +8469,7 @@
     "permission": "ControlPVR",
     "params": [
       {
-        "name": "broadcastid",
+        "name": "broadcastId",
         "required": true,
         "description": "the broadcast id of the item to record",
         "schema": {
@@ -8477,7 +8477,7 @@
         }
       },
       {
-        "name": "timerrule",
+        "name": "timerRule",
         "description": "controls whether to create a timer rule or a onetime timer",
         "schema": {
           "type": "boolean",
@@ -8507,7 +8507,7 @@
     "permission": "ControlPVR",
     "params": [
       {
-        "name": "timerid",
+        "name": "timerId",
         "required": true,
         "description": "the id of the onetime timer or timer rule to delete",
         "schema": {
@@ -8528,7 +8528,7 @@
     "permission": "ControlPVR",
     "params": [
       {
-        "name": "broadcastid",
+        "name": "broadcastId",
         "required": true,
         "description": "the broadcast id of the item to toggle a onetime timer or time rule for",
         "schema": {
@@ -8536,7 +8536,7 @@
         }
       },
       {
-        "name": "timerrule",
+        "name": "timerRule",
         "description": "controls whether to create / delete a timer rule or a onetime timer",
         "schema": {
           "type": "boolean",
@@ -8605,7 +8605,7 @@
     "permission": "ReadData",
     "params": [
       {
-        "name": "recordingid",
+        "name": "recordingId",
         "required": true,
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -8621,7 +8621,7 @@
     "returns": {
       "type": "object",
       "properties": {
-        "recordingdetails": {
+        "recordingDetails": {
           "$ref": "#/$defs/PVR.Details.Recording"
         }
       }
@@ -8677,7 +8677,7 @@
     "permission": "ControlPVR",
     "params": [
       {
-        "name": "clientid",
+        "name": "clientId",
         "description": "Specify a PVR client id to avoid UI dialog, optional in kodi 19, required in kodi 20",
         "schema": {
           "$ref": "#/$defs/Library.Id"
@@ -8734,7 +8734,7 @@
     "permission": "RemoveData",
     "params": [
       {
-        "name": "textureid",
+        "name": "textureId",
         "required": true,
         "description": "Texture database identifier",
         "schema": {
@@ -8997,7 +8997,7 @@
         }
       },
       {
-        "name": "holdtime",
+        "name": "holdTime",
         "description": "Number of milliseconds to simulate button hold.",
         "schema": {
           "type": "integer",
@@ -9269,7 +9269,7 @@
       },
       {
         "name": "path",
-        "description": "Required for media, script and androidapp favourites types",
+        "description": "Required for media, script and androidApp favourites types",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }
@@ -9282,7 +9282,7 @@
         }
       },
       {
-        "name": "windowparameter",
+        "name": "windowParameter",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }

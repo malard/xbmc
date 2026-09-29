@@ -155,7 +155,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
     }
 
     // Check if the "properties" list exists
-    // and make sure it contains the "file" and "filetype"
+    // and make sure it contains the "file" and "fileType"
     // fields
     CVariant param = parameterObject;
     if (!param.isMember("properties"))
@@ -174,7 +174,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
     if (!hasFileField)
       param["properties"].append("file");
-    param["properties"].append("filetype");
+    param["properties"].append("fileType");
 
     HandleFileItemList("id", true, "files", filteredFiles, param, result);
 
@@ -228,9 +228,9 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, 
 
   if (!hasFileField)
     param["properties"].append("file");
-  param["properties"].append("filetype");
+  param["properties"].append("fileType");
 
-  HandleFileItem("id", true, "filedetails", item, parameterObject, param["properties"], result,
+  HandleFileItem("id", true, "fileDetails", item, parameterObject, param["properties"], result,
                  false);
   return OK;
 }
@@ -265,14 +265,14 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
 
   CDateTime lastPlayed = infos.m_lastPlayed;
   int playcount = infos.GetPlayCount();
-  if (!parameterObject["lastplayed"].isNull())
+  if (!parameterObject["lastPlayed"].isNull())
   {
     lastPlayed.Reset();
-    SetFromDBDateTime(parameterObject["lastplayed"], lastPlayed);
+    SetFromDBDateTime(parameterObject["lastPlayed"], lastPlayed);
     playcount = lastPlayed.IsValid() ? std::max(1, playcount) : 0;
   }
-  if (!parameterObject["playcount"].isNull())
-    playcount = parameterObject["playcount"].asInteger();
+  if (!parameterObject["playCount"].isNull())
+    playcount = parameterObject["playCount"].asInteger();
   if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
     videodatabase.SetPlayCount(CFileItem(infos), playcount, lastPlayed);
 
@@ -478,8 +478,8 @@ bool CFileOperations::NeedsLibraryLookup(const CVariant& parameterObject)
   if (!parameterObject.isMember("properties") || !parameterObject["properties"].isArray())
     return false;
 
-  static const std::set<std::string> fileProperties = {"file",     "filetype", "label",
-                                                       "mimetype", "size",     "lastmodified"};
+  static const std::set<std::string> fileProperties = {"file",     "fileType", "label",
+                                                       "mimeType", "size",     "lastModified"};
 
   for (CVariant::const_iterator_array property = parameterObject["properties"].begin_array();
        property != parameterObject["properties"].end_array(); ++property)

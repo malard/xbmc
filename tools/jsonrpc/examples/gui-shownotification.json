@@ -9,7 +9,7 @@
       "title": "Library update",
       "message": "The video library scan has finished",
       "image": "info",
-      "displaytime": 5000
+      "displayTime": 5000
     }
   },
   "response": {

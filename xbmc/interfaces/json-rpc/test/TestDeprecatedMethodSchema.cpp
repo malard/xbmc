@@ -67,17 +67,17 @@ struct DeprecatedProperty
 };
 
 constexpr std::array<DeprecatedProperty, 3> DEPRECATED_PROPERTIES{{
-    {"PVR.Details.Broadcast", "seasonnum", "season"},
-    {"PVR.Details.Broadcast", "episodenum", "episode"},
-    {"PVR.Details.Broadcast", "isplayable", "PVR.GetBroadcastIsPlayable"},
+    {"PVR.Details.Broadcast", "seasonNum", "season"},
+    {"PVR.Details.Broadcast", "episodeNum", "episode"},
+    {"PVR.Details.Broadcast", "isPlayable", "PVR.GetBroadcastIsPlayable"},
 }};
 
 //! \brief Deprecated members of a method parameter, as "Method(parameter).member" and what
 //! replaces them
 constexpr std::array<Supersession, 3> DEPRECATED_PARAMETER_MEMBERS{{
     {"Player.Open(item).random", "shuffled"},
-    {"AudioLibrary.GetArtists(filter).genreid", "songgenreid"},
-    {"AudioLibrary.GetArtists(filter).genre", "songgenre"},
+    {"AudioLibrary.GetArtists(filter).genreId", "songGenreId"},
+    {"AudioLibrary.GetArtists(filter).genre", "songGenre"},
 }};
 
 //! \brief Calls \p visit with every member a schema declares, however deeply it is nested

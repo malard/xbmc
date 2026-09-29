@@ -94,10 +94,10 @@ void CStreamDetailVideo::Serialize(CVariant& value) const
   value["height"] = m_iHeight;
   value["width"] = m_iWidth;
   value["duration"] = m_iDuration;
-  value["stereomode"] = m_strStereoMode;
+  value["stereoMode"] = m_strStereoMode;
   value["language"] = m_language.ToString();
-  value["hdrtype"] = m_strHdrType;
-  value["hdrdetail"] = m_strHdrDetail;
+  value["hdrType"] = m_strHdrType;
+  value["hdrDetail"] = m_strHdrDetail;
   value["source"] = static_cast<int>(m_source);
   value["version"] = m_version;
 }

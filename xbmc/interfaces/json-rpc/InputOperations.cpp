@@ -102,7 +102,7 @@ JSONRPC_STATUS CInputOperations::ButtonEvent(const CVariant& parameterObject, CV
 {
   std::string button = parameterObject["button"].asString();
   std::string keymap = parameterObject["keymap"].asString();
-  int holdtime = static_cast<int>(parameterObject["holdtime"].asInteger());
+  int holdtime = static_cast<int>(parameterObject["holdTime"].asInteger());
   if (holdtime < 0)
   {
     return InvalidParams;

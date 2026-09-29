@@ -89,20 +89,20 @@ void CPVRChannel::Serialize(CVariant& value) const
   if (epg)
     epg->Serialize(value);
 
-  value["channelid"] = m_iChannelId;
-  value["channeltype"] = m_bIsRadio ? "radio" : "tv";
+  value["channelId"] = m_iChannelId;
+  value["channelType"] = m_bIsRadio ? "radio" : "tv";
   value["hidden"] = m_bIsHidden;
   value["locked"] = m_bIsLocked;
   value["icon"] = IconPath();
   value["thumbnail"] = IconPath();
   value["channel"] = m_strChannelName;
-  value["channeluid"] = m_iUniqueId;
+  value["channelUid"] = m_iUniqueId;
   CDateTime lastPlayed(m_iLastWatched);
-  value["lastplayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDate() : "";
-  value["dateadded"] = m_dateTimeAdded.IsValid() ? m_dateTimeAdded.GetAsDBDate() : "";
+  value["lastPlayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDate() : "";
+  value["dateAdded"] = m_dateTimeAdded.IsValid() ? m_dateTimeAdded.GetAsDBDate() : "";
 
-  value["hasarchive"] = m_bHasArchive;
-  value["clientid"] = m_iClientId;
+  value["hasArchive"] = m_bHasArchive;
+  value["clientId"] = m_iClientId;
 }
 
 bool CPVRChannel::QueueDelete()

@@ -56,7 +56,7 @@ TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
   {
     // CFileItemHandler::HandleFileItem answers the identifier itself, so it is
     // not one of the requestable fields
-    if (property == "broadcastid")
+    if (property == "broadcastId")
     {
       continue;
     }
@@ -72,6 +72,6 @@ TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
  */
 TEST(TestPVRBroadcastSchema, TheRecordingIsAddressableByItsIdentifier)
 {
-  EXPECT_TRUE(RequestableFields().contains("recordingid"));
-  EXPECT_TRUE(DeclaredProperties().contains("recordingid"));
+  EXPECT_TRUE(RequestableFields().contains("recordingId"));
+  EXPECT_TRUE(DeclaredProperties().contains("recordingId"));
 }

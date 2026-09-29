@@ -38,7 +38,7 @@ TEST(TestFileOperations, MissingPropertiesDoesNotNeedLibraryLookup)
 TEST(TestFileOperations, BasicFilePropertiesDoNotNeedLibraryLookup)
 {
   const CVariant params =
-      ParamsWithProperties({"file", "filetype", "label", "mimetype", "size", "lastmodified"});
+      ParamsWithProperties({"file", "fileType", "label", "mimeType", "size", "lastModified"});
   EXPECT_FALSE(CFileOperations::NeedsLibraryLookup(params));
 }
 
@@ -46,5 +46,5 @@ TEST(TestFileOperations, VideoPropertiesNeedLibraryLookup)
 {
   EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"thumbnail"})));
   EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"cast"})));
-  EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"file", "streamdetails"})));
+  EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"file", "streamDetails"})));
 }

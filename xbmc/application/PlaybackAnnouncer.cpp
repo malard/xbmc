@@ -36,19 +36,19 @@ std::string PropertyName(CPlaybackAnnouncer::PlayerProperty property)
   switch (property)
   {
     case PartyMode:
-      return "partymode";
+      return "partyMode";
     case Shuffled:
       return "shuffled";
     case Repeat:
       return "repeat";
     case SubtitleEnabled:
-      return "subtitleenabled";
+      return "subtitleEnabled";
     case CurrentSubtitle:
-      return "currentsubtitle";
+      return "currentSubtitle";
     case CurrentAudioStream:
-      return "currentaudiostream";
+      return "currentAudioStream";
     case CurrentVideoStream:
-      return "currentvideostream";
+      return "currentVideoStream";
   }
   return {};
 }

@@ -28,14 +28,14 @@
       },
       "movies": [
         {
-          "movieid": 1,
+          "movieId": 1,
           "label": "The Matrix",
           "title": "The Matrix",
           "year": 1999,
           "rating": 8.7
         },
         {
-          "movieid": 2,
+          "movieId": 2,
           "label": "Spirited Away",
           "title": "Spirited Away",
           "year": 2001,

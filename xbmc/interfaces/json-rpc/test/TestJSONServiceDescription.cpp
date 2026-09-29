@@ -134,12 +134,12 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
     "params": [
       { "name": "target", "required": true, "schema": { "anyOf": [
           { "type": "object",
-            "properties": { "movieid": { "type": "integer" } },
-            "required": ["movieid"],
+            "properties": { "movieId": { "type": "integer" } },
+            "required": ["movieId"],
             "additionalProperties": false },
           { "type": "object",
-            "properties": { "songid": { "type": "integer" } },
-            "required": ["songid"],
+            "properties": { "songId": { "type": "integer" } },
+            "required": ["songId"],
             "additionalProperties": false }
         ] } },
       { "name": "when", "schema": { "anyOf": [
@@ -153,13 +153,13 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
                                                  StubMethod));
 
   CVariant output;
-  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"movieid": 3}})", output));
-  ExpectVariantEq(ParseJson(R"({ "target": { "movieid": 3 }, "when": null, "flag": null })"),
+  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"movieId": 3}})", output));
+  ExpectVariantEq(ParseJson(R"({ "target": { "movieId": 3 }, "when": null, "flag": null })"),
                   output);
 
-  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"songid": 7}, "when": "later", "flag": true})",
+  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"songId": 7}, "when": "later", "flag": true})",
                      output));
-  ExpectVariantEq(ParseJson(R"({ "target": { "songid": 7 }, "when": "later", "flag": true })"),
+  ExpectVariantEq(ParseJson(R"({ "target": { "songId": 7 }, "when": "later", "flag": true })"),
                   output);
 
   // No union branch accepts the value: the error carries the OR'd type list
@@ -176,7 +176,7 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
 
   // A value matching the type mask but no branch constraint fails the union check
   EXPECT_EQ(InvalidParams,
-            Call("Test.Union", R"({"target": {"movieid": 3}, "when": "never"})", output));
+            Call("Test.Union", R"({"target": {"movieId": 3}, "when": "never"})", output));
   ExpectVariantEq(ParseJson(R"({
     "method": "Test.Union",
     "stack": {
@@ -188,7 +188,7 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
                   output);
 
   // A value outside the OR'd type mask fails before any branch is tried
-  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieid": 3}, "when": 5})", output));
+  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieId": 3}, "when": 5})", output));
   ExpectVariantEq(ParseJson(R"({
     "method": "Test.Union",
     "stack": {
@@ -200,7 +200,7 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
                   output);
 
   // Pure string unions behave identically
-  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieid": 3}, "flag": 1})", output));
+  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieId": 3}, "flag": 1})", output));
   ExpectVariantEq(ParseJson(R"({
     "method": "Test.Union",
     "stack": {
@@ -420,6 +420,30 @@ TEST_F(TestJSONServiceDescription, EnumParameter)
     }
   })"),
                   output);
+}
+
+TEST_F(TestJSONServiceDescription, APropertyNameMatchesOnlyInItsOwnCase)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Camel": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "o", "required": true, "schema": {
+      "type": "object",
+      "properties": { "movieId": { "type": "integer" } },
+      "additionalProperties": false } } ],
+    "returns": "string"
+  }})",
+                                                 StubMethod));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Camel", R"({"o": {"movieId": 3}})", output));
+  EXPECT_EQ(InvalidParams, Call("Test.Camel", R"({"o": {"movieid": 3}})", output))
+      << "a name in another case is an unexpected property, not the declared one";
+
+  CVariant printed;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(printed, &m_transport, &m_client, false, false,
+                                               false));
+  EXPECT_TRUE(printed["methods"]["Test.Camel"]["params"][0]["schema"]["properties"].isMember(
+      "movieId"));
 }
 
 TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)

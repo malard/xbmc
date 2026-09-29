@@ -68,5 +68,5 @@ TEST(TestSharedFieldDeclarations, GenreIsTheSameValueWhereverItIsCarried)
 
 TEST(TestSharedFieldDeclarations, ImdbNumberIsTheSameValueWhereverItIsCarried)
 {
-  ExpectOneDeclaration("imdbnumber");
+  ExpectOneDeclaration("imdbNumber");
 }

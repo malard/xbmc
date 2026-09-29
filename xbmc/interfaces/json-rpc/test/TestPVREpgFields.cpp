@@ -114,10 +114,10 @@ TEST_F(TestPVRBroadcastFields, UndeclaredSerializedKeysAreNotAnswered)
 {
   const std::set<std::string> fields{BroadcastFields()};
 
-  EXPECT_FALSE(fields.contains("channeluid"));
+  EXPECT_FALSE(fields.contains("channelUid"));
   EXPECT_FALSE(fields.contains("filenameandpath"));
   EXPECT_FALSE(fields.contains("serieslink"));
-  EXPECT_FALSE(fields.contains("titleextrainfo"));
+  EXPECT_FALSE(fields.contains("titleExtraInfo"));
 }
 
 /*!

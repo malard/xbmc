@@ -35,6 +35,7 @@
 #include "utils/FileUtils.h"
 #include "utils/ISerializable.h"
 #include "utils/SortUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
@@ -116,7 +117,7 @@ bool CFileItemHandler::GetField(const std::string& field,
   // overwrite serialized values
   if (item)
   {
-    if (field == "mimetype" && item->GetMimeType().empty())
+    if (field == "mimeType" && item->GetMimeType().empty())
     {
       item->FillInMimeType(false);
       result[field] = item->GetMimeType();
@@ -138,21 +139,21 @@ bool CFileItemHandler::GetField(const std::string& field,
         result[field] = StringUtils::Split(info[field].asString(), EPG_STRING_TOKEN_SEPARATOR);
         return true;
       }
-      else if (field == "isrecording")
+      else if (field == "isRecording")
       {
         result[field] = CServiceBroker::GetPVRManager().Timers()->IsRecordingOnChannel(
             *item->GetPVRChannelInfoTag());
         return true;
       }
-      else if (field == "broadcastnow" || field == "broadcastnext")
+      else if (field == "broadcastNow" || field == "broadcastNext")
       {
         // Both slots are PVR.Details.Broadcast, whose label and field set only the handler supplies
         const std::shared_ptr<const PVR::CPVRChannel> channel{item->GetPVRChannelInfoTag()};
         const std::shared_ptr<PVR::CPVREpgInfoTag> tag{
-            field == "broadcastnow" ? channel->GetEPGNow() : channel->GetEPGNext()};
+            field == "broadcastNow" ? channel->GetEPGNow() : channel->GetEPGNext()};
         if (tag)
         {
-          HandleFileItem("broadcastid", false, field.c_str(), std::make_shared<CFileItem>(tag),
+          HandleFileItem("broadcastId", false, field.c_str(), std::make_shared<CFileItem>(tag),
                          CVariant{CVariant::VariantTypeObject}, BroadcastFields(), result, false);
         }
         return true;
@@ -161,7 +162,7 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (item->HasEPGInfoTag())
     {
-      if (field == "hastimer" || field == "hasreminder" || field == "hastimerrule")
+      if (field == "hasTimer" || field == "hasReminder" || field == "hasTimerRule")
       {
         if (!epgTimer.has_value())
         {
@@ -170,15 +171,15 @@ bool CFileItemHandler::GetField(const std::string& field,
         }
 
         const std::shared_ptr<PVR::CPVRTimerInfoTag>& timer{*epgTimer};
-        if (field == "hastimer")
+        if (field == "hasTimer")
           result[field] = (timer != nullptr);
-        else if (field == "hasreminder")
+        else if (field == "hasReminder")
           result[field] = (timer && timer->IsReminder());
         else
           result[field] = (timer && timer->HasParent());
         return true;
       }
-      else if (field == "hasrecording" || field == "recording" || field == "recordingid")
+      else if (field == "hasRecording" || field == "recording" || field == "recordingId")
       {
         if (!epgRecording.has_value())
         {
@@ -187,7 +188,7 @@ bool CFileItemHandler::GetField(const std::string& field,
         }
 
         const std::shared_ptr<PVR::CPVRRecording>& recording{*epgRecording};
-        if (field == "hasrecording")
+        if (field == "hasRecording")
         {
           result[field] = (recording != nullptr);
         }
@@ -214,33 +215,36 @@ bool CFileItemHandler::GetField(const std::string& field,
   // check if the field requires special handling
   if (item)
   {
+    // item properties keep Kodi's own lowercase names
+    const std::string property = StringUtils::ToLower(std::string_view{field});
+
     if (item->IsAlbum())
     {
-      if (field == "albumlabel")
+      if (field == "albumLabel")
       {
         result[field] = item->GetProperty("album_label");
         return true;
       }
-      if (item->HasProperty("album_" + field + "_array"))
+      if (item->HasProperty("album_" + property + "_array"))
       {
-        result[field] = item->GetProperty("album_" + field + "_array");
+        result[field] = item->GetProperty("album_" + property + "_array");
         return true;
       }
-      if (item->HasProperty("album_" + field))
+      if (item->HasProperty("album_" + property))
       {
-        result[field] = item->GetProperty("album_" + field);
+        result[field] = item->GetProperty("album_" + property);
         return true;
       }
     }
 
-    if (item->HasProperty("artist_" + field + "_array"))
+    if (item->HasProperty("artist_" + property + "_array"))
     {
-      result[field] = item->GetProperty("artist_" + field + "_array");
+      result[field] = item->GetProperty("artist_" + property + "_array");
       return true;
     }
-    if (item->HasProperty("artist_" + field))
+    if (item->HasProperty("artist_" + property))
     {
-      result[field] = item->GetProperty("artist_" + field);
+      result[field] = item->GetProperty("artist_" + property);
       return true;
     }
 
@@ -296,16 +300,16 @@ bool CFileItemHandler::GetField(const std::string& field,
         result[field] = static_cast<int>(item->GetProperty("totalseasons").asInteger());
         return true;
       }
-      if (field == "watchedepisodes")
+      if (field == "watchedEpisodes")
       {
         result[field] = static_cast<int>(item->GetProperty("watchedepisodes").asInteger());
         return true;
       }
     }
 
-    if (item->HasProperty(field))
+    if (item->HasProperty(property))
     {
-      result[field] = item->GetProperty(field);
+      result[field] = item->GetProperty(property);
       return true;
     }
   }
@@ -418,7 +422,7 @@ void CFileItemHandler::HandleFileItem(const char* ID,
     if (fields.erase("file") > 0 && allowFile)
     {
       // A folder reports its own path so that file agrees with filetype
-      if (fields.contains("filetype") && item->IsFolder())
+      if (fields.contains("fileType") && item->IsFolder())
         object["file"] = item->GetPath();
       else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->GetPath().empty())
         object["file"] = item->GetVideoInfoTag()->GetPath();
@@ -434,13 +438,13 @@ void CFileItemHandler::HandleFileItem(const char* ID,
     if (item->HasProperty("playlistdisplayorder"))
     {
       object["position"] = item->GetProperty("playlistposition");
-      object["displayorder"] = item->GetProperty("playlistdisplayorder");
+      object["displayOrder"] = item->GetProperty("playlistdisplayorder");
     }
 
-    if (fields.erase("mediapath") > 0)
-      object["mediapath"] = item->GetPath();
-    if (fields.erase("dynpath") > 0)
-      object["dynpath"] = item->GetDynPath();
+    if (fields.erase("mediaPath") > 0)
+      object["mediaPath"] = item->GetPath();
+    if (fields.erase("dynPath") > 0)
+      object["dynPath"] = item->GetDynPath();
 
     if (ID)
     {
@@ -484,8 +488,8 @@ void CFileItemHandler::HandleFileItem(const char* ID,
         if (!object.isMember("type"))
           object["type"] = "unknown";
 
-        if (fields.contains("filetype"))
-          object["filetype"] = item->IsFolder() ? "directory" : "file";
+        if (fields.contains("fileType"))
+          object["fileType"] = item->IsFolder() ? "directory" : "file";
       }
     }
 

@@ -38,7 +38,7 @@ constexpr std::array<std::pair<int, const char*>, 4> LOG_LEVEL_NAMES{{
     {LOG_LEVEL_NONE, "none"},
     {LOG_LEVEL_NORMAL, "normal"},
     {LOG_LEVEL_DEBUG, "debug"},
-    {LOG_LEVEL_DEBUG_FREEMEM, "debugfreemem"},
+    {LOG_LEVEL_DEBUG_FREEMEM, "debugFreeMem"},
 }};
 } // unnamed namespace
 
@@ -147,24 +147,24 @@ JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& prope
     if (StringUtils::StartsWithNoCase(tag, "alpha"))
     {
       result["tag"] = "alpha";
-      result["tagversion"] = StringUtils::Mid(tag, 5);
+      result["tagVersion"] = StringUtils::Mid(tag, 5);
     }
     else if (StringUtils::StartsWithNoCase(tag, "beta"))
     {
       result["tag"] = "beta";
-      result["tagversion"] = StringUtils::Mid(tag, 4);
+      result["tagVersion"] = StringUtils::Mid(tag, 4);
     }
     else if (StringUtils::StartsWithNoCase(tag, "rc"))
     {
-      result["tag"] = "releasecandidate";
-      result["tagversion"] = StringUtils::Mid(tag, 2);
+      result["tag"] = "releaseCandidate";
+      result["tagVersion"] = StringUtils::Mid(tag, 2);
     }
     else if (tag.empty())
       result["tag"] = "stable";
     else
       result["tag"] = "prealpha";
   }
-  else if (property == "sorttokens")
+  else if (property == "sortTokens")
   {
     result = CVariant(CVariant::VariantTypeArray); // Ensure no tokens returns as []
     const auto& sortTokens = KODI::LANGUAGE::CLanguage::GetInstance().SortTokens();
@@ -175,7 +175,7 @@ JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& prope
   {
     result = KODI::LANGUAGE::CLanguage::GetInstance().UI().ToString();
   }
-  else if (property == "loglevel")
+  else if (property == "logLevel")
     result = LogLevelValue();
   else
     return InvalidParams;

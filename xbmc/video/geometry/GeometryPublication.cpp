@@ -66,8 +66,8 @@ void SerializeEffectiveGeometry(const EffectiveGeometry& geometry, CVariant& val
   if (geometry.displayFrame.Width() > 0.0f && geometry.displayFrame.Height() > 0.0f)
   {
     WriteRect(value, geometry.displayRect);
-    value["framewidth"] = geometry.displayFrame.Width();
-    value["frameheight"] = geometry.displayFrame.Height();
+    value["frameWidth"] = geometry.displayFrame.Width();
+    value["frameHeight"] = geometry.displayFrame.Height();
   }
 
   value["aspect"] = PublishedAspect(geometry.aspect);
@@ -106,9 +106,9 @@ void SerializeGeometryOverrides(const GeometryOverrides& overrides, CVariant& va
   value["raster"] = PublishedAspect(overrides.rasterAspect);
   value["maintain"] = PublishedAspect(overrides.maintainAspect);
   if (overrides.osdPlacement)
-    value["osdplacement"] = OsdPlacementName(*overrides.osdPlacement);
+    value["osdPlacement"] = OsdPlacementName(*overrides.osdPlacement);
   else
-    value["osdplacement"] = CVariant{CVariant::VariantTypeNull};
+    value["osdPlacement"] = CVariant{CVariant::VariantTypeNull};
 }
 
 void ParseGeometryOverrides(const CVariant& geometry, GeometryOverrides& overrides)
@@ -125,7 +125,7 @@ void ParseGeometryOverrides(const CVariant& geometry, GeometryOverrides& overrid
   if (!maintain.isNull())
     overrides.maintainAspect = maintain.asFloat();
 
-  const CVariant& placement = geometry["osdplacement"];
+  const CVariant& placement = geometry["osdPlacement"];
   if (!placement.isNull())
     overrides.osdPlacement = OsdPlacementFromName(placement.asString());
 }

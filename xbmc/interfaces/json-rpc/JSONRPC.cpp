@@ -130,10 +130,10 @@ JSONRPC_STATUS CJSONRPC::Introspect(ITransportLayer* transport,
                                     CVariant& result)
 {
   return CJSONServiceDescription::Print(
-      result, transport, client, parameterObject["getdescriptions"].asBoolean(),
-      parameterObject["getmetadata"].asBoolean(), parameterObject["filterbytransport"].asBoolean(),
+      result, transport, client, parameterObject["getDescriptions"].asBoolean(),
+      parameterObject["getMetadata"].asBoolean(), parameterObject["filterByTransport"].asBoolean(),
       parameterObject["filter"]["id"].asString(), parameterObject["filter"]["type"].asString(),
-      parameterObject["filter"]["getreferences"].asBoolean());
+      parameterObject["filter"]["getReferences"].asBoolean());
 }
 
 JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant& result)

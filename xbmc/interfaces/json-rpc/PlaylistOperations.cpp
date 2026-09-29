@@ -73,7 +73,7 @@ const char* ReasonOf(JSONRPC_STATUS status)
   switch (status)
   {
     case NotFound:
-      return "notfound";
+      return "notFound";
     case Unavailable:
       return "unavailable";
     default:

@@ -41,8 +41,8 @@ CVariant Request(const std::string& starttime, const std::string& endtime)
   CVariant params{CVariant::VariantTypeObject};
   // the service description fills every declared parameter before a handler runs, so an
   // omitted time arrives as an empty string rather than as an absent member
-  params["starttime"] = starttime;
-  params["endtime"] = endtime;
+  params["startTime"] = starttime;
+  params["endTime"] = endtime;
   return params;
 }
 
@@ -56,10 +56,10 @@ TEST(TestPVRBroadcastRange, TheRangeOnGetBroadcastsIsOptional)
 {
   const std::map<std::string, CVariant> params{Params(ShippedMethod("PVR.GetBroadcasts"))};
 
-  ASSERT_TRUE(params.contains("starttime"));
-  ASSERT_TRUE(params.contains("endtime"));
-  EXPECT_FALSE(params.at("starttime")["required"].asBoolean());
-  EXPECT_FALSE(params.at("endtime")["required"].asBoolean());
+  ASSERT_TRUE(params.contains("startTime"));
+  ASSERT_TRUE(params.contains("endTime"));
+  EXPECT_FALSE(params.at("startTime")["required"].asBoolean());
+  EXPECT_FALSE(params.at("endTime")["required"].asBoolean());
 }
 
 /*!
@@ -70,12 +70,12 @@ TEST(TestPVRBroadcastRange, TheGroupFormRequiresARange)
   const std::map<std::string, CVariant> params{
       Params(ShippedMethod("PVR.GetBroadcastsByChannelGroup"))};
 
-  ASSERT_TRUE(params.contains("channelgroupid"));
-  ASSERT_TRUE(params.contains("starttime"));
-  ASSERT_TRUE(params.contains("endtime"));
-  EXPECT_TRUE(params.at("channelgroupid")["required"].asBoolean());
-  EXPECT_TRUE(params.at("starttime")["required"].asBoolean());
-  EXPECT_TRUE(params.at("endtime")["required"].asBoolean());
+  ASSERT_TRUE(params.contains("channelGroupId"));
+  ASSERT_TRUE(params.contains("startTime"));
+  ASSERT_TRUE(params.contains("endTime"));
+  EXPECT_TRUE(params.at("channelGroupId")["required"].asBoolean());
+  EXPECT_TRUE(params.at("startTime")["required"].asBoolean());
+  EXPECT_TRUE(params.at("endTime")["required"].asBoolean());
   EXPECT_TRUE(params.contains("properties"));
   EXPECT_FALSE(params.contains("limits"));
 }
@@ -92,7 +92,7 @@ TEST(TestPVRBroadcastRange, TheGroupFormAnswersPerChannel)
 
   const CVariant& channel{returns["properties"]["channels"]["items"]};
   const std::set<std::string> required{RequiredMembers(channel)};
-  EXPECT_TRUE(required.contains("channelid"));
+  EXPECT_TRUE(required.contains("channelId"));
   EXPECT_TRUE(required.contains("broadcasts"));
   EXPECT_EQ(channel["properties"]["broadcasts"]["items"]["$ref"].asString(),
             "#/$defs/PVR.Details.Broadcast");

@@ -190,20 +190,20 @@ void CPVRRecording::Serialize(CVariant& value) const
   value["lifetime"] = m_iLifetime;
   value["directory"] = m_strDirectory;
   value["icon"] = IconPath();
-  value["starttime"] = m_recordingTime.IsValid() ? m_recordingTime.GetAsDBDateTime() : "";
-  value["endtime"] = m_recordingTime.IsValid() ? EndTimeAsUTC().GetAsDBDateTime() : "";
-  value["recordingid"] = m_iRecordingId;
-  value["isdeleted"] = m_bIsDeleted;
-  value["epgeventid"] = m_iEpgEventId;
-  value["channeluid"] = m_iChannelUid;
+  value["startTime"] = m_recordingTime.IsValid() ? m_recordingTime.GetAsDBDateTime() : "";
+  value["endTime"] = m_recordingTime.IsValid() ? EndTimeAsUTC().GetAsDBDateTime() : "";
+  value["recordingId"] = m_iRecordingId;
+  value["isDeleted"] = m_bIsDeleted;
+  value["epgEventId"] = m_iEpgEventId;
+  value["channelUid"] = m_iChannelUid;
   value["radio"] = m_bRadio;
   value["genre"] = m_genre;
-  value["parentalrating"] = m_parentalRating;
-  value["parentalratingcode"] = m_parentalRatingCode;
-  value["parentalratingicon"] = GetParentalRatingIcon();
-  value["parentalratingsource"] = m_parentalRatingSource;
-  value["episodepart"] = m_episodePartNumber;
-  value["titleextrainfo"] = m_titleExtraInfo;
+  value["parentalRating"] = m_parentalRating;
+  value["parentalRatingCode"] = m_parentalRatingCode;
+  value["parentalRatingIcon"] = GetParentalRatingIcon();
+  value["parentalRatingSource"] = m_parentalRatingSource;
+  value["episodePart"] = m_episodePartNumber;
+  value["titleExtraInfo"] = m_titleExtraInfo;
 
   if (!value.isMember("art"))
     value["art"] = CVariant(CVariant::VariantTypeObject);
@@ -212,7 +212,7 @@ void CPVRRecording::Serialize(CVariant& value) const
   if (!FanartPath().empty())
     value["art"]["fanart"] = FanartPath();
 
-  value["clientid"] = m_iClientId;
+  value["clientId"] = m_iClientId;
 }
 
 void CPVRRecording::ToSortable(SortItem& sortable, Field field) const

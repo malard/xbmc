@@ -655,7 +655,7 @@ void CSettingsOperations::SerializeSettingString(
 {
   obj["default"] = setting->GetDefault();
 
-  obj["allowempty"] = setting->AllowEmpty();
+  obj["allowEmpty"] = setting->AllowEmpty();
   obj["allownewoption"] = setting->AllowNewOption();
 
   if (std::optional<CVariant> options = SerializeOptionsOf(setting))
@@ -675,7 +675,7 @@ void CSettingsOperations::SerializeSettingString(
   else if (format == "addon")
   {
     obj["type"] = "addon";
-    obj["addontype"] = ADDON::CAddonInfo::TranslateType(
+    obj["addonType"] = ADDON::CAddonInfo::TranslateType(
         std::static_pointer_cast<const CSettingAddon>(setting)->GetAddonType());
   }
   else if (format == "date" || format == "time")
@@ -692,7 +692,7 @@ bool CSettingsOperations::SerializeSettingList(const std::shared_ptr<const CSett
   SerializeSettingListValues(CSettingUtils::ListToValues(setting, setting->GetDefault()),
                              obj["default"]);
 
-  obj["elementtype"] = obj["definition"]["type"];
+  obj["elementType"] = obj["definition"]["type"];
   obj["delimiter"] = setting->GetDelimiter();
   obj["minimumItems"] = setting->GetMinimumItems();
   obj["maximumItems"] = setting->GetMaximumItems();
@@ -715,17 +715,17 @@ bool CSettingsOperations::SerializeSettingControl(
   {
     const auto spinner = std::static_pointer_cast<const CSettingControlSpinner>(control);
     if (spinner->GetFormatLabel() >= 0)
-      obj["formatlabel"] = Localize(spinner->GetFormatLabel());
+      obj["formatLabel"] = Localize(spinner->GetFormatLabel());
     else if (!spinner->GetFormatString().empty() && spinner->GetFormatString() != "{:d}")
-      obj["formatlabel"] = spinner->GetFormatString();
+      obj["formatLabel"] = spinner->GetFormatString();
     if (spinner->GetMinimumLabel() >= 0)
-      obj["minimumlabel"] = Localize(spinner->GetMinimumLabel());
+      obj["minimumLabel"] = Localize(spinner->GetMinimumLabel());
   }
   else if (type == "edit")
   {
     const auto edit = std::static_pointer_cast<const CSettingControlEdit>(control);
     obj["hidden"] = edit->IsHidden();
-    obj["verifynewvalue"] = edit->VerifyNewValue();
+    obj["verifyNewValue"] = edit->VerifyNewValue();
     if (edit->GetHeading() >= 0)
       obj["heading"] = Localize(edit->GetHeading());
   }
@@ -740,7 +740,7 @@ bool CSettingsOperations::SerializeSettingControl(
     const auto list = std::static_pointer_cast<const CSettingControlList>(control);
     if (list->GetHeading() >= 0)
       obj["heading"] = Localize(list->GetHeading());
-    obj["multiselect"] = list->CanMultiSelect();
+    obj["multiSelect"] = list->CanMultiSelect();
   }
   else if (type == "slider")
   {
@@ -749,21 +749,21 @@ bool CSettingsOperations::SerializeSettingControl(
       obj["heading"] = Localize(slider->GetHeading());
     obj["popup"] = slider->UsePopup();
     if (slider->GetFormatLabel() >= 0)
-      obj["formatlabel"] = Localize(slider->GetFormatLabel());
+      obj["formatLabel"] = Localize(slider->GetFormatLabel());
     else
-      obj["formatlabel"] = slider->GetFormatString();
+      obj["formatLabel"] = slider->GetFormatString();
   }
   else if (type == "range")
   {
     const auto range = std::static_pointer_cast<const CSettingControlRange>(control);
     if (range->GetFormatLabel() >= 0)
-      obj["formatlabel"] = Localize(range->GetFormatLabel());
+      obj["formatLabel"] = Localize(range->GetFormatLabel());
     else
-      obj["formatlabel"] = "";
+      obj["formatLabel"] = "";
     if (range->GetValueFormatLabel() >= 0)
-      obj["formatvalue"] = Localize(range->GetValueFormatLabel());
+      obj["formatValue"] = Localize(range->GetValueFormatLabel());
     else
-      obj["formatvalue"] = range->GetValueFormat();
+      obj["formatValue"] = range->GetValueFormat();
   }
   else if (type != "toggle" && type != "label")
     return false;

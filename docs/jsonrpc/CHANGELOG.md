@@ -12,6 +12,10 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 
 ### Breaking
 
+- Names are camelCase: every property, parameter and result name, and every value of an
+  enum the API defines for itself (`movieId`, `playCount`, `canChangeSpeed`). Shared Kodi
+  vocabularies keep their spelling: media and content types, sort methods, smart playlist
+  fields, window and action names, add-on types.
 - `WriteSetting` is a real permission, required by `Settings.SetSettingValue`,
   `Settings.ResetSettingValue`, `Settings.SetSkinSettingValue` and `Settings.SetLevel`. HTTP `GET`
   does not hold it. An unknown permission name is an error.

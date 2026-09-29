@@ -169,8 +169,8 @@ JSONRPC_STATUS CPlayerOperations::GetPlayers(const CVariant& parameterObject, CV
     CVariant player(CVariant::VariantTypeObject);
     player["name"] = playername;
 
-    player["playsvideo"] = playerCoreFactory.PlaysVideo(playername);
-    player["playsaudio"] = playerCoreFactory.PlaysAudio(playername);
+    player["playsVideo"] = playerCoreFactory.PlaysVideo(playername);
+    player["playsAudio"] = playerCoreFactory.PlaysAudio(playername);
     player["type"] = playerCoreFactory.GetPlayerType(playername);
 
     result.push_back(player);
@@ -233,9 +233,9 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
              itr != parameterObject["properties"].end_array(); ++itr)
         {
           std::string fieldValue = itr->asString();
-          if (fieldValue == "cast" || fieldValue == "set" || fieldValue == "setid" ||
-              fieldValue == "showlink" || fieldValue == "resume" ||
-              (fieldValue == "streamdetails" &&
+          if (fieldValue == "cast" || fieldValue == "set" || fieldValue == "setId" ||
+              fieldValue == "showLink" || fieldValue == "resume" ||
+              (fieldValue == "streamDetails" &&
                !fileItem->GetVideoInfoTag()->m_streamDetails.HasItems()))
             additionalInfo = true;
         }
@@ -666,13 +666,13 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant
             else if (value.isMember("step"))
             {
               std::string step = value["step"].asString();
-              if (step == "smallforward")
+              if (step == "smallForward")
                 CBuiltins::GetInstance().Execute("playercontrol(smallskipforward)");
-              else if (step == "smallbackward")
+              else if (step == "smallBackward")
                 CBuiltins::GetInstance().Execute("playercontrol(smallskipbackward)");
-              else if (step == "bigforward")
+              else if (step == "bigForward")
                 CBuiltins::GetInstance().Execute("playercontrol(bigskipforward)");
-              else if (step == "bigbackward")
+              else if (step == "bigBackward")
                 CBuiltins::GetInstance().Execute("playercontrol(bigskipbackward)");
               else
                 return InvalidParams;
@@ -687,7 +687,7 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant
 
             GetPropertyValue(player, "percentage", result["percentage"]);
             GetPropertyValue(player, "time", result["time"]);
-            GetPropertyValue(player, "totaltime", result["totaltime"]);
+            GetPropertyValue(player, "totalTime", result["totalTime"]);
             return OK;
           }
 
@@ -841,7 +841,7 @@ JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant& parameterObject, C
   CVideoSettings vs = appPlayer->GetVideoSettings();
   ViewMode mode = ViewModeNormal;
 
-  CVariant viewMode = parameterObject["viewmode"];
+  CVariant viewMode = parameterObject["viewMode"];
   if (viewMode.isString())
   {
     std::string modestr = viewMode.asString();
@@ -855,9 +855,9 @@ JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant& parameterObject, C
   {
     mode = ViewModeCustom;
     CVariant zoom = viewMode["zoom"];
-    CVariant pixelRatio = viewMode["pixelratio"];
-    CVariant verticalShift = viewMode["verticalshift"];
-    CVariant stretch = viewMode["nonlinearstretch"];
+    CVariant pixelRatio = viewMode["pixelRatio"];
+    CVariant verticalShift = viewMode["verticalShift"];
+    CVariant stretch = viewMode["nonlinearStretch"];
 
     if (!zoom.isNull())
     {
@@ -917,7 +917,7 @@ JSONRPC_STATUS CPlayerOperations::GetGeometry(const CVariant& parameterObject, C
                                                     result["stated"]);
 
   result["raster"] = KODI::VIDEO::GEOMETRY::PublishedAspect(contentGeometry->RasterAspect());
-  result["osdplacement"] =
+  result["osdPlacement"] =
       KODI::VIDEO::GEOMETRY::OsdPlacementName(contentGeometry->OsdPlacementInForce());
 
   // Absent while nothing is drawn.
@@ -934,12 +934,12 @@ JSONRPC_STATUS CPlayerOperations::GetViewMode(const CVariant& parameterObject, C
 
   int mode = appPlayer->GetVideoSettings().m_ViewMode;
 
-  result["viewmode"] = GetStringFromViewMode(static_cast<ViewMode>(mode));
+  result["viewMode"] = GetStringFromViewMode(static_cast<ViewMode>(mode));
 
   result["zoom"] = CDisplaySettings::GetInstance().GetZoomAmount();
-  result["pixelratio"] = CDisplaySettings::GetInstance().GetPixelRatio();
-  result["verticalshift"] = CDisplaySettings::GetInstance().GetVerticalShift();
-  result["nonlinearstretch"] = CDisplaySettings::GetInstance().IsNonLinearStretched();
+  result["pixelRatio"] = CDisplaySettings::GetInstance().GetPixelRatio();
+  result["verticalShift"] = CDisplaySettings::GetInstance().GetVerticalShift();
+  result["nonlinearStretch"] = CDisplaySettings::GetInstance().IsNonLinearStretched();
   return OK;
 }
 
@@ -951,7 +951,7 @@ JSONRPC_STATUS CPlayerOperations::SetDeclaredAspectRatio(const CVariant& paramet
   if (!appPlayer || !appPlayer->IsPlayingVideo())
     return FailedToExecute;
 
-  const CVariant& ratio = parameterObject["aspectratio"];
+  const CVariant& ratio = parameterObject["aspectRatio"];
 
   if (ratio.isString())
   {
@@ -991,10 +991,10 @@ JSONRPC_STATUS CPlayerOperations::GetDeclaredAspectRatio(const CVariant& paramet
       KODI::UTILS::CAspectRatioVocabulary::Nearest(vs.m_declaredAspect);
 
   result["declared"] = true;
-  result["aspectratio"] = KODI::VIDEO::GEOMETRY::PublishedAspect(vs.m_declaredAspect);
+  result["aspectRatio"] = KODI::VIDEO::GEOMETRY::PublishedAspect(vs.m_declaredAspect);
   result["label"] = entry ? entry->label : "";
   result["name"] = entry ? entry->name : "";
-  result["declaredon"] = vs.m_declaredOn;
+  result["declaredOn"] = vs.m_declaredOn;
   return OK;
 }
 
@@ -1088,20 +1088,20 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
                   (!optionShuffled.isBoolean() && parameterObject["item"]["random"].asBoolean());
     return StartSlideshow(path, recursive, random);
   }
-  else if (parameterObject["item"].isObject() && parameterObject["item"].isMember("partymode"))
+  else if (parameterObject["item"].isObject() && parameterObject["item"].isMember("partyMode"))
   {
-    const std::string partymode = parameterObject["item"]["partymode"].asString();
+    const std::string partymode = parameterObject["item"]["partyMode"].asString();
     const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromName(partymode);
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_PARTYMODE, 1,
                                                type ? static_cast<int>(*type) : -1, nullptr,
                                                type ? "" : partymode);
     return ACK;
   }
-  else if (parameterObject["item"].isMember("broadcastid"))
+  else if (parameterObject["item"].isMember("broadcastId"))
   {
     const std::shared_ptr<CPVREpgInfoTag> epgTag =
         CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-            static_cast<unsigned int>(parameterObject["item"]["broadcastid"].asInteger()));
+            static_cast<unsigned int>(parameterObject["item"]["broadcastId"].asInteger()));
 
     if (!epgTag || !epgTag->IsPlayable())
       return InvalidParams;
@@ -1111,7 +1111,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     return ACK;
   }
-  else if (parameterObject["item"].isMember("channelid"))
+  else if (parameterObject["item"].isMember("channelId"))
   {
     const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer =
         CServiceBroker::GetPVRManager().ChannelGroups();
@@ -1119,7 +1119,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       return FailedToExecute;
 
     const std::shared_ptr<const CPVRChannel> channel = channelGroupContainer->GetChannelById(
-        static_cast<int>(parameterObject["item"]["channelid"].asInteger()));
+        static_cast<int>(parameterObject["item"]["channelId"].asInteger()));
     if (!channel)
       return InvalidParams;
 
@@ -1134,7 +1134,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     return ACK;
   }
-  else if (parameterObject["item"].isMember("recordingid"))
+  else if (parameterObject["item"].isMember("recordingId"))
   {
     const std::shared_ptr<const CPVRRecordings> recordingsContainer =
         CServiceBroker::GetPVRManager().Recordings();
@@ -1142,7 +1142,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       return FailedToExecute;
 
     const std::shared_ptr<CPVRRecording> recording = recordingsContainer->GetById(
-        static_cast<int>(parameterObject["item"]["recordingid"].asInteger()));
+        static_cast<int>(parameterObject["item"]["recordingId"].asInteger()));
     if (!recording)
       return InvalidParams;
 
@@ -1221,7 +1221,7 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list, const CV
   const CVariant& optionShuffled = options["shuffled"];
   const CVariant& optionRepeat = options["repeat"];
   const CVariant& optionResume = options["resume"];
-  const CVariant& optionPlayer = options["playername"];
+  const CVariant& optionPlayer = options["playerName"];
 
   std::string playername;
   if (!optionPlayer.isNull())
@@ -1413,8 +1413,8 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, 
             if (enabled && !PARTYMODE::IsRunning(type))
               return InvalidParams;
 
-            const bool toggle = parameterObject["partymode"].isString();
-            const bool wanted = toggle ? !enabled : parameterObject["partymode"].asBoolean();
+            const bool toggle = parameterObject["partyMode"].isString();
+            const bool wanted = toggle ? !enabled : parameterObject["partyMode"].asBoolean();
             if (wanted != enabled)
               CServiceBroker::GetAppMessenger()->PostMsg(TMSG_PLAYLISTPLAYER_PARTYMODE,
                                                          wanted ? 1 : 0, static_cast<int>(type));
@@ -1752,7 +1752,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
       {"volume", []() -> Value
        { return static_cast<int>(std::lroundf(VolumeHandling()->GetVolumePercent())); }},
       {"muted", []() -> Value { return VolumeHandling()->IsMuted(); }},
-      {"contentrect",
+      {"contentRect",
        []() -> Value
        {
          const auto contentGeometry = ContentGeometryComponent();
@@ -1804,7 +1804,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
            return "audio";
          return "picture";
        }},
-      {"partymode", [](PlayerType player, const PlayList&) -> Value
+      {"partyMode", [](PlayerType player, const PlayList&) -> Value
        { return player != Picture && !IsPVRChannel() && PARTYMODE::IsRunning(); }},
       {"speed",
        [](PlayerType player, const PlayList&) -> Value
@@ -1828,7 +1828,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          const std::shared_ptr<CPVREpgInfoTag> epg = GetCurrentEpg();
          return timeObject(epg ? static_cast<int>(epg->Progress() * 1000) : 0);
        }},
-      {"totaltime",
+      {"totalTime",
        [](PlayerType player, const PlayList&) -> Value
        {
          if (player == Picture)
@@ -1854,7 +1854,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
            return epg->ProgressPercentage();
          return 0;
        }},
-      {"playertype",
+      {"playerType",
        [](PlayerType player, const PlayList&) -> Value
        {
          const auto appPlayer = AppPlayer();
@@ -1864,7 +1864,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
            return "remote";
          return "internal";
        }},
-      {"cachepercentage",
+      {"cachePercentage",
        [](PlayerType player, const PlayList&) -> Value
        {
          if (player == Picture)
@@ -1874,7 +1874,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
       {"playlist", [](PlayerType, const PlayList& playList) -> Value
        { return playList ? std::string{PLAYLIST::NameOf(*playList)} : "picture"; }},
       {"position", position},
-      {"displayorder",
+      {"displayOrder",
        [](PlayerType player, const PlayList& playList) -> Value
        {
          if (player == Picture)
@@ -1883,17 +1883,17 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
            return -1;
          return CServiceBroker::GetPlayLists()->GetPlayingDisplayPosition(*playList);
        }},
-      {"canseek", [](PlayerType player, const PlayList&) -> Value
+      {"canSeek", [](PlayerType player, const PlayList&) -> Value
        { return player != Picture && AppPlayer()->CanSeek(); }},
-      {"canchangespeed", [](PlayerType player, const PlayList&) -> Value
+      {"canChangeSpeed", [](PlayerType player, const PlayList&) -> Value
        { return player != Picture && !IsPVRChannel(); }},
-      {"canmove", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
-      {"canzoom", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
-      {"canrotate", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
-      {"canshuffle", [](PlayerType, const PlayList&) -> Value { return !IsPVRChannel(); }},
-      {"canrepeat", [](PlayerType player, const PlayList&) -> Value
+      {"canMove", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
+      {"canZoom", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
+      {"canRotate", [](PlayerType player, const PlayList&) -> Value { return player == Picture; }},
+      {"canShuffle", [](PlayerType, const PlayList&) -> Value { return !IsPVRChannel(); }},
+      {"canRepeat", [](PlayerType player, const PlayList&) -> Value
        { return player != Picture && !IsPVRChannel(); }},
-      {"currentaudiostream",
+      {"currentAudioStream",
        [](PlayerType player, const PlayList&) -> Value
        {
          const auto appPlayer = AppPlayer();
@@ -1906,7 +1906,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          appPlayer->GetAudioStreamInfo(index, info);
          return INTERFACES::StreamToObject(index, info);
        }},
-      {"audiostreams",
+      {"audioStreams",
        [](PlayerType player, const PlayList&) -> Value
        {
          CVariant streams(CVariant::VariantTypeArray);
@@ -1921,7 +1921,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          }
          return streams;
        }},
-      {"currentvideostream",
+      {"currentVideoStream",
        [](PlayerType player, const PlayList&) -> Value
        {
          if (player != Video)
@@ -1934,7 +1934,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          appPlayer->GetVideoStreamInfo(index, info);
          return INTERFACES::StreamToObject(index, info);
        }},
-      {"videostreams",
+      {"videoStreams",
        [](PlayerType player, const PlayList&) -> Value
        {
          CVariant streams(CVariant::VariantTypeArray);
@@ -1949,9 +1949,9 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          }
          return streams;
        }},
-      {"subtitleenabled", [](PlayerType player, const PlayList&) -> Value
+      {"subtitleEnabled", [](PlayerType player, const PlayList&) -> Value
        { return player == Video && AppPlayer()->GetSubtitleVisible(); }},
-      {"currentsubtitle",
+      {"currentSubtitle",
        [](PlayerType player, const PlayList&) -> Value
        {
          const auto appPlayer = AppPlayer();

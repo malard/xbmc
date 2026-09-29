@@ -79,7 +79,7 @@ TEST(TestPVRRecordingSchema, EveryValueTheRecordingAddsIsRequestable)
 
     // CPVROperations answers the identifier itself, so it is not one of the
     // requestable fields
-    if (value->first == "recordingid")
+    if (value->first == "recordingId")
       continue;
 
     EXPECT_TRUE(fields.contains(value->first)) << "CPVRRecording::Serialize writes \""

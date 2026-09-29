@@ -86,7 +86,7 @@ void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
     return;
 
   CVariant data{CVariant::VariantTypeObject};
-  SerializeEffectiveGeometry(geometry, data["contentrect"]);
+  SerializeEffectiveGeometry(geometry, data["contentRect"]);
 
   if (drawn.Drawn())
     SerializeDrawnGeometry(drawn, data["screen"]);

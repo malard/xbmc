@@ -27,7 +27,7 @@ TEST(TestAudioLibrarySetInfoProviderSchema, IsAWriteLikeItsVideoSibling)
 TEST(TestAudioLibrarySetInfoProviderSchema, OffersTheThreeScopesOfTheDialog)
 {
   const CVariant method = ShippedMethod("AudioLibrary.SetInfoProvider");
-  const CVariant* applyTo = Param(method, "applyto");
+  const CVariant* applyTo = Param(method, "applyTo");
   ASSERT_NE(nullptr, applyTo);
   ASSERT_TRUE((*applyTo)["required"].asBoolean());
 
@@ -37,7 +37,7 @@ TEST(TestAudioLibrarySetInfoProviderSchema, OffersTheThreeScopesOfTheDialog)
 TEST(TestAudioLibrarySetInfoProviderSchema, ScraperIdIsOptionalSoABindingCanBeCleared)
 {
   const CVariant method = ShippedMethod("AudioLibrary.SetInfoProvider");
-  const CVariant* scraperId = Param(method, "scraperid");
+  const CVariant* scraperId = Param(method, "scraperId");
   ASSERT_NE(nullptr, scraperId);
   EXPECT_FALSE((*scraperId)["required"].asBoolean(false));
   EXPECT_EQ("", (*scraperId)["schema"]["default"].asString());

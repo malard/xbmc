@@ -18,20 +18,20 @@ TEST(TestStreamObjects, AnAudioStreamIsImpairedWhenItDescribesThePicture)
 {
   AudioStreamInfo info;
   info.flags = StreamFlags::FLAG_VISUAL_IMPAIRED;
-  EXPECT_TRUE(INTERFACES::StreamToObject(1, info)["isimpaired"].asBoolean());
+  EXPECT_TRUE(INTERFACES::StreamToObject(1, info)["isImpaired"].asBoolean());
 
   info.flags = StreamFlags::FLAG_HEARING_IMPAIRED;
-  EXPECT_FALSE(INTERFACES::StreamToObject(1, info)["isimpaired"].asBoolean());
+  EXPECT_FALSE(INTERFACES::StreamToObject(1, info)["isImpaired"].asBoolean());
 }
 
 TEST(TestStreamObjects, ASubtitleIsImpairedWhenItDescribesTheSound)
 {
   SubtitleStreamInfo info;
   info.flags = StreamFlags::FLAG_HEARING_IMPAIRED;
-  EXPECT_TRUE(INTERFACES::StreamToObject(1, info)["isimpaired"].asBoolean());
+  EXPECT_TRUE(INTERFACES::StreamToObject(1, info)["isImpaired"].asBoolean());
 
   info.flags = StreamFlags::FLAG_VISUAL_IMPAIRED;
-  EXPECT_FALSE(INTERFACES::StreamToObject(1, info)["isimpaired"].asBoolean());
+  EXPECT_FALSE(INTERFACES::StreamToObject(1, info)["isImpaired"].asBoolean());
 }
 
 TEST(TestStreamObjects, AnAudioStreamCarriesTheCodecNameAndFormat)
@@ -44,6 +44,6 @@ TEST(TestStreamObjects, AnAudioStreamCarriesTheCodecNameAndFormat)
   const CVariant stream = INTERFACES::StreamToObject(2, info);
   EXPECT_EQ(2, stream["index"].asInteger());
   EXPECT_EQ("eac3", stream["codec"].asString());
-  EXPECT_EQ(48000, stream["samplerate"].asInteger());
-  EXPECT_EQ(24, stream["bitspersample"].asInteger());
+  EXPECT_EQ(48000, stream["sampleRate"].asInteger());
+  EXPECT_EQ(24, stream["bitsPerSample"].asInteger());
 }

@@ -130,7 +130,7 @@ TEST_P(TestAudioLibrary, SetArtistDetailsPreservesDiscographyAndVideoLinks)
   ASSERT_TRUE(m_db.ExecuteQuery("UPDATE versiontagscan SET lastscanned = '2000-01-01 00:00:00'"));
 
   CVariant params(CVariant::VariantTypeObject);
-  params["artistid"] = m_artistId;
+  params["artistId"] = m_artistId;
   params["description"] = "Updated biography";
   params["art"]["thumb"] = "new-thumb";
   params["art"]["banner"] = CVariant(CVariant::VariantTypeNull);

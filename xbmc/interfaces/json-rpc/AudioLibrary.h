@@ -86,7 +86,7 @@ protected:
                                       ADDON::ContentType& content,
                                       std::string& viewPath);
 
-  //! What SetInfoProvider's "applyto" names, and the scope's own parameters.
+  //! What SetInfoProvider's "applyTo" names, and the scope's own parameters.
   struct InfoProviderTarget
   {
     enum class Scope

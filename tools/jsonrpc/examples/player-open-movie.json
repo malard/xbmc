@@ -7,7 +7,7 @@
     "method": "Player.Open",
     "params": {
       "item": {
-        "movieid": 42
+        "movieId": 42
       }
     }
   },

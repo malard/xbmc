@@ -41,7 +41,7 @@ JSONRPC_STATUS CProfilesOperations::GetProfiles(const CVariant& parameterObject,
   for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array();
        propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
   {
-    if (propertyiter->isString() && propertyiter->asString() == "lockmode")
+    if (propertyiter->isString() && propertyiter->asString() == "lockMode")
     {
       for (CVariant::iterator_array profileiter = result["profiles"].begin_array();
            profileiter != result["profiles"].end_array(); ++profileiter)
@@ -54,7 +54,7 @@ JSONRPC_STATUS CProfilesOperations::GetProfiles(const CVariant& parameterObject,
           locktype = profileManager->GetMasterProfile().getLockMode();
         else
           locktype = profile->getLockMode();
-        (*profileiter)["lockmode"] = static_cast<int>(locktype);
+        (*profileiter)["lockMode"] = static_cast<int>(locktype);
       }
       break;
     }
@@ -76,8 +76,8 @@ JSONRPC_STATUS CProfilesOperations::GetCurrentProfile(const CVariant& parameterO
   {
     if (propertyiter->isString())
     {
-      if (propertyiter->asString() == "lockmode")
-        profileVariant["lockmode"] = static_cast<int>(currentProfile.getLockMode());
+      if (propertyiter->asString() == "lockMode")
+        profileVariant["lockMode"] = static_cast<int>(currentProfile.getLockMode());
       else if (propertyiter->asString() == "thumbnail")
         profileVariant["thumbnail"] = currentProfile.getThumb();
     }

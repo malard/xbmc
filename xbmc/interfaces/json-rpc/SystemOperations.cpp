@@ -81,13 +81,13 @@ JSONRPC_STATUS CSystemOperations::GetPropertyValue(int permissions,
                                                    const std::string& property,
                                                    CVariant& result)
 {
-  if (property == "canshutdown")
+  if (property == "canShutdown")
     result = CServiceBroker::GetPowerManager().CanPowerdown() && (permissions & ControlPower);
-  else if (property == "cansuspend")
+  else if (property == "canSuspend")
     result = CServiceBroker::GetPowerManager().CanSuspend() && (permissions & ControlPower);
-  else if (property == "canhibernate")
+  else if (property == "canHibernate")
     result = CServiceBroker::GetPowerManager().CanHibernate() && (permissions & ControlPower);
-  else if (property == "canreboot")
+  else if (property == "canReboot")
     result = CServiceBroker::GetPowerManager().CanReboot() && (permissions & ControlPower);
   else
     return InvalidParams;

@@ -73,8 +73,8 @@ private:
  */
 TEST(TestApplicationLogLevel, TheLevelIsAnApplicationProperty)
 {
-  EXPECT_TRUE(EnumValues(ShippedType("Application.Property.Name")).contains("loglevel"));
-  EXPECT_EQ(ShippedType("Application.Property.Value")["properties"]["loglevel"]["$ref"].asString(),
+  EXPECT_TRUE(EnumValues(ShippedType("Application.Property.Name")).contains("logLevel"));
+  EXPECT_EQ(ShippedType("Application.Property.Value")["properties"]["logLevel"]["$ref"].asString(),
             "#/$defs/Application.LogLevel.Value");
 }
 

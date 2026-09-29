@@ -44,7 +44,7 @@ TEST(TestGeometryPublication, AnOverrideIsWithdrawnByZeroOrNullWithoutEndingPlay
   CVariant geometry{CVariant::VariantTypeObject};
   geometry["raster"] = 0;
   geometry["maintain"] = 0;
-  geometry["osdplacement"] = "setting";
+  geometry["osdPlacement"] = "setting";
   ParseGeometryOverrides(geometry, overrides);
 
   // All three back to "use the setting", which is what Any() is asking about.
@@ -66,7 +66,7 @@ TEST(TestGeometryPublication, ANullFieldIsNotAWithdrawal)
 
   CVariant geometry{CVariant::VariantTypeObject};
   geometry["raster"] = CVariant{CVariant::VariantTypeNull};
-  geometry["osdplacement"] = CVariant{CVariant::VariantTypeNull};
+  geometry["osdPlacement"] = CVariant{CVariant::VariantTypeNull};
   geometry["maintain"] = 1.78;
   ParseGeometryOverrides(geometry, overrides);
 
@@ -80,12 +80,12 @@ TEST(TestGeometryPublication, OsdPlacementNamesTheTwoThingsItCanBeLaidOutAgainst
   GeometryOverrides overrides;
 
   CVariant picture{CVariant::VariantTypeObject};
-  picture["osdplacement"] = "picture";
+  picture["osdPlacement"] = "picture";
   ParseGeometryOverrides(picture, overrides);
   EXPECT_EQ(OsdPlacement::Picture, overrides.osdPlacement.value_or(OsdPlacement::Raster));
 
   CVariant raster{CVariant::VariantTypeObject};
-  raster["osdplacement"] = "raster";
+  raster["osdPlacement"] = "raster";
   ParseGeometryOverrides(raster, overrides);
   EXPECT_EQ(OsdPlacement::Raster, overrides.osdPlacement.value_or(OsdPlacement::Picture));
 
@@ -193,8 +193,8 @@ TEST(TestGeometryPublication, AShapeWithNoFrameIsSerialisedWithoutAnyPixels)
   EXPECT_FALSE(value.isMember("y"));
   EXPECT_FALSE(value.isMember("width"));
   EXPECT_FALSE(value.isMember("height"));
-  EXPECT_FALSE(value.isMember("framewidth"));
-  EXPECT_FALSE(value.isMember("frameheight"));
+  EXPECT_FALSE(value.isMember("frameWidth"));
+  EXPECT_FALSE(value.isMember("frameHeight"));
 
   // The shape itself is always there, and is what a mask or a lens is driven from.
   EXPECT_DOUBLE_EQ(2.4, value["aspect"].asDouble());
@@ -243,8 +243,8 @@ TEST(TestGeometryPublication, AMeasuredGeometryStillCarriesItsRectangle)
   EXPECT_NEAR(280.0, value["y"].asDouble(), 0.001);
   EXPECT_NEAR(3840.0, value["width"].asDouble(), 0.001);
   EXPECT_NEAR(1600.0, value["height"].asDouble(), 0.001);
-  EXPECT_EQ(3840.0, value["framewidth"].asDouble());
-  EXPECT_EQ(2160.0, value["frameheight"].asDouble());
+  EXPECT_EQ(3840.0, value["frameWidth"].asDouble());
+  EXPECT_EQ(2160.0, value["frameHeight"].asDouble());
 }
 
 //! A float widened to a double serialises as sixteen digits of its own representation error,

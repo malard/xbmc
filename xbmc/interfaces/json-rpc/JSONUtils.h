@@ -97,9 +97,9 @@ protected:
 
     // parse the sort attributes
     sortAttributes = SortAttributeNone;
-    if (parameterObject["sort"]["ignorearticle"].asBoolean())
+    if (parameterObject["sort"]["ignoreArticle"].asBoolean())
       sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeIgnoreArticle);
-    if (parameterObject["sort"]["useartistsortname"].asBoolean())
+    if (parameterObject["sort"]["useArtistSortName"].asBoolean())
       sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeUseArtistSortName);
 
     // parse the sort order

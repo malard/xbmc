@@ -116,25 +116,25 @@ std::shared_ptr<CFileItem> MakeSet()
 TEST(TestFileItemHandler, MovieWithVersionsReportsAPathItsFiletypeAgreesWith)
 {
   const CVariant object{
-      CTestFileItemHandler::Handle(MakeMovieWithVersions(), {"file", "filetype"})};
+      CTestFileItemHandler::Handle(MakeMovieWithVersions(), {"file", "fileType"})};
 
-  EXPECT_EQ("directory", object["filetype"].asString());
+  EXPECT_EQ("directory", object["fileType"].asString());
   EXPECT_EQ(HYBRID_FOLDER, object["file"].asString());
 }
 
 TEST(TestFileItemHandler, SetReportsAPathItsFiletypeAgreesWith)
 {
-  const CVariant object{CTestFileItemHandler::Handle(MakeSet(), {"file", "filetype"})};
+  const CVariant object{CTestFileItemHandler::Handle(MakeSet(), {"file", "fileType"})};
 
-  EXPECT_EQ("directory", object["filetype"].asString());
+  EXPECT_EQ("directory", object["fileType"].asString());
   EXPECT_EQ(SET_FOLDER, object["file"].asString());
 }
 
 TEST(TestFileItemHandler, MovieWithoutVersionsReportsItsFile)
 {
-  const CVariant object{CTestFileItemHandler::Handle(MakeMovie(), {"file", "filetype"})};
+  const CVariant object{CTestFileItemHandler::Handle(MakeMovie(), {"file", "fileType"})};
 
-  EXPECT_EQ("file", object["filetype"].asString());
+  EXPECT_EQ("file", object["fileType"].asString());
   EXPECT_EQ(DEFAULT_VERSION, object["file"].asString());
 }
 
@@ -149,11 +149,11 @@ TEST(TestFileItemHandler, FieldsComeFromTheListGivenRatherThanFromTheParameters)
 {
   CVariant fields{CVariant::VariantTypeArray};
   fields.push_back("file");
-  fields.push_back("filetype");
+  fields.push_back("fileType");
 
   const CVariant object{CTestFileItemHandler::HandleWithProperties(MakeMovie(), fields)};
 
-  EXPECT_EQ("file", object["filetype"].asString());
+  EXPECT_EQ("file", object["fileType"].asString());
   EXPECT_EQ(DEFAULT_VERSION, object["file"].asString());
 }
 
@@ -229,7 +229,7 @@ using FilterField = CFileItemHandler::FilterField;
 
 TEST(TestListFilter, TheFirstFieldTheFilterNamesSetsItsOption)
 {
-  static constexpr FilterField fields[] = {FilterField::Number("genreid"),
+  static constexpr FilterField fields[] = {FilterField::Number("genreId", "genreid"),
                                            FilterField::Text("genre")};
   CVideoDbUrl url;
   ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
@@ -247,11 +247,11 @@ TEST(TestListFilter, TheFirstFieldTheFilterNamesSetsItsOption)
 
 TEST(TestListFilter, AFieldSetsTheOptionItIsMappedTo)
 {
-  static constexpr FilterField fields[] = {FilterField::Number("songgenreid", "genreid")};
+  static constexpr FilterField fields[] = {FilterField::Number("songGenreId", "genreid")};
   CMusicDbUrl url;
   ASSERT_TRUE(url.FromString("musicdb://artists/"));
   CVariant filter{CVariant::VariantTypeObject};
-  filter["songgenreid"] = 3;
+  filter["songGenreId"] = 3;
 
   ASSERT_TRUE(CTestFileItemHandler::Filter(filter, fields, url));
 

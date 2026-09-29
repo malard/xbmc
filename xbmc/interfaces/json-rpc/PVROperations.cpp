@@ -57,7 +57,7 @@ JSONRPC_STATUS CPVROperations::GetChannelGroups(const CVariant& parameterObject,
     return FailedToExecute;
 
   const std::shared_ptr<const CPVRChannelGroups> channelGroups{
-      channelGroupContainer->Get(parameterObject["channeltype"].asString() == "radio")};
+      channelGroupContainer->Get(parameterObject["channelType"].asString() == "radio")};
   if (!channelGroups)
     return FailedToExecute;
 
@@ -67,7 +67,7 @@ JSONRPC_STATUS CPVROperations::GetChannelGroups(const CVariant& parameterObject,
   std::vector<std::shared_ptr<CPVRChannelGroup>> groupList{channelGroups->GetMembers(true)};
   HandleLimits(parameterObject, result, static_cast<int>(groupList.size()), start, end);
   for (int index = start; index < end; ++index)
-    FillChannelGroupDetails(groupList.at(index), parameterObject, result["channelgroups"], true);
+    FillChannelGroupDetails(groupList.at(index), parameterObject, result["channelGroups"], true);
 
   return OK;
 }
@@ -84,16 +84,16 @@ JSONRPC_STATUS CPVROperations::GetChannelGroupDetails(const CVariant& parameterO
     return FailedToExecute;
 
   std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelgroupid"]};
+  const CVariant id{parameterObject["channelGroupId"]};
   if (id.isInteger())
     channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
   else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allradio");
+    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
 
   if (!channelGroup)
     return NotFound;
 
-  FillChannelGroupDetails(channelGroup, parameterObject, result["channelgroupdetails"], false);
+  FillChannelGroupDetails(channelGroup, parameterObject, result["channelGroupDetails"], false);
 
   return OK;
 }
@@ -109,11 +109,11 @@ JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVar
     return FailedToExecute;
 
   std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelgroupid"]};
+  const CVariant id{parameterObject["channelGroupId"]};
   if (id.isInteger())
     channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
   else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allradio");
+    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
 
   if (!channelGroup)
     return NotFound;
@@ -125,7 +125,7 @@ JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVar
     channels.Add(std::make_shared<CFileItem>(groupMember));
   }
 
-  HandleFileItemList("channelid", false, "channels", channels, parameterObject, result, true);
+  HandleFileItemList("channelId", false, "channels", channels, parameterObject, result, true);
 
   return OK;
 }
@@ -141,7 +141,7 @@ JSONRPC_STATUS CPVROperations::GetChannelDetails(const CVariant& parameterObject
     return FailedToExecute;
 
   const std::shared_ptr<const CPVRChannel> channel{channelGroupContainer->GetChannelById(
-      static_cast<int>(parameterObject["channelid"].asInteger()))};
+      static_cast<int>(parameterObject["channelId"].asInteger()))};
   if (!channel)
     return NotFound;
 
@@ -150,7 +150,7 @@ JSONRPC_STATUS CPVROperations::GetChannelDetails(const CVariant& parameterObject
   if (!groupMember)
     return NotFound;
 
-  HandleFileItem("channelid", false, "channeldetails", std::make_shared<CFileItem>(groupMember),
+  HandleFileItem("channelId", false, "channelDetails", std::make_shared<CFileItem>(groupMember),
                  parameterObject, parameterObject["properties"], result, false);
 
   return OK;
@@ -191,7 +191,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject, CV
     return rangeStatus;
 
   const std::shared_ptr<const CPVRChannel> channel{channelGroupContainer->GetChannelById(
-      static_cast<int>(parameterObject["channelid"].asInteger()))};
+      static_cast<int>(parameterObject["channelId"].asInteger()))};
   if (!channel)
     return NotFound;
 
@@ -205,7 +205,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject, CV
     programFull.Add(std::make_shared<CFileItem>(tag));
   }
 
-  HandleFileItemList("broadcastid", false, "broadcasts", programFull, parameterObject, result,
+  HandleFileItemList("broadcastId", false, "broadcasts", programFull, parameterObject, result,
                      programFull.Size(), true);
 
   return OK;
@@ -229,11 +229,11 @@ JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& param
     return rangeStatus;
 
   std::shared_ptr<const CPVRChannelGroup> channelGroup;
-  const CVariant id{parameterObject["channelgroupid"]};
+  const CVariant id{parameterObject["channelGroupId"]};
   if (id.isInteger())
     channelGroup = channelGroupContainer->GetByIdFromAll(static_cast<int>(id.asInteger()));
   else if (id.isString())
-    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allradio");
+    channelGroup = channelGroupContainer->GetGroupAll(id.asString() == "allRadio");
 
   if (!channelGroup)
     return NotFound;
@@ -248,7 +248,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& param
       continue;
 
     CVariant entry{CVariant::VariantTypeObject};
-    entry["channelid"] = channel->ChannelID();
+    entry["channelId"] = channel->ChannelID();
     entry["broadcasts"] = CVariant{CVariant::VariantTypeArray};
 
     const std::shared_ptr<const CPVREpg> channelEpg{channel->GetEPG()};
@@ -256,7 +256,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& param
     {
       for (const auto& tag : GetBroadcastsInRange(*channelEpg, start, end))
       {
-        HandleFileItem("broadcastid", false, "broadcasts", std::make_shared<CFileItem>(tag),
+        HandleFileItem("broadcastId", false, "broadcasts", std::make_shared<CFileItem>(tag),
                        parameterObject, parameterObject["properties"], entry, true);
       }
     }
@@ -275,12 +275,12 @@ JSONRPC_STATUS CPVROperations::GetBroadcastDetails(const CVariant& parameterObje
 
   const std::shared_ptr<CPVREpgInfoTag> epgTag{
       CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-          static_cast<int>(parameterObject["broadcastid"].asInteger()))};
+          static_cast<int>(parameterObject["broadcastId"].asInteger()))};
 
   if (!epgTag)
     return NotFound;
 
-  HandleFileItem("broadcastid", false, "broadcastdetails", std::make_shared<CFileItem>(epgTag),
+  HandleFileItem("broadcastId", false, "broadcastDetails", std::make_shared<CFileItem>(epgTag),
                  parameterObject, parameterObject["properties"], result, false);
 
   return OK;
@@ -294,7 +294,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastIsPlayable(const CVariant& parameterO
 
   const std::shared_ptr<const CPVREpgInfoTag> epgTag{
       CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-          static_cast<int>(parameterObject["broadcastid"].asInteger()))};
+          static_cast<int>(parameterObject["broadcastId"].asInteger()))};
 
   if (!epgTag)
     return NotFound;
@@ -324,7 +324,7 @@ JSONRPC_STATUS CPVROperations::GetPlayableBroadcasts(ITransportLayer* transport,
     return rangeStatus;
 
   const std::shared_ptr<const CPVRChannel> channel{channelGroupContainer->GetChannelById(
-      static_cast<int>(parameterObject["channelid"].asInteger()))};
+      static_cast<int>(parameterObject["channelId"].asInteger()))};
   if (!channel)
     return NotFound;
 
@@ -341,14 +341,14 @@ JSONRPC_STATUS CPVROperations::GetPlayableBroadcasts(ITransportLayer* transport,
   int last{0};
   HandleLimits(parameterObject, result, static_cast<int>(tagsInRange.size()), first, last);
 
-  result["broadcastids"] = CVariant{CVariant::VariantTypeArray};
+  result["broadcastIds"] = CVariant{CVariant::VariantTypeArray};
 
   for (int index = first; index < last; ++index)
   {
     const std::shared_ptr<const CPVREpgInfoTag>& tag{tagsInRange[index]};
     if (tag->IsPlayable())
     {
-      result["broadcastids"].append(tag->DatabaseID());
+      result["broadcastIds"].append(tag->DatabaseID());
     }
   }
 
@@ -406,10 +406,10 @@ JSONRPC_STATUS CPVROperations::Scan(const CVariant& parameterObject, CVariant& r
   if (!CServiceBroker::GetPVRManager().IsStarted())
     return FailedToExecute;
 
-  if (parameterObject.isMember("clientid"))
+  if (parameterObject.isMember("clientId"))
   {
     if (CServiceBroker::GetPVRManager().Get<PVR::GUI::Channels>().StartChannelScan(
-            static_cast<int>(parameterObject["clientid"].asInteger())))
+            static_cast<int>(parameterObject["clientId"].asInteger())))
       return ACK;
   }
   else
@@ -457,8 +457,8 @@ void CPVROperations::FillChannelGroupDetails(
     return;
 
   CVariant object{CVariant::VariantTypeObject};
-  object["channelgroupid"] = channelGroup->GroupID();
-  object["channeltype"] = channelGroup->IsRadio() ? "radio" : "tv";
+  object["channelGroupId"] = channelGroup->GroupID();
+  object["channelType"] = channelGroup->IsRadio() ? "radio" : "tv";
   object["label"] = channelGroup->GroupName();
 
   if (append)
@@ -473,7 +473,7 @@ void CPVROperations::FillChannelGroupDetails(
     }
 
     object["channels"] = CVariant(CVariant::VariantTypeArray);
-    HandleFileItemList("channelid", false, "channels", channels, parameterObject["channels"],
+    HandleFileItemList("channelId", false, "channels", channels, parameterObject["channels"],
                        object, false);
 
     result = object;
@@ -496,7 +496,7 @@ JSONRPC_STATUS CPVROperations::GetTimers(const CVariant& parameterObject, CVaria
     timerList.Add(std::make_shared<CFileItem>(timer));
   }
 
-  HandleFileItemList("timerid", false, "timers", timerList, parameterObject, result, true);
+  HandleFileItemList("timerId", false, "timers", timerList, parameterObject, result, true);
 
   return OK;
 }
@@ -511,11 +511,11 @@ JSONRPC_STATUS CPVROperations::GetTimerDetails(const CVariant& parameterObject, 
     return FailedToExecute;
 
   const std::shared_ptr<CPVRTimerInfoTag> timer{
-      timers->GetById(static_cast<int>(parameterObject["timerid"].asInteger()))};
+      timers->GetById(static_cast<int>(parameterObject["timerId"].asInteger()))};
   if (!timer)
     return NotFound;
 
-  HandleFileItem("timerid", false, "timerdetails", std::make_shared<CFileItem>(timer),
+  HandleFileItem("timerId", false, "timerDetails", std::make_shared<CFileItem>(timer),
                  parameterObject, parameterObject["properties"], result, false);
 
   return OK;
@@ -528,7 +528,7 @@ JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject, CVarian
 
   const std::shared_ptr<CPVREpgInfoTag> epgTag{
       CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-          static_cast<int>(parameterObject["broadcastid"].asInteger()))};
+          static_cast<int>(parameterObject["broadcastId"].asInteger()))};
 
   if (!epgTag)
     return NotFound;
@@ -537,7 +537,7 @@ JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject, CVarian
     return InvalidParams;
 
   const std::shared_ptr<CPVRTimerInfoTag> newTimer{
-      CPVRTimerInfoTag::CreateFromEpg(epgTag, parameterObject["timerrule"].asBoolean(false),
+      CPVRTimerInfoTag::CreateFromEpg(epgTag, parameterObject["timerRule"].asBoolean(false),
                                       parameterObject["reminder"].asBoolean(false))};
   if (newTimer)
   {
@@ -557,7 +557,7 @@ JSONRPC_STATUS CPVROperations::DeleteTimer(const CVariant& parameterObject, CVar
     return FailedToExecute;
 
   const std::shared_ptr<CPVRTimerInfoTag> timer{
-      timers->GetById(static_cast<int>(parameterObject["timerid"].asInteger()))};
+      timers->GetById(static_cast<int>(parameterObject["timerId"].asInteger()))};
   if (!timer)
     return NotFound;
 
@@ -574,7 +574,7 @@ JSONRPC_STATUS CPVROperations::ToggleTimer(const CVariant& parameterObject, CVar
 
   const std::shared_ptr<CPVREpgInfoTag> epgTag{
       CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-          static_cast<int>(parameterObject["broadcastid"].asInteger()))};
+          static_cast<int>(parameterObject["broadcastId"].asInteger()))};
 
   if (!epgTag)
     return NotFound;
@@ -583,7 +583,7 @@ JSONRPC_STATUS CPVROperations::ToggleTimer(const CVariant& parameterObject, CVar
   if (!timers)
     return FailedToExecute;
 
-  const bool timerrule{parameterObject["timerrule"].asBoolean(false)};
+  const bool timerrule{parameterObject["timerRule"].asBoolean(false)};
   bool sentOkay = false;
   std::shared_ptr<CPVRTimerInfoTag> timer{timers->GetTimerForEpgTag(epgTag)};
   if (timer)
@@ -627,7 +627,7 @@ JSONRPC_STATUS CPVROperations::GetRecordings(const CVariant& parameterObject, CV
     recordingsList.Add(std::make_shared<CFileItem>(recording));
   }
 
-  HandleFileItemList("recordingid", true, "recordings", recordingsList, parameterObject, result,
+  HandleFileItemList("recordingId", true, "recordings", recordingsList, parameterObject, result,
                      true);
 
   return OK;
@@ -645,11 +645,11 @@ JSONRPC_STATUS CPVROperations::GetRecordingDetails(const CVariant& parameterObje
     return FailedToExecute;
 
   const std::shared_ptr<CPVRRecording> recording{
-      recordings->GetById(static_cast<int>(parameterObject["recordingid"].asInteger()))};
+      recordings->GetById(static_cast<int>(parameterObject["recordingId"].asInteger()))};
   if (!recording)
     return NotFound;
 
-  HandleFileItem("recordingid", true, "recordingdetails", std::make_shared<CFileItem>(recording),
+  HandleFileItem("recordingId", true, "recordingDetails", std::make_shared<CFileItem>(recording),
                  parameterObject, parameterObject["properties"], result, false);
 
   return OK;
@@ -678,8 +678,8 @@ JSONRPC_STATUS CPVROperations::ParseTimeRange(const CVariant& parameterObject,
                                               CDateTime& start,
                                               CDateTime& end)
 {
-  const std::string startTime{parameterObject["starttime"].asString()};
-  const std::string endTime{parameterObject["endtime"].asString()};
+  const std::string startTime{parameterObject["startTime"].asString()};
+  const std::string endTime{parameterObject["endTime"].asString()};
 
   if (startTime.empty() && endTime.empty())
   {

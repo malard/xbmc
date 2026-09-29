@@ -131,7 +131,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
 
 JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonid"].asString();
+  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
   if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_NO) ||
       addon.get() == nullptr || addon->Type() <= AddonType::UNKNOWN ||
@@ -145,7 +145,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObjec
 
 JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonid"].asString();
+  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
   if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_NO) ||
       addon == nullptr || addon->Type() <= AddonType::UNKNOWN ||
@@ -176,7 +176,7 @@ JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObjec
 
 JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonid"].asString();
+  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
   if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_YES) ||
       addon.get() == nullptr || addon->Type() < AddonType::VISUALIZATION ||
@@ -202,7 +202,7 @@ JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, 
 static CVariant Serialize(const AddonPtr& addon)
 {
   CVariant variant;
-  variant["addonid"] = addon->ID();
+  variant["addonId"] = addon->ID();
   variant["type"] = CAddonInfo::TranslateType(addon->Type(), false);
   variant["name"] = addon->Name();
   variant["version"] = addon->Version().asString();
@@ -218,7 +218,7 @@ static CVariant Serialize(const AddonPtr& addon)
   for (const auto& dep : addon->GetDependencies())
   {
     CVariant info(CVariant::VariantTypeObject);
-    info["addonid"] = dep.id;
+    info["addonId"] = dep.id;
     info["minversion"] = dep.versionMin.asString();
     info["version"] = dep.version.asString();
     info["optional"] = dep.optional;
@@ -232,13 +232,13 @@ static CVariant Serialize(const AddonPtr& addon)
     variant["deprecated"] = addon->LifecycleStateDescription();
   else
     variant["deprecated"] = false;
-  variant["extrainfo"] = CVariant(CVariant::VariantTypeArray);
+  variant["extraInfo"] = CVariant(CVariant::VariantTypeArray);
   for (const auto& kv : addon->ExtraInfo())
   {
     CVariant info(CVariant::VariantTypeObject);
     info["key"] = kv.first;
     info["value"] = kv.second;
-    variant["extrainfo"].push_back(std::move(info));
+    variant["extraInfo"].push_back(std::move(info));
   }
   variant["rating"] = -1;
   return variant;
@@ -255,7 +255,7 @@ void CAddonsOperations::FillDetails(const std::shared_ptr<ADDON::IAddon>& addon,
   CVariant addonInfo = Serialize(addon);
 
   CVariant object;
-  object["addonid"] = addonInfo["addonid"];
+  object["addonId"] = addonInfo["addonId"];
   object["type"] = addonInfo["type"];
 
   for (unsigned int index = 0; index < fields.size(); index++)

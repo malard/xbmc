@@ -55,7 +55,7 @@ TEST(TestPVRRecording, AnEpisodeDescribesItselfAsAScannedOneDoes)
   recording.Serialize(serialized);
 
   EXPECT_EQ("Genesis", serialized["title"].asString());
-  EXPECT_EQ("Heroes", serialized["showtitle"].asString());
+  EXPECT_EQ("Heroes", serialized["showTitle"].asString());
 }
 
 /*!

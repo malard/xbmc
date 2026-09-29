@@ -851,7 +851,7 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["genre"] = m_genre;
   value["country"] = m_country;
   value["tagline"] = m_strTagLine;
-  value["plotoutline"] = m_strPlotOutline;
+  value["plotOutline"] = m_strPlotOutline;
   value["plot"] = m_strPlot;
   value["title"] = m_strTitle;
   value["votes"] = std::to_string(GetRating().votes);
@@ -877,28 +877,29 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["runtime"] = GetDuration();
   value["file"] = m_strFile;
   value["path"] = m_strPath;
-  value["imdbnumber"] = GetUniqueID();
+  value["imdbNumber"] = GetUniqueID();
   value["mpaa"] = m_strMPAARating;
   value["filenameandpath"] = m_strFileNameAndPath;
-  value["originaltitle"] = m_strOriginalTitle;
+  value["originalTitle"] = m_strOriginalTitle;
   value["originallanguage"] = m_originalLanguage.ToString();
-  value["sorttitle"] = m_strSortTitle;
-  value["episodeguide"] = m_strEpisodeGuide;
+  value["sortTitle"] = m_strSortTitle;
+  value["episodeGuide"] = m_strEpisodeGuide;
   value["premiered"] = m_premiered.IsValid() ? m_premiered.GetAsDBDate() : StringUtils::Empty;
   value["status"] = m_strStatus;
-  value["productioncode"] = m_strProductionCode;
-  value["firstaired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
-  value["showtitle"] = m_strShowTitle;
+  value["productionCode"] = m_strProductionCode;
+  value["firstAired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
+  value["showTitle"] = m_strShowTitle;
   value["album"] = m_strAlbum;
   value["artist"] = m_artist;
-  value["playcount"] = GetPlayCount();
-  value["lastplayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["playCount"] = GetPlayCount();
+  value["lastPlayed"] =
+      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
   value["top250"] = m_iTop250;
   value["year"] = GetYear();
   value["season"] = m_iSeason;
   value["episode"] = m_iEpisode;
   for (const auto& i : m_uniqueIDs)
-    value["uniqueid"][i.first] = i.second;
+    value["uniqueId"][i.first] = i.second;
 
   value["rating"] = GetRating().rating;
   CVariant ratings{CVariant::VariantTypeObject};
@@ -912,23 +913,23 @@ void CVideoInfoTag::Serialize(CVariant& value) const
     ratings[ratingname] = rating;
   }
   value["ratings"] = ratings;
-  value["userrating"] = m_iUserRating;
+  value["userRating"] = m_iUserRating;
   value["dbid"] = m_iDbId;
   value["fileid"] = m_iFileId;
   value["track"] = m_iTrack;
-  value["showlink"] = m_showLink;
-  m_streamDetails.Serialize(value["streamdetails"]);
-  SerializeContentGeometry(value["streamdetails"]);
+  value["showLink"] = m_showLink;
+  m_streamDetails.Serialize(value["streamDetails"]);
+  SerializeContentGeometry(value["streamDetails"]);
   CVariant resume{CVariant::VariantTypeObject};
   resume["position"] = m_resumePoint.timeInSeconds;
   resume["total"] = m_resumePoint.totalTimeInSeconds;
   value["resume"] = resume;
-  value["tvshowid"] = m_iIdShow;
-  value["dateadded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
+  value["tvShowId"] = m_iIdShow;
+  value["dateAdded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
   value["type"] = m_type;
-  value["seasonid"] = m_iIdSeason;
-  value["specialsortseason"] = m_iSpecialSortSeason;
-  value["specialsortepisode"] = m_iSpecialSortEpisode;
+  value["seasonId"] = m_iIdSeason;
+  value["specialSortSeason"] = m_iSpecialSortSeason;
+  value["specialSortEpisode"] = m_iSpecialSortEpisode;
 }
 
 int CVideoInfoTag::GetDescribedAudioStreamIndex() const
@@ -1785,7 +1786,7 @@ void CVideoInfoTag::SerializeContentGeometry(CVariant& streamdetails) const
     return;
 
   KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(ResolveContentGeometry(),
-                                                    streamdetails["video"][0]["contentrect"]);
+                                                    streamdetails["video"][0]["contentRect"]);
 }
 
 bool CVideoInfoTag::IsEmpty() const

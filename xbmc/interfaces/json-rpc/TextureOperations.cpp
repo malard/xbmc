@@ -57,7 +57,7 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, 
 
   // return only what was asked for, plus textureid
   CVariant prop = parameterObject["properties"];
-  prop.push_back("textureid");
+  prop.push_back("textureId");
   if (!items.empty() && prop.isArray())
   {
     std::set<std::string> fields;
@@ -90,7 +90,7 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CTextureOperations::RemoveTexture(const CVariant& parameterObject, CVariant& result)
 {
-  int id = static_cast<int>(parameterObject["textureid"].asInteger());
+  int id = static_cast<int>(parameterObject["textureId"].asInteger());
 
   if (!CServiceBroker::GetTextureCache()->ClearCachedImage(id))
     return InvalidParams;

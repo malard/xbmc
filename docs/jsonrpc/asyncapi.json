@@ -747,7 +747,7 @@
                     "player": {
                       "$ref": "#/components/schemas/Player.Notifications.Player"
                     },
-                    "contentrect": {
+                    "contentRect": {
                       "$ref": "#/components/schemas/Video.ContentRect"
                     },
                     "screen": {
@@ -756,7 +756,7 @@
                     }
                   },
                   "required": [
-                    "contentrect"
+                    "contentRect"
                   ]
                 }
               },
@@ -1389,7 +1389,7 @@
                       "type": "string",
                       "default": ""
                     },
-                    "failcount": {
+                    "failCount": {
                       "type": "integer",
                       "minimum": 0,
                       "default": 0
@@ -1437,7 +1437,7 @@
                     "type": {
                       "$ref": "#/components/schemas/Notifications.Library.Video.Type"
                     },
-                    "playcount": {
+                    "playCount": {
                       "type": "integer",
                       "minimum": 0,
                       "default": -1
@@ -1500,7 +1500,7 @@
                       "type": "string",
                       "default": ""
                     },
-                    "failcount": {
+                    "failCount": {
                       "type": "integer",
                       "minimum": 0,
                       "default": 0
@@ -1774,13 +1774,13 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "exitcode": {
+                    "exitCode": {
                       "type": "integer",
                       "minimum": 0
                     }
                   },
                   "required": [
-                    "exitcode"
+                    "exitCode"
                   ]
                 }
               },
@@ -2096,12 +2096,12 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "shuttingdown": {
+                    "shuttingDown": {
                       "type": "boolean"
                     }
                   },
                   "required": [
-                    "shuttingdown"
+                    "shuttingDown"
                   ]
                 }
               },
@@ -2517,19 +2517,19 @@
           "channels": {
             "type": "integer"
           },
-          "isdefault": {
+          "isDefault": {
             "type": "boolean"
           },
-          "isoriginal": {
+          "isOriginal": {
             "type": "boolean"
           },
-          "isimpaired": {
+          "isImpaired": {
             "type": "boolean"
           },
-          "samplerate": {
+          "sampleRate": {
             "type": "integer"
           },
-          "bitspersample": {
+          "bitsPerSample": {
             "type": "integer"
           }
         },
@@ -2540,11 +2540,11 @@
           "codec",
           "bitrate",
           "channels",
-          "isdefault",
-          "isoriginal",
-          "isimpaired",
-          "samplerate",
-          "bitspersample"
+          "isDefault",
+          "isOriginal",
+          "isImpaired",
+          "sampleRate",
+          "bitsPerSample"
         ]
       },
       "Player.Video.Stream": {
@@ -2597,13 +2597,13 @@
           "codec": {
             "type": "string"
           },
-          "isdefault": {
+          "isDefault": {
             "type": "boolean"
           },
-          "isforced": {
+          "isForced": {
             "type": "boolean"
           },
-          "isimpaired": {
+          "isImpaired": {
             "type": "boolean"
           }
         },
@@ -2612,9 +2612,9 @@
           "name",
           "language",
           "codec",
-          "isdefault",
-          "isforced",
-          "isimpaired"
+          "isDefault",
+          "isForced",
+          "isImpaired"
         ]
       },
       "Player.Property.Value": {
@@ -2631,7 +2631,7 @@
           "type": {
             "$ref": "#/components/schemas/Player.Type"
           },
-          "partymode": {
+          "partyMode": {
             "type": "boolean"
           },
           "speed": {
@@ -2643,7 +2643,7 @@
           "percentage": {
             "$ref": "#/components/schemas/Player.Position.Percentage"
           },
-          "totaltime": {
+          "totalTime": {
             "$ref": "#/components/schemas/Global.Time"
           },
           "playlist": {
@@ -2652,32 +2652,32 @@
           "position": {
             "$ref": "#/components/schemas/Playlist.Position"
           },
-          "displayorder": {
+          "displayOrder": {
             "$ref": "#/components/schemas/Playlist.Position",
             "description": "The current entry's place in play order, which is list order unless shuffled"
           },
-          "canseek": {
+          "canSeek": {
             "type": "boolean"
           },
-          "canchangespeed": {
+          "canChangeSpeed": {
             "type": "boolean"
           },
-          "canmove": {
+          "canMove": {
             "type": "boolean"
           },
-          "canzoom": {
+          "canZoom": {
             "type": "boolean"
           },
-          "canrotate": {
+          "canRotate": {
             "type": "boolean"
           },
-          "canshuffle": {
+          "canShuffle": {
             "type": "boolean"
           },
-          "canrepeat": {
+          "canRepeat": {
             "type": "boolean"
           },
-          "currentaudiostream": {
+          "currentAudioStream": {
             "anyOf": [
               {
                 "type": "null"
@@ -2687,13 +2687,13 @@
               }
             ]
           },
-          "audiostreams": {
+          "audioStreams": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Player.Audio.Stream"
             }
           },
-          "currentvideostream": {
+          "currentVideoStream": {
             "anyOf": [
               {
                 "type": "null"
@@ -2703,16 +2703,16 @@
               }
             ]
           },
-          "videostreams": {
+          "videoStreams": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Player.Video.Stream"
             }
           },
-          "subtitleenabled": {
+          "subtitleEnabled": {
             "type": "boolean"
           },
-          "currentsubtitle": {
+          "currentSubtitle": {
             "anyOf": [
               {
                 "type": "null"
@@ -2731,10 +2731,10 @@
           "live": {
             "type": "boolean"
           },
-          "cachepercentage": {
+          "cachePercentage": {
             "$ref": "#/components/schemas/Player.Position.Percentage"
           },
-          "playertype": {
+          "playerType": {
             "type": "string",
             "enum": [
               "internal",
@@ -2742,7 +2742,7 @@
               "remote"
             ]
           },
-          "contentrect": {
+          "contentRect": {
             "$ref": "#/components/schemas/Video.ContentRect",
             "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
           }
@@ -2825,7 +2825,7 @@
               "season": {
                 "type": "integer"
               },
-              "showtitle": {
+              "showTitle": {
                 "type": "string"
               }
             },
@@ -2910,7 +2910,7 @@
               "title": {
                 "type": "string"
               },
-              "channeltype": {
+              "channelType": {
                 "$ref": "#/components/schemas/PVR.Channel.Type"
               }
             },
@@ -2918,7 +2918,7 @@
               "type",
               "id",
               "title",
-              "channeltype"
+              "channelType"
             ]
           }
         ]
@@ -2972,11 +2972,11 @@
           "height": {
             "type": "number"
           },
-          "framewidth": {
+          "frameWidth": {
             "type": "number",
             "description": "The whole frame, in the same space, which the rectangle is contained by"
           },
-          "frameheight": {
+          "frameHeight": {
             "type": "number"
           },
           "aspect": {

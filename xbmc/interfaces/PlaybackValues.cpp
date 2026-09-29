@@ -40,11 +40,11 @@ CVariant StreamToObject(int index, const AudioStreamInfo& info)
   stream["codec"] = info.codecName;
   stream["bitrate"] = info.bitrate;
   stream["channels"] = info.channels;
-  stream["samplerate"] = info.samplerate;
-  stream["bitspersample"] = info.bitspersample;
-  stream["isdefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
-  stream["isoriginal"] = (info.flags & StreamFlags::FLAG_ORIGINAL) != 0;
-  stream["isimpaired"] = (info.flags & StreamFlags::FLAG_VISUAL_IMPAIRED) != 0;
+  stream["sampleRate"] = info.samplerate;
+  stream["bitsPerSample"] = info.bitspersample;
+  stream["isDefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
+  stream["isOriginal"] = (info.flags & StreamFlags::FLAG_ORIGINAL) != 0;
+  stream["isImpaired"] = (info.flags & StreamFlags::FLAG_VISUAL_IMPAIRED) != 0;
   return stream;
 }
 
@@ -67,9 +67,9 @@ CVariant StreamToObject(int index, const SubtitleStreamInfo& info)
   stream["name"] = info.name;
   stream["language"] = info.language.ToString();
   stream["codec"] = info.codecName;
-  stream["isdefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
-  stream["isforced"] = (info.flags & StreamFlags::FLAG_FORCED) != 0;
-  stream["isimpaired"] = (info.flags & StreamFlags::FLAG_HEARING_IMPAIRED) != 0;
+  stream["isDefault"] = (info.flags & StreamFlags::FLAG_DEFAULT) != 0;
+  stream["isForced"] = (info.flags & StreamFlags::FLAG_FORCED) != 0;
+  stream["isImpaired"] = (info.flags & StreamFlags::FLAG_HEARING_IMPAIRED) != 0;
   return stream;
 }
 

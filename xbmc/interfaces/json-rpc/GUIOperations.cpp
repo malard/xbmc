@@ -89,7 +89,7 @@ JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant& parameterObject,
   std::string title = parameterObject["title"].asString();
   std::string message = parameterObject["message"].asString();
   unsigned int displaytime =
-      static_cast<unsigned int>(parameterObject["displaytime"].asUnsignedInteger());
+      static_cast<unsigned int>(parameterObject["displayTime"].asUnsignedInteger());
 
   if (image.compare("info") == 0)
     CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, title, message, displaytime);
@@ -144,7 +144,7 @@ JSONRPC_STATUS CGUIOperations::GetStereoscopicModes(const CVariant& parameterObj
   {
     RenderStereoMode mode = static_cast<RenderStereoMode>(i);
     if (CServiceBroker::GetRenderSystem()->SupportsStereo(mode))
-      result["stereoscopicmodes"].push_back(GetStereoModeObjectFromGuiMode(mode));
+      result["stereoscopicModes"].push_back(GetStereoModeObjectFromGuiMode(mode));
   }
 
   return OK;
@@ -292,14 +292,14 @@ CVariant CGUIOperations::GetScreenAlignmentState()
 
 JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string& property, CVariant& result)
 {
-  if (property == "currentwindow")
+  if (property == "currentWindow")
   {
     result["label"] = CServiceBroker::GetGUI()->GetInfoManager().GetLabel(
         CServiceBroker::GetGUI()->GetInfoManager().TranslateString("System.CurrentWindow"),
         INFO::DEFAULT_CONTEXT);
     result["id"] = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog();
   }
-  else if (property == "currentcontrol")
+  else if (property == "currentControl")
     result["label"] = CServiceBroker::GetGUI()->GetInfoManager().GetLabel(
         CServiceBroker::GetGUI()->GetInfoManager().TranslateString("System.CurrentControl"),
         INFO::DEFAULT_CONTEXT);
@@ -321,7 +321,7 @@ JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string& property, CVa
   else if (property == "ready")
     result =
         g_application.IsInitialized() && CServiceBroker::GetGUI()->GetWindowManager().Initialized();
-  else if (property == "stereoscopicmode")
+  else if (property == "stereoscopicMode")
   {
     const CStereoscopicsManager& stereoscopicsManager =
         CServiceBroker::GetGUI()->GetStereoscopicsManager();
