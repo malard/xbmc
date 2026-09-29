@@ -107,9 +107,6 @@ const char* GeometrySourceName(GeometrySource source);
 //! \brief The distinct ratios \p geometry establishes, dominant first.
 ContentAspectSet ContentAspectsOf(const EffectiveGeometry& geometry);
 
-//! \brief Where the picture is inside \p videoRect, the rectangle the whole frame is drawn in.
-CRect PictureRect(const EffectiveGeometry& geometry, const CRect& videoRect);
-
 //! \brief The part of \p geometry a render path reads.
 RenderGeometry RenderGeometryOf(const EffectiveGeometry& geometry);
 

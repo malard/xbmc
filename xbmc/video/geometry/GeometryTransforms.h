@@ -75,15 +75,8 @@ float PixelAspectRatio(const StreamGeometry& stream);
 //! \brief Undo the coding's pixel aspect, leaving the picture oriented as it was coded.
 CRect ToSquarePixels(const CRectInt& coded, const StreamGeometry& stream);
 
-//! \brief A coded rectangle carried to the screen: pixel-aspect correction, then rotation.
-CRect ToDisplaySpace(const CRectInt& coded, const StreamGeometry& stream);
-
 //! \brief The largest rectangle of ratio \p aspect that fits centred inside \p frame.
 CRect FitAspect(float aspect, const CRect& frame);
-
-//! \brief Where content of \p contentAspect is drawn inside the \p maintainAspect area of
-//! \p operatingArea. Either ratio may be zero, meaning the enclosing rectangle is filled.
-CRect MaintainedRect(float maintainAspect, float contentAspect, const CRect& operatingArea);
 
 //! \brief The resolved geometry reduced to what a render path reads.
 struct RenderGeometry

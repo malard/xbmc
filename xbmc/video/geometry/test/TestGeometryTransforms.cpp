@@ -23,7 +23,7 @@ TEST(TestGeometryTransforms, SquarePixelsWhenNoDisplayAspectIsDeclared)
 
   // Display space must degenerate to coded space rather than to nothing, so that content
   // with no anamorphic coding is unaffected by the correction existing at all.
-  ExpectRect(ToDisplaySpace(CRectInt{0, 140, 1920, 940}, stream), 0.0f, 140.0f, 1920.0f, 940.0f);
+  ExpectRect(ToSquarePixels(CRectInt{0, 140, 1920, 940}, stream), 0.0f, 140.0f, 1920.0f, 940.0f);
 }
 
 TEST(TestGeometryTransforms, AnamorphicPixelsAreWiderThanTheyAreCoded)
@@ -31,64 +31,6 @@ TEST(TestGeometryTransforms, AnamorphicPixelsAreWiderThanTheyAreCoded)
   EXPECT_NEAR(1.4222f, PixelAspectRatio(AnamorphicPal()), 0.0001f);
   ExpectRect(ToSquarePixels(CRectInt{0, 0, 720, 576}, AnamorphicPal()), 0.0f, 0.0f, 1024.0f,
              576.0f);
-}
-
-TEST(TestGeometryTransforms, MaintainedTargetNestsInsideTheOperatingArea)
-{
-  // The automation asks for 2.35 in a room whose raster is 2.40. The target is the 2.35 area
-  // of that band - not of the display - so it is 40px in from each side and full height.
-  ExpectRect(MaintainedRect(2.35f, 2.35f, ScopeRaster), 40.0f, 280.0f, 3800.0f, 1880.0f);
-}
-
-// The reason nesting is the reading this builds, rather than letting a maintained ratio
-// replace the operating area. Taken against the display a 2.35 target is 1634 tall, which
-// overhangs the 1600-tall raster by 17px top and bottom - picture off the screen, on a
-// constitution where nothing exceeds the raster ever.
-TEST(TestGeometryTransforms, MaintainedTargetCannotEscapeTheOperatingArea)
-{
-  const CRect display{0.0f, 0.0f, 3840.0f, 2160.0f};
-  EXPECT_NEAR(1634.04f, FitAspect(2.35f, display).Height(), 0.01f);
-
-  const CRect maintained = MaintainedRect(2.35f, 2.35f, ScopeRaster);
-  EXPECT_GE(maintained.y1, ScopeRaster.y1);
-  EXPECT_LE(maintained.y2, ScopeRaster.y2);
-  EXPECT_GE(maintained.x1, ScopeRaster.x1);
-  EXPECT_LE(maintained.x2, ScopeRaster.x2);
-}
-
-// The Dark Knight maintained at 2.35 in a 2.40 room, through its two geometries. Both land
-// inside the same maintained target, which is what lets one lens position serve the whole film.
-TEST(TestGeometryTransforms, MaintainedContentBindsOnWidthOrHeightAsItsOwnRatioRequires)
-{
-  // Scope sections: wider than the target, so they bind on width and letterbox within it.
-  // Taken at the 2.40 the vocabulary labels the film, not at its own 2.3980 - the same target,
-  // one and a third pixels apart.
-  ExpectRect(MaintainedRect(2.35f, 2.40f, ScopeRaster), 40.0f, 296.67f, 3800.0f, 1863.33f);
-
-  // IMAX sections: taller than the target, so they bind on height and pillarbox within it.
-  ExpectRect(MaintainedRect(2.35f, 16.0f / 9.0f, ScopeRaster), 497.78f, 280.0f, 3342.22f, 1880.0f);
-}
-
-TEST(TestGeometryTransforms, AbsentMaintainAndUnknownContentBothDegradeToWhatIsAlreadyThere)
-{
-  // No maintain stated: the operating area is the target. Shown with content at the raster's
-  // own ratio, which then fills it - the same content under a 2.35 maintain is inset to
-  // 3760x1566.67, so this is the difference the override actually makes.
-  ExpectRect(MaintainedRect(0.0f, 2.40f, ScopeRaster), 0.0f, 280.0f, 3840.0f, 1880.0f);
-
-  // Content ratio unknown: fill what the automation named rather than guess a shape for it.
-  // Predictability is the whole contract - the lens is already moving to this rectangle.
-  ExpectRect(MaintainedRect(2.35f, 0.0f, ScopeRaster), 40.0f, 280.0f, 3800.0f, 1880.0f);
-}
-
-// Worth stating because it bounds what the override can do: a maintain only moves the picture
-// for content wider than it. Content taller than the maintained ratio binds on the target's
-// height, and the target is full height, so it lands where it would have landed anyway.
-TEST(TestGeometryTransforms, MaintainDoesNothingToContentTallerThanItself)
-{
-  // Both are the 16:9 rectangle of a 1600-tall band, centred: 2844.44 wide at x = 497.78.
-  ExpectRect(MaintainedRect(2.35f, 16.0f / 9.0f, ScopeRaster), 497.78f, 280.0f, 3342.22f, 1880.0f);
-  ExpectRect(MaintainedRect(0.0f, 16.0f / 9.0f, ScopeRaster), 497.78f, 280.0f, 3342.22f, 1880.0f);
 }
 
 // The reason the resolver works in display space at all. A scope film on an anamorphic PAL
@@ -116,7 +58,7 @@ TEST(TestGeometryTransforms, SquarePixelsAreExactWhenTheStreamAgreesWithItsCodin
   // out as the frame it went in as.
   const StreamGeometry stream{CRectInt{0, 0, 1920, 800}, 2.4f, 0};
   EXPECT_EQ(1.0f, PixelAspectRatio(stream));
-  ExpectRect(ToDisplaySpace(CRectInt{0, 0, 1920, 800}, stream), 0.0f, 0.0f, 1920.0f, 800.0f);
+  ExpectRect(ToSquarePixels(CRectInt{0, 0, 1920, 800}, stream), 0.0f, 0.0f, 1920.0f, 800.0f);
 }
 
 /*!
@@ -232,19 +174,22 @@ TEST(TestGeometryTransforms, WithNoResolvedRectangleTheSourceIsLeftAlone)
 
 TEST(TestGeometryTransforms, AQuarterTurnTransposesTheRectangle)
 {
-  const StreamGeometry stream = Uhd(90);
-  ExpectRect(ToDisplaySpace(CRectInt{0, 0, 3840, 2160}, stream), 0.0f, 0.0f, 2160.0f, 3840.0f);
-  ExpectRect(ToDisplaySpace(CRectInt{0, 280, 3840, 1880}, stream), 280.0f, 0.0f, 1880.0f, 3840.0f);
+  const CRect frame{0.0f, 0.0f, 3840.0f, 2160.0f};
+  const CRect scope{0.0f, 280.0f, 3840.0f, 1880.0f};
 
-  ExpectRect(ToDisplaySpace(CRectInt{0, 280, 3840, 1880}, Uhd(180)), 0.0f, 280.0f, 3840.0f,
-             1880.0f);
-  ExpectRect(ToDisplaySpace(CRectInt{0, 280, 3840, 1880}, Uhd(270)), 280.0f, 0.0f, 1880.0f,
-             3840.0f);
+  ExpectRect(Rotate(frame, frame, NormaliseRotation(90)), 0.0f, 0.0f, 2160.0f, 3840.0f);
+  ExpectRect(Rotate(scope, frame, NormaliseRotation(90)), 280.0f, 0.0f, 1880.0f, 3840.0f);
+  ExpectRect(Rotate(scope, frame, NormaliseRotation(180)), 0.0f, 280.0f, 3840.0f, 1880.0f);
+  ExpectRect(Rotate(scope, frame, NormaliseRotation(270)), 280.0f, 0.0f, 1880.0f, 3840.0f);
 }
 
 TEST(TestGeometryTransforms, AnUnusableRotationIsTreatedAsUpright)
 {
-  ExpectRect(ToDisplaySpace(CRectInt{0, 280, 3840, 1880}, Uhd(45)), 0.0f, 280.0f, 3840.0f, 1880.0f);
+  const CRect frame{0.0f, 0.0f, 3840.0f, 2160.0f};
+
+  EXPECT_EQ(0, NormaliseRotation(45));
+  ExpectRect(Rotate(CRect{0.0f, 280.0f, 3840.0f, 1880.0f}, frame, NormaliseRotation(45)), 0.0f,
+             280.0f, 3840.0f, 1880.0f);
 }
 
 TEST(TestGeometryTransforms, SideBySideSelectsOneView)

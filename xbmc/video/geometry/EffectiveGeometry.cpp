@@ -101,15 +101,6 @@ ResolvedMeasurement ResolveMeasurement(const GeometryInputs& inputs, const CRect
 
 } // unnamed namespace
 
-CRect PictureRect(const EffectiveGeometry& geometry, const CRect& videoRect)
-{
-  const CRect& frame = geometry.displayFrame;
-  if (frame.Width() <= 0.0f || frame.Height() <= 0.0f)
-    return videoRect;
-
-  return FromFraction(FractionOf(geometry.displayRect, frame), videoRect);
-}
-
 RenderGeometry RenderGeometryOf(const EffectiveGeometry& geometry)
 {
   return {geometry.codedFrame, geometry.displayFrame, geometry.displayRect,

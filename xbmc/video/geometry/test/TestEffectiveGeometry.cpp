@@ -20,6 +20,19 @@ using namespace KODI::VIDEO::GEOMETRY;
 using namespace KODI::VIDEO::GEOMETRY::TEST;
 using namespace KODI::UTILS;
 
+namespace
+{
+//! Where the picture lands when the whole coded frame is drawn into \p dest
+CRect PictureIn(EffectiveGeometry geometry, const CRect& dest)
+{
+  if (geometry.codedFrame.IsEmpty())
+    geometry.codedFrame = CRectInt{0, 0, static_cast<int>(geometry.displayFrame.Width()),
+                                   static_cast<int>(geometry.displayFrame.Height())};
+
+  return PictureOnScreen(RenderGeometryOf(geometry), CRect{geometry.codedFrame}, dest);
+}
+} // namespace
+
 TEST(TestEffectiveGeometry, AnamorphicContentResolvesToItsDisplayedRatio)
 {
   const GeometryInputs inputs = ScopeCachedPal();
@@ -738,7 +751,7 @@ TEST(TestEffectiveGeometry, UncroppedContentIsDrawnWhereTheWholeVideoIs)
 
   // Exactly the video rectangle, so a file with no measurement and no declaration cannot move
   // anything: the resolver reports the coded frame in that case.
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 0.0f, 1920.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 0.0f, 1920.0f,
              1080.0f);
 }
 
@@ -749,7 +762,7 @@ TEST(TestEffectiveGeometry, TheBarsAreTakenAsAFractionOfTheFrame)
   geometry.displayRect = {0.0f, 280.0f, 3840.0f, 1880.0f};
 
   // 280 of 2160 is 12.96%, which of a 1080 high video is 140.
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 140.0f, 1920.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 140.0f, 1920.0f,
              940.0f);
 }
 
@@ -760,7 +773,7 @@ TEST(TestEffectiveGeometry, ThePictureFollowsAVideoDrawnSmallerThanTheScreen)
   geometry.displayRect = {0.0f, 280.0f, 3840.0f, 1880.0f};
 
   // A 16:9 video on a 4:3 screen is drawn pillarboxed, and the picture is inside that.
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 180.0f, 1440.0f, 990.0f}), 0.0f, 285.0f, 1440.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 180.0f, 1440.0f, 990.0f}), 0.0f, 285.0f, 1440.0f,
              885.0f);
 }
 
@@ -773,7 +786,7 @@ TEST(TestEffectiveGeometry, AZoomedVideoCarriesThePictureOffTheScreenWithIt)
   // Zoomed by 2160/1600 to put the bars outside the raster, which is how an anamorphic lens
   // without masking is driven. The picture then lands exactly on the screen, and confining the
   // interface to it comes to nothing - the correct answer, reached without a case for it.
-  ExpectRect(PictureRect(geometry, CRect{0.0f, -189.0f, 1920.0f, 1269.0f}), 0.0f, 0.0f, 1920.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, -189.0f, 1920.0f, 1269.0f}), 0.0f, 0.0f, 1920.0f,
              1080.0f);
 }
 
@@ -783,7 +796,7 @@ TEST(TestEffectiveGeometry, AnOffCentrePictureIsNotSymmetrised)
   geometry.displayFrame = {0.0f, 0.0f, 1920.0f, 1080.0f};
   geometry.displayRect = {0.0f, 40.0f, 1920.0f, 1000.0f};
 
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 40.0f, 1920.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 40.0f, 1920.0f,
              1000.0f);
 }
 
@@ -793,7 +806,7 @@ TEST(TestEffectiveGeometry, APillarboxedPictureInsetsTheSides)
   geometry.displayFrame = {0.0f, 0.0f, 3840.0f, 2160.0f};
   geometry.displayRect = {480.0f, 0.0f, 3360.0f, 2160.0f};
 
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 240.0f, 0.0f, 1680.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 240.0f, 0.0f, 1680.0f,
              1080.0f);
 }
 
@@ -801,7 +814,7 @@ TEST(TestEffectiveGeometry, AFrameOfNoSizeLeavesTheVideoRectangleAlone)
 {
   EffectiveGeometry geometry;
 
-  ExpectRect(PictureRect(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 0.0f, 1920.0f,
+  ExpectRect(PictureIn(geometry, CRect{0.0f, 0.0f, 1920.0f, 1080.0f}), 0.0f, 0.0f, 1920.0f,
              1080.0f);
 }
 
@@ -812,8 +825,9 @@ TEST(TestEffectiveGeometry, ARotatedPictureIsMappedOntoTheRotatedVideoRectangle)
   inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
 
   // Turned, the 2.40 picture is pillarboxed within a portrait frame, and the video rectangle it
-  // is drawn into is portrait too. No rotation is applied here - it is already in both.
-  ExpectRect(PictureRect(ResolveEffectiveGeometry(inputs), CRect{660.0f, 0.0f, 1260.0f, 1080.0f}),
+  // is drawn into is portrait too. The coded source is upright, so the turn is applied on the
+  // way through.
+  ExpectRect(PictureIn(ResolveEffectiveGeometry(inputs), CRect{660.0f, 0.0f, 1260.0f, 1080.0f}),
              737.78f, 0.0f, 1182.22f, 1080.0f);
 }
 
@@ -943,19 +957,13 @@ TEST(TestEffectiveGeometry, AGeometryDescribesTheRegionItWasMeasuredIn)
   EXPECT_FALSE(DescribesFrame(RenderGeometry{}, CRect{}));
 }
 
-TEST(TestEffectiveGeometry, ARendererDrawingTheWholeFrameAgreesWithPictureRect)
+TEST(TestEffectiveGeometry, ARendererDrawingTheWholeFrameSeesTheBars)
 {
-  GeometryInputs inputs = ScopeCachedUhd();
-  const EffectiveGeometry geometry = ResolveEffectiveGeometry(inputs);
+  const EffectiveGeometry geometry = ResolveEffectiveGeometry(ScopeCachedUhd());
 
-  // The two answers describe the same screen, so a consumer switching from one to the other
-  // must not see the picture move.
-  const CRect dest{0.0f, 0.0f, 1920.0f, 1080.0f};
-  const CRect fromFrame = PictureRect(geometry, dest);
-  const CRect fromDrawn =
-      PictureOnScreen(RenderGeometryOf(geometry), CRect{0.0f, 0.0f, 3840.0f, 2160.0f}, dest);
-  ExpectRect(fromDrawn, fromFrame.x1, fromFrame.y1, fromFrame.x2, fromFrame.y2);
-  ExpectRect(fromDrawn, 0.0f, 140.0f, 1920.0f, 940.0f);
+  ExpectRect(PictureOnScreen(RenderGeometryOf(geometry), CRect{0.0f, 0.0f, 3840.0f, 2160.0f},
+                             CRect{0.0f, 0.0f, 1920.0f, 1080.0f}),
+             0.0f, 140.0f, 1920.0f, 940.0f);
 }
 
 TEST(TestEffectiveGeometry, ASourceCutToTheContentPutsThePictureEverywhereItIsDrawn)
@@ -980,22 +988,6 @@ TEST(TestEffectiveGeometry, OnlyTheDrawnPartOfTheContentCounts)
                              CRect{0.0f, 0.0f, 3840.0f, 1080.0f},
                              CRect{0.0f, 0.0f, 1920.0f, 540.0f}),
              0.0f, 140.0f, 1920.0f, 540.0f);
-}
-
-TEST(TestEffectiveGeometry, ATurnedSourceIsMappedOntoTheTurnedDestination)
-{
-  GeometryInputs inputs;
-  inputs.stream = Uhd(90);
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
-  const EffectiveGeometry geometry = ResolveEffectiveGeometry(inputs);
-
-  // The same screen as the PictureRect case above: the source is coded and upright, the
-  // destination is portrait, and the turn between them is applied on the way through.
-  const CRect dest{660.0f, 0.0f, 1260.0f, 1080.0f};
-  const CRect fromFrame = PictureRect(geometry, dest);
-  const CRect fromDrawn =
-      PictureOnScreen(RenderGeometryOf(geometry), CRect{0.0f, 0.0f, 3840.0f, 2160.0f}, dest);
-  ExpectRect(fromDrawn, fromFrame.x1, fromFrame.y1, fromFrame.x2, fromFrame.y2);
 }
 
 TEST(TestEffectiveGeometry, PictureOnScreenWithNothingKnownIsTheDestination)

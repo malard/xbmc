@@ -260,3 +260,33 @@ TEST(TestGeometryPublication, ThePublishedRatioIsRoundedToTheVocabularysPrecisio
 
   EXPECT_DOUBLE_EQ(1.7778, value["aspect"].asDouble());
 }
+
+TEST(TestGeometryPublication, AChangeToAnyPublishedFieldIsADifference)
+{
+  EffectiveGeometry base;
+  base.displayFrame = {0.0f, 0.0f, 1920.0f, 1080.0f};
+  base.displayRect = {0.0f, 140.0f, 1920.0f, 940.0f};
+  base.aspect = 2.40f;
+  base.label = "2.40";
+  base.name = "Scope";
+  base.sections.push_back({base.displayRect, 2.40f, "2.40", "Scope"});
+
+  EXPECT_FALSE(PublishedGeometryDiffers(base, base));
+
+  EffectiveGeometry aspect{base};
+  aspect.aspect = 2.39f;
+  EXPECT_TRUE(PublishedGeometryDiffers(base, aspect));
+
+  EffectiveGeometry name{base};
+  name.name.clear();
+  EXPECT_TRUE(PublishedGeometryDiffers(base, name));
+
+  EffectiveGeometry rejected{base};
+  rejected.rejected = true;
+  EXPECT_TRUE(PublishedGeometryDiffers(base, rejected));
+
+  // A varying title re-measured to the same dominant shape but a different second one
+  EffectiveGeometry sections{base};
+  sections.sections.push_back({{240.0f, 0.0f, 1680.0f, 1080.0f}, 1.33f, "1.33", "4:3"});
+  EXPECT_TRUE(PublishedGeometryDiffers(base, sections));
+}

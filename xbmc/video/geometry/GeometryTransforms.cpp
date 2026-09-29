@@ -146,12 +146,6 @@ CRect ToSquarePixels(const CRectInt& coded, const StreamGeometry& stream)
           static_cast<float>(coded.y2 - stream.coded.y1)};
 }
 
-CRect ToDisplaySpace(const CRectInt& coded, const StreamGeometry& stream)
-{
-  return Rotate(ToSquarePixels(coded, stream), ToSquarePixels(stream.coded, stream),
-                NormaliseRotation(stream.orientation));
-}
-
 CRect FitAspect(float aspect, const CRect& frame)
 {
   if (aspect <= 0.0f || frame.Width() <= 0.0f || frame.Height() <= 0.0f)
@@ -176,12 +170,6 @@ CRect FitAspect(float aspect, const CRect& frame)
   const float x = frame.x1 + (frame.Width() - width) / 2.0f;
   const float y = frame.y1 + (frame.Height() - height) / 2.0f;
   return {x, y, x + width, y + height};
-}
-
-CRect MaintainedRect(float maintainAspect, float contentAspect, const CRect& operatingArea)
-{
-  // Both absent cases fall out of FitAspect(), which gives back the frame for a ratio of zero.
-  return FitAspect(contentAspect, FitAspect(maintainAspect, operatingArea));
 }
 
 bool DescribesFrame(const RenderGeometry& geometry, const CRect& frameSource)

@@ -51,8 +51,11 @@ std::optional<OsdPlacement> OsdPlacementFromName(std::string_view name)
 
 bool PublishedGeometryDiffers(const EffectiveGeometry& a, const EffectiveGeometry& b)
 {
-  return a.displayRect != b.displayRect || a.displayFrame != b.displayFrame ||
-         a.source != b.source || a.varies != b.varies || a.stale != b.stale || a.label != b.label;
+  CVariant publishedA;
+  CVariant publishedB;
+  SerializeEffectiveGeometry(a, publishedA);
+  SerializeEffectiveGeometry(b, publishedB);
+  return publishedA != publishedB;
 }
 
 void SerializeEffectiveGeometry(const EffectiveGeometry& geometry, CVariant& value)

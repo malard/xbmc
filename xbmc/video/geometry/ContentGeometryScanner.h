@@ -54,6 +54,7 @@ public:
   //! other video library job runs rather than queueing behind it.
   void Sweep(bool retryFailed = false);
 
+  //! \brief For tests only.
   bool IsSweeping() const { return m_sweeping; }
 
   //! \brief Ask a running sweep to stop, abandoning the file it is measuring.
