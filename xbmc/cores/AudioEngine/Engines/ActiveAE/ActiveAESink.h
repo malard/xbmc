@@ -166,6 +166,15 @@ protected:
   //! \brief Armed at sink open, dropped once content follows the filler.
   bool m_fillerArmed{false};
   bool m_fillerUsed{false};
+  //! \brief What the last passthrough write sent, logged when it changes.
+  enum class RawOut
+  {
+    NONE,
+    DATA,
+    FILLER,
+    PAUSE
+  };
+  RawOut m_lastRawOut{RawOut::NONE};
   bool m_streamNoise;
 };
 

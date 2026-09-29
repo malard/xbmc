@@ -1049,8 +1049,9 @@ void CActiveAESink::OpenSink()
       passthrough && settings && settings->GetBool(CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
   m_fillerArmed = m_silenceFiller;
   m_fillerUsed = false;
+  m_lastRawOut = RawOut::NONE;
   if (m_silenceFiller)
-    CLog::Log(LOGINFO, "CActiveAESink::OpenSink - content filler armed for the opening hold");
+    CLog::Log(LOGDEBUG, "CActiveAESink::OpenSink - content filler armed for the opening hold");
 
   m_swapState = CHECK_SWAP;
 }
@@ -1098,16 +1099,10 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
     bool skipSwap = false;
     if (m_needIecPack)
     {
-      enum class RawOut
-      {
-        NONE,
-        DATA,
-        FILLER,
-        PAUSE
-      };
-      static RawOut lastOut = RawOut::NONE;
-      RawOut out = lastOut;
-      const char* why = "";
+      RawOut out = m_lastRawOut;
+      bool haveFormat = false;
+      bool wholeFrame = false;
+      bool fillerTried = false;
       if (frames > 0)
       {
         m_packer->Reset();
@@ -1123,25 +1118,19 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
         bool burst = m_extStreaming && (m_packer->GetBuffer()[0] != 0);
         // ActiveAE reports STREAMING false for the whole of a hold, so burst
         // cannot gate this.
-        const bool haveFormat = m_packer->GetBuffer()[0] != 0;
+        haveFormat = m_packer->GetBuffer()[0] != 0;
         // Sync gaps request arbitrary lengths and stay as pause bursts.
         bool filled = false;
-        const bool wholeFrame = samples->pkt->pause_burst_ms ==
-                                static_cast<int>(m_sinkFormat.m_streamInfo.GetDuration());
+        wholeFrame = samples->pkt->pause_burst_ms ==
+                     static_cast<int>(m_sinkFormat.m_streamInfo.GetDuration());
         // The opening only: repeating a burst across a later gap is audible.
         if (m_silenceFiller && m_fillerArmed && haveFormat && wholeFrame)
         {
+          fillerTried = true;
           filled = m_packer->PackLastBurst();
           if (filled)
             m_fillerUsed = true;
-          if (!filled)
-            why = " [filler: no burst retained]";
         }
-        else if (m_silenceFiller)
-          why = !m_fillerArmed ? " [filler: past the opening]"
-                : !haveFormat  ? " [filler: no prior burst]"
-                : !wholeFrame  ? " [filler: partial frame]"
-                               : "";
         // Not skipSwap: the retained burst is copied in fresh and still needs it.
         if (!filled &&
             !m_packer->PackPause(m_sinkFormat.m_streamInfo, samples->pkt->pause_burst_ms, burst))
@@ -1154,16 +1143,26 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
         out = RawOut::NONE;
       }
 
-      if (out != lastOut)
+      if (out != m_lastRawOut)
       {
-        static const char* const names[] = {"none", "data", "filler", "pause"};
-        CLog::Log(
-            LOGINFO,
-            "CActiveAESink::OutputSamples - raw output {} -> {} (type {}, repeat {}, {} ms){}",
-            names[static_cast<int>(lastOut)], names[static_cast<int>(out)],
-            static_cast<int>(m_sinkFormat.m_streamInfo.m_type), m_sinkFormat.m_streamInfo.m_repeat,
-            samples->pkt->pause_burst_ms, why);
-        lastOut = out;
+        if (CServiceBroker::GetLogging().IsLogLevelLogged(LOGDEBUG))
+        {
+          static constexpr const char* NAMES[] = {"none", "data", "filler", "pause"};
+          const char* why = "";
+          if (out == RawOut::PAUSE && m_silenceFiller)
+            why = fillerTried      ? " [filler: no burst retained]"
+                  : !m_fillerArmed ? " [filler: past the opening]"
+                  : !haveFormat    ? " [filler: no prior burst]"
+                  : !wholeFrame    ? " [filler: partial frame]"
+                                   : "";
+          CLog::Log(LOGDEBUG,
+                    "CActiveAESink::OutputSamples - raw output {} -> {} (type {}, repeat {}, {} "
+                    "ms){}",
+                    NAMES[static_cast<int>(m_lastRawOut)], NAMES[static_cast<int>(out)],
+                    static_cast<int>(m_sinkFormat.m_streamInfo.m_type),
+                    m_sinkFormat.m_streamInfo.m_repeat, samples->pkt->pause_burst_ms, why);
+        }
+        m_lastRawOut = out;
       }
 
       unsigned int size = m_packer->GetSize();
