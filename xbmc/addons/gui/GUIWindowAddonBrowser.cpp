@@ -289,7 +289,7 @@ void CGUIWindowAddonBrowser::UpdateButtons()
   CGUIMediaWindow::UpdateButtons();
 }
 
-static bool IsForeign(const std::string& languages)
+static bool IsForeign(const std::vector<KODI::LANGUAGE::CLanguageTag>& languages)
 {
   if (languages.empty())
     return false;
@@ -299,9 +299,8 @@ static bool IsForeign(const std::string& languages)
   const KODI::LANGUAGE::CLanguageTag norwegian{KODI::LANGUAGE::CLanguageTag::Parse("no")};
   const KODI::LANGUAGE::CLanguageTag bokmal{KODI::LANGUAGE::CLanguageTag::Parse("nb")};
 
-  for (const auto& lang : StringUtils::Split(languages, " "))
+  for (const KODI::LANGUAGE::CLanguageTag& language : languages)
   {
-    const KODI::LANGUAGE::CLanguageTag language{KODI::LANGUAGE::CLanguageTag::Parse(lang)};
     if (language.IsEnglish() || language.Matches(interfaceLanguage))
       return false;
 
@@ -325,8 +324,8 @@ bool CGUIWindowAddonBrowser::GetDirectory(const std::string& strDirectory, CFile
       int i = 0;
       while (i < items.Size())
       {
-        auto prop = items[i]->GetProperty("Addon.Language");
-        if (!prop.isNull() && IsForeign(prop.asString()))
+        const auto info = items[i]->GetAddonInfo();
+        if (info && IsForeign(info->Languages()))
           items.Remove(i);
         else
           ++i;
