@@ -67,15 +67,11 @@ std::optional<ContentGeometryRecord> MeasureContentGeometry(const CFileItem& ite
   if (scan.cancelled)
     return std::nullopt;
 
-  const ContentGeometryRecord record{
-      MakeContentGeometryRecord(scan, identity, CDateTime::GetCurrentDateTime())};
+  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, identity)};
 
-  // What was stored, which is not always what was measured: a scan that read nothing still
-  // produces a row.
+  // A scan that read nothing still produces a row, so the file is not measured again.
   CLog::LogF(LOGDEBUG, "storing content geometry for {}: {}", CURL::GetRedacted(item.GetDynPath()),
-             record.outcome == ContentGeometryOutcome::Failed ? "could not be read"
-             : record.hasReading                              ? "measured"
-                                                              : "no reading, frame stands");
+             record.HasReading() ? EncodeContentAspects(record.aspects) : "no reading");
 
   return record;
 }

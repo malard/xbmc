@@ -116,8 +116,7 @@ TEST(TestGeometryPublication, SectionsReachTheSerialisedForm)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}};
+  inputs.cached = Cached({2.40f, 1.78f});
 
   CVariant value;
   SerializeEffectiveGeometry(ResolveEffectiveGeometry(inputs), value);

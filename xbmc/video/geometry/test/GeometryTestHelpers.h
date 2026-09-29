@@ -11,6 +11,9 @@
 #include "utils/Geometry.h"
 #include "video/geometry/EffectiveGeometry.h"
 
+#include <utility>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 namespace KODI::VIDEO::GEOMETRY::TEST
@@ -31,30 +34,21 @@ inline StreamGeometry AnamorphicPal()
 //! \brief A 2.40 operating area on a UHD display: 3840x1600, centred in 2160.
 inline const CRect ScopeRaster{0.0f, 280.0f, 3840.0f, 1880.0f};
 
-inline ContentGeometryLookup Cached(const CRectInt& rect,
-                                    const CRectInt& envelope,
-                                    bool varies = false,
+//! \brief A stored measurement holding \p aspects, dominant first.
+inline ContentGeometryLookup Cached(std::vector<float> aspects,
                                     ContentGeometryState state = ContentGeometryState::VALID)
 {
   ContentGeometryLookup lookup;
   lookup.state = state;
-  lookup.record.rect = rect;
-  lookup.record.envelope = envelope;
-  lookup.record.varies = varies;
-  lookup.record.hasReading = true;
+  lookup.record.aspects = std::move(aspects);
   return lookup;
 }
 
-//! \brief A measured 2.40 letterbox on an HD frame: the 1920x800 body at {0,140}, with the
-//! envelope defaulted to the rectangle and everything else at the record's own defaults.
-inline ContentGeometryRecord ScopeHdRecord(const CRectInt& envelope = CRectInt{0, 140, 1920, 940})
+//! \brief A measured 2.40 title, unless \p aspects says otherwise.
+inline ContentGeometryRecord ScopeRecord(std::vector<float> aspects = {2.40f})
 {
   ContentGeometryRecord record;
-  record.coded = CRectInt{0, 0, 1920, 1080};
-  record.rect = CRectInt{0, 140, 1920, 940};
-  record.envelope = envelope;
-  record.displayAspect = 16.0f / 9.0f;
-  record.hasReading = true;
+  record.aspects = std::move(aspects);
   return record;
 }
 
@@ -63,7 +57,7 @@ inline GeometryInputs ScopeCachedUhd()
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
+  inputs.cached = Cached({2.40f});
   return inputs;
 }
 
@@ -73,18 +67,17 @@ inline GeometryInputs RefusedCachedUhd()
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 480, 3840, 1680}, CRectInt{0, 480, 3840, 1680});
+  inputs.cached = Cached({3.20f});
   return inputs;
 }
 
-//! \brief A 2.35 measurement on the anamorphic PAL frame: 720x436 coded pixels whose display
-//! ratio only comes out right after pixel-aspect correction.
-inline GeometryInputs ScopeCachedPal(const CRectInt& envelope = CRectInt{0, 70, 720, 506},
-                                     bool varies = false)
+//! \brief A 2.35 measurement on the anamorphic PAL frame, whose 720x576 coded pixels are not
+//! square.
+inline GeometryInputs ScopeCachedPal(std::vector<float> aspects = {2.35f})
 {
   GeometryInputs inputs;
   inputs.stream = AnamorphicPal();
-  inputs.cached = Cached(CRectInt{0, 70, 720, 506}, envelope, varies);
+  inputs.cached = Cached(std::move(aspects));
   return inputs;
 }
 

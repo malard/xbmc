@@ -181,7 +181,6 @@ std::pair<EffectiveGeometry, DrawnGeometry> CApplicationContentGeometry::Snapsho
 }
 
 void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cached,
-                                                std::vector<CRectInt> sections,
                                                 float declaredAspect)
 {
   {
@@ -189,7 +188,6 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
 
     m_inputs = {};
     m_inputs.cached = cached;
-    m_inputs.sections = std::move(sections);
     m_inputs.declaredAspect = declaredAspect;
 
     m_overrides = m_pending;
@@ -292,7 +290,7 @@ void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
       m_inputs.live.rect = rect;
       m_inputs.live.envelope = rect;
       m_inputs.live.varies =
-          varies || (m_inputs.cached.HasRecord() && m_inputs.cached.record.varies);
+          varies || (m_inputs.cached.HasRecord() && m_inputs.cached.record.Varies());
       m_inputs.live.hasReading = true;
       m_inputs.hasLive = true;
     }

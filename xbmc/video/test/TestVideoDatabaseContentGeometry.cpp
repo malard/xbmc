@@ -8,9 +8,12 @@
 
 #include "DatabaseManager.h"
 #include "ServiceBroker.h"
+#include "filesystem/File.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/URIUtils.h"
 #include "video/VideoDatabaseDDL.h"
 #include "video/geometry/ContentGeometryRecord.h"
 #include "video/test/VideoDatabaseTestBase.h"
@@ -28,38 +31,14 @@ using namespace KODI::VIDEO::GEOMETRY;
 namespace
 {
 
-constexpr int CODED_WIDTH{1920};
-constexpr int CODED_HEIGHT{1080};
-
-//! A 2.35:1 picture in a 16:9 frame - 132 lines of black top and bottom.
-constexpr int CONTENT_TOP{132};
-constexpr int CONTENT_BOTTOM{948};
-
-//! \brief A taller sequence the scan also caught, so the envelope is wider than the rectangle
-//! and the two cannot be confused for one another in a round trip.
-constexpr int ENVELOPE_TOP{70};
-constexpr int ENVELOPE_BOTTOM{1010};
-
 //! \brief The file as it is on disk, sized past 32 bits so truncation cannot round-trip.
 const FileIdentity IDENTITY{8'000'000'000, 1'700'000'000};
 
 ContentGeometryRecord MakeRecord(const FileIdentity& identity = IDENTITY)
 {
   ContentGeometryRecord record;
-  record.coded = CRectInt{0, 0, CODED_WIDTH, CODED_HEIGHT};
-  record.rect = CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
-  record.envelope = CRectInt{0, ENVELOPE_TOP, CODED_WIDTH, ENVELOPE_BOTTOM};
-
-  // Set to values a default-constructed record does not hold, so that reading them back is
-  // evidence they were stored rather than of the destination being untouched.
-  record.displayAspect = 16.0f / 9.0f;
-  record.varies = true;
-  record.hasReading = true;
+  record.aspects = {2.35f, 1.78f};
   record.identity = identity;
-  record.computed = CDateTime(2026, 8, 6, 21, 30, 0);
-  record.sections.push_back(CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM});
-  record.sections.push_back(CRectInt{0, ENVELOPE_TOP, CODED_WIDTH, ENVELOPE_BOTTOM});
-
   return record;
 }
 
@@ -94,56 +73,11 @@ TEST_F(TestVideoDatabaseContentGeometry, StoresAndReadsBack)
 
   const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, IDENTITY)};
   ASSERT_EQ(ContentGeometryState::VALID, lookup.state);
-  EXPECT_EQ(stored.coded, lookup.record.coded);
-  EXPECT_EQ(stored.rect, lookup.record.rect);
-  EXPECT_EQ(stored.envelope, lookup.record.envelope);
-  EXPECT_NE(lookup.record.rect, lookup.record.envelope) << "the two columns were confused";
-  EXPECT_FLOAT_EQ(stored.displayAspect, lookup.record.displayAspect);
-  EXPECT_TRUE(lookup.record.varies);
-  EXPECT_EQ(stored.varies, lookup.record.varies);
-  EXPECT_EQ(stored.hasReading, lookup.record.hasReading);
+  EXPECT_EQ(stored.aspects, lookup.record.aspects) << "the order is the dominant ratio first";
+  EXPECT_TRUE(lookup.record.Varies());
   EXPECT_EQ(stored.algorithmVersion, lookup.record.algorithmVersion);
   EXPECT_EQ(stored.identity.size, lookup.record.identity.size);
   EXPECT_EQ(stored.identity.time, lookup.record.identity.time);
-  EXPECT_EQ(stored.sections, lookup.record.sections);
-  EXPECT_EQ(stored.computed.GetAsDBDateTime(), lookup.record.computed.GetAsDBDateTime());
-}
-
-TEST_F(TestVideoDatabaseContentGeometry, TheSectionsRoundTrip)
-{
-  const int idFile{AddTestFile("sections.mkv")};
-
-  ContentGeometryRecord record{MakeRecord(IDENTITY)};
-
-  // A pillarboxed shape as well, so the round trip covers a rectangle whose origin is not zero
-  // on either axis and cannot be reconstructed from the others.
-  record.sections.push_back(CRectInt{240, 0, CODED_WIDTH - 240, CODED_HEIGHT});
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
-
-  const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, IDENTITY)};
-  EXPECT_EQ(record.sections, lookup.record.sections);
-  ASSERT_EQ(3u, lookup.record.sections.size()) << "the order is the dominant shape first";
-  EXPECT_EQ(CRectInt(0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM), lookup.record.sections[0]);
-  EXPECT_EQ(CRectInt(240, 0, CODED_WIDTH - 240, CODED_HEIGHT), lookup.record.sections[2]);
-}
-
-/*!
- * The other half of a rule the scan's side also tests: an envelope that was never set stores as
- * an empty rectangle and reads back as a measurement claiming there is no picture at all, so the
- * write falls back to the rectangle.
- */
-TEST_F(TestVideoDatabaseContentGeometry, AnUnsetEnvelopeIsStoredAsTheRectangle)
-{
-  const int idFile{AddTestFile("noenvelope.mkv")};
-
-  ContentGeometryRecord record{MakeRecord(IDENTITY)};
-  record.envelope = CRectInt{};
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
-
-  const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, IDENTITY)};
-  ASSERT_EQ(ContentGeometryState::VALID, lookup.state);
-  EXPECT_EQ(record.rect, lookup.record.envelope);
-  EXPECT_FALSE(lookup.record.envelope.IsEmpty());
 }
 
 //! A file size past MySQL's signed 32-bit INTEGER.
@@ -206,7 +140,7 @@ TEST_F(TestVideoDatabaseContentGeometry, AnOlderAlgorithmVersionIsStaleNotMissin
   const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, IDENTITY)};
   EXPECT_EQ(ContentGeometryState::STALE, lookup.state);
   ASSERT_TRUE(lookup.HasRecord());
-  EXPECT_EQ(record.rect, lookup.record.rect);
+  EXPECT_EQ(record.aspects, lookup.record.aspects);
 }
 
 //! Identity is checked before version.
@@ -231,7 +165,7 @@ TEST_F(TestVideoDatabaseContentGeometry, StoringAgainReplacesRatherThanAccumulat
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord(first)));
 
   ContentGeometryRecord updated{MakeRecord(second)};
-  updated.rect = CRectInt{0, 0, CODED_WIDTH, CODED_HEIGHT};
+  updated.aspects = {1.78f};
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, updated));
 
   EXPECT_EQ(1, CountRows(idFile));
@@ -239,40 +173,26 @@ TEST_F(TestVideoDatabaseContentGeometry, StoringAgainReplacesRatherThanAccumulat
 
   const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, second)};
   ASSERT_EQ(ContentGeometryState::VALID, lookup.state);
-  EXPECT_EQ(updated.rect, lookup.record.rect);
-}
-
-TEST_F(TestVideoDatabaseContentGeometry, ARecordWithNoCodedFrameIsRefused)
-{
-  const int idFile{AddTestFile("nocodedframe.mkv")};
-
-  ContentGeometryRecord record{MakeRecord({8'000'000'000, 1'700'000'000})};
-  record.coded = CRectInt{};
-
-  EXPECT_FALSE(m_db.SetContentGeometry(idFile, record));
-  EXPECT_EQ(0, CountRows(idFile));
+  EXPECT_EQ(updated.aspects, lookup.record.aspects);
 }
 
 /*!
- * The exception to the rule above: a record saying the file could not be measured is stored
- * precisely because it has no rectangle. Refusing it would leave the sweep unable to remember
- * that it had already tried.
+ * A record saying measuring found nothing is stored precisely because it has no ratio. Without
+ * it the sweep could not remember that it had already tried.
  */
-TEST_F(TestVideoDatabaseContentGeometry, AFailureIsStoredDespiteHavingNoRectangle)
+TEST_F(TestVideoDatabaseContentGeometry, AnAttemptThatFoundNothingIsStored)
 {
   const int idFile{AddTestFile("unreadable.mkv")};
 
   ContentGeometryRecord record;
-  record.outcome = ContentGeometryOutcome::Failed;
   record.identity = IDENTITY;
-  record.computed = CDateTime(2026, 8, 7, 14, 0, 0);
 
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
   EXPECT_EQ(1, CountRows(idFile));
 
   const ContentGeometryAttempt attempt{m_db.GetContentGeometryAttempt(idFile)};
   EXPECT_TRUE(attempt.exists);
-  EXPECT_EQ(ContentGeometryOutcome::Failed, attempt.outcome);
+  EXPECT_FALSE(attempt.hasReading);
   EXPECT_EQ(IDENTITY.size, attempt.identity.size);
   EXPECT_EQ(IDENTITY.time, attempt.identity.time);
   EXPECT_FALSE(NeedsContentGeometry(attempt, IDENTITY));
@@ -285,7 +205,6 @@ TEST_F(TestVideoDatabaseContentGeometry, AFailureReadsAsMissingToEveryConsumer)
   const int idFile{AddTestFile("unreadable-lookup.mkv")};
 
   ContentGeometryRecord record;
-  record.outcome = ContentGeometryOutcome::Failed;
   record.identity = IDENTITY;
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
 
@@ -295,15 +214,26 @@ TEST_F(TestVideoDatabaseContentGeometry, AFailureReadsAsMissingToEveryConsumer)
   EXPECT_FALSE(m_db.GetContentGeometryUnverified(idFile, unverified));
 }
 
-TEST_F(TestVideoDatabaseContentGeometry, AMeasurementRoundTripsItsOutcome)
+//! An NFO is trusted for the file as it stands when it is imported.
+TEST_F(TestVideoDatabaseContentGeometry, ARecordWithNoIdentityTakesTheFilesOwn)
 {
-  const int idFile{AddTestFile("outcome.mkv")};
+  XFILE::CFile* const file{XBMC_CREATETEMPFILE(".mkv")};
+  ASSERT_NE(nullptr, file);
+  const std::string path{XBMC_TEMPFILEPATH(file)};
+  const int idFile{m_db.AddFile(path, URIUtils::GetDirectory(path))};
+  ASSERT_GE(idFile, 0);
 
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord(IDENTITY)));
+  ContentGeometryRecord imported;
+  imported.aspects = {2.35f};
+  ASSERT_TRUE(m_db.SetContentGeometry(idFile, imported));
 
-  EXPECT_EQ(ContentGeometryOutcome::Measured,
-            m_db.GetContentGeometry(idFile, IDENTITY).record.outcome);
-  EXPECT_EQ(ContentGeometryOutcome::Measured, m_db.GetContentGeometryAttempt(idFile).outcome);
+  const FileIdentity identity{GetFileIdentity(path)};
+  ASSERT_TRUE(identity.IsKnown());
+  const ContentGeometryLookup lookup{m_db.GetContentGeometry(idFile, identity)};
+  EXPECT_EQ(ContentGeometryState::VALID, lookup.state);
+  EXPECT_EQ(imported.aspects, lookup.record.aspects);
+
+  EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
 }
 
 TEST_F(TestVideoDatabaseContentGeometry, AFileWithNoRowHasNoAttempt)
@@ -329,7 +259,6 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
   ASSERT_TRUE(m_db.SetContentGeometry(measured, MakeRecord(IDENTITY)));
 
   ContentGeometryRecord failure;
-  failure.outcome = ContentGeometryOutcome::Failed;
   failure.identity = IDENTITY;
   ASSERT_TRUE(m_db.SetContentGeometry(failed, failure));
 
@@ -346,7 +275,7 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
   const ContentGeometryCandidate first{find(measured)};
   EXPECT_EQ("/test/contentgeometry/candidate-measured.mkv", first.path);
   EXPECT_TRUE(first.attempt.exists);
-  EXPECT_EQ(ContentGeometryOutcome::Measured, first.attempt.outcome);
+  EXPECT_TRUE(first.attempt.hasReading);
   EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, first.attempt.algorithmVersion);
   EXPECT_EQ(IDENTITY.size, first.attempt.identity.size);
   EXPECT_FALSE(NeedsContentGeometry(first.attempt, IDENTITY));
@@ -354,7 +283,7 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
   EXPECT_FALSE(find(untouched).attempt.exists);
   EXPECT_TRUE(NeedsContentGeometry(find(untouched).attempt, IDENTITY));
 
-  EXPECT_EQ(ContentGeometryOutcome::Failed, find(failed).attempt.outcome);
+  EXPECT_FALSE(find(failed).attempt.hasReading);
 }
 
 /*!
@@ -579,7 +508,7 @@ TEST(TestVideoDatabaseContentGeometryMySQL, StoresAndCascadesOnMySQL)
   const ContentGeometryLookup lookup{db.GetContentGeometry(idFile, identity)};
   ASSERT_EQ(ContentGeometryState::VALID, lookup.state);
   EXPECT_EQ(identity.size, lookup.record.identity.size) << "the file size did not survive MySQL";
-  EXPECT_EQ(CRectInt(0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM), lookup.record.rect);
+  EXPECT_EQ(MakeRecord().aspects, lookup.record.aspects);
 
   EXPECT_EQ(ContentGeometryState::MISSING,
             db.GetContentGeometry(idFile, {identity.size, identity.time + 1}).state);

@@ -26,6 +26,8 @@
 
 #include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -517,73 +519,58 @@ TEST_F(AudioSortKeyTester, SortKeyFollowsTheLanguageDetailsSetting)
   EXPECT_EQ("de", sortable[Field::AUDIO_LANGUAGE].asString());
 }
 
-//! Content geometry survives the export and import round trip.
+//! Content geometry survives the export and import round trip, as the ratios alone.
 TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughNfo)
 {
   using namespace KODI::VIDEO::GEOMETRY;
 
   CVideoInfoTag written;
-  written.m_contentGeometry.coded = CRectInt{0, 0, 3840, 2160};
-  written.m_contentGeometry.rect = CRectInt{0, 264, 3840, 1896};
-  written.m_contentGeometry.varies = true;
-  written.m_contentGeometry.hasReading = true;
-  written.m_contentGeometry.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
-
-  // Beyond 32 bits.
+  written.m_contentGeometry.aspects = {2.35f, 1.78f};
   written.m_contentGeometry.identity = FileIdentity{68'719'476'736, 1'700'000'000};
-  written.m_contentGeometry.computed = CDateTime(2026, 8, 6, 21, 30, 0);
-
-  // The shapes travel too: an NFO carrying the flag without them describes a title that
-  // changes shape and names none of the shapes.
-  written.m_contentGeometry.sections.push_back(CRectInt{0, 264, 3840, 1896});
-  written.m_contentGeometry.sections.push_back(CRectInt{0, 0, 3840, 2160});
   ASSERT_TRUE(written.HasContentGeometry());
 
   CXBMCTinyXML doc;
   doc.InsertEndChild(TiXmlElement("root"));
   ASSERT_TRUE(written.Save(doc.RootElement(), "movie", true));
 
+  const TiXmlElement* block{
+      doc.RootElement()->FirstChildElement("movie")->FirstChildElement("contentgeometry")};
+  ASSERT_NE(nullptr, block);
+
+  // Only what describes the picture is written: each ratio, human readable, dominant first.
+  std::vector<std::string> written_;
+  for (const TiXmlElement* child = block->FirstChildElement(); child;
+       child = child->NextSiblingElement())
+  {
+    EXPECT_STREQ("aspect", child->Value());
+    written_.emplace_back(child->GetText() ? child->GetText() : "");
+  }
+  EXPECT_EQ((std::vector<std::string>{"2.35", "1.78"}), written_);
+
   CVideoInfoTag read;
   ASSERT_TRUE(read.Load(doc.RootElement()->FirstChildElement("movie"), true, false));
 
   ASSERT_TRUE(read.HasContentGeometry());
-  EXPECT_EQ(written.m_contentGeometry.coded, read.m_contentGeometry.coded);
-  EXPECT_EQ(written.m_contentGeometry.rect, read.m_contentGeometry.rect);
-  EXPECT_EQ(written.m_contentGeometry.varies, read.m_contentGeometry.varies);
-  EXPECT_EQ(written.m_contentGeometry.hasReading, read.m_contentGeometry.hasReading);
-  EXPECT_EQ(written.m_contentGeometry.algorithmVersion, read.m_contentGeometry.algorithmVersion);
-  EXPECT_EQ(written.m_contentGeometry.computed.GetAsDBDateTime(),
-            read.m_contentGeometry.computed.GetAsDBDateTime());
+  EXPECT_EQ(written.m_contentGeometry.aspects, read.m_contentGeometry.aspects);
+  EXPECT_TRUE(read.m_contentGeometry.Varies());
+  EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, read.m_contentGeometry.algorithmVersion);
 
-  EXPECT_EQ(written.m_contentGeometry.identity.size, read.m_contentGeometry.identity.size);
-  EXPECT_EQ(written.m_contentGeometry.identity.time, read.m_contentGeometry.identity.time);
-  EXPECT_TRUE(read.m_contentGeometry.identity.Matches(written.m_contentGeometry.identity));
-
-  EXPECT_EQ(written.m_contentGeometry.sections, read.m_contentGeometry.sections)
-      << "the title still claims to vary, with none of the shapes it varies between";
+  // The file an NFO describes is identified when the record is stored, not from the NFO.
+  EXPECT_FALSE(read.m_contentGeometry.identity.IsKnown());
 }
 
-/*!
- * An NFO written before the shapes travelled in one carries varies and no sections. Nothing can
- * recover them, but the flag it does carry is still the measurement's, so it is imported as
- * written rather than argued with.
- */
-TEST(TestVideoInfoTag, AnNfoPredatingTheShapesImportsWithoutThem)
+//! A record that found nothing has nothing to tell an NFO.
+TEST(TestVideoInfoTag, NoReadingWritesNoContentGeometry)
 {
-  const std::string document{
-      R"(<movie><contentgeometry><codedwidth>3840</codedwidth><codedheight>2160</codedheight>
-         <x>0</x><y>264</y><width>3840</width><height>1632</height>
-         <varies>true</varies><hasreading>true</hasreading></contentgeometry></movie>)"};
+  CVideoInfoTag written;
+  written.m_contentGeometry.identity = {8'000'000'000, 1'700'000'000};
 
   CXBMCTinyXML doc;
-  doc.Parse(document, TIXML_ENCODING_UNKNOWN);
+  doc.InsertEndChild(TiXmlElement("root"));
+  ASSERT_TRUE(written.Save(doc.RootElement(), "movie", true));
 
-  CVideoInfoTag details;
-  ASSERT_TRUE(details.Load(doc.RootElement(), true, false));
-
-  ASSERT_TRUE(details.HasContentGeometry());
-  EXPECT_TRUE(details.m_contentGeometry.varies);
-  EXPECT_TRUE(details.m_contentGeometry.sections.empty());
+  EXPECT_EQ(nullptr,
+            doc.RootElement()->FirstChildElement("movie")->FirstChildElement("contentgeometry"));
 }
 
 //! An NFO with no geometry leaves the tag reporting none, not an empty rectangle.
@@ -610,15 +597,8 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughTheArchive)
 
   CVideoInfoTag written;
   written.m_strTitle = "archived";
-  written.m_contentGeometry.coded = CRectInt{0, 0, 3840, 2160};
-  written.m_contentGeometry.rect = CRectInt{0, 264, 3840, 1896};
-  written.m_contentGeometry.envelope = CRectInt{0, 140, 3840, 2020};
-  written.m_contentGeometry.sections = {CRectInt{0, 264, 3840, 1896}, CRectInt{0, 140, 3840, 2020}};
-  written.m_contentGeometry.displayAspect = 16.0f / 9.0f;
-  written.m_contentGeometry.varies = true;
-  written.m_contentGeometry.hasReading = true;
+  written.m_contentGeometry.aspects = {2.35f, 1.78f};
   written.m_contentGeometry.identity = FileIdentity{68'719'476'736, 1'700'000'000};
-  written.m_contentGeometry.computed = CDateTime(2026, 8, 6, 21, 30, 0);
 
   // Not the current version, so that losing this field is visible here rather than only in
   // whatever later reports the record as fresh when it is stale.
@@ -641,47 +621,13 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughTheArchive)
   read.Archive(in);
   in.Close();
 
-  EXPECT_EQ(written.m_contentGeometry.coded, read.m_contentGeometry.coded);
-  EXPECT_EQ(written.m_contentGeometry.rect, read.m_contentGeometry.rect);
-  EXPECT_EQ(written.m_contentGeometry.envelope, read.m_contentGeometry.envelope);
-  EXPECT_EQ(written.m_contentGeometry.sections, read.m_contentGeometry.sections);
-  EXPECT_FLOAT_EQ(written.m_contentGeometry.displayAspect, read.m_contentGeometry.displayAspect);
-  EXPECT_EQ(written.m_contentGeometry.varies, read.m_contentGeometry.varies);
-  EXPECT_EQ(written.m_contentGeometry.hasReading, read.m_contentGeometry.hasReading);
+  EXPECT_EQ(written.m_contentGeometry.aspects, read.m_contentGeometry.aspects);
   EXPECT_EQ(written.m_contentGeometry.algorithmVersion, read.m_contentGeometry.algorithmVersion);
   EXPECT_EQ(written.m_contentGeometry.identity.size, read.m_contentGeometry.identity.size);
   EXPECT_EQ(written.m_contentGeometry.identity.time, read.m_contentGeometry.identity.time);
-  EXPECT_EQ(written.m_contentGeometry.computed.GetAsDBDateTime(),
-            read.m_contentGeometry.computed.GetAsDBDateTime());
-
-  // outcome is deliberately not carried: a failed attempt has no coded frame, so it reads as
-  // no measurement at all whichever value survives, and nothing downstream asks.
   EXPECT_EQ(written.m_showLink, read.m_showLink) << "the operators are out of step";
 
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
-}
-
-/*!
- * An NFO written before the envelope existed describes a rectangle and nothing wider, so the
- * rectangle is the envelope. Defaulting to an empty one instead would import a measurement
- * claiming there is no picture at all.
- */
-TEST(TestVideoInfoTag, AnNfoPredatingTheEnvelopeTakesTheRectangleAsOne)
-{
-  const std::string document{
-      R"(<movie><contentgeometry><codedwidth>3840</codedwidth><codedheight>2160</codedheight>
-         <x>0</x><y>264</y><width>3840</width><height>1632</height>
-         <hasreading>true</hasreading></contentgeometry></movie>)"};
-
-  CXBMCTinyXML doc;
-  doc.Parse(document, TIXML_ENCODING_UNKNOWN);
-
-  CVideoInfoTag details;
-  ASSERT_TRUE(details.Load(doc.RootElement(), true, false));
-
-  ASSERT_TRUE(details.HasContentGeometry());
-  EXPECT_EQ(details.m_contentGeometry.rect, details.m_contentGeometry.envelope);
-  EXPECT_FALSE(details.m_contentGeometry.envelope.IsEmpty());
 }
 
 /*!
@@ -704,10 +650,19 @@ TEST(TestVideoInfoTag, AnUnmeasuredTagResolvesToNothingRatherThanItsFrame)
 
 namespace
 {
-//! \brief A 2.40 letterbox measurement on an HD frame.
-KODI::VIDEO::GEOMETRY::ContentGeometryRecord ScopeRecord()
+//! \brief A tag for an HD file, measured as \p aspects.
+CVideoInfoTag MeasuredTag(std::vector<float> aspects = {2.40f})
 {
-  return KODI::VIDEO::GEOMETRY::TEST::ScopeHdRecord();
+  VideoStreamInfo info;
+  info.width = 1920;
+  info.height = 1080;
+  info.videoAspectRatio = 16.0f / 9.0f;
+
+  CVideoInfoTag tag;
+  tag.m_streamDetails.AddStream(new CStreamDetailVideo(info, 0, CStreamDetail::MEDIA));
+  tag.m_streamDetails.DetermineBestStreams();
+  tag.m_contentGeometry.aspects = std::move(aspects);
+  return tag;
 }
 } // unnamed namespace
 
@@ -715,14 +670,12 @@ TEST(TestVideoInfoTag, AMeasuredTagResolvesToTheRatioItWasMeasuredAt)
 {
   using namespace KODI::VIDEO::GEOMETRY;
 
-  CVideoInfoTag tag;
-  tag.m_contentGeometry = ScopeRecord();
-
-  const EffectiveGeometry resolved{tag.ResolveContentGeometry()};
+  const EffectiveGeometry resolved{MeasuredTag().ResolveContentGeometry()};
 
   EXPECT_EQ(GeometrySource::Cached, resolved.source);
   EXPECT_EQ("2.40", resolved.label);
   EXPECT_FALSE(resolved.stale);
+  TEST::ExpectRect(resolved.displayRect, 0.0f, 140.0f, 1920.0f, 940.0f);
 }
 
 //! A record from a superseded detector keeps serving, and says it is stale rather than
@@ -731,8 +684,7 @@ TEST(TestVideoInfoTag, AStaleRecordIsStillResolvedAndSaysSo)
 {
   using namespace KODI::VIDEO::GEOMETRY;
 
-  CVideoInfoTag tag;
-  tag.m_contentGeometry = ScopeRecord();
+  CVideoInfoTag tag{MeasuredTag()};
   tag.m_contentGeometry.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION - 1;
 
   const EffectiveGeometry resolved{tag.ResolveContentGeometry()};
@@ -743,20 +695,14 @@ TEST(TestVideoInfoTag, AStaleRecordIsStillResolvedAndSaysSo)
 }
 
 /*!
- * The stored shapes reach the answer, which is what makes a title reporting more than one ratio
+ * The stored ratios reach the answer, which is what makes a title reporting more than one ratio
  * possible from a listing at all.
  */
-TEST(TestVideoInfoTag, TheStoredShapesReachTheResolvedSections)
+TEST(TestVideoInfoTag, TheStoredRatiosReachTheResolvedSections)
 {
   using namespace KODI::VIDEO::GEOMETRY;
 
-  CVideoInfoTag tag;
-  tag.m_contentGeometry = ScopeRecord();
-  tag.m_contentGeometry.envelope = CRectInt{0, 0, 1920, 1080};
-  tag.m_contentGeometry.varies = true;
-  tag.m_contentGeometry.sections = {CRectInt{0, 140, 1920, 940}, CRectInt{0, 0, 1920, 1080}};
-
-  const EffectiveGeometry resolved{tag.ResolveContentGeometry()};
+  const EffectiveGeometry resolved{MeasuredTag({2.40f, 1.78f}).ResolveContentGeometry()};
 
   ASSERT_EQ(2u, resolved.sections.size());
   EXPECT_EQ("2.40", resolved.sections[0].label);
@@ -767,26 +713,34 @@ TEST(TestVideoInfoTag, TheStoredShapesReachTheResolvedSections)
   ASSERT_EQ(2u, aspects.aspects.size());
 }
 
+//! The frame a ratio is fitted into comes from the stream details, so a tag without them has
+//! nowhere to place it.
+TEST(TestVideoInfoTag, ATagWithoutAVideoStreamResolvesToNothing)
+{
+  CVideoInfoTag tag;
+  tag.m_contentGeometry.aspects = {2.40f};
+
+  EXPECT_EQ(KODI::VIDEO::GEOMETRY::GeometrySource::Container, tag.ResolveContentGeometry().source);
+}
+
 /*!
- * The agreement the contract rests on. The library resolves from the stored record alone; the
- * player resolves the same record with a stream in hand. Given the same measurement they must
- * name the same ratio, or a title reads one way in a list and another while it plays.
+ * The agreement the contract rests on. The library resolves the stored record against the
+ * stream details; the player resolves the same record against the stream it is playing. Given
+ * the same measurement they must name the same ratio, or a title reads one way in a list and
+ * another while it plays.
  */
 TEST(TestVideoInfoTag, TheLibraryAndThePlayerNameTheSameRatio)
 {
   using namespace KODI::VIDEO::GEOMETRY;
 
-  const ContentGeometryRecord record = ScopeRecord();
-
-  CVideoInfoTag tag;
-  tag.m_contentGeometry = record;
+  const CVideoInfoTag tag{MeasuredTag()};
   const EffectiveGeometry library{tag.ResolveContentGeometry()};
 
   GeometryInputs player;
-  player.stream.coded = record.coded;
-  player.stream.displayAspect = record.displayAspect;
+  player.stream.coded = CRectInt{0, 0, 1920, 1080};
+  player.stream.displayAspect = 16.0f / 9.0f;
   player.cached.state = ContentGeometryState::VALID;
-  player.cached.record = record;
+  player.cached.record = tag.m_contentGeometry;
   player.policy = ContentGeometryPolicyFromSettings();
   player.atRestAspect = ContentGeometryAtRestFromSettings();
   const EffectiveGeometry played{ResolveEffectiveGeometry(player)};

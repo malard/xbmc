@@ -135,13 +135,11 @@ struct GeometryInputs
   //! \brief The ratio the display rests at, which a measurement errs toward. Zero for none.
   float atRestAspect{0.0f};
 
-  ContentGeometryLookup cached; //!< what the detection cache holds for this file
+  //! \brief What the detection cache holds for this file. Its ratios are also published as
+  //! the title's sections.
+  ContentGeometryLookup cached;
   CombinedGeometry live; //!< a playback reading, which outranks the cache when present
   bool hasLive{false};
-
-  //! \brief The geometries measured, dominant first, in coded space. Published, never
-  //! resolved from.
-  std::vector<CRectInt> sections;
 
   VariableGeometryPolicy policy{VariableGeometryPolicy::Envelope};
 };

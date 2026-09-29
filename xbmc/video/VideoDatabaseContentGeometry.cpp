@@ -11,7 +11,6 @@
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/geometry/ContentGeometryRecord.h"
-#include "video/geometry/GeometryTransforms.h"
 
 #include <cinttypes>
 #include <memory>
@@ -22,61 +21,31 @@ using namespace KODI::VIDEO::GEOMETRY;
 namespace
 {
 
-//! \brief The outcome column holds the enumerator's value. Anything else is treated as a
-//! measurement, so its rectangle is still read.
-ContentGeometryOutcome OutcomeFromColumn(int value)
-{
-  return value == static_cast<int>(ContentGeometryOutcome::Failed)
-             ? ContentGeometryOutcome::Failed
-             : ContentGeometryOutcome::Measured;
-}
-
 ContentGeometryRecord RecordFromDataset(dbiplus::Dataset& ds)
 {
   ContentGeometryRecord geometry;
-
-  const int codedWidth{ds.fv("codedWidth").get_asInt()};
-  const int codedHeight{ds.fv("codedHeight").get_asInt()};
-  geometry.coded = CRectInt{0, 0, codedWidth, codedHeight};
-
-  geometry.rect = OriginSizeRect(ds.fv("rectX").get_asInt(), ds.fv("rectY").get_asInt(),
-                                 ds.fv("rectWidth").get_asInt(), ds.fv("rectHeight").get_asInt());
-  geometry.envelope =
-      OriginSizeRect(ds.fv("envelopeX").get_asInt(), ds.fv("envelopeY").get_asInt(),
-                     ds.fv("envelopeWidth").get_asInt(), ds.fv("envelopeHeight").get_asInt());
-
-  geometry.displayAspect = ds.fv("displayAspect").get_asFloat();
-  geometry.varies = ds.fv("varies").get_asBool();
-  geometry.hasReading = ds.fv("hasReading").get_asBool();
-  geometry.outcome = OutcomeFromColumn(ds.fv("outcome").get_asInt());
+  geometry.aspects = DecodeContentAspects(ds.fv("aspects").get_asString());
   geometry.algorithmVersion = ds.fv("algorithmVersion").get_asInt();
   geometry.identity.size = ds.fv("fileSize").get_asInt64();
   geometry.identity.time = ds.fv("fileMTime").get_asInt64();
-  geometry.computed.SetFromDBDateTime(ds.fv("dateComputed").get_asString());
-  geometry.sections = DecodeGeometrySections(ds.fv("sections").get_asString());
-
   return geometry;
 }
 
-//! \brief What is stored for one file, from a row carrying those four columns.
+//! \brief What is stored for one file, from a row carrying those columns.
 ContentGeometryAttempt AttemptFromDataset(dbiplus::Dataset& ds)
 {
   ContentGeometryAttempt attempt;
   attempt.exists = true;
+  attempt.hasReading = !ds.fv("aspects").get_asString().empty();
   attempt.algorithmVersion = ds.fv("algorithmVersion").get_asInt();
   attempt.identity.size = ds.fv("fileSize").get_asInt64();
   attempt.identity.time = ds.fv("fileMTime").get_asInt64();
-  attempt.outcome = OutcomeFromColumn(ds.fv("outcome").get_asInt());
   return attempt;
 }
 
-constexpr const char* ATTEMPT_COLUMNS{"algorithmVersion, fileSize, fileMTime, outcome"};
-
-//! \brief What RecordFromDataset() reads and SetContentGeometry() writes.
-constexpr const char* RECORD_COLUMNS{
-    "codedWidth, codedHeight, rectX, rectY, rectWidth, rectHeight, envelopeX, envelopeY, "
-    "envelopeWidth, envelopeHeight, displayAspect, varies, hasReading, outcome, "
-    "algorithmVersion, fileSize, fileMTime, dateComputed, sections"};
+//! \brief What RecordFromDataset() and AttemptFromDataset() read and SetContentGeometry()
+//! writes.
+constexpr const char* RECORD_COLUMNS{"aspects, algorithmVersion, fileSize, fileMTime"};
 
 } // unnamed namespace
 
@@ -84,32 +53,30 @@ bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord&
 {
   try
   {
-    if (idFile < 0 || nullptr == m_pDB || nullptr == m_pDS)
+    if (idFile < 0 || nullptr == m_pDB)
       return false;
 
-    // A failed attempt is a row with no rectangle, so only a measurement has to carry one.
-    if (geometry.outcome == ContentGeometryOutcome::Measured && !geometry.IsValid())
+    // A record without an identity came from an NFO, which is trusted for the file as it
+    // stands now.
+    FileIdentity identity{geometry.identity};
+    const std::unique_ptr<dbiplus::Dataset> ds{identity.IsKnown() ? nullptr
+                                                                  : m_pDB->CreateDataset()};
+    if (ds)
     {
-      CLog::LogF(LOGERROR, "refusing content geometry for file {} with no coded frame", idFile);
-      return false;
+      ds->query(PrepareSQL("SELECT strPath, strFileName FROM files JOIN path ON "
+                           "path.idPath=files.idPath WHERE idFile=%i",
+                           idFile));
+      if (!ds->eof())
+        identity = GetFileIdentity(URIUtils::AddFileToFolder(ds->fv("strPath").get_asString(),
+                                                             ds->fv("strFileName").get_asString()));
+      ds->close();
     }
 
-    // An envelope that was never set falls back to the rectangle.
-    const CRectInt envelope{geometry.envelope.IsEmpty() ? geometry.rect : geometry.envelope};
-
-    const std::string sql{PrepareSQL(
-        "REPLACE INTO contentgeometry (idFile, %s) "
-        "VALUES (%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%i,%i,%" PRId64 ",%" PRId64
-        ",'%s','%s')",
-        RECORD_COLUMNS, idFile, geometry.coded.Width(), geometry.coded.Height(), geometry.rect.x1,
-        geometry.rect.y1, geometry.rect.Width(), geometry.rect.Height(), envelope.x1, envelope.y1,
-        envelope.Width(), envelope.Height(), static_cast<double>(geometry.displayAspect),
-        geometry.varies ? 1 : 0, geometry.hasReading ? 1 : 0, static_cast<int>(geometry.outcome),
-        geometry.algorithmVersion, geometry.identity.size, geometry.identity.time,
-        geometry.computed.GetAsDBDateTime().c_str(),
-        EncodeGeometrySections(geometry.sections).c_str())};
-
-    if (ExecuteQuery(sql))
+    if (ExecuteQuery(PrepareSQL("REPLACE INTO contentgeometry (idFile, %s) "
+                                "VALUES (%i,'%s',%i,%" PRId64 ",%" PRId64 ")",
+                                RECORD_COLUMNS, idFile,
+                                EncodeContentAspects(geometry.aspects).c_str(),
+                                geometry.algorithmVersion, identity.size, identity.time)))
       return true;
   }
   catch (...)
@@ -167,8 +134,8 @@ bool CVideoDatabase::GetContentGeometryUnverified(int idFile, ContentGeometryRec
     geometry = RecordFromDataset(*ds);
     ds->close();
 
-    // A failed attempt reads as no record; GetContentGeometryAttempt() sees it.
-    return geometry.outcome == ContentGeometryOutcome::Measured && geometry.IsValid();
+    // An attempt that found nothing reads as no record; GetContentGeometryAttempt() sees it.
+    return geometry.HasReading();
   }
   catch (...)
   {
@@ -189,8 +156,7 @@ ContentGeometryAttempt CVideoDatabase::GetContentGeometryAttempt(int idFile)
     if (!ds)
       return attempt;
 
-    ds->query(
-        PrepareSQL("SELECT %s FROM contentgeometry WHERE idFile=%i", ATTEMPT_COLUMNS, idFile));
+    ds->query(PrepareSQL("SELECT %s FROM contentgeometry WHERE idFile=%i", RECORD_COLUMNS, idFile));
     if (ds->num_rows() == 0)
     {
       ds->close();
@@ -219,12 +185,13 @@ std::vector<ContentGeometryCandidate> CVideoDatabase::GetContentGeometryCandidat
     if (!ds)
       return candidates;
 
-    ds->query("SELECT files.idFile, path.strPath, files.strFileName, "
-              "contentgeometry.idFile AS storedFile, contentgeometry.algorithmVersion, "
-              "contentgeometry.fileSize, contentgeometry.fileMTime, contentgeometry.outcome "
-              "FROM files JOIN path ON path.idPath=files.idPath "
-              "LEFT JOIN contentgeometry ON contentgeometry.idFile=files.idFile "
-              "ORDER BY files.idFile");
+    ds->query(
+        "SELECT files.idFile, path.strPath, files.strFileName, "
+        "contentgeometry.idFile AS storedFile, contentgeometry.aspects, "
+        "contentgeometry.algorithmVersion, contentgeometry.fileSize, contentgeometry.fileMTime "
+        "FROM files JOIN path ON path.idPath=files.idPath "
+        "LEFT JOIN contentgeometry ON contentgeometry.idFile=files.idFile "
+        "ORDER BY files.idFile");
 
     candidates.reserve(ds->num_rows());
     while (!ds->eof())

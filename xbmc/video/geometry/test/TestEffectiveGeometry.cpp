@@ -54,7 +54,7 @@ TEST(TestEffectiveGeometry, AMeasurementResolvesToItsVocabularyEntry)
   // 3840x1728 is 2.2222, an encode of a 2.20 film. The answer is the entry, not the encode:
   // a masking system absorbs the difference in the fabric, and what it cannot absorb is a
   // ratio nothing was ever shot at, which no preset can be programmed against.
-  inputs.cached = Cached(CRectInt{0, 216, 3840, 1944}, CRectInt{0, 216, 3840, 1944});
+  inputs.cached = Cached({2.22f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -70,7 +70,7 @@ TEST(TestEffectiveGeometry, SnappingErrsTowardTheShapeTheRoomRestsAt)
   inputs.stream = Uhd();
   // 3840x1620 is 2.3704, within tolerance of 2.35 and 2.40 both. Which entry is right
   // depends on the room, so the resting shape decides - in both directions.
-  inputs.cached = Cached(CRectInt{0, 270, 3840, 1890}, CRectInt{0, 270, 3840, 1890});
+  inputs.cached = Cached({2.37f});
 
   inputs.atRestAspect = 1.78f;
   const EffectiveGeometry towardFlat = ResolveEffectiveGeometry(inputs);
@@ -86,7 +86,7 @@ TEST(TestEffectiveGeometry, DetectionAndDeclarationOfTheSameRatioAgreeExactly)
 {
   GeometryInputs measured;
   measured.stream = Uhd();
-  measured.cached = Cached(CRectInt{0, 270, 3840, 1890}, CRectInt{0, 270, 3840, 1890});
+  measured.cached = Cached({2.37f});
   measured.atRestAspect = 2.40f;
 
   GeometryInputs declared;
@@ -118,7 +118,7 @@ TEST(TestEffectiveGeometry, TheDetectedRatioIgnoresADeclarationOverIt)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 216, 3840, 1944}, CRectInt{0, 216, 3840, 1944});
+  inputs.cached = Cached({2.22f});
 
   // Undeclared, the served answer and the detected one are the same thing.
   const EffectiveGeometry undeclared = ResolveEffectiveGeometry(inputs);
@@ -152,7 +152,7 @@ TEST(TestEffectiveGeometry, TheDetectedRatioIsZeroWhenNothingWasMeasured)
   // 3.84, which no real ratio is.
   GeometryInputs rejected;
   rejected.stream = Uhd();
-  rejected.cached = Cached(CRectInt{0, 580, 3840, 1580}, CRectInt{0, 580, 3840, 1580});
+  rejected.cached = Cached({3.84f});
   const EffectiveGeometry result = ResolveEffectiveGeometry(rejected);
   ASSERT_TRUE(result.rejected);
   EXPECT_FLOAT_EQ(0.0f, result.detectedAspect);
@@ -164,7 +164,7 @@ TEST(TestEffectiveGeometry, AFullFrameMeasurementServesExactlyTheFrame)
   // resolving to it gives back the frame to the pixel and nothing on the wire changes.
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 0, 3840, 2160}, CRectInt{0, 0, 3840, 2160});
+  inputs.cached = Cached({1.78f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -173,20 +173,6 @@ TEST(TestEffectiveGeometry, AFullFrameMeasurementServesExactlyTheFrame)
   EXPECT_EQ(0.0f, result.displayRect.y1);
   EXPECT_EQ(3840.0f, result.displayRect.x2);
   EXPECT_EQ(2160.0f, result.displayRect.y2);
-}
-
-TEST(TestEffectiveGeometry, SnappingCentresWhatItServes)
-{
-  // The measured offset is discarded with the measured size, deliberately: the answer is the
-  // entry's rectangle, which is a declaration's, and a declaration knows only a ratio.
-  GeometryInputs inputs;
-  inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 100, 3840, 1700}, CRectInt{0, 100, 3840, 1700});
-
-  const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
-
-  EXPECT_EQ("2.40", result.label);
-  ExpectRect(result.displayRect, 0.0f, 280.0f, 3840.0f, 1880.0f);
 }
 
 TEST(TestEffectiveGeometry, NothingKnownReportsTheWholeFrame)
@@ -218,8 +204,7 @@ TEST(TestEffectiveGeometry, AStaleMeasurementIsStillServed)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880}, false,
-                         ContentGeometryState::STALE);
+  inputs.cached = Cached({2.40f}, ContentGeometryState::STALE);
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -321,7 +306,7 @@ TEST(TestEffectiveGeometry, VariablePolicyDecidesBetweenShowingAllOfItAndNamingI
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
+  inputs.cached = Cached({2.40f, 1.78f});
 
   inputs.policy = VariableGeometryPolicy::Envelope;
   const EffectiveGeometry envelope = ResolveEffectiveGeometry(inputs);
@@ -342,8 +327,7 @@ TEST(TestEffectiveGeometry, VariablePolicyDecidesBetweenShowingAllOfItAndNamingI
 TEST(TestEffectiveGeometry, HorizontalVariationDoesNotNarrowTheAnswer)
 {
   const StreamGeometry scope{CRectInt{0, 0, 1920, 800}, 2.4f, 0};
-  const CRectInt body{0, 0, 1920, 800};
-  const CRectInt archive{413, 0, 1507, 800};
+  const CRectInt body{0, 0, 1920, 800}; //!< the pillarboxed archive at 413 to 1507 is inside it
 
   CombinedGeometry live;
   live.hasReading = true;
@@ -355,7 +339,6 @@ TEST(TestEffectiveGeometry, HorizontalVariationDoesNotNarrowTheAnswer)
   inputs.stream = scope;
   inputs.hasLive = true;
   inputs.live = live;
-  inputs.sections = {body, archive};
 
   for (const VariableGeometryPolicy policy :
        {VariableGeometryPolicy::Envelope, VariableGeometryPolicy::Dominant})
@@ -375,8 +358,7 @@ TEST(TestEffectiveGeometry, HorizontalVariationDoesNotNarrowTheAnswer)
  */
 TEST(TestEffectiveGeometry, MeasuredSectionsArePublishedInDisplaySpaceWithTheirOwnRatio)
 {
-  GeometryInputs inputs = ScopeCachedPal(CRectInt{0, 0, 720, 576}, true);
-  inputs.sections = {CRectInt{0, 70, 720, 506}, CRectInt{0, 0, 720, 576}};
+  GeometryInputs inputs = ScopeCachedPal({2.35f, 1.78f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -395,31 +377,6 @@ TEST(TestEffectiveGeometry, MeasuredSectionsArePublishedInDisplaySpaceWithTheirO
 }
 
 /*!
- * Half side-by-side: each view is 960x1080 of a 1920x1080 frame, and its pixels are squeezed
- * two to one, so a 2.35 picture in it measures 960 by 816. Resolved against the view that is
- * 2.35; resolved against the whole frame it is 1.18, which is inside tolerance of Movietone -
- * a real entry, so nothing rejects it and the title is published as 1.19.
- */
-TEST(TestEffectiveGeometry, AStereoscopicMeasurementResolvesAgainstItsOwnView)
-{
-  const CRectInt content{0, 132, 960, 948};
-
-  GeometryInputs view;
-  view.stream = MeasuredStreamGeometry("left_right", 1920, 1080, 16.0f / 9.0f);
-  view.cached = Cached(content, content);
-  EXPECT_EQ("2.35", ResolveEffectiveGeometry(view).label);
-
-  // Against the whole frame the same measurement names some other ratio. Which one is not the
-  // point and is not asserted - it depends on where the vocabulary's entries happen to sit, and
-  // pinning it would make an unrelated edit to the vocabulary fail here.
-  GeometryInputs wholeFrame;
-  wholeFrame.stream = {CRectInt{0, 0, 1920, 1080}, 16.0f / 9.0f, 0};
-  wholeFrame.cached = Cached(content, content);
-  EXPECT_NE("2.35", ResolveEffectiveGeometry(wholeFrame).label)
-      << "the region the measurement describes has stopped mattering, which it should not have";
-}
-
-/*!
  * A measurement describes the stream the sampler took, so it is withheld while another one is
  * decoding - withheld, not destroyed. The inputs are loaded once, as the file opens, so
  * clearing them would leave a viewer who switched away and back watching the coded frame for
@@ -428,18 +385,17 @@ TEST(TestEffectiveGeometry, AStereoscopicMeasurementResolvesAgainstItsOwnView)
 TEST(TestEffectiveGeometry, AnotherStreamWithholdsTheRecordWithoutDestroyingIt)
 {
   GeometryInputs inputs = ScopeCachedUhd();
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}};
 
   const GeometryInputs other = InputsForStream(inputs, 1);
   EXPECT_FALSE(other.cached.HasRecord());
-  EXPECT_TRUE(other.sections.empty());
+  EXPECT_TRUE(ResolveEffectiveGeometry(other).sections.empty());
   EXPECT_EQ(GeometrySource::Container, ResolveEffectiveGeometry(other).source);
 
   EXPECT_TRUE(inputs.cached.HasRecord()) << "the stored inputs were mutated";
 
   const GeometryInputs back = InputsForStream(inputs, 0);
   EXPECT_EQ(GeometrySource::Cached, ResolveEffectiveGeometry(back).source);
-  EXPECT_EQ(1u, back.sections.size());
+  EXPECT_EQ(1u, ResolveEffectiveGeometry(back).sections.size());
 }
 
 //! A live reading is taken from whatever is decoding now, so it describes the stream in force
@@ -465,8 +421,7 @@ TEST(TestEffectiveGeometry, ASectionOnNoRealRatioCarriesNoLabel)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 1080, 2160}};
+  inputs.cached = Cached({2.40f, 0.50f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -517,9 +472,6 @@ TEST(TestEffectiveGeometry, ARecordThatCarriesNoReadingFallsBackToTheFrame)
   GeometryInputs inputs;
   inputs.stream = Uhd();
   inputs.cached.state = ContentGeometryState::VALID;
-  inputs.cached.record.hasReading = false;
-  inputs.cached.record.rect = CRectInt{0, 280, 3840, 1880};
-  inputs.cached.record.envelope = CRectInt{0, 280, 3840, 1880};
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -537,7 +489,7 @@ TEST(TestEffectiveGeometry, AGateRejectionIsReportedRatherThanJustActedOn)
 
   //! 3456x2160 is 1.60, which is 3.7% from the nearest detectable entry - beyond tolerance,
   //! so the gate rejects it and the coded frame stands.
-  inputs.cached = Cached(CRectInt{192, 0, 3648, 2160}, CRectInt{192, 0, 3648, 2160});
+  inputs.cached = Cached({1.60f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -564,7 +516,7 @@ TEST(TestEffectiveGeometry, ADeclarationClearsAGateRejection)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{192, 0, 3648, 2160}, CRectInt{192, 0, 3648, 2160});
+  inputs.cached = Cached({1.60f});
 
   ASSERT_TRUE(ResolveEffectiveGeometry(inputs).rejected) << "the gate has to refuse it first";
 
@@ -594,8 +546,7 @@ TEST(TestEffectiveGeometry, AQuarterTurnLeavesASectionsRatioUpright)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd(90);
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}};
+  inputs.cached = Cached({2.40f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -630,9 +581,7 @@ TEST(TestEffectiveGeometry, ARefusedMeasurementContainsNoRatiosEither)
   EXPECT_TRUE(ContentAspectsOf(result).aspects.empty());
 }
 
-//! Nothing retained the per-sample detail, so there are no sections - the ratio the resolver
-//! settled on is the whole of what the title contains rather than nothing at all.
-TEST(TestEffectiveGeometry, AMeasuredTitleWithNoRetainedDetailContainsTheRatioItResolvedTo)
+TEST(TestEffectiveGeometry, AMeasuredTitleContainsTheRatioItResolvedTo)
 {
   GeometryInputs inputs = ScopeCachedUhd();
 
@@ -662,8 +611,7 @@ TEST(TestEffectiveGeometry, TheRatiosOfAVariableTitleArePublishedDominantFirst)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}};
+  inputs.cached = Cached({2.40f, 1.78f});
 
   const ContentAspectSet set = ContentAspectsOf(ResolveEffectiveGeometry(inputs));
 
@@ -673,22 +621,19 @@ TEST(TestEffectiveGeometry, TheRatiosOfAVariableTitleArePublishedDominantFirst)
   EXPECT_TRUE(set.varies);
 }
 
-//! The clusters are share-weighted, so the same ratio can be measured twice over. What is
-//! published is the set of ratios the title contains, never how many stretches hold each.
+//! Two stored ratios can name one entry. What is published is the set of ratios the title
+//! contains, as the vocabulary names them.
 TEST(TestEffectiveGeometry, TheSameRatioMeasuredTwiceIsStillOneRatio)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 279, 3840, 1881}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}, CRectInt{0, 281, 3840, 1879}};
+  inputs.cached = Cached({2.40f, 2.41f});
 
   const ContentAspectSet set = ContentAspectsOf(ResolveEffectiveGeometry(inputs));
 
   ASSERT_EQ(1u, set.aspects.size());
   EXPECT_EQ("2.40", set.aspects[0].label);
 
-  // Still varying: the measurement saw the picture move, and one rectangle covering both
-  // stretches is a fact about the title that the ratio alone does not carry.
   EXPECT_TRUE(set.varies);
 }
 
@@ -699,8 +644,7 @@ TEST(TestEffectiveGeometry, TheShapeAVariableTitleIsServedAtIsNotOneOfItsRatios)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd();
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 0, 3840, 2160}, true);
-  inputs.sections = {CRectInt{0, 280, 3840, 1880}, CRectInt{480, 0, 3360, 2160}};
+  inputs.cached = Cached({2.40f, 1.33f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -731,7 +675,7 @@ TEST(TestEffectiveGeometry, RotationDoesNotDisqualifyTheRatioItWasShotAt)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd(90);
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
+  inputs.cached = Cached({2.40f});
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
 
@@ -822,7 +766,7 @@ TEST(TestEffectiveGeometry, ARotatedPictureIsMappedOntoTheRotatedVideoRectangle)
 {
   GeometryInputs inputs;
   inputs.stream = Uhd(90);
-  inputs.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
+  inputs.cached = Cached({2.40f});
 
   // Turned, the 2.40 picture is pillarboxed within a portrait frame, and the video rectangle it
   // is drawn into is portrait too. The coded source is upright, so the turn is applied on the
@@ -913,7 +857,7 @@ TEST(TestEffectiveGeometry, TheSourceRegionIsNeverAnotherShapeThanTheContent)
 
   GeometryInputs letterboxed;
   letterboxed.stream = Uhd();
-  letterboxed.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
+  letterboxed.cached = Cached({2.40f});
   auto [cut, resolved] = shotRatio(letterboxed);
   EXPECT_NEAR(resolved, cut, 0.001f);
 
@@ -924,7 +868,7 @@ TEST(TestEffectiveGeometry, TheSourceRegionIsNeverAnotherShapeThanTheContent)
   // Turned, the resolved ratio is the upright one and the coded region is upright too.
   GeometryInputs turned;
   turned.stream = Uhd(90);
-  turned.cached = Cached(CRectInt{0, 280, 3840, 1880}, CRectInt{0, 280, 3840, 1880});
+  turned.cached = Cached({2.40f});
   std::tie(cut, resolved) = shotRatio(turned);
   EXPECT_NEAR(resolved, cut, 0.001f);
 }
@@ -939,7 +883,7 @@ TEST(TestEffectiveGeometry, AGeometryDescribesTheRegionItWasMeasuredIn)
 {
   GeometryInputs inputs;
   inputs.stream = MeasuredStreamGeometry("left_right", 1920, 1080, 16.0f / 9.0f);
-  inputs.cached = Cached(CRectInt{0, 132, 960, 948}, CRectInt{0, 132, 960, 948});
+  inputs.cached = Cached({2.35f});
 
   const RenderGeometry view{RenderGeometryOf(ResolveEffectiveGeometry(inputs))};
 

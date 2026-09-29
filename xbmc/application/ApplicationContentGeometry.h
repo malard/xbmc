@@ -33,9 +33,8 @@ public:
   void OnSettingChanged(const std::shared_ptr<const CSetting>& setting) override;
 
   //! \brief Take the stored inputs for the file that is opening, \p cached already verified
-  //! against it and \p sections dominant first.
+  //! against it.
   void SetFileInputs(const KODI::VIDEO::GEOMETRY::ContentGeometryLookup& cached,
-                     std::vector<CRectInt> sections,
                      float declaredAspect);
 
   //! \brief Resolve again against the stream that is playing now.

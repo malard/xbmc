@@ -567,8 +567,8 @@ void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
     const VIDEO::GEOMETRY::ContentGeometryLookup cached{dbs.GetContentGeometry(
         dbs.GetPlayedFileId(fileItem), VIDEO::GEOMETRY::GetFileIdentity(fileItem.GetDynPath()))};
 
-    components.GetComponent<CApplicationContentGeometry>()->SetFileInputs(
-        cached, cached.record.sections, vs.m_declaredAspect);
+    components.GetComponent<CApplicationContentGeometry>()->SetFileInputs(cached,
+                                                                          vs.m_declaredAspect);
 
     dbs.Close();
   }

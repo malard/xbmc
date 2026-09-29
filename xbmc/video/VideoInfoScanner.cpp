@@ -2183,7 +2183,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
             GEOMETRY::MeasureContentGeometry(*pItem, identity, GEOMETRY::SamplingDepth::Normal,
                                              [this]() { return m_bStop.load(); })};
 
-        if (geometry && geometry->outcome == GEOMETRY::ContentGeometryOutcome::Measured)
+        if (geometry && geometry->HasReading())
           movieDetails.m_contentGeometry = *geometry;
       }
     }

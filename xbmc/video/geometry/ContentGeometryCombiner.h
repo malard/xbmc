@@ -69,9 +69,12 @@ struct CombinedGeometry
   //! varies.
   CRectInt envelope;
 
-  //! \brief The title's geometry changes partway through, decided on how often it differs
-  //! rather than on confidence.
+  //! \brief The title's geometry changes partway through: more than one shape below.
   bool varies{false};
+
+  //! \brief The shapes the title is in: the answer, then each rival seen often enough to
+  //! count, decided on how often it occurs rather than on confidence.
+  std::vector<CRectInt> shapes;
 
   bool hasReading{false}; //!< false when no sample survived; rect is then the coded frame
 
@@ -82,7 +85,7 @@ struct CombinedGeometry
   //! the answer; marks a pass a denser one would settle.
   unsigned int unexplainedShapes{0};
 
-  //! \brief Every cluster, dominant first, retained for post-mortem.
+  //! \brief Every corroborated cluster, dominant first.
   std::vector<GeometryCluster> clusters;
 };
 

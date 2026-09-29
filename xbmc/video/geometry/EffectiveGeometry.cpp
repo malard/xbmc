@@ -22,14 +22,6 @@ namespace KODI::VIDEO::GEOMETRY
 namespace
 {
 
-//! \brief One measurement, whatever produced it.
-struct Measurement
-{
-  CRectInt rect;
-  CRectInt envelope;
-  bool varies{false};
-};
-
 //! \brief What the measurement in force resolves to, before any declaration is applied.
 struct ResolvedMeasurement
 {
@@ -59,28 +51,35 @@ ResolvedMeasurement ResolveMeasurement(const GeometryInputs& inputs, const CRect
   ResolvedMeasurement resolved;
   resolved.upright = frame;
 
-  std::optional<Measurement> measurement;
+  const bool envelope{inputs.policy == VariableGeometryPolicy::Envelope};
+  CRect candidate;
   GeometrySource measured = GeometrySource::Container;
+  bool varies{false};
 
   if (inputs.hasLive && inputs.live.hasReading)
   {
-    measurement = Measurement{inputs.live.rect, inputs.live.envelope, inputs.live.varies};
+    candidate = ToSquarePixels(envelope ? inputs.live.envelope : inputs.live.rect, inputs.stream);
     measured = GeometrySource::Live;
+    varies = inputs.live.varies;
   }
-  else if (inputs.cached.HasRecord() && inputs.cached.record.hasReading)
+  else if (inputs.cached.HasRecord() && inputs.cached.record.HasReading())
   {
-    const ContentGeometryRecord& record = inputs.cached.record;
-    measurement = Measurement{record.rect, record.envelope, record.varies};
+    // The stored ratios, fitted into this stream's frame; the envelope is their union.
+    const std::vector<float>& aspects = inputs.cached.record.aspects;
+    candidate = FitAspect(aspects.front(), frame);
+    if (envelope)
+    {
+      for (const float aspect : aspects)
+        candidate.Union(FitAspect(aspect, frame));
+    }
     measured = GeometrySource::Cached;
+    varies = inputs.cached.record.Varies();
     resolved.stale = inputs.cached.state == ContentGeometryState::STALE;
   }
-
-  if (!measurement)
+  else
+  {
     return resolved;
-
-  const CRectInt& chosen =
-      inputs.policy == VariableGeometryPolicy::Envelope ? measurement->envelope : measurement->rect;
-  const CRect candidate = ToSquarePixels(chosen, inputs.stream);
+  }
 
   // The answer is the matched ratio's rectangle, centred, after pixel-aspect correction.
   const std::optional<AspectRatioEntry> entry = CAspectRatioVocabulary::Resolve(
@@ -95,7 +94,7 @@ ResolvedMeasurement ResolveMeasurement(const GeometryInputs& inputs, const CRect
 
   resolved.upright = FitAspect(entry->ratio, frame);
   resolved.source = measured;
-  resolved.varies = measurement->varies;
+  resolved.varies = varies;
   return resolved;
 }
 
@@ -141,7 +140,6 @@ GeometryInputs InputsForStream(const GeometryInputs& inputs, int videoStream)
 
   GeometryInputs withheld{inputs};
   withheld.cached = {};
-  withheld.sections.clear();
   return withheld;
 }
 
@@ -157,27 +155,27 @@ EffectiveGeometry ResolveEffectiveGeometry(const GeometryInputs& inputs)
 
   result.displayFrame = Rotate(frame, frame, result.orientation);
 
-  // A section matching no entry is still published at its own pixels.
-  result.sections.reserve(inputs.sections.size());
-  for (const CRectInt& section : inputs.sections)
+  // A section matching no entry is still published at its own ratio.
+  const std::vector<float> aspects{inputs.cached.HasRecord() ? inputs.cached.record.aspects
+                                                             : std::vector<float>{}};
+  result.sections.reserve(aspects.size());
+  for (const float aspect : aspects)
   {
-    const CRect square = ToSquarePixels(section, inputs.stream);
     GeometrySection published;
-    const std::optional<AspectRatioEntry> entry = CAspectRatioVocabulary::Resolve(
-        AspectOf(square), AspectRatioUse::Detect, inputs.atRestAspect);
+    const std::optional<AspectRatioEntry> entry =
+        CAspectRatioVocabulary::Resolve(aspect, AspectRatioUse::Detect, inputs.atRestAspect);
     if (entry)
     {
       published.aspect = entry->ratio;
       published.label = entry->label;
       published.name = entry->name;
-      published.displayRect = Rotate(FitAspect(entry->ratio, frame), frame, result.orientation);
     }
     else
     {
-      published.aspect = AspectOf(square);
+      published.aspect = aspect;
       PublishRatio(published.aspect, published.label, published.name);
-      published.displayRect = Rotate(square, frame, result.orientation);
     }
+    published.displayRect = Rotate(FitAspect(published.aspect, frame), frame, result.orientation);
     result.sections.push_back(std::move(published));
   }
 

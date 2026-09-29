@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include "XBDateTime.h"
-#include "utils/Geometry.h"
-#include "video/geometry/ContentGeometryCombiner.h"
-#include "video/geometry/FrameSampling.h"
-
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -47,63 +42,37 @@ struct FileIdentity
 //! \return an unknown identity if the file cannot be stat'd, or reports neither a time nor a size
 FileIdentity GetFileIdentity(const std::string& path);
 
-//! \brief Whether a stored row is a measurement or a note that measuring failed.
-enum class ContentGeometryOutcome
-{
-  Measured, //!< opened and sampled; whether anything survived is hasReading
-  Failed, //!< would not open, carried no video, or decoded nothing; no coded frame either
-};
-
-//! \brief Pack the shapes a title contains as "x,y,width,height", semicolon separated.
-std::string EncodeGeometrySections(const std::vector<CRectInt>& sections);
-
-//! \brief Read EncodeGeometrySections() back. A malformed value costs the shapes after the
-//! point it stopped parsing.
-std::vector<CRectInt> DecodeGeometrySections(const std::string& packed);
-
 //! \brief One file's measured content geometry, as stored.
 struct ContentGeometryRecord
 {
-  CRectInt coded; //!< the frame the rectangle was measured in
-  CRectInt rect; //!< the content rectangle, in coded space
-
-  //! \brief Outer extent of every measured geometry, in coded space. Equals rect unless the
-  //! title varies.
-  CRectInt envelope;
-
-  //! \brief Every shape the title contains, dominant first, in coded space. Published rather
-  //! than resolved from, and legitimately empty for an older or NFO-imported record.
-  std::vector<CRectInt> sections;
-
-  //! \brief The ratio the stream was displayed at when measured; zero for none declared.
-  float displayAspect{0.0f};
-
-  bool varies{false}; //!< the title's geometry changes partway through
-
-  //! \brief A reading was obtained, which the rectangle alone does not say - it is the coded
-  //! frame either way.
-  bool hasReading{false};
-
-  //! \brief A Failed record is invisible to everything but the sweep.
-  ContentGeometryOutcome outcome{ContentGeometryOutcome::Measured};
+  //! \brief The display ratios the title contains, dominant first, to two decimals. Empty when
+  //! measuring found nothing usable.
+  std::vector<float> aspects;
 
   int algorithmVersion{CONTENT_GEOMETRY_ALGORITHM_VERSION};
   FileIdentity identity;
-  CDateTime computed;
 
-  //! \brief False for every Failed record, which carries no rectangle.
-  bool IsValid() const { return coded.Width() > 0 && coded.Height() > 0; }
+  bool HasReading() const { return !aspects.empty(); }
+  bool Varies() const { return aspects.size() > 1; }
 };
 
-//! \brief Read or write the record on \p ar. The shapes travel with it, the diagnostics do not.
+//! \brief \p aspect rounded to the two decimals a ratio is stored and written at.
+float StoredAspect(float aspect);
+
+//! \brief The ratios as "2.35;1.78".
+std::string EncodeContentAspects(const std::vector<float>& aspects);
+
+//! \brief Read EncodeContentAspects() back, skipping anything that is not a ratio.
+std::vector<float> DecodeContentAspects(const std::string& packed);
+
+//! \brief Read or write the record on \p ar.
 void Archive(CArchive& ar, ContentGeometryRecord& record);
 
-//! \brief Write the record under \p movie as a <contentgeometry> element. The identity, version
-//! and shapes travel with it; the diagnostics do not.
+//! \brief Write the ratios under \p movie as a <contentgeometry> element, nothing when the
+//! record has no reading.
 void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& record);
 
-//! \brief Read SaveContentGeometryXML() back. Nothing when \p movie carries no element, or one
-//! without a usable coded frame.
+//! \brief Read SaveContentGeometryXML() back. Nothing when \p movie names no ratio.
 std::optional<ContentGeometryRecord> LoadContentGeometryXML(const TiXmlElement& movie);
 
 //! \brief What a lookup found.
@@ -127,21 +96,21 @@ struct ContentGeometryLookup
 //! \brief STALE or VALID for a record in hand - MISSING is a lookup's answer, not a record's.
 ContentGeometryState StateOf(const ContentGeometryRecord& record);
 
-//! \brief The widest display-space ratio the record saw, from its own frame rather than a
-//! playing stream. What the masking opens to. Zero when the record carries no reading.
+//! \brief The widest ratio the record holds, which the masking opens to. Zero with no reading.
 float WidestAspect(const ContentGeometryRecord& record);
 
 //! \brief What is stored for one file, without reading back the whole record.
 struct ContentGeometryAttempt
 {
   bool exists{false};
+  bool hasReading{false};
   int algorithmVersion{0};
   FileIdentity identity;
-  ContentGeometryOutcome outcome{ContentGeometryOutcome::Measured};
 };
 
 //! \brief Whether the file still needs measuring: the attempt is missing, superseded, or
-//! describes a different file. A failed attempt counts as done until the file changes.
+//! describes a different file. An attempt that found nothing counts as done until the file
+//! changes.
 bool NeedsContentGeometry(const ContentGeometryAttempt& attempt, const FileIdentity& identity);
 
 } // namespace KODI::VIDEO::GEOMETRY

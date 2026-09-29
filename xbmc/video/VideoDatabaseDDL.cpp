@@ -203,14 +203,8 @@ void CVideoDatabaseDDL::CreateContentGeometryTable(CDatabase& db)
 {
   CLog::Log(LOGINFO, "create contentgeometry table");
 
-  db.ExecuteQuery("CREATE TABLE contentgeometry (idFile INTEGER PRIMARY KEY, "
-                  "codedWidth INTEGER, codedHeight INTEGER, "
-                  "rectX INTEGER, rectY INTEGER, rectWidth INTEGER, rectHeight INTEGER, "
-                  "envelopeX INTEGER, envelopeY INTEGER, envelopeWidth INTEGER, "
-                  "envelopeHeight INTEGER, displayAspect FLOAT, "
-                  "varies BOOL, hasReading BOOL, outcome INTEGER, "
-                  "algorithmVersion INTEGER, fileSize BIGINT, fileMTime BIGINT, "
-                  "dateComputed TEXT, sections TEXT)");
+  db.ExecuteQuery("CREATE TABLE contentgeometry (idFile INTEGER PRIMARY KEY, aspects TEXT, "
+                  "algorithmVersion INTEGER, fileSize BIGINT, fileMTime BIGINT)");
 }
 
 void CVideoDatabaseDDL::CreateLinkIndex(CDatabase& db, const std::string& table)

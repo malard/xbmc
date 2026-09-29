@@ -6,7 +6,6 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "XBDateTime.h"
 #include "video/geometry/SampledGeometry.h"
 
 #include <gtest/gtest.h>
@@ -24,7 +23,6 @@ constexpr int CONTENT_TOP{264};
 constexpr int CONTENT_BOTTOM{1896};
 
 const FileIdentity IDENTITY{8'000'000'000, 1'700'000'000};
-const CDateTime COMPUTED{2026, 8, 7, 14, 0, 0};
 
 SampledGeometry MakeScan()
 {
@@ -35,114 +33,90 @@ SampledGeometry MakeScan()
   scan.samples = {{CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.9f, false, 300.0},
                   {CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.8f, false, 900.0}};
 
-  scan.combined.rect = CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
-  scan.combined.envelope = CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
+  const CRectInt scope{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
+  scan.combined.rect = scope;
+  scan.combined.envelope = scope;
+  scan.combined.shapes = {scope};
   scan.combined.hasReading = true;
   scan.combined.usable = 2;
-  scan.combined.discarded = 0;
-  scan.combined.clusters = {{CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 2, 1.7f}};
+  scan.combined.clusters = {{scope, 2, 1.7f}};
 
   return scan;
 }
 
 } // unnamed namespace
 
-TEST(TestSampledGeometry, ASucceededScanBecomesAMeasurement)
+TEST(TestSampledGeometry, ASucceededScanBecomesItsDisplayRatio)
 {
-  const ContentGeometryRecord record{MakeContentGeometryRecord(MakeScan(), IDENTITY, COMPUTED)};
+  const ContentGeometryRecord record{MakeContentGeometryRecord(MakeScan(), IDENTITY)};
 
-  EXPECT_EQ(ContentGeometryOutcome::Measured, record.outcome);
-  EXPECT_TRUE(record.IsValid());
-  EXPECT_EQ(CRectInt(0, 0, CODED_WIDTH, CODED_HEIGHT), record.coded);
-  EXPECT_EQ(CRectInt(0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM), record.rect);
-  EXPECT_FLOAT_EQ(1.7777778f, record.displayAspect);
-  EXPECT_TRUE(record.hasReading);
-  EXPECT_FALSE(record.varies);
+  ASSERT_EQ(1u, record.aspects.size());
+  EXPECT_FLOAT_EQ(2.35f, record.aspects[0]);
+  EXPECT_TRUE(record.HasReading());
+  EXPECT_FALSE(record.Varies());
   EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, record.algorithmVersion);
   EXPECT_EQ(IDENTITY.size, record.identity.size);
   EXPECT_EQ(IDENTITY.time, record.identity.time);
-  EXPECT_EQ(COMPUTED.GetAsDBDateTime(), record.computed.GetAsDBDateTime());
+}
+
+//! The ratio is the displayed one: an anamorphic frame's coded pixels are not square.
+TEST(TestSampledGeometry, AnAnamorphicScanStoresTheRatioItIsSeenAt)
+{
+  SampledGeometry scan;
+  scan.succeeded = true;
+  scan.coded = CRectInt{0, 0, 720, 576};
+  scan.displayAspect = 16.0f / 9.0f;
+  scan.combined.hasReading = true;
+  scan.combined.shapes = {CRectInt{0, 70, 720, 506}};
+
+  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY)};
+
+  ASSERT_EQ(1u, record.aspects.size());
+  EXPECT_FLOAT_EQ(2.35f, record.aspects[0]);
+}
+
+TEST(TestSampledGeometry, AVaryingTitleStoresEachRatioDominantFirst)
+{
+  SampledGeometry scan{MakeScan()};
+  scan.combined.shapes.push_back(CRectInt{0, 0, CODED_WIDTH, CODED_HEIGHT});
+
+  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY)};
+
+  ASSERT_EQ(2u, record.aspects.size());
+  EXPECT_FLOAT_EQ(2.35f, record.aspects[0]);
+  EXPECT_FLOAT_EQ(1.78f, record.aspects[1]);
+  EXPECT_TRUE(record.Varies());
+}
+
+//! Two stretches at one ratio are one ratio, so a title is not said to vary for moving its
+//! bars by a row.
+TEST(TestSampledGeometry, TheSameRatioTwiceIsStoredOnce)
+{
+  SampledGeometry scan{MakeScan()};
+  scan.combined.shapes.push_back(CRectInt{0, CONTENT_TOP + 1, CODED_WIDTH, CONTENT_BOTTOM + 1});
+
+  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY)};
+
+  EXPECT_EQ(1u, record.aspects.size());
+  EXPECT_FALSE(record.Varies());
 }
 
 /*!
- * The shapes the title contains, kept where a list can read them.
+ * A file that could not be read, or that read nothing, still becomes a row, so that a sweep
+ * over a large library does not attempt it again every time. It carries no ratio.
  */
-TEST(TestSampledGeometry, TheClustersBecomeTheSections)
+TEST(TestSampledGeometry, AScanThatReadNothingStoresNoRatio)
 {
-  SampledGeometry scan{MakeScan()};
-  scan.combined.clusters.push_back({CRectInt{240, 0, CODED_WIDTH - 240, CODED_HEIGHT}, 1, 0.4f});
+  const ContentGeometryRecord failed{MakeContentGeometryRecord(SampledGeometry{}, IDENTITY)};
+  EXPECT_FALSE(failed.HasReading());
+  EXPECT_EQ(IDENTITY.size, failed.identity.size);
 
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
+  SampledGeometry empty{MakeScan()};
+  empty.combined = {};
+  empty.combined.rect = empty.coded;
+  empty.combined.discarded = 9;
 
-  ASSERT_EQ(2u, record.sections.size());
-  EXPECT_EQ(CRectInt(0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM), record.sections[0]);
-  EXPECT_EQ(CRectInt(240, 0, CODED_WIDTH - 240, CODED_HEIGHT), record.sections[1]);
-}
-
-/*!
- * A combiner that found nothing to take an extent of leaves the envelope empty, and an empty
- * envelope stored verbatim reads back as a measurement claiming there is no picture at all.
- */
-TEST(TestSampledGeometry, AnUnsetEnvelopeFallsBackToTheRectangle)
-{
-  SampledGeometry scan{MakeScan()};
-  scan.combined.envelope = CRectInt{};
-
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
-
-  EXPECT_EQ(record.rect, record.envelope);
-}
-
-TEST(TestSampledGeometry, AVaryingTitleKeepsBothRectangles)
-{
-  SampledGeometry scan{MakeScan()};
-  scan.combined.varies = true;
-  scan.combined.envelope = CRectInt{0, 0, CODED_WIDTH, CODED_HEIGHT};
-
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
-
-  EXPECT_TRUE(record.varies);
-  EXPECT_EQ(CRectInt(0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM), record.rect);
-  EXPECT_EQ(CRectInt(0, 0, CODED_WIDTH, CODED_HEIGHT), record.envelope);
-}
-
-/*!
- * A file that could not be read becomes a row rather than nothing, so that a sweep over a
- * large library does not attempt it again every time. It carries no rectangle, because none
- * was ever measured.
- */
-TEST(TestSampledGeometry, AFailedScanBecomesAFailureRecord)
-{
-  const SampledGeometry scan; // never opened
-
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
-
-  EXPECT_EQ(ContentGeometryOutcome::Failed, record.outcome);
-  EXPECT_FALSE(record.IsValid());
-  EXPECT_FALSE(record.hasReading);
-  EXPECT_TRUE(record.sections.empty());
-
-  EXPECT_EQ(IDENTITY.size, record.identity.size);
-  EXPECT_EQ(IDENTITY.time, record.identity.time);
-}
-
-//! A scan that opened the file but whose samples all came to nothing is not a failure: the
-//! coded frame is known and is the honest answer, and it should not be measured again.
-TEST(TestSampledGeometry, AScanThatFoundNoBarsIsStillAMeasurement)
-{
-  SampledGeometry scan{MakeScan()};
-  scan.samples.clear();
-  scan.combined = {};
-  scan.combined.rect = scan.coded;
-  scan.combined.hasReading = false;
-  scan.combined.discarded = 9;
-
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
-
-  EXPECT_EQ(ContentGeometryOutcome::Measured, record.outcome);
-  EXPECT_TRUE(record.IsValid());
-  EXPECT_FALSE(record.hasReading);
-  EXPECT_EQ(scan.coded, record.rect);
+  EXPECT_FALSE(MakeContentGeometryRecord(empty, IDENTITY).HasReading());
 }
 
 TEST(TestSampledGeometry, NothingIsNeededForAnUpToDateMeasurement)
@@ -182,17 +156,17 @@ TEST(TestSampledGeometry, AMeasurementOfDifferentContentNeedsMeasuringAgain)
 }
 
 /*!
- * The whole point of recording a failure. Asked again about a file that has not changed since
- * it could not be read, the answer is no - otherwise every sweep pays for an open over the
- * network for every broken file in the library.
+ * The whole point of recording an attempt that found nothing. Asked again about a file that has
+ * not changed since, the answer is no - otherwise every sweep pays for an open over the network
+ * for every unreadable file in the library.
  */
-TEST(TestSampledGeometry, AFailedAttemptCountsAsDoneUntilTheFileChanges)
+TEST(TestSampledGeometry, AnAttemptThatFoundNothingCountsAsDoneUntilTheFileChanges)
 {
   ContentGeometryAttempt attempt;
   attempt.exists = true;
+  attempt.hasReading = false;
   attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
   attempt.identity = IDENTITY;
-  attempt.outcome = ContentGeometryOutcome::Failed;
 
   EXPECT_FALSE(NeedsContentGeometry(attempt, IDENTITY));
   EXPECT_TRUE(NeedsContentGeometry(attempt, {IDENTITY.size + 1, IDENTITY.time}));

@@ -140,7 +140,7 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
     }
 
     const bool retryThisOne{m_retryFailed && candidate.attempt.exists &&
-                            candidate.attempt.outcome == ContentGeometryOutcome::Failed};
+                            !candidate.attempt.hasReading};
     if (!retryThisOne && !NeedsContentGeometry(candidate.attempt, identity))
     {
       ++index;
@@ -154,17 +154,17 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
     if (!record)
       continue; // abandoned, not finished - take this file again once whatever interrupted it stops
 
-    if (record->outcome == ContentGeometryOutcome::Failed)
-      ++failed;
-    else
+    if (record->HasReading())
       ++measured;
+    else
+      ++failed;
 
     db.SetContentGeometry(candidate.idFile, *record);
     ++index;
   }
 
-  CLog::LogF(LOGINFO, "measured {} of {} files, {} could not be read{}", measured,
-             candidates.size(), failed, IsCancelled() ? ", cancelled" : "");
+  CLog::LogF(LOGINFO, "measured {} of {} files, {} with no reading{}", measured, candidates.size(),
+             failed, IsCancelled() ? ", cancelled" : "");
 
   return true;
 }

@@ -15,12 +15,10 @@
 
 #include <vector>
 
-class CDateTime;
-
 namespace KODI::VIDEO::GEOMETRY
 {
 
-//! \brief What sampling one file produced, with the parameters that produced it.
+//! \brief What sampling one file produced.
 struct SampledGeometry
 {
   bool succeeded{false}; //!< the file was opened and at least one picture decoded
@@ -36,17 +34,17 @@ struct SampledGeometry
 
   CombinedGeometry combined;
 
-  //! Every sample, kept for post-mortem.
+  //! Every sample the combiner was given.
   std::vector<GeometrySample> samples;
 
   //! \brief Points that produced no reading, counted separately from the combiner's totals.
   unsigned int unreadable{0};
 };
 
-//! \brief Turn a completed scan into the row stored for it. One that did not succeed becomes a
-//! Failed record. A cancelled scan must not be stored at all, which this does not check.
+//! \brief Turn a completed scan into the row stored for it: the display ratio of each shape
+//! the title is in, each once. One that read nothing stores no ratio. A cancelled scan must
+//! not be stored at all, which this does not check.
 ContentGeometryRecord MakeContentGeometryRecord(const SampledGeometry& scan,
-                                                const FileIdentity& identity,
-                                                const CDateTime& computed);
+                                                const FileIdentity& identity);
 
 } // namespace KODI::VIDEO::GEOMETRY

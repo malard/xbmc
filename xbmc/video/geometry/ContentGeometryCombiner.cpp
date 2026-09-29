@@ -167,14 +167,14 @@ CombinedGeometry CombineGeometrySamples(std::span<const GeometrySample> samples,
 
   // Counts, not weight.
   const unsigned int counted = result.usable;
-  result.varies =
-      std::any_of(result.clusters.begin() + 1, result.clusters.end(),
-                  [&](const GeometryCluster& cluster)
-                  {
-                    return cluster.samples >= params.minRivalSamples &&
-                           static_cast<float>(cluster.samples) / static_cast<float>(counted) >=
-                               params.variesShare;
-                  });
+  result.shapes.push_back(result.rect);
+  for (auto cluster = result.clusters.begin() + 1; cluster != result.clusters.end(); ++cluster)
+  {
+    if (cluster->samples >= params.minRivalSamples &&
+        static_cast<float>(cluster->samples) / static_cast<float>(counted) >= params.variesShare)
+      result.shapes.push_back(cluster->rect);
+  }
+  result.varies = result.shapes.size() > 1;
 
   return result;
 }

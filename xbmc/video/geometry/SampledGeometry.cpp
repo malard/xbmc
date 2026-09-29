@@ -8,40 +8,29 @@
 
 #include "SampledGeometry.h"
 
-#include "XBDateTime.h"
+#include "video/geometry/GeometryTransforms.h"
+
+#include <algorithm>
 
 namespace KODI::VIDEO::GEOMETRY
 {
 
 ContentGeometryRecord MakeContentGeometryRecord(const SampledGeometry& scan,
-                                                const FileIdentity& identity,
-                                                const CDateTime& computed)
+                                                const FileIdentity& identity)
 {
   ContentGeometryRecord record;
   record.identity = identity;
-  record.computed = computed;
 
-  if (!scan.succeeded)
-  {
-    record.outcome = ContentGeometryOutcome::Failed;
+  if (!scan.succeeded || !scan.combined.hasReading)
     return record;
+
+  const StreamGeometry stream{scan.coded, scan.displayAspect, 0};
+  for (const CRectInt& shape : scan.combined.shapes)
+  {
+    const float aspect{StoredAspect(AspectOf(ToSquarePixels(shape, stream)))};
+    if (std::find(record.aspects.begin(), record.aspects.end(), aspect) == record.aspects.end())
+      record.aspects.push_back(aspect);
   }
-
-  record.outcome = ContentGeometryOutcome::Measured;
-  record.coded = scan.coded;
-  record.rect = scan.combined.rect;
-
-  // The combiner leaves the envelope empty only when it had no cluster to take an extent of.
-  record.envelope = scan.combined.envelope.IsEmpty() ? scan.combined.rect : scan.combined.envelope;
-
-  record.displayAspect = scan.displayAspect;
-  record.varies = scan.combined.varies;
-  record.hasReading = scan.combined.hasReading;
-
-  // The clusters' rectangles alone, without the rest of what produced them.
-  record.sections.reserve(scan.combined.clusters.size());
-  for (const GeometryCluster& cluster : scan.combined.clusters)
-    record.sections.push_back(cluster.rect);
 
   return record;
 }

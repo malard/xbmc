@@ -30,15 +30,14 @@ GeometryOverrides Stated(float raster, std::optional<OsdPlacement> placement, fl
 //! \brief Open a file with nothing known about it, which is what promotes an armed instruction.
 void OpenFile(CApplicationContentGeometry& geometry)
 {
-  geometry.SetFileInputs(ContentGeometryLookup{}, {}, 0.0f);
+  geometry.SetFileInputs(ContentGeometryLookup{}, 0.0f);
 }
 
-//! \brief A stored measurement of a scope title in a 16:9 frame, whose envelope caught a
-//! taller sequence - so the envelope and the rectangle carry different heights.
+//! \brief A stored measurement of a scope title.
 ContentGeometryLookup MeasuredScope()
 {
   ContentGeometryLookup lookup;
-  lookup.record = TEST::ScopeHdRecord(CRectInt{0, 70, 1920, 1010});
+  lookup.record = TEST::ScopeRecord();
   lookup.state = ContentGeometryState::VALID;
   return lookup;
 }
@@ -215,10 +214,8 @@ TEST(TestApplicationContentGeometry, StoppingAlsoDiscardsAnInstructionThatNeverO
 TEST(TestApplicationContentGeometry, TheMaskOpeningIsTheWidestShapeMeasured)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), {}, 0.0f);
+  geometry.SetFileInputs(MeasuredScope(), 0.0f);
 
-  // The body, not the extent the sampling caught around it: an opening narrower than the
-  // title's own widest shape leaves that shape unable to reach the sides of its own mask.
   EXPECT_NEAR(1920.0f / 800.0f, geometry.GetRenderInputs().maskAspect, 0.001f);
 }
 
@@ -234,17 +231,13 @@ TEST(TestApplicationContentGeometry, TheMaskOpeningIsTheWidestShapeMeasured)
  */
 TEST(TestApplicationContentGeometry, AMixedRatioTitleMasksToItsWidestShapeNotItsEnvelope)
 {
-  const CRectInt scope{0, 140, 1920, 940}; //!< the 2.40 body
-  const CRectInt tall{0, 0, 1920, 1080}; //!< the sequences shot taller
-
+  // The 2.40 body, then the sequences shot taller
   ContentGeometryLookup lookup;
-  lookup.record = TEST::ScopeHdRecord(tall);
-  lookup.record.varies = true;
-  lookup.record.sections = {scope, tall};
+  lookup.record = TEST::ScopeRecord({2.40f, 1.78f});
   lookup.state = ContentGeometryState::VALID;
 
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(lookup, {}, 0.0f);
+  geometry.SetFileInputs(lookup, 0.0f);
 
   EXPECT_NEAR(1920.0f / 800.0f, geometry.GetRenderInputs().maskAspect, 0.001f)
       << "the mask opened to the envelope, so the scope sections cannot fill the screen";
@@ -262,10 +255,10 @@ TEST(TestApplicationContentGeometry, ThereIsNoMaskOpeningWithoutAMeasurement)
 TEST(TestApplicationContentGeometry, AFailedMeasurementOpensNothing)
 {
   ContentGeometryLookup failed{MeasuredScope()};
-  failed.record.hasReading = false;
+  failed.record.aspects.clear();
 
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(failed, {}, 0.0f);
+  geometry.SetFileInputs(failed, 0.0f);
 
   EXPECT_FLOAT_EQ(0.0f, geometry.GetRenderInputs().maskAspect);
 }
@@ -273,7 +266,7 @@ TEST(TestApplicationContentGeometry, AFailedMeasurementOpensNothing)
 TEST(TestApplicationContentGeometry, StoppingClosesTheMaskOpening)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), {}, 0.0f);
+  geometry.SetFileInputs(MeasuredScope(), 0.0f);
   geometry.Clear();
 
   EXPECT_FLOAT_EQ(0.0f, geometry.GetRenderInputs().maskAspect);
@@ -284,7 +277,7 @@ TEST(TestApplicationContentGeometry, StoppingClosesTheMaskOpening)
 TEST(TestApplicationContentGeometry, TheRenderInputsAgreeWithTheAccessorsTheyReplace)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), {}, 0.0f);
+  geometry.SetFileInputs(MeasuredScope(), 0.0f);
   geometry.SetOverrides(Stated(2.40f, OsdPlacement::Picture, 2.35f));
 
   const CApplicationContentGeometry::RenderInputs inputs{geometry.GetRenderInputs()};

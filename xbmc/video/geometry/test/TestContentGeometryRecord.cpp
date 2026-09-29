@@ -82,64 +82,32 @@ TEST(TestFileIdentity, ARealFileHasOneAndItIsStable)
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
 }
 
-TEST(TestGeometrySections, RoundTripThroughTheStoredForm)
+TEST(TestContentAspects, RoundTripThroughTheStoredForm)
 {
-  const std::vector<CRectInt> sections{CRectInt{0, 140, 1920, 940}, CRectInt{240, 0, 1680, 1080}};
+  const std::vector<float> aspects{2.35f, 1.78f};
 
-  EXPECT_EQ("0,140,1920,800;240,0,1440,1080", EncodeGeometrySections(sections));
-  EXPECT_EQ(sections, DecodeGeometrySections(EncodeGeometrySections(sections)));
+  EXPECT_EQ("2.35;1.78", EncodeContentAspects(aspects));
+  EXPECT_EQ(aspects, DecodeContentAspects(EncodeContentAspects(aspects)));
 }
 
-//! A stereoscopic scan measures one view, whose frame is an offset region of the picture, so
-//! an origin left of the frame's is a real measurement rather than a corrupt one.
-TEST(TestGeometrySections, ANegativeOriginSurvives)
+TEST(TestContentAspects, NoRatiosIsAnEmptyValue)
 {
-  const std::vector<CRectInt> sections{CRectInt{-120, -8, 840, 568}};
-
-  EXPECT_EQ(sections, DecodeGeometrySections(EncodeGeometrySections(sections)));
+  EXPECT_TRUE(EncodeContentAspects({}).empty());
+  EXPECT_TRUE(DecodeContentAspects("").empty());
 }
 
-TEST(TestGeometrySections, NoSectionsIsAnEmptyValue)
+//! The column is plain text a user can edit, so a value naming no ratio costs only itself.
+TEST(TestContentAspects, AnythingThatIsNotARatioIsSkipped)
 {
-  EXPECT_TRUE(EncodeGeometrySections({}).empty());
-  EXPECT_TRUE(DecodeGeometrySections("").empty());
+  const std::vector<float> scope{2.40f};
+  EXPECT_EQ(scope, DecodeContentAspects("2.40;wide;0;-1.78;nan;inf"));
 }
 
-//! A value that stops making sense costs the shapes past that point rather than the record.
-TEST(TestGeometrySections, AMalformedValueKeepsWhatParsed)
+TEST(TestContentAspects, ARatioIsHeldToTwoDecimals)
 {
-  EXPECT_TRUE(DecodeGeometrySections("not a rectangle").empty());
-  EXPECT_TRUE(DecodeGeometrySections("0,140,1920").empty()) << "a short shape is not a shape";
-
-  const std::vector<CRectInt> first{CRectInt{0, 140, 1920, 940}};
-  EXPECT_EQ(first, DecodeGeometrySections("0,140,1920,800;240,0"));
-}
-
-/*!
- * The column is plain text a user can edit, and the far edge of a shape is an origin plus a
- * size - so two values each inside the range can still add to something outside it.
- */
-TEST(TestGeometrySections, AnExtentOutsideTheRangeIsRefused)
-{
-  EXPECT_TRUE(DecodeGeometrySections("2000000000,0,2000000000,1080").empty());
-  EXPECT_TRUE(DecodeGeometrySections("0,2000000000,1920,2000000000").empty());
-  EXPECT_TRUE(DecodeGeometrySections("-2000000000,0,-2000000000,1080").empty());
-
-  // A value outside the range on its own was already refused, and still is.
-  EXPECT_TRUE(DecodeGeometrySections("99999999999,0,1920,1080").empty());
-
-  // The shapes read before the impossible one are kept, as with any other malformed tail.
-  const std::vector<CRectInt> first{CRectInt{0, 140, 1920, 940}};
-  EXPECT_EQ(first, DecodeGeometrySections("0,140,1920,800;2000000000,0,2000000000,1080"));
-}
-
-//! Either separator is accepted wherever it appears - see DecodeGeometrySections().
-TEST(TestGeometrySections, EitherSeparatorReadsTheSameShapes)
-{
-  const std::vector<CRectInt> sections{CRectInt{0, 140, 1920, 940}, CRectInt{240, 0, 1920, 1080}};
-
-  EXPECT_EQ(sections, DecodeGeometrySections("0,140,1920,800;240,0,1680,1080"));
-  EXPECT_EQ(sections, DecodeGeometrySections("0;140;1920;800,240,0,1680,1080"));
+  EXPECT_FLOAT_EQ(2.35f, StoredAspect(3840.0f / 1632.0f));
+  const std::vector<float> rounded{2.35f};
+  EXPECT_EQ(rounded, DecodeContentAspects("2.3529"));
 }
 
 TEST(TestContentGeometryRecord, DefaultsToTheCurrentAlgorithmVersion)
@@ -147,13 +115,19 @@ TEST(TestContentGeometryRecord, DefaultsToTheCurrentAlgorithmVersion)
   EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, ContentGeometryRecord{}.algorithmVersion);
 }
 
-TEST(TestContentGeometryRecord, ARecordWithoutACodedFrameIsNotValid)
+TEST(TestContentGeometryRecord, AReadingIsARatioAndVaryingIsMoreThanOne)
 {
   ContentGeometryRecord record;
-  EXPECT_FALSE(record.IsValid());
+  EXPECT_FALSE(record.HasReading());
+  EXPECT_FALSE(record.Varies());
 
-  record.coded = CRectInt{0, 0, 1920, 1080};
-  EXPECT_TRUE(record.IsValid());
+  record.aspects = {2.40f};
+  EXPECT_TRUE(record.HasReading());
+  EXPECT_FALSE(record.Varies());
+
+  record.aspects.push_back(1.78f);
+  EXPECT_TRUE(record.Varies());
+  EXPECT_FLOAT_EQ(2.40f, WidestAspect(record));
 }
 
 TEST(TestContentGeometryLookup, MissingCarriesNoRecord)

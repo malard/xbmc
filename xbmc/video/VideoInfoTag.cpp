@@ -1753,7 +1753,7 @@ bool CVideoInfoTag::HasNFOStreamDetails() const
 
 bool CVideoInfoTag::HasContentGeometry() const
 {
-  return m_contentGeometry.IsValid();
+  return m_contentGeometry.HasReading();
 }
 
 KODI::VIDEO::GEOMETRY::EffectiveGeometry CVideoInfoTag::ResolveContentGeometry() const
@@ -1761,13 +1761,18 @@ KODI::VIDEO::GEOMETRY::EffectiveGeometry CVideoInfoTag::ResolveContentGeometry()
   if (!HasContentGeometry())
     return {};
 
+  const int width{m_streamDetails.GetVideoWidth()};
+  const int height{m_streamDetails.GetVideoHeight()};
+  if (width <= 0 || height <= 0)
+    return {};
+
   // Neither rotation nor a declaration is applied.
   KODI::VIDEO::GEOMETRY::GeometryInputs inputs;
-  inputs.stream.coded = m_contentGeometry.coded;
-  inputs.stream.displayAspect = m_contentGeometry.displayAspect;
+  inputs.stream = KODI::VIDEO::GEOMETRY::MeasuredStreamGeometry(
+      m_streamDetails.GetStereoMode(), static_cast<unsigned int>(width),
+      static_cast<unsigned int>(height), m_streamDetails.GetVideoAspect());
   inputs.cached.record = m_contentGeometry;
   inputs.cached.state = KODI::VIDEO::GEOMETRY::StateOf(m_contentGeometry);
-  inputs.sections = m_contentGeometry.sections;
   inputs.policy = KODI::VIDEO::GEOMETRY::ContentGeometryPolicyFromSettings();
   inputs.atRestAspect = KODI::VIDEO::GEOMETRY::ContentGeometryAtRestFromSettings();
 
