@@ -264,9 +264,11 @@ public:
      */
   std::vector<const JsonRpcStatusDescription*> errors;
   /*!
-     \brief Reasons this method can fail for, each belonging to one of its errors
+     \brief Reasons this method can fail for, under the error each comes with
      */
-  std::vector<const JsonRpcReasonDescription*> reasons;
+  std::vector<
+      std::pair<const JsonRpcStatusDescription*, std::vector<const JsonRpcReasonDescription*>>>
+      reasons;
 
 private:
   bool parseErrors(const CVariant& value);

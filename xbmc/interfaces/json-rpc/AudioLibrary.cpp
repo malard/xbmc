@@ -166,7 +166,8 @@ JSONRPC_STATUS CAudioLibrary::GetArtistDetails(const CVariant& parameterObject, 
     return InternalError;
 
   if (items.Size() != 1)
-    return Fail(result, Reason::NoSuchItem, Target("artistId", parameterObject["artistId"]));
+    return Fail(result, NotFound, Reason::NoSuchItem,
+                Target("artistId", parameterObject["artistId"]));
 
   // Add "artist" to "properties" array by default
   CVariant param = parameterObject;
@@ -1483,7 +1484,8 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
                            ADDON::OnlyEnabled::CHOICE_YES))
     {
       if (!addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
-        return Fail(result, Reason::NoSuchAddon, Target("scraperId", parameterObject["scraperId"]));
+        return Fail(result, NotFound, Reason::NoSuchAddon,
+                    Target("scraperId", parameterObject["scraperId"]));
       return InvalidParams;
     }
 

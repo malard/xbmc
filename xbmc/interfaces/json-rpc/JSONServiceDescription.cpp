@@ -1323,25 +1323,41 @@ bool JsonRpcMethod::parseReasons(const CVariant& value)
   if (!value.isMember("reasons"))
     return true;
 
-  if (!value["reasons"].isArray())
+  if (!value["reasons"].isObject())
   {
-    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined reasons list", name);
+    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined reasons map", name);
     return false;
   }
 
-  for (auto reason = value["reasons"].begin_array(); reason != value["reasons"].end_array();
-       ++reason)
+  for (auto entry = value["reasons"].begin_map(); entry != value["reasons"].end_map(); ++entry)
   {
-    const std::string reasonName = reason->asString();
-    const auto description = std::ranges::find_if(
-        JSONRPC_REASON_DESCRIPTIONS, [&reasonName](const JsonRpcReasonDescription& candidate)
-        { return reasonName == candidate.name; });
-    if (description == std::end(JSONRPC_REASON_DESCRIPTIONS))
+    // a reason refines an error the method declares
+    const std::string& errorName = entry->first;
+    const auto error = std::ranges::find_if(errors, [&errorName](const auto* candidate)
+                                            { return errorName == candidate->name; });
+    if (error == errors.end() || !entry->second.isArray())
     {
-      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown reason \"{}\"", name, reasonName);
+      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares reasons for an undeclared error \"{}\"",
+                name, errorName);
       return false;
     }
-    reasons.push_back(&(*description));
+
+    std::vector<const JsonRpcReasonDescription*> refined;
+    for (auto reason = entry->second.begin_array(); reason != entry->second.end_array(); ++reason)
+    {
+      const std::string reasonName = reason->asString();
+      const auto description = std::ranges::find_if(
+          JSONRPC_REASON_DESCRIPTIONS, [&reasonName](const JsonRpcReasonDescription& candidate)
+          { return reasonName == candidate.name; });
+      if (description == std::end(JSONRPC_REASON_DESCRIPTIONS))
+      {
+        CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown reason \"{}\"", name,
+                  reasonName);
+        return false;
+      }
+      refined.push_back(&(*description));
+    }
+    reasons.emplace_back(*error, std::move(refined));
   }
 
   return true;
@@ -1972,10 +1988,13 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
             errors.push_back(error);
         }
 
-        for (const auto* reason : methodIterator->second.reasons)
+        for (const auto& [error, refined] : methodIterator->second.reasons)
         {
-          if (std::ranges::find(reasons, reason) == reasons.end())
-            reasons.push_back(reason);
+          for (const auto* reason : refined)
+          {
+            if (std::ranges::find(reasons, reason) == reasons.end())
+              reasons.push_back(reason);
+          }
         }
       }
 
@@ -2081,9 +2100,14 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     for (const auto* error : methodIterator->second.errors)
       currentMethod["errors"].append(error->name);
 
-    currentMethod["reasons"] = CVariant(CVariant::VariantTypeArray);
-    for (const auto* reason : methodIterator->second.reasons)
-      currentMethod["reasons"].append(reason->name);
+    currentMethod["reasons"] = CVariant(CVariant::VariantTypeObject);
+    for (const auto& [error, refined] : methodIterator->second.reasons)
+    {
+      CVariant& names = currentMethod["reasons"][error->name];
+      names = CVariant(CVariant::VariantTypeArray);
+      for (const auto* reason : refined)
+        names.append(reason->name);
+    }
 
     result["methods"][methodIterator->second.name] = currentMethod;
   }
@@ -2113,8 +2137,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
   for (const auto* reason : reasons)
   {
     CVariant currentReason = CVariant(CVariant::VariantTypeObject);
-
-    currentReason["error"] = StatusToDescription(reason->status)->name;
     if (printDescriptions)
       currentReason["description"] = reason->description;
 

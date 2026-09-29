@@ -52,8 +52,8 @@ def build_method(name, method, taxonomy):
                    for error in taxonomy
                    if error["name"] in can_return],
         "x-kodi-permission": method["permission"],
-        "x-kodi-reasons": [{"$ref": REASON_PREFIX + reason}
-                           for reason in method["reasons"]],
+        "x-kodi-reasons": {error: [{"$ref": REASON_PREFIX + reason} for reason in reasons]
+                           for error, reasons in method["reasons"].items()},
     }
     if "transport" in method:
         entry["x-kodi-transport"] = method["transport"]
@@ -79,10 +79,7 @@ def build_document():
     # a failure for a reason carries {"reason": <name>, "target": {...}} as "error.data"
     reasons = {}
     for reason in kodi_schema.load_reason_taxonomy():
-        reasons[reason["name"]] = {
-            "error": {"$ref": "#/components/errors/" + reason["error"]},
-            "description": reason["description"],
-        }
+        reasons[reason["name"]] = {"description": reason["description"]}
     return {
         "openrpc": "1.3.2",
         "info": {

@@ -10,11 +10,11 @@
 
 The errors a method can return are the JSONRPC_STATUS names its handler's
 body mentions, plus those of every JSONRPC_STATUS function it calls,
-transitively.  Its reasons are the Reason enumerators found the same way,
-and each reason also brings the status it belongs to.  This module computes
-that closure from the source text in xbmc/interfaces/json-rpc and compares
-it with the "errors" and "reasons" members each method declares in
-methods.json.
+transitively.  Its reasons are found the same way, from each Fail() call,
+which names the status and the reason together; a reason is declared under
+every status a call pairs it with.  This module computes that closure from
+the source text in xbmc/interfaces/json-rpc and compares it with the
+"errors" and "reasons" members each method declares in methods.json.
 
     python tools/jsonrpc/method_errors.py            # report any drift
     python tools/jsonrpc/method_errors.py --write    # declare the derived sets
@@ -50,6 +50,7 @@ _CALL = re.compile(r"(?<![\w.])(?<!->)((?:\w+::)?\w+)\s*\(")
 # A function passed by name as an argument, which the callee may call.
 _ARGUMENT = re.compile(r"[(,]\s*((?:\w+::)?\w+)\s*(?=[,)])")
 _REASON = re.compile(r"\bReason::(\w+)\b")
+_FAIL = re.compile(r"(?<![\w.:>])Fail\s*\(")
 _MAP_ENTRY = re.compile(r'\{\s*"([\w.]+)"\s*,\s*(\w+::\w+)\s*\}')
 
 
@@ -109,11 +110,51 @@ def _status_names(taxonomy):
     return [error["name"] for error in taxonomy]
 
 
+def _arguments(text):
+    """Split a call's argument text at its top-level commas."""
+    args, depth, current = [], 0, []
+    for char in text:
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        if char == "," and depth == 0:
+            args.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    args.append("".join(current))
+    return args
+
+
+def _reason_pairs(name, body, status_pattern, by_enumerator):
+    """Return the (status, reason name) pairs the Fail() calls in body make."""
+    pairs = set()
+    covered = 0
+    for match in _FAIL.finditer(body):
+        close = _matching(body, match.end() - 1, "(", ")")
+        args = _arguments(body[match.end():close])
+        if len(args) < 3:
+            continue
+        statuses = set(status_pattern.findall(args[1])) - set(SUCCESS)
+        enumerators = _REASON.findall(args[2])
+        if not statuses or not enumerators:
+            raise ValueError(f"{name} calls Fail() without naming its status and reason")
+        covered += len(enumerators)
+        for enumerator in enumerators:
+            if enumerator not in by_enumerator:
+                raise ValueError(f"{name} names Reason::{enumerator}, which is not described")
+            pairs |= {(status, by_enumerator[enumerator]["name"]) for status in statuses}
+    if covered != len(_REASON.findall(body)):
+        raise ValueError(f"{name} names a reason outside a Fail() call")
+    return pairs
+
+
 def build_graph(source_dir=SOURCE_DIR, taxonomy=None, reasons=None):
     """Return (failures, calls) per JSONRPC_STATUS function in source_dir.
 
-    A function's failures are the error and reason names its own body
-    names, without following calls.
+    A function's failures are the error names and the (error, reason) pairs
+    its own body names, without following calls.
     """
     taxonomy = taxonomy or kodi_schema.load_error_taxonomy()
     reasons = reasons or kodi_schema.load_reason_taxonomy()
@@ -132,13 +173,10 @@ def build_graph(source_dir=SOURCE_DIR, taxonomy=None, reasons=None):
     failures = {}
     calls = {}
     for name, body in bodies.items():
-        named = set()
-        for enumerator in _REASON.findall(body):
-            if enumerator not in by_enumerator:
-                raise ValueError(f"{name} names Reason::{enumerator}, which is not described")
-            named.add(by_enumerator[enumerator]["name"])
-            named.add(by_enumerator[enumerator]["error"])
-        failures[name] = (set(status_pattern.findall(body)) - set(SUCCESS)) | named
+        # Fail() forwards what its callers name
+        pairs = set() if name == "Fail" else _reason_pairs(name, body, status_pattern,
+                                                           by_enumerator)
+        failures[name] = (set(status_pattern.findall(body)) - set(SUCCESS)) | pairs
         cls = name.split("::")[0] if "::" in name else None
         callees = set()
         for callee in _CALL.findall(body) + _ARGUMENT.findall(body):
@@ -166,9 +204,10 @@ def method_handlers(method_map=METHOD_MAP):
 
 
 def derive_all(source_dir=SOURCE_DIR, taxonomy=None, reasons=None):
-    """Return {method name: {"errors": [...], "reasons": [...]}}.
+    """Return {method name: {"errors": [...], "reasons": {error: [...]}}}.
 
-    Errors are in taxonomy order, reasons in the order of the reason table.
+    Errors, and the errors reasons are declared under, are in taxonomy order;
+    reasons are in the order of the reason table.
     """
     taxonomy = taxonomy or kodi_schema.load_error_taxonomy()
     reasons = reasons or kodi_schema.load_reason_taxonomy()
@@ -192,9 +231,13 @@ def derive_all(source_dir=SOURCE_DIR, taxonomy=None, reasons=None):
         if handler not in closure:
             raise ValueError(f"{method} maps to {handler}, which is not defined")
         found = closure[handler]
+        errors = sorted({f for f in found if isinstance(f, str)}, key=error_order.__getitem__)
+        pairs = [f for f in found if isinstance(f, tuple)]
         derived[method] = {
-            "errors": sorted(found & error_order.keys(), key=error_order.__getitem__),
-            "reasons": sorted(found & reason_order.keys(), key=reason_order.__getitem__),
+            "errors": errors,
+            "reasons": {error: sorted((r for e, r in pairs if e == error),
+                                      key=reason_order.__getitem__)
+                        for error in errors if any(e == error for e, _ in pairs)},
         }
     return derived
 
@@ -206,7 +249,7 @@ def derive(source_dir=SOURCE_DIR, taxonomy=None):
 
 
 def derive_reasons(source_dir=SOURCE_DIR):
-    """Return {method name: [reason names]} in reason table order."""
+    """Return {method name: {error: [reason names]}}."""
     return {method: failures["reasons"]
             for method, failures in derive_all(source_dir).items()}
 
@@ -216,8 +259,11 @@ def explain(method, source_dir=SOURCE_DIR):
     failures, calls = build_graph(source_dir)
     handler = method_handlers(Path(source_dir) / METHOD_MAP.name)[method]
 
+    def describe(found):
+        return sorted(f if isinstance(f, str) else f"{f[0]}/{f[1]}" for f in found)
+
     def walk(name, depth, seen):
-        print("  " * depth + name, sorted(failures[name]))
+        print("  " * depth + name, describe(failures[name]))
         for callee in sorted(calls[name]):
             if callee not in seen:
                 seen.add(callee)
@@ -235,7 +281,8 @@ def declared(schema_dir=kodi_schema.SCHEMA_DIR):
 def write(schema_dir=kodi_schema.SCHEMA_DIR, source_dir=SOURCE_DIR):
     """Declare the derived errors and reasons on every method in methods.json."""
     path = Path(schema_dir) / "methods.json"
-    methods = json.loads(path.read_text(encoding="utf-8"))
+    raw = path.read_bytes().decode("utf-8")
+    methods = json.loads(raw)
     derived = derive_all(source_dir)
     for name, method in methods.items():
         method.pop("errors", None)
@@ -246,8 +293,10 @@ def write(schema_dir=kodi_schema.SCHEMA_DIR, source_dir=SOURCE_DIR):
         entries.insert(after + 1, ("errors", derived[name]["errors"]))
         entries.insert(after + 2, ("reasons", derived[name]["reasons"]))
         methods[name] = dict(entries)
-    path.write_text(json.dumps(methods, indent=2, ensure_ascii=False) + "\n",
-                    encoding="utf-8", newline="\n")
+    text = json.dumps(methods, indent=2, ensure_ascii=False) + "\n"
+    if "\r\n" in raw:
+        text = text.replace("\n", "\r\n")
+    path.write_bytes(text.encode("utf-8"))
 
 
 def main(argv):

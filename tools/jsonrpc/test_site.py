@@ -250,8 +250,9 @@ class TestSiteGeneration(unittest.TestCase):
             page = (self.out / self.vdir / "methods"
                     / f"{name}.html").read_text(encoding="utf-8")
             with self.subTest(method=name):
-                for reason in method["reasons"]:
-                    self.assertIn(f'href="../errors.html#{reason}"', page)
+                for reasons in method["reasons"].values():
+                    for reason in reasons:
+                        self.assertIn(f'href="../errors.html#{reason}"', page)
 
     def test_errors_page_lists_every_reason(self):
         text = (self.out / self.vdir

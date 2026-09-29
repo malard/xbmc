@@ -87,12 +87,10 @@ TEST(TestJSONRPCStatus, ReasonNamesAreUniqueAndKebabCase)
   }
 }
 
-//! \brief A reason refines an error, so its status must be one that reaches a client as an error
-TEST(TestJSONRPCStatus, EveryReasonBelongsToAnErrorStatus)
+TEST(TestJSONRPCStatus, EveryReasonIsDescribed)
 {
   for (const auto& description : JSONRPC_REASON_DESCRIPTIONS)
   {
-    EXPECT_NE(nullptr, StatusToDescription(description.status)) << description.name;
     EXPECT_EQ(&description, &ReasonToDescription(description.reason)) << description.name;
     EXPECT_FALSE(std::string_view(description.description).empty()) << description.name;
   }

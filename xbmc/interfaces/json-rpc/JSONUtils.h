@@ -476,7 +476,7 @@ protected:
       case CDatabase::GetResult::Ok:
         return OK;
       case CDatabase::GetResult::NotFound:
-        return Fail(result, Reason::NoSuchItem, target);
+        return Fail(result, NotFound, Reason::NoSuchItem, target);
       case CDatabase::GetResult::Error:
         break;
     }

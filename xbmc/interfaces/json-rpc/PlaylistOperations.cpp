@@ -280,7 +280,7 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVar
   if (!playList)
     return FailedToExecute;
   if (!playList->type)
-    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
+    return Fail(result, FailedToExecute, Reason::NotApplicable, PlayListTarget(*playList));
 
   CFileItemList list;
   CVariant unresolved{CVariant::VariantTypeArray};
@@ -306,7 +306,7 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, 
     return ApplyShuffle(*playList->type, shuffle);
 
   if (!CServiceBroker::GetSlideShowDelegator().IsPlaying())
-    return Fail(result, Reason::NothingPlaying, PlayListTarget(*playList));
+    return Fail(result, FailedToExecute, Reason::NothingPlaying, PlayListTarget(*playList));
   return ShuffleSlideshow(shuffle);
 }
 
@@ -316,7 +316,7 @@ JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, C
   if (!playList)
     return FailedToExecute;
   if (!playList->type)
-    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
+    return Fail(result, FailedToExecute, Reason::NotApplicable, PlayListTarget(*playList));
 
   return ApplyRepeat(*playList->type, parameterObject["repeat"]);
 }
@@ -327,7 +327,7 @@ JSONRPC_STATUS CPlaylistOperations::Remove(const CVariant& parameterObject, CVar
   if (!playList)
     return FailedToExecute;
   if (!playList->type)
-    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
+    return Fail(result, FailedToExecute, Reason::NotApplicable, PlayListTarget(*playList));
 
   const int position = static_cast<int>(parameterObject["position"].asInteger());
   return CServiceBroker::GetPlayLists()->Remove(*playList->type, position) ? ACK : InvalidParams;
@@ -357,7 +357,7 @@ JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant& parameterObject, CVaria
   if (!playList)
     return FailedToExecute;
   if (!playList->type)
-    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
+    return Fail(result, FailedToExecute, Reason::NotApplicable, PlayListTarget(*playList));
 
   CServiceBroker::GetPlayLists()->Swap(*playList->type,
                                        static_cast<int>(parameterObject["position1"].asInteger()),

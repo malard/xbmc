@@ -123,7 +123,7 @@ def load_error_taxonomy(header_path=UTILS_HEADER):
 
 
 _REASON_ENTRY = re.compile(
-    r"\{\s*Reason::(\w+)\s*,\s*(\w+)\s*,\s*"
+    r"\{\s*Reason::(\w+)\s*,\s*"
     r"(" + _STRING_LITERALS + r")\s*,\s*"
     r"(" + _STRING_LITERALS + r")\s*,?\s*\}",
     re.DOTALL)
@@ -132,14 +132,10 @@ _REASON_ENTRY = re.compile(
 def load_reason_taxonomy(header_path=UTILS_HEADER):
     """Parse JSONRPCUtils.h into a list of failure reasons.
 
-    Each entry is {"name", "enumerator", "error", "description"}, in the
-    order of the JSONRPC_REASON_DESCRIPTIONS table; "error" is the name of
-    the status the reason belongs to.
+    Each entry is {"name", "enumerator", "description"}, in the order of the
+    JSONRPC_REASON_DESCRIPTIONS table.
     """
     text = Path(header_path).read_text(encoding="utf-8")
-    status_names = {}
-    for entry in _DESCRIPTION_ENTRY.finditer(text):
-        status_names[entry.group(1)] = _join_literals(entry.group(2))
     enum = re.search(r"enum\s+class\s+Reason\s*\{(.*?)\}", text, re.DOTALL)
     if enum is None:
         raise ValueError("Reason enum not found")
@@ -151,13 +147,10 @@ def load_reason_taxonomy(header_path=UTILS_HEADER):
         raise ValueError("JSONRPC_REASON_DESCRIPTIONS table not found")
     reasons = []
     for entry in _REASON_ENTRY.finditer(table.group(1)):
-        enumerator, status, name, description = entry.groups()
-        if status not in status_names:
-            raise ValueError(f"reason {enumerator} belongs to unknown status {status}")
+        enumerator, name, description = entry.groups()
         reasons.append({
             "name": _join_literals(name),
             "enumerator": enumerator,
-            "error": status_names[status],
             "description": _join_literals(description),
         })
     if [reason["enumerator"] for reason in reasons] != enumerators:

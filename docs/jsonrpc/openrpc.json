@@ -123,7 +123,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -190,7 +190,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -283,7 +283,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -320,7 +320,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -357,7 +357,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Announcing"
     },
     {
@@ -442,7 +442,7 @@
         }
       ],
       "x-kodi-permission": "ControlNotify",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Announcing"
     },
     {
@@ -498,7 +498,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -715,20 +715,26 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/unreachable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-a-file"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-a-file"
+          }
+        ],
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/unreachable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -807,7 +813,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -865,7 +871,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -928,7 +934,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -968,7 +974,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1008,7 +1014,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1072,7 +1078,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1126,14 +1132,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-pausable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-pausable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1180,11 +1188,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1221,7 +1231,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1267,7 +1277,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1338,14 +1348,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1421,14 +1433,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1489,20 +1503,22 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/tempo-unsupported"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/paused"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/tempo-unsupported"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/paused"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1626,17 +1642,19 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-seekable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-seekable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1696,11 +1714,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1768,14 +1788,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1829,7 +1851,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1877,7 +1899,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -1941,7 +1963,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2002,7 +2024,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2062,14 +2084,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2131,7 +2155,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2189,14 +2213,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2262,11 +2288,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2320,11 +2348,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2391,17 +2421,21 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-stream"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-stream"
+          }
+        ],
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2468,17 +2502,21 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-stream"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-stream"
+          }
+        ],
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2533,14 +2571,16 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2617,17 +2657,21 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-stream"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-stream"
+          }
+        ],
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2680,7 +2724,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2736,7 +2780,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2814,7 +2858,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -2879,17 +2923,21 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-a-file"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-a-file"
+          }
+        ],
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -2964,20 +3012,26 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-a-file"
-        }
-      ],
+      "x-kodi-reasons": {
+        "InvalidParams": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-a-file"
+          }
+        ],
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ],
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3032,11 +3086,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3081,7 +3137,7 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -3146,11 +3202,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3205,11 +3263,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3271,11 +3331,13 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3333,14 +3395,16 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/nothing-playing"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/not-applicable"
-        }
-      ],
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3409,7 +3473,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -3483,11 +3547,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ]
+      },
       "x-kodi-transport": [
         "Response",
         "FileDownloadRedirect"
@@ -3536,7 +3602,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": [
         "Response",
         "FileDownloadDirect"
@@ -3634,14 +3700,18 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/unreachable"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/outside-sources"
-        }
-      ],
+      "x-kodi-reasons": {
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/unreachable"
+          }
+        ],
+        "AccessDenied": [
+          {
+            "$ref": "#/components/x-kodi-reasons/outside-sources"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3714,14 +3784,18 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/outside-sources"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ],
+        "AccessDenied": [
+          {
+            "$ref": "#/components/x-kodi-reasons/outside-sources"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3811,17 +3885,21 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-path"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/outside-sources"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ],
+        "AccessDenied": [
+          {
+            "$ref": "#/components/x-kodi-reasons/outside-sources"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -3873,7 +3951,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -4192,7 +4270,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -4254,11 +4332,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -4476,7 +4556,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -4538,11 +4618,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -4794,7 +4876,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -4856,11 +4938,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -4933,7 +5017,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5013,7 +5097,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5086,7 +5170,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5159,7 +5243,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5233,7 +5317,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5307,7 +5391,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5381,7 +5465,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5465,7 +5549,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5572,7 +5656,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -5773,11 +5857,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6016,11 +6102,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6239,11 +6327,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6294,11 +6384,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6349,11 +6441,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6464,14 +6558,16 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-addon"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6524,7 +6620,7 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -6599,7 +6695,7 @@
         }
       ],
       "x-kodi-permission": "WriteFile",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -6645,7 +6741,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -6856,7 +6952,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -6918,11 +7014,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -6995,7 +7093,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -7074,11 +7172,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -7238,7 +7338,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -7300,11 +7400,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -7383,7 +7485,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -7445,11 +7547,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -7613,7 +7717,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -7675,11 +7779,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -7852,7 +7958,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -7914,11 +8020,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -7991,7 +8099,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8064,7 +8172,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8137,7 +8245,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8210,7 +8318,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8296,7 +8404,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8382,7 +8490,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8514,7 +8622,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -8669,7 +8777,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -9001,11 +9109,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -9082,11 +9192,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -9329,11 +9441,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -9410,11 +9524,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -9638,11 +9754,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -9891,11 +10009,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -10044,11 +10164,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -10115,11 +10237,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response",
       "deprecated": true
     },
@@ -10195,11 +10319,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response",
       "deprecated": true
     },
@@ -10267,11 +10393,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response",
       "deprecated": true
     },
@@ -10387,11 +10515,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -10458,11 +10588,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response",
       "deprecated": true
     },
@@ -10511,7 +10643,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -10559,7 +10691,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -10607,7 +10739,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -10655,7 +10787,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -10714,11 +10846,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-source"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-source"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -10854,11 +10988,13 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-addon"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -10938,7 +11074,7 @@
         }
       ],
       "x-kodi-permission": "WriteFile",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11012,11 +11148,13 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/not-in-library"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-in-library"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -11072,7 +11210,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11152,7 +11290,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11204,7 +11342,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11253,7 +11391,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11313,7 +11451,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11359,7 +11497,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11396,7 +11534,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11471,7 +11609,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11533,7 +11671,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11587,7 +11725,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11641,7 +11779,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11700,7 +11838,7 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11740,7 +11878,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11851,7 +11989,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11914,7 +12052,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -11966,7 +12104,7 @@
         }
       ],
       "x-kodi-permission": "ManageAddon",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -12042,7 +12180,7 @@
         }
       ],
       "x-kodi-permission": "ExecuteAddon",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -12094,7 +12232,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -12163,7 +12301,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -12233,11 +12371,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12321,11 +12461,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12387,11 +12529,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12453,7 +12597,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -12548,11 +12692,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12651,11 +12797,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12717,11 +12865,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12773,11 +12923,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12869,11 +13021,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12947,7 +13101,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13009,11 +13163,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13081,11 +13237,13 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13137,11 +13295,13 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13201,11 +13361,13 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13279,7 +13441,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13341,11 +13503,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13416,11 +13580,13 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-item"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13468,7 +13634,7 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13532,7 +13698,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13578,7 +13744,7 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13649,7 +13815,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13693,7 +13859,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13752,7 +13918,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13801,7 +13967,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13841,7 +14007,7 @@
         }
       ],
       "x-kodi-permission": "ControlSystem",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13881,7 +14047,7 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13921,7 +14087,7 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -13961,7 +14127,7 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14001,7 +14167,7 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14055,7 +14221,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14100,7 +14266,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14169,7 +14335,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14206,7 +14372,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14243,7 +14409,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14280,7 +14446,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14317,7 +14483,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14354,7 +14520,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14391,7 +14557,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14428,7 +14594,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14465,7 +14631,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14502,7 +14668,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14539,7 +14705,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14576,7 +14742,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14613,7 +14779,7 @@
         }
       ],
       "x-kodi-permission": "Navigate",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14662,7 +14828,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14732,7 +14898,7 @@
         }
       ],
       "x-kodi-permission": "ControlSystem",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14769,7 +14935,7 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14841,7 +15007,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14922,7 +15088,7 @@
         }
       ],
       "x-kodi-permission": "UpdateData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -14967,7 +15133,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15023,11 +15189,13 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/level-locked"
-        }
-      ],
+      "x-kodi-reasons": {
+        "AccessDenied": [
+          {
+            "$ref": "#/components/x-kodi-reasons/level-locked"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -15104,7 +15272,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15188,7 +15356,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15275,7 +15443,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15332,11 +15500,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-setting"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-setting"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -15403,17 +15573,21 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-setting"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/setting-disabled"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/change-declined"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-setting"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/setting-disabled"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/change-declined"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -15465,14 +15639,18 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [
-        {
-          "$ref": "#/components/x-kodi-reasons/no-such-setting"
-        },
-        {
-          "$ref": "#/components/x-kodi-reasons/setting-disabled"
-        }
-      ],
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-setting"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/setting-disabled"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -15529,7 +15707,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15585,7 +15763,7 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15661,7 +15839,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
@@ -15709,7 +15887,7 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     }
   ],
@@ -22088,117 +22266,60 @@
     },
     "x-kodi-reasons": {
       "nothing-playing": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "Nothing is playing, or not the playlist the call named."
       },
       "not-applicable": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle for music or repeating the picture playlist."
       },
       "not-seekable": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "What is playing cannot seek."
       },
       "not-pausable": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "What is playing cannot pause."
       },
       "tempo-unsupported": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "The player of what is playing cannot change its tempo."
       },
       "paused": {
-        "error": {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
         "description": "The call needs playback that is not paused."
       },
       "no-such-stream": {
-        "error": {
-          "$ref": "#/components/errors/InvalidParams"
-        },
         "description": "What is playing has no stream at the given index."
       },
       "unreachable": {
-        "error": {
-          "$ref": "#/components/errors/Unavailable"
-        },
         "description": "The path cannot be read at the moment, as when its share is offline."
       },
       "no-such-item": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, timer or recording."
       },
       "no-such-source": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "The directory lies inside no source of the library."
       },
       "not-in-library": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "The library holds nothing under the directory."
       },
       "no-such-addon": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "No enabled add-on has the given id."
       },
       "no-such-path": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "Nothing exists at the given path."
       },
       "outside-sources": {
-        "error": {
-          "$ref": "#/components/errors/AccessDenied"
-        },
         "description": "The path lies outside every source shared for remote access."
       },
       "not-a-file": {
-        "error": {
-          "$ref": "#/components/errors/InvalidParams"
-        },
         "description": "The path names a directory, not a file."
       },
       "no-such-setting": {
-        "error": {
-          "$ref": "#/components/errors/NotFound"
-        },
         "description": "No setting has the given id."
       },
       "setting-disabled": {
-        "error": {
-          "$ref": "#/components/errors/Unavailable"
-        },
         "description": "The setting is disabled by the settings it depends on, so it cannot change now."
       },
       "change-declined": {
-        "error": {
-          "$ref": "#/components/errors/Unavailable"
-        },
         "description": "Kodi declined the value, as when a new display mode is not kept."
       },
       "level-locked": {
-        "error": {
-          "$ref": "#/components/errors/AccessDenied"
-        },
         "description": "The profile's settings lock keeps the setting level."
       }
     }

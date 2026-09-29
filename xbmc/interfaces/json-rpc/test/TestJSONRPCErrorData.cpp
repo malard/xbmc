@@ -20,12 +20,17 @@ namespace
 JSONRPC_STATUS FailWithTarget(const CVariant& parameterObject, CVariant& result)
 {
   result["partial"] = true;
-  return Fail(result, Reason::NothingPlaying, Target("playlist", "audio"));
+  return Fail(result, FailedToExecute, Reason::NothingPlaying, Target("playlist", "audio"));
 }
 
 JSONRPC_STATUS FailWithoutTarget(const CVariant& parameterObject, CVariant& result)
 {
-  return Fail(result, Reason::Unreachable);
+  return Fail(result, Unavailable, Reason::Unreachable);
+}
+
+JSONRPC_STATUS FailUnderAnotherStatus(const CVariant& parameterObject, CVariant& result)
+{
+  return Fail(result, NotFound, Reason::Unreachable);
 }
 
 JSONRPC_STATUS FailWithStatusAlone(const CVariant& parameterObject, CVariant& result)
@@ -51,7 +56,7 @@ protected:
   }
 };
 
-//! \brief A handler failing for a reason answers with the reason's status and the reason in data
+//! \brief A handler failing for a reason answers with the status it names and the reason in data
 TEST_F(TestJSONRPCErrorData, AReasonAndItsTargetReachErrorData)
 {
   const CVariant response = Respond("FailWithTarget", FailWithTarget);
@@ -70,6 +75,15 @@ TEST_F(TestJSONRPCErrorData, AReasonWithoutATargetOmitsIt)
   EXPECT_EQ(Unavailable, response["error"]["code"].asInteger());
   EXPECT_EQ("unreachable", response["error"]["data"]["reason"].asString());
   EXPECT_FALSE(response["error"]["data"].isMember("target"));
+}
+
+//! \brief A reason is not tied to one status
+TEST_F(TestJSONRPCErrorData, TheSameReasonCanComeWithAnotherStatus)
+{
+  const CVariant response = Respond("FailUnderAnotherStatus", FailUnderAnotherStatus);
+
+  EXPECT_EQ(NotFound, response["error"]["code"].asInteger());
+  EXPECT_EQ("unreachable", response["error"]["data"]["reason"].asString());
 }
 
 //! \brief A status alone still fails the call, and what the handler had written stays private

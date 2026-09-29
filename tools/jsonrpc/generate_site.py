@@ -206,11 +206,11 @@ class SiteBuilder:
             parts.append(f"<ul>{items}</ul>")
             also = "also "
         if method["reasons"]:
-            errors_of = {reason["name"]: reason["error"] for reason in self.reasons}
             items = "".join(
                 f'<li><a href="../errors.html#{esc(reason)}"><code>{esc(reason)}</code></a> '
-                f"({esc(errors_of[reason])})</li>"
-                for reason in method["reasons"])
+                f"({esc(error)})</li>"
+                for error, reasons in method["reasons"].items()
+                for reason in reasons)
             parts.append("<h3>Reasons</h3>"
                          "<p>A failure for one of these carries it as "
                          "<code>error.data.reason</code>.</p>"
@@ -322,7 +322,6 @@ class SiteBuilder:
         reason_rows = "".join(
             f'<tr id="{esc(reason["name"])}">'
             f"<td><code>{esc(reason['name'])}</code></td>"
-            f'<td><a href="#{esc(reason["error"])}">{esc(reason["error"])}</a></td>'
             f"<td>{esc(reason['description'])}</td>"
             "</tr>"
             for reason in self.reasons)
@@ -331,10 +330,10 @@ class SiteBuilder:
             "<p>A failure a client can act on names its reason: "
             "<code>error.data</code> is <code>{\"reason\": ..., \"target\": {...}}</code>, "
             "where the optional target is what the failure concerns, as the call "
-            "addresses it. Each reason refines one error, and each method's page "
-            "lists the reasons it can fail for.</p>"
+            "addresses it. Each method's page lists the reasons it can fail for, "
+            "under the error each comes with.</p>"
             '<div class="tablewrap"><table>'
-            "<thead><tr><th>Reason</th><th>Error</th><th>Description</th></tr></thead>"
+            "<thead><tr><th>Reason</th><th>Description</th></tr></thead>"
             f"<tbody>{reason_rows}</tbody></table></div>")
         self.page(f"{self.vdir}/errors.html",
                   "Errors - Kodi JSON-RPC API", body)

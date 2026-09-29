@@ -222,7 +222,8 @@ JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, 
       status != OK)
     return status;
   if (infos.m_iIdShow <= 0)
-    return Fail(result, Reason::NoSuchItem, Target("seasonId", parameterObject["seasonId"]));
+    return Fail(result, NotFound, Reason::NoSuchItem,
+                Target("seasonId", parameterObject["seasonId"]));
 
   CFileItemPtr pItem = std::make_shared<CFileItem>(infos);
   HandleFileItem("seasonId", false, "seasonDetails", pItem, parameterObject,
@@ -722,7 +723,8 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
       status != OK)
     return status;
   if (infos.m_iIdShow <= 0)
-    return Fail(result, Reason::NoSuchItem, Target("seasonId", parameterObject["seasonId"]));
+    return Fail(result, NotFound, Reason::NoSuchItem,
+                Target("seasonId", parameterObject["seasonId"]));
 
   const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
   if (ParameterNotNull(parameterObject, "title"))
@@ -755,7 +757,8 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
 
   int tvshowid = videodatabase.GetTvShowForEpisode(id);
   if (tvshowid <= 0)
-    return Fail(result, Reason::NoSuchItem, Target("episodeId", parameterObject["episodeId"]));
+    return Fail(result, NotFound, Reason::NoSuchItem,
+                Target("episodeId", parameterObject["episodeId"]));
 
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
@@ -874,7 +877,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
                                               static_cast<int>(item["musicVideoId"].asInteger()));
 
     if (!found || infos.m_iDbId <= 0)
-      return Fail(result, Reason::NoSuchItem, Target(key, item[key]));
+      return Fail(result, NotFound, Reason::NoSuchItem, Target(key, item[key]));
 
     fileItem.SetFromVideoInfoTag(infos);
   }
@@ -923,7 +926,8 @@ JSONRPC_STATUS CVideoLibrary::Scan(const CVariant& parameterObject, CVariant& re
 
     std::string sourcePath;
     if (!videodatabase.GetSourcePath(directory, sourcePath))
-      return Fail(result, Reason::NoSuchSource, Target("directory", parameterObject["directory"]));
+      return Fail(result, NotFound, Reason::NoSuchSource,
+                  Target("directory", parameterObject["directory"]));
   }
 
   std::string cmd =
@@ -974,7 +978,8 @@ JSONRPC_STATUS CVideoLibrary::SetSourceContent(const CVariant& parameterObject, 
     {
       if (!addonMgr.GetAddon(parsed.scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
       {
-        return Fail(result, Reason::NoSuchAddon, Target("scraperId", parameterObject["scraperId"]));
+        return Fail(result, NotFound, Reason::NoSuchAddon,
+                    Target("scraperId", parameterObject["scraperId"]));
       }
       return InvalidParams;
     }
@@ -1051,7 +1056,8 @@ JSONRPC_STATUS CVideoLibrary::Clean(const CVariant& parameterObject, CVariant& r
                                            paths))
       return InternalError;
     if (paths.empty())
-      return Fail(result, Reason::NotInLibrary, Target("directory", parameterObject["directory"]));
+      return Fail(result, NotFound, Reason::NotInLibrary,
+                  Target("directory", parameterObject["directory"]));
   }
 
   std::string cmd;

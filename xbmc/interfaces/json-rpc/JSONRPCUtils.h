@@ -122,8 +122,8 @@ inline const JsonRpcStatusDescription* StatusToDescription(JSONRPC_STATUS status
  \ingroup jsonrpc
  \brief Why a call failed, reported to the client as "error.data.reason"
 
- Each reason belongs to one JSONRPC_STATUS, which a call failing for that reason answers with.
- A method declares the reasons it can fail for beside its errors in methods.json.
+ A reason refines the status a call fails with, and may refine more than one. A method declares
+ the reasons it can fail for under the errors they come with in methods.json.
  */
 enum class Reason
 {
@@ -151,7 +151,6 @@ enum class Reason
 struct JsonRpcReasonDescription
 {
   Reason reason;
-  JSONRPC_STATUS status;
   //! The stable name a client matches on
   const char* name;
   const char* description;
@@ -159,39 +158,35 @@ struct JsonRpcReasonDescription
 
 //! Every Reason, in declaration order
 inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
-    {Reason::NothingPlaying, FailedToExecute, "nothing-playing",
+    {Reason::NothingPlaying, "nothing-playing",
      "Nothing is playing, or not the playlist the call named."},
-    {Reason::NotApplicable, FailedToExecute, "not-applicable",
+    {Reason::NotApplicable, "not-applicable",
      "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle "
      "for music or repeating the picture playlist."},
-    {Reason::NotSeekable, FailedToExecute, "not-seekable", "What is playing cannot seek."},
-    {Reason::NotPausable, FailedToExecute, "not-pausable", "What is playing cannot pause."},
-    {Reason::TempoUnsupported, FailedToExecute, "tempo-unsupported",
+    {Reason::NotSeekable, "not-seekable", "What is playing cannot seek."},
+    {Reason::NotPausable, "not-pausable", "What is playing cannot pause."},
+    {Reason::TempoUnsupported, "tempo-unsupported",
      "The player of what is playing cannot change its tempo."},
-    {Reason::Paused, FailedToExecute, "paused", "The call needs playback that is not paused."},
-    {Reason::NoSuchStream, InvalidParams, "no-such-stream",
-     "What is playing has no stream at the given index."},
-    {Reason::Unreachable, Unavailable, "unreachable",
+    {Reason::Paused, "paused", "The call needs playback that is not paused."},
+    {Reason::NoSuchStream, "no-such-stream", "What is playing has no stream at the given index."},
+    {Reason::Unreachable, "unreachable",
      "The path cannot be read at the moment, as when its share is offline."},
-    {Reason::NoSuchItem, NotFound, "no-such-item",
+    {Reason::NoSuchItem, "no-such-item",
      "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, "
      "timer or recording."},
-    {Reason::NoSuchSource, NotFound, "no-such-source",
-     "The directory lies inside no source of the library."},
-    {Reason::NotInLibrary, NotFound, "not-in-library",
-     "The library holds nothing under the directory."},
-    {Reason::NoSuchAddon, NotFound, "no-such-addon", "No enabled add-on has the given id."},
-    {Reason::NoSuchPath, NotFound, "no-such-path", "Nothing exists at the given path."},
-    {Reason::OutsideSources, AccessDenied, "outside-sources",
+    {Reason::NoSuchSource, "no-such-source", "The directory lies inside no source of the library."},
+    {Reason::NotInLibrary, "not-in-library", "The library holds nothing under the directory."},
+    {Reason::NoSuchAddon, "no-such-addon", "No enabled add-on has the given id."},
+    {Reason::NoSuchPath, "no-such-path", "Nothing exists at the given path."},
+    {Reason::OutsideSources, "outside-sources",
      "The path lies outside every source shared for remote access."},
-    {Reason::NotAFile, InvalidParams, "not-a-file", "The path names a directory, not a file."},
-    {Reason::NoSuchSetting, NotFound, "no-such-setting", "No setting has the given id."},
-    {Reason::SettingDisabled, Unavailable, "setting-disabled",
+    {Reason::NotAFile, "not-a-file", "The path names a directory, not a file."},
+    {Reason::NoSuchSetting, "no-such-setting", "No setting has the given id."},
+    {Reason::SettingDisabled, "setting-disabled",
      "The setting is disabled by the settings it depends on, so it cannot change now."},
-    {Reason::ChangeDeclined, Unavailable, "change-declined",
+    {Reason::ChangeDeclined, "change-declined",
      "Kodi declined the value, as when a new display mode is not kept."},
-    {Reason::LevelLocked, AccessDenied, "level-locked",
-     "The profile's settings lock keeps the setting level."},
+    {Reason::LevelLocked, "level-locked", "The profile's settings lock keeps the setting level."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()
@@ -213,12 +208,13 @@ inline const JsonRpcReasonDescription& ReasonToDescription(Reason reason)
 /*!
  \brief Fails a call for a declared reason, which the response carries in "error.data"
  \param result The handler's result, replaced by the error data
+ \param status The status the call fails with
  \param reason Why the call failed
  \param target What the failure concerns, as the caller addresses it, e.g. {"movieId": 3}
- \return The status the reason belongs to
+ \return status
  */
-JSONRPC_STATUS Fail(CVariant& result, Reason reason);
-JSONRPC_STATUS Fail(CVariant& result, Reason reason, const CVariant& target);
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason);
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason, const CVariant& target);
 
 //! A failure's target of one member, e.g. Target("playlist", "audio")
 CVariant Target(const std::string& key, const CVariant& value);

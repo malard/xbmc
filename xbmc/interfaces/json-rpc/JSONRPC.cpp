@@ -369,17 +369,19 @@ inline void CJSONRPC::BuildResponse(const CVariant& request,
   }
 }
 
-JSONRPC_STATUS JSONRPC::Fail(CVariant& result, Reason reason)
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result, JSONRPC_STATUS status, Reason reason)
 {
-  const JsonRpcReasonDescription& description = ReasonToDescription(reason);
   result = CVariant(CVariant::VariantTypeObject);
-  result["reason"] = description.name;
-  return description.status;
+  result["reason"] = ReasonToDescription(reason).name;
+  return status;
 }
 
-JSONRPC_STATUS JSONRPC::Fail(CVariant& result, Reason reason, const CVariant& target)
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result,
+                             JSONRPC_STATUS status,
+                             Reason reason,
+                             const CVariant& target)
 {
-  const JSONRPC_STATUS status = Fail(result, reason);
+  Fail(result, status, reason);
   if (!target.isNull())
     result["target"] = target;
   return status;

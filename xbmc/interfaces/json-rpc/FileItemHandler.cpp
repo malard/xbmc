@@ -610,19 +610,19 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item, CV
   if (!file.empty() && !URIUtils::IsURL(file) && !CFileUtils::Exists(file, false))
   {
     // A directory named as a file is a malformed request, not a reference that has gone stale
-    return Fail(result,
-                XFILE::CDirectory::Exists(file, false) ? Reason::NotAFile : Reason::NoSuchPath,
-                Target("file", item["file"]));
+    if (XFILE::CDirectory::Exists(file, false))
+      return Fail(result, InvalidParams, Reason::NotAFile, Target("file", item["file"]));
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", item["file"]));
   }
 
   const std::string directory{item["directory"].asString()};
   if (!directory.empty() && !XFILE::CDirectory::Exists(directory, false))
-    return Fail(result, Reason::NoSuchPath, Target("directory", item["directory"]));
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("directory", item["directory"]));
 
   for (const std::string& identifier : LibraryIdentifiers())
   {
     if (item[identifier].asInteger(-1) > 0)
-      return Fail(result, Reason::NoSuchItem, Target(identifier, item[identifier]));
+      return Fail(result, NotFound, Reason::NoSuchItem, Target(identifier, item[identifier]));
   }
 
   return InvalidParams;

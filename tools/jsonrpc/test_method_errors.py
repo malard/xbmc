@@ -54,25 +54,27 @@ class TestDeclarations(unittest.TestCase):
             with self.subTest(method=name):
                 self.assertEqual(self.methods[name]["errors"], errors)
 
-    def test_every_method_declares_a_reason_list(self):
+    def test_every_method_declares_a_reason_map(self):
         for name, method in self.methods.items():
             with self.subTest(method=name):
-                self.assertIsInstance(method.get("reasons"), list)
+                self.assertIsInstance(method.get("reasons"), dict)
 
     def test_declared_reasons_match_the_handlers(self):
         for name, reasons in self.derived_reasons.items():
             with self.subTest(method=name):
                 self.assertEqual(self.methods[name]["reasons"], reasons)
 
-    def test_a_declared_reason_refines_a_declared_error(self):
+    def test_reasons_are_declared_under_declared_errors(self):
         for name, method in self.methods.items():
-            for reason in method["reasons"]:
-                with self.subTest(method=name, reason=reason):
-                    self.assertIn(self.reasons[reason]["error"], method["errors"])
+            for error, reasons in method["reasons"].items():
+                with self.subTest(method=name, error=error):
+                    self.assertIn(error, method["errors"])
+                    self.assertTrue(reasons)
+                    self.assertTrue(set(reasons) <= set(self.reasons))
 
     def test_every_reason_is_used(self):
         used = {reason for method in self.methods.values()
-                for reason in method["reasons"]}
+                for reasons in method["reasons"].values() for reason in reasons}
         self.assertEqual(set(self.reasons), used)
 
     def test_reason_names_are_kebab_case(self):
@@ -140,13 +142,14 @@ class TestDerivation(unittest.TestCase):
         JSONRPC_STATUS CTest::Refuse(const CVariant& parameterObject, CVariant& result)
         {
           // Reason::NotSeekable in a comment does not count
-          return Fail(result, Reason::NothingPlaying);
+          return Fail(result, FailedToExecute, Reason::NothingPlaying);
         }
 
         JSONRPC_STATUS CTest::Delegate(const CVariant& parameterObject, CVariant& result)
         {
           if (parameterObject.isNull())
-            return Fail(result, Reason::Unreachable);
+            return Fail(result, parameterObject.isArray() ? NotFound : Unavailable,
+                        Reason::Unreachable, Target("path", parameterObject));
           return Refuse(parameterObject, result);
         }
         """)
@@ -192,24 +195,40 @@ class TestDerivation(unittest.TestCase):
         self.assertNotIn("Unavailable", self.derived["Test.Outer"])
         self.assertEqual(self.derived["Test.Open"], ["Unavailable"])
 
-    def test_a_reason_brings_the_error_it_belongs_to(self):
-        self.assertEqual(self.derived_reasons["Test.Refuse"], ["nothing-playing"])
+    def test_a_reason_is_declared_under_the_status_its_call_names(self):
+        self.assertEqual(self.derived_reasons["Test.Refuse"],
+                         {"FailedToExecute": ["nothing-playing"]})
         self.assertEqual(self.derived["Test.Refuse"], ["FailedToExecute"])
 
-    def test_reasons_travel_through_called_functions(self):
+    def test_a_reason_can_come_with_more_than_one_status(self):
         self.assertEqual(self.derived_reasons["Test.Delegate"],
-                         ["nothing-playing", "unreachable"])
-        self.assertEqual(self.derived["Test.Delegate"], ["FailedToExecute", "Unavailable"])
+                         {"FailedToExecute": ["nothing-playing"],
+                          "NotFound": ["unreachable"],
+                          "Unavailable": ["unreachable"]})
+        self.assertEqual(self.derived["Test.Delegate"],
+                         ["FailedToExecute", "NotFound", "Unavailable"])
 
     def test_a_method_naming_no_reason_derives_none(self):
-        self.assertEqual(self.derived_reasons["Test.Outer"], [])
+        self.assertEqual(self.derived_reasons["Test.Outer"], {})
+
+    def test_a_reason_outside_a_fail_call_is_an_error(self):
+        source_dir = Path(self.tempdir.name)
+        (source_dir / "Bad.cpp").write_text(textwrap.dedent("""
+            JSONRPC_STATUS CBad::Refuse(const CVariant& parameterObject, CVariant& result)
+            {
+              const Reason reason = Reason::NothingPlaying;
+              return Fail(result, FailedToExecute, reason);
+            }
+            """), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            method_errors.derive(source_dir)
 
     def test_an_undescribed_reason_is_an_error(self):
         source_dir = Path(self.tempdir.name)
         (source_dir / "Bad.cpp").write_text(textwrap.dedent("""
             JSONRPC_STATUS CBad::Refuse(const CVariant& parameterObject, CVariant& result)
             {
-              return Fail(result, Reason::NoSuchReason);
+              return Fail(result, NotFound, Reason::NoSuchReason);
             }
             """), encoding="utf-8")
         with self.assertRaises(ValueError):

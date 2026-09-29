@@ -44,7 +44,7 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
   for (auto method = result["methods"].begin_map(); method != result["methods"].end_map(); ++method)
   {
     EXPECT_TRUE(method->second["errors"].isArray()) << method->first << " declares no errors";
-    EXPECT_TRUE(method->second["reasons"].isArray()) << method->first << " declares no reasons";
+    EXPECT_TRUE(method->second["reasons"].isObject()) << method->first << " declares no reasons";
   }
 }
 
@@ -101,13 +101,14 @@ TEST_F(TestJSONServiceDescriptionIntrospect, AMethodDeclaringNoErrorsServesAnEmp
   EXPECT_EQ(0u, result["errors"].size());
 }
 
-//! \brief A method's declared reasons are served under it, and each names the error it refines
+//! \brief A method's declared reasons are served under it, under the error each comes with
 TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredReasonsAreServedWithTheMethod)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Reasons": {
     "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [], "returns": "string", "errors": ["FailedToExecute"],
-    "reasons": ["nothing-playing", "not-seekable"]
+    "params": [], "returns": "string", "errors": ["FailedToExecute", "NotFound"],
+    "reasons": {"FailedToExecute": ["nothing-playing", "not-seekable"],
+                "NotFound": ["nothing-playing"]}
   }})",
                                                  StubMethod));
 
@@ -117,12 +118,32 @@ TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredReasonsAreServedWithTheMeth
 
   const CVariant& reasons = result["methods"]["Test.Reasons"]["reasons"];
   ASSERT_EQ(2u, reasons.size());
-  EXPECT_EQ("nothing-playing", reasons[0].asString());
-  EXPECT_EQ("not-seekable", reasons[1].asString());
+  ASSERT_EQ(2u, reasons["FailedToExecute"].size());
+  EXPECT_EQ("nothing-playing", reasons["FailedToExecute"][0].asString());
+  EXPECT_EQ("not-seekable", reasons["FailedToExecute"][1].asString());
+  ASSERT_EQ(1u, reasons["NotFound"].size());
+  EXPECT_EQ("nothing-playing", reasons["NotFound"][0].asString());
 
   EXPECT_EQ(2u, result["reasons"].size());
-  EXPECT_EQ("FailedToExecute", result["reasons"]["nothing-playing"]["error"].asString());
   EXPECT_FALSE(result["reasons"]["not-seekable"]["description"].asString().empty());
+  EXPECT_FALSE(result["reasons"]["not-seekable"].isMember("error"));
+}
+
+TEST_F(TestJSONServiceDescriptionIntrospect, AMethodDeclaringNoReasonsServesAnEmptyMap)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.NoReasons": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [], "returns": "string", "errors": ["FailedToExecute"], "reasons": {}
+  }})",
+                                                 StubMethod));
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false,
+                                               "Test.NoReasons", "method"));
+
+  const CVariant& reasons = result["methods"]["Test.NoReasons"]["reasons"];
+  EXPECT_TRUE(reasons.isObject());
+  EXPECT_EQ(0u, reasons.size());
 }
 
 TEST_F(TestJSONServiceDescriptionIntrospect, EveryReasonIsServedUnfiltered)
@@ -137,7 +158,18 @@ TEST_F(TestJSONServiceDescriptionIntrospect, AnUnknownReasonIsRejected)
 {
   EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.UnknownReason": {
     "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [], "returns": "string", "errors": ["FailedToExecute"], "reasons": ["no-such-reason"]
+    "params": [], "returns": "string", "errors": ["FailedToExecute"],
+    "reasons": {"FailedToExecute": ["no-such-reason"]}
+  }})",
+                                                  StubMethod));
+}
+
+TEST_F(TestJSONServiceDescriptionIntrospect, AReasonUnderAnUndeclaredErrorIsRejected)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.UndeclaredError": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [], "returns": "string", "errors": ["FailedToExecute"],
+    "reasons": {"NotFound": ["nothing-playing"]}
   }})",
                                                   StubMethod));
 }
