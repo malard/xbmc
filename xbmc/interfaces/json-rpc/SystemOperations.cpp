@@ -41,7 +41,7 @@ JSONRPC_STATUS CSystemOperations::Shutdown(const CVariant& parameterObject, CVar
     return ACK;
   }
   else
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
 JSONRPC_STATUS CSystemOperations::Suspend(const CVariant& parameterObject, CVariant& result)
@@ -52,7 +52,7 @@ JSONRPC_STATUS CSystemOperations::Suspend(const CVariant& parameterObject, CVari
     return ACK;
   }
   else
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
 JSONRPC_STATUS CSystemOperations::Hibernate(const CVariant& parameterObject, CVariant& result)
@@ -63,7 +63,7 @@ JSONRPC_STATUS CSystemOperations::Hibernate(const CVariant& parameterObject, CVa
     return ACK;
   }
   else
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
 JSONRPC_STATUS CSystemOperations::Reboot(const CVariant& parameterObject, CVariant& result)
@@ -74,7 +74,7 @@ JSONRPC_STATUS CSystemOperations::Reboot(const CVariant& parameterObject, CVaria
     return ACK;
   }
   else
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
 JSONRPC_STATUS CSystemOperations::GetPropertyValue(int permissions,

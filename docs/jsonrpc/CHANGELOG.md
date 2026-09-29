@@ -135,6 +135,16 @@ Failure reasons:
   `no-such-item`, `no-such-path` or `not-a-file`.
 - `Settings`: `no-such-setting`, `setting-disabled`, `change-declined` and `level-locked`, naming
   the setting or level.
+- `PVR`: `pvr-not-started`, `not-recordable`, and `backend-refused` when the PVR add-on refuses a
+  recording, timer or channel scan. `Player.Open`: `playback-refused` when PVR playback does not
+  start, and `pvr-not-started`.
+- `GUI.TakeScreenshot`: `nothing-playing` or `not-applicable` for the video frame with no video,
+  `no-screenshot-folder`, `capture-failed`. `GUI.DeleteScreenshots`: `disabled`, `no-such-path`,
+  `delete-failed`.
+- `System.Shutdown`, `Suspend`, `Hibernate`, `Reboot`: `not-supported`.
+  `Application.GetDatabaseName`: `database-not-open`. `VideoLibrary.RefreshContentGeometry`:
+  `disabled`, `measure-failed`. `Playlist.SetShuffle`: `not-applicable` for unshuffling a
+  slideshow. `Files.PrepareDownload` and `Files.Download`: `no-such-path`.
 
 Properties and types:
 

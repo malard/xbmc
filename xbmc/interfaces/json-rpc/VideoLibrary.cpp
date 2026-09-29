@@ -841,7 +841,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
                                                      CVariant& result)
 {
   if (!KODI::VIDEO::GEOMETRY::ContentGeometryEnabledFromSettings())
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::Disabled);
 
   const CVariant& item = parameterObject["item"];
 
@@ -887,7 +887,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
                                                    : KODI::VIDEO::GEOMETRY::SamplingDepth::Normal};
 
   if (!KODI::VIDEO::GEOMETRY::RemeasureContentGeometry(fileItem, depth))
-    return Unavailable;
+    return Fail(result, Unavailable, Reason::MeasureFailed);
 
   return ACK;
 }

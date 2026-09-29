@@ -146,6 +146,17 @@ enum class Reason
   SettingDisabled,
   ChangeDeclined,
   LevelLocked,
+  PvrNotStarted,
+  NotRecordable,
+  BackendRefused,
+  PlaybackRefused,
+  Disabled,
+  NoScreenshotFolder,
+  CaptureFailed,
+  DeleteFailed,
+  NotSupported,
+  DatabaseNotOpen,
+  MeasureFailed,
 };
 
 struct JsonRpcReasonDescription
@@ -188,6 +199,22 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::ChangeDeclined, "change-declined",
      "Kodi declined the value, as when a new display mode is not kept."},
     {Reason::LevelLocked, "level-locked", "The profile's settings lock keeps the setting level."},
+    {Reason::PvrNotStarted, "pvr-not-started", "PVR is off, or has not finished starting."},
+    {Reason::NotRecordable, "not-recordable", "The channel cannot be recorded."},
+    {Reason::BackendRefused, "backend-refused",
+     "The PVR add-on refused the request or failed to carry it out."},
+    {Reason::PlaybackRefused, "playback-refused",
+     "Playback did not start, as when a parental lock is not unlocked or a prompt is cancelled."},
+    {Reason::Disabled, "disabled", "A setting on this installation turns the feature off."},
+    {Reason::NoScreenshotFolder, "no-screenshot-folder", "No screenshot folder is configured."},
+    {Reason::CaptureFailed, "capture-failed",
+     "The frame did not arrive, or the screenshot could not be written."},
+    {Reason::DeleteFailed, "delete-failed", "The file could not be deleted."},
+    {Reason::NotSupported, "not-supported",
+     "The system cannot do it, or its power settings do not allow it."},
+    {Reason::DatabaseNotOpen, "database-not-open",
+     "Kodi has not opened that database, because it is still starting or opening it failed."},
+    {Reason::MeasureFailed, "measure-failed", "The file could not be read or decoded to measure."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

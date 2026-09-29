@@ -721,6 +721,14 @@
             "$ref": "#/components/x-kodi-reasons/not-a-file"
           }
         ],
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/playback-refused"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -3267,6 +3275,9 @@
         "FailedToExecute": [
           {
             "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
           }
         ]
       },
@@ -3602,7 +3613,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ]
+      },
       "x-kodi-transport": [
         "Response",
         "FileDownloadDirect"
@@ -10524,9 +10541,19 @@
       ],
       "x-kodi-permission": "UpdateData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/disabled"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/measure-failed"
           }
         ]
       },
@@ -11617,7 +11644,24 @@
         }
       ],
       "x-kodi-permission": "ControlGUI",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/capture-failed"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-screenshot-folder"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -11679,7 +11723,23 @@
         }
       ],
       "x-kodi-permission": "RemoveData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/delete-failed"
+          }
+        ],
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/disabled"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12267,7 +12327,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12336,7 +12402,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12407,6 +12479,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12497,6 +12574,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12565,6 +12647,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12632,7 +12719,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12728,6 +12821,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12833,6 +12931,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12901,6 +13004,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -12959,6 +13067,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13057,6 +13170,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13136,7 +13254,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13199,6 +13323,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13273,6 +13402,14 @@
       ],
       "x-kodi-permission": "ControlPVR",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/backend-refused"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13331,6 +13468,14 @@
       ],
       "x-kodi-permission": "ControlPVR",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/backend-refused"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13397,6 +13542,14 @@
       ],
       "x-kodi-permission": "ControlPVR",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/backend-refused"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13476,7 +13629,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13539,6 +13698,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -13619,6 +13783,15 @@
           },
           {
             "$ref": "#/components/x-kodi-reasons/not-applicable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-recordable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/backend-refused"
           }
         ],
         "NotFound": [
@@ -13674,7 +13847,16 @@
         }
       ],
       "x-kodi-permission": "ControlPVR",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/backend-refused"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -14087,7 +14269,13 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-supported"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -14127,7 +14315,13 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-supported"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -14167,7 +14361,13 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-supported"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -14207,7 +14407,13 @@
         }
       ],
       "x-kodi-permission": "ControlPower",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/not-supported"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -15927,7 +16133,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/database-not-open"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     }
   ],
@@ -22361,6 +22573,39 @@
       },
       "level-locked": {
         "description": "The profile's settings lock keeps the setting level."
+      },
+      "pvr-not-started": {
+        "description": "PVR is off, or has not finished starting."
+      },
+      "not-recordable": {
+        "description": "The channel cannot be recorded."
+      },
+      "backend-refused": {
+        "description": "The PVR add-on refused the request or failed to carry it out."
+      },
+      "playback-refused": {
+        "description": "Playback did not start, as when a parental lock is not unlocked or a prompt is cancelled."
+      },
+      "disabled": {
+        "description": "A setting on this installation turns the feature off."
+      },
+      "no-screenshot-folder": {
+        "description": "No screenshot folder is configured."
+      },
+      "capture-failed": {
+        "description": "The frame did not arrive, or the screenshot could not be written."
+      },
+      "delete-failed": {
+        "description": "The file could not be deleted."
+      },
+      "not-supported": {
+        "description": "The system cannot do it, or its power settings do not allow it."
+      },
+      "database-not-open": {
+        "description": "Kodi has not opened that database, because it is still starting or opening it failed."
+      },
+      "measure-failed": {
+        "description": "The file could not be read or decoded to measure."
       }
     }
   }

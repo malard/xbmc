@@ -335,7 +335,9 @@ JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,
                                          const CVariant& parameterObject,
                                          CVariant& result)
 {
-  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : NotFound;
+  if (!transport->Download(parameterObject["path"].asString().c_str(), result))
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("path", parameterObject["path"]));
+  return OK;
 }
 
 bool CFileOperations::FillFileItem(

@@ -1121,7 +1121,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       return InvalidParams;
 
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayEpgTag(CFileItem(epgTag)))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1130,7 +1130,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer =
         CServiceBroker::GetPVRManager().ChannelGroups();
     if (!channelGroupContainer)
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<const CPVRChannel> channel = channelGroupContainer->GetChannelById(
         static_cast<int>(parameterObject["item"]["channelId"].asInteger()));
@@ -1145,7 +1145,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(
             CFileItem(groupMember)))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1154,7 +1154,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     const std::shared_ptr<const CPVRRecordings> recordingsContainer =
         CServiceBroker::GetPVRManager().Recordings();
     if (!recordingsContainer)
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<CPVRRecording> recording = recordingsContainer->GetById(
         static_cast<int>(parameterObject["item"]["recordingId"].asInteger()));
@@ -1165,7 +1165,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     CFileItem recItem{recording};
     HandleResumeOption(optionResume, recItem);
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1199,14 +1199,14 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       else if (list.Size() == 1 && URIUtils::IsPVRChannel(list[0]->GetPath()))
       {
         if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
-          return FailedToExecute;
+          return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
       {
         const std::shared_ptr<const CPVRRecordings> recordingsContainer{
             CServiceBroker::GetPVRManager().Recordings()};
         if (!recordingsContainer)
-          return FailedToExecute;
+          return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
         std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
         if (!recording)
@@ -1219,7 +1219,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
         CFileItem recItem{recording};
         HandleResumeOption(optionResume, recItem);
         if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
-          return FailedToExecute;
+          return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else
         return PlayFileItemList(list, options, result);

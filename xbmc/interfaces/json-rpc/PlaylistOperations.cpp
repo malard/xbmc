@@ -307,7 +307,7 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, 
 
   if (!CServiceBroker::GetSlideShowDelegator().IsPlaying())
     return Fail(result, FailedToExecute, Reason::NothingPlaying, PlayListTarget(*playList));
-  return ShuffleSlideshow(shuffle);
+  return ShuffleSlideshow(shuffle, result);
 }
 
 JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, CVariant& result)

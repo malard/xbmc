@@ -21,7 +21,8 @@ JSONRPC_STATUS CDatabaseOperations::GetDatabaseName(const CVariant& parameterObj
   const std::string dbName = CServiceBroker::GetDatabaseManager().GetDatabaseNameByType(dbType);
 
   if (dbName.empty())
-    return FailedToExecute;
+    return Fail(result, FailedToExecute, Reason::DatabaseNotOpen,
+                Target("type", parameterObject["type"]));
 
   result = dbName;
   return OK;

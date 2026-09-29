@@ -168,7 +168,8 @@ JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, C
     const auto& components = CServiceBroker::GetAppComponents();
     const auto appPlayer = components.GetComponent<CApplicationPlayer>();
     if (!appPlayer->IsRenderingVideo())
-      return FailedToExecute;
+      return Fail(result, FailedToExecute,
+                  appPlayer->IsPlaying() ? Reason::NotApplicable : Reason::NothingPlaying);
   }
 
   const CaptureContent capture = content == "video"  ? CaptureContent::VIDEO
@@ -181,12 +182,12 @@ JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, C
   switch (files.error)
   {
     case CScreenShot::ScreenshotError::NO_FOLDER:
-      return Unavailable;
+      return Fail(result, Unavailable, Reason::NoScreenshotFolder);
     case CScreenShot::ScreenshotError::BAD_TARGET:
       return InvalidParams;
     case CScreenShot::ScreenshotError::NOT_FOUND:
     case CScreenShot::ScreenshotError::FAILED:
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::CaptureFailed);
     case CScreenShot::ScreenshotError::NONE:
       break;
   }
@@ -202,7 +203,7 @@ JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, C
 JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const CVariant& parameterObject, CVariant& result)
 {
   if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonAllowScreenshotDeletion)
-    return Unavailable;
+    return Fail(result, Unavailable, Reason::Disabled);
 
   const CScreenShot::ScreenshotDeletion removed =
       CScreenShot::DeleteScreenshots(parameterObject["file"].asString());
@@ -212,11 +213,11 @@ JSONRPC_STATUS CGUIOperations::DeleteScreenshots(const CVariant& parameterObject
     case CScreenShot::ScreenshotError::BAD_TARGET:
       return InvalidParams;
     case CScreenShot::ScreenshotError::NOT_FOUND:
-      return NotFound;
+      return Fail(result, NotFound, Reason::NoSuchPath, Target("file", parameterObject["file"]));
     case CScreenShot::ScreenshotError::NO_FOLDER:
       return Unavailable;
     case CScreenShot::ScreenshotError::FAILED:
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::DeleteFailed);
     case CScreenShot::ScreenshotError::NONE:
       break;
   }

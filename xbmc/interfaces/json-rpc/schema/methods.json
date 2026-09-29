@@ -478,6 +478,10 @@
       "InvalidParams": [
         "not-a-file"
       ],
+      "FailedToExecute": [
+        "pvr-not-started",
+        "playback-refused"
+      ],
       "NotFound": [
         "no-such-item",
         "no-such-path"
@@ -1936,7 +1940,8 @@
     ],
     "reasons": {
       "FailedToExecute": [
-        "nothing-playing"
+        "nothing-playing",
+        "not-applicable"
       ]
     }
   },
@@ -2135,7 +2140,11 @@
     "errors": [
       "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-path"
+      ]
+    }
   },
   "Files.GetDirectory": {
     "type": "method",
@@ -7359,8 +7368,14 @@
       "Unavailable"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "disabled"
+      ],
       "NotFound": [
         "no-such-item"
+      ],
+      "Unavailable": [
+        "measure-failed"
       ]
     }
   },
@@ -7979,7 +7994,16 @@
       "FailedToExecute",
       "Unavailable"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable",
+        "capture-failed"
+      ],
+      "Unavailable": [
+        "no-screenshot-folder"
+      ]
+    }
   },
   "GUI.DeleteScreenshots": {
     "type": "method",
@@ -8012,7 +8036,17 @@
       "NotFound",
       "Unavailable"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "delete-failed"
+      ],
+      "NotFound": [
+        "no-such-path"
+      ],
+      "Unavailable": [
+        "disabled"
+      ]
+    }
   },
   "GUI.GetInfoLabels": {
     "type": "method",
@@ -8363,7 +8397,11 @@
       "InvalidParams",
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetChannelGroups": {
     "type": "method",
@@ -8406,7 +8444,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetChannelGroupDetails": {
     "type": "method",
@@ -8449,6 +8491,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8509,6 +8554,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8547,6 +8595,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8586,7 +8637,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetBroadcasts": {
     "type": "method",
@@ -8653,6 +8708,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8729,6 +8787,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8767,6 +8828,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8793,6 +8857,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8860,6 +8927,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8911,7 +8981,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetTimerDetails": {
     "type": "method",
@@ -8946,6 +9020,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -8989,6 +9066,10 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -9015,6 +9096,10 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -9050,6 +9135,10 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -9101,7 +9190,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetRecordingDetails": {
     "type": "method",
@@ -9136,6 +9229,9 @@
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
       "NotFound": [
         "no-such-item"
       ]
@@ -9181,7 +9277,10 @@
     "reasons": {
       "FailedToExecute": [
         "nothing-playing",
-        "not-applicable"
+        "not-applicable",
+        "pvr-not-started",
+        "not-recordable",
+        "backend-refused"
       ],
       "NotFound": [
         "no-such-item"
@@ -9206,7 +9305,12 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ]
+    }
   },
   "Application.GetTextures": {
     "type": "method",
@@ -9415,7 +9519,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Suspend": {
     "type": "method",
@@ -9427,7 +9535,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Hibernate": {
     "type": "method",
@@ -9439,7 +9551,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Reboot": {
     "type": "method",
@@ -9451,7 +9567,11 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "Input.SendText": {
     "type": "method",
@@ -10325,6 +10445,10 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "database-not-open"
+      ]
+    }
   }
 }
