@@ -66,6 +66,12 @@ constexpr auto BUILT_IN = std::to_array<BuiltInEntry>({
     {2.76f, "Ultra Panavision 70", false, true},
 });
 
+//! \brief Whether \p ratio is one at all: finite and above zero, which NaN is not.
+bool IsRatio(float ratio)
+{
+  return ratio > 0.0f && !std::isinf(ratio);
+}
+
 //! \brief The label for a ratio, which is the ratio written out. Not settable from a
 //! definition file.
 std::string LabelFor(float ratio)
@@ -142,7 +148,7 @@ bool Usable(const AspectRatioEntry& entry, AspectRatioUse use)
 
 const AspectRatioEntry* NearestIn(const Vocabulary& vocabulary, float ratio, AspectRatioUse use)
 {
-  if (ratio <= 0.0f)
+  if (!IsRatio(ratio))
     return nullptr;
 
   const float squared = ratio * ratio;
@@ -174,7 +180,7 @@ const AspectRatioEntry* ResolveIn(const Vocabulary& vocabulary,
                                   AspectRatioUse use,
                                   float towardRatio)
 {
-  if (!(ratio > 0.0f))
+  if (!IsRatio(ratio))
     return nullptr;
 
   const float wanted = std::log(ratio);
@@ -239,7 +245,7 @@ bool MergeRatio(const tinyxml2::XMLElement* element, Vocabulary& vocabulary)
   }
 
   const float ratio{static_cast<float>(value)};
-  if (!(ratio > 0.0f) || std::isinf(ratio))
+  if (!IsRatio(ratio))
   {
     CLog::LogF(LOGERROR, "<ratio> value {} is not a ratio", value);
     return false;
@@ -303,7 +309,7 @@ float CAspectRatioVocabulary::Tolerance()
 
 float CAspectRatioVocabulary::Distance(float a, float b)
 {
-  if (a <= 0.0f || b <= 0.0f)
+  if (!IsRatio(a) || !IsRatio(b))
     return std::numeric_limits<float>::infinity();
 
   return std::fabs(std::log(a / b));
@@ -494,9 +500,9 @@ void CAspectRatioVocabulary::Load()
   apply(std::string("special://xbmc/system/") + DEFINITION_FILE, true);
 
   // The viewer's own, over the shipped one.
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  if (settings && settings->GetProfileManager())
-    apply(settings->GetProfileManager()->GetUserDataItem(DEFINITION_FILE), false);
+  apply(
+      CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem(DEFINITION_FILE),
+      false);
 }
 
 } // namespace KODI::UTILS

@@ -357,11 +357,6 @@ std::string URIUtils::GetFileName(const CURL& url)
   return GetFileName(url.GetFileName());
 }
 
-std::string URIUtils::GetDecodedFileName(const CURL& url)
-{
-  return DecodePathEscapes(GetFileName(url));
-}
-
 std::string URIUtils::GetDecodedFileName(const std::string& strFileNameAndPath)
 {
   return DecodePathEscapes(GetFileName(strFileNameAndPath));

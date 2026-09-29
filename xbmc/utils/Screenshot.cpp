@@ -230,11 +230,16 @@ void CScreenShot::TakeScreenshot(KODI::RENDERING::CAPTURE::CaptureContent conten
 
 namespace
 {
-// A caller-named target, resolved under dir: a bare .png file name, so nothing outside the
-// configured folder can be named.
+// A bare .png file name, so nothing outside the configured folder can be named.
+bool IsScreenshotName(const std::string& name)
+{
+  return URIUtils::HasExtension(name, ".png") && name.find_first_of("/\\:") == std::string::npos;
+}
+
+// A caller-named target, resolved under dir.
 std::string TargetScreenshotFile(const std::string& dir, const std::string& target)
 {
-  if (!URIUtils::HasExtension(target, ".png") || target.find_first_of("/\\:") != std::string::npos)
+  if (!IsScreenshotName(target))
     return {};
 
   return URIUtils::AddFileToFolder(dir, target);
@@ -276,8 +281,7 @@ bool CScreenShot::IsScreenshotPath(const std::string& path)
   if (!StringUtils::StartsWithNoCase(path, SCREENSHOT_FOLDER))
     return false;
 
-  const std::string name = path.substr(SCREENSHOT_FOLDER.size());
-  return name.find_first_of("/\\") == std::string::npos && URIUtils::HasExtension(name, ".png");
+  return IsScreenshotName(path.substr(SCREENSHOT_FOLDER.size()));
 }
 
 CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(

@@ -50,7 +50,6 @@ public:
   static std::string GetFileName(const std::string& strFileNameAndPath);
 
   /*! \brief The file name with any percent escapes resolved, as a label carries it. */
-  static std::string GetDecodedFileName(const CURL& url);
   static std::string GetDecodedFileName(const std::string& strFileNameAndPath);
   static std::string GetFileOrFolderName(std::string_view path);
 

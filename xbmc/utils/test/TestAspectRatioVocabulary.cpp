@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <set>
 #include <string>
 #include <string_view>
@@ -71,6 +72,19 @@ TEST(TestAspectRatioVocabulary, NearestRejectsNonRatios)
   EXPECT_FALSE(CAspectRatioVocabulary::Nearest(-1.0f).has_value());
   EXPECT_TRUE(CAspectRatioVocabulary::Label(0.0f).empty());
   EXPECT_TRUE(CAspectRatioVocabulary::Label(-1.0f).empty());
+}
+
+TEST(TestAspectRatioVocabulary, NaNAndInfinityAreNotRatios)
+{
+  // An NFO can state either, and the number parser accepts both
+  for (const float notARatio :
+       {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+  {
+    EXPECT_FALSE(CAspectRatioVocabulary::Nearest(notARatio).has_value());
+    EXPECT_FALSE(CAspectRatioVocabulary::Match(notARatio).has_value());
+    EXPECT_TRUE(CAspectRatioVocabulary::Label(notARatio).empty());
+    EXPECT_TRUE(std::isinf(CAspectRatioVocabulary::Distance(notARatio, 1.78f)));
+  }
 }
 
 TEST(TestAspectRatioVocabulary, NearestCutsAtTheGeometricMean)
