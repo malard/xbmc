@@ -26,6 +26,9 @@ namespace
 // which the test environment does not register.
 constexpr unsigned int DISPLAY_TIME{5000};
 
+// The deadline is held in whole milliseconds, so a wait can end up to one short of it.
+constexpr std::chrono::milliseconds DEADLINE_RESOLUTION{1};
+
 std::chrono::milliseconds Elapsed(const std::chrono::steady_clock::time_point start)
 {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
@@ -47,7 +50,7 @@ TEST(TestGUIDialogBusy, ATimeoutEndsTheWait)
 
   // the wait ends on its own deadline rather than running on to displaytime
   const auto elapsed{Elapsed(start)};
-  EXPECT_GE(elapsed, 200ms);
+  EXPECT_GE(elapsed, 200ms - DEADLINE_RESOLUTION);
   EXPECT_LT(elapsed, 1000ms);
 }
 
@@ -126,7 +129,7 @@ TEST(TestGUIDialogBusy, ATimeoutEndsTheWaitWithNoBusyDialogToShow)
 
     // longer than displaytime, so the dialog is looked up and found missing
     EXPECT_FALSE(CGUIDialogBusy::WaitOnEvent(event, 100, true, 400ms));
-    EXPECT_GE(Elapsed(start), 400ms);
+    EXPECT_GE(Elapsed(start), 400ms - DEADLINE_RESOLUTION);
   }
   CServiceBroker::UnregisterWinSystem();
 }
