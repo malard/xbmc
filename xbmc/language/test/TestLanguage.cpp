@@ -65,19 +65,6 @@ TEST(TestLanguagePreference, TreatsTextNamingNothingAsNoPreference)
   EXPECT_TRUE(CLanguagePreference::ForAudio("").Is(Kind::FollowUI));
 }
 
-TEST(TestLanguagePreference, ResolvesOnlyTheChoicesAnsweredByALanguage)
-{
-  const CLanguageTag ui{CLanguageTag::Parse("de")};
-
-  EXPECT_EQ(CLanguagePreference::ForAudio("fr").Resolve(ui), CLanguageTag::Parse("fr"));
-  EXPECT_EQ(CLanguagePreference::ForAudio("default").Resolve(ui), ui);
-
-  EXPECT_TRUE(CLanguagePreference::ForAudio("mediadefault").Resolve(ui).IsUndetermined());
-  EXPECT_TRUE(CLanguagePreference::ForAudio("original").Resolve(ui).IsUndetermined());
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("none").Resolve(ui).IsUndetermined());
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("forced_only").Resolve(ui).IsUndetermined());
-}
-
 TEST(TestLanguage, AnswersAStatedLanguageWhateverTheFallback)
 {
   CLanguage language;
@@ -88,7 +75,6 @@ TEST(TestLanguage, AnswersAStatedLanguageWhateverTheFallback)
   EXPECT_EQ(language.UI(), CLanguageTag::Parse("en-GB"));
   EXPECT_EQ(language.Audio(), CLanguageTag::Parse("fr"));
   EXPECT_EQ(language.Subtitle(), CLanguageTag::Parse("es"));
-  EXPECT_EQ(language.Audio(false), CLanguageTag::Parse("fr"));
   EXPECT_EQ(language.Subtitle(false), CLanguageTag::Parse("es"));
 }
 
@@ -125,7 +111,6 @@ TEST(TestLanguage, AnswersAChoiceThatNamesNoLanguageWithTheInterfaceOne)
   {
     language.SetAudio(audio);
     EXPECT_EQ(language.Audio(), CLanguageTag::Parse("de")) << audio;
-    EXPECT_TRUE(language.Audio(false).IsUndetermined()) << audio;
   }
 
   language.SetAudio("original");
@@ -206,6 +191,5 @@ TEST(TestLanguage, WithoutAPackTheInterfaceIsInTheBuiltInLanguage)
   language.SetPack(nullptr);
 
   EXPECT_EQ(language.UI(), CLanguageTag::English());
-  EXPECT_EQ(language.Pack(), nullptr);
   EXPECT_TRUE(language.PackName().empty());
 }

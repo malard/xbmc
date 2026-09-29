@@ -79,14 +79,6 @@ public:
    */
   const CLanguageTag& GetLanguage() const { return m_language; }
 
-  /*!
-   * \brief The language a track should be matched against.
-   * \param[in] ui The interface language, which is what FollowUI asks for.
-   * \return The language to match, or an empty tag where the preference is answered by something
-   *         other than a language - a stream flag, or nothing being wanted at all.
-   */
-  CLanguageTag Resolve(const CLanguageTag& ui) const;
-
   bool operator==(const CLanguagePreference& other) const = default;
 
 private:
@@ -126,18 +118,11 @@ public:
   /*!
    * \brief The language an audio track should be matched against.
    *
-   * The audio preference, resolving "default" to the interface language. A preference answered
-   * by something other than a language - the media's own first track, or the original-language
-   * track - is answered by the interface language as well, so that a caller with nothing better
-   * to match against still has a language.
-   *
-   * \param[in] fallbackToUI Whether a preference naming no language is answered by the interface
-   *            language. False for a caller that answers it better itself, or that acts on the
-   *            choice rather than matching a language against it.
-   * \return The language, or an empty tag where the preference names none and there is no
-   *         fallback.
+   * The language the audio preference names. Any other choice - the interface language, the
+   * media's own first track, the original-language track - is answered by the interface
+   * language, so that a caller with nothing better to match against still has a language.
    */
-  CLanguageTag Audio(bool fallbackToUI = true) const;
+  CLanguageTag Audio() const;
 
   /*!
    * \brief The language a subtitle track should be matched against.
@@ -146,8 +131,10 @@ public:
    * language is answered by the one they asked to hear. Where neither states a language, the
    * caller that knows what is playing answers it with that instead, as it is not a setting.
    *
-   * \param[in] fallbackToUI As Audio describes.
-   * \return The language, as Audio describes.
+   * \param[in] fallbackToUI Whether a preference naming no language is answered by the interface
+   *            language.
+   * \return The language, or an empty tag where neither preference names one and there is no
+   *         fallback.
    */
   CLanguageTag Subtitle(bool fallbackToUI = true) const;
 
@@ -160,12 +147,6 @@ public:
 
   //! \brief What the user asked for, as AudioPreference describes.
   const CLanguagePreference& SubtitlePreference() const { return m_subtitle; }
-
-  /*!
-   * \brief The language pack the interface is running.
-   * \return The pack, or nullptr before one has been loaded.
-   */
-  const LanguageResourcePtr& Pack() const { return m_pack; }
 
   /*!
    * \brief The name the active language pack states for itself, in English.
@@ -200,7 +181,7 @@ public:
    */
   void DeclareSortTokens(Tokens tokens);
 
-  //! \brief The interface language, for the caller that has no pack to take it from.
+  //! \brief The interface language without loading a pack. For tests only.
   void SetUI(const CLanguageTag& language) { m_ui = language; }
   void SetAudio(const std::string& setting) { m_audio = CLanguagePreference::ForAudio(setting); }
   void SetSubtitle(const std::string& setting)

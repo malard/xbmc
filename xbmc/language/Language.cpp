@@ -99,37 +99,15 @@ CLanguagePreference CLanguagePreference::ForSubtitles(const std::string& setting
   return Parse(setting);
 }
 
-CLanguageTag CLanguagePreference::Resolve(const CLanguageTag& ui) const
-{
-  switch (m_kind)
-  {
-    case Kind::Language:
-      return m_language;
-    case Kind::FollowUI:
-      return ui;
-    case Kind::MediaDefault:
-    case Kind::Original:
-    case Kind::None:
-    case Kind::ForcedOnly:
-      return {};
-  }
-
-  return {};
-}
-
 CLanguage& CLanguage::GetInstance()
 {
   static CLanguage language;
   return language;
 }
 
-CLanguageTag CLanguage::Audio(bool fallbackToUI /* = true */) const
+CLanguageTag CLanguage::Audio() const
 {
-  const CLanguageTag audio{m_audio.Resolve(m_ui)};
-  if (!audio.IsUndetermined() || !fallbackToUI)
-    return audio;
-
-  return m_ui;
+  return m_audio.GetLanguage().IsUndetermined() ? m_ui : m_audio.GetLanguage();
 }
 
 CLanguageTag CLanguage::Subtitle(bool fallbackToUI /* = true */) const
