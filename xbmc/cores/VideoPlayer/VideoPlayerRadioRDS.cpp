@@ -1390,12 +1390,6 @@ unsigned int CDVDRadioRDSData::DecodeEPPTransmitterInfo(const uint8_t* msgElemen
   {
     int codeHigh = msgElement[2]&0xF0;
     int codeLow  = msgElement[2]&0x0F;
-    if (codeLow > 7)
-    {
-      CLog::Log(LOGERROR, "Radio RDS - {} - invalid country code {:#02X}{:02X}", __FUNCTION__,
-                codeHigh, codeLow);
-      return 7;
-    }
 
     const auto territory{KODI::RDS::Country(codeHigh, m_PI_CountryCode, codeLow)};
     if (!territory.has_value())
@@ -1441,12 +1435,6 @@ unsigned int CDVDRadioRDSData::DecodeSlowLabelingCodes(const uint8_t* msgElement
       {
         int codeHigh    = slowLabellingCode&0xF0;
         int codeLow     = slowLabellingCode&0x0F;
-        if (codeLow > 5)
-        {
-          CLog::Log(LOGERROR, "Radio RDS - {} - invalid country code {:#02X}{:02X}", __FUNCTION__,
-                    codeHigh, codeLow);
-          return 4;
-        }
 
         const auto territory{KODI::RDS::Country(codeHigh, m_PI_CountryCode, codeLow)};
         if (!territory.has_value())
@@ -1461,12 +1449,15 @@ unsigned int CDVDRadioRDSData::DecodeSlowLabelingCodes(const uint8_t* msgElement
       break;
     }
     case VARCODE_LANGUAGE_CODES:      // language codes
-      if (slowLabellingCode > 1 && slowLabellingCode < 0x80)
-        m_currentInfoTag->SetLanguage(KODI::RDS::Language(slowLabellingCode));
-      else
+    {
+      const KODI::LANGUAGE::CLanguageTag language{KODI::RDS::Language(slowLabellingCode)};
+      if (language.IsUndetermined())
         CLog::Log(LOGERROR, "Radio RDS - {} - invalid language code {}", __FUNCTION__,
                   slowLabellingCode);
+      else
+        m_currentInfoTag->SetLanguage(language);
       break;
+    }
 
     case VARCODE_TMC_IDENT:           // TMC identification
     case VARCODE_PAGING_IDENT:        // Paging identification
