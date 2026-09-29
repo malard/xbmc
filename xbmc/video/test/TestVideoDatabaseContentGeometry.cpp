@@ -55,7 +55,6 @@ ContentGeometryRecord MakeRecord(const FileIdentity& identity = IDENTITY)
   record.displayAspect = 16.0f / 9.0f;
   record.varies = true;
   record.hasReading = true;
-  record.confidence = 0.875f;
   record.identity = identity;
   record.computed = CDateTime(2026, 8, 6, 21, 30, 0);
   record.sections.push_back(CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM});
@@ -103,7 +102,6 @@ TEST_F(TestVideoDatabaseContentGeometry, StoresAndReadsBack)
   EXPECT_TRUE(lookup.record.varies);
   EXPECT_EQ(stored.varies, lookup.record.varies);
   EXPECT_EQ(stored.hasReading, lookup.record.hasReading);
-  EXPECT_FLOAT_EQ(stored.confidence, lookup.record.confidence);
   EXPECT_EQ(stored.algorithmVersion, lookup.record.algorithmVersion);
   EXPECT_EQ(stored.identity.size, lookup.record.identity.size);
   EXPECT_EQ(stored.identity.time, lookup.record.identity.time);

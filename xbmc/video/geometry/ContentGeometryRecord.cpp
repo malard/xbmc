@@ -213,7 +213,6 @@ void Archive(CArchive& ar, ContentGeometryRecord& record)
   io(record.displayAspect);
   io(record.varies);
   io(record.hasReading);
-  io(record.confidence);
   io(record.algorithmVersion);
   io(record.identity.size);
   io(record.identity.time);
@@ -230,7 +229,6 @@ void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& recor
   XMLUtils::SetFloat(&geometry, "displayaspect", record.displayAspect);
   XMLUtils::SetBoolean(&geometry, "varies", record.varies);
   XMLUtils::SetBoolean(&geometry, "hasreading", record.hasReading);
-  XMLUtils::SetFloat(&geometry, "confidence", record.confidence);
   XMLUtils::SetInt(&geometry, "algorithmversion", record.algorithmVersion);
   XMLUtils::SetString(&geometry, "filesize", std::to_string(record.identity.size));
   XMLUtils::SetString(&geometry, "filemtime", std::to_string(record.identity.time));
@@ -263,7 +261,6 @@ std::optional<ContentGeometryRecord> LoadContentGeometryXML(const TiXmlElement& 
   XMLUtils::GetFloat(geometry, "displayaspect", record.displayAspect);
   XMLUtils::GetBoolean(geometry, "varies", record.varies);
   XMLUtils::GetBoolean(geometry, "hasreading", record.hasReading);
-  XMLUtils::GetFloat(geometry, "confidence", record.confidence);
   XMLUtils::GetInt(geometry, "algorithmversion", record.algorithmVersion);
 
   if (std::string value; XMLUtils::GetString(geometry, "filesize", value))

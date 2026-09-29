@@ -147,13 +147,9 @@ CombinedGeometry CombineGeometrySamples(std::span<const GeometrySample> samples,
               return a.members.size() > b.members.size();
             });
 
-  float totalWeight = 0.0f;
   for (const WorkingCluster& cluster : clusters)
-  {
-    totalWeight += cluster.weight;
     result.clusters.push_back({MedianRect(cluster.members),
                                static_cast<unsigned int>(cluster.members.size()), cluster.weight});
-  }
 
   result.hasReading = true;
   result.rect = result.clusters.front().rect;
@@ -162,11 +158,6 @@ CombinedGeometry CombineGeometrySamples(std::span<const GeometrySample> samples,
   result.envelope = CRectInt{};
   for (const GeometryCluster& cluster : result.clusters)
     result.envelope.Union(cluster.rect);
-  // Falls back to counts when nothing scored.
-  result.share = totalWeight > 0.0f ? result.clusters.front().weight / totalWeight
-                                    : static_cast<float>(result.clusters.front().samples) /
-                                          static_cast<float>(result.usable);
-
   // Counted rather than acted on; ShouldEscalate() reads it.
   for (const CRectInt& shape : rejected)
   {

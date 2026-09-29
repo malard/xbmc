@@ -38,7 +38,6 @@ SampledGeometry MakeScan()
   scan.combined.rect = CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
   scan.combined.envelope = CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
   scan.combined.hasReading = true;
-  scan.combined.share = 0.85f;
   scan.combined.usable = 2;
   scan.combined.discarded = 0;
   scan.combined.clusters = {{CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 2, 1.7f}};
@@ -59,7 +58,6 @@ TEST(TestSampledGeometry, ASucceededScanBecomesAMeasurement)
   EXPECT_FLOAT_EQ(1.7777778f, record.displayAspect);
   EXPECT_TRUE(record.hasReading);
   EXPECT_FALSE(record.varies);
-  EXPECT_FLOAT_EQ(0.85f, record.confidence);
   EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, record.algorithmVersion);
   EXPECT_EQ(IDENTITY.size, record.identity.size);
   EXPECT_EQ(IDENTITY.time, record.identity.time);

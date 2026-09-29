@@ -527,7 +527,6 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughNfo)
   written.m_contentGeometry.rect = CRectInt{0, 264, 3840, 1896};
   written.m_contentGeometry.varies = true;
   written.m_contentGeometry.hasReading = true;
-  written.m_contentGeometry.confidence = 0.75f;
   written.m_contentGeometry.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
 
   // Beyond 32 bits.
@@ -552,7 +551,6 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughNfo)
   EXPECT_EQ(written.m_contentGeometry.rect, read.m_contentGeometry.rect);
   EXPECT_EQ(written.m_contentGeometry.varies, read.m_contentGeometry.varies);
   EXPECT_EQ(written.m_contentGeometry.hasReading, read.m_contentGeometry.hasReading);
-  EXPECT_FLOAT_EQ(written.m_contentGeometry.confidence, read.m_contentGeometry.confidence);
   EXPECT_EQ(written.m_contentGeometry.algorithmVersion, read.m_contentGeometry.algorithmVersion);
   EXPECT_EQ(written.m_contentGeometry.computed.GetAsDBDateTime(),
             read.m_contentGeometry.computed.GetAsDBDateTime());
@@ -619,7 +617,6 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughTheArchive)
   written.m_contentGeometry.displayAspect = 16.0f / 9.0f;
   written.m_contentGeometry.varies = true;
   written.m_contentGeometry.hasReading = true;
-  written.m_contentGeometry.confidence = 0.75f;
   written.m_contentGeometry.identity = FileIdentity{68'719'476'736, 1'700'000'000};
   written.m_contentGeometry.computed = CDateTime(2026, 8, 6, 21, 30, 0);
 
@@ -651,7 +648,6 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughTheArchive)
   EXPECT_FLOAT_EQ(written.m_contentGeometry.displayAspect, read.m_contentGeometry.displayAspect);
   EXPECT_EQ(written.m_contentGeometry.varies, read.m_contentGeometry.varies);
   EXPECT_EQ(written.m_contentGeometry.hasReading, read.m_contentGeometry.hasReading);
-  EXPECT_FLOAT_EQ(written.m_contentGeometry.confidence, read.m_contentGeometry.confidence);
   EXPECT_EQ(written.m_contentGeometry.algorithmVersion, read.m_contentGeometry.algorithmVersion);
   EXPECT_EQ(written.m_contentGeometry.identity.size, read.m_contentGeometry.identity.size);
   EXPECT_EQ(written.m_contentGeometry.identity.time, read.m_contentGeometry.identity.time);

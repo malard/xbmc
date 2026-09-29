@@ -37,7 +37,6 @@ ContentGeometryRecord MakeContentGeometryRecord(const SampledGeometry& scan,
   record.displayAspect = scan.displayAspect;
   record.varies = scan.combined.varies;
   record.hasReading = scan.combined.hasReading;
-  record.confidence = scan.combined.share;
 
   // The clusters' rectangles alone, without the rest of what produced them.
   record.sections.reserve(scan.combined.clusters.size());

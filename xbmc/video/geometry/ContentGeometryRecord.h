@@ -84,8 +84,6 @@ struct ContentGeometryRecord
   //! frame either way.
   bool hasReading{false};
 
-  float confidence{0.0f}; //!< the dominant cluster's share of the surviving weight
-
   //! \brief A Failed record is invisible to everything but the sweep.
   ContentGeometryOutcome outcome{ContentGeometryOutcome::Measured};
 

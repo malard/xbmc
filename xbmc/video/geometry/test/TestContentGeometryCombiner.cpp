@@ -64,7 +64,6 @@ TEST(TestContentGeometryCombiner, UnanimousSamples)
   ExpectRect(result.rect, 0, 263, WIDTH, HEIGHT - 263);
   EXPECT_TRUE(result.hasReading);
   EXPECT_FALSE(result.varies);
-  EXPECT_FLOAT_EQ(1.0f, result.share);
   EXPECT_EQ(1u, result.clusters.size());
   EXPECT_EQ(9u, result.usable);
 }
@@ -163,7 +162,6 @@ TEST(TestContentGeometryCombiner, VariesIsCountedNotWeighted)
   const CombinedGeometry result = Combine(samples);
 
   EXPECT_TRUE(result.varies) << "confidence weighting has suppressed the minority geometry";
-  EXPECT_LT(result.share, 1.0f);
 }
 
 //! \brief Sixteen scope samples with two full-frame rivals: two of eighteen is a ninth,
@@ -318,7 +316,6 @@ TEST(TestContentGeometryCombiner, StationaryUnscoredSamplesStillRead)
   EXPECT_EQ(479, result.rect.x1);
   EXPECT_EQ(8u, result.usable);
   EXPECT_EQ(0u, result.discarded);
-  EXPECT_FLOAT_EQ(1.0f, result.share); // counts, because there is no weight to take a share of
 }
 
 //! One unscored reading is a point, and two is a coincidence. Neither is stationarity.

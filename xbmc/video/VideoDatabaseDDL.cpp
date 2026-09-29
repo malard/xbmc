@@ -208,7 +208,7 @@ void CVideoDatabaseDDL::CreateContentGeometryTable(CDatabase& db)
                   "rectX INTEGER, rectY INTEGER, rectWidth INTEGER, rectHeight INTEGER, "
                   "envelopeX INTEGER, envelopeY INTEGER, envelopeWidth INTEGER, "
                   "envelopeHeight INTEGER, displayAspect FLOAT, "
-                  "varies BOOL, hasReading BOOL, confidence FLOAT, outcome INTEGER, "
+                  "varies BOOL, hasReading BOOL, outcome INTEGER, "
                   "algorithmVersion INTEGER, fileSize BIGINT, fileMTime BIGINT, "
                   "dateComputed TEXT, sections TEXT)");
 }

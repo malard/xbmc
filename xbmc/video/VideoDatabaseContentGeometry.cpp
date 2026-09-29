@@ -48,7 +48,6 @@ ContentGeometryRecord RecordFromDataset(dbiplus::Dataset& ds)
   geometry.displayAspect = ds.fv("displayAspect").get_asFloat();
   geometry.varies = ds.fv("varies").get_asBool();
   geometry.hasReading = ds.fv("hasReading").get_asBool();
-  geometry.confidence = ds.fv("confidence").get_asFloat();
   geometry.outcome = OutcomeFromColumn(ds.fv("outcome").get_asInt());
   geometry.algorithmVersion = ds.fv("algorithmVersion").get_asInt();
   geometry.identity.size = ds.fv("fileSize").get_asInt64();
@@ -76,7 +75,7 @@ constexpr const char* ATTEMPT_COLUMNS{"algorithmVersion, fileSize, fileMTime, ou
 //! \brief What RecordFromDataset() reads and SetContentGeometry() writes.
 constexpr const char* RECORD_COLUMNS{
     "codedWidth, codedHeight, rectX, rectY, rectWidth, rectHeight, envelopeX, envelopeY, "
-    "envelopeWidth, envelopeHeight, displayAspect, varies, hasReading, confidence, outcome, "
+    "envelopeWidth, envelopeHeight, displayAspect, varies, hasReading, outcome, "
     "algorithmVersion, fileSize, fileMTime, dateComputed, sections"};
 
 } // unnamed namespace
@@ -100,13 +99,12 @@ bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord&
 
     const std::string sql{PrepareSQL(
         "REPLACE INTO contentgeometry (idFile, %s) "
-        "VALUES (%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%f,%i,%i,%" PRId64 ",%" PRId64
+        "VALUES (%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%i,%i,%" PRId64 ",%" PRId64
         ",'%s','%s')",
         RECORD_COLUMNS, idFile, geometry.coded.Width(), geometry.coded.Height(), geometry.rect.x1,
         geometry.rect.y1, geometry.rect.Width(), geometry.rect.Height(), envelope.x1, envelope.y1,
         envelope.Width(), envelope.Height(), static_cast<double>(geometry.displayAspect),
-        geometry.varies ? 1 : 0, geometry.hasReading ? 1 : 0,
-        static_cast<double>(geometry.confidence), static_cast<int>(geometry.outcome),
+        geometry.varies ? 1 : 0, geometry.hasReading ? 1 : 0, static_cast<int>(geometry.outcome),
         geometry.algorithmVersion, geometry.identity.size, geometry.identity.time,
         geometry.computed.GetAsDBDateTime().c_str(),
         EncodeGeometrySections(geometry.sections).c_str())};

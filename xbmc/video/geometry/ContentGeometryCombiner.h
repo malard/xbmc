@@ -75,9 +75,6 @@ struct CombinedGeometry
 
   bool hasReading{false}; //!< false when no sample survived; rect is then the coded frame
 
-  //! \brief Dominant cluster's share of the surviving weight, or of the samples when nothing
-  //! scored.
-  float share{0.0f};
   unsigned int usable{0}; //!< samples in a cluster that corroborated itself
   unsigned int discarded{0}; //!< carried no reading, or landed in a cluster nothing corroborated
 
