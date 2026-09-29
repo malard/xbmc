@@ -337,6 +337,10 @@ void CActiveAESink::StateMachine(int signal, Protocol *port, Message *msg)
           m_extStreaming = *(bool*)msg->data;
           return;
 
+        case CSinkControlProtocol::ARMFILLER:
+          m_fillerArmed = m_silenceFiller;
+          return;
+
         case CSinkControlProtocol::SETSILENCETIMEOUT:
           m_silenceTimeOut = std::chrono::minutes(*reinterpret_cast<int*>(msg->data));
           return;
@@ -1045,11 +1049,8 @@ void CActiveAESink::OpenSink()
 
   m_silenceFiller = passthrough && CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
                                        CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
-  m_fillerArmed = m_silenceFiller;
-  m_fillerUsed = false;
+  m_fillerArmed = false;
   m_lastRawOut = RawOut::NONE;
-  if (m_silenceFiller)
-    CLog::Log(LOGDEBUG, "CActiveAESink::OpenSink - content filler armed for the opening hold");
 
   m_swapState = CHECK_SWAP;
 }
@@ -1105,9 +1106,8 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
         m_packer->Reset();
         m_packer->Pack(m_sinkFormat.m_streamInfo, buffer[0], frames);
         out = RawOut::DATA;
-        // Content after the filler is the film starting: the opening is over.
-        if (m_fillerUsed)
-          m_fillerArmed = false;
+        // Content is the hold over.
+        m_fillerArmed = false;
       }
       else if (samples->pkt->pause_burst_ms > 0)
       {
@@ -1117,14 +1117,11 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
         bool filled = false;
         wholeFrame = samples->pkt->pause_burst_ms ==
                      static_cast<int>(m_sinkFormat.m_streamInfo.GetDuration());
-        // The opening only: repeating a burst across a later gap is audible. ActiveAE reports
-        // STREAMING false for the whole of a hold, so burst cannot gate this.
+        // Only during a hold: repeating a burst across any other gap is audible.
         if (m_silenceFiller && m_fillerArmed && wholeFrame)
         {
           fillerTried = true;
           filled = m_packer->PackLastBurst();
-          if (filled)
-            m_fillerUsed = true;
         }
         // Not skipSwap: the retained burst is copied in fresh and still needs it.
         if (!filled &&
@@ -1146,7 +1143,7 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
           const char* why = "";
           if (out == RawOut::PAUSE && m_silenceFiller)
             why = fillerTried      ? " [filler: no burst retained]"
-                  : !m_fillerArmed ? " [filler: past the opening]"
+                  : !m_fillerArmed ? " [filler: no hold]"
                   : !wholeFrame    ? " [filler: partial frame]"
                                    : "";
           CLog::Log(LOGDEBUG,

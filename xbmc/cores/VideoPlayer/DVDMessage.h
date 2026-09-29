@@ -56,6 +56,7 @@ public:
     PLAYER_FRAME_ADVANCE,
     PLAYER_DISPLAY_RESET,           // report display reset event
     PLAYER_AUDIO_FORMAT_CHANGE,     // the audio format on the wire changed
+    PLAYER_AUDIO_FORMAT_HOLD,       // hold or release the audio output for a format change
 
     // demuxer related messages
     DEMUXER_PACKET,                 // data packet
