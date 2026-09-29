@@ -144,11 +144,14 @@ private:
                                     bool limit = true);
   static JSONRPC_STATUS RemoveVideo(const CVariant& parameterObject);
 
-  static JSONRPC_STATUS RefreshVideo(const CVariant& identifier, const CVariant& parameterObject);
+  static JSONRPC_STATUS RefreshVideo(const CVariant& identifier,
+                                     const CVariant& parameterObject,
+                                     CVariant& result);
 
   static JSONRPC_STATUS ResolveRefreshItem(const CVariant& identifier,
                                            CVideoDatabase& videodatabase,
-                                           CFileItem& item);
+                                           CFileItem& item,
+                                           CVariant& result);
   static void UpdateVideoTag(const CVariant& parameterObject,
                              CVideoInfoTag& details,
                              KODI::ART::Artwork& artwork,

@@ -110,7 +110,8 @@ protected:
      */
   static JSONRPC_STATUS ResolveInfoProviderTarget(const CVariant& parameterObject,
                                                   CMusicDatabase& musicdatabase,
-                                                  InfoProviderTarget& target);
+                                                  InfoProviderTarget& target,
+                                                  CVariant& result);
 
 private:
   //! Narrows \p url to the artists in the role the caller's filter names, or to every role

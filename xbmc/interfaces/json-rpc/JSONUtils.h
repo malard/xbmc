@@ -463,14 +463,20 @@ protected:
     return parameterObject.isMember(key) && !parameterObject[key].isNull();
   }
 
-  static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup)
+  /*!
+     \brief The answer to a library lookup
+     \param target The id looked up, as the caller gave it, e.g. {"movieId": 3}
+     */
+  static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup,
+                                  CVariant& result,
+                                  const CVariant& target)
   {
     switch (lookup)
     {
       case CDatabase::GetResult::Ok:
         return OK;
       case CDatabase::GetResult::NotFound:
-        return NotFound;
+        return Fail(result, Reason::NoSuchItem, target);
       case CDatabase::GetResult::Error:
         break;
     }

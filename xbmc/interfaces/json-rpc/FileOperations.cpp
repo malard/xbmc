@@ -259,7 +259,8 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
     return InternalError;
 
   CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId));
+  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId),
+                                              result, Target("file", parameterObject["file"]));
       status != OK)
     return status;
 

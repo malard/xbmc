@@ -13,6 +13,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
+            TestLibraryLookup.cpp
             TestPlayerOpenDirectory.cpp
             TestPlayerTargets.cpp
             TestPVRBroadcastRange.cpp

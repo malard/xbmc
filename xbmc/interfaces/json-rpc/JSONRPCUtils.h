@@ -135,6 +135,10 @@ enum class Reason
   Paused,
   NoSuchStream,
   Unreachable,
+  NoSuchItem,
+  NoSuchSource,
+  NotInLibrary,
+  NoSuchAddon,
 };
 
 struct JsonRpcReasonDescription
@@ -162,6 +166,14 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
      "What is playing has no stream at the given index."},
     {Reason::Unreachable, Unavailable, "unreachable",
      "The file cannot be read at the moment, as when its share is offline."},
+    {Reason::NoSuchItem, NotFound, "no-such-item",
+     "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, "
+     "timer or recording."},
+    {Reason::NoSuchSource, NotFound, "no-such-source",
+     "The directory lies inside no source of the library."},
+    {Reason::NotInLibrary, NotFound, "not-in-library",
+     "The library holds nothing under the directory."},
+    {Reason::NoSuchAddon, NotFound, "no-such-addon", "No enabled add-on has the given id."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

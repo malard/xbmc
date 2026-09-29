@@ -113,6 +113,9 @@ Failure reasons:
   `x-kodi-reasons`.
 - `Player`: `nothing-playing`, `not-applicable`, `not-seekable`, `not-pausable`,
   `tempo-unsupported`, `paused`, `no-such-stream`, and `unreachable` from `Player.Open`.
+- `VideoLibrary`, `AudioLibrary` and `PVR`: `no-such-item` for an id nothing has, with the id as
+  its target (`{"movieId": 3}`); `no-such-source` from `VideoLibrary.Scan`, `not-in-library` from
+  `VideoLibrary.Clean`, and `no-such-addon` for a scraper that does not exist.
 
 Properties and types:
 

@@ -2218,7 +2218,9 @@
       "NotFound",
       "AccessDenied"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.GetProperties": {
     "type": "method",
@@ -2572,7 +2574,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.GetAlbums": {
     "type": "method",
@@ -2799,7 +2803,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.GetSongs": {
     "type": "method",
@@ -3060,7 +3066,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.GetRecentlyAddedAlbums": {
     "type": "method",
@@ -3709,7 +3717,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.SetAlbumDetails": {
     "type": "method",
@@ -3918,7 +3928,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.SetSongDetails": {
     "type": "method",
@@ -4107,7 +4119,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.RefreshArtist": {
     "type": "method",
@@ -4128,7 +4142,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.RefreshAlbum": {
     "type": "method",
@@ -4149,7 +4165,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "AudioLibrary.SetInfoProvider": {
     "type": "method",
@@ -4231,7 +4249,10 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item",
+      "no-such-addon"
+    ]
   },
   "AudioLibrary.Scan": {
     "type": "method",
@@ -4544,7 +4565,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetMovieSets": {
     "type": "method",
@@ -4642,7 +4665,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetTVShows": {
     "type": "method",
@@ -4811,7 +4836,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetSeasons": {
     "type": "method",
@@ -4898,7 +4925,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetEpisodes": {
     "type": "method",
@@ -5071,7 +5100,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetMusicVideos": {
     "type": "method",
@@ -5253,7 +5284,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.GetRecentlyAddedMovies": {
     "type": "method",
@@ -6098,7 +6131,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.SetMovieSetDetails": {
     "type": "method",
@@ -6145,7 +6180,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.SetTVShowDetails": {
     "type": "method",
@@ -6358,7 +6395,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.SetSeasonDetails": {
     "type": "method",
@@ -6405,7 +6444,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.SetEpisodeDetails": {
     "type": "method",
@@ -6599,7 +6640,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.SetMusicVideoDetails": {
     "type": "method",
@@ -6818,7 +6861,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.Refresh": {
     "type": "method",
@@ -6938,7 +6983,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RefreshMovie": {
     "type": "method",
@@ -6977,7 +7024,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RefreshTVShow": {
     "type": "method",
@@ -7024,7 +7073,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RefreshEpisode": {
     "type": "method",
@@ -7063,7 +7114,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RefreshContentGeometry": {
     "type": "method",
@@ -7144,7 +7197,9 @@
       "NotFound",
       "Unavailable"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RefreshMusicVideo": {
     "type": "method",
@@ -7183,7 +7238,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "VideoLibrary.RemoveMovie": {
     "type": "method",
@@ -7292,7 +7349,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-source"
+    ]
   },
   "VideoLibrary.SetSourceContent": {
     "type": "method",
@@ -7399,7 +7458,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-addon"
+    ]
   },
   "VideoLibrary.Export": {
     "type": "method",
@@ -7496,7 +7557,9 @@
       "InternalError",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "not-in-library"
+    ]
   },
   "GUI.ActivateWindow": {
     "type": "method",
@@ -8199,7 +8262,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetChannels": {
     "type": "method",
@@ -8255,7 +8320,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetChannelDetails": {
     "type": "method",
@@ -8289,7 +8356,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetClients": {
     "type": "method",
@@ -8391,7 +8460,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetBroadcastsByChannelGroup": {
     "type": "method",
@@ -8463,7 +8534,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetBroadcastDetails": {
     "type": "method",
@@ -8497,7 +8570,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetBroadcastIsPlayable": {
     "type": "method",
@@ -8519,7 +8594,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetPlayableBroadcasts": {
     "type": "method",
@@ -8582,7 +8659,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetTimers": {
     "type": "method",
@@ -8664,7 +8743,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.AddTimer": {
     "type": "method",
@@ -8703,7 +8784,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.DeleteTimer": {
     "type": "method",
@@ -8725,7 +8808,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.ToggleTimer": {
     "type": "method",
@@ -8756,7 +8841,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.GetRecordings": {
     "type": "method",
@@ -8838,7 +8925,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.Record": {
     "type": "method",
@@ -8878,7 +8967,9 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item"
+    ]
   },
   "PVR.Scan": {
     "type": "method",
