@@ -2112,17 +2112,11 @@ CApplication::PlayResult CApplication::PlayFile(const CFileItem& item,
   const auto contentGeometry{GetComponent<CApplicationContentGeometry>()};
 
   CApplicationPlay appPlay{*stackHelper};
-  const auto result{appPlay.GatherPlaybackDetails(item, player, reopen == Reopen::Yes,
-                                                  startsRun == StartsRun::Yes)};
-  if (result == RESULT_ERROR)
+  const auto result{appPlay.GatherPlaybackDetails(item, player, reopen == Reopen::Yes, startsRun)};
+  if (result == RESULT_ERROR || result == RESULT_NO_PLAYLIST_SELECTED)
   {
     contentGeometry->ClearPendingOverrides();
-    return PlayResult::Failed;
-  }
-  if (result == RESULT_NO_PLAYLIST_SELECTED)
-  {
-    contentGeometry->ClearPendingOverrides();
-    return PlayResult::Cancelled;
+    return result == RESULT_ERROR ? PlayResult::Failed : PlayResult::Cancelled;
   }
 
   //! @todo Shouldn't disc stubs also be handled via appPlayer->OpenFile()?

@@ -27,7 +27,6 @@
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
 #include "settings/lib/SettingsManager.h"
-#include "video/geometry/GeometrySettings.h"
 #include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
 
@@ -105,18 +104,14 @@ void CApplicationSettingsHandling::RegisterSettings()
   settingsMgr->AddDynamicCondition("isplaying", IsPlaying);
 
   const auto contentGeometry = components.GetComponent<CApplicationContentGeometry>();
-  if (contentGeometry)
-  {
-    settingsMgr->RegisterCallback(contentGeometry.get(),
-                                  {CSettings::SETTING_VIDEOSCREEN_RASTERASPECT,
-                                   CSettings::SETTING_VIDEOSCREEN_VARIABLECONTENTGEOMETRY,
-                                   CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE,
-                                   CSettings::SETTING_VIDEOSCREEN_GUISURROUND,
-                                   CSettings::SETTING_VIDEOSCREEN_OSDPLAYING});
-
-    contentGeometry->RefreshOsdPlacement();
-    contentGeometry->RefreshAtRest();
-  }
+  settingsMgr->RegisterCallback(contentGeometry.get(),
+                                {CSettings::SETTING_VIDEOSCREEN_RASTERASPECT,
+                                 CSettings::SETTING_VIDEOSCREEN_VARIABLECONTENTGEOMETRY,
+                                 CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE,
+                                 CSettings::SETTING_VIDEOSCREEN_GUISURROUND,
+                                 CSettings::SETTING_VIDEOSCREEN_OSDPLAYING});
+  contentGeometry->RefreshOsdPlacement();
+  contentGeometry->RefreshAtRest();
 
   settings->RegisterSubSettings(this);
 }
@@ -133,9 +128,7 @@ void CApplicationSettingsHandling::UnregisterSettings()
   settings->UnregisterSubSettings(this);
   settingsMgr->RemoveDynamicCondition("isplaying");
 
-  const auto contentGeometry = components.GetComponent<CApplicationContentGeometry>();
-  if (contentGeometry)
-    settingsMgr->UnregisterCallback(contentGeometry.get());
+  settingsMgr->UnregisterCallback(components.GetComponent<CApplicationContentGeometry>().get());
 
   settingsMgr->UnregisterCallback(&appPlayer->GetSeekHandler());
   settingsMgr->UnregisterCallback(this);
@@ -213,12 +206,6 @@ void CApplicationSettingsHandling::ApplyRasterChange()
 
 void CApplicationSettingsHandling::ApplyRasterSettings()
 {
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  if (!settings || !settings->GetSettings())
-    return;
-
-  const auto values = settings->GetSettings();
-
   auto* const winSystem = CServiceBroker::GetWinSystem();
   if (!winSystem)
     return;
@@ -227,9 +214,9 @@ void CApplicationSettingsHandling::ApplyRasterSettings()
 
   const auto contentGeometry =
       CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
-  const float aspect = contentGeometry ? contentGeometry->RasterAspect()
-                                       : KODI::VIDEO::GEOMETRY::RasterAspectFromSettings();
-  const bool keepShape = values->GetBool(CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE);
+  const float aspect = contentGeometry->RasterAspect();
+  const bool keepShape = CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE);
 
   if (aspect == context.GetRasterAspect() && keepShape == context.GetGuiKeepShape())
     return;
@@ -244,8 +231,7 @@ void CApplicationSettingsHandling::ApplyRasterSettings()
     gui->GetWindowManager().SendThreadMessage(msg);
   }
 
-  if (contentGeometry)
-    contentGeometry->RefreshAtRest();
+  contentGeometry->RefreshAtRest();
 }
 
 void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const CSetting>& setting)

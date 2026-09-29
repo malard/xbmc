@@ -270,9 +270,10 @@ bool CApplicationPlay::GetPlaylistIfDisc()
   return true;
 }
 
-void CApplicationPlay::DetermineFullScreen(bool startsRun)
+void CApplicationPlay::DetermineFullScreen(KODI::APPLICATION::StartsRun startsRun)
 {
-  if (!startsRun || CMediaSettings::GetInstance().DoesMediaStartWindowed())
+  if (startsRun == KODI::APPLICATION::StartsRun::No ||
+      CMediaSettings::GetInstance().DoesMediaStartWindowed())
   {
     m_options.fullscreen = false;
     return;
@@ -286,7 +287,7 @@ void CApplicationPlay::DetermineFullScreen(bool startsRun)
 }
 
 CApplicationPlay::GatherPlaybackDetailsResult CApplicationPlay::GatherPlaybackDetails(
-    const CFileItem& item, std::string player, bool restart, bool startsRun)
+    const CFileItem& item, std::string player, bool restart, KODI::APPLICATION::StartsRun startsRun)
 {
   m_item = item;
   m_player = std::move(player);
