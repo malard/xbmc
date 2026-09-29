@@ -538,7 +538,8 @@
                   "random": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Deprecated, use the shuffled property of the options parameter instead. Only applies to a slideshow."
+                    "deprecated": true,
+                    "description": "Use the shuffled property of the options parameter instead. Only applies to a slideshow."
                   },
                   "recursive": {
                     "type": "boolean",
@@ -3635,7 +3636,8 @@
                 "properties": {
                   "genreid": {
                     "$ref": "#/components/schemas/Library.Id",
-                    "description": "Deprecated, use songgenreid. Filter for existence of songs with this genre"
+                    "deprecated": true,
+                    "description": "Use songgenreid instead. Filter for existence of songs with this genre"
                   }
                 },
                 "required": [
@@ -3695,7 +3697,8 @@
                   "genre": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Deprecated, use songgenre. Filter for existence of songs with this genre"
+                    "deprecated": true,
+                    "description": "Use songgenre instead. Filter for existence of songs with this genre"
                   }
                 },
                 "required": [
@@ -18642,7 +18645,8 @@
           },
           "isplayable": {
             "type": "boolean",
-            "description": "Deprecated - Use GetBroadcastIsPlayable instead"
+            "deprecated": true,
+            "description": "Use PVR.GetBroadcastIsPlayable instead"
           },
           "clientid": {
             "$ref": "#/components/schemas/Library.Id"

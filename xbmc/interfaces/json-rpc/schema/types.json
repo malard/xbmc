@@ -3346,7 +3346,8 @@
       },
       "isplayable": {
         "type": "boolean",
-        "description": "Deprecated - Use GetBroadcastIsPlayable instead"
+        "deprecated": true,
+        "description": "Use PVR.GetBroadcastIsPlayable instead"
       },
       "clientid": {
         "$ref": "#/$defs/Library.Id"
