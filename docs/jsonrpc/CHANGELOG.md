@@ -61,7 +61,7 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and `Player.OnSeek` are removed:
   each is `Player.OnPropertiesChanged`, carrying `speed` for the first three and `time` for a seek,
   with `player`. A pause is `speed` 0.
-- Six failures answer with the status that fits, each with its reason in `error.data`: an
+- Several failures answer with the status that fits, each with its reason in `error.data`: an
   unknown add-on id in `Addons.GetAddonDetails`, `Addons.SetAddonEnabled` and
   `Addons.ExecuteAddon` is `NotFound` (`no-such-addon`), not `InvalidParams`; `Player.GetChapters`
   with no video playing is `FailedToExecute` (`nothing-playing` or `not-applicable`), not
@@ -70,7 +70,11 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   (`no-such-path`), not `InvalidParams`; `PVR.Record` on the `current` channel with no channel
   playing is `FailedToExecute` (`nothing-playing` or `not-applicable`), not `InternalError`;
   `Files.GetDirectory` on a directory that does not exist is `NotFound` (`no-such-path`), not
-  `Unavailable`, which now means only that the source cannot be reached.
+  `Unavailable`, which now means only that the source cannot be reached; `Addons.SetAddonEnabled`
+  refused by Kodi is `Unavailable` (`change-declined`), `Player.SetPartymode` while party mode runs
+  on the other playlist is `FailedToExecute` (`party-mode-elsewhere`), and `PVR.AddTimer` for a
+  broadcast that already has a timer is `FailedToExecute` (`timer-exists`), none of them
+  `InvalidParams` any more.
 
 ### Deprecated
 

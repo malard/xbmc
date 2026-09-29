@@ -727,7 +727,7 @@ answers and notifications, using the table.
 | `windowparameter` | `windowParameter` |
 | `yearsactive` | `yearsActive` |
 
-## 18. Six failures answer with the status that fits
+## 18. Several failures answer with the status that fits
 
 The calls still work; only these failures changed code. Each now also names
 its reason in `error.data.reason`.
@@ -740,6 +740,9 @@ its reason in `error.data.reason`.
 | `Player.Open` | a PVR recording path nothing has | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-path` |
 | `PVR.Record` | `"channel": "current"` with no channel playing | -32603 `InternalError` | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
 | `Files.GetDirectory` | the directory does not exist | -32097 `Unavailable` | -32098 `NotFound`, `no-such-path` |
+| `Addons.SetAddonEnabled` | Kodi refuses the change, as for a required add-on | -32602 `InvalidParams` | -32097 `Unavailable`, `change-declined` |
+| `Player.SetPartymode` | party mode runs on the other playlist | -32602 `InvalidParams` | -32100 `FailedToExecute`, `party-mode-elsewhere` |
+| `PVR.AddTimer` | the broadcast already has a timer | -32602 `InvalidParams` | -32100 `FailedToExecute`, `timer-exists` |
 
 `Files.GetDirectory` still answers `Unavailable` (`unreachable`) when no
 directory above the one asked for can be listed either, as when its share

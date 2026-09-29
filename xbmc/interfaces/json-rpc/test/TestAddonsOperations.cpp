@@ -46,3 +46,16 @@ TEST(TestAddonsOperations, AnUnknownAddonIsNotFound)
   result = CVariant();
   ExpectNoSuchAddon(CAddonsOperations::ExecuteAddon(Addon(), result), result);
 }
+
+//! \brief Kodi refusing to disable a required system add-on is a declined change, not a bad request
+TEST(TestAddonsOperations, DisablingARequiredAddonIsDeclined)
+{
+  CVariant params(CVariant::VariantTypeObject);
+  params["addonId"] = "game.controller.default";
+  params["enabled"] = false;
+
+  CVariant result;
+  EXPECT_EQ(Unavailable, CAddonsOperations::SetAddonEnabled(params, result));
+  EXPECT_EQ("change-declined", result["reason"].asString());
+  EXPECT_EQ("game.controller.default", result["target"]["addonId"].asString());
+}

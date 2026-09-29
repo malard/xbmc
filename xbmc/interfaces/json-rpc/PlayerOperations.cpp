@@ -1431,7 +1431,7 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, 
             const PLAYLIST::Type type = player == Video ? PLAYLIST::Video : PLAYLIST::Audio;
             const bool enabled = PARTYMODE::IsRunning();
             if (enabled && !PARTYMODE::IsRunning(type))
-              return InvalidParams;
+              return Fail(result, FailedToExecute, Reason::PartyModeElsewhere);
 
             const bool toggle = parameterObject["partyMode"].isString();
             const bool wanted = toggle ? !enabled : parameterObject["partyMode"].asBoolean();

@@ -554,7 +554,8 @@ JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject, CVarian
                 Target("broadcastId", parameterObject["broadcastId"]));
 
   if (CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(epgTag))
-    return InvalidParams;
+    return Fail(result, FailedToExecute, Reason::TimerExists,
+                Target("broadcastId", parameterObject["broadcastId"]));
 
   const std::shared_ptr<CPVRTimerInfoTag> newTimer{
       CPVRTimerInfoTag::CreateFromEpg(epgTag, parameterObject["timerRule"].asBoolean(false),

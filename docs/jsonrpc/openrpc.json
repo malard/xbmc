@@ -2360,6 +2360,9 @@
         "FailedToExecute": [
           {
             "$ref": "#/components/x-kodi-reasons/not-applicable"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/party-mode-elsewhere"
           }
         ]
       },
@@ -12181,6 +12184,9 @@
         },
         {
           "$ref": "#/components/errors/NotFound"
+        },
+        {
+          "$ref": "#/components/errors/Unavailable"
         }
       ],
       "x-kodi-permission": "ManageAddon",
@@ -12188,6 +12194,11 @@
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ],
+        "Unavailable": [
+          {
+            "$ref": "#/components/x-kodi-reasons/change-declined"
           }
         ]
       },
@@ -13408,6 +13419,9 @@
           },
           {
             "$ref": "#/components/x-kodi-reasons/backend-refused"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/timer-exists"
           }
         ],
         "NotFound": [
@@ -22569,7 +22583,7 @@
         "description": "The setting is disabled by the settings it depends on, so it cannot change now."
       },
       "change-declined": {
-        "description": "Kodi declined the value, as when a new display mode is not kept."
+        "description": "Kodi declined the change, as when a new display mode is not kept or a required add-on would be disabled."
       },
       "level-locked": {
         "description": "The profile's settings lock keeps the setting level."
@@ -22606,6 +22620,12 @@
       },
       "measure-failed": {
         "description": "The file could not be read or decoded to measure."
+      },
+      "party-mode-elsewhere": {
+        "description": "Party mode is running on the other playlist."
+      },
+      "timer-exists": {
+        "description": "A timer already exists for the broadcast."
       }
     }
   }

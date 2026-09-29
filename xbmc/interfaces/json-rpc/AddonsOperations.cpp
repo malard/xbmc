@@ -173,7 +173,10 @@ JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObjec
                      ? CServiceBroker::GetAddonMgr().DisableAddon(id, AddonDisabledReason::USER)
                      : CServiceBroker::GetAddonMgr().EnableAddon(id);
 
-  return success ? ACK : InvalidParams;
+  if (!success)
+    return Fail(result, Unavailable, Reason::ChangeDeclined,
+                Target("addonId", parameterObject["addonId"]));
+  return ACK;
 }
 
 JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, CVariant& result)

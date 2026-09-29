@@ -157,6 +157,8 @@ enum class Reason
   NotSupported,
   DatabaseNotOpen,
   MeasureFailed,
+  PartyModeElsewhere,
+  TimerExists,
 };
 
 struct JsonRpcReasonDescription
@@ -197,7 +199,8 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::SettingDisabled, "setting-disabled",
      "The setting is disabled by the settings it depends on, so it cannot change now."},
     {Reason::ChangeDeclined, "change-declined",
-     "Kodi declined the value, as when a new display mode is not kept."},
+     "Kodi declined the change, as when a new display mode is not kept or a required add-on "
+     "would be disabled."},
     {Reason::LevelLocked, "level-locked", "The profile's settings lock keeps the setting level."},
     {Reason::PvrNotStarted, "pvr-not-started", "PVR is off, or has not finished starting."},
     {Reason::NotRecordable, "not-recordable", "The channel cannot be recorded."},
@@ -215,6 +218,9 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::DatabaseNotOpen, "database-not-open",
      "Kodi has not opened that database, because it is still starting or opening it failed."},
     {Reason::MeasureFailed, "measure-failed", "The file could not be read or decoded to measure."},
+    {Reason::PartyModeElsewhere, "party-mode-elsewhere",
+     "Party mode is running on the other playlist."},
+    {Reason::TimerExists, "timer-exists", "A timer already exists for the broadcast."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

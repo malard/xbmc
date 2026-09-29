@@ -1405,12 +1405,12 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams",
       "FailedToExecute"
     ],
     "reasons": {
       "FailedToExecute": [
-        "not-applicable"
+        "not-applicable",
+        "party-mode-elsewhere"
       ]
     }
   },
@@ -8308,11 +8308,15 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "NotFound"
+      "NotFound",
+      "Unavailable"
     ],
     "reasons": {
       "NotFound": [
         "no-such-addon"
+      ],
+      "Unavailable": [
+        "change-declined"
       ]
     }
   },
@@ -9061,14 +9065,14 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams",
       "FailedToExecute",
       "NotFound"
     ],
     "reasons": {
       "FailedToExecute": [
         "pvr-not-started",
-        "backend-refused"
+        "backend-refused",
+        "timer-exists"
       ],
       "NotFound": [
         "no-such-item"
