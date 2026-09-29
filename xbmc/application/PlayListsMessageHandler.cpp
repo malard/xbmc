@@ -38,10 +38,7 @@ namespace
 {
 void WakeScreen()
 {
-  const auto appPower =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPowerHandling>();
-  appPower->ResetScreenSaver();
-  appPower->WakeUpScreenSaverAndDPMS();
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationPowerHandling>()->WakeScreen();
 }
 
 //! A message's position: -1 for none.

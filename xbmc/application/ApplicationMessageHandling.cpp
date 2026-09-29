@@ -100,13 +100,6 @@ private:
   const CFileItem m_item;
 };
 
-void WakeScreensaver()
-{
-  const auto appPower =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationPowerHandling>();
-  appPower->ResetScreenSaver();
-  appPower->WakeUpScreenSaverAndDPMS();
-}
 } // unnamed namespace
 
 CApplicationMessageHandling::CApplicationMessageHandling(CApplication& app)
@@ -466,7 +459,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       else
         m_app.LeavePlaybackWindow();
 
-      WakeScreensaver();
+      m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
 
       if (appPlayer->IsPlaying())
         m_app.StopPlaying();
@@ -476,7 +469,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     case TMSG_MEDIA_PAUSE:
       if (appPlayer->HasPlayer())
       {
-        WakeScreensaver();
+        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
         appPlayer->Pause();
       }
       break;
@@ -484,7 +477,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     case TMSG_MEDIA_UNPAUSE:
       if (appPlayer->IsPausedPlayback())
       {
-        WakeScreensaver();
+        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
         appPlayer->Pause();
       }
       break;
@@ -492,7 +485,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     case TMSG_MEDIA_PAUSE_IF_PLAYING:
       if (appPlayer->IsPlaying() && !appPlayer->IsPaused())
       {
-        WakeScreensaver();
+        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
         appPlayer->Pause();
       }
       break;
