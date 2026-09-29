@@ -6,7 +6,10 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "filesystem/File.h"
 #include "language/LanguageTag.h"
+#include "test/TestUtils.h"
+#include "utils/Archive.h"
 #include "utils/StreamDetails.h"
 #include "utils/Variant.h"
 
@@ -1158,4 +1161,36 @@ TEST(TestStreamDetails, DefaultAudio_FirstNominationWins)
                                {"ger", "truehd", 8, StreamFlags::FLAG_DEFAULT}})};
 
   EXPECT_EQ(1, details.GetDefaultAudioStreamIndex());
+}
+
+TEST(TestStreamDetails, AnArchiveKeepsEachLanguageWhole)
+{
+  CStreamDetails written;
+  auto* video = new CStreamDetailVideo();
+  video->m_language = CLanguageTag::Parse("en-GB");
+  written.AddStream(video);
+  auto* audio = new CStreamDetailAudio();
+  audio->m_language = CLanguageTag::Parse("pt-BR");
+  written.AddStream(audio);
+  auto* subtitle = new CStreamDetailSubtitle();
+  subtitle->m_language = CLanguageTag::Parse("es-419");
+  written.AddStream(subtitle);
+
+  XFILE::CFile* const file{XBMC_CREATETEMPFILE(".ar")};
+  ASSERT_NE(nullptr, file);
+
+  CArchive out(file, CArchive::store);
+  written.Archive(out);
+  out.Close();
+  ASSERT_EQ(0, file->Seek(0, SEEK_SET));
+
+  CStreamDetails read;
+  CArchive in(file, CArchive::load);
+  read.Archive(in);
+  in.Close();
+  XBMC_DELETETEMPFILE(file);
+
+  EXPECT_EQ(read.GetVideoLanguage(), CLanguageTag::Parse("en-GB"));
+  EXPECT_EQ(read.GetAudioLanguage(), CLanguageTag::Parse("pt-BR"));
+  EXPECT_EQ(read.GetSubtitleLanguage(), CLanguageTag::Parse("es-419"));
 }

@@ -62,7 +62,7 @@ void CStreamDetailVideo::Archive(CArchive& ar)
     ar << m_iWidth;
     ar << m_iDuration;
     ar << m_strStereoMode;
-    ar << m_language.AsIso6392B();
+    ar << m_language.ToString();
     ar << m_strHdrType;
     ar << m_strHdrDetail;
     ar << static_cast<int>(m_source);
@@ -132,7 +132,7 @@ void CStreamDetailAudio::Archive(CArchive& ar)
   if (ar.IsStoring())
   {
     ar << m_strCodec;
-    ar << m_language.AsIso6392B();
+    ar << m_language.ToString();
     ar << m_iChannels;
     ar << static_cast<int>(m_source);
     ar << m_version;
@@ -191,7 +191,7 @@ void CStreamDetailSubtitle::Archive(CArchive& ar)
 {
   if (ar.IsStoring())
   {
-    ar << m_language.AsIso6392B();
+    ar << m_language.ToString();
     ar << static_cast<int>(m_source);
     ar << m_version;
     ar << static_cast<int>(m_flags);
