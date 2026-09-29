@@ -57,9 +57,6 @@ namespace XBMCAddon
     /// play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
     /// ...
     /// ~~~~~~~~~~~~~
-    ///
-    /// @python_v23 Removed **unshuffle()**. A playlist keeps the order it was built in; shuffle
-    /// only chooses the play order, and PlayerControl(RandomOff) turns it off.
     //
     class PlayList : public AddonClass
     {
@@ -178,6 +175,17 @@ namespace XBMCAddon
       shuffle();
 #else
       void shuffle();
+#endif
+
+#ifdef DOXYGEN_SHOULD_USE_THIS
+      ///
+      /// \ingroup python_PlayList
+      /// @brief \python_func{ unshuffle() }
+      /// Turn off shuffled play order. The items keep their positions.
+      ///
+      unshuffle();
+#else
+      void unshuffle();
 #endif
 
 #ifdef DOXYGEN_SHOULD_USE_THIS

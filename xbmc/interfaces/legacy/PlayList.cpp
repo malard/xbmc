@@ -124,6 +124,12 @@ namespace XBMCAddon
                                                  CApplicationPlayLists::Persist::No);
     }
 
+    void PlayList::unshuffle()
+    {
+      CServiceBroker::GetPlayLists()->SetShuffle(TypeOf(iPlayList), false,
+                                                 CApplicationPlayLists::Persist::No);
+    }
+
     int PlayList::getposition()
     {
       return pPlayList->GetCurrentPosition();
