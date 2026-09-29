@@ -26,7 +26,6 @@ struct GeometrySample
   CRectInt rect; //!< content rectangle in coded space
   float confidence{0.0f};
   bool degenerate{false}; //!< carries no reading at all - never combine as a narrow one
-  double position{0.0}; //!< seconds into the title, retained for diagnostics
 };
 
 struct CombinerParams

@@ -35,10 +35,6 @@ struct SamplingParams
   //! \brief Share of the runtime to sample when the exclusions do not fit inside it.
   double shortTitleWindow{0.80};
 
-  //! \brief Pictures to decode at each position. More than one measures whether the content
-  //! there is stable rather than voting.
-  unsigned int picturesPerPoint{1};
-
   //! \brief Points for a second pass when the first looks inconclusive. Zero disables it.
   unsigned int escalatedPoints{27};
 

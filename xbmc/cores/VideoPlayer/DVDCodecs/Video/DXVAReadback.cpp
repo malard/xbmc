@@ -213,7 +213,6 @@ ReductionResult CSurfaceReadback::ReadFilledSlot(KODI::VIDEO::GEOMETRY::ReducedF
   nv12.width = m_targetWidth;
   nv12.height = m_targetHeight;
   nv12.bitDepth = 8;
-  nv12.chroma = KODI::VIDEO::GEOMETRY::ChromaLayout::Interleaved;
   nv12.y = static_cast<const uint8_t*>(mapped.pData);
   nv12.yStrideBytes = static_cast<int>(mapped.RowPitch);
   nv12.u = nv12.y + static_cast<size_t>(mapped.RowPitch) * m_targetHeight;

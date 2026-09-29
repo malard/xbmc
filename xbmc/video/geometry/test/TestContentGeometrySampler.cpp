@@ -76,7 +76,6 @@ TEST(TestContentGeometrySampler, RetainsThePerSampleReadings)
 
   for (const auto& sample : scan.samples)
   {
-    EXPECT_GT(sample.position, 0.0) << "t=0 is idents and logos, never the title's geometry";
     EXPECT_FALSE(sample.degenerate);
     EXPECT_EQ(BAR, sample.rect.y1);
     EXPECT_EQ(CODED_HEIGHT - BAR, sample.rect.y2);

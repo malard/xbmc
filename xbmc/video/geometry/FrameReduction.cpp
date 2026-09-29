@@ -30,7 +30,7 @@ std::vector<unsigned int> ColumnBoundaries(unsigned int sourceWidth, unsigned in
 }
 
 //! \brief One plane's worth of box averaging, templated on sample width and on the stride
-//! between neighbouring samples, which is 2 only for interleaved chroma.
+//! between neighbouring samples, which is 2 for interleaved chroma.
 template<typename T, unsigned int STEP>
 void ReducePlane(const uint8_t* data,
                  int strideBytes,
@@ -96,20 +96,10 @@ void ReducePlanes(const ReductionSource& source,
 
   ReducePlane<T, 1>(source.y, source.yStrideBytes, 0, source.width, source.height, shift, outWidth,
                     outHeight, out.y.data());
-  if (source.chroma == ChromaLayout::Interleaved)
-  {
-    ReducePlane<T, 2>(source.u, source.uStrideBytes, 0, chromaWidth, chromaHeight, shift,
-                      outChromaWidth, outChromaHeight, out.u.data());
-    ReducePlane<T, 2>(source.u, source.uStrideBytes, 1, chromaWidth, chromaHeight, shift,
-                      outChromaWidth, outChromaHeight, out.v.data());
-  }
-  else
-  {
-    ReducePlane<T, 1>(source.u, source.uStrideBytes, 0, chromaWidth, chromaHeight, shift,
-                      outChromaWidth, outChromaHeight, out.u.data());
-    ReducePlane<T, 1>(source.v, source.vStrideBytes, 0, chromaWidth, chromaHeight, shift,
-                      outChromaWidth, outChromaHeight, out.v.data());
-  }
+  ReducePlane<T, 2>(source.u, source.uStrideBytes, 0, chromaWidth, chromaHeight, shift,
+                    outChromaWidth, outChromaHeight, out.u.data());
+  ReducePlane<T, 2>(source.u, source.uStrideBytes, 1, chromaWidth, chromaHeight, shift,
+                    outChromaWidth, outChromaHeight, out.v.data());
 }
 
 } // unnamed namespace
@@ -135,9 +125,6 @@ bool ReduceFrame(const ReductionSource& source, unsigned int targetWidth, Reduce
 {
   if (!source.y || !source.u || source.width == 0 || source.height == 0 || targetWidth == 0 ||
       source.bitDepth < 8 || source.bitDepth > 16)
-    return false;
-
-  if (source.chroma == ChromaLayout::Planar && !source.v)
     return false;
 
   const auto [outWidth, outHeight] = ReductionOutputSize(source.width, source.height, targetWidth);

@@ -30,8 +30,8 @@ SampledGeometry MakeScan()
   scan.succeeded = true;
   scan.coded = CRectInt{0, 0, CODED_WIDTH, CODED_HEIGHT};
   scan.displayAspect = 1.7777778f;
-  scan.samples = {{CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.9f, false, 300.0},
-                  {CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.8f, false, 900.0}};
+  scan.samples = {{CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.9f, false},
+                  {CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM}, 0.8f, false}};
 
   const CRectInt scope{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
   scan.combined.rect = scope;

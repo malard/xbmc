@@ -14,29 +14,20 @@
 namespace KODI::VIDEO::GEOMETRY
 {
 
-//! \brief How the chroma samples of a ReductionSource are laid out.
-enum class ChromaLayout
-{
-  Planar, //!< separate U and V planes, half resolution each way
-  Interleaved, //!< one plane of Cb,Cr pairs at half resolution - NV12, P010
-};
-
-//! \brief A non-owning view of one decoded 4:2:0 frame. Samples deeper than 8 bits are
-//! little-endian uint16_t, and highAligned says where the significant bits sit in the word.
+//! \brief A non-owning view of one decoded 4:2:0 frame with interleaved chroma, as NV12 and
+//! P010 lay it out. Samples deeper than 8 bits are little-endian uint16_t, and highAligned
+//! says where the significant bits sit in the word.
 struct ReductionSource
 {
   unsigned int width{0};
   unsigned int height{0};
   unsigned int bitDepth{8};
   bool highAligned{false};
-  ChromaLayout chroma{ChromaLayout::Interleaved};
 
   const uint8_t* y{nullptr};
   int yStrideBytes{0};
-  const uint8_t* u{nullptr}; //!< the interleaved chroma plane when layout is Interleaved
+  const uint8_t* u{nullptr}; //!< the interleaved Cb,Cr plane
   int uStrideBytes{0};
-  const uint8_t* v{nullptr}; //!< unused when layout is Interleaved
-  int vStrideBytes{0};
 };
 
 //! \brief The extent a reduction produces; zero in both dimensions when none is possible.

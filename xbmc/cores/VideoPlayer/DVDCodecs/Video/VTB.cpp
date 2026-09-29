@@ -94,7 +94,6 @@ ReductionResult CVideoBufferVTB::ReduceForAnalysis(KODI::VIDEO::GEOMETRY::Reduce
       std::min(sourceWidth, static_cast<unsigned int>(CVPixelBufferGetWidthOfPlane(m_pbRef, 0)));
   source.height =
       std::min(sourceHeight, static_cast<unsigned int>(CVPixelBufferGetHeightOfPlane(m_pbRef, 0)));
-  source.chroma = ChromaLayout::Interleaved;
   source.y = static_cast<const uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(m_pbRef, 0));
   source.yStrideBytes = static_cast<int>(CVPixelBufferGetBytesPerRowOfPlane(m_pbRef, 0));
   source.u = static_cast<const uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(m_pbRef, 1));

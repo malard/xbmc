@@ -42,7 +42,6 @@ struct NV12Frame
     source.width = width;
     source.height = height;
     source.bitDepth = 8;
-    source.chroma = ChromaLayout::Interleaved;
     source.y = y.data();
     source.yStrideBytes = static_cast<int>(width);
     source.u = uv.data();
@@ -118,7 +117,6 @@ TEST(TestFrameReduction, TopAlignedTenBitReadsAsItsHighByte)
   source.height = HEIGHT;
   source.bitDepth = 10;
   source.highAligned = true;
-  source.chroma = ChromaLayout::Interleaved;
   source.y = reinterpret_cast<const uint8_t*>(luma.data());
   source.yStrideBytes = static_cast<int>(WIDTH * sizeof(uint16_t));
   source.u = reinterpret_cast<const uint8_t*>(chroma.data());
@@ -181,7 +179,6 @@ TEST(TestFrameReduction, ASourceAtTheOutputSizeIsCopiedSampleForSample)
   source.width = WIDTH;
   source.height = HEIGHT;
   source.bitDepth = 8;
-  source.chroma = ChromaLayout::Interleaved;
   source.y = luma.data();
   source.yStrideBytes = PITCH;
   source.u = chroma.data();
@@ -250,10 +247,6 @@ TEST(TestFrameReduction, AnUndescribableSourceIsRefused)
   ReductionSource badDepth = frame.Source();
   badDepth.bitDepth = 17;
   EXPECT_FALSE(ReduceFrame(badDepth, 64, out));
-
-  ReductionSource planarWithoutV = frame.Source();
-  planarWithoutV.chroma = ChromaLayout::Planar;
-  EXPECT_FALSE(ReduceFrame(planarWithoutV, 64, out));
 
   EXPECT_FALSE(ReduceFrame(frame.Source(), 0, out));
 }

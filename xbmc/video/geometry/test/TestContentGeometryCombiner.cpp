@@ -24,25 +24,25 @@ constexpr int HEIGHT = 2160;
 const CRectInt CODED{0, 0, WIDTH, HEIGHT};
 
 //! \brief A letterboxed reading with equal bars top and bottom.
-GeometrySample Letterbox(int bar, float confidence, double position = 0.0)
+GeometrySample Letterbox(int bar, float confidence)
 {
-  return {CRectInt{0, bar, WIDTH, HEIGHT - bar}, confidence, false, position};
+  return {CRectInt{0, bar, WIDTH, HEIGHT - bar}, confidence, false};
 }
 
-GeometrySample FullFrame(float confidence, double position = 0.0)
+GeometrySample FullFrame(float confidence)
 {
-  return {CODED, confidence, false, position};
+  return {CODED, confidence, false};
 }
 
-GeometrySample Degenerate(double position = 0.0)
+GeometrySample Degenerate()
 {
-  return {CODED, 0.0f, true, position};
+  return {CODED, 0.0f, true};
 }
 
 //! \brief A pillarboxed reading with equal bars left and right.
-GeometrySample Pillarbox(int bar, float confidence, double position = 0.0)
+GeometrySample Pillarbox(int bar, float confidence)
 {
-  return {CRectInt{bar, 0, WIDTH - bar, HEIGHT}, confidence, false, position};
+  return {CRectInt{bar, 0, WIDTH - bar, HEIGHT}, confidence, false};
 }
 
 CombinedGeometry Combine(const std::vector<GeometrySample>& samples,
@@ -57,7 +57,7 @@ TEST(TestContentGeometryCombiner, UnanimousSamples)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 9; ++i)
-    samples.push_back(Letterbox(263, 0.9f, i * 600.0));
+    samples.push_back(Letterbox(263, 0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -78,8 +78,8 @@ TEST(TestContentGeometryCombiner, LoneOutlierIsAbsorbed)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 8; ++i)
-    samples.push_back(Letterbox(263, 0.8f, i * 600.0));
-  samples.push_back({CRectInt{59, 869, 3121, 1884}, 0.4f, false, 3857.0});
+    samples.push_back(Letterbox(263, 0.8f));
+  samples.push_back({CRectInt{59, 869, 3121, 1884}, 0.4f, false});
 
   const CombinedGeometry result = Combine(samples);
 
@@ -98,9 +98,9 @@ TEST(TestContentGeometryCombiner, DegenerateSamplesAreDiscarded)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 5; ++i)
-    samples.push_back(Letterbox(263, 0.9f, i * 600.0));
+    samples.push_back(Letterbox(263, 0.9f));
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Degenerate(i * 700.0));
+    samples.push_back(Degenerate());
 
   const CombinedGeometry result = Combine(samples);
 
@@ -114,9 +114,9 @@ TEST(TestContentGeometryCombiner, LowConfidenceSamplesAreDiscarded)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 5; ++i)
-    samples.push_back(Letterbox(263, 0.9f, i * 600.0));
+    samples.push_back(Letterbox(263, 0.9f));
   for (int i = 0; i < 3; ++i)
-    samples.push_back(Letterbox(700, 0.01f, 4000.0 + i));
+    samples.push_back(Letterbox(700, 0.01f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -133,9 +133,9 @@ TEST(TestContentGeometryCombiner, TwoStationaryClustersMeanVaries)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back(FullFrame(1.0f, i * 800.0));
+    samples.push_back(FullFrame(1.0f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(Letterbox(275, 0.9f, 4000.0 + i * 800.0));
+    samples.push_back(Letterbox(275, 0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -155,9 +155,9 @@ TEST(TestContentGeometryCombiner, VariesIsCountedNotWeighted)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back(FullFrame(1.0f, i * 800.0));
+    samples.push_back(FullFrame(1.0f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(Letterbox(275, 0.07f, 4000.0 + i * 800.0));
+    samples.push_back(Letterbox(275, 0.07f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -170,9 +170,9 @@ std::vector<GeometrySample> ANinthInRivals()
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 16; ++i)
-    samples.push_back(Letterbox(280, 0.9f, i * 300.0));
+    samples.push_back(Letterbox(280, 0.9f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(FullFrame(0.9f, 5000.0 + i * 300.0));
+    samples.push_back(FullFrame(0.9f));
   return samples;
 }
 
@@ -195,9 +195,9 @@ TEST(TestContentGeometryCombiner, BelowTheShareTheTitleDoesNotVary)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 22; ++i)
-    samples.push_back(Letterbox(280, 0.9f, i * 300.0));
+    samples.push_back(Letterbox(280, 0.9f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(FullFrame(0.9f, 8000.0 + i * 300.0));
+    samples.push_back(FullFrame(0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -224,8 +224,8 @@ TEST(TestContentGeometryCombiner, SingleRivalSampleIsNotACluster)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back(FullFrame(1.0f, i * 1500.0));
-  samples.push_back({CRectInt{415, 0, WIDTH - 410, HEIGHT}, 0.26f, false, 8994.0});
+    samples.push_back(FullFrame(1.0f));
+  samples.push_back({CRectInt{415, 0, WIDTH - 410, HEIGHT}, 0.26f, false});
 
   const CombinedGeometry result = Combine(samples);
 
@@ -240,7 +240,7 @@ TEST(TestContentGeometryCombiner, SingleRivalSampleIsNotACluster)
  */
 TEST(TestContentGeometryCombiner, NoUsableSamplesReportsTheCodedFrame)
 {
-  const CombinedGeometry result = Combine({Degenerate(100.0), Degenerate(200.0)});
+  const CombinedGeometry result = Combine({Degenerate(), Degenerate()});
 
   ExpectRect(result.rect, 0, 0, WIDTH, HEIGHT);
   EXPECT_FALSE(result.hasReading);
@@ -288,9 +288,9 @@ TEST(TestContentGeometryCombiner, DominantClusterIsChosenOnWeight)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 3; ++i)
-    samples.push_back(Letterbox(263, 1.0f, i * 600.0));
+    samples.push_back(Letterbox(263, 1.0f));
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Letterbox(140, 0.2f, 3000.0 + i * 600.0));
+    samples.push_back(Letterbox(140, 0.2f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -308,7 +308,7 @@ TEST(TestContentGeometryCombiner, StationaryUnscoredSamplesStillRead)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 8; ++i)
-    samples.push_back(Pillarbox(478 + i % 3, 0.0f, i * 600.0));
+    samples.push_back(Pillarbox(478 + i % 3, 0.0f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -321,8 +321,7 @@ TEST(TestContentGeometryCombiner, StationaryUnscoredSamplesStillRead)
 //! One unscored reading is a point, and two is a coincidence. Neither is stationarity.
 TEST(TestContentGeometryCombiner, TooFewUnscoredSamplesDoNotRead)
 {
-  const CombinedGeometry result =
-      Combine({Pillarbox(478, 0.0f, 600.0), Pillarbox(479, 0.0f, 1200.0)});
+  const CombinedGeometry result = Combine({Pillarbox(478, 0.0f), Pillarbox(479, 0.0f)});
 
   EXPECT_FALSE(result.hasReading);
   ExpectRect(result.rect, 0, 0, WIDTH, HEIGHT); // never narrower than the coded frame
@@ -337,9 +336,9 @@ TEST(TestContentGeometryCombiner, UnscoredSamplesAreStillDroppedWhenTheTitleScor
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Letterbox(263, 0.9f, i * 600.0));
+    samples.push_back(Letterbox(263, 0.9f));
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Pillarbox(478, 0.0f, 3000.0 + i * 600.0));
+    samples.push_back(Pillarbox(478, 0.0f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -364,9 +363,9 @@ TEST(TestContentGeometryCombiner, PillarboxAndLetterboxAreDistinguished)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back({CRectInt{480, 0, WIDTH - 480, HEIGHT}, 0.9f, false, i * 600.0});
+    samples.push_back({CRectInt{480, 0, WIDTH - 480, HEIGHT}, 0.9f, false});
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Letterbox(480, 0.9f, 3000.0 + i * 600.0));
+    samples.push_back(Letterbox(480, 0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -385,8 +384,8 @@ TEST(TestContentGeometryCombiner, AnUnexplainedShapeSurvivesAsAReasonToLookAgain
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 8; ++i)
-    samples.push_back(Pillarbox(480, 0.0f, i * 150.0));
-  samples.push_back(Letterbox(276, 0.0f, 1350.0));
+    samples.push_back(Pillarbox(480, 0.0f));
+  samples.push_back(Letterbox(276, 0.0f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -401,8 +400,8 @@ TEST(TestContentGeometryCombiner, ANearbyDiscardedReadingIsNotAnUnexplainedShape
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 8; ++i)
-    samples.push_back(Letterbox(276, 0.0f, i * 150.0));
-  samples.push_back(Letterbox(292, 0.0f, 1350.0));
+    samples.push_back(Letterbox(276, 0.0f));
+  samples.push_back(Letterbox(292, 0.0f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -414,9 +413,9 @@ TEST(TestContentGeometryCombiner, TheShapesAreTheAnswerThenEachRivalThatCounts)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 6; ++i)
-    samples.push_back(Letterbox(276, 0.9f, i * 100.0));
+    samples.push_back(Letterbox(276, 0.9f));
   for (int i = 0; i < 3; ++i)
-    samples.push_back(Letterbox(140, 0.9f, 600.0 + i * 100.0));
+    samples.push_back(Letterbox(140, 0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -432,7 +431,7 @@ TEST(TestContentGeometryCombiner, AFixedTitleIsInOneShape)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 6; ++i)
-    samples.push_back(Letterbox(276, 0.9f, i * 100.0));
+    samples.push_back(Letterbox(276, 0.9f));
 
   const CombinedGeometry result = Combine(samples);
 
@@ -454,9 +453,9 @@ TEST(TestContentGeometryCombiner, ARivalAtExactlyTheVariesShareVaries)
 
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 18; ++i)
-    samples.push_back(Letterbox(276, 0.9f, i * 50.0));
+    samples.push_back(Letterbox(276, 0.9f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(Letterbox(140, 0.9f, 900.0 + i * 50.0));
+    samples.push_back(Letterbox(140, 0.9f));
 
   const CombinedGeometry result = Combine(samples, params);
 
@@ -473,16 +472,16 @@ TEST(TestContentGeometryCombiner, ARivalAtExactlyTheMinimumSampleCountVaries)
 
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 10; ++i)
-    samples.push_back(Letterbox(276, 0.9f, i * 50.0));
+    samples.push_back(Letterbox(276, 0.9f));
   for (int i = 0; i < 2; ++i)
-    samples.push_back(Letterbox(140, 0.9f, 500.0 + i * 50.0));
+    samples.push_back(Letterbox(140, 0.9f));
 
   EXPECT_TRUE(Combine(samples, params).varies);
 
   std::vector<GeometrySample> one;
   for (int i = 0; i < 10; ++i)
-    one.push_back(Letterbox(276, 0.9f, i * 50.0));
-  one.push_back(Letterbox(140, 0.9f, 500.0));
+    one.push_back(Letterbox(276, 0.9f));
+  one.push_back(Letterbox(140, 0.9f));
 
   EXPECT_FALSE(Combine(one, params).varies) << "one below the minimum is not a section";
 }
@@ -498,9 +497,9 @@ TEST(TestContentGeometryCombiner, ReadingsExactlyToleranceApartAreOneShape)
 
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Letterbox(276, 0.9f, i * 100.0));
+    samples.push_back(Letterbox(276, 0.9f));
   for (int i = 0; i < 4; ++i)
-    samples.push_back(Letterbox(276 - static_cast<int>(params.tolerance), 0.9f, 400.0 + i * 100.0));
+    samples.push_back(Letterbox(276 - static_cast<int>(params.tolerance), 0.9f));
 
   const CombinedGeometry result = Combine(samples, params);
 

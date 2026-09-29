@@ -127,7 +127,6 @@ bool CDVDFileGeometry::BuildGeometryFrameRef(const ReducedFrame& reduction,
 struct GeometrySampleRun
 {
   DVDDecodeSession& session;
-  unsigned int perPoint;
   const std::function<bool()>& cancelled;
   const std::string& redactPath;
   const std::string& logName;
@@ -135,7 +134,7 @@ struct GeometrySampleRun
   std::vector<double> visited{};
   int packetsTried{0};
 
-  //! \brief One pass over \p schedule: seek to each point and read its pictures into the scan.
+  //! \brief One pass over \p schedule: seek to each point and read its picture into the scan.
   void Sample(const std::vector<double>& schedule);
 };
 
@@ -150,41 +149,38 @@ void GeometrySampleRun::Sample(const std::vector<double>& schedule)
     }
 
     visited.push_back(offset);
-    for (unsigned int repeat = 0; repeat < perPoint; ++repeat)
+
+    VideoPicture picture = {};
+    const auto position = static_cast<int64_t>(offset * 1000.0);
+    if (!SeekAndDecodePictureAt(*session.demuxer, *session.codec, session.videoStream, position,
+                                redactPath, picture, packetsTried))
     {
-      VideoPicture picture = {};
-      const auto position = static_cast<int64_t>(offset * 1000.0);
-      if (!SeekAndDecodePictureAt(*session.demuxer, *session.codec, session.videoStream, position,
-                                  redactPath, picture, packetsTried))
-      {
-        ++scan.unreadable;
-        CLog::LogF(LOGDEBUG, "no picture decoded at {:.1f}s in {}", offset, redactPath);
-        continue;
-      }
-
-      FrameRef frame;
-      if (!CDVDFileGeometry::BuildGeometryFrameRef(picture, session.hint, frame))
-      {
-        ++scan.unreadable;
-        CLog::LogF(LOGDEBUG, "picture at {:.1f}s is in no format the detector reads ({}) in {}",
-                   offset, picture.pixelFormat, redactPath);
-        continue;
-      }
-
-      if (!scan.succeeded)
-      {
-        scan.succeeded = true;
-        scan.coded = MeasuredFrameRect(picture.stereoMode, frame.width, frame.height);
-      }
-
-      const DetectionResult detected = DetectContentRect(frame);
-      scan.samples.push_back({detected.rect, detected.confidence, detected.degenerate, offset});
-
-      CLog::LogF(LOGDEBUG, "[{}] {:.1f}s: {}x{} at {},{} confidence {:.4f}{}", logName, offset,
-                 detected.rect.Width(), detected.rect.Height(), detected.rect.x1, detected.rect.y1,
-                 detected.confidence,
-                 detected.degenerate ? " (degenerate, carries no reading)" : "");
+      ++scan.unreadable;
+      CLog::LogF(LOGDEBUG, "no picture decoded at {:.1f}s in {}", offset, redactPath);
+      continue;
     }
+
+    FrameRef frame;
+    if (!CDVDFileGeometry::BuildGeometryFrameRef(picture, session.hint, frame))
+    {
+      ++scan.unreadable;
+      CLog::LogF(LOGDEBUG, "picture at {:.1f}s is in no format the detector reads ({}) in {}",
+                 offset, picture.pixelFormat, redactPath);
+      continue;
+    }
+
+    if (!scan.succeeded)
+    {
+      scan.succeeded = true;
+      scan.coded = MeasuredFrameRect(picture.stereoMode, frame.width, frame.height);
+    }
+
+    const DetectionResult detected = DetectContentRect(frame);
+    scan.samples.push_back({detected.rect, detected.confidence, detected.degenerate});
+
+    CLog::LogF(LOGDEBUG, "[{}] {:.1f}s: {}x{} at {},{} confidence {:.4f}{}", logName, offset,
+               detected.rect.Width(), detected.rect.Height(), detected.rect.x1, detected.rect.y1,
+               detected.confidence, detected.degenerate ? " (degenerate, carries no reading)" : "");
   }
 }
 
@@ -222,8 +218,7 @@ SampledGeometry CDVDFileGeometry::ExtractContentGeometry(const CFileItem& fileIt
   CLog::LogF(LOGDEBUG, "sampling {} points across {:.1f}-{:.1f}s of {:.1f}s in {}", offsets.size(),
              windowStart, windowEnd, duration, redactPath);
 
-  GeometrySampleRun run{
-      *session, std::max(1u, sampling.picturesPerPoint), cancelled, redactPath, logName, scan};
+  GeometrySampleRun run{*session, cancelled, redactPath, logName, scan};
 
   run.Sample(offsets);
   if (scan.cancelled || !scan.succeeded)
