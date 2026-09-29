@@ -1880,7 +1880,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
   CJsonRpcMethodMap methods;
   std::map<std::string, CVariant> notifications;
   std::vector<const JsonRpcStatusDescription*> errors;
-  std::vector<const JsonRpcReasonDescription*> reasons;
 
   int clientPermissions = client->GetPermissionFlags();
   int transportCapabilities = transport->GetCapabilities();
@@ -1987,15 +1986,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
           if (std::find(errors.begin(), errors.end(), error) == errors.end())
             errors.push_back(error);
         }
-
-        for (const auto& [error, refined] : methodIterator->second.reasons)
-        {
-          for (const auto* reason : refined)
-          {
-            if (std::ranges::find(reasons, reason) == reasons.end())
-              reasons.push_back(reason);
-          }
-        }
       }
 
       for (const auto& referencedType : referencedTypes)
@@ -2016,9 +2006,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     errors.reserve(JSONRPC_STATUS_DESCRIPTIONS.size());
     for (const auto& description : JSONRPC_STATUS_DESCRIPTIONS)
       errors.push_back(&description);
-
-    for (const auto& description : JSONRPC_REASON_DESCRIPTIONS)
-      reasons.push_back(&description);
   }
 
   // Print the header
@@ -2132,15 +2119,6 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     currentError["hasdata"] = status->hasData;
 
     result["errors"][status->name] = currentError;
-  }
-
-  for (const auto* reason : reasons)
-  {
-    CVariant currentReason = CVariant(CVariant::VariantTypeObject);
-    if (printDescriptions)
-      currentReason["description"] = reason->description;
-
-    result["reasons"][reason->name] = currentReason;
   }
 
   return OK;

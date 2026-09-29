@@ -124,8 +124,8 @@ Failure reasons:
   (`{"playlist": "audio"}`), when there is one.
 - Each method declares its `reasons` under the errors they come with, beside its `errors`:
   `{"FailedToExecute": ["nothing-playing", "not-seekable"]}`. A reason may come with more than
-  one error. `JSONRPC.Introspect` serves them, with the reason descriptions under `reasons`;
-  `openrpc.json` carries them as `x-kodi-reasons`.
+  one error. `JSONRPC.Introspect` serves them with each method; `openrpc.json` carries them, and
+  what each reason means, as `x-kodi-reasons`.
 - `Player`: `nothing-playing`, `not-applicable`, `not-seekable`, `not-pausable`,
   `tempo-unsupported`, `paused`, `no-such-stream`, and `unreachable` from `Player.Open`.
 - `VideoLibrary`, `AudioLibrary` and `PVR`: `no-such-item` for an id nothing has, with the id as

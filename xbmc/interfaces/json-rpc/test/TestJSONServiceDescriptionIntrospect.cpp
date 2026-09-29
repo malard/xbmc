@@ -124,9 +124,7 @@ TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredReasonsAreServedWithTheMeth
   ASSERT_EQ(1u, reasons["NotFound"].size());
   EXPECT_EQ("nothing-playing", reasons["NotFound"][0].asString());
 
-  EXPECT_EQ(2u, result["reasons"].size());
-  EXPECT_FALSE(result["reasons"]["not-seekable"]["description"].asString().empty());
-  EXPECT_FALSE(result["reasons"]["not-seekable"].isMember("error"));
+  EXPECT_FALSE(result.isMember("reasons"));
 }
 
 TEST_F(TestJSONServiceDescriptionIntrospect, AMethodDeclaringNoReasonsServesAnEmptyMap)
@@ -144,14 +142,6 @@ TEST_F(TestJSONServiceDescriptionIntrospect, AMethodDeclaringNoReasonsServesAnEm
   const CVariant& reasons = result["methods"]["Test.NoReasons"]["reasons"];
   EXPECT_TRUE(reasons.isObject());
   EXPECT_EQ(0u, reasons.size());
-}
-
-TEST_F(TestJSONServiceDescriptionIntrospect, EveryReasonIsServedUnfiltered)
-{
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
-
-  EXPECT_EQ(std::size(JSONRPC_REASON_DESCRIPTIONS), result["reasons"].size());
 }
 
 TEST_F(TestJSONServiceDescriptionIntrospect, AnUnknownReasonIsRejected)
