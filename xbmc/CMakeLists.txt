@@ -22,7 +22,6 @@ set(SOURCES AutoSwitch.cpp
             SeekHandler.cpp
             ServiceBroker.cpp
             ServiceManager.cpp
-            SmartFeed.cpp
             SystemGlobals.cpp
             TextureCache.cpp
             TextureCacheJob.cpp
@@ -65,7 +64,6 @@ set(HEADERS AutoSwitch.h
             SeekHandler.h
             ServiceBroker.h
             ServiceManager.h
-            SmartFeed.h
             SortFileItem.h
             SourceType.h
             TextureCache.h

@@ -6,7 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "SmartFeed.h"
+#include "playlists/SmartFeed.h"
 
 #include "utils/Random.h"
 
@@ -14,6 +14,9 @@
 #include <mutex>
 #include <numeric>
 #include <utility>
+
+namespace KODI::PLAYLIST
+{
 
 CSmartFeed::CSmartFeed(int total, Fetch fetch)
   : m_fetch(std::move(fetch)),
@@ -55,3 +58,5 @@ int CSmartFeed::GetLeft() const
   std::unique_lock lock(m_critSection);
   return static_cast<int>(m_pool.size() - m_next);
 }
+
+} // namespace KODI::PLAYLIST

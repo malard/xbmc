@@ -8,7 +8,6 @@ set(SOURCES TestAutoSwitch.cpp
             TestMediaManager.cpp
             TestMediaSource.cpp
             TestPartyMode.cpp
-            TestSmartFeed.cpp
             TestPasswordManager.cpp
             TestTextureCacheJob.cpp
             TestURL.cpp

@@ -17,12 +17,14 @@
 
 class CFileItem;
 
+namespace KODI::PLAYLIST
+{
 /*!
  * \brief A feed that deals a pool of matches in random order and has its creator fetch the items
  * as they are taken. A match is an index into the creator's own list of what matched; the feed
  * never learns what it names.
  */
-class CSmartFeed final : public KODI::PLAYLIST::IFeed
+class CSmartFeed final : public IFeed
 {
 public:
   /*!
@@ -46,3 +48,4 @@ private:
   //! The next pool entry to hand over.
   size_t m_next{0};
 };
+} // namespace KODI::PLAYLIST

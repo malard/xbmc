@@ -12,7 +12,6 @@
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
 #include "ServiceBroker.h"
-#include "SmartFeed.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "guilib/GUIComponent.h"
@@ -21,6 +20,7 @@
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListTypes.h"
+#include "playlists/SmartFeed.h"
 #include "playlists/SmartPlayList.h"
 #include "profiles/ProfileManager.h"
 #include "settings/SettingsComponent.h"
@@ -183,7 +183,7 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
   }
 
   const auto matches = std::make_shared<const std::vector<Match>>(std::move(*found));
-  const auto feed = std::make_shared<CSmartFeed>(static_cast<int>(matches->size()),
+  const auto feed = std::make_shared<PLAYLIST::CSmartFeed>(static_cast<int>(matches->size()),
                                                  [matches](const std::vector<int>& slice)
                                                  {
                                                    std::vector<Match> taken;

@@ -7,7 +7,7 @@
  */
 
 #include "FileItem.h"
-#include "SmartFeed.h"
+#include "playlists/SmartFeed.h"
 
 #include <algorithm>
 #include <memory>
@@ -15,6 +15,8 @@
 #include <vector>
 
 #include <gtest/gtest.h>
+
+using KODI::PLAYLIST::CSmartFeed;
 
 namespace
 {
