@@ -134,7 +134,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Files.GetFileDetails",                         CFileOperations::GetFileDetails },
   { "Files.SetFileDetails",                         CFileOperations::SetFileDetails },
   { "Files.PrepareDownload",                        CFileOperations::PrepareDownload },
-  { "Files.Download",                               CFileOperations::Download },
 
 // Music Library
   { "AudioLibrary.GetProperties",                   CAudioLibrary::GetProperties },

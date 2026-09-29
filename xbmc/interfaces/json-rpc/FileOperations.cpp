@@ -318,26 +318,10 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
                                  protocol))
   {
     result["protocol"] = protocol;
-
-    if ((transport->GetCapabilities() & FileDownloadDirect) == FileDownloadDirect)
-      result["mode"] = "direct";
-    else
-      result["mode"] = "redirect";
-
     return OK;
   }
 
   return Fail(result, NotFound, Reason::NoSuchPath, Target("path", parameterObject["path"]));
-}
-
-JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result)
-{
-  if (!transport->Download(parameterObject["path"].asString().c_str(), result))
-    return Fail(result, NotFound, Reason::NoSuchPath, Target("path", parameterObject["path"]));
-  return OK;
 }
 
 bool CFileOperations::FillFileItem(

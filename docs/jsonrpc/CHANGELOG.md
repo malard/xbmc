@@ -44,6 +44,9 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Player.GetProperties` reports `displayorder`.
 - A hidden setting is read and written like any other.
 - Stream languages are BCP 47 tags (`en`, `en-AU`), not ISO 639-2/B (`eng`).
+- `Files.Download` is removed: no transport ever served a file directly, so it answered
+  `MethodNotFound` everywhere. `Files.PrepareDownload` no longer answers `mode`, which was always
+  `redirect`.
 - `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed; `GUI.GetInfoLabels` and
   `GUI.GetInfoBooleans` are the same methods.
 - `Textures.GetTextures` and `Textures.RemoveTexture` are `Application.GetTextures` and
@@ -152,7 +155,7 @@ Failure reasons:
 - `System.Shutdown`, `Suspend`, `Hibernate`, `Reboot`: `not-supported`.
   `Application.GetDatabaseName`: `database-not-open`. `VideoLibrary.RefreshContentGeometry`:
   `feature-disabled`, `measure-failed`. `Playlist.SetShuffle`: `not-applicable` for unshuffling a
-  slideshow. `Files.PrepareDownload` and `Files.Download`: `no-such-path`.
+  slideshow. `Files.PrepareDownload`: `no-such-path`.
 
 Properties and types:
 

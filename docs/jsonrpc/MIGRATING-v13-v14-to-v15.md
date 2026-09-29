@@ -45,7 +45,7 @@ Affected since 13.200.0: every `AudioLibrary` and `VideoLibrary`
 `Get*Details`, `Set*Details` and `Refresh*` method answers `NotFound` for an
 id no item has, and `Player.Open` answers `Unavailable` for an item it cannot
 reach. New in 15: `Files.GetDirectory`, `Files.GetFileDetails`,
-`Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
+`Files.SetFileDetails`, `Files.PrepareDownload`,
 `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
 `AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
 `Settings.SetSettingValue`, `Settings.ResetSettingValue`, and every `PVR`
@@ -773,6 +773,23 @@ Clients of 14 saw `Playlist.AddResult.unresolved[].reason` as `notfound`,
 
 **What to do.** Match on the new names. A call that adds nothing fails with
 the reason the first missing item gives, so the same code reads both.
+
+## 20. `Files.Download` is removed
+
+No transport served a file directly, so `Files.Download` answered
+`MethodNotFound` on every one of them and nothing could reach it. It is gone,
+and `Files.PrepareDownload` no longer answers `mode`, which was always
+`redirect`.
+
+**What to do.** Download through `Files.PrepareDownload`: it answers
+`details.path`, the URL path to fetch the file from over HTTP.
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "Files.PrepareDownload",
+ "params": {"path": "special://profile/playlists/music/party.m3u"}}
+```
+
+Drop any use of `result.mode`.
 
 ## Finding the rest
 

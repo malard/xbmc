@@ -36,7 +36,6 @@ public:
   {
     return false;
   }
-  bool Download(const char* path, CVariant& result) override { return false; }
   int GetCapabilities() override { return TRANSPORT_LAYER_CAPABILITY_ALL; }
 };
 

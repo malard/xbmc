@@ -2097,49 +2097,13 @@
         },
         "details": {
           "description": "Transport specific details on how/from where to download the given file"
-        },
-        "mode": {
-          "type": "string",
-          "enum": [
-            "redirect",
-            "direct"
-          ],
-          "description": "Direct mode allows using Files.Download whereas redirect mode requires the usage of a different protocol"
         }
       },
       "required": [
         "protocol",
-        "details",
-        "mode"
+        "details"
       ]
     },
-    "errors": [
-      "NotFound"
-    ],
-    "reasons": {
-      "NotFound": [
-        "no-such-path"
-      ]
-    }
-  },
-  "Files.Download": {
-    "type": "method",
-    "description": "Downloads the given file",
-    "transport": [
-      "Response",
-      "FileDownloadDirect"
-    ],
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "path",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      }
-    ],
-    "returns": {},
     "errors": [
       "NotFound"
     ],

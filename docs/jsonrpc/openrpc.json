@@ -3532,20 +3532,11 @@
             },
             "details": {
               "description": "Transport specific details on how/from where to download the given file"
-            },
-            "mode": {
-              "type": "string",
-              "enum": [
-                "redirect",
-                "direct"
-              ],
-              "description": "Direct mode allows using Files.Download whereas redirect mode requires the usage of a different protocol"
             }
           },
           "required": [
             "protocol",
-            "details",
-            "mode"
+            "details"
           ]
         }
       },
@@ -3580,61 +3571,6 @@
       "x-kodi-transport": [
         "Response",
         "FileDownloadRedirect"
-      ]
-    },
-    {
-      "name": "Files.Download",
-      "summary": "Downloads the given file",
-      "tags": [
-        {
-          "name": "Files"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {}
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {
-        "NotFound": [
-          {
-            "$ref": "#/components/x-kodi-reasons/no-such-path"
-          }
-        ]
-      },
-      "x-kodi-transport": [
-        "Response",
-        "FileDownloadDirect"
       ]
     },
     {

@@ -262,11 +262,6 @@ bool CTCPServer::PrepareDownload(const char *path, CVariant &details, std::strin
   return false;
 }
 
-bool CTCPServer::Download(const char *path, CVariant &result)
-{
-  return false;
-}
-
 int CTCPServer::GetCapabilities()
 {
   return Response | Announcing;
