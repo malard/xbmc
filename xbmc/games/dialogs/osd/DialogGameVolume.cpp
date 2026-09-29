@@ -76,7 +76,7 @@ void CDialogGameVolume::OnInitWindow()
   if (dialogVolumeBar != nullptr)
     dialogVolumeBar->RegisterCallback(this);
 
-  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Application);
+  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player);
 }
 
 void CDialogGameVolume::OnDeinitWindow(int nextWindowID)
@@ -114,9 +114,9 @@ void CDialogGameVolume::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                                  const std::string& message,
                                  const CVariant& data)
 {
-  if (message == "OnVolumeChanged")
+  if (message == "OnPropertiesChanged" && data["properties"].isMember("volume"))
   {
-    const float volumePercent = static_cast<float>(data["volume"].asDouble());
+    const float volumePercent = static_cast<float>(data["properties"]["volume"].asDouble());
 
     if (std::fabs(volumePercent - m_volumePercent) > 0.1f)
     {

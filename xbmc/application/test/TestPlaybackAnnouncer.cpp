@@ -224,7 +224,7 @@ TEST_F(TestPlaybackAnnouncer, ShuffleAndRepeatAreAnnouncedOnTheirPlayListOnly)
   for (const Published& published : m_published)
   {
     EXPECT_NE(ANNOUNCEMENT::Player, published.flag) << published.message;
-    if (published.flag == ANNOUNCEMENT::Playlist && published.message == "OnPropertyChanged")
+    if (published.flag == ANNOUNCEMENT::Playlist && published.message == "OnPropertiesChanged")
       ++onPlayList;
   }
   EXPECT_EQ(3, onPlayList);

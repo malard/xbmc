@@ -265,9 +265,9 @@
     ],
     "returns": null
   },
-  "Player.OnPropertyChanged": {
+  "Player.OnPropertiesChanged": {
     "type": "notification",
-    "description": "A property of the playing items has changed.",
+    "description": "Properties of what is seen and heard changed, carrying only what changed. player is present when the change belongs to a playback.",
     "params": [
       {
         "name": "sender",
@@ -282,7 +282,7 @@
         "schema": {
           "type": "object",
           "properties": {
-            "property": {
+            "properties": {
               "$ref": "#/$defs/Player.Property.Value"
             },
             "player": {
@@ -290,7 +290,7 @@
             }
           },
           "required": [
-            "player"
+            "properties"
           ]
         }
       }
@@ -393,9 +393,9 @@
     ],
     "returns": null
   },
-  "Playlist.OnPropertyChanged": {
+  "Playlist.OnPropertiesChanged": {
     "type": "notification",
-    "description": "A property of the playlist has changed. Unlike Player.OnPropertyChanged this is also sent when the playlist is not currently being played.",
+    "description": "Properties of a playlist changed, whether or not it is being played, carrying only what changed.",
     "params": [
       {
         "name": "sender",
@@ -413,13 +413,13 @@
             "playlist": {
               "$ref": "#/$defs/Playlist.Name"
             },
-            "property": {
+            "properties": {
               "$ref": "#/$defs/Playlist.Property.Value"
             }
           },
           "required": [
             "playlist",
-            "property"
+            "properties"
           ]
         }
       }
@@ -951,41 +951,6 @@
         "required": true,
         "schema": {
           "type": "null"
-        }
-      }
-    ],
-    "returns": null
-  },
-  "Application.OnVolumeChanged": {
-    "type": "notification",
-    "description": "The volume of the application has changed.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "type": "object",
-          "properties": {
-            "volume": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "muted": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "volume",
-            "muted"
-          ]
         }
       }
     ],

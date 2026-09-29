@@ -308,9 +308,9 @@ void CPlaybackAnnouncer::PublishProperty(const CVariant& players,
   if (value.isNull())
     return;
   CVariant data;
-  data["property"][PropertyName(property)] = value;
+  data["properties"][PropertyName(property)] = value;
   data["player"]["players"] = players;
-  m_sink(ANNOUNCEMENT::Player, "OnPropertyChanged", nullptr, data);
+  m_sink(ANNOUNCEMENT::Player, "OnPropertiesChanged", nullptr, data);
 }
 
 void CPlaybackAnnouncer::PublishPlayListProperty(std::string_view playList,
@@ -319,8 +319,8 @@ void CPlaybackAnnouncer::PublishPlayListProperty(std::string_view playList,
 {
   CVariant data;
   data["playlist"] = std::string{playList};
-  data["property"][PropertyName(property)] = value;
-  m_sink(ANNOUNCEMENT::Playlist, "OnPropertyChanged", nullptr, data);
+  data["properties"][PropertyName(property)] = value;
+  m_sink(ANNOUNCEMENT::Playlist, "OnPropertiesChanged", nullptr, data);
 }
 
 void CPlaybackAnnouncer::PublishListChange(std::string_view playList,

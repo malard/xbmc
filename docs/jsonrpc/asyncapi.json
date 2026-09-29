@@ -64,8 +64,8 @@
         "Player.OnSeek": {
           "$ref": "#/components/messages/Player.OnSeek"
         },
-        "Player.OnPropertyChanged": {
-          "$ref": "#/components/messages/Player.OnPropertyChanged"
+        "Player.OnPropertiesChanged": {
+          "$ref": "#/components/messages/Player.OnPropertiesChanged"
         },
         "Playlist.OnAdd": {
           "$ref": "#/components/messages/Playlist.OnAdd"
@@ -76,8 +76,8 @@
         "Playlist.OnClear": {
           "$ref": "#/components/messages/Playlist.OnClear"
         },
-        "Playlist.OnPropertyChanged": {
-          "$ref": "#/components/messages/Playlist.OnPropertyChanged"
+        "Playlist.OnPropertiesChanged": {
+          "$ref": "#/components/messages/Playlist.OnPropertiesChanged"
         },
         "AudioLibrary.OnUpdate": {
           "$ref": "#/components/messages/AudioLibrary.OnUpdate"
@@ -138,9 +138,6 @@
         },
         "System.OnLowBattery": {
           "$ref": "#/components/messages/System.OnLowBattery"
-        },
-        "Application.OnVolumeChanged": {
-          "$ref": "#/components/messages/Application.OnVolumeChanged"
         },
         "Input.OnInputRequested": {
           "$ref": "#/components/messages/Input.OnInputRequested"
@@ -286,14 +283,14 @@
         }
       ]
     },
-    "Player.OnPropertyChanged": {
+    "Player.OnPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/Player.OnPropertyChanged"
+          "$ref": "#/channels/jsonrpc/messages/Player.OnPropertiesChanged"
         }
       ]
     },
@@ -330,14 +327,14 @@
         }
       ]
     },
-    "Playlist.OnPropertyChanged": {
+    "Playlist.OnPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/Playlist.OnPropertyChanged"
+          "$ref": "#/channels/jsonrpc/messages/Playlist.OnPropertiesChanged"
         }
       ]
     },
@@ -558,17 +555,6 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/System.OnLowBattery"
-        }
-      ]
-    },
-    "Application.OnVolumeChanged": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/Application.OnVolumeChanged"
         }
       ]
     },
@@ -1101,9 +1087,9 @@
           ]
         }
       },
-      "Player.OnPropertyChanged": {
-        "name": "Player.OnPropertyChanged",
-        "summary": "A property of the playing items has changed.",
+      "Player.OnPropertiesChanged": {
+        "name": "Player.OnPropertiesChanged",
+        "summary": "Properties of what is seen and heard changed, carrying only what changed. player is present when the change belongs to a playback.",
         "payload": {
           "type": "object",
           "properties": {
@@ -1111,7 +1097,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "Player.OnPropertyChanged"
+              "const": "Player.OnPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1122,7 +1108,7 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "property": {
+                    "properties": {
                       "$ref": "#/components/schemas/Player.Property.Value"
                     },
                     "player": {
@@ -1130,7 +1116,7 @@
                     }
                   },
                   "required": [
-                    "player"
+                    "properties"
                   ]
                 }
               },
@@ -1289,9 +1275,9 @@
           ]
         }
       },
-      "Playlist.OnPropertyChanged": {
-        "name": "Playlist.OnPropertyChanged",
-        "summary": "A property of the playlist has changed. Unlike Player.OnPropertyChanged this is also sent when the playlist is not currently being played.",
+      "Playlist.OnPropertiesChanged": {
+        "name": "Playlist.OnPropertiesChanged",
+        "summary": "Properties of a playlist changed, whether or not it is being played, carrying only what changed.",
         "payload": {
           "type": "object",
           "properties": {
@@ -1299,7 +1285,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "Playlist.OnPropertyChanged"
+              "const": "Playlist.OnPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1313,13 +1299,13 @@
                     "playlist": {
                       "$ref": "#/components/schemas/Playlist.Name"
                     },
-                    "property": {
+                    "properties": {
                       "$ref": "#/components/schemas/Playlist.Property.Value"
                     }
                   },
                   "required": [
                     "playlist",
-                    "property"
+                    "properties"
                   ]
                 }
               },
@@ -2151,56 +2137,6 @@
                 },
                 "data": {
                   "type": "null"
-                }
-              },
-              "required": [
-                "sender",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
-      "Application.OnVolumeChanged": {
-        "name": "Application.OnVolumeChanged",
-        "summary": "The volume of the application has changed.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "Application.OnVolumeChanged"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "volume": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "maximum": 100
-                    },
-                    "muted": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "volume",
-                    "muted"
-                  ]
                 }
               },
               "required": [

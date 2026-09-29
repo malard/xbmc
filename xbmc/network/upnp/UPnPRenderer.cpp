@@ -55,8 +55,7 @@ CUPnPRenderer::CUPnPRenderer(const char* friendly_name,
                              unsigned int port /*= 0*/)
   : PLT_MediaRenderer(friendly_name, show_ip, uuid, port)
 {
-  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player |
-                                                                   ANNOUNCEMENT::Application);
+  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player);
 }
 
 /*----------------------------------------------------------------------
@@ -250,6 +249,24 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   NPT_AutoLock lock(m_state);
   PLT_Service *avt, *rct;
 
+  if (flag == ANNOUNCEMENT::Player && message == "OnPropertiesChanged")
+  {
+    const CVariant& properties = data["properties"];
+    if (!(properties.isMember("volume") || properties.isMember("muted")) ||
+        NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:RenderingControl:1", rct)))
+      return;
+
+    if (properties.isMember("volume"))
+    {
+      const int64_t volume = properties["volume"].asInteger();
+      rct->SetStateVariable("Volume", std::to_string(volume).c_str());
+      rct->SetStateVariable("VolumeDb", std::to_string(256 * (volume * 60 - 60) / 100).c_str());
+    }
+    if (properties.isMember("muted"))
+      rct->SetStateVariable("Mute", properties["muted"].asBoolean() ? "1" : "0");
+    return;
+  }
+
   if (flag == ANNOUNCEMENT::Player)
   {
     if (NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:AVTransport:1", avt)))
@@ -290,21 +307,6 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     {
       Reset(avt);
     }
-  }
-  else if (flag == ANNOUNCEMENT::Application && message == "OnVolumeChanged")
-  {
-    if (NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:RenderingControl:1", rct)))
-      return;
-
-    std::string buffer;
-
-    buffer = std::to_string(data["volume"].asInteger());
-    rct->SetStateVariable("Volume", buffer.c_str());
-
-    buffer = std::to_string(256 * (data["volume"].asInteger() * 60 - 60) / 100);
-    rct->SetStateVariable("VolumeDb", buffer.c_str());
-
-    rct->SetStateVariable("Mute", data["muted"].asBoolean() ? "1" : "0");
   }
 }
 

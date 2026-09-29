@@ -65,7 +65,13 @@ protected:
 
   void SetHardwareVolume(float hardwareVolume);
 
-  void VolumeChanged();
+  enum class Changed
+  {
+    Volume,
+    Muted,
+  };
+  //! Announces the property that changed, and hands the volume to a player that controls its own.
+  void VolumeChanged(Changed changed);
 
   bool m_muted = false;
   float m_volumeLevel = VOLUME_MAXIMUM;

@@ -42,14 +42,18 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Application.RemoveTexture`: a namespace names what it acts on, and the texture cache is Kodi's
   internals.
 - `Player.SetShuffle` and `Player.SetRepeat` are removed, and `Player.GetProperties` and
-  `Player.OnPropertyChanged` no longer carry `shuffled` or `repeat`. Shuffle and repeat belong to
+  `Player.OnPropertiesChanged` no longer carry `shuffled` or `repeat`. Shuffle and repeat belong to
   the playlist: `Playlist.SetShuffle`, `Playlist.SetRepeat`, `Playlist.GetProperties` and
-  `Playlist.OnPropertyChanged`.
+  `Playlist.OnPropertiesChanged`.
 - `Application.SetVolume` and `Application.SetMute` are removed, and `Application.GetProperties`
   no longer reports `volume`, `muted` or `contentrect`. `Player` is what is seen and heard: its
   `GetProperties` answers `volume`, `muted` and `contentrect` whether or not anything plays,
   `Player.SetProperties` sets `volume` and `muted`, and `Player.VolumeUp` and `Player.VolumeDown`
   step the volume.
+- `Player.OnPropertyChanged` and `Playlist.OnPropertyChanged` are `Player.OnPropertiesChanged` and
+  `Playlist.OnPropertiesChanged`, carrying what changed under `data.properties` in place of
+  `data.property`. `Application.OnVolumeChanged` is removed: a volume or mute change is
+  `Player.OnPropertiesChanged` carrying `volume` or `muted`, whichever changed, and no `player`.
 
 ### Deprecated
 
@@ -89,7 +93,7 @@ Notifications:
 - `GUI.OnSkinLoaded`, `GUI.OnSkinLoadFailed`, `GUI.OnSkinUnloading`
 - `Player.OnPlaybackFailed`
 - `Player.OnContentGeometryChange`
-- `Playlist.OnPropertyChanged`
+- `Playlist.OnPropertiesChanged`
 - `Settings.OnLevelChanged`
 
 Properties and types:
@@ -113,7 +117,7 @@ Properties and types:
 
 - `Settings.GetSections`, `GetCategories` and `GetSettings` answer the `level` they filtered at.
 - `Configuration.Notifications` declares `Info`, `Sources` and `Settings`.
-- `Player.OnPropertyChanged` carries every member `Player.Property.Value` declares.
+- `Player.OnPropertiesChanged` carries every member `Player.Property.Value` declares.
 - PVR images are `/image/` URLs, not local paths.
 - A PVR channel's `icon` and `thumbnail` are its own logo; programme art is under `broadcastnow`.
 - PVR cast members carry `role` and `order`.
