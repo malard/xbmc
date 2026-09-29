@@ -10,7 +10,6 @@
 #include "ServiceBroker.h"
 #include "addons/addoninfo/AddonType.h"
 #include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
 #include "language/LanguageLoader.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "settings/Settings.h"
@@ -62,17 +61,9 @@ CLanguageResource::CLanguageResource(const AddonInfoPtr& addonInfo)
       Type(AddonType::RESOURCE_LANGUAGE)->GetElement("sorttokens");
   if (sorttokensElement != nullptr)
   {
-    /* First loop goes around rows e.g.
-     *   <token separators="'">L</token>
-     *   <token>Le</token>
-     *   ...
-     */
+    // <token separators="'">L</token> is stored as L', one entry per separator
     for (const auto& [_, addonExtensions] : sorttokensElement->GetValues())
     {
-      /* Second loop goes around the row parts, e.g.
-       *   separators = "'"
-       *   token = Le
-       */
       const std::string token = addonExtensions.GetValue("token").asString();
       if (!token.empty())
       {
