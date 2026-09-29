@@ -10,12 +10,12 @@
 
 #include "ServiceBroker.h"
 #include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h"
-#include "cores/VideoPlayer/DVDFileGeometry.h"
 #include "cores/VideoPlayer/DVDMessage.h"
 #include "cores/VideoPlayer/DVDMessageQueue.h"
 #include "cores/VideoPlayer/DVDStreamInfo.h"
 #include "cores/VideoPlayer/Interface/TimingConstants.h"
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
+#include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/log.h"
@@ -188,7 +188,7 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
                                         bool& reduced)
 {
   reduced = false;
-  if (CDVDFileGeometry::BuildGeometryFrameRef(picture, hints, frame))
+  if (CVideoFileGeometry::BuildGeometryFrameRef(picture, hints, frame))
     return true;
 
   ReductionResult result = ReductionResult::Unsupported;
@@ -203,7 +203,7 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
           std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - reduceStart)
               .count();
       ++m_reduceCount;
-      reduced = CDVDFileGeometry::BuildGeometryFrameRef(m_reduction, picture, hints, frame);
+      reduced = CVideoFileGeometry::BuildGeometryFrameRef(m_reduction, picture, hints, frame);
     }
   }
 

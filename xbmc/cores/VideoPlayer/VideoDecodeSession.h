@@ -22,7 +22,7 @@ class CProcessInfo;
 struct VideoPicture;
 
 //! \brief An open demux-and-decode session on a file's first video stream.
-struct DVDDecodeSession
+struct VideoDecodeSession
 {
   std::shared_ptr<CDVDInputStream> inputStream;
   std::unique_ptr<CDVDDemux> demuxer;
@@ -35,9 +35,9 @@ struct DVDDecodeSession
 
 //! \brief Open \p fileItem for decoding: input stream, demuxer with every stream but the first
 //! real video one disabled, and a codec for it opened with \p codecOptions.
-std::optional<DVDDecodeSession> OpenDVDDecodeSession(const CFileItem& fileItem,
-                                                     int codecOptions,
-                                                     const std::string& redactPath);
+std::optional<VideoDecodeSession> OpenVideoDecodeSession(const CFileItem& fileItem,
+                                                         int codecOptions,
+                                                         const std::string& redactPath);
 
 //! \brief Seek to a position in milliseconds and decode the first usable picture there.
 bool SeekAndDecodePictureAt(CDVDDemux& demuxer,

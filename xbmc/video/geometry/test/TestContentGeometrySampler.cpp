@@ -7,8 +7,8 @@
  */
 
 #include "FileItem.h"
-#include "cores/VideoPlayer/DVDFileGeometry.h"
 #include "cores/VideoPlayer/DVDFileInfo.h"
+#include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "test/TestUtils.h"
 
 #include <string>
@@ -50,7 +50,7 @@ CFileItem LetterboxedClip()
 
 TEST(TestContentGeometrySampler, FindsTheBarsInALetterboxedFile)
 {
-  const SampledGeometry scan = CDVDFileGeometry::ExtractContentGeometry(LetterboxedClip());
+  const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(LetterboxedClip());
 
   ASSERT_TRUE(scan.succeeded);
   EXPECT_EQ(CODED_WIDTH, scan.coded.Width());
@@ -69,7 +69,7 @@ TEST(TestContentGeometrySampler, FindsTheBarsInALetterboxedFile)
 //! afterwards if the readings behind it survived.
 TEST(TestContentGeometrySampler, RetainsThePerSampleReadings)
 {
-  const SampledGeometry scan = CDVDFileGeometry::ExtractContentGeometry(LetterboxedClip());
+  const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(LetterboxedClip());
 
   ASSERT_TRUE(scan.succeeded);
   ASSERT_FALSE(scan.samples.empty());
@@ -87,8 +87,8 @@ TEST(TestContentGeometrySampler, RetainsThePerSampleReadings)
 //! rescan.
 TEST(TestContentGeometrySampler, IsRepeatable)
 {
-  const SampledGeometry first = CDVDFileGeometry::ExtractContentGeometry(LetterboxedClip());
-  const SampledGeometry second = CDVDFileGeometry::ExtractContentGeometry(LetterboxedClip());
+  const SampledGeometry first = CVideoFileGeometry::ExtractContentGeometry(LetterboxedClip());
+  const SampledGeometry second = CVideoFileGeometry::ExtractContentGeometry(LetterboxedClip());
 
   ASSERT_TRUE(first.succeeded);
   ASSERT_TRUE(second.succeeded);
@@ -106,7 +106,7 @@ TEST(TestContentGeometrySampler, HonoursTheRequestedPointCount)
   sampling.escalatedPoints = 0; // no densification, so the count is exactly what was asked
 
   const SampledGeometry scan =
-      CDVDFileGeometry::ExtractContentGeometry(LetterboxedClip(), sampling);
+      CVideoFileGeometry::ExtractContentGeometry(LetterboxedClip(), sampling);
 
   ASSERT_TRUE(scan.succeeded);
   EXPECT_EQ(3u, scan.samples.size());
@@ -118,7 +118,7 @@ TEST(TestContentGeometrySampler, RefusesItemsThatCannotBeExtracted)
   const CFileItem stream("http://example.invalid/stream.m3u8", false);
   ASSERT_FALSE(CDVDFileInfo::CanExtract(stream));
 
-  const SampledGeometry scan = CDVDFileGeometry::ExtractContentGeometry(stream);
+  const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(stream);
 
   EXPECT_FALSE(scan.succeeded);
   EXPECT_TRUE(scan.samples.empty());
@@ -133,7 +133,7 @@ TEST(TestContentGeometrySampler, MissingFileYieldsNoReading)
   const CFileItem missing(XBMC_REF_FILE_PATH("xbmc/video/geometry/test/testdata/nonexistent.mp4"),
                           false);
 
-  const SampledGeometry scan = CDVDFileGeometry::ExtractContentGeometry(missing);
+  const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(missing);
 
   EXPECT_FALSE(scan.succeeded);
   EXPECT_FALSE(scan.combined.hasReading);

@@ -6,14 +6,14 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DVDFileGeometry.h"
+#include "VideoFileGeometry.h"
 
 #include "DVDCodecs/Video/DVDVideoCodec.h"
-#include "DVDDecodeSession.h"
 #include "DVDFileInfo.h"
 #include "DVDStreamInfo.h"
 #include "FileItem.h"
 #include "URL.h"
+#include "VideoDecodeSession.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/geometry/ContentBarDetector.h"
@@ -44,9 +44,9 @@ static ColorRange GeometryColorRange(const VideoPicture& picture, const CDVDStre
 }
 
 // The detector needs planar, little-endian, low-aligned samples; anything else is refused.
-bool CDVDFileGeometry::BuildGeometryFrameRef(const VideoPicture& picture,
-                                             const CDVDStreamInfo& hint,
-                                             FrameRef& frame)
+bool CVideoFileGeometry::BuildGeometryFrameRef(const VideoPicture& picture,
+                                               const CDVDStreamInfo& hint,
+                                               FrameRef& frame)
 {
   if (!picture.videoBuffer || picture.iWidth == 0 || picture.iHeight == 0)
     return false;
@@ -95,10 +95,10 @@ bool CDVDFileGeometry::BuildGeometryFrameRef(const VideoPicture& picture,
   return true;
 }
 
-bool CDVDFileGeometry::BuildGeometryFrameRef(const ReducedFrame& reduction,
-                                             const VideoPicture& picture,
-                                             const CDVDStreamInfo& hint,
-                                             FrameRef& frame)
+bool CVideoFileGeometry::BuildGeometryFrameRef(const ReducedFrame& reduction,
+                                               const VideoPicture& picture,
+                                               const CDVDStreamInfo& hint,
+                                               FrameRef& frame)
 {
   if (reduction.width == 0 || reduction.height == 0)
     return false;
@@ -126,7 +126,7 @@ bool CDVDFileGeometry::BuildGeometryFrameRef(const ReducedFrame& reduction,
 //! sampling accumulates across passes.
 struct GeometrySampleRun
 {
-  DVDDecodeSession& session;
+  VideoDecodeSession& session;
   const std::function<bool()>& cancelled;
   const std::string& redactPath;
   const std::string& logName;
@@ -161,7 +161,7 @@ void GeometrySampleRun::Sample(const std::vector<double>& schedule)
     }
 
     FrameRef frame;
-    if (!CDVDFileGeometry::BuildGeometryFrameRef(picture, session.hint, frame))
+    if (!CVideoFileGeometry::BuildGeometryFrameRef(picture, session.hint, frame))
     {
       ++scan.unreadable;
       CLog::LogF(LOGDEBUG, "picture at {:.1f}s is in no format the detector reads ({}) in {}",
@@ -184,10 +184,10 @@ void GeometrySampleRun::Sample(const std::vector<double>& schedule)
   }
 }
 
-SampledGeometry CDVDFileGeometry::ExtractContentGeometry(const CFileItem& fileItem,
-                                                         const SamplingParams& sampling,
-                                                         const CombinerParams& combining,
-                                                         const std::function<bool()>& cancelled)
+SampledGeometry CVideoFileGeometry::ExtractContentGeometry(const CFileItem& fileItem,
+                                                           const SamplingParams& sampling,
+                                                           const CombinerParams& combining,
+                                                           const std::function<bool()>& cancelled)
 {
   SampledGeometry scan;
 
@@ -197,8 +197,8 @@ SampledGeometry CDVDFileGeometry::ExtractContentGeometry(const CFileItem& fileIt
   const std::string redactPath = CURL::GetRedacted(fileItem.GetPath());
   const auto start = std::chrono::steady_clock::now();
 
-  std::optional<DVDDecodeSession> session =
-      OpenDVDDecodeSession(fileItem, CODEC_FORCE_SOFTWARE | CODEC_EXPORT_FILM_GRAIN, redactPath);
+  std::optional<VideoDecodeSession> session =
+      OpenVideoDecodeSession(fileItem, CODEC_FORCE_SOFTWARE | CODEC_EXPORT_FILM_GRAIN, redactPath);
   if (!session)
     return scan;
 

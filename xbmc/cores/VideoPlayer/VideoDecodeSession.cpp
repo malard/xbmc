@@ -6,7 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DVDDecodeSession.h"
+#include "VideoDecodeSession.h"
 
 #include "DVDCodecs/DVDFactoryCodec.h"
 #include "DVDCodecs/Video/DVDVideoCodec.h"
@@ -21,25 +21,25 @@
 
 #include <vector>
 
-std::optional<DVDDecodeSession> OpenDVDDecodeSession(const CFileItem& fileItem,
-                                                     int codecOptions,
-                                                     const std::string& redactPath)
+std::optional<VideoDecodeSession> OpenVideoDecodeSession(const CFileItem& fileItem,
+                                                         int codecOptions,
+                                                         const std::string& redactPath)
 {
   CFileItem item(fileItem);
   item.SetMimeTypeForInternetFile();
 
-  DVDDecodeSession session;
+  VideoDecodeSession session;
   session.inputStream = CDVDFactoryInputStream::CreateInputStream(nullptr, item);
   if (!session.inputStream || !session.inputStream->Open())
   {
-    CLog::Log(LOGERROR, "DVDDecodeSession: error opening input stream for {}", redactPath);
+    CLog::Log(LOGERROR, "VideoDecodeSession: error opening input stream for {}", redactPath);
     return std::nullopt;
   }
 
   session.demuxer.reset(CDVDFactoryDemuxer::CreateDemuxer(session.inputStream, true));
   if (!session.demuxer)
   {
-    CLog::Log(LOGERROR, "DVDDecodeSession: error creating demuxer for {}", redactPath);
+    CLog::Log(LOGERROR, "VideoDecodeSession: error creating demuxer for {}", redactPath);
     return std::nullopt;
   }
 
@@ -74,7 +74,7 @@ std::optional<DVDDecodeSession> OpenDVDDecodeSession(const CFileItem& fileItem,
   session.codec = CDVDFactoryCodec::CreateVideoCodec(session.hint, *session.processInfo);
   if (!session.codec)
   {
-    CLog::Log(LOGERROR, "DVDDecodeSession: error creating video codec for {}", redactPath);
+    CLog::Log(LOGERROR, "VideoDecodeSession: error creating video codec for {}", redactPath);
     return std::nullopt;
   }
 

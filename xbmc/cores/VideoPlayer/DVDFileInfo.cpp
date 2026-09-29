@@ -8,12 +8,12 @@
 
 #include "DVDFileInfo.h"
 
-#include "DVDDecodeSession.h"
 #include "DVDInputStreams/DVDInputStream.h"
 #include "DVDStreamInfo.h"
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
+#include "VideoDecodeSession.h"
 #include "filesystem/StackDirectory.h"
 #include "guilib/Texture.h"
 #include "network/NetworkFileItemClassify.h"
@@ -215,8 +215,8 @@ std::unique_ptr<CTexture> CDVDFileInfo::ExtractThumbToTexture(const CFileItem& f
   const std::string redactPath = CURL::GetRedacted(fileItem.GetPath());
   auto start = std::chrono::steady_clock::now();
 
-  std::optional<DVDDecodeSession> session =
-      OpenDVDDecodeSession(fileItem, CODEC_FORCE_SOFTWARE, redactPath);
+  std::optional<VideoDecodeSession> session =
+      OpenVideoDecodeSession(fileItem, CODEC_FORCE_SOFTWARE, redactPath);
   if (!session)
     return {};
 

@@ -1,14 +1,11 @@
 set(SOURCES AudioSinkAE.cpp
             DVDClock.cpp
-            DVDDecodeSession.cpp
             DVDDemuxSPU.cpp
-            DVDFileGeometry.cpp
             DVDFileInfo.cpp
             DVDMessage.cpp
             DVDMessageQueue.cpp
             DVDOverlayContainer.cpp
             DVDStreamInfo.cpp
-            LiveGeometryMonitor.cpp
             Edl.cpp
             Edl/EdlParserFactory.cpp
             Edl/EdlParsers/BeyondTVParser.cpp
@@ -17,9 +14,12 @@ set(SOURCES AudioSinkAE.cpp
             Edl/EdlParsers/MultipleEpisodeEdlParser.cpp
             Edl/EdlParsers/PvrEdlParser.cpp
             Edl/EdlParsers/VideoReDoParser.cpp
+            LiveGeometryMonitor.cpp
             PTSTracker.cpp
             RadioRDSCountries.cpp
             RadioRDSLanguages.cpp
+            VideoDecodeSession.cpp
+            VideoFileGeometry.cpp
             VideoPlayer.cpp
             VideoPlayerAudio.cpp
             VideoPlayerAudioID3.cpp
@@ -32,14 +32,11 @@ set(SOURCES AudioSinkAE.cpp
 set(HEADERS AudioSinkAE.h
             DVDClock.h
             DVDDemuxSPU.h
-            DVDDecodeSession.h
-            DVDFileGeometry.h
             DVDFileInfo.h
             DVDMessage.h
             DVDMessageQueue.h
             DVDOverlayContainer.h
             DVDResource.h
-            LiveGeometryMonitor.h
             DVDStreamInfo.h
             Edl.h
             Edl/EdlParser.h
@@ -51,7 +48,12 @@ set(HEADERS AudioSinkAE.h
             Edl/EdlParsers/PvrEdlParser.h
             Edl/EdlParsers/VideoReDoParser.h
             IVideoPlayer.h
+            LiveGeometryMonitor.h
             PTSTracker.h
+            RadioRDSCountries.h
+            RadioRDSLanguages.h
+            VideoDecodeSession.h
+            VideoFileGeometry.h
             VideoPlayer.h
             VideoPlayerAudio.h
             VideoPlayerAudioID3.h

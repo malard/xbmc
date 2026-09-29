@@ -12,8 +12,8 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "XBDateTime.h"
-#include "cores/VideoPlayer/DVDFileGeometry.h"
 #include "cores/VideoPlayer/DVDFileInfo.h"
+#include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "cores/VideoSettings.h"
 #include "dialogs/GUIDialogBusy.h"
 #include "jobs/JobManager.h"
@@ -56,9 +56,9 @@ std::optional<ContentGeometryRecord> MeasureContentGeometry(const CFileItem& ite
                                                             SamplingDepth depth,
                                                             const std::function<bool()>& cancelled)
 {
-  const SampledGeometry scan{
-      CDVDFileGeometry::ExtractContentGeometry(item, ContentGeometrySamplingFromSettings(depth),
-                                               ContentGeometryCombiningFromSettings(), cancelled)};
+  const SampledGeometry scan{CVideoFileGeometry::ExtractContentGeometry(
+      item, ContentGeometrySamplingFromSettings(depth), ContentGeometryCombiningFromSettings(),
+      cancelled)};
   if (scan.cancelled)
     return std::nullopt;
 

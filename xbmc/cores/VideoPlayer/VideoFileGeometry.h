@@ -23,7 +23,7 @@ struct ReducedFrame;
 } // namespace KODI::VIDEO::GEOMETRY
 
 //! \brief Decodes a file at several points and describes each picture to the detector.
-class CDVDFileGeometry
+class CVideoFileGeometry
 {
 public:
   //! \brief Sample a file at several points and work out its picture rectangle. Decodes in
