@@ -29,6 +29,8 @@ public:
   //! Re-emit the last complete burst. Returns false when none has been packed
   //! yet.
   bool PackLastBurst();
+  //! Start the next packet. The last complete burst is kept: a packer lives as long as the
+  //! sink it was opened for.
   void Reset();
   uint8_t* GetBuffer();
   unsigned int GetSize() const;

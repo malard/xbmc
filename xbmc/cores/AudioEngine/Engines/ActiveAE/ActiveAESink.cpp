@@ -1098,7 +1098,6 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
     if (m_needIecPack)
     {
       RawOut out = m_lastRawOut;
-      bool haveFormat = false;
       bool wholeFrame = false;
       bool fillerTried = false;
       if (frames > 0)
@@ -1114,15 +1113,13 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
       {
         // construct a pause burst if we have already output valid audio
         bool burst = m_extStreaming && (m_packer->GetBuffer()[0] != 0);
-        // ActiveAE reports STREAMING false for the whole of a hold, so burst
-        // cannot gate this.
-        haveFormat = m_packer->GetBuffer()[0] != 0;
         // Sync gaps request arbitrary lengths and stay as pause bursts.
         bool filled = false;
         wholeFrame = samples->pkt->pause_burst_ms ==
                      static_cast<int>(m_sinkFormat.m_streamInfo.GetDuration());
-        // The opening only: repeating a burst across a later gap is audible.
-        if (m_silenceFiller && m_fillerArmed && haveFormat && wholeFrame)
+        // The opening only: repeating a burst across a later gap is audible. ActiveAE reports
+        // STREAMING false for the whole of a hold, so burst cannot gate this.
+        if (m_silenceFiller && m_fillerArmed && wholeFrame)
         {
           fillerTried = true;
           filled = m_packer->PackLastBurst();
@@ -1150,7 +1147,6 @@ unsigned int CActiveAESink::OutputSamples(CSampleBuffer* samples)
           if (out == RawOut::PAUSE && m_silenceFiller)
             why = fillerTried      ? " [filler: no burst retained]"
                   : !m_fillerArmed ? " [filler: past the opening]"
-                  : !haveFormat    ? " [filler: no prior burst]"
                   : !wholeFrame    ? " [filler: partial frame]"
                                    : "";
           CLog::Log(LOGDEBUG,
