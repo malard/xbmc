@@ -475,7 +475,10 @@
       "Unavailable"
     ],
     "reasons": [
-      "unreachable"
+      "unreachable",
+      "no-such-item",
+      "no-such-path",
+      "not-a-file"
     ]
   },
   "Player.GetPlayers": {
@@ -1701,7 +1704,11 @@
       "InvalidParams",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-item",
+      "no-such-path",
+      "not-a-file"
+    ]
   },
   "Playlist.Insert": {
     "type": "method",
@@ -1749,7 +1756,12 @@
       "FailedToExecute",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "not-applicable",
+      "no-such-item",
+      "no-such-path",
+      "not-a-file"
+    ]
   },
   "Playlist.Remove": {
     "type": "method",
@@ -1777,7 +1789,9 @@
       "InvalidParams",
       "FailedToExecute"
     ],
-    "reasons": []
+    "reasons": [
+      "not-applicable"
+    ]
   },
   "Playlist.Clear": {
     "type": "method",
@@ -1832,7 +1846,9 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": []
+    "reasons": [
+      "not-applicable"
+    ]
   },
   "Playlist.SetShuffle": {
     "type": "method",
@@ -1860,7 +1876,9 @@
       "InvalidParams",
       "FailedToExecute"
     ],
-    "reasons": []
+    "reasons": [
+      "nothing-playing"
+    ]
   },
   "Playlist.Swap": {
     "type": "method",
@@ -1894,7 +1912,9 @@
     "errors": [
       "FailedToExecute"
     ],
-    "reasons": []
+    "reasons": [
+      "not-applicable"
+    ]
   },
   "Player.GetChapters": {
     "type": "method",

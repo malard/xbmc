@@ -89,16 +89,9 @@ CVariant UnresolvedEntry(const CVariant& item, const std::string& reason)
   return entry;
 }
 
-// The error for a call that added nothing. A reference that no longer resolves is NotFound;
-// only when every entry was malformed is the request itself at fault.
-JSONRPC_STATUS StatusForNothingAdded(const CVariant& unresolved)
+CVariant PlayListTarget(const PublishedPlayList& playList)
 {
-  for (auto entry = unresolved.begin_array(); entry != unresolved.end_array(); ++entry)
-  {
-    if ((*entry)["reason"].asString() != "invalid")
-      return NotFound;
-  }
-  return InvalidParams;
+  return Target("playlist", std::string{playList.name});
 }
 } // namespace
 
@@ -127,8 +120,22 @@ void CPlaylistOperations::ReadItems(std::string_view media,
       resolved = items.Size() > before;
     }
     if (!resolved)
-      unresolved.push_back(UnresolvedEntry(asked, ReasonOf(DiagnoseUnresolvedItem(asked))));
+    {
+      CVariant diagnosis;
+      unresolved.push_back(
+          UnresolvedEntry(asked, ReasonOf(DiagnoseUnresolvedItem(asked, diagnosis))));
+    }
   }
+}
+
+JSONRPC_STATUS CPlaylistOperations::NothingAdded(const CVariant& unresolved, CVariant& result)
+{
+  for (auto entry = unresolved.begin_array(); entry != unresolved.end_array(); ++entry)
+  {
+    if ((*entry)["reason"].asString() != "invalid")
+      return DiagnoseUnresolvedItem((*entry)["item"], result);
+  }
+  return InvalidParams;
 }
 
 JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject, CVariant& result)
@@ -260,7 +267,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
   }
 
   if (added == 0)
-    return StatusForNothingAdded(unresolved);
+    return NothingAdded(unresolved, result);
 
   result["added"] = added;
   result["unresolved"] = unresolved;
@@ -270,14 +277,16 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
 JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
-  if (!playList || !playList->type)
+  if (!playList)
     return FailedToExecute;
+  if (!playList->type)
+    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
 
   CFileItemList list;
   CVariant unresolved{CVariant::VariantTypeArray};
   ReadItems(playList->media, parameterObject["item"], list, unresolved);
   if (list.IsEmpty())
-    return StatusForNothingAdded(unresolved);
+    return NothingAdded(unresolved, result);
 
   CServiceBroker::GetPlayLists()->Insert(*playList->type, list,
                                          static_cast<int>(parameterObject["position"].asInteger()));
@@ -297,15 +306,17 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, 
     return ApplyShuffle(*playList->type, shuffle);
 
   if (!CServiceBroker::GetSlideShowDelegator().IsPlaying())
-    return FailedToExecute;
+    return Fail(result, Reason::NothingPlaying, PlayListTarget(*playList));
   return ShuffleSlideshow(shuffle);
 }
 
 JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
-  if (!playList || !playList->type)
+  if (!playList)
     return FailedToExecute;
+  if (!playList->type)
+    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
 
   return ApplyRepeat(*playList->type, parameterObject["repeat"]);
 }
@@ -313,8 +324,10 @@ JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, C
 JSONRPC_STATUS CPlaylistOperations::Remove(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
-  if (!playList || !playList->type)
+  if (!playList)
     return FailedToExecute;
+  if (!playList->type)
+    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
 
   const int position = static_cast<int>(parameterObject["position"].asInteger());
   return CServiceBroker::GetPlayLists()->Remove(*playList->type, position) ? ACK : InvalidParams;
@@ -341,8 +354,10 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const CVariant& parameterObject, CVari
 JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
-  if (!playList || !playList->type)
+  if (!playList)
     return FailedToExecute;
+  if (!playList->type)
+    return Fail(result, Reason::NotApplicable, PlayListTarget(*playList));
 
   CServiceBroker::GetPlayLists()->Swap(*playList->type,
                                        static_cast<int>(parameterObject["position1"].asInteger()),

@@ -118,6 +118,10 @@ Failure reasons:
   `VideoLibrary.Clean`, and `no-such-addon` for a scraper that does not exist.
 - `Files`: `outside-sources`, `no-such-path`, and `unreachable` for a directory that cannot be
   listed, each naming the path it was given.
+- `Playlist`: `not-applicable` for an edit the `picture` playlist cannot take, `nothing-playing`
+  for shuffling a slideshow that is not running, and, when `Add` or `Insert` adds nothing, the
+  reason the first missing item gives. `Player.Open` gives the same for an item it cannot resolve:
+  `no-such-item`, `no-such-path` or `not-a-file`.
 
 Properties and types:
 

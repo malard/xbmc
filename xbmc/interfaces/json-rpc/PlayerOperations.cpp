@@ -1220,7 +1220,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       return ACK;
     }
     else
-      return DiagnoseUnresolvedItem(parameterObject["item"]);
+      return DiagnoseUnresolvedItem(parameterObject["item"], result);
   }
 
   return InvalidParams;

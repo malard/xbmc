@@ -16,6 +16,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestLibraryLookup.cpp
             TestPlayerOpenDirectory.cpp
             TestPlayerTargets.cpp
+            TestPlaylistOperations.cpp
             TestPVRBroadcastRange.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp

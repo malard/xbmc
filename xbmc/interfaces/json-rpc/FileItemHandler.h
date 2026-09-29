@@ -110,7 +110,7 @@ protected:
 
      \return NotFound, or InvalidParams when nothing better applies
      */
-  static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
+  static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item, CVariant& result);
 
 private:
   static void Sort(CFileItemList& items, const CVariant& parameterObject);

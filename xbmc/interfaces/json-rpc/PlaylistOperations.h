@@ -43,5 +43,11 @@ private:
                         const CVariant& itemParam,
                         CFileItemList& items,
                         CVariant& unresolved);
+  /*!
+     * \brief The failure of a call that added nothing. A reference that no longer resolves is
+     * NotFound, for the reason the first such item gives; only when every item was malformed is
+     * the request itself at fault.
+     */
+  static JSONRPC_STATUS NothingAdded(const CVariant& unresolved, CVariant& result);
 };
 } // namespace JSONRPC

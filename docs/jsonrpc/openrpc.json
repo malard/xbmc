@@ -718,6 +718,15 @@
       "x-kodi-reasons": [
         {
           "$ref": "#/components/x-kodi-reasons/unreachable"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-item"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/not-a-file"
         }
       ],
       "x-kodi-transport": "Response"
@@ -2870,7 +2879,17 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-item"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/not-a-file"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -2945,7 +2964,20 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/not-applicable"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-item"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/not-a-file"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3000,7 +3032,11 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/not-applicable"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3110,7 +3146,11 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/not-applicable"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3165,7 +3205,11 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/nothing-playing"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3227,7 +3271,11 @@
         }
       ],
       "x-kodi-permission": "ControlPlayback",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/not-applicable"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -22012,7 +22060,7 @@
         "error": {
           "$ref": "#/components/errors/FailedToExecute"
         },
-        "description": "The call does not apply to what is playing, such as zooming a video or choosing a subtitle for music."
+        "description": "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle for music or repeating the picture playlist."
       },
       "not-seekable": {
         "error": {
@@ -22085,6 +22133,12 @@
           "$ref": "#/components/errors/AccessDenied"
         },
         "description": "The path lies outside every source shared for remote access."
+      },
+      "not-a-file": {
+        "error": {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        "description": "The path names a directory, not a file."
       }
     }
   }

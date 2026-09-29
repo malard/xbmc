@@ -9,6 +9,7 @@
 #include "FileItem.h"
 #include "JSONRPCTestUtils.h"
 #include "ThumbLoader.h"
+#include "filesystem/SpecialProtocol.h"
 #include "interfaces/json-rpc/FileItemHandler.h"
 #include "media/MediaType.h"
 #include "music/MusicDbUrl.h"
@@ -49,7 +50,10 @@ public:
     return HandleWith(item, fields);
   }
 
-  static JSONRPC_STATUS Diagnose(const CVariant& item) { return DiagnoseUnresolvedItem(item); }
+  static JSONRPC_STATUS Diagnose(const CVariant& item, CVariant& result)
+  {
+    return DiagnoseUnresolvedItem(item, result);
+  }
 
   static bool Filter(const CVariant& filter,
                      std::span<const CFileItemHandler::FilterField> fields,
@@ -212,8 +216,11 @@ TEST_F(TestUnresolvedItemDiagnosis, EveryDeclaredIdentifierIsDiagnosedAsAMissing
     CVariant item{CVariant::VariantTypeObject};
     item[identifier] = 1;
 
-    EXPECT_EQ(NotFound, CTestFileItemHandler::Diagnose(item))
+    CVariant result;
+    EXPECT_EQ(NotFound, CTestFileItemHandler::Diagnose(item, result))
         << "an item naming " << identifier << " is not diagnosed as a reference that has gone";
+    EXPECT_EQ("no-such-item", result["reason"].asString()) << identifier;
+    EXPECT_EQ(1, result["target"][identifier].asInteger()) << identifier;
   }
 }
 
@@ -222,7 +229,42 @@ TEST_F(TestUnresolvedItemDiagnosis, AnItemNamingNothingResolvableIsMalformed)
   CVariant item{CVariant::VariantTypeObject};
   item["nosuchid"] = 1;
 
-  EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item));
+  CVariant result;
+  EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item, result));
+  EXPECT_FALSE(result.isMember("reason"));
+}
+
+TEST_F(TestUnresolvedItemDiagnosis, AMissingFileOrDirectoryIsNoSuchPath)
+{
+  // a URL is left to the player, so only a local path can be missing
+  const std::string file{
+      CSpecialProtocol::TranslatePath("special://temp/jsonrpc-no-such-file.mkv")};
+  CVariant item{CVariant::VariantTypeObject};
+  item["file"] = file;
+
+  CVariant result;
+  EXPECT_EQ(NotFound, CTestFileItemHandler::Diagnose(item, result));
+  EXPECT_EQ("no-such-path", result["reason"].asString());
+  EXPECT_EQ(file, result["target"]["file"].asString());
+
+  const std::string directory{"special://temp/jsonrpc-no-such-directory/"};
+  item = CVariant{CVariant::VariantTypeObject};
+  item["directory"] = directory;
+
+  result = CVariant();
+  EXPECT_EQ(NotFound, CTestFileItemHandler::Diagnose(item, result));
+  EXPECT_EQ("no-such-path", result["reason"].asString());
+  EXPECT_EQ(directory, result["target"]["directory"].asString());
+}
+
+TEST_F(TestUnresolvedItemDiagnosis, ADirectoryNamedAsAFileIsNotAFile)
+{
+  CVariant item{CVariant::VariantTypeObject};
+  item["file"] = CSpecialProtocol::TranslatePath("special://temp/");
+
+  CVariant result;
+  EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item, result));
+  EXPECT_EQ("not-a-file", result["reason"].asString());
 }
 
 using FilterField = CFileItemHandler::FilterField;

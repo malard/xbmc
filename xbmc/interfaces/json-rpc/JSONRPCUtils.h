@@ -141,6 +141,7 @@ enum class Reason
   NoSuchAddon,
   NoSuchPath,
   OutsideSources,
+  NotAFile,
 };
 
 struct JsonRpcReasonDescription
@@ -157,8 +158,8 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::NothingPlaying, FailedToExecute, "nothing-playing",
      "Nothing is playing, or not the playlist the call named."},
     {Reason::NotApplicable, FailedToExecute, "not-applicable",
-     "The call does not apply to what is playing, such as zooming a video or choosing a subtitle "
-     "for music."},
+     "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle "
+     "for music or repeating the picture playlist."},
     {Reason::NotSeekable, FailedToExecute, "not-seekable", "What is playing cannot seek."},
     {Reason::NotPausable, FailedToExecute, "not-pausable", "What is playing cannot pause."},
     {Reason::TempoUnsupported, FailedToExecute, "tempo-unsupported",
@@ -179,6 +180,7 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::NoSuchPath, NotFound, "no-such-path", "Nothing exists at the given path."},
     {Reason::OutsideSources, AccessDenied, "outside-sources",
      "The path lies outside every source shared for remote access."},
+    {Reason::NotAFile, InvalidParams, "not-a-file", "The path names a directory, not a file."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()
