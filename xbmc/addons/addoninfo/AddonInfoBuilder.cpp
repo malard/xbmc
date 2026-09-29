@@ -669,6 +669,17 @@ bool CAddonInfoBuilder::ParseXML(const AddonInfoPtr& addon,
     }
   }
 
+  // A language pack is a language, so one naming none is not a language pack
+  if (addon->m_mainType == AddonType::RESOURCE_LANGUAGE)
+  {
+    const std::string locale{addon->m_types[0].GetValue("@locale").asString()};
+    if (!KODI::LANGUAGE::CLanguageTag::TryParse(locale).has_value())
+    {
+      CLog::LogF(LOGERROR, "{}: unknown locale '{}', ignored", addon->ID(), locale);
+      return false;
+    }
+  }
+
   if (!isRepoXMLContent)
   {
     using XFILE::CFile;

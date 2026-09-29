@@ -72,6 +72,26 @@ AddonInfoPtr GenerateWithLibrary(const std::string& libraryName)
   EXPECT_TRUE(doc.Parse(xml));
   return CAddonInfoBuilder::Generate(doc.RootElement(), RepositoryDirInfo{});
 }
+
+AddonInfoPtr GenerateLanguagePack(const std::string& locale)
+{
+  const std::string xml = R"xml(
+<addon id="resource.language.test"
+       name="Test"
+       version="1.0.0"
+       provider-name="Team Kodi">
+  <extension point="kodi.resource.language" locale=")xml" +
+                          locale + R"xml("/>
+  <extension point="kodi.addon.metadata">
+    <platform>all</platform>
+  </extension>
+</addon>
+)xml";
+
+  CXBMCTinyXML2 doc;
+  EXPECT_TRUE(doc.Parse(xml));
+  return CAddonInfoBuilder::Generate(doc.RootElement(), RepositoryDirInfo{});
+}
 } // namespace
 
 class TestAddonInfoBuilder : public ::testing::Test
@@ -240,4 +260,14 @@ TEST_F(TestAddonInfoBuilder, TestGenerate_DBEntry)
   auto info = addon->ExtraInfo().find("language");
   ASSERT_NE(info, addon->ExtraInfo().end());
   EXPECT_EQ(info->second, "marsian");
+}
+
+TEST_F(TestAddonInfoBuilder, ALanguagePackMustNameItsLanguage)
+{
+  EXPECT_NE(nullptr, GenerateLanguagePack("en_GB"));
+  EXPECT_NE(nullptr, GenerateLanguagePack("pt-BR"));
+
+  EXPECT_EQ(nullptr, GenerateLanguagePack("en_UK"));
+  EXPECT_EQ(nullptr, GenerateLanguagePack("not a language"));
+  EXPECT_EQ(nullptr, GenerateLanguagePack(""));
 }

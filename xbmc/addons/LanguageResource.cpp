@@ -16,7 +16,6 @@
 #include "settings/SettingsComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
-#include "utils/log.h"
 
 #include <array>
 #include <string_view>
@@ -39,14 +38,6 @@ CLanguageResource::CLanguageResource(const AddonInfoPtr& addonInfo)
     m_language(KODI::LANGUAGE::CLanguageTag::Parse(
         Type(AddonType::RESOURCE_LANGUAGE)->GetValue("@locale").asString()))
 {
-  // The locale is kept as written either way, so an addon naming a language Kodi does not know
-  // still loads; it just cannot be matched against media.
-  if (!m_language.IsValid())
-  {
-    CLog::Log(LOGWARNING, "CLanguageResource: {}: unrecognized locale '{}'", ID(),
-              m_language.ToString());
-  }
-
   // parse <charsets>
   const CAddonExtensions* charsetsElement =
       Type(AddonType::RESOURCE_LANGUAGE)->GetElement("charsets");
