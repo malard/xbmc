@@ -99,7 +99,7 @@ void CVideoInfoTag::Reset()
   m_strTitle.clear();
   m_strShowTitle.clear();
   m_strOriginalTitle.clear();
-  m_originalLanguage.clear();
+  m_originalLanguage = {};
   m_strSortTitle.clear();
   m_cast.clear();
   m_set.Reset();
@@ -405,7 +405,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   XMLUtils::SetDateTime(movie, "dateadded", m_dateAdded);
 
   {
-    const std::string lang{GetOriginalLanguage()};
+    const std::string& lang{GetOriginalLanguage().ToString()};
 
     if (!lang.empty() && (tag == "movie" || tag == "tvshow"))
       XMLUtils::SetString(movie, "originallanguage", lang);
@@ -476,7 +476,7 @@ void CVideoInfoTag::Merge(CVideoInfoTag& other)
     m_strShowTitle = other.m_strShowTitle;
   if (!other.m_strOriginalTitle.empty())
     m_strOriginalTitle = other.m_strOriginalTitle;
-  if (!other.m_originalLanguage.empty())
+  if (!other.m_originalLanguage.ToString().empty())
     m_originalLanguage = other.m_originalLanguage;
   if (!other.m_strSortTitle.empty())
     m_strSortTitle = other.m_strSortTitle;
@@ -647,7 +647,7 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar << m_strMPAARating;
     ar << m_strFileNameAndPath;
     ar << m_strOriginalTitle;
-    ar << m_originalLanguage;
+    ar << m_originalLanguage.ToString();
     ar << m_strEpisodeGuide;
     ar << m_premiered;
     ar << m_bHasPremiered;
@@ -754,7 +754,9 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar >> m_strMPAARating;
     ar >> m_strFileNameAndPath;
     ar >> m_strOriginalTitle;
-    ar >> m_originalLanguage;
+    std::string originalLanguage;
+    ar >> originalLanguage;
+    m_originalLanguage = KODI::LANGUAGE::CLanguageTag::Parse(originalLanguage);
     ar >> m_strEpisodeGuide;
     ar >> m_premiered;
     ar >> m_bHasPremiered;
@@ -879,7 +881,7 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["mpaa"] = m_strMPAARating;
   value["filenameandpath"] = m_strFileNameAndPath;
   value["originaltitle"] = m_strOriginalTitle;
-  value["originallanguage"] = m_originalLanguage;
+  value["originallanguage"] = m_originalLanguage.ToString();
   value["sorttitle"] = m_strSortTitle;
   value["episodeguide"] = m_strEpisodeGuide;
   value["premiered"] = m_premiered.IsValid() ? m_premiered.GetAsDBDate() : StringUtils::Empty;
@@ -1732,9 +1734,8 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
 
   XMLUtils::GetDateTime(movie, "dateadded", m_dateAdded);
 
-  if (XMLUtils::GetString(movie, "originallanguage", value) &&
-      !SetOriginalLanguage(value, LanguageTagSource::SOURCE_EXTERNAL))
-    CLog::LogF(LOGWARNING, "<originallanguage> tag value {} is not recognized", value);
+  if (XMLUtils::GetString(movie, "originallanguage", value))
+    SetOriginalLanguage(value);
 }
 
 bool CVideoInfoTag::HasStreamDetails() const
@@ -2030,22 +2031,23 @@ void CVideoInfoTag::SetOriginalTitle(std::string originalTitle)
   m_strOriginalTitle = Trim(std::move(originalTitle));
 }
 
-bool CVideoInfoTag::SetOriginalLanguage(std::string language, LanguageTagSource source)
+bool CVideoInfoTag::SetOriginalLanguage(const std::string& language)
 {
-  if (source == LanguageTagSource::SOURCE_INTERNAL)
+  if (language.empty())
   {
-    m_originalLanguage = std::move(language);
+    m_originalLanguage = {};
     return true;
   }
 
-  if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
+  const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language);
+  if (!tag.has_value())
   {
-    m_originalLanguage = tag->ToString();
-    return true;
+    CLog::Log(LOGWARNING, "CVideoInfoTag: unknown original language '{}'", language);
+    return false;
   }
 
-  CLog::LogF(LOGERROR, "{} is not recognized as a valid language tag or English name", language);
-  return false;
+  m_originalLanguage = *tag;
+  return true;
 }
 
 void CVideoInfoTag::SetEpisodeGuide(std::string episodeGuide)

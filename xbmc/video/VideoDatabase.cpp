@@ -2633,7 +2633,7 @@ int CVideoDatabase::SetDetailsForMovie(CVideoInfoTag& details,
     else
       sql += PrepareSQL(", premiered = '%i'", details.GetYear());
     {
-      const std::string& lang{details.GetOriginalLanguage()};
+      const std::string& lang{details.GetOriginalLanguage().ToString()};
       if (lang.size() > 0)
         sql += PrepareSQL(", originalLanguage = '%s'", lang.c_str());
       else
@@ -2959,7 +2959,7 @@ bool CVideoDatabase::UpdateDetailsForTvShow(int idTvShow,
   else
     sql += ", duration = NULL";
   {
-    const std::string& lang{details.GetOriginalLanguage()};
+    const std::string& lang{details.GetOriginalLanguage().ToString()};
     if (lang.size() > 0)
       sql += PrepareSQL(", originalLanguage = '%s'", lang.c_str());
     else
@@ -5140,8 +5140,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForMovie(const dbiplus::sql_record* cons
     details.SetYear(record->at(VIDEODB_DETAILS_MOVIE_PREMIERED).get_asInt());
   else
     details.SetPremieredFromDBDate(premieredString);
-  details.SetOriginalLanguage(record->at(VIDEODB_DETAILS_MOVIE_ORIGINAL_LANGUAGE).get_asString(),
-                              CVideoInfoTag::LanguageTagSource::SOURCE_INTERNAL);
+  details.SetOriginalLanguage(record->at(VIDEODB_DETAILS_MOVIE_ORIGINAL_LANGUAGE).get_asString());
 
   if (getDetails)
   {
@@ -5240,8 +5239,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForTvShow(const dbiplus::sql_record* con
                     record->at(VIDEODB_DETAILS_TVSHOW_RATING_TYPE).get_asString(), true);
   details.SetUniqueID(record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_TYPE).get_asString(), true);
   details.SetDuration(record->at(VIDEODB_DETAILS_TVSHOW_DURATION).get_asInt());
-  details.SetOriginalLanguage(record->at(VIDEODB_DETAILS_TVSHOW_ORIGINAL_LANGUAGE).get_asString(),
-                              CVideoInfoTag::LanguageTagSource::SOURCE_INTERNAL);
+  details.SetOriginalLanguage(record->at(VIDEODB_DETAILS_TVSHOW_ORIGINAL_LANGUAGE).get_asString());
   details.SetTagLine(record->at(VIDEODB_DETAILS_TVSHOW_TAGLINE).get_asString());
 
   const int inProgressEpisodes = record->at(VIDEODB_DETAILS_TVSHOW_NUM_INPROGRESS).get_asInt();
@@ -5336,8 +5334,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForEpisode(const dbiplus::sql_record* co
   details.m_studio = StringUtils::Split(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_STUDIO).get_asString(), CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
   details.SetPremieredFromDBDate(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_AIRED).get_asString());
   details.SetOriginalLanguage(
-      record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_ORIGINAL_LANGUAGE).get_asString(),
-      CVideoInfoTag::LanguageTagSource::SOURCE_INTERNAL);
+      record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_ORIGINAL_LANGUAGE).get_asString());
 
   details.SetResumePoint(record->at(VIDEODB_DETAILS_EPISODE_RESUME_TIME).get_asInt(),
                          record->at(VIDEODB_DETAILS_EPISODE_TOTAL_TIME).get_asInt(),

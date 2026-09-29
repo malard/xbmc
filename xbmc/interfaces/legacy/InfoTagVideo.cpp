@@ -334,7 +334,7 @@ namespace XBMCAddon
 
     String InfoTagVideo::getOriginalLanguage()
     {
-      return infoTag->GetOriginalLanguage();
+      return infoTag->GetOriginalLanguage().ToString();
     }
 
     String InfoTagVideo::getPremiered()
@@ -924,13 +924,7 @@ namespace XBMCAddon
 
     bool InfoTagVideo::setOriginalLanguageRaw(CVideoInfoTag* infoTag, const String& language)
     {
-      if (!infoTag->SetOriginalLanguage(language,
-                                        CVideoInfoTag::LanguageTagSource::SOURCE_EXTERNAL))
-      {
-        CLog::LogF(LOGWARNING, "the language {} is not recognized", language);
-        return false;
-      }
-      return true;
+      return infoTag->SetOriginalLanguage(language);
     }
 
     void InfoTagVideo::setSortTitleRaw(CVideoInfoTag* infoTag, const String& sortTitle)
