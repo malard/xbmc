@@ -73,15 +73,9 @@ private:
 TEST(TestSettingsValueGate, AnUnknownSettingIsNotFound)
 {
   CVariant result;
-  EXPECT_EQ(CSettingsOperations::GetSettingValue("", nullptr, nullptr, Request("no.such.setting"),
-                                                 result),
-            NotFound);
-  EXPECT_EQ(CSettingsOperations::SetSettingValue("", nullptr, nullptr, Request("no.such.setting"),
-                                                 result),
-            NotFound);
-  EXPECT_EQ(CSettingsOperations::ResetSettingValue("", nullptr, nullptr, Request("no.such.setting"),
-                                                   result),
-            NotFound);
+  EXPECT_EQ(CSettingsOperations::GetSettingValue(Request("no.such.setting"), result), NotFound);
+  EXPECT_EQ(CSettingsOperations::SetSettingValue(Request("no.such.setting"), result), NotFound);
+  EXPECT_EQ(CSettingsOperations::ResetSettingValue(Request("no.such.setting"), result), NotFound);
 }
 
 /*!
@@ -98,9 +92,9 @@ TEST(TestSettingsValueGate, AHiddenSettingCanBeRead)
   ASSERT_FALSE(setting->IsVisible());
 
   CVariant result;
-  EXPECT_EQ(CSettingsOperations::GetSettingValue(
-                "", nullptr, nullptr, Request(CSettings::SETTING_DEBUG_SHOWLOGINFO), result),
-            OK);
+  EXPECT_EQ(
+      CSettingsOperations::GetSettingValue(Request(CSettings::SETTING_DEBUG_SHOWLOGINFO), result),
+      OK);
   EXPECT_TRUE(result["value"].isBoolean());
 }
 
@@ -117,7 +111,7 @@ TEST(TestSettingsValueGate, AHiddenSettingCanBeWritten)
   params["value"] = std::static_pointer_cast<CSettingBool>(setting)->GetValue();
 
   CVariant result;
-  EXPECT_EQ(CSettingsOperations::SetSettingValue("", nullptr, nullptr, params, result), OK);
+  EXPECT_EQ(CSettingsOperations::SetSettingValue(params, result), OK);
 }
 
 /*!
@@ -137,9 +131,7 @@ TEST(TestSettingsValueGate, ADisabledSettingRefusesWritesAsUnavailable)
   params["value"] = true;
 
   CVariant result;
-  EXPECT_EQ(CSettingsOperations::SetSettingValue("", nullptr, nullptr, params, result),
-            Unavailable);
-  EXPECT_EQ(CSettingsOperations::ResetSettingValue("", nullptr, nullptr, params, result),
-            Unavailable);
-  EXPECT_EQ(CSettingsOperations::GetSettingValue("", nullptr, nullptr, params, result), OK);
+  EXPECT_EQ(CSettingsOperations::SetSettingValue(params, result), Unavailable);
+  EXPECT_EQ(CSettingsOperations::ResetSettingValue(params, result), Unavailable);
+  EXPECT_EQ(CSettingsOperations::GetSettingValue(params, result), OK);
 }

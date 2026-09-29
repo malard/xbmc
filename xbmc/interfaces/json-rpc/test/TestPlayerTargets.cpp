@@ -26,8 +26,6 @@ CVariant Named(const char* playlist)
 TEST(TestPlayerTargets, AVerbOnThePlayerFailsWhenTheNamedPlayListIsIdle)
 {
   CVariant result;
-  EXPECT_EQ(FailedToExecute,
-            CPlayerOperations::Stop("Player.Stop", nullptr, nullptr, Named("audio"), result));
-  EXPECT_EQ(FailedToExecute, CPlayerOperations::PlayPause("Player.PlayPause", nullptr, nullptr,
-                                                          Named("video"), result));
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::Stop(Named("audio"), result));
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::PlayPause(Named("video"), result));
 }

@@ -36,40 +36,20 @@ namespace JSONRPC
   class CSettingsOperations
   {
   public:
-    static JSONRPC_STATUS GetLevel(const std::string& method,
-                                   ITransportLayer* transport,
-                                   IClient* client,
-                                   const CVariant& parameterObject,
-                                   CVariant& result);
-    static JSONRPC_STATUS SetLevel(const std::string& method,
-                                   ITransportLayer* transport,
-                                   IClient* client,
-                                   const CVariant& parameterObject,
-                                   CVariant& result);
+    static JSONRPC_STATUS GetLevel(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetLevel(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetSections(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetCategories(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetSettings(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetSections(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetCategories(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetSettings(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetSettingValue(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSettingValue(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS ResetSettingValue(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetSettingValue(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetSettingValue(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS ResetSettingValue(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetSkinSettings(const std::string& method,
-                                          ITransportLayer* transport,
-                                          IClient* client,
-                                          const CVariant& parameterObject,
-                                          CVariant& result);
-    static JSONRPC_STATUS GetSkinSettingValue(const std::string& method,
-                                              ITransportLayer* transport,
-                                              IClient* client,
-                                              const CVariant& parameterObject,
-                                              CVariant& result);
-    static JSONRPC_STATUS SetSkinSettingValue(const std::string& method,
-                                              ITransportLayer* transport,
-                                              IClient* client,
-                                              const CVariant& parameterObject,
-                                              CVariant& result);
+    static JSONRPC_STATUS GetSkinSettings(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetSkinSettingValue(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetSkinSettingValue(const CVariant& parameterObject, CVariant& result);
 
   private:
     static SettingLevel ParseSettingLevel(const std::string &strLevel);

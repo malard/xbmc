@@ -48,11 +48,7 @@ public:
   bool SetAnnouncementFlags(int flags) override { return true; }
 };
 
-inline JSONRPC_STATUS StubMethod(const std::string& method,
-                                 ITransportLayer* transport,
-                                 IClient* client,
-                                 const CVariant& parameterObject,
-                                 CVariant& result)
+inline JSONRPC_STATUS StubMethod(const CVariant& parameterObject, CVariant& result)
 {
   return OK;
 }
@@ -247,7 +243,7 @@ public:
     // the transport layer lowercases the method before dispatch
     std::string key = method;
     StringUtils::ToLower(key);
-    MethodCall call = nullptr;
+    MethodCall call;
     output = CVariant();
     return CJSONServiceDescription::CheckCall(key.c_str(), ParseJson(paramsJson), &m_transport,
                                               &m_client, false, call, output);

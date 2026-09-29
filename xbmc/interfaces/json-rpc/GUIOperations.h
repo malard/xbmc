@@ -18,53 +18,28 @@ namespace JSONRPC
   class CGUIOperations
   {
   public:
-    static JSONRPC_STATUS GetProperties(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS ActivateWindow(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS ActivateWindow(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS ShowNotification(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetFullscreen(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetStereoscopicMode(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetStereoscopicModes(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS ActivateScreenSaver(const std::string& method,
-                                                  ITransportLayer* transport,
-                                                  IClient* client,
-                                                  const CVariant& parameterObject,
-                                                  CVariant& result);
-    static JSONRPC_STATUS TakeScreenshot(const std::string& method,
-                                         ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result);
-    static JSONRPC_STATUS DeleteScreenshots(const std::string& method,
-                                            ITransportLayer* transport,
-                                            IClient* client,
-                                            const CVariant& parameterObject,
-                                            CVariant& result);
+    static JSONRPC_STATUS ShowNotification(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetFullscreen(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetStereoscopicMode(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetStereoscopicModes(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS ActivateScreenSaver(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS TakeScreenshot(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS DeleteScreenshots(const CVariant& parameterObject, CVariant& result);
 
     //! Also serves the deprecated XBMC.GetInfoLabels.
-    static JSONRPC_STATUS GetInfoLabels(const std::string& method,
-                                        ITransportLayer* transport,
-                                        IClient* client,
-                                        const CVariant& parameterObject,
-                                        CVariant& result);
+    static JSONRPC_STATUS GetInfoLabels(const CVariant& parameterObject, CVariant& result);
 
     //! Also serves the deprecated XBMC.GetInfoBooleans.
-    static JSONRPC_STATUS GetInfoBooleans(const std::string& method,
-                                          ITransportLayer* transport,
+    static JSONRPC_STATUS GetInfoBooleans(ITransportLayer* transport,
                                           IClient* client,
                                           const CVariant& parameterObject,
                                           CVariant& result);
-    static JSONRPC_STATUS SetScreenAlignment(const std::string& method,
-                                             ITransportLayer* transport,
-                                             IClient* client,
-                                             const CVariant& parameterObject,
-                                             CVariant& result);
-    static JSONRPC_STATUS GetScreenAlignment(const std::string& method,
-                                             ITransportLayer* transport,
-                                             IClient* client,
-                                             const CVariant& parameterObject,
-                                             CVariant& result);
+    static JSONRPC_STATUS SetScreenAlignment(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetScreenAlignment(const CVariant& parameterObject, CVariant& result);
 
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);

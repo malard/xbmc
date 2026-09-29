@@ -39,7 +39,7 @@ using namespace KODI::REGEXP;
 using namespace JSONRPC;
 using namespace XFILE;
 
-JSONRPC_STATUS CFileOperations::GetRootDirectory(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -76,7 +76,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const std::string &method, ITra
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -178,7 +178,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const std::string &method, ITranspo
   return Unavailable;
 }
 
-JSONRPC_STATUS CFileOperations::GetFileDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string file = parameterObject["file"].asString();
   if (!CFileUtils::RemoteAccessAllowed(file))
@@ -228,7 +228,7 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const std::string &method, ITrans
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::SetFileDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -276,7 +276,10 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const std::string &method, ITrans
   return ACK;
 }
 
-JSONRPC_STATUS CFileOperations::PrepareDownload(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
+                                                IClient* client,
+                                                const CVariant& parameterObject,
+                                                CVariant& result)
 {
   std::string protocol;
   if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))
@@ -294,7 +297,10 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(const std::string &method, ITran
   return NotFound;
 }
 
-JSONRPC_STATUS CFileOperations::Download(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,
+                                         IClient* client,
+                                         const CVariant& parameterObject,
+                                         CVariant& result)
 {
   return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : NotFound;
 }

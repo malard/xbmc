@@ -131,11 +131,7 @@ void CPlaylistOperations::ReadItems(std::string_view media,
   }
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const std::string& method,
-                                                 ITransportLayer* transport,
-                                                 IClient* client,
-                                                 const CVariant& parameterObject,
-                                                 CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject, CVariant& result)
 {
   result = CVariant(CVariant::VariantTypeArray);
   for (const PublishedPlayList& playList : PUBLISHED_PLAYLISTS)
@@ -148,11 +144,7 @@ JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetProperties(const std::string& method,
-                                                  ITransportLayer* transport,
-                                                  IClient* client,
-                                                  const CVariant& parameterObject,
-                                                  CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
 
@@ -196,11 +188,7 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetItems(const std::string& method,
-                                             ITransportLayer* transport,
-                                             IClient* client,
-                                             const CVariant& parameterObject,
-                                             CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
 
@@ -234,11 +222,7 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Add(const std::string& method,
-                                        ITransportLayer* transport,
-                                        IClient* client,
-                                        const CVariant& parameterObject,
-                                        CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -283,11 +267,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Insert(const std::string& method,
-                                           ITransportLayer* transport,
-                                           IClient* client,
-                                           const CVariant& parameterObject,
-                                           CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList || !playList->type)
@@ -306,11 +286,7 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
-                                               ITransportLayer* transport,
-                                               IClient* client,
-                                               const CVariant& parameterObject,
-                                               CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -325,11 +301,7 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const std::string& method,
   return ShuffleSlideshow(shuffle);
 }
 
-JSONRPC_STATUS CPlaylistOperations::SetRepeat(const std::string& method,
-                                              ITransportLayer* transport,
-                                              IClient* client,
-                                              const CVariant& parameterObject,
-                                              CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList || !playList->type)
@@ -338,11 +310,7 @@ JSONRPC_STATUS CPlaylistOperations::SetRepeat(const std::string& method,
   return ApplyRepeat(*playList->type, parameterObject["repeat"]);
 }
 
-JSONRPC_STATUS CPlaylistOperations::Remove(const std::string& method,
-                                           ITransportLayer* transport,
-                                           IClient* client,
-                                           const CVariant& parameterObject,
-                                           CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Remove(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList || !playList->type)
@@ -352,11 +320,7 @@ JSONRPC_STATUS CPlaylistOperations::Remove(const std::string& method,
   return CServiceBroker::GetPlayLists()->Remove(*playList->type, position) ? ACK : InvalidParams;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Clear(const std::string& method,
-                                          ITransportLayer* transport,
-                                          IClient* client,
-                                          const CVariant& parameterObject,
-                                          CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Clear(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (playList && playList->type)
@@ -374,11 +338,7 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const std::string& method,
   return ACK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Swap(const std::string& method,
-                                         ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList || !playList->type)

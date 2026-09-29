@@ -133,8 +133,7 @@ TEST(TestApplicationLogLevel, AnUnknownComponentIsRejected)
   params["components"].append("no-such-component");
 
   CVariant result;
-  EXPECT_EQ(CApplicationOperations::SetLogLevel("", nullptr, nullptr, params, result),
-            InvalidParams);
+  EXPECT_EQ(CApplicationOperations::SetLogLevel(params, result), InvalidParams);
 }
 
 /*!
@@ -150,12 +149,12 @@ TEST(TestApplicationLogLevel, TheSetterAnswersWithWhatIsInForce)
   params["components"] = CVariant{};
 
   CVariant result;
-  ASSERT_EQ(CApplicationOperations::SetLogLevel("", nullptr, nullptr, params, result), OK);
+  ASSERT_EQ(CApplicationOperations::SetLogLevel(params, result), OK);
   EXPECT_EQ(result["level"].asString(), "normal");
   EXPECT_EQ(CServiceBroker::GetLogging().GetLogLevel(), LOG_LEVEL_NORMAL);
 
   params["level"] = "debug";
-  ASSERT_EQ(CApplicationOperations::SetLogLevel("", nullptr, nullptr, params, result), OK);
+  ASSERT_EQ(CApplicationOperations::SetLogLevel(params, result), OK);
   EXPECT_EQ(result["level"].asString(), "debug");
   EXPECT_EQ(CServiceBroker::GetLogging().GetLogLevel(), LOG_LEVEL_DEBUG);
 

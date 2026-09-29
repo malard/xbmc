@@ -25,7 +25,7 @@
 using namespace JSONRPC;
 using namespace ADDON;
 
-JSONRPC_STATUS CAddonsOperations::GetAddons(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVariant& result)
 {
   std::vector<AddonType> addonTypes;
   AddonType addonType = CAddonInfo::TranslateType(parameterObject["type"].asString());
@@ -129,7 +129,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const std::string &method, ITranspor
   return OK;
 }
 
-JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string id = parameterObject["addonid"].asString();
   AddonPtr addon;
@@ -143,7 +143,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const std::string &method, ITr
   return OK;
 }
 
-JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObject, CVariant& result)
 {
   std::string id = parameterObject["addonid"].asString();
   AddonPtr addon;
@@ -174,7 +174,7 @@ JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const std::string &method, ITr
   return success ? ACK : InvalidParams;
 }
 
-JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, CVariant& result)
 {
   std::string id = parameterObject["addonid"].asString();
   AddonPtr addon;

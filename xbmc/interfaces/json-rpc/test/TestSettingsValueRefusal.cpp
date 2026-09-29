@@ -78,8 +78,7 @@ TEST(TestSettingsValueRefusal, AValueTheSettingDoesNotOfferIsInvalidParams)
 {
   CVariant result;
   EXPECT_EQ(CSettingsOperations::SetSettingValue(
-                "", nullptr, nullptr, Write(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE, 99),
-                result),
+                Write(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE, 99), result),
             InvalidParams);
 }
 
@@ -99,7 +98,7 @@ TEST(TestSettingsValueRefusal, DISABLED_AChangeAHandlerDeclinesIsUnavailable)
 
   CVariant result;
   EXPECT_EQ(CSettingsOperations::SetSettingValue(
-                "", nullptr, nullptr, Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before), result),
+                Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before), result),
             Unavailable);
   EXPECT_EQ(before, setting->GetValue());
 }
@@ -116,8 +115,8 @@ TEST(TestSettingsValueRefusal, DISABLED_ConfirmedReachesTheChangeHandler)
   {
     CDecliningHandler handler{CSettings::SETTING_DEBUG_SHOWLOGINFO};
     CVariant result;
-    CSettingsOperations::SetSettingValue(
-        "", nullptr, nullptr, Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before), result);
+    CSettingsOperations::SetSettingValue(Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before),
+                                         result);
     EXPECT_FALSE(handler.WasConfirmed());
   }
 
@@ -126,7 +125,7 @@ TEST(TestSettingsValueRefusal, DISABLED_ConfirmedReachesTheChangeHandler)
     CVariant params{Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before)};
     params["confirmed"] = true;
     CVariant result;
-    CSettingsOperations::SetSettingValue("", nullptr, nullptr, params, result);
+    CSettingsOperations::SetSettingValue(params, result);
     EXPECT_TRUE(handler.WasConfirmed());
   }
 
