@@ -401,6 +401,14 @@ public:
   static constexpr auto SETTING_VIDEOSCREEN_GUISURROUND = "videoscreen.guisurround";
   static constexpr auto SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR = "videoscreen.guisurroundcolour";
   static constexpr auto SETTING_VIDEOSCREEN_GUISURROUNDIMAGE = "videoscreen.guisurroundimage";
+  //! \brief The values of SETTING_VIDEOSCREEN_GUISURROUND
+  enum class GuiSurround
+  {
+    SKIN = 0, //!< the skin's own declaration, black when it has none
+    COLOUR = 1,
+    IMAGE = 2,
+    REPORT_SHAPE = 3, //!< nothing drawn; the room is told the interface's shape
+  };
   static constexpr auto SETTING_VIDEOSCREEN_OSDPLAYING = "videoscreen.osdplaying";
   static constexpr auto SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY =
       "videoscreen.extractcontentgeometry";

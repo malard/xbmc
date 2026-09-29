@@ -57,15 +57,17 @@ const CGUISurroundRenderer::SurroundArt& CGUISurroundRenderer::Art()
 
   m_artResolved = true;
 
-  switch (values->GetInt(CSettings::SETTING_VIDEOSCREEN_GUISURROUND))
+  switch (static_cast<CSettings::GuiSurround>(
+      values->GetInt(CSettings::SETTING_VIDEOSCREEN_GUISURROUND)))
   {
-    case 1:
+    using enum CSettings::GuiSurround;
+    case COLOUR:
       m_art.colour = values->GetString(CSettings::SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR);
       break;
-    case 2:
+    case IMAGE:
       m_art.image = values->GetString(CSettings::SETTING_VIDEOSCREEN_GUISURROUNDIMAGE);
       break;
-    case 3:
+    case REPORT_SHAPE:
       break;
     default:
       if (const auto skin = CServiceBroker::GetGUI()->GetSkinInfo())
