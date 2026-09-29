@@ -54,25 +54,6 @@ enum class ContentGeometryOutcome
   Failed, //!< would not open, carried no video, or decoded nothing; no coded frame either
 };
 
-//! \brief Diagnostics behind one stored measurement. Written once and never read back.
-struct ContentGeometryDetails
-{
-  std::string detector; //!< which detector produced the reading
-  CombinerParams combining;
-  SamplingParams sampling;
-  std::vector<GeometrySample> samples;
-  std::vector<GeometryCluster> clusters;
-  unsigned int usable{0};
-  unsigned int discarded{0};
-
-  unsigned int unreadable{0}; //!< points that produced no reading
-};
-
-std::string EncodeContentGeometryDetails(const ContentGeometryDetails& details);
-
-//! \brief Read EncodeContentGeometryDetails() back.
-ContentGeometryDetails DecodeContentGeometryDetails(const std::string& json);
-
 //! \brief Pack the shapes a title contains as "x,y,width,height", semicolon separated.
 std::string EncodeGeometrySections(const std::vector<CRectInt>& sections);
 
@@ -111,10 +92,6 @@ struct ContentGeometryRecord
   int algorithmVersion{CONTENT_GEOMETRY_ALGORITHM_VERSION};
   FileIdentity identity;
   CDateTime computed;
-
-  //! \brief EncodeContentGeometryDetails() output. Disengaged means it was not read and storing
-  //! leaves what is held alone; an engaged empty string is a scan that produced none.
-  std::optional<std::string> details;
 
   //! \brief False for every Failed record, which carries no rectangle.
   bool IsValid() const { return coded.Width() > 0 && coded.Height() > 0; }

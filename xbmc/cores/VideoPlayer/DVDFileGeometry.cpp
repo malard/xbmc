@@ -194,8 +194,6 @@ SampledGeometry CDVDFileGeometry::ExtractContentGeometry(const CFileItem& fileIt
                                                          const std::function<bool()>& cancelled)
 {
   SampledGeometry scan;
-  scan.sampling = sampling;
-  scan.combining = combining;
 
   if (!CDVDFileInfo::CanExtract(fileItem))
     return scan;

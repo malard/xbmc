@@ -24,8 +24,6 @@ ContentGeometryRecord MakeContentGeometryRecord(const SampledGeometry& scan,
   if (!scan.succeeded)
   {
     record.outcome = ContentGeometryOutcome::Failed;
-
-    record.details = std::string{};
     return record;
   }
 
@@ -45,17 +43,6 @@ ContentGeometryRecord MakeContentGeometryRecord(const SampledGeometry& scan,
   record.sections.reserve(scan.combined.clusters.size());
   for (const GeometryCluster& cluster : scan.combined.clusters)
     record.sections.push_back(cluster.rect);
-
-  ContentGeometryDetails details;
-  details.detector = CONTENT_GEOMETRY_DETECTOR;
-  details.combining = scan.combining;
-  details.sampling = scan.sampling;
-  details.samples = scan.samples;
-  details.clusters = scan.combined.clusters;
-  details.usable = scan.combined.usable;
-  details.discarded = scan.combined.discarded;
-  details.unreadable = scan.unreadable;
-  record.details = EncodeContentGeometryDetails(details);
 
   return record;
 }

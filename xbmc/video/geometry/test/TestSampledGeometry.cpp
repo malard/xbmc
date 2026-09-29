@@ -66,30 +66,8 @@ TEST(TestSampledGeometry, ASucceededScanBecomesAMeasurement)
   EXPECT_EQ(COMPUTED.GetAsDBDateTime(), record.computed.GetAsDBDateTime());
 }
 
-//! The diagnostics blob is the only place the individual readings survive, so the parameters
-//! that produced them have to travel with them or the answer cannot be explained afterwards.
-TEST(TestSampledGeometry, TheDetailsCarryTheReadingsAndWhatProducedThem)
-{
-  SampledGeometry scan{MakeScan()};
-  scan.sampling.points = 27;
-  scan.combining.tolerance = 12;
-
-  const ContentGeometryRecord record{MakeContentGeometryRecord(scan, IDENTITY, COMPUTED)};
-  ASSERT_TRUE(record.details.has_value());
-  const ContentGeometryDetails details{DecodeContentGeometryDetails(*record.details)};
-
-  EXPECT_EQ(CONTENT_GEOMETRY_DETECTOR, details.detector);
-  EXPECT_EQ(27u, details.sampling.points);
-  EXPECT_EQ(12u, details.combining.tolerance);
-  EXPECT_EQ(2u, details.samples.size());
-  EXPECT_EQ(1u, details.clusters.size());
-  EXPECT_EQ(2u, details.usable);
-  EXPECT_EQ(0u, details.discarded);
-}
-
 /*!
- * The shapes the title contains, kept where a list can read them: the same clusters are in
- * the diagnostics, but a listing answering a per-item ratio cannot afford to parse those.
+ * The shapes the title contains, kept where a list can read them.
  */
 TEST(TestSampledGeometry, TheClustersBecomeTheSections)
 {
@@ -145,11 +123,6 @@ TEST(TestSampledGeometry, AFailedScanBecomesAFailureRecord)
   EXPECT_FALSE(record.IsValid());
   EXPECT_FALSE(record.hasReading);
   EXPECT_TRUE(record.sections.empty());
-
-  // Stated as empty rather than left unsaid, so that storing this clears the diagnostics an
-  // earlier measurement of the same file left behind.
-  ASSERT_TRUE(record.details.has_value());
-  EXPECT_TRUE(record.details->empty());
 
   EXPECT_EQ(IDENTITY.size, record.identity.size);
   EXPECT_EQ(IDENTITY.time, record.identity.time);

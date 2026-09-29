@@ -83,7 +83,6 @@ constexpr const char* RECORD_COLUMNS{
 
 bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord& geometry)
 {
-  bool begun{false};
   try
   {
     if (idFile < 0 || nullptr == m_pDB || nullptr == m_pDS)
@@ -112,25 +111,7 @@ bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord&
         geometry.computed.GetAsDBDateTime().c_str(),
         EncodeGeometrySections(geometry.sections).c_str())};
 
-    // The row and its diagnostics land together or not at all. Nested only when nothing is
-    // already writing.
-    begun = !InTransaction();
-    if (begun)
-      BeginTransaction();
-
-    bool stored{ExecuteQuery(sql)};
-
-    if (stored && geometry.details)
-    {
-      stored = geometry.details->empty()
-                   ? ExecuteQuery(
-                         PrepareSQL("DELETE FROM contentgeometrydetails WHERE idFile=%i", idFile))
-                   : ExecuteQuery(PrepareSQL(
-                         "REPLACE INTO contentgeometrydetails (idFile, details) VALUES (%i,'%s')",
-                         idFile, geometry.details->c_str()));
-    }
-
-    if (stored && (!begun || CommitTransaction()))
+    if (ExecuteQuery(sql))
       return true;
   }
   catch (...)
@@ -138,8 +119,6 @@ bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord&
     CLog::LogF(LOGERROR, "failed for file {}", idFile);
   }
 
-  if (begun)
-    RollbackTransaction();
   return false;
 }
 

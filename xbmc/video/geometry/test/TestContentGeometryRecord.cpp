@@ -15,52 +15,6 @@
 using namespace KODI::VIDEO::GEOMETRY;
 using namespace KODI::VIDEO::GEOMETRY::TEST;
 
-namespace
-{
-
-ContentGeometryDetails MakeDetails()
-{
-  ContentGeometryDetails details;
-  details.detector = "contentbar";
-  details.usable = 7;
-  details.discarded = 2;
-  details.unreadable = 3;
-  // Every field off its default, so a field the codec drops fails the round trip.
-  details.combining.tolerance = 6;
-  details.combining.minConfidence = 0.10f;
-  details.combining.minStationarySamples = 5;
-  details.combining.variesShare = 0.25f;
-  details.combining.minRivalSamples = 4;
-  details.combining.distinctAspectShare = 0.08f;
-  details.sampling.points = 11;
-  details.sampling.leadInSeconds = 90.0;
-  details.sampling.leadOutSeconds = 45.0;
-  details.sampling.shortTitleWindow = 0.70;
-  details.sampling.picturesPerPoint = 2;
-  details.sampling.escalatedPoints = 33;
-  details.sampling.escalateDiscardShare = 0.50f;
-  details.samples.push_back({CRectInt{0, 20, 320, 220}, 0.9f, false, 61.5});
-  details.samples.push_back({CRectInt{0, 0, 320, 240}, 0.1f, true, 122.0});
-  details.clusters.push_back({CRectInt{0, 20, 320, 220}, 6, 5.4f});
-
-  return details;
-}
-
-
-constexpr int WIDTH = 1920;
-constexpr int HEIGHT = 1080;
-
-//! \brief A scanned record of a scope title: one shape, envelope equal to the rectangle. Read
-//! back, so it carries no diagnostics - which is the state every merge starts from.
-ContentGeometryRecord ScannedScope()
-{
-  ContentGeometryRecord record = ScopeHdRecord();
-  record.sections.push_back(record.rect);
-  return record;
-}
-
-} // unnamed namespace
-
 TEST(TestFileIdentity, AnIdentityMatchesItself)
 {
   const FileIdentity identity{1234567890, 1700000000};
@@ -126,61 +80,6 @@ TEST(TestFileIdentity, ARealFileHasOneAndItIsStable)
   EXPECT_TRUE(identity.Matches(GetFileIdentity(path)));
 
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
-}
-
-TEST(TestContentGeometryDetails, RoundTripsThroughJson)
-{
-  const ContentGeometryDetails original{MakeDetails()};
-  const ContentGeometryDetails decoded{
-      DecodeContentGeometryDetails(EncodeContentGeometryDetails(original))};
-
-  EXPECT_EQ(original.detector, decoded.detector);
-  EXPECT_EQ(original.usable, decoded.usable);
-  EXPECT_EQ(original.discarded, decoded.discarded);
-
-  //! The count that closes the accounting: without it a stored row reporting eight readings
-  //! from nine points cannot be told from arithmetic that does not add up.
-  EXPECT_EQ(original.unreadable, decoded.unreadable);
-  EXPECT_EQ(original.combining.tolerance, decoded.combining.tolerance);
-  EXPECT_FLOAT_EQ(original.combining.minConfidence, decoded.combining.minConfidence);
-  EXPECT_EQ(original.combining.minStationarySamples, decoded.combining.minStationarySamples);
-  EXPECT_FLOAT_EQ(original.combining.variesShare, decoded.combining.variesShare);
-  EXPECT_EQ(original.combining.minRivalSamples, decoded.combining.minRivalSamples);
-  EXPECT_FLOAT_EQ(original.combining.distinctAspectShare, decoded.combining.distinctAspectShare);
-  EXPECT_EQ(original.sampling.points, decoded.sampling.points);
-  EXPECT_DOUBLE_EQ(original.sampling.leadInSeconds, decoded.sampling.leadInSeconds);
-  EXPECT_DOUBLE_EQ(original.sampling.leadOutSeconds, decoded.sampling.leadOutSeconds);
-  EXPECT_DOUBLE_EQ(original.sampling.shortTitleWindow, decoded.sampling.shortTitleWindow);
-  EXPECT_EQ(original.sampling.picturesPerPoint, decoded.sampling.picturesPerPoint);
-  EXPECT_EQ(original.sampling.escalatedPoints, decoded.sampling.escalatedPoints);
-  EXPECT_FLOAT_EQ(original.sampling.escalateDiscardShare, decoded.sampling.escalateDiscardShare);
-
-  ASSERT_EQ(original.samples.size(), decoded.samples.size());
-  for (size_t i = 0; i < original.samples.size(); ++i)
-  {
-    EXPECT_EQ(original.samples[i].rect, decoded.samples[i].rect);
-    EXPECT_FLOAT_EQ(original.samples[i].confidence, decoded.samples[i].confidence);
-    EXPECT_EQ(original.samples[i].degenerate, decoded.samples[i].degenerate);
-    EXPECT_DOUBLE_EQ(original.samples[i].position, decoded.samples[i].position);
-  }
-
-  ASSERT_EQ(original.clusters.size(), decoded.clusters.size());
-  EXPECT_EQ(original.clusters[0].rect, decoded.clusters[0].rect);
-  EXPECT_EQ(original.clusters[0].samples, decoded.clusters[0].samples);
-  EXPECT_FLOAT_EQ(original.clusters[0].weight, decoded.clusters[0].weight);
-}
-
-//! A corrupt blob costs the diagnostics it carried and nothing more.
-TEST(TestContentGeometryDetails, GarbageDecodesToDefaults)
-{
-  for (const std::string& json : {std::string{}, std::string{"not json"}, std::string{"[1,2,3]"},
-                                  std::string{R"({"samples": 4})"}})
-  {
-    const ContentGeometryDetails decoded{DecodeContentGeometryDetails(json)};
-    EXPECT_TRUE(decoded.detector.empty());
-    EXPECT_TRUE(decoded.samples.empty());
-    EXPECT_TRUE(decoded.clusters.empty());
-  }
 }
 
 TEST(TestGeometrySections, RoundTripThroughTheStoredForm)
@@ -261,19 +160,6 @@ TEST(TestContentGeometryLookup, MissingCarriesNoRecord)
 {
   EXPECT_FALSE(ContentGeometryLookup{}.HasRecord());
   EXPECT_EQ(ContentGeometryState::MISSING, ContentGeometryLookup{}.state);
-}
-
-//! Rows written before the count existed are already in every library that has run a sweep,
-//! and they decode without it. Zero is the truthful answer for them: nothing was recorded as
-//! unreadable, which is exactly what those rows know.
-TEST(TestContentGeometryDetails, DetailWrittenBeforeTheUnreadableCountDecodesAsZero)
-{
-  const ContentGeometryDetails decoded{DecodeContentGeometryDetails(
-      R"({"detector":"contentbar","usable":7,"discarded":2,"samples":[],"clusters":[]})")};
-
-  EXPECT_EQ(7u, decoded.usable);
-  EXPECT_EQ(2u, decoded.discarded);
-  EXPECT_EQ(0u, decoded.unreadable);
 }
 
 

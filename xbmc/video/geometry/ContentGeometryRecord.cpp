@@ -10,8 +10,6 @@
 
 #include "filesystem/File.h"
 #include "utils/Archive.h"
-#include "utils/JSONVariantParser.h"
-#include "utils/JSONVariantWriter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/XMLUtils.h"
@@ -28,78 +26,6 @@
 
 namespace KODI::VIDEO::GEOMETRY
 {
-
-namespace
-{
-
-CVariant RectToVariant(const CRectInt& rect)
-{
-  CVariant value{CVariant::VariantTypeObject};
-  value["x"] = rect.x1;
-  value["y"] = rect.y1;
-  value["width"] = rect.Width();
-  value["height"] = rect.Height();
-  return value;
-}
-
-CRectInt RectFromVariant(const CVariant& value)
-{
-  return OriginSizeRect(value["x"].asInteger32(0), value["y"].asInteger32(0),
-                        value["width"].asInteger32(0), value["height"].asInteger32(0));
-}
-
-CVariant CombinerParamsToVariant(const CombinerParams& params)
-{
-  CVariant value{CVariant::VariantTypeObject};
-  value["tolerance"] = params.tolerance;
-  value["minconfidence"] = params.minConfidence;
-  value["minstationarysamples"] = params.minStationarySamples;
-  value["variesshare"] = params.variesShare;
-  value["minrivalsamples"] = params.minRivalSamples;
-  value["distinctaspectshare"] = params.distinctAspectShare;
-  return value;
-}
-
-CombinerParams CombinerParamsFromVariant(const CVariant& value)
-{
-  CombinerParams params;
-  params.tolerance = value["tolerance"].asUnsignedInteger32(params.tolerance);
-  params.minConfidence = value["minconfidence"].asFloat(params.minConfidence);
-  params.minStationarySamples =
-      value["minstationarysamples"].asUnsignedInteger32(params.minStationarySamples);
-  params.variesShare = value["variesshare"].asFloat(params.variesShare);
-  params.minRivalSamples = value["minrivalsamples"].asUnsignedInteger32(params.minRivalSamples);
-  params.distinctAspectShare = value["distinctaspectshare"].asFloat(params.distinctAspectShare);
-  return params;
-}
-
-CVariant SamplingParamsToVariant(const SamplingParams& params)
-{
-  CVariant value{CVariant::VariantTypeObject};
-  value["points"] = params.points;
-  value["leadinseconds"] = params.leadInSeconds;
-  value["leadoutseconds"] = params.leadOutSeconds;
-  value["shorttitlewindow"] = params.shortTitleWindow;
-  value["picturesperpoint"] = params.picturesPerPoint;
-  value["escalatedpoints"] = params.escalatedPoints;
-  value["escalatediscardshare"] = params.escalateDiscardShare;
-  return value;
-}
-
-SamplingParams SamplingParamsFromVariant(const CVariant& value)
-{
-  SamplingParams params;
-  params.points = value["points"].asUnsignedInteger32(params.points);
-  params.leadInSeconds = value["leadinseconds"].asDouble(params.leadInSeconds);
-  params.leadOutSeconds = value["leadoutseconds"].asDouble(params.leadOutSeconds);
-  params.shortTitleWindow = value["shorttitlewindow"].asDouble(params.shortTitleWindow);
-  params.picturesPerPoint = value["picturesperpoint"].asUnsignedInteger32(params.picturesPerPoint);
-  params.escalatedPoints = value["escalatedpoints"].asUnsignedInteger32(params.escalatedPoints);
-  params.escalateDiscardShare = value["escalatediscardshare"].asFloat(params.escalateDiscardShare);
-  return params;
-}
-
-} // unnamed namespace
 
 FileIdentity GetFileIdentity(const std::string& path)
 {
@@ -158,47 +84,6 @@ bool NeedsContentGeometry(const ContentGeometryAttempt& attempt, const FileIdent
     return true;
 
   return !attempt.identity.Matches(identity);
-}
-
-std::string EncodeContentGeometryDetails(const ContentGeometryDetails& details)
-{
-  CVariant value{CVariant::VariantTypeObject};
-  value["detector"] = details.detector;
-  value["usable"] = details.usable;
-  value["discarded"] = details.discarded;
-  value["unreadable"] = details.unreadable;
-
-  value["combining"] = CombinerParamsToVariant(details.combining);
-  value["sampling"] = SamplingParamsToVariant(details.sampling);
-
-  CVariant samples{CVariant::VariantTypeArray};
-  for (const auto& sample : details.samples)
-  {
-    CVariant entry{CVariant::VariantTypeObject};
-    entry["rect"] = RectToVariant(sample.rect);
-    entry["confidence"] = sample.confidence;
-    entry["degenerate"] = sample.degenerate;
-    entry["position"] = sample.position;
-    samples.push_back(std::move(entry));
-  }
-  value["samples"] = std::move(samples);
-
-  CVariant clusters{CVariant::VariantTypeArray};
-  for (const auto& cluster : details.clusters)
-  {
-    CVariant entry{CVariant::VariantTypeObject};
-    entry["rect"] = RectToVariant(cluster.rect);
-    entry["samples"] = cluster.samples;
-    entry["weight"] = cluster.weight;
-    clusters.push_back(std::move(entry));
-  }
-  value["clusters"] = std::move(clusters);
-
-  std::string json;
-  if (!CJSONVariantWriter::Write(value, json, true))
-    return {};
-
-  return json;
 }
 
 std::string EncodeGeometrySections(const std::vector<CRectInt>& sections)
@@ -396,46 +281,6 @@ std::optional<ContentGeometryRecord> LoadContentGeometryXML(const TiXmlElement& 
     return std::nullopt;
 
   return record;
-}
-
-ContentGeometryDetails DecodeContentGeometryDetails(const std::string& json)
-{
-  ContentGeometryDetails details;
-
-  CVariant value;
-  if (json.empty() || !CJSONVariantParser::Parse(json, value) || !value.isObject())
-    return details;
-
-  details.detector = value["detector"].asString();
-  details.usable = value["usable"].asUnsignedInteger32(0);
-  details.discarded = value["discarded"].asUnsignedInteger32(0);
-  details.unreadable = value["unreadable"].asUnsignedInteger32(0);
-
-  details.combining = CombinerParamsFromVariant(value["combining"]);
-  details.sampling = SamplingParamsFromVariant(value["sampling"]);
-
-  const CVariant& samples{value["samples"]};
-  for (auto it = samples.begin_array(); it != samples.end_array(); ++it)
-  {
-    GeometrySample sample;
-    sample.rect = RectFromVariant((*it)["rect"]);
-    sample.confidence = (*it)["confidence"].asFloat(0.0f);
-    sample.degenerate = (*it)["degenerate"].asBoolean(false);
-    sample.position = (*it)["position"].asDouble(0.0);
-    details.samples.emplace_back(sample);
-  }
-
-  const CVariant& clusters{value["clusters"]};
-  for (auto it = clusters.begin_array(); it != clusters.end_array(); ++it)
-  {
-    GeometryCluster cluster;
-    cluster.rect = RectFromVariant((*it)["rect"]);
-    cluster.samples = (*it)["samples"].asUnsignedInteger32(0);
-    cluster.weight = (*it)["weight"].asFloat(0.0f);
-    details.clusters.emplace_back(cluster);
-  }
-
-  return details;
 }
 
 } // namespace KODI::VIDEO::GEOMETRY

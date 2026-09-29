@@ -61,9 +61,6 @@ ContentGeometryRecord MakeRecord(const FileIdentity& identity = IDENTITY)
   record.sections.push_back(CRectInt{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM});
   record.sections.push_back(CRectInt{0, ENVELOPE_TOP, CODED_WIDTH, ENVELOPE_BOTTOM});
 
-  // Carries both quote characters, to exercise the escaping of the blob column.
-  record.details = R"({"detector":"contentbar","note":"O'Brien said \"bars\""})";
-
   return record;
 }
 
@@ -86,19 +83,6 @@ protected:
   {
     return m_db.GetSingleValueInt(
         StringUtils::Format("SELECT count(*) FROM contentgeometry WHERE idFile={}", idFile));
-  }
-
-  //! \brief The stored diagnostics, which no lookup reads back.
-  std::string StoredDetails(int idFile)
-  {
-    return m_db.GetSingleValue(
-        StringUtils::Format("SELECT details FROM contentgeometrydetails WHERE idFile={}", idFile));
-  }
-
-  int CountDetailRows(int idFile)
-  {
-    return m_db.GetSingleValueInt(
-        StringUtils::Format("SELECT count(*) FROM contentgeometrydetails WHERE idFile={}", idFile));
   }
 };
 
@@ -127,67 +111,7 @@ TEST_F(TestVideoDatabaseContentGeometry, StoresAndReadsBack)
   EXPECT_EQ(stored.computed.GetAsDBDateTime(), lookup.record.computed.GetAsDBDateTime());
 }
 
-/*!
- * The diagnostics are several kB of retained per-sample readings and no consumer of a
- * rectangle wants them, so a lookup does not fetch them - this row is read once per item a
- * listing fills. They are still stored, and still escape correctly.
- */
-TEST_F(TestVideoDatabaseContentGeometry, ALookupDoesNotDragTheDiagnosticsWithIt)
-{
-  const int idFile{AddTestFile("diagnostics.mkv")};
-  const ContentGeometryRecord stored{MakeRecord(IDENTITY)};
-
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, stored));
-
-  EXPECT_EQ(*stored.details, StoredDetails(idFile));
-
-  EXPECT_FALSE(m_db.GetContentGeometry(idFile, IDENTITY).record.details.has_value());
-
-  ContentGeometryRecord unverified;
-  ASSERT_TRUE(m_db.GetContentGeometryUnverified(idFile, unverified));
-  EXPECT_FALSE(unverified.details.has_value());
-}
-
-/*!
- * A listing fills a tag from the lookup above and a library update writes that tag back, so
- * the common write states no diagnostics at all. Erasing them on it would lose the scan's
- * account of the measurement to a row being touched for an unrelated reason.
- */
-TEST_F(TestVideoDatabaseContentGeometry, StoringARecordThatStatesNoDiagnosticsKeepsThem)
-{
-  const int idFile{AddTestFile("roundtrip.mkv")};
-  const ContentGeometryRecord stored{MakeRecord(IDENTITY)};
-
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, stored));
-
-  ContentGeometryRecord readBack;
-  ASSERT_TRUE(m_db.GetContentGeometryUnverified(idFile, readBack));
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, readBack));
-
-  EXPECT_EQ(*stored.details, StoredDetails(idFile));
-}
-
-//! A re-measurement that could not read the file states empty diagnostics, and what the
-//! measurement it replaces recorded goes with it.
-TEST_F(TestVideoDatabaseContentGeometry, StoringEmptyDiagnosticsClearsThem)
-{
-  const int idFile{AddTestFile("cleared.mkv")};
-
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord(IDENTITY)));
-  ASSERT_FALSE(StoredDetails(idFile).empty());
-
-  ContentGeometryRecord failure;
-  failure.outcome = ContentGeometryOutcome::Failed;
-  failure.identity = IDENTITY;
-  failure.details = std::string{};
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, failure));
-
-  EXPECT_TRUE(StoredDetails(idFile).empty());
-}
-
-//! The shapes a title contains are stored in their own right, so that resolving one costs no
-//! parse of the diagnostics they were measured alongside.
-TEST_F(TestVideoDatabaseContentGeometry, TheSectionsRoundTripWithoutTheDiagnostics)
+TEST_F(TestVideoDatabaseContentGeometry, TheSectionsRoundTrip)
 {
   const int idFile{AddTestFile("sections.mkv")};
 
@@ -436,25 +360,8 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
 }
 
 /*!
- * The row and its diagnostics are two writes describing one measurement, so they land together
- * or not at all. Unguarded, a diagnostics write failing after the row was committed would answer
- * false with the row stored - and a caller reading that as "not stored" measures the file all
- * over again. The failure is forced by taking away the table the second write needs.
- */
-TEST_F(TestVideoDatabaseContentGeometry, AFailedDiagnosticsWriteLeavesNoRowBehind)
-{
-  const int idFile{AddTestFile("halfwritten.mkv")};
-  ASSERT_TRUE(m_db.ExecuteQuery("DROP TABLE contentgeometrydetails"));
-
-  EXPECT_FALSE(m_db.SetContentGeometry(idFile, MakeRecord({8'000'000'000, 1'700'000'000})));
-  EXPECT_EQ(0, CountRows(idFile)) << "a call that answered false stored the row anyway";
-}
-
-/*!
- * A library update stores the geometry from inside its own transaction, so the guard the two
- * writes are wrapped in has to join that one rather than open a second - a second BEGIN is an
- * error, and committing an inner one would end the caller's early. Shown by rolling the
- * caller's back afterwards: the geometry goes with it.
+ * A library update stores the geometry from inside its own transaction, and the write must
+ * belong to it. Shown by rolling the caller's back afterwards: the geometry goes with it.
  */
 TEST_F(TestVideoDatabaseContentGeometry, StoringInsideACallersTransactionJoinsIt)
 {
@@ -466,7 +373,6 @@ TEST_F(TestVideoDatabaseContentGeometry, StoringInsideACallersTransactionJoinsIt
   m_db.RollbackTransaction();
 
   EXPECT_EQ(0, CountRows(idFile)) << "the write did not join the caller's transaction";
-  EXPECT_EQ(0, CountDetailRows(idFile));
 }
 
 //! The delete_file trigger reaches the new tables.
@@ -476,12 +382,10 @@ TEST_F(TestVideoDatabaseContentGeometry, DeletingTheFileCascadesToTheGeometry)
 
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord({8'000'000'000, 1'700'000'000})));
   ASSERT_EQ(1, CountRows(idFile));
-  ASSERT_EQ(1, CountDetailRows(idFile));
 
   ASSERT_TRUE(m_db.DeleteFile(idFile));
 
   EXPECT_EQ(0, CountRows(idFile));
-  EXPECT_EQ(0, CountDetailRows(idFile));
 }
 
 //! The trigger on its own, rather than whatever else DeleteFile() does on the way.
@@ -495,7 +399,6 @@ TEST_F(TestVideoDatabaseContentGeometry, TheTriggerAloneRemovesTheGeometry)
   ASSERT_TRUE(DeleteFilesRow(idFile));
 
   EXPECT_EQ(0, CountRows(idFile));
-  EXPECT_EQ(0, CountDetailRows(idFile));
 }
 
 //! The cascade returns by itself after the drop-and-recreate cycle an upgrade performs.
@@ -558,7 +461,6 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
               old.Connect("MyVideosMigration149", settings, true));
     ASSERT_TRUE(old.ExecuteQuery("DROP TABLE contentgeometry"));
-    ASSERT_TRUE(old.ExecuteQuery("DROP TABLE contentgeometrydetails"));
     ASSERT_TRUE(old.ExecuteQuery("DROP TABLE settings"));
     ASSERT_TRUE(old.ExecuteQuery(
         "CREATE TABLE settings ( idFile integer, Deinterlace bool,"
@@ -608,21 +510,12 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
   ASSERT_TRUE(migrated.SetContentGeometry(idFile, record))
       << "the migration did not create a usable contentgeometry table";
 
-  EXPECT_EQ(*record.details,
-            migrated.GetSingleValue(StringUtils::Format(
-                "SELECT details FROM contentgeometrydetails WHERE idFile={}", idFile)))
-      << "the migration did not create a usable contentgeometrydetails table";
-
   ASSERT_TRUE(
       migrated.ExecuteQuery(StringUtils::Format("DELETE FROM files WHERE idFile={}", idFile)));
 
   EXPECT_EQ(0, migrated.GetSingleValueInt(StringUtils::Format(
                    "SELECT count(*) FROM contentgeometry WHERE idFile={}", idFile)))
       << "the trigger recreated after the migration does not cover contentgeometry";
-
-  EXPECT_EQ(0, migrated.GetSingleValueInt(StringUtils::Format(
-                   "SELECT count(*) FROM contentgeometrydetails WHERE idFile={}", idFile)))
-      << "the trigger recreated after the migration does not cover contentgeometrydetails";
 
   migrated.Close();
 }
@@ -677,7 +570,6 @@ TEST(TestVideoDatabaseContentGeometryMySQL, StoresAndCascadesOnMySQL)
       << "could not create the test database on " << host;
 
   ASSERT_TRUE(db.ExecuteQuery("DELETE FROM contentgeometry"));
-  ASSERT_TRUE(db.ExecuteQuery("DELETE FROM contentgeometrydetails"));
 
   const int idFile{db.AddFile("/test/contentgeometry/mysql.mkv", "/test/contentgeometry/")};
   ASSERT_GE(idFile, 0);
@@ -698,9 +590,6 @@ TEST(TestVideoDatabaseContentGeometryMySQL, StoresAndCascadesOnMySQL)
   EXPECT_EQ(0, db.GetSingleValueInt(StringUtils::Format(
                    "SELECT count(*) FROM contentgeometry WHERE idFile={}", idFile)))
       << "the delete_file trigger does not cascade to contentgeometry on MySQL";
-  EXPECT_EQ(0, db.GetSingleValueInt(StringUtils::Format(
-                   "SELECT count(*) FROM contentgeometrydetails WHERE idFile={}", idFile)))
-      << "the delete_file trigger does not cascade to contentgeometrydetails on MySQL";
 
   db.Close();
 }

@@ -41,13 +41,7 @@ struct SampledGeometry
 
   //! \brief Points that produced no reading, counted separately from the combiner's totals.
   unsigned int unreadable{0};
-
-  SamplingParams sampling;
-  CombinerParams combining;
 };
-
-//! \brief Names the detector in a stored record's diagnostics.
-inline constexpr const char* CONTENT_GEOMETRY_DETECTOR{"contentbar"};
 
 //! \brief Turn a completed scan into the row stored for it. One that did not succeed becomes a
 //! Failed record. A cancelled scan must not be stored at all, which this does not check.

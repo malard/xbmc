@@ -211,9 +211,6 @@ void CVideoDatabaseDDL::CreateContentGeometryTable(CDatabase& db)
                   "varies BOOL, hasReading BOOL, confidence FLOAT, outcome INTEGER, "
                   "algorithmVersion INTEGER, fileSize BIGINT, fileMTime BIGINT, "
                   "dateComputed TEXT, sections TEXT)");
-
-  db.ExecuteQuery("CREATE TABLE contentgeometrydetails (idFile INTEGER PRIMARY KEY, "
-                  "details TEXT)");
 }
 
 void CVideoDatabaseDDL::CreateLinkIndex(CDatabase& db, const std::string& table)
@@ -391,7 +388,6 @@ void CVideoDatabaseDDL::CreateTriggers(CDatabase& db)
                   "DELETE FROM streamdetails WHERE idFile=old.idFile; "
                   "DELETE FROM videoversion WHERE idFile=old.idFile; "
                   "DELETE FROM contentgeometry WHERE idFile=old.idFile; "
-                  "DELETE FROM contentgeometrydetails WHERE idFile=old.idFile; "
                   "DELETE FROM art WHERE media_id=old.idFile AND media_type='videoversion'; "
                   "END");
   db.ExecuteQuery(
