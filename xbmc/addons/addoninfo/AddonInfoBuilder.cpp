@@ -64,10 +64,7 @@ std::vector<KODI::LANGUAGE::CLanguageTag> ParseLanguages(const std::string& text
     if (const auto language = KODI::LANGUAGE::CLanguageTag::TryParse(token); language.has_value())
       languages.emplace_back(*language);
     else
-      CLog::Log(LOGWARNING,
-                "CAddonInfoBuilder: add-on '{}' states a language of '{}', which names no "
-                "language and is ignored",
-                addonId, token);
+      CLog::LogF(LOGWARNING, "{}: unknown language '{}', ignored", addonId, token);
   }
 
   return languages;
