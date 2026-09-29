@@ -34,9 +34,6 @@ CRect Rotate(const CRect& rect, const CRect& frame, int orientation);
 
 float AspectOf(const CRect& rect);
 
-//! \brief The corner-to-corner rectangle an origin and a size describe.
-CRectInt OriginSizeRect(int x, int y, int width, int height);
-
 //! \brief Chebyshev distance between two rectangles: the furthest any single edge has moved.
 int EdgeDistance(const CRectInt& a, const CRectInt& b);
 

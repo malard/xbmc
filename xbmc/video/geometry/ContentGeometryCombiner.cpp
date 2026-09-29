@@ -87,7 +87,6 @@ CombinedGeometry CombineGeometrySamples(std::span<const GeometrySample> samples,
 {
   CombinedGeometry result;
   result.rect = coded;
-  result.envelope = coded;
 
   std::vector<WorkingCluster> clusters;
 
@@ -154,10 +153,6 @@ CombinedGeometry CombineGeometrySamples(std::span<const GeometrySample> samples,
   result.hasReading = true;
   result.rect = result.clusters.front().rect;
 
-  // Every corroborated cluster, including ones too small to make the title count as varying.
-  result.envelope = CRectInt{};
-  for (const GeometryCluster& cluster : result.clusters)
-    result.envelope.Union(cluster.rect);
   // Counted rather than acted on; ShouldEscalate() reads it.
   for (const CRectInt& shape : rejected)
   {

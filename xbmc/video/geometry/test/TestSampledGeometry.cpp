@@ -35,7 +35,6 @@ SampledGeometry MakeScan()
 
   const CRectInt scope{0, CONTENT_TOP, CODED_WIDTH, CONTENT_BOTTOM};
   scan.combined.rect = scope;
-  scan.combined.envelope = scope;
   scan.combined.shapes = {scope};
   scan.combined.hasReading = true;
   scan.combined.usable = 2;

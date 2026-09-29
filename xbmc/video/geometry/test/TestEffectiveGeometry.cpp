@@ -291,7 +291,6 @@ TEST(TestEffectiveGeometry, ALiveReadingOutranksTheCache)
   GeometryInputs inputs = ScopeCachedUhd();
   inputs.live.hasReading = true;
   inputs.live.rect = CRectInt{0, 0, 3840, 2160};
-  inputs.live.envelope = CRectInt{0, 0, 3840, 2160};
   inputs.hasLive = true;
 
   const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
@@ -319,35 +318,6 @@ TEST(TestEffectiveGeometry, VariablePolicyDecidesBetweenShowingAllOfItAndNamingI
   EXPECT_EQ("2.40", dominant.label);
   ExpectRect(dominant.displayRect, 0.0f, 280.0f, 3840.0f, 1880.0f);
   EXPECT_TRUE(dominant.varies);
-}
-
-// A scope title carrying a pillarboxed archive sequence. The variation is horizontal, so the
-// taller of the two rectangles is also the narrower one, and taking the outer extent per axis
-// is what keeps the answer at the ratio the film is in.
-TEST(TestEffectiveGeometry, HorizontalVariationDoesNotNarrowTheAnswer)
-{
-  const StreamGeometry scope{CRectInt{0, 0, 1920, 800}, 2.4f, 0};
-  const CRectInt body{0, 0, 1920, 800}; //!< the pillarboxed archive at 413 to 1507 is inside it
-
-  CombinedGeometry live;
-  live.hasReading = true;
-  live.rect = body;
-  live.envelope = body; // the union of body and archive is body
-  live.varies = false;
-
-  GeometryInputs inputs;
-  inputs.stream = scope;
-  inputs.hasLive = true;
-  inputs.live = live;
-
-  for (const VariableGeometryPolicy policy :
-       {VariableGeometryPolicy::Envelope, VariableGeometryPolicy::Dominant})
-  {
-    inputs.policy = policy;
-    const EffectiveGeometry result = ResolveEffectiveGeometry(inputs);
-    EXPECT_EQ("2.40", result.label);
-    ExpectRect(result.displayRect, 0.0f, 0.0f, 1920.0f, 800.0f);
-  }
 }
 
 /*!
@@ -407,7 +377,6 @@ TEST(TestEffectiveGeometry, AnotherStreamKeepsTheLiveReading)
   inputs.hasLive = true;
   inputs.live.hasReading = true;
   inputs.live.rect = CRectInt{0, 280, 3840, 1880};
-  inputs.live.envelope = inputs.live.rect;
 
   EXPECT_EQ(GeometrySource::Live, ResolveEffectiveGeometry(InputsForStream(inputs, 1)).source);
 }

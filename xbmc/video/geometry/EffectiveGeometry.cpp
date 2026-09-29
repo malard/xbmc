@@ -58,7 +58,7 @@ ResolvedMeasurement ResolveMeasurement(const GeometryInputs& inputs, const CRect
 
   if (inputs.hasLive && inputs.live.hasReading)
   {
-    candidate = ToSquarePixels(envelope ? inputs.live.envelope : inputs.live.rect, inputs.stream);
+    candidate = ToSquarePixels(inputs.live.rect, inputs.stream);
     measured = GeometrySource::Live;
     varies = inputs.live.varies;
   }

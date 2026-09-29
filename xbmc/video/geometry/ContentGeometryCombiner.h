@@ -65,10 +65,6 @@ struct CombinedGeometry
 {
   CRectInt rect; //!< the answer; the coded rectangle when there is no reading
 
-  //! \brief Outer extent of every corroborated cluster, per axis. Equals rect unless the title
-  //! varies.
-  CRectInt envelope;
-
   //! \brief The title's geometry changes partway through: more than one shape below.
   bool varies{false};
 

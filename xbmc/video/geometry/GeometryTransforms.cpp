@@ -44,11 +44,6 @@ float AspectOf(const CRect& rect)
   return rect.Height() > 0.0f ? rect.Width() / rect.Height() : 0.0f;
 }
 
-CRectInt OriginSizeRect(int x, int y, int width, int height)
-{
-  return {x, y, x + width, y + height};
-}
-
 int EdgeDistance(const CRectInt& a, const CRectInt& b)
 {
   return std::max(

@@ -409,12 +409,8 @@ TEST(TestContentGeometryCombiner, ANearbyDiscardedReadingIsNotAnUnexplainedShape
   EXPECT_EQ(0u, result.unexplainedShapes);
 }
 
-/*!
- * The envelope, which the default Envelope policy serves. It is every corroborated cluster
- * unioned - not the dominant one, and not the coded frame. Serving the dominant crops the taller
- * sequence; serving the frame opens a mask onto black.
- */
-TEST(TestContentGeometryCombiner, TheEnvelopeContainsEveryCorroboratedShape)
+//! The shapes a title is in: the dominant one, then each rival seen often enough to count.
+TEST(TestContentGeometryCombiner, TheShapesAreTheAnswerThenEachRivalThatCounts)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 6; ++i)
@@ -426,14 +422,13 @@ TEST(TestContentGeometryCombiner, TheEnvelopeContainsEveryCorroboratedShape)
 
   ASSERT_EQ(2u, result.clusters.size());
   EXPECT_EQ(CRectInt(0, 276, WIDTH, HEIGHT - 276), result.rect) << "the dominant shape answers";
-  EXPECT_EQ(CRectInt(0, 140, WIDTH, HEIGHT - 140), result.envelope)
-      << "the extent has to contain the taller sequence too";
-  EXPECT_NE(result.rect, result.envelope);
+  ASSERT_EQ(2u, result.shapes.size());
+  EXPECT_EQ(result.rect, result.shapes[0]);
+  EXPECT_EQ(CRectInt(0, 140, WIDTH, HEIGHT - 140), result.shapes[1]);
+  EXPECT_TRUE(result.varies);
 }
 
-//! A title in one shape has an envelope, and it is that shape - not an empty rectangle, which
-//! reads downstream as a measurement claiming there is no picture.
-TEST(TestContentGeometryCombiner, AFixedTitlesEnvelopeIsItsRectangle)
+TEST(TestContentGeometryCombiner, AFixedTitleIsInOneShape)
 {
   std::vector<GeometrySample> samples;
   for (int i = 0; i < 6; ++i)
@@ -441,8 +436,9 @@ TEST(TestContentGeometryCombiner, AFixedTitlesEnvelopeIsItsRectangle)
 
   const CombinedGeometry result = Combine(samples);
 
-  EXPECT_EQ(CRectInt(0, 276, WIDTH, HEIGHT - 276), result.envelope);
-  EXPECT_EQ(result.rect, result.envelope);
+  ASSERT_EQ(1u, result.shapes.size());
+  EXPECT_EQ(result.rect, result.shapes[0]);
+  EXPECT_FALSE(result.varies);
 }
 
 /*!

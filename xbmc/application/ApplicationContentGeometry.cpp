@@ -288,7 +288,6 @@ void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
     {
       m_inputs.live = {};
       m_inputs.live.rect = rect;
-      m_inputs.live.envelope = rect;
       m_inputs.live.varies =
           varies || (m_inputs.cached.HasRecord() && m_inputs.cached.record.Varies());
       m_inputs.live.hasReading = true;
