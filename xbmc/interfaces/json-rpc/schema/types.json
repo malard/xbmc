@@ -6224,5 +6224,17 @@
       "video",
       "audio"
     ]
+  },
+  "Optional.Player.Playlist": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Player.Playlist"
+      }
+    ],
+    "default": null,
+    "description": "The playlist a call acts on; none names everything playing."
   }
 }

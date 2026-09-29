@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "interfaces/json-rpc/PlayerOperations.h"
 #include "utils/Variant.h"
 
@@ -51,4 +52,43 @@ TEST(TestPlayerTargets, AVerbFailsForNothingPlayingWhenNothingPlays)
   EXPECT_EQ(FailedToExecute,
             CPlayerOperations::Zoom(CVariant(CVariant::VariantTypeObject), result));
   EXPECT_EQ("nothing-playing", result["reason"].asString());
+}
+
+class TestPlayerTargetParameter : public JSONServiceDescriptionTestBase
+{
+};
+
+/*!
+ \brief A playlist the caller does not name reaches the handler unnamed
+
+ The validator fills an omitted parameter with its default, and the first value of an enum
+ without one, which would name the video playlist for every call that names none.
+ */
+TEST_F(TestPlayerTargetParameter, AnOmittedPlaylistIsNotNamed)
+{
+  AddShippedServiceDescription();
+
+  int checked = 0;
+  for (const auto& [name, method] : ShippedMethods())
+  {
+    if (name.rfind("Player.", 0) != 0 || Param(method, "playlist") == nullptr)
+      continue;
+
+    // a call with a required parameter cannot be made without naming something
+    bool hasRequired = false;
+    for (const auto& [param, descriptor] : Params(method))
+      hasRequired = hasRequired || descriptor["required"].asBoolean();
+    if (hasRequired)
+      continue;
+
+    ++checked;
+    CVariant output;
+    ASSERT_EQ(OK, Call(name.c_str(), "{}", output)) << name << ": " << ToJson(output);
+    EXPECT_TRUE(output["playlist"].isNull()) << name << " names " << ToJson(output["playlist"]);
+  }
+  EXPECT_GT(checked, 0);
+
+  CVariant output;
+  ASSERT_EQ(OK, Call("Player.Stop", R"({"playlist": "audio"})", output));
+  EXPECT_EQ("audio", output["playlist"].asString());
 }
