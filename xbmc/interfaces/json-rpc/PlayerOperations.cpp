@@ -262,8 +262,6 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
             default:
               break;
           }
-
-          videodatabase.Close();
         }
       }
       else // Audio

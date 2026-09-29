@@ -21,6 +21,7 @@ class CAlbum;
 class CFileitem;
 class CFileitemList;
 class CMusicDatabase;
+class CMusicDbUrl;
 class CVariant;
 
 namespace JSONRPC
@@ -114,6 +115,9 @@ namespace JSONRPC
                                                     InfoProviderTarget& target);
 
   private:
+    //! Narrows \p url to the artists in the role the caller's filter names, or to every role
+    static void ApplyRoleFilter(const CVariant& parameterObject, CMusicDbUrl& url);
+
     static void FillAlbumItem(const CAlbum& album,
                               const std::string& path,
                               std::shared_ptr<CFileItem>& item);

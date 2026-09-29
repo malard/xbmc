@@ -14,7 +14,9 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 
+class CDbUrl;
 class CFileItem;
 class CFileItemList;
 class CThumbLoader;
@@ -31,6 +33,24 @@ namespace JSONRPC
 {
   class CFileItemHandler : public CJSONUtils
   {
+  public:
+    //! A list filter naming one field's value, and the database URL option it sets
+    struct FilterField
+    {
+      static constexpr FilterField Text(const char* name, const char* option = nullptr)
+      {
+        return {name, option ? option : name, false};
+      }
+      static constexpr FilterField Number(const char* name, const char* option = nullptr)
+      {
+        return {name, option ? option : name, true};
+      }
+
+      const char* name;
+      const char* option;
+      bool number;
+    };
+
   protected:
     static void FillDetails(const ISerializable* info,
                             const std::shared_ptr<CFileItem>& item,
@@ -59,6 +79,17 @@ namespace JSONRPC
                                CThumbLoader* thumbLoader = nullptr);
 
     static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+
+
+    /*!
+     \brief Narrows \p url by the caller's filter: the first of \p fields it names, else its rules
+     \param rulesType The smart playlist type the rules are written for
+     \return false if the rules do not parse
+     */
+    static bool ApplyFilter(const CVariant& filter,
+                            std::span<const FilterField> fields,
+                            const std::string& rulesType,
+                            CDbUrl& url);
 
     /*!
      \brief Diagnoses an item FillFileItemList dropped without saying why

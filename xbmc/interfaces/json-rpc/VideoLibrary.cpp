@@ -49,43 +49,17 @@ JSONRPC_STATUS CVideoLibrary::GetMovies(const CVariant& parameterObject, CVarian
   if (!videoUrl.FromString("videodb://movies/titles/"))
     return InternalError;
 
-  int genreID = -1, year = -1, setID = 0;
-  const CVariant &filter = parameterObject["filter"];
-  if (filter.isMember("genreid"))
-    genreID = (int)filter["genreid"].asInteger();
-  else if (filter.isMember("genre"))
-    videoUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isMember("year"))
-    year = (int)filter["year"].asInteger();
-  else if (filter.isMember("actor"))
-    videoUrl.AddOption("actor", filter["actor"].asString());
-  else if (filter.isMember("director"))
-    videoUrl.AddOption("director", filter["director"].asString());
-  else if (filter.isMember("studio"))
-    videoUrl.AddOption("studio", filter["studio"].asString());
-  else if (filter.isMember("country"))
-    videoUrl.AddOption("country", filter["country"].asString());
-  else if (filter.isMember("setid"))
-    setID = (int)filter["setid"].asInteger();
-  else if (filter.isMember("set"))
-    videoUrl.AddOption("set", filter["set"].asString());
-  else if (filter.isMember("tag"))
-    videoUrl.AddOption("tag", filter["tag"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("movies", filter, xsp))
-      return InvalidParams;
-
-    videoUrl.AddOption("xsp", xsp);
-  }
-
-  // setID must not be -1 otherwise GetMoviesNav() will return sets
-  if (setID < 0)
-    setID = 0;
+  static constexpr FilterField filters[] = {
+      FilterField::Number("genreid"), FilterField::Text("genre"),    FilterField::Number("year"),
+      FilterField::Text("actor"),     FilterField::Text("director"), FilterField::Text("studio"),
+      FilterField::Text("country"),   FilterField::Number("setid"),  FilterField::Text("set"),
+      FilterField::Text("tag")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "movies", videoUrl))
+    return InvalidParams;
 
   CFileItemList items;
-  if (!videodatabase.GetMoviesNav(videoUrl.ToString(), items, genreID, year, -1, -1, -1, -1, setID, -1, sorting, RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
+  if (!videodatabase.GetMoviesByWhere(videoUrl.ToString(), CDatabase::Filter(), items, sorting,
+                                      RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
     return InvalidParams;
 
   return HandleItems("movieid", "movies", items, parameterObject, result, false);
@@ -164,31 +138,15 @@ JSONRPC_STATUS CVideoLibrary::GetTVShows(const CVariant& parameterObject, CVaria
   if (!videoUrl.FromString("videodb://tvshows/titles/"))
     return InternalError;
 
-  const CVariant &filter = parameterObject["filter"];
-  if (filter.isMember("genreid"))
-    videoUrl.AddOption("genreid", (int)filter["genreid"].asInteger());
-  else if (filter.isMember("genre"))
-    videoUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isMember("year"))
-    videoUrl.AddOption("year", (int)filter["year"].asInteger());
-  else if (filter.isMember("actor"))
-    videoUrl.AddOption("actor", filter["actor"].asString());
-  else if (filter.isMember("studio"))
-    videoUrl.AddOption("studio", filter["studio"].asString());
-  else if (filter.isMember("tag"))
-    videoUrl.AddOption("tag", filter["tag"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("tvshows", filter, xsp))
-      return InvalidParams;
-
-    videoUrl.AddOption("xsp", xsp);
-  }
+  static constexpr FilterField filters[] = {
+      FilterField::Number("genreid"), FilterField::Text("genre"),  FilterField::Number("year"),
+      FilterField::Text("actor"),     FilterField::Text("studio"), FilterField::Text("tag")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "tvshows", videoUrl))
+    return InvalidParams;
 
   CFileItemList items;
-  CDatabase::Filter nofilter;
-  if (!videodatabase.GetTvShowsByWhere(videoUrl.ToString(), nofilter, items, sorting, RequiresAdditionalDetails(MediaTypeTvShow, parameterObject)))
+  if (!videodatabase.GetTvShowsByWhere(videoUrl.ToString(), CDatabase::Filter(), items, sorting,
+                                       RequiresAdditionalDetails(MediaTypeTvShow, parameterObject)))
     return InvalidParams;
 
   return HandleItems("tvshowid", "tvshows", items, parameterObject, result, false);
@@ -272,25 +230,11 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodes(const CVariant& parameterObject, CVari
   if (!videoUrl.FromString(strPath))
     return InternalError;
 
-  const CVariant &filter = parameterObject["filter"];
-  if (filter.isMember("genreid"))
-    videoUrl.AddOption("genreid", (int)filter["genreid"].asInteger());
-  else if (filter.isMember("genre"))
-    videoUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isMember("year"))
-    videoUrl.AddOption("year", (int)filter["year"].asInteger());
-  else if (filter.isMember("actor"))
-    videoUrl.AddOption("actor", filter["actor"].asString());
-  else if (filter.isMember("director"))
-    videoUrl.AddOption("director", filter["director"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("episodes", filter, xsp))
-      return InvalidParams;
-
-    videoUrl.AddOption("xsp", xsp);
-  }
+  static constexpr FilterField filters[] = {
+      FilterField::Number("genreid"), FilterField::Text("genre"), FilterField::Number("year"),
+      FilterField::Text("actor"), FilterField::Text("director")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "episodes", videoUrl))
+    return InvalidParams;
 
   if (tvshowID <= 0 && (season > 0 || videoUrl.HasOption("genreid") || videoUrl.HasOption("genre") || videoUrl.HasOption("actor")))
     return InvalidParams;
@@ -352,33 +296,17 @@ JSONRPC_STATUS CVideoLibrary::GetMusicVideos(const CVariant& parameterObject, CV
   if (!videoUrl.FromString("videodb://musicvideos/titles/"))
     return InternalError;
 
-  int genreID = -1, year = -1;
-  const CVariant &filter = parameterObject["filter"];
-  if (filter.isMember("artist"))
-    videoUrl.AddOption("artist", filter["artist"].asString());
-  else if (filter.isMember("genreid"))
-    genreID = (int)filter["genreid"].asInteger();
-  else if (filter.isMember("genre"))
-    videoUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isMember("year"))
-    year = (int)filter["year"].asInteger();
-  else if (filter.isMember("director"))
-    videoUrl.AddOption("director", filter["director"].asString());
-  else if (filter.isMember("studio"))
-    videoUrl.AddOption("studio", filter["studio"].asString());
-  else if (filter.isMember("tag"))
-    videoUrl.AddOption("tag", filter["tag"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("musicvideos", filter, xsp))
-      return InvalidParams;
-
-    videoUrl.AddOption("xsp", xsp);
-  }
+  static constexpr FilterField filters[] = {
+      FilterField::Text("artist"), FilterField::Number("genreid"), FilterField::Text("genre"),
+      FilterField::Number("year"), FilterField::Text("director"),  FilterField::Text("studio"),
+      FilterField::Text("tag")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "musicvideos", videoUrl))
+    return InvalidParams;
 
   CFileItemList items;
-  if (!videodatabase.GetMusicVideosNav(videoUrl.ToString(), items, genreID, year, -1, -1, -1, -1, -1, sorting, RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
+  if (!videodatabase.GetMusicVideosByWhere(
+          videoUrl.ToString(), CDatabase::Filter(), items, true, sorting,
+          RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
     return InternalError;
 
   return HandleItems("musicvideoid", "musicvideos", items, parameterObject, result, false);
@@ -680,10 +608,7 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject
 
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSetInfo(id, infos)); status != OK)
-  {
-    videodatabase.Close();
     return status;
-  }
 
   // get artwork
   KODI::ART::Artwork artwork;
@@ -782,15 +707,9 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSeasonInfo(id, infos));
       status != OK)
-  {
-    videodatabase.Close();
     return status;
-  }
   if (infos.m_iIdShow <= 0)
-  {
-    videodatabase.Close();
     return NotFound;
-  }
 
   // get artwork
   KODI::ART::Artwork artwork;
@@ -823,17 +742,11 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetEpisodeInfo("", infos, id));
       status != OK)
-  {
-    videodatabase.Close();
     return status;
-  }
 
   int tvshowid = videodatabase.GetTvShowForEpisode(id);
   if (tvshowid <= 0)
-  {
-    videodatabase.Close();
     return NotFound;
-  }
 
   // get artwork
   KODI::ART::Artwork artwork;
@@ -878,10 +791,7 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObje
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMusicVideoInfo("", infos, id));
       status != OK)
-  {
-    videodatabase.Close();
     return status;
-  }
 
   // get artwork
   KODI::ART::Artwork artwork;
