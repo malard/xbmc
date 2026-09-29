@@ -56,9 +56,7 @@ KODI::LANGUAGE::CLanguageTag LanguageFromNfo(const std::string& value, std::stri
   KODI::LANGUAGE::CLanguageTag language{KODI::LANGUAGE::CLanguageTag::Parse(text)};
   if (!language.IsValid())
   {
-    CLog::Log(LOGWARNING,
-              "CVideoInfoTag: the {} stream of an NFO states a language of '{}', which names none",
-              streamType, value);
+    CLog::Log(LOGWARNING, "CVideoInfoTag: {} stream: unknown language '{}'", streamType, value);
   }
 
   return language;
