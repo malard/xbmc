@@ -54,6 +54,9 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Playlist.OnPropertiesChanged`, carrying what changed under `data.properties` in place of
   `data.property`. `Application.OnVolumeChanged` is removed: a volume or mute change is
   `Player.OnPropertiesChanged` carrying `volume` or `muted`, whichever changed, and no `player`.
+- `Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and `Player.OnSeek` are removed:
+  each is `Player.OnPropertiesChanged`, carrying `speed` for the first three and `time` for a seek,
+  with `player`. A pause is `speed` 0.
 
 ### Deprecated
 

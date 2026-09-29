@@ -1270,21 +1270,6 @@
       "players"
     ]
   },
-  "Player.Notifications.Player.Seek": {
-    "allOf": [
-      {
-        "$ref": "#/$defs/Player.Notifications.Player"
-      }
-    ],
-    "properties": {
-      "time": {
-        "$ref": "#/$defs/Global.Time"
-      },
-      "seekoffset": {
-        "$ref": "#/$defs/Global.Time"
-      }
-    }
-  },
   "Player.Notifications.Data": {
     "type": "object",
     "properties": {

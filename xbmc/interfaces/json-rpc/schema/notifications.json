@@ -20,27 +20,6 @@
     ],
     "returns": null
   },
-  "Player.OnResume": {
-    "type": "notification",
-    "description": "Playback of a media item has been resumed. If there is no ID available extra information will be provided.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Player.Notifications.Data"
-        }
-      }
-    ],
-    "returns": null
-  },
   "Player.OnAVStart": {
     "type": "notification",
     "description": "Playback of a media item has been started and first frame is available. If there is no ID available extra information will be provided.",
@@ -119,27 +98,6 @@
     ],
     "returns": null
   },
-  "Player.OnPause": {
-    "type": "notification",
-    "description": "Playback of a media item has been paused. If there is no ID available extra information will be provided.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Player.Notifications.Data"
-        }
-      }
-    ],
-    "returns": null
-  },
   "Player.OnStop": {
     "type": "notification",
     "description": "Playback of a media item has been stopped. If there is no ID available extra information will be provided.",
@@ -206,59 +164,6 @@
           },
           "required": [
             "reason"
-          ]
-        }
-      }
-    ],
-    "returns": null
-  },
-  "Player.OnSpeedChanged": {
-    "type": "notification",
-    "description": "Speed of the playback of a media item has been changed. If there is no ID available extra information will be provided.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Player.Notifications.Data"
-        }
-      }
-    ],
-    "returns": null
-  },
-  "Player.OnSeek": {
-    "type": "notification",
-    "description": "The playback position has been changed. If there is no ID available extra information will be provided.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "type": "object",
-          "properties": {
-            "item": {
-              "$ref": "#/$defs/Notifications.Item"
-            },
-            "player": {
-              "$ref": "#/$defs/Player.Notifications.Player.Seek"
-            }
-          },
-          "required": [
-            "player"
           ]
         }
       }

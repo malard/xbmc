@@ -37,9 +37,6 @@
         "Player.OnPlay": {
           "$ref": "#/components/messages/Player.OnPlay"
         },
-        "Player.OnResume": {
-          "$ref": "#/components/messages/Player.OnResume"
-        },
         "Player.OnAVStart": {
           "$ref": "#/components/messages/Player.OnAVStart"
         },
@@ -49,20 +46,11 @@
         "Player.OnContentGeometryChange": {
           "$ref": "#/components/messages/Player.OnContentGeometryChange"
         },
-        "Player.OnPause": {
-          "$ref": "#/components/messages/Player.OnPause"
-        },
         "Player.OnStop": {
           "$ref": "#/components/messages/Player.OnStop"
         },
         "Player.OnPlaybackFailed": {
           "$ref": "#/components/messages/Player.OnPlaybackFailed"
-        },
-        "Player.OnSpeedChanged": {
-          "$ref": "#/components/messages/Player.OnSpeedChanged"
-        },
-        "Player.OnSeek": {
-          "$ref": "#/components/messages/Player.OnSeek"
         },
         "Player.OnPropertiesChanged": {
           "$ref": "#/components/messages/Player.OnPropertiesChanged"
@@ -184,17 +172,6 @@
         }
       ]
     },
-    "Player.OnResume": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/Player.OnResume"
-        }
-      ]
-    },
     "Player.OnAVStart": {
       "action": "send",
       "channel": {
@@ -228,17 +205,6 @@
         }
       ]
     },
-    "Player.OnPause": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/Player.OnPause"
-        }
-      ]
-    },
     "Player.OnStop": {
       "action": "send",
       "channel": {
@@ -258,28 +224,6 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/Player.OnPlaybackFailed"
-        }
-      ]
-    },
-    "Player.OnSpeedChanged": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/Player.OnSpeedChanged"
-        }
-      ]
-    },
-    "Player.OnSeek": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/Player.OnSeek"
         }
       ]
     },
@@ -707,42 +651,6 @@
           ]
         }
       },
-      "Player.OnResume": {
-        "name": "Player.OnResume",
-        "summary": "Playback of a media item has been resumed. If there is no ID available extra information will be provided.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "Player.OnResume"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "$ref": "#/components/schemas/Player.Notifications.Data"
-                }
-              },
-              "required": [
-                "sender",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
       "Player.OnAVStart": {
         "name": "Player.OnAVStart",
         "summary": "Playback of a media item has been started and first frame is available. If there is no ID available extra information will be provided.",
@@ -866,42 +774,6 @@
           ]
         }
       },
-      "Player.OnPause": {
-        "name": "Player.OnPause",
-        "summary": "Playback of a media item has been paused. If there is no ID available extra information will be provided.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "Player.OnPause"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "$ref": "#/components/schemas/Player.Notifications.Data"
-                }
-              },
-              "required": [
-                "sender",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
       "Player.OnStop": {
         "name": "Player.OnStop",
         "summary": "Playback of a media item has been stopped. If there is no ID available extra information will be provided.",
@@ -987,89 +859,6 @@
                   },
                   "required": [
                     "reason"
-                  ]
-                }
-              },
-              "required": [
-                "sender",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
-      "Player.OnSpeedChanged": {
-        "name": "Player.OnSpeedChanged",
-        "summary": "Speed of the playback of a media item has been changed. If there is no ID available extra information will be provided.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "Player.OnSpeedChanged"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "$ref": "#/components/schemas/Player.Notifications.Data"
-                }
-              },
-              "required": [
-                "sender",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
-      "Player.OnSeek": {
-        "name": "Player.OnSeek",
-        "summary": "The playback position has been changed. If there is no ID available extra information will be provided.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "Player.OnSeek"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "item": {
-                      "$ref": "#/components/schemas/Notifications.Item"
-                    },
-                    "player": {
-                      "$ref": "#/components/schemas/Player.Notifications.Player.Seek"
-                    }
-                  },
-                  "required": [
-                    "player"
                   ]
                 }
               },
@@ -3150,21 +2939,6 @@
         "required": [
           "players"
         ]
-      },
-      "Player.Notifications.Player.Seek": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Player.Notifications.Player"
-          }
-        ],
-        "properties": {
-          "time": {
-            "$ref": "#/components/schemas/Global.Time"
-          },
-          "seekoffset": {
-            "$ref": "#/components/schemas/Global.Time"
-          }
-        }
       },
       "Player.Notifications.Data": {
         "type": "object",

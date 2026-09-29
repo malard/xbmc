@@ -415,8 +415,19 @@ Only what changed is carried: a volume change carries `volume`, a mute
 change `muted`. `player` is present when the change belongs to a playback,
 and absent for volume and mute, which change whether or not anything plays.
 
+`Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and
+`Player.OnSeek` are removed, because each is only a change of state: pause,
+resume and a speed change arrive as `Player.OnPropertiesChanged` carrying
+`speed` (0 while paused), and a seek as one carrying `time`.
+
+```diff
+- {"method": "Player.OnPause",             "params": {"data": {"item": {...}, "player": {"players": ["video"], "speed": 0}}}}
++ {"method": "Player.OnPropertiesChanged", "params": {"data": {"properties": {"speed": 0}, "player": {"players": ["video"]}}}}
+```
+
 **What to do.** Merge `data.properties` into the state you hold for the
-player or the playlist, as you would a `GetProperties` answer.
+player or the playlist, as you would a `GetProperties` answer. Treat
+`speed` 0 as paused.
 
 ## Finding the rest
 

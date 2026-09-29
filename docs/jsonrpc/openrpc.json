@@ -16378,21 +16378,6 @@
           "players"
         ]
       },
-      "Player.Notifications.Player.Seek": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Player.Notifications.Player"
-          }
-        ],
-        "properties": {
-          "time": {
-            "$ref": "#/components/schemas/Global.Time"
-          },
-          "seekoffset": {
-            "$ref": "#/components/schemas/Global.Time"
-          }
-        }
-      },
       "Player.Notifications.Data": {
         "type": "object",
         "properties": {
