@@ -75,13 +75,6 @@ public:
    */
   std::string AsIso3166_1Alpha3() const;
 
-  /*!
-   * \brief The English name of the place, as shown to a user.
-   * \return The name, or an empty string where the place is one neither ISO 3166-1 nor the
-   *         subtag registry names.
-   */
-  std::string ToEnglishName() const;
-
   bool operator==(const CTerritory& other) const = default;
 
 private:

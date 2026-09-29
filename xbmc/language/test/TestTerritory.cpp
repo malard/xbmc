@@ -27,13 +27,6 @@ TEST(TestTerritory, NamesACountryInEveryNotation)
   EXPECT_EQ(territory.AsIso3166_1Alpha3(), "GBR");
   EXPECT_EQ(CTerritory::FromCode("NL").AsIso3166_1Alpha3(), "NLD");
   EXPECT_EQ(CTerritory::FromCode("mx").AsIso3166_1Alpha3(), "MEX");
-
-  // The ISO 3166-1 table holds that standard's official names, which carry a trailing article
-  // where the English name takes one. They are reproduced rather than tidied, so that the name
-  // a caller shows is the one the standard publishes.
-  EXPECT_EQ(territory.ToEnglishName(),
-            "United Kingdom of Great Britain and Northern Ireland (the)");
-  EXPECT_EQ(CTerritory::FromCode("MX").ToEnglishName(), "Mexico");
 }
 
 TEST(TestTerritory, TakesTheAreasIso3166DoesNotCover)
@@ -43,7 +36,6 @@ TEST(TestTerritory, TakesTheAreasIso3166DoesNotCover)
   const CTerritory latinAmerica{CTerritory::FromCode("419")};
 
   EXPECT_EQ(latinAmerica.ToString(), "419");
-  EXPECT_EQ(latinAmerica.ToEnglishName(), "Latin America and the Caribbean");
 
   // The question a caller contracting to supply a country has to ask, answered by the type
   // rather than left to each of them
@@ -67,9 +59,6 @@ TEST(TestTerritory, TakesEveryRegionALanguageTagCanState)
   EXPECT_FALSE(CTerritory::FromCode("EU").IsCountry());
   EXPECT_FALSE(CTerritory::FromCode("DD").IsCountry());
   EXPECT_EQ(CTerritory::FromCode("EU").AsIso3166_1Alpha2(), "");
-
-  // and they are still named
-  EXPECT_EQ(CTerritory::FromCode("EU").ToEnglishName(), "European Union");
 
   // RFC 5646 permits the private-use codes, so a tag can state them and so can a territory
   EXPECT_NE(CTerritory::FromCode("AA"), CTerritory{});
