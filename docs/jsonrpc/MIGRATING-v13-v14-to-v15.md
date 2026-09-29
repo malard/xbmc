@@ -176,10 +176,6 @@ under `schema`. Tuple-form `items`, `additionalItems`, `divisibleBy` and the
 boolean `exclusiveMinimum`/`exclusiveMaximum` are no longer read; the shipped
 schema never used them.
 
-Two definitions that were inline and named by an `id` are now global types in
-their own right: `Notifications.Library.Audio.Type` and
-`Notifications.Library.Video.Type`.
-
 **What to do.** If you validate against the description, use a 2020-12
 validator. If you generate code from it, most generators support 2020-12
 directly and needed a shim for draft-03. You can also skip `Introspect`
@@ -760,7 +756,7 @@ ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
 
 **What to do.** Replace each call as above. Read the answer as the item.
 
-## 19. A library item's changes arrive as `OnItemPropertiesChanged`
+## 19. A library item's changes, additions and removals are its own notifications
 
 `VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are
 `VideoLibrary.OnItemPropertiesChanged` and
@@ -788,9 +784,22 @@ the item and `transaction`. `OnItemPropertiesChanged` never carries `added`.
 + {"method": "VideoLibrary.OnItemAdded", "params": {"data": {"item": {"kind": "movie", "id": 9}, "transaction": true}}}
 ```
 
+A removed item is `VideoLibrary.OnItemRemoved` or
+`AudioLibrary.OnItemRemoved`, in place of `OnRemove`, addressing the item
+the same way and carrying `transaction` when the removal is part of a clean.
+The removal of a movie's version, which arrived as `OnRemove` with
+`"type": "videoversion"`, is no longer sent: a version is not an item you
+can address.
+
+```diff
+- {"method": "VideoLibrary.OnRemove",      "params": {"data": {"id": 7, "type": "movie", "transaction": true}}}
++ {"method": "VideoLibrary.OnItemRemoved", "params": {"data": {"item": {"kind": "movie", "id": 7}, "transaction": true}}}
+```
+
 **What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
 into what you hold for the item, or read it with `GetItemProperties` when
-there is none. Listen for `OnItemAdded` to learn of new items.
+there is none. Listen for `OnItemAdded` and `OnItemRemoved` to learn of new
+and removed items.
 
 ## 20. `GetInProgressTVShows` sorts and limits as asked
 

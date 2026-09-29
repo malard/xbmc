@@ -9,11 +9,15 @@
 #pragma once
 
 #include "interfaces/IAnnouncer.h"
+#include "media/MediaType.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/Variant.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace JSONRPC
@@ -37,7 +41,7 @@ protected:
     std::string name = method;
     CVariant payload = data;
     AsPropertiesChanged(flag, name, payload);
-    if (!AsItemPropertiesChanged(flag, name, payload))
+    if (!AsItemNotification(flag, name, payload))
       return {};
 
     std::string namespaceMethod = ANNOUNCEMENT::AnnouncementFlagToString(flag);
@@ -85,32 +89,44 @@ private:
   }
 
   /*!
-   \brief Sends a library update as the item's OnItemAdded when it adds the item, and otherwise as
-   its OnItemPropertiesChanged, carrying the properties it names under the names GetItemProperties
-   answers with, when it names any.
+   \brief Sends a library item's announcement as the item's own notification: an update as its
+   OnItemAdded when it adds the item and otherwise as its OnItemPropertiesChanged, carrying the
+   properties it names under the names GetItemProperties answers with, when it names any, and a
+   removal as its OnItemRemoved.
 
    The announcement keeps its name inside Kodi, where components react to it.
 
-   \return false for an update to no library item, which is not sent
+   \return false for an announcement about no item of the library, which is not sent
    */
-  static bool AsItemPropertiesChanged(ANNOUNCEMENT::AnnouncementFlag flag,
-                                      std::string& method,
-                                      CVariant& data)
+  static bool AsItemNotification(ANNOUNCEMENT::AnnouncementFlag flag,
+                                 std::string& method,
+                                 CVariant& data)
   {
+    static constexpr std::array<std::string_view, 6> VIDEO_KINDS{
+        MediaTypeMovie,  MediaTypeVideoCollection, MediaTypeTvShow,
+        MediaTypeSeason, MediaTypeEpisode,         MediaTypeMusicVideo};
+    static constexpr std::array<std::string_view, 3> AUDIO_KINDS{MediaTypeArtist, MediaTypeAlbum,
+                                                                 MediaTypeSong};
+
     if ((flag != ANNOUNCEMENT::VideoLibrary && flag != ANNOUNCEMENT::AudioLibrary) ||
-        method != "OnUpdate")
+        (method != "OnUpdate" && method != "OnRemove"))
       return true;
 
     const CVariant& item = data.isMember("item") ? data["item"] : data;
     const int64_t id = item["id"].asInteger(-1);
-    if (id <= 0)
+    const std::string kind = item["type"].asString();
+    const bool isKind = flag == ANNOUNCEMENT::VideoLibrary
+                            ? std::ranges::find(VIDEO_KINDS, kind) != VIDEO_KINDS.end()
+                            : std::ranges::find(AUDIO_KINDS, kind) != AUDIO_KINDS.end();
+    if (id <= 0 || !isKind)
       return false;
 
-    const bool added = data["added"].asBoolean(false);
+    const bool removed = method == "OnRemove";
+    const bool added = !removed && data["added"].asBoolean(false);
     CVariant changed(CVariant::VariantTypeObject);
-    changed["item"]["kind"] = item["type"];
+    changed["item"]["kind"] = kind;
     changed["item"]["id"] = id;
-    if (!added)
+    if (!removed && !added)
     {
       if (data.isMember("properties"))
         changed["properties"] = data["properties"];
@@ -120,7 +136,7 @@ private:
     if (data.isMember("transaction"))
       changed["transaction"] = data["transaction"];
 
-    method = added ? "OnItemAdded" : "OnItemPropertiesChanged";
+    method = removed ? "OnItemRemoved" : added ? "OnItemAdded" : "OnItemPropertiesChanged";
     data = std::move(changed);
     return true;
   }

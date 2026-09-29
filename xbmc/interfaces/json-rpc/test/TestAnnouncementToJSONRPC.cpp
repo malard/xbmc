@@ -221,15 +221,66 @@ TEST(TestAnnouncementToJSONRPC, AnUpdateToNoLibraryItemIsNotSent)
   EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnUpdate", unknown).empty());
 }
 
-TEST(TestAnnouncementToJSONRPC, ARemovedLibraryItemKeepsItsEvent)
+TEST(TestAnnouncementToJSONRPC, ARemovedLibraryItemIsOnItemRemoved)
 {
-  CVariant data;
-  data["id"] = 7;
-  data["type"] = "movie";
+  CVariant cleaned;
+  cleaned["id"] = 7;
+  cleaned["type"] = "movie";
+  cleaned["transaction"] = true;
+
+  const CVariant movie =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::VideoLibrary, "OnRemove", cleaned);
+
+  EXPECT_EQ("VideoLibrary.OnItemRemoved", movie["method"].asString());
+  const CVariant& removed = movie["params"]["data"];
+  EXPECT_EQ("movie", removed["item"]["kind"].asString());
+  EXPECT_EQ(7, removed["item"]["id"].asInteger());
+  EXPECT_TRUE(removed["transaction"].asBoolean());
+  EXPECT_FALSE(removed.isMember("id"));
+  EXPECT_FALSE(removed.isMember("type"));
+  EXPECT_FALSE(removed.isMember("properties"));
+
+  CVariant song;
+  song["id"] = 4;
+  song["type"] = "song";
 
   const CVariant notification =
-      CTestAnnouncer::Notification(ANNOUNCEMENT::VideoLibrary, "OnRemove", data);
+      CTestAnnouncer::Notification(ANNOUNCEMENT::AudioLibrary, "OnRemove", song);
 
-  EXPECT_EQ("VideoLibrary.OnRemove", notification["method"].asString());
-  EXPECT_EQ(7, notification["params"]["data"]["id"].asInteger());
+  EXPECT_EQ("AudioLibrary.OnItemRemoved", notification["method"].asString());
+  EXPECT_EQ("song", notification["params"]["data"]["item"]["kind"].asString());
+  EXPECT_FALSE(notification["params"]["data"].isMember("transaction"));
+}
+
+TEST(TestAnnouncementToJSONRPC, ANotificationNamingNoLibraryItemIsNotSent)
+{
+  CVariant unknown;
+  unknown["id"] = -1;
+  unknown["type"] = "movie";
+  EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnRemove", unknown).empty());
+
+  // a movie's version is an asset of the movie, not an item a client can address
+  CVariant version;
+  version["id"] = 12;
+  version["type"] = "videoversion";
+  EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnRemove", version).empty());
+  EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::VideoLibrary, "OnUpdate", version).empty());
+
+  CVariant movie;
+  movie["id"] = 12;
+  movie["type"] = "movie";
+  EXPECT_TRUE(CTestAnnouncer::Text(ANNOUNCEMENT::AudioLibrary, "OnRemove", movie).empty());
+}
+
+TEST(TestAnnouncementToJSONRPC, APlaylistRemovalKeepsItsEvent)
+{
+  CVariant data;
+  data["playlist"] = "video";
+  data["position"] = 2;
+
+  const CVariant notification =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::Playlist, "OnRemove", data);
+
+  EXPECT_EQ("Playlist.OnRemove", notification["method"].asString());
+  EXPECT_EQ(2, notification["params"]["data"]["position"].asInteger());
 }

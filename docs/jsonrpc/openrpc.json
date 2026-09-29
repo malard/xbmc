@@ -20546,21 +20546,6 @@
           "viewmodes"
         ]
       },
-      "Notifications.Library.Audio.Type": {
-        "type": "string",
-        "enum": [
-          "song"
-        ]
-      },
-      "Notifications.Library.Video.Type": {
-        "type": "string",
-        "enum": [
-          "movie",
-          "tvshow",
-          "episode",
-          "musicvideo"
-        ]
-      },
       "Playlist.Name": {
         "type": "string",
         "enum": [

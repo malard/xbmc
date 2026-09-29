@@ -400,9 +400,9 @@
     ],
     "returns": null
   },
-  "AudioLibrary.OnRemove": {
+  "AudioLibrary.OnItemRemoved": {
     "type": "notification",
-    "description": "An audio item has been removed.",
+    "description": "A music library item was removed.",
     "params": [
       {
         "name": "sender",
@@ -417,11 +417,8 @@
         "schema": {
           "type": "object",
           "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
-            },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Audio.Type"
+            "item": {
+              "$ref": "#/$defs/Audio.Item"
             },
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
@@ -429,8 +426,7 @@
             }
           },
           "required": [
-            "id",
-            "type"
+            "item"
           ]
         }
       }
@@ -621,6 +617,39 @@
     ],
     "returns": null
   },
+  "VideoLibrary.OnItemRemoved": {
+    "type": "notification",
+    "description": "A video library item was removed.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Video.Item"
+            },
+            "transaction": {
+              "$ref": "#/$defs/Optional.Boolean",
+              "description": "True if the removal is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
   "VideoLibrary.OnExport": {
     "type": "notification",
     "description": "A video library export has finished.",
@@ -651,43 +680,6 @@
               "default": 0
             }
           }
-        }
-      }
-    ],
-    "returns": null
-  },
-  "VideoLibrary.OnRemove": {
-    "type": "notification",
-    "description": "A video item has been removed.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
-            },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Video.Type"
-            },
-            "transaction": {
-              "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the removal is being performed within a transaction."
-            }
-          },
-          "required": [
-            "id",
-            "type"
-          ]
         }
       }
     ],
