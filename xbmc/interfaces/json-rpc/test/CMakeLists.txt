@@ -1,4 +1,5 @@
 set(SOURCES TestAddonsExecuteAddon.cpp
+            TestAddonsOperations.cpp
             TestAnnouncementItemData.cpp
             TestAnnouncementToJSONRPC.cpp
             TestApplicationLogLevel.cpp
@@ -6,16 +7,20 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestAudioLibraryInfoProviderView.cpp
             TestAudioLibrarySetInfoProviderSchema.cpp
             TestDeprecatedMethodSchema.cpp
+            TestFailureReasons.cpp
             TestFileItemHandler.cpp
             TestFileOperations.cpp
             TestGUIPropertySchema.cpp
+            TestJSONRPCErrorData.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp
             TestJSONServiceDescriptionIntrospect.cpp
             TestLibraryItems.cpp
+            TestLibraryLookup.cpp
             TestPlayerOpenDirectory.cpp
             TestPlayerTargets.cpp
+            TestPlaylistOperations.cpp
             TestPVRBroadcastRange.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp

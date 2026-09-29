@@ -225,8 +225,6 @@ protected:
   {
     if (transport.compare("Announcing") == 0)
       return Announcing;
-    if (transport.compare("FileDownloadDirect") == 0)
-      return FileDownloadDirect;
     if (transport.compare("FileDownloadRedirect") == 0)
       return FileDownloadRedirect;
 
@@ -463,14 +461,20 @@ protected:
     return parameterObject.isMember(key) && !parameterObject[key].isNull();
   }
 
-  static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup)
+  /*!
+     \brief The answer to a library lookup
+     \param target The id looked up, as the caller gave it, e.g. {"movieId": 3}
+     */
+  static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup,
+                                  CVariant& result,
+                                  const CVariant& target)
   {
     switch (lookup)
     {
       case CDatabase::GetResult::Ok:
         return OK;
       case CDatabase::GetResult::NotFound:
-        return NotFound;
+        return Fail(result, NotFound, Reason::NoSuchItem, target);
       case CDatabase::GetResult::Error:
         break;
     }

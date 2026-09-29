@@ -139,9 +139,10 @@ protected:
 
      Bypasses the caches so a cached hit cannot mask storage that has gone away.
 
-     \return NotFound, or InvalidParams when nothing better applies
+     \return NotFound, or InvalidParams as not-a-file or, when nothing better applies,
+     not-playable
      */
-  static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
+  static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item, CVariant& result);
 
   //! Moves the list a query answered under \p from to \p to, as an empty list when there is none
   static void RenameList(CVariant& result, const char* from, const char* to);

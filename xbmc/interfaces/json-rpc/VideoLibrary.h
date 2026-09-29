@@ -148,22 +148,28 @@ private:
   //! Store each of \p properties given a value on the item of their kind with \p id
   static JSONRPC_STATUS SetMovieDetails(int id,
                                         const CVariant& properties,
-                                        CVideoDatabase& videodatabase);
+                                        CVideoDatabase& videodatabase,
+                                        CVariant& result);
   static JSONRPC_STATUS SetMovieSetDetails(int id,
                                            const CVariant& properties,
-                                           CVideoDatabase& videodatabase);
+                                           CVideoDatabase& videodatabase,
+                                           CVariant& result);
   static JSONRPC_STATUS SetTVShowDetails(int id,
                                          const CVariant& properties,
-                                         CVideoDatabase& videodatabase);
+                                         CVideoDatabase& videodatabase,
+                                         CVariant& result);
   static JSONRPC_STATUS SetSeasonDetails(int id,
                                          const CVariant& properties,
-                                         CVideoDatabase& videodatabase);
+                                         CVideoDatabase& videodatabase,
+                                         CVariant& result);
   static JSONRPC_STATUS SetEpisodeDetails(int id,
                                           const CVariant& properties,
-                                          CVideoDatabase& videodatabase);
+                                          CVideoDatabase& videodatabase,
+                                          CVariant& result);
   static JSONRPC_STATUS SetMusicVideoDetails(int id,
                                              const CVariant& properties,
-                                             CVideoDatabase& videodatabase);
+                                             CVideoDatabase& videodatabase,
+                                             CVariant& result);
 
   static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant& parameterObject);
   static JSONRPC_STATUS HandleItems(const char* idProperty,
@@ -174,11 +180,14 @@ private:
                                     bool limit = true);
   static JSONRPC_STATUS RemoveVideo(const CVariant& parameterObject);
 
-  static JSONRPC_STATUS RefreshVideo(const CVariant& identifier, const CVariant& parameterObject);
+  static JSONRPC_STATUS RefreshVideo(const CVariant& identifier,
+                                     const CVariant& parameterObject,
+                                     CVariant& result);
 
   static JSONRPC_STATUS ResolveRefreshItem(const CVariant& identifier,
                                            CVideoDatabase& videodatabase,
-                                           CFileItem& item);
+                                           CFileItem& item,
+                                           CVariant& result);
   static void UpdateVideoTag(const CVariant& parameterObject,
                              CVideoInfoTag& details,
                              KODI::ART::Artwork& artwork,

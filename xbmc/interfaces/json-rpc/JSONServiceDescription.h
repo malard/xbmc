@@ -263,9 +263,16 @@ public:
      \brief Errors this method can return, beyond those any request can receive
      */
   std::vector<const JsonRpcStatusDescription*> errors;
+  /*!
+     \brief Reasons this method can fail for, under the error each comes with
+     */
+  std::vector<
+      std::pair<const JsonRpcStatusDescription*, std::vector<const JsonRpcReasonDescription*>>>
+      reasons;
 
 private:
   bool parseErrors(const CVariant& value);
+  bool parseReasons(const CVariant& value);
   bool parseParameter(const CVariant& value, const JSONSchemaTypeDefinitionPtr& parameter);
   bool parseReturn(const CVariant& value);
   static JSONRPC_STATUS checkParameter(const CVariant& requestParameters,

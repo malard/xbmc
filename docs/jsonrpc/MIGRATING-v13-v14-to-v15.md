@@ -45,7 +45,7 @@ Affected since 13.200.0: every `AudioLibrary` and `VideoLibrary`
 `Get*Details`, `Set*Details` and `Refresh*` method answers `NotFound` for an
 id no item has, and `Player.Open` answers `Unavailable` for an item it cannot
 reach. New in 15: `Files.GetDirectory`, `Files.GetFileDetails`,
-`Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
+`Files.SetFileDetails`, `Files.PrepareDownload`,
 `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
 `AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
 `Settings.SetSettingValue`, `Settings.ResetSettingValue`, and every `PVR`
@@ -84,12 +84,13 @@ Version 15 says what happened:
 
 ```json
 {"result": {"added": 2,
-            "unresolved": [{"item": {"movieid": 4321}, "reason": "notfound"}]}}
+            "unresolved": [{"item": {"movieId": 4321}, "reason": "no-such-item"}]}}
 ```
 
-`reason` is `notfound`, `unavailable` or `invalid`. When *nothing* was added
-the call is an error instead — `NotFound` if anything named something real
-that has gone, `InvalidParams` if every entry was malformed.
+`reason` is one of the failure reasons of section 23. When *nothing* was
+added the call is an error instead — `NotFound` if anything named something
+real that has gone, `InvalidParams` if every entry was malformed — and its
+`error.data` carries the same reason as that item's entry would.
 
 **What to do.** If you check `result == "OK"`, that test now fails against a
 successful call. Read `result.added`, and show `result.unresolved` if you
@@ -281,9 +282,11 @@ A playlist is `video`, `audio` or `picture`, in place of the numeric
 `playerid` is gone from every `Player` method. Version 13 resolved it through
 the playlist in use, so it never named a player: playerid 1 was accepted only
 while the video playlist was current, and accepted even when nothing played.
-A `Player` method now takes an optional `playlist`, `video` or `audio`. With
-none, it acts on everything playing, the playback and a slideshow beside it.
-A named playlist that nothing is playing through answers `FailedToExecute`.
+A `Player` method now takes an optional `playlist`: `playing`, the default,
+or `video`, `audio` or `picture`, the slideshow. With `playing` it acts on
+everything playing, the playback and a slideshow beside it, and a query
+answers for the playback, then the slideshow. A named playlist that nothing
+is playing through answers `FailedToExecute`.
 
 ```diff
 - {"method": "Player.Stop", "params": {"playerid": 1}}
@@ -619,7 +622,6 @@ answers and notifications, using the table.
 | `musicvideoid` | `musicVideoId` |
 | `musicvideos` | `musicVideos` |
 | `nonlinearstretch` | `nonlinearStretch` |
-| `notfound` | `notFound` |
 | `noupdate` | `noUpdate` |
 | `originaldate` | `originalDate` |
 | `originaltitle` | `originalTitle` |
@@ -834,6 +836,68 @@ empty `items`, where it used to answer no list at all.
 **What to do.** Read `result.items` in place of `result.movies`,
 `result.tvShows` and the rest.
 
+## 22. Several failures answer with the status that fits
+
+The calls still work; only these failures changed code. Each now also names
+its reason in `error.data.reason`.
+
+| Call | Failure | Was | Now |
+|---|---|---|---|
+| `Addons.GetAddonDetails`, `Addons.SetAddonEnabled`, `Addons.ExecuteAddon` | no add-on has the id | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-addon` |
+| `Player.GetChapters` | no video playing | -32602 `InvalidParams` (audio or pictures playing) | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Player.Open` | unknown `broadcastId`, `channelId` or `recordingId` | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-item` |
+| `Player.Open` | a PVR recording path nothing has | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-path` |
+| `PVR.Record` | `"channel": "current"` with no channel playing | -32603 `InternalError` | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Files.GetDirectory` | the directory does not exist | -32097 `Unavailable` | -32098 `NotFound`, `no-such-path` |
+| `Addons.SetAddonEnabled` | Kodi refuses the change, as for a required add-on | -32602 `InvalidParams` | -32097 `Unavailable`, `change-declined` |
+| `Player.SetPartymode` | party mode runs on the other playlist | -32602 `InvalidParams` | -32100 `FailedToExecute`, `party-mode-elsewhere` |
+| `PVR.AddTimer` | the broadcast already has a timer | -32602 `InvalidParams` | -32100 `FailedToExecute`, `timer-exists` |
+
+`Files.GetDirectory` still answers `Unavailable` (`unreachable`) when no
+directory above the one asked for can be listed either, as when its share
+is offline.
+
+**What to do.** Treat -32098 as "gone" for these calls, and read
+`error.data.reason` rather than the code where you need to tell the cases
+apart.
+
+## 23. An unresolved item's reason is a failure reason
+
+Clients of 14 saw `Playlist.AddResult.unresolved[].reason` as `notfound`,
+`unavailable` or `invalid`. It now uses the vocabulary of
+`error.data.reason`:
+
+| Was | Now |
+|---|---|
+| `notfound` | `no-such-item` for a library id, `no-such-path` for a file or directory |
+| `unavailable` | not given: nothing diagnosed it |
+| `invalid` | `not-a-file` for a directory named as a file, `not-playable` otherwise |
+
+```diff
+- {"item": {"movieid": 4321}, "reason": "notfound"}
++ {"item": {"movieId": 4321}, "reason": "no-such-item"}
+```
+
+**What to do.** Match on the new names. A call that adds nothing fails with
+the reason the first missing item gives, so the same code reads both.
+
+## 24. `Files.Download` is removed
+
+No transport served a file directly, so `Files.Download` answered
+`MethodNotFound` on every one of them and nothing could reach it. It is gone,
+and `Files.PrepareDownload` no longer answers `mode`, which was always
+`redirect`.
+
+**What to do.** Download through `Files.PrepareDownload`: it answers
+`details.path`, the URL path to fetch the file from over HTTP.
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "Files.PrepareDownload",
+ "params": {"path": "special://profile/playlists/music/party.m3u"}}
+```
+
+Drop any use of `result.mode`.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
@@ -854,6 +918,16 @@ the same flag for offline tooling.
 New since Kodi 21 and safe to ignore until you want it. The
 [changelog](CHANGELOG.md) has the complete list.
 
+- **A failure says why.** Where a client can act on it, `error.data` names
+  the reason and what it concerns, whatever the code:
+
+  ```json
+  {"jsonrpc": "2.0", "id": 1, "error": {"code": -32100, "message": "Failed to execute method.",
+   "data": {"reason": "nothing-playing"}}}
+  ```
+
+  Each method lists its `reasons` beside its `errors` in `JSONRPC.Introspect`.
+  Match on `reason`, never on `message`.
 - **Playback failure is reported.** `Player.OnPlaybackFailed` fires when
   playback was requested and did not happen, with a `reason` of `unplayable`,
   `unresolved`, `locked` or `error`.

@@ -76,6 +76,25 @@ class TestErrorTaxonomyParser(unittest.TestCase):
         self.assertIn('"data"', by_name["InvalidParams"]["description"])
 
 
+class TestReasonTaxonomyParser(unittest.TestCase):
+
+    def setUp(self):
+        self.reasons = kodi_schema.load_reason_taxonomy()
+
+    def test_expected_reason(self):
+        by_name = {entry["name"]: entry for entry in self.reasons}
+        self.assertEqual(by_name["nothing-playing"]["enumerator"], "NothingPlaying")
+
+    def test_every_reason_is_described(self):
+        for entry in self.reasons:
+            with self.subTest(reason=entry["name"]):
+                self.assertTrue(entry["description"])
+
+    def test_split_literals_are_joined(self):
+        by_name = {entry["name"]: entry for entry in self.reasons}
+        self.assertIn("choosing a subtitle for music", by_name["not-applicable"]["description"])
+
+
 class TestOpenRpcDocument(unittest.TestCase):
 
     @classmethod
@@ -106,8 +125,22 @@ class TestOpenRpcDocument(unittest.TestCase):
             elif ref.startswith("#/components/errors/"):
                 name = ref[len("#/components/errors/"):]
                 self.assertIn(name, errors)
+            elif ref.startswith(generate_openrpc.REASON_PREFIX):
+                name = ref[len(generate_openrpc.REASON_PREFIX):]
+                self.assertIn(name, self.document["components"]["x-kodi-reasons"])
             else:
                 self.fail(f"unexpected ref form: {ref}")
+
+    def test_a_method_carries_its_declared_reasons(self):
+        seek = next(method for method in self.document["methods"]
+                    if method["name"] == "Player.Seek")
+        self.assertIn({"$ref": generate_openrpc.REASON_PREFIX + "not-seekable"},
+                      seek["x-kodi-reasons"]["FailedToExecute"])
+        self.assertIn({"$ref": "#/components/errors/FailedToExecute"}, seek["errors"])
+
+    def test_every_reason_is_a_component(self):
+        names = {entry["name"] for entry in kodi_schema.load_reason_taxonomy()}
+        self.assertEqual(names, set(self.document["components"]["x-kodi-reasons"]))
 
     def test_runtime_enums_are_placeholders(self):
         schemas = self.document["components"]["schemas"]

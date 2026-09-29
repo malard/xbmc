@@ -115,7 +115,8 @@ protected:
      */
   static JSONRPC_STATUS ResolveInfoProviderTarget(const CVariant& parameterObject,
                                                   CMusicDatabase& musicdatabase,
-                                                  InfoProviderTarget& target);
+                                                  InfoProviderTarget& target,
+                                                  CVariant& result);
 
 private:
   /*!
@@ -138,13 +139,16 @@ private:
   //! Store each of \p properties given a value on the item of their kind with \p id
   static JSONRPC_STATUS SetArtistDetails(int id,
                                          const CVariant& properties,
-                                         CMusicDatabase& musicdatabase);
+                                         CMusicDatabase& musicdatabase,
+                                         CVariant& result);
   static JSONRPC_STATUS SetAlbumDetails(int id,
                                         const CVariant& properties,
-                                        CMusicDatabase& musicdatabase);
+                                        CMusicDatabase& musicdatabase,
+                                        CVariant& result);
   static JSONRPC_STATUS SetSongDetails(int id,
                                        const CVariant& properties,
-                                       CMusicDatabase& musicdatabase);
+                                       CMusicDatabase& musicdatabase,
+                                       CVariant& result);
 
   //! Adds the art and fanart the JSON listing leaves out to each item of \p list
   static void FillListArt(CVariant& list,

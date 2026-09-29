@@ -21,25 +21,32 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   does not hold it. An unknown permission name is an error.
 - `JSONRPC.Introspect` answers in JSON Schema 2020-12, not draft-03.
 - PVR channel `uniqueid` is `channeluid`.
-- `Playlist.Add` and `Playlist.Insert` return `Playlist.AddResult`, not `"OK"`.
+- `Playlist.Add` and `Playlist.Insert` return `Playlist.AddResult`, not `"OK"`. Each `unresolved`
+  entry's `reason` is a failure reason (`no-such-item`, `no-such-path`, `not-a-file`,
+  `not-playable`), not `notFound`, `unavailable` or `invalid`, and a call that adds nothing fails
+  for the reason of its first missing item, else its first malformed one.
 - `currentaudiostream`, `currentvideostream` and `currentsubtitle` are `null`, not `{}`, when
   nothing is selected.
 - `Files.GetDirectory` keeps a folder that matches a library item as a `directory` at its own path;
   answers `properties` under `"media": "files"`; resolves tv show folders.
 - `NotFound` (-32098), `Unavailable` (-32097), `AccessDenied` (-32096) and `InternalError` (-32603)
   replace `InvalidParams` where the request was valid but could not be served: library and PVR ids,
-  `Files.*`, `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
-  `AudioLibrary.GetArtistDetails` and `Settings.*SettingValue`.
+  `Files.*`, `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean` and
+  `Settings.*SettingValue`.
 - Playlists are named `video`, `audio` or `picture`, not numbered, in every `Playlist` method and
   notification and in `Player.Open`.
-- `Player` methods take an optional `playlist` in place of the required `playerid`. With none they
-  act on everything playing; an idle named playlist is `FailedToExecute`.
+- `Player` methods take an optional `playlist`, a `Player.Target`, in place of the required
+  `playerid`: `playing` (the default), `video`, `audio` or `picture`, the slideshow. With `playing`
+  they act on everything playing; an idle named playlist is `FailedToExecute`.
 - `Player.GetActivePlayers` is removed. `Player.GetProperties` reports `playlist` and `playertype`.
 - `Player.On*` notifications carry `players` in place of `playerid`.
 - `Playlist.GetItems` returns `Playlist.Entry` with `position` and `displayorder`.
   `Player.GetProperties` reports `displayorder`.
 - A hidden setting is read and written like any other.
 - Stream languages are BCP 47 tags (`en`, `en-AU`), not ISO 639-2/B (`eng`).
+- `Files.Download` is removed: no transport ever served a file directly, so it answered
+  `MethodNotFound` everywhere. `Files.PrepareDownload` no longer answers `mode`, which was always
+  `redirect`.
 - `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed; `GUI.GetInfoLabels` and
   `GUI.GetInfoBooleans` are the same methods.
 - `Textures.GetTextures` and `Textures.RemoveTexture` are `Application.GetTextures` and
@@ -81,6 +88,20 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `{limits, items}`, as `GetItems` does, in place of a list named for the kind (`movies`,
   `tvShows`, `episodes`, ...). The calls are unchanged. A music list that finds nothing answers
   an empty `items`, where it answered no list.
+- Several failures answer with the status that fits, each with its reason in `error.data`: an
+  unknown add-on id in `Addons.GetAddonDetails`, `Addons.SetAddonEnabled` and
+  `Addons.ExecuteAddon` is `NotFound` (`no-such-addon`), not `InvalidParams`; `Player.GetChapters`
+  with no video playing is `FailedToExecute` (`nothing-playing` or `not-applicable`), not
+  `InvalidParams`; `Player.Open` with an unknown `broadcastId`, `channelId` or `recordingId` is
+  `NotFound` (`no-such-item`), and with a PVR recording path nothing has, `NotFound`
+  (`no-such-path`), not `InvalidParams`; `PVR.Record` on the `current` channel with no channel
+  playing is `FailedToExecute` (`nothing-playing` or `not-applicable`), not `InternalError`;
+  `Files.GetDirectory` on a directory that does not exist is `NotFound` (`no-such-path`), not
+  `Unavailable`, which now means only that the source cannot be reached; `Addons.SetAddonEnabled`
+  refused by Kodi is `Unavailable` (`change-declined`), `Player.SetPartymode` while party mode runs
+  on the other playlist is `FailedToExecute` (`party-mode-elsewhere`), and `PVR.AddTimer` for a
+  broadcast that already has a timer is `FailedToExecute` (`timer-exists`), none of them
+  `InvalidParams` any more.
 
 ### Deprecated
 
@@ -130,6 +151,39 @@ Notifications:
 - `Playlist.OnPropertiesChanged`
 - `Settings.OnLevelChanged`
 
+Failure reasons:
+
+- A failure a client can act on carries `error.data` as `{"reason": ..., "target": {...}}`: a
+  stable kebab-case reason, and what the failure concerns as the call addresses it
+  (`{"playlist": "audio"}`), when there is one.
+- Each method declares its `reasons` under the errors they come with, beside its `errors`:
+  `{"FailedToExecute": ["nothing-playing", "not-seekable"]}`. A reason may come with more than
+  one error. `JSONRPC.Introspect` serves them with each method; `openrpc.json` carries them, and
+  what each reason means, as `x-kodi-reasons`.
+- `Player`: `nothing-playing`, `not-applicable`, `not-seekable`, `not-pausable`,
+  `tempo-unsupported`, `paused`, `no-such-stream`, and `unreachable` from `Player.Open`.
+- `VideoLibrary`, `AudioLibrary` and `PVR`: `no-such-item` for an id nothing has, with the id as
+  its target (`{"movieId": 3}`); `no-such-source` from `VideoLibrary.Scan`, `not-in-library` from
+  `VideoLibrary.Clean`, and `no-such-addon` for a scraper that does not exist.
+- `Files`: `outside-sources`, `no-such-path`, and `unreachable` for a directory that cannot be
+  listed, each naming the path it was given.
+- `Playlist`: `not-applicable` for an edit the `picture` playlist cannot take, `nothing-playing`
+  for shuffling a slideshow that is not running, and, when `Add` or `Insert` adds nothing, the
+  reason the first missing item gives. `Player.Open` gives the same for an item it cannot resolve:
+  `no-such-item`, `no-such-path` or `not-a-file`.
+- `Settings`: `no-such-setting`, `setting-disabled`, `change-declined` and `level-locked`, naming
+  the setting or level.
+- `PVR`: `pvr-not-started`, `not-recordable`, and `backend-refused` when the PVR add-on refuses a
+  recording, timer or channel scan. `Player.Open`: `playback-refused` when PVR playback does not
+  start, and `pvr-not-started`.
+- `GUI.TakeScreenshot`: `nothing-playing` or `not-applicable` for the video frame with no video,
+  `no-screenshot-folder`, `capture-failed`. `GUI.DeleteScreenshots`: `feature-disabled`, `no-such-path`,
+  `delete-failed`.
+- `System.Shutdown`, `Suspend`, `Hibernate`, `Reboot`: `not-supported`.
+  `Application.GetDatabaseName`: `database-not-open`. `VideoLibrary.RefreshContentGeometry`:
+  `feature-disabled`, `measure-failed`. `Playlist.SetShuffle`: `not-applicable` for unshuffling a
+  slideshow. `Files.PrepareDownload`: `no-such-path`.
+
 Properties and types:
 
 - The error taxonomy in `JSONRPC.Introspect` (`errors`, and `"error"` as a filter type), and each
@@ -166,6 +220,11 @@ Properties and types:
 
 ### Fixed
 
+- `Player.Open` with a `channelId` while PVR is off no longer crashes Kodi. Every PVR item it
+  opens answers `FailedToExecute` (`pvr-not-started`) until PVR has started.
+- A `Player` method called without `playlist` acts on everything playing. The validator had filled
+  the omitted parameter with `video`, so a call naming nothing failed while only audio played; it
+  now fills it with `playing`.
 - Announcements are not held up by a busy TCP server, and each connection's requests run on its
   own thread, so a modal dialog stalls no other client.
 - A failing send gives up instead of spinning.

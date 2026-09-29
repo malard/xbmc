@@ -365,11 +365,12 @@
       },
       "reason": {
         "type": "string",
-        "description": "\"notFound\": the item does not exist. \"unavailable\": it exists but cannot be reached at the moment, so the reference is worth keeping and retrying. \"invalid\": the item cannot go in a playlist of this type, or holds nothing playable.",
+        "description": "Why the item was not added, in the vocabulary of error.data.reason: the reason the call itself fails with when it adds nothing.",
         "enum": [
-          "notFound",
-          "unavailable",
-          "invalid"
+          "no-such-item",
+          "no-such-path",
+          "not-a-file",
+          "not-playable"
         ]
       }
     },
@@ -8102,5 +8103,16 @@
       "video",
       "audio"
     ]
+  },
+  "Player.Target": {
+    "type": "string",
+    "enum": [
+      "playing",
+      "video",
+      "audio",
+      "picture"
+    ],
+    "default": "playing",
+    "description": "What a Player call acts on. \"playing\" is everything seen or heard now: a verb acts on all of it, a query answers for the playback, then the slideshow. A playlist names the player playing it; \"picture\" is the slideshow."
   }
 }

@@ -134,7 +134,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Files.GetFileDetails",                         CFileOperations::GetFileDetails },
   { "Files.SetFileDetails",                         CFileOperations::SetFileDetails },
   { "Files.PrepareDownload",                        CFileOperations::PrepareDownload },
-  { "Files.Download",                               CFileOperations::Download },
 
 // Music Library
   { "AudioLibrary.GetProperties",                   CAudioLibrary::GetProperties },
@@ -1304,7 +1303,53 @@ bool JsonRpcMethod::Parse(const CVariant& value)
     return false;
   }
 
-  return parseErrors(value);
+  return parseErrors(value) && parseReasons(value);
+}
+
+bool JsonRpcMethod::parseReasons(const CVariant& value)
+{
+  reasons.clear();
+  if (!value.isMember("reasons"))
+    return true;
+
+  if (!value["reasons"].isObject())
+  {
+    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined reasons map", name);
+    return false;
+  }
+
+  for (auto entry = value["reasons"].begin_map(); entry != value["reasons"].end_map(); ++entry)
+  {
+    // a reason refines an error the method declares
+    const std::string& errorName = entry->first;
+    const auto error = std::ranges::find_if(errors, [&errorName](const auto* candidate)
+                                            { return errorName == candidate->name; });
+    if (error == errors.end() || !entry->second.isArray())
+    {
+      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares reasons for an undeclared error \"{}\"",
+                name, errorName);
+      return false;
+    }
+
+    std::vector<const JsonRpcReasonDescription*> refined;
+    for (auto reason = entry->second.begin_array(); reason != entry->second.end_array(); ++reason)
+    {
+      const std::string reasonName = reason->asString();
+      const auto description = std::ranges::find_if(
+          JSONRPC_REASON_DESCRIPTIONS, [&reasonName](const JsonRpcReasonDescription& candidate)
+          { return reasonName == candidate.name; });
+      if (description == std::end(JSONRPC_REASON_DESCRIPTIONS))
+      {
+        CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown reason \"{}\"", name,
+                  reasonName);
+        return false;
+      }
+      refined.push_back(&(*description));
+    }
+    reasons.emplace_back(*error, std::move(refined));
+  }
+
+  return true;
 }
 
 bool JsonRpcMethod::parseErrors(const CVariant& value)
@@ -2030,6 +2075,15 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     currentMethod["errors"] = CVariant(CVariant::VariantTypeArray);
     for (const auto* error : methodIterator->second.errors)
       currentMethod["errors"].append(error->name);
+
+    currentMethod["reasons"] = CVariant(CVariant::VariantTypeObject);
+    for (const auto& [error, refined] : methodIterator->second.reasons)
+    {
+      CVariant& names = currentMethod["reasons"][error->name];
+      names = CVariant(CVariant::VariantTypeArray);
+      for (const auto* reason : refined)
+        names.append(reason->name);
+    }
 
     result["methods"][methodIterator->second.name] = currentMethod;
   }

@@ -147,6 +147,15 @@ const KindTraits& TraitsOf(AudioKind kind)
   return *std::ranges::find(KINDS, kind, &KindTraits::kind);
 }
 
+//! The error target for an item, in the addressing the caller used
+CVariant ItemTarget(AudioKind kind, int id)
+{
+  CVariant item(CVariant::VariantTypeObject);
+  item["kind"] = TraitsOf(kind).name;
+  item["id"] = id;
+  return Target("item", item);
+}
+
 const KindTraits* TraitsNamed(std::string_view name)
 {
   const auto traits = std::ranges::find_if(KINDS, [name](const KindTraits& candidate)
@@ -422,13 +431,13 @@ JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject,
   switch (traits->kind)
   {
     case AudioKind::Artist:
-      status = SetArtistDetails(id, properties, musicdatabase);
+      status = SetArtistDetails(id, properties, musicdatabase, result);
       break;
     case AudioKind::Album:
-      status = SetAlbumDetails(id, properties, musicdatabase);
+      status = SetAlbumDetails(id, properties, musicdatabase, result);
       break;
     case AudioKind::Song:
-      status = SetSongDetails(id, properties, musicdatabase);
+      status = SetSongDetails(id, properties, musicdatabase, result);
       break;
   }
   if (status != OK)
@@ -464,7 +473,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
     if (!musicdatabase.GetArtistsByWhere(musicUrl.ToString(), items, SortDescription(), filter))
       return InternalError;
     if (items.Size() != 1)
-      return NotFound;
+      return Fail(result, NotFound, Reason::NoSuchItem, ItemTarget(kind, id));
 
     status = GetAdditionalArtistDetails(request, items, musicdatabase);
 
@@ -474,7 +483,9 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
   else if (kind == AudioKind::Album)
   {
     CAlbum album;
-    if (status = StatusFor(musicdatabase.TryGetAlbum(id, album, false)); status != OK)
+    if (status =
+            StatusFor(musicdatabase.TryGetAlbum(id, album, false), result, ItemTarget(kind, id));
+        status != OK)
       return status;
 
     CFileItemPtr albumItem;
@@ -486,7 +497,8 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
   else
   {
     CSong song;
-    if (status = StatusFor(musicdatabase.TryGetSong(id, song)); status != OK)
+    if (status = StatusFor(musicdatabase.TryGetSong(id, song), result, ItemTarget(kind, id));
+        status != OK)
       return status;
 
     CFileItemPtr item = std::make_shared<CFileItem>(song);
@@ -642,10 +654,13 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
                                                const CVariant& properties,
-                                               CMusicDatabase& musicdatabase)
+                                               CMusicDatabase& musicdatabase,
+                                               CVariant& result)
 {
   CArtist artist;
-  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist)); status != OK)
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist), result,
+                                              ItemTarget(AudioKind::Artist, id));
+      status != OK)
     return status;
 
   CopyIfGiven(properties, "artist", artist.strArtist);
@@ -713,11 +728,13 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
 
 JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
                                               const CVariant& properties,
-                                              CMusicDatabase& musicdatabase)
+                                              CMusicDatabase& musicdatabase,
+                                              CVariant& result)
 {
   CAlbum album;
   // Get current album details, but not songs as we do not want to update them here
-  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(id, album, false));
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(id, album, false), result,
+                                              ItemTarget(AudioKind::Album, id));
       status != OK)
     return status;
 
@@ -797,10 +814,13 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
 
 JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id,
                                              const CVariant& properties,
-                                             CMusicDatabase& musicdatabase)
+                                             CMusicDatabase& musicdatabase,
+                                             CVariant& result)
 {
   CSong song;
-  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(id, song)); status != OK)
+  if (const JSONRPC_STATUS status =
+          StatusFor(musicdatabase.TryGetSong(id, song), result, ItemTarget(AudioKind::Song, id));
+      status != OK)
     return status;
 
   CopyIfGiven(properties, "title", song.strTitle);
@@ -1246,7 +1266,8 @@ JSONRPC_STATUS CAudioLibrary::RefreshArtist(const CVariant& parameterObject, CVa
   // Checking if artistID is a valid one
   const CVariant artistIdVariant{parameterObject["artistId"]};
   const auto artistID{static_cast<int>(artistIdVariant.asInteger())};
-  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtistExists(artistID));
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtistExists(artistID), result,
+                                              Target("artistId", parameterObject["artistId"]));
       status != OK)
     return status;
 
@@ -1268,7 +1289,9 @@ JSONRPC_STATUS CAudioLibrary::RefreshAlbum(const CVariant& parameterObject, CVar
   CAlbum album;
   const CVariant albumIdVariant{parameterObject["albumId"]};
   const int albumID = static_cast<int>(albumIdVariant.asInteger());
-  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(albumID, album, false));
+  if (const JSONRPC_STATUS status =
+          StatusFor(musicdatabase.TryGetAlbum(albumID, album, false), result,
+                    Target("albumId", parameterObject["albumId"]));
       status != OK)
     return status;
 
@@ -1323,7 +1346,8 @@ bool CAudioLibrary::ResolveInfoProviderView(const std::string& path,
 
 JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& parameterObject,
                                                         CMusicDatabase& musicdatabase,
-                                                        InfoProviderTarget& target)
+                                                        InfoProviderTarget& target,
+                                                        CVariant& result)
 {
   const std::string applyTo = parameterObject["applyTo"].asString();
 
@@ -1337,7 +1361,9 @@ JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& paramete
     target.scope = InfoProviderTarget::Scope::Item;
     if (artistId > 0)
     {
-      if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtistExists(artistId));
+      if (const JSONRPC_STATUS status =
+              StatusFor(musicdatabase.TryGetArtistExists(artistId), result,
+                        Target("artistId", parameterObject["artistId"]));
           status != OK)
         return status;
 
@@ -1347,7 +1373,9 @@ JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& paramete
     else
     {
       CAlbum album;
-      if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(albumId, album, false));
+      if (const JSONRPC_STATUS status =
+              StatusFor(musicdatabase.TryGetAlbum(albumId, album, false), result,
+                        Target("albumId", parameterObject["albumId"]));
           status != OK)
         return status;
 
@@ -1397,7 +1425,7 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
 
   InfoProviderTarget target;
   if (const JSONRPC_STATUS status =
-          ResolveInfoProviderTarget(parameterObject, musicdatabase, target);
+          ResolveInfoProviderTarget(parameterObject, musicdatabase, target, result);
       status != OK)
     return status;
 
@@ -1410,8 +1438,10 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
     if (!addonMgr.GetAddon(scraperId, addon, ADDON::ScraperTypeFromContent(target.content),
                            ADDON::OnlyEnabled::CHOICE_YES))
     {
-      return addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES) ? InvalidParams
-                                                                                 : NotFound;
+      if (!addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
+        return Fail(result, NotFound, Reason::NoSuchAddon,
+                    Target("scraperId", parameterObject["scraperId"]));
+      return InvalidParams;
     }
 
     scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
