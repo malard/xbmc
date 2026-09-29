@@ -81,6 +81,7 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
     {
       m_iSection = message.GetParam2() - CGUIDialogSettingsManagerBase::GetID();
 
+      // Returning, not opening fresh, so the viewer stays in the category they were in
       if (m_returningFromSkinLoad)
         message.SetParam1(WINDOW_INVALID);
 

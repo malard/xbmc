@@ -334,24 +334,34 @@ void CSetting::Copy(const CSetting &setting)
 }
 
 template<class TSetting, typename TValue, typename TValidate>
-CSetting::ApplyResult CSetting::ApplyValue(TValue& storage, const TValue& value, TValidate validate)
+bool CSetting::ApplyValue(TValue& storage,
+                          const TValue& value,
+                          const TValue& defaultValue,
+                          TValidate validate)
 {
   TValue oldValue;
   {
     std::unique_lock lock(m_critical);
 
     if (storage == value)
-      return ApplyResult::Unchanged;
+      return true;
 
     if (!validate())
-      return ApplyResult::Rejected;
+      return false;
 
     oldValue = storage;
     storage = value;
   }
 
   if (OnSettingChanging(shared_from_base<TSetting>()))
-    return ApplyResult::Applied;
+  {
+    {
+      std::unique_lock lock(m_critical);
+      m_changed = storage != defaultValue;
+    }
+    OnSettingChanged(shared_from_base<TSetting>());
+    return true;
+  }
 
   {
     std::unique_lock lock(m_critical);
@@ -365,7 +375,7 @@ CSetting::ApplyResult CSetting::ApplyValue(TValue& storage, const TValue& value,
   // callback so we need to let all the callback handlers
   // know that the setting hasn't changed
   OnSettingChanging(shared_from_base<TSetting>());
-  return ApplyResult::Rejected;
+  return false;
 }
 
 Logger CSettingList::s_logger;
@@ -790,16 +800,7 @@ bool CSettingBool::CheckValidity(const std::string &value) const
 
 bool CSettingBool::SetValue(bool value)
 {
-  const ApplyResult result{ApplyValue<CSettingBool>(m_value, value, [] { return true; })};
-  if (result != ApplyResult::Applied)
-    return result == ApplyResult::Unchanged;
-
-  {
-    std::unique_lock lock(m_critical);
-    m_changed = m_value != m_default;
-  }
-  OnSettingChanged(shared_from_base<CSettingBool>());
-  return true;
+  return ApplyValue<CSettingBool>(m_value, value, m_default, [] { return true; });
 }
 
 void CSettingBool::SetDefault(bool value)
@@ -1056,17 +1057,7 @@ bool CSettingInt::CheckValidity(int value) const
 
 bool CSettingInt::SetValue(int value)
 {
-  const ApplyResult result{
-      ApplyValue<CSettingInt>(m_value, value, [&] { return CheckValidity(value); })};
-  if (result != ApplyResult::Applied)
-    return result == ApplyResult::Unchanged;
-
-  {
-    std::unique_lock lock(m_critical);
-    m_changed = m_value != m_default;
-  }
-  OnSettingChanged(shared_from_base<CSettingInt>());
-  return true;
+  return ApplyValue<CSettingInt>(m_value, value, m_default, [&] { return CheckValidity(value); });
 }
 
 void CSettingInt::SetDefault(int value)
@@ -1311,17 +1302,8 @@ bool CSettingNumber::CheckValidity(double value) const
 
 bool CSettingNumber::SetValue(double value)
 {
-  const ApplyResult result{
-      ApplyValue<CSettingNumber>(m_value, value, [&] { return CheckValidity(value); })};
-  if (result != ApplyResult::Applied)
-    return result == ApplyResult::Unchanged;
-
-  {
-    std::unique_lock lock(m_critical);
-    m_changed = m_value != m_default;
-  }
-  OnSettingChanged(shared_from_base<CSettingNumber>());
-  return true;
+  return ApplyValue<CSettingNumber>(m_value, value, m_default,
+                                    [&] { return CheckValidity(value); });
 }
 
 void CSettingNumber::SetDefault(double value)
@@ -1519,17 +1501,8 @@ bool CSettingString::CheckValidity(const std::string &value) const
 
 bool CSettingString::SetValue(const std::string &value)
 {
-  const ApplyResult result{
-      ApplyValue<CSettingString>(m_value, value, [&] { return CheckValidity(value); })};
-  if (result != ApplyResult::Applied)
-    return result == ApplyResult::Unchanged;
-
-  {
-    std::unique_lock lock(m_critical);
-    m_changed = m_value != m_default;
-  }
-  OnSettingChanged(shared_from_base<CSettingString>());
-  return true;
+  return ApplyValue<CSettingString>(m_value, value, m_default,
+                                    [&] { return CheckValidity(value); });
 }
 
 void CSettingString::SetDefault(const std::string &value)

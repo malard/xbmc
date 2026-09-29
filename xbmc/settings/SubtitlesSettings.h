@@ -88,8 +88,8 @@ public:
    */
   void SetAlignment(Align align) const;
 
-  //! \brief Whether alignment is measured against the picture rather than the whole video.
-  //! Gated on the display setting.
+  //! \brief Whether the inside positions are measured against the picture rather than the
+  //! whole video.
   bool IsAlignedToContent() const;
 
   /*!

@@ -128,21 +128,19 @@ protected:
     return std::static_pointer_cast<TSetting>(shared_from_this());
   }
 
-  enum class ApplyResult
-  {
-    Unchanged,
-    Applied,
-    Rejected //!< the value was invalid, or a callback refused it and it has been reverted
-  };
-
   /*! \brief Store a value and run the change callbacks.
 
    The callbacks run with m_critical released, unless the caller already holds it, because
    one of them reading this setting back on another thread would otherwise deadlock against
    the write. validate is the exception: it is called while the lock is held.
+
+   \return false where the value was invalid, or a callback refused it and it was reverted.
    */
   template<class TSetting, typename TValue, typename TValidate>
-  ApplyResult ApplyValue(TValue& storage, const TValue& value, TValidate validate);
+  bool ApplyValue(TValue& storage,
+                  const TValue& value,
+                  const TValue& defaultValue,
+                  TValidate validate);
 
   ISettingCallback *m_callback = nullptr;
   bool m_enabled = true;

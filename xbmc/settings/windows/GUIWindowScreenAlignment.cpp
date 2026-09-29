@@ -77,8 +77,7 @@ bool CGUIWindowScreenAlignment::OnMessage(CGUIMessage& message)
       context.SetCalibrating(true);
 
       m_entries = CAspectRatioVocabulary::Entries();
-      if (!m_entries.empty())
-        m_cursor = std::min(m_cursor, m_entries.size() - 1);
+      m_cursor = std::min(m_cursor, m_entries.size() - 1);
       ApplyDefaultRatios();
 
       const RESOLUTION_INFO grid = RawGrid();
@@ -132,9 +131,6 @@ bool CGUIWindowScreenAlignment::OnMessage(CGUIMessage& message)
 
 bool CGUIWindowScreenAlignment::OnAction(const CAction& action)
 {
-  if (m_entries.empty())
-    return CGUIWindow::OnAction(action);
-
   switch (action.GetID())
   {
     case ACTION_MOVE_UP:
@@ -178,9 +174,6 @@ bool CGUIWindowScreenAlignment::OnAction(const CAction& action)
 
 void CGUIWindowScreenAlignment::ToggleRow(size_t index)
 {
-  if (index >= m_entries.size())
-    return;
-
   const int key = CAspectRatioVocabulary::Key(m_entries[index].ratio);
 
   std::unique_lock lock(m_stateSection);
@@ -211,7 +204,7 @@ CRect CGUIWindowScreenAlignment::RowRect(const CRect& display, size_t index) con
 
 std::optional<size_t> CGUIWindowScreenAlignment::RowAt(const CPoint& point) const
 {
-  if (m_entries.empty() || RowHeight() <= 0.0f)
+  if (RowHeight() <= 0.0f)
     return std::nullopt;
 
   const RESOLUTION_INFO grid = RawGrid();
@@ -298,7 +291,7 @@ void CGUIWindowScreenAlignment::DrawLabel(
 
 void CGUIWindowScreenAlignment::DrawLegend(const CRect& display, const std::set<int>& shown)
 {
-  if (!m_layout || m_entries.empty() || RowHeight() <= 0.0f)
+  if (!m_layout || RowHeight() <= 0.0f)
     return;
 
   for (size_t i = 0; i < m_entries.size(); ++i)
@@ -322,12 +315,8 @@ void CGUIWindowScreenAlignment::ApplyDefaultRatios()
 
   m_defaulted = true;
 
-  int key = 0;
-  if (const auto settings = CServiceBroker::GetSettingsComponent())
-  {
-    if (const auto values = settings->GetSettings())
-      key = values->GetInt(CSettings::SETTING_VIDEOSCREEN_RASTERASPECT);
-  }
+  int key = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+      CSettings::SETTING_VIDEOSCREEN_RASTERASPECT);
 
   if (CAspectRatioVocabulary::RatioForKey(key) <= 0.0f)
     key = CAspectRatioVocabulary::Key(DEFAULT_RATIO);
