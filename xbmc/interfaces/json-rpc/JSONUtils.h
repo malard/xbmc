@@ -512,4 +512,25 @@ namespace JSONRPC
       return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
     }
   };
+
+  /*!
+   \brief Answers a GetProperties call, reading each property the caller names with \p getValue
+   \return OK, or the first status other than OK that \p getValue answers
+   */
+  template<typename Getter>
+  JSONRPC_STATUS GetNamedProperties(const CVariant& parameterObject,
+                                    CVariant& result,
+                                    const Getter& getValue)
+  {
+    CVariant properties(CVariant::VariantTypeObject);
+    const CVariant& names = parameterObject["properties"];
+    for (auto name = names.begin_array(); name != names.end_array(); ++name)
+    {
+      const std::string property = name->asString();
+      if (const JSONRPC_STATUS status = getValue(property, properties[property]); status != OK)
+        return status;
+    }
+    result = std::move(properties);
+    return OK;
+  }
 }
