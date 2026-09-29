@@ -160,7 +160,7 @@ void CApplicationPlay::GetOptionsAndUpdateItem()
           GetEpisodeBookmark(m_item, m_options, db);
       }
 
-      // No resume data found from any source -- clear the stale resume request
+      // No resume data found from any source — clear the stale resume request
       // so downstream code (e.g. DVDInputStreamBluray::Open) doesn't attempt
       // to resume from a non-existent state.
       if (m_options.starttime == 0.0)

@@ -2613,7 +2613,7 @@ constexpr std::array<InfoMap, 3> musicpartymode = {{
 ///                  \anchor MusicPlayer_Genre_separator
 ///                  _string_,
 ///     @return A list of genres of current song\, separated by given separator\, or if no
-///     separator was given separated by the advanced settings value \"itemseparator\" for music.
+///     separator was given separated by the advanced settings value \“itemseparator\” for music.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link MusicPlayer_Genre_separator `MusicPlayer.Genre(separator)`\endlink
@@ -3326,7 +3326,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///                  \anchor VideoPlayer_Genre_separator
 ///                  _string_,
 ///     @return A list of genres of current movie\, separated by given separator\, or if no
-///     separator was given separated by the advanced settings value \"itemseparator\" for videos.
+///     separator was given separated by the advanced settings value \“itemseparator\” for videos.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link VideoPlayer_Genre_separator `VideoPlayer.Genre(separator)`\endlink
@@ -3361,7 +3361,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///                  \anchor VideoPlayer_Director_separator
 ///                  _string_,
 ///     @return A list of directors of the currently playing video\, separated by given separator\,
-///     or if no separator was given separated by the advanced settings value \"itemseparator\" for
+///     or if no separator was given separated by the advanced settings value \“itemseparator\” for
 ///     video items.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
@@ -3776,7 +3776,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///                  \anchor VideoPlayer_Writer_separator
 ///                  _string_,
 ///     @return A list of writers of the currently playing video\, separated by given separator\,
-///     or if no separator was given separated by the advanced settings value \"itemseparator\" for
+///     or if no separator was given separated by the advanced settings value \“itemseparator\” for
 ///     video items.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
@@ -4191,7 +4191,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///                  _string_,
 ///     @return A list of genres of the programme that will be played next (PVR)\, separated by
 ///     given separator\, or if no separator was given separated by the advanced settings value
-///     \"itemseparator\" for videos.
+///     \“itemseparator\” for videos.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link VideoPlayer_NextGenre_separator `VideoPlayer.NextGenre(separator)`\endlink
@@ -5718,7 +5718,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///                  \anchor ListItem_Genre_separator
 ///                  _string_,
 ///     @return A list of genres\, separated by given separator\, or if no separator was given
-///     separated by the advanced settings value \"itemseparator\" for videos or music.
+///     separated by the advanced settings value \“itemseparator\” for videos or music.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link ListItem_Genre_separator `ListItem.Genre(separator)`\endlink
@@ -5753,7 +5753,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///                  \anchor ListItem_Director_separator
 ///                  _string_,
 ///     @return A list of directors\, separated by given separator\, or if no separator was given
-///     separated by the advanced settings value \"itemseparator\" for video items.
+///     separated by the advanced settings value \“itemseparator\” for video items.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link ListItem_Director_separator `ListItem.Director(separator)`\endlink
@@ -6663,7 +6663,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///                  \anchor ListItem_Writer_separator
 ///                  _string_,
 ///     @return A list of writers\, separated by given separator\, or if no separator was given
-///     separated by the advanced settings value \"itemseparator\" for video items.
+///     separated by the advanced settings value \“itemseparator\” for video items.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
 ///     @skinning_v22 **[New Infolabel]** \link ListItem_Writer_separator `ListItem.Writer(separator)`\endlink
@@ -7169,7 +7169,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///                  \anchor ListItem_NextGenre_separator
 ///                  _string_,
 ///     @return A list of genres of the the next item (PVR)\, separated by given separator\, or if
-///     no separator was given separated by the advanced settings value \"itemseparator\" for
+///     no separator was given separated by the advanced settings value \“itemseparator\” for
 ///     videos.
 ///     Possible values for separator: comma\, pipe\, slash\, cr\, dash\, colon\, semicolon\, fullstop
 ///     <p><hr>
@@ -9915,7 +9915,7 @@ constexpr std::array<InfoMap, 12> pvr_times = {{
 ///                  \anchor RDS_InfoSport
 ///                  _string_,
 ///     @return The result of a match; either as one part or as several distinct parts:
-///     "match 99result"\, e.g. "Bayern Muenchen : Borussia 995:5"  (if available).
+///     "match 99result"\, e.g. "Bayern München : Borussia 995:5"  (if available).
 ///     @note Only available on RadioText Plus
 ///     <p><hr>
 ///     @skinning_v16 **[New Infolabel]** \link RDS_InfoSport `RDS.InfoSport`\endlink

@@ -31,7 +31,7 @@ using namespace XFILE;
     <!-- Stream URL !-->
     <url>mms://stream02.rambler.ru/eurosport</url>
     <!-- Stream name - used for display !-->
-    <name>Sport</name>
+    <name>Евроспорт</name>
     <!-- Stream category - currently only LIVETV is supported !-->
     <category>LIVETV</category>
     <!-- Stream language code !-->
@@ -44,7 +44,7 @@ using namespace XFILE;
 
   <stream>
     <url>mms://video.rfn.ru/vesti_24</url>
-    <name>News 24</name>
+    <name>Вести 24</name>
     <category>LIVETV</category>
     <lang>RU</lang>
     <channel>2</channel>

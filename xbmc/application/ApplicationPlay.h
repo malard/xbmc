@@ -18,7 +18,7 @@ class CApplicationStackHelper;
 
 /*!
  * \brief Helper class to gather all playback details for a file item.
- * Usage: Construct with stack helper -> call GatherPlaybackDetails() -> retrieve results via getters
+ * Usage: Construct with stack helper → call GatherPlaybackDetails() → retrieve results via getters
  */
 class CApplicationPlay
 {
