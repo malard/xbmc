@@ -147,8 +147,7 @@ void CDebugRenderer::CRenderer::Render(int idx, float depth)
       if (!ovAss || !ovAss->GetLibassHandler())
         continue;
 
-      bool updateStyle = !m_debugOverlayStyle;
-      if (updateStyle)
+      if (!m_debugOverlayStyle)
         CreateSubtitlesStyle();
 
       // Copied from OVERLAY::CRenderer::ConvertLibass. PR #28373 changed
@@ -256,8 +255,8 @@ void CDebugRenderer::CRenderer::Render(int idx, float depth)
       }
 
       int changes = 0;
-      ASS_Image* images = ovAss->GetLibassHandler()->RenderImage(it->pts, rOpts, updateStyle,
-                                                                 m_debugOverlayStyle, &changes);
+      ASS_Image* images =
+          ovAss->GetLibassHandler()->RenderImage(it->pts, rOpts, m_debugOverlayStyle, &changes);
 
       if (!images)
         continue;

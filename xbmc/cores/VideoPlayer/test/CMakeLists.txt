@@ -1,4 +1,5 @@
-set(SOURCES TestLiveGeometryMonitor.cpp
+set(SOURCES TestDVDSubtitlesLibass.cpp
+            TestLiveGeometryMonitor.cpp
             TestRadioRDSCountries.cpp
             TestRadioRDSLanguages.cpp
             TestSubtitleMargins.cpp
