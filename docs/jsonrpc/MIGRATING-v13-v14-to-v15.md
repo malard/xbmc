@@ -793,6 +793,29 @@ method.
 **What to do.** Nothing, unless you sent `sort` or `limits` and relied on
 their being ignored: drop them to get every in-progress show, as before.
 
+## 21. Every library list answers `items`
+
+The library list methods keep their names and parameters, but answer as
+`VideoLibrary.GetItems` and `AudioLibrary.GetItems` do: the list is `items`,
+not a name for the kind.
+
+```diff
+- {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "movies": [{"movieId": 1, "label": "The Matrix"}, ...]}}
++ {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "items":  [{"movieId": 1, "label": "The Matrix"}, ...]}}
+```
+
+This holds for `GetMovies`, `GetMovieSets`, `GetTVShows`, `GetSeasons`,
+`GetEpisodes`, `GetMusicVideos`, `GetRecentlyAddedMovies`,
+`GetRecentlyAddedEpisodes`, `GetRecentlyAddedMusicVideos`,
+`GetInProgressTVShows`, `GetArtists`, `GetAlbums`, `GetSongs`,
+`GetRecentlyAddedAlbums`, `GetRecentlyAddedSongs`, `GetRecentlyPlayedAlbums`
+and `GetRecentlyPlayedSongs`. Each item still carries its kind's id
+(`movieId`, `tvShowId`, ...). A music list that finds nothing answers an
+empty `items`, where it used to answer no list at all.
+
+**What to do.** Read `result.items` in place of `result.movies`,
+`result.tvShows` and the rest.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
@@ -828,7 +851,7 @@ New since Kodi 21 and safe to ignore until you want it. The
 - **`Player.GetChapters`** returns the playing item's chapters.
 - **`VideoLibrary.GetItems` and `AudioLibrary.GetItems`** list any kind of
   item with one method; `GetMovies` and the other list methods are the same
-  query with preset values, and answer as before.
+  query with preset values.
 - **`GUI.TakeScreenshot`**, `Database.GetDatabaseName`,
   `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist`.
 - **PVR image properties are URLs** the web server's `/image/` endpoint can

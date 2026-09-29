@@ -125,7 +125,7 @@ struct KindTraits
   AudioKind kind;
   const char* name; //!< the media type
   const char* id;
-  const char* list;
+  const char* list; //!< what the JSON listing answers under, and the rules' playlist type
   const char* path;
   const char* fields;
   const char* filter;
@@ -198,12 +198,7 @@ JSONRPC_STATUS CAudioLibrary::GetItems(const CVariant& parameterObject, CVariant
       status != OK)
     return status;
 
-  if (const JSONRPC_STATUS status = Query(traits->kind, Listing::All, checked, result);
-      status != OK)
-    return status;
-
-  RenameList(result, traits->list, "items");
-  return OK;
+  return Query(traits->kind, Listing::All, checked, result);
 }
 
 JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
@@ -262,8 +257,7 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
     if (ret != OK)
       return ret;
 
-    HandleFileItemList(traits.id, kind == AudioKind::Song, traits.list, items, parameterObject,
-                       result);
+    HandleFileItemList(traits.id, kind == AudioKind::Song, "items", items, parameterObject, result);
     return OK;
   }
 
@@ -326,8 +320,9 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
   if (!listed)
     return InternalError;
 
-  if (kind != AudioKind::Artist && !result.isNull())
-    FillListArt(result[traits.list], fields, traits.id, traits.name);
+  RenameList(result, traits.list, "items");
+  if (kind != AudioKind::Artist)
+    FillListArt(result["items"], fields, traits.id, traits.name);
 
   int start, end;
   HandleLimits(parameterObject, result, total, start, end);

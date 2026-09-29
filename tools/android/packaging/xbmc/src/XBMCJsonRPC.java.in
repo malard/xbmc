@@ -248,7 +248,7 @@ public class XBMCJsonRPC
           return null;
 
         JsonObject results = req.getAsJsonObject("result");
-        JsonArray movies = results.getAsJsonArray("movies");
+        JsonArray movies = results.getAsJsonArray("items");
 
         for (int i = 0; i < movies.size(); ++i)
         {
@@ -284,7 +284,7 @@ public class XBMCJsonRPC
           return null;
 
         JsonObject results = req.getAsJsonObject("result");
-        JsonArray tvshows = results.getAsJsonArray("tvShows");
+        JsonArray tvshows = results.getAsJsonArray("items");
 
         for (int i = 0; i < tvshows.size(); ++i)
         {
@@ -395,9 +395,9 @@ public class XBMCJsonRPC
           if (resp == null || !resp.has("result"))
             break searchmovies;
           JsonObject results = resp.getAsJsonObject("result");
-          if (results == null || !results.has("movies"))
+          if (results == null || !results.has("items"))
             break searchmovies;
-          JsonArray movies = results.get("movies").getAsJsonArray();
+          JsonArray movies = results.get("items").getAsJsonArray();
 
           for (int i = 0; i < movies.size() && totCount < limit; ++i)
           {
@@ -451,9 +451,9 @@ public class XBMCJsonRPC
           if(!resp.has("result"))
             break searchtv;
           JsonObject results = resp.getAsJsonObject("result");
-          if (results == null || !results.has("tvShows"))
+          if (results == null || !results.has("items"))
             break searchtv;
-          JsonArray tvshows = results.get("tvShows").getAsJsonArray();
+          JsonArray tvshows = results.get("items").getAsJsonArray();
 
           for (int i = 0; i < tvshows.size() && totCount < limit; ++i)
           {
@@ -507,9 +507,9 @@ public class XBMCJsonRPC
           if (!resp.has("result"))
             break searchalbums;
           JsonObject results = resp.getAsJsonObject("result");
-          if (results == null || !results.has("albums"))
+          if (results == null || !results.has("items"))
             break searchalbums;
-          JsonArray albums = results.get("albums").getAsJsonArray();
+          JsonArray albums = results.get("items").getAsJsonArray();
 
           for (int i = 0; i < albums.size() && totCount < limit; ++i)
           {
@@ -545,9 +545,9 @@ public class XBMCJsonRPC
           if (!resp.has("result"))
             break searchartists;
           JsonObject results = resp.getAsJsonObject("result");
-          if (results == null || !results.has("artists"))
+          if (results == null || !results.has("items"))
             break searchartists;
-          JsonArray artists = results.get("artists").getAsJsonArray();
+          JsonArray artists = results.get("items").getAsJsonArray();
 
           for (int i = 0; i < artists.size() && totCount < limit; ++i)
           {
@@ -597,7 +597,7 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        JsonArray movies = results.get("movies").getAsJsonArray();
+        JsonArray movies = results.get("items").getAsJsonArray();
 
         int count = 0;
         for (int i = 0; i < movies.size() && count < MAX_RECOMMENDATIONS; ++i)
@@ -657,7 +657,7 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        JsonArray tvshows = results.get("tvShows").getAsJsonArray();
+        JsonArray tvshows = results.get("items").getAsJsonArray();
 
         int count = 0;
         for (int i = 0; i < tvshows.size() && count < MAX_RECOMMENDATIONS; ++i)
@@ -718,7 +718,7 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        JsonArray albums = results.has("albums") ? results.get("albums").getAsJsonArray()
+        JsonArray albums = results.has("items") ? results.get("items").getAsJsonArray()
                                                  : new JsonArray();
 
         int count = 0;
@@ -1167,9 +1167,9 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        if (results.has("movies"))
+        if (results.has("items"))
         {
-          movies = results.get("movies").getAsJsonArray();
+          movies = results.get("items").getAsJsonArray();
           if (movies.size() > 0)
           {
             ++categories;
@@ -1186,9 +1186,9 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        if (results.has("tvShows"))
+        if (results.has("items"))
         {
-          tvshows = results.get("tvShows").getAsJsonArray();
+          tvshows = results.get("items").getAsJsonArray();
           if (tvshows.size() > 0)
           {
             ++categories;
@@ -1205,9 +1205,9 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        if (results.has("albums"))
+        if (results.has("items"))
         {
-          albums = results.get("albums").getAsJsonArray();
+          albums = results.get("items").getAsJsonArray();
           if (albums.size() > 0)
           {
             ++categories;

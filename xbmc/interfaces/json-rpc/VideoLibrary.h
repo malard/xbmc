@@ -43,7 +43,7 @@ public:
   //! The query over one kind's items
   static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
 
-  //! A list method: the query over \p Kind with the listing \p From, answered as that kind's list
+  //! A list method: the query over \p Kind with the listing \p From
   template<VideoKind Kind, Listing From = Listing::All>
   static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
 
@@ -129,7 +129,7 @@ public:
 
 private:
   /*!
-     \brief Lists the items of \p kind that \p listing selects, under the kind's own list name
+     \brief Lists the items of \p kind that \p listing selects
      \param parameterObject The caller's properties, limits, sort and filter, and the show and
      season an episode or season list is narrowed to
      */

@@ -207,10 +207,9 @@ public:
     return idShow;
   }
 
-  //! Answers \p list and GetItems for \p kind with the same parameters, and expects the same items
+  //! Calls \p listMethod and GetItems for \p kind with the same parameters, and expects one answer
   void ExpectTheQueryAnswersAsTheListMethod(const char* libraryNamespace,
                                             const char* listMethod,
-                                            const char* list,
                                             const char* kind,
                                             const std::string& params)
   {
@@ -226,10 +225,8 @@ public:
                              (params.empty() ? "" : ", " + params) + "}",
                          queried));
 
-    EXPECT_EQ(ToJson(listed["limits"]), ToJson(queried["limits"]));
-    EXPECT_EQ(ToJson(listed.isMember(list) ? listed[list] : CVariant(CVariant::VariantTypeArray)),
-              ToJson(queried["items"]));
-    EXPECT_TRUE(queried["items"].isArray());
+    EXPECT_EQ(ToJson(queried), ToJson(listed));
+    EXPECT_TRUE(listed["items"].isArray());
   }
 
   TestGUI m_gui;
@@ -346,23 +343,22 @@ TEST_F(TestLibraryItems, TheQueryRefusesWhatNarrowsAnotherKind)
 TEST_F(TestLibraryItemsInDatabase, TheVideoListMethodsAreTheQueryWithPresetValues)
 {
   const std::string show{std::to_string(m_showId)};
-  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovies", "movies", "movie",
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovies", "movie",
                                        R"("properties": ["title", "setId", "set"])");
   ExpectTheQueryAnswersAsTheListMethod(
-      "VideoLibrary", "VideoLibrary.GetMovies", "movies", "movie",
+      "VideoLibrary", "VideoLibrary.GetMovies", "movie",
       R"("filter": {"set": "JSON-RPC test set"}, "sort": {"method": "title"})");
-  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovieSets", "sets", "set",
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovieSets", "set",
                                        R"("properties": ["title"], "limits": {"end": 3})");
-  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetTVShows", "tvShows",
-                                       "tvshow", R"("properties": ["title", "episode"])");
-  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetSeasons", "seasons",
-                                       "season",
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetTVShows", "tvshow",
+                                       R"("properties": ["title", "episode"])");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetSeasons", "season",
                                        R"("tvShowId": )" + show + R"(, "properties": ["season"])");
-  ExpectTheQueryAnswersAsTheListMethod(
-      "VideoLibrary", "VideoLibrary.GetEpisodes", "episodes", "episode",
-      R"("tvShowId": )" + show + R"(, "season": 1, "properties": ["title", "episode"])");
-  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMusicVideos", "musicVideos",
-                                       "musicvideo", "");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetEpisodes", "episode",
+                                       R"("tvShowId": )" + show +
+                                           R"(, "season": 1, "properties": ["title", "episode"])");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMusicVideos", "musicvideo",
+                                       "");
 }
 
 TEST_F(TestLibraryItemsInDatabase, TheQueryNarrowsToTheFilterGiven)
@@ -378,11 +374,11 @@ TEST_F(TestLibraryItemsInDatabase, TheQueryNarrowsToTheFilterGiven)
 
 TEST_F(TestLibraryItemsInDatabase, TheMusicListMethodsAreTheQueryWithPresetValues)
 {
-  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetArtists", "artists",
-                                       "artist", R"("properties": ["genre"], "allRoles": true)");
-  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetAlbums", "albums", "album",
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetArtists", "artist",
+                                       R"("properties": ["genre"], "allRoles": true)");
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetAlbums", "album",
                                        R"("properties": ["title", "art"])");
-  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetSongs", "songs", "song",
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetSongs", "song",
                                        R"("properties": ["title", "albumId", "thumbnail"])");
 }
 
@@ -568,15 +564,15 @@ TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)
                        R"({"sort": {"method": "title", "order": "ascending"}})", ascending));
   const int total{static_cast<int>(ascending["limits"]["total"].asInteger())};
   ASSERT_GE(total, 2);
-  EXPECT_EQ(first, ascending["tvShows"][0]["tvShowId"].asInteger());
+  EXPECT_EQ(first, ascending["items"][0]["tvShowId"].asInteger());
 
   CVariant descending;
   ASSERT_EQ(OK, Invoke("VideoLibrary.GetInProgressTVShows",
                        R"({"sort": {"method": "title", "order": "descending"},
                            "limits": {"start": 0, "end": 1}})",
                        descending));
-  ASSERT_EQ(1u, descending["tvShows"].size());
-  EXPECT_EQ(last, descending["tvShows"][0]["tvShowId"].asInteger());
+  ASSERT_EQ(1u, descending["items"].size());
+  EXPECT_EQ(last, descending["items"][0]["tvShowId"].asInteger());
   EXPECT_EQ(total, descending["limits"]["total"].asInteger());
   EXPECT_EQ(1, descending["limits"]["end"].asInteger());
 }

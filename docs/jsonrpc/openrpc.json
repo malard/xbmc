@@ -3976,7 +3976,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "artists": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Artist"
@@ -3984,7 +3984,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4069,7 +4070,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "albums": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Album"
@@ -4077,7 +4078,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4171,7 +4173,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "songs": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Song"
@@ -4179,7 +4181,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4243,7 +4246,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "albums": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Album"
@@ -4251,7 +4254,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4322,7 +4326,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "songs": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Song"
@@ -4330,7 +4334,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4394,7 +4399,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "albums": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Album"
@@ -4402,7 +4407,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -4466,7 +4472,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "songs": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Audio.Details.Song"
@@ -4474,7 +4480,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -5679,7 +5686,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "movies": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.Movie"
@@ -5687,7 +5694,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -5751,7 +5759,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "sets": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.MovieSet"
@@ -5759,7 +5767,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -5829,7 +5838,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "tvShows": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.TVShow"
@@ -5837,7 +5846,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -5907,7 +5917,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "seasons": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.Season"
@@ -5915,7 +5925,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -5999,7 +6010,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "episodes": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.Episode"
@@ -6007,7 +6018,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -6077,7 +6089,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "musicVideos": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.MusicVideo"
@@ -6085,7 +6097,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -6149,7 +6162,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "movies": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.Movie"
@@ -6157,7 +6170,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -6221,7 +6235,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "episodes": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.Episode"
@@ -6229,7 +6243,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -6293,7 +6308,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "musicVideos": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.MusicVideo"
@@ -6301,7 +6316,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },
@@ -6365,7 +6381,7 @@
             "limits": {
               "$ref": "#/components/schemas/List.LimitsReturned"
             },
-            "tvShows": {
+            "items": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Video.Details.TVShow"
@@ -6373,7 +6389,8 @@
             }
           },
           "required": [
-            "limits"
+            "limits",
+            "items"
           ]
         }
       },

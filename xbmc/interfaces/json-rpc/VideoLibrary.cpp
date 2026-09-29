@@ -73,7 +73,6 @@ struct KindTraits
   VideoKind kind;
   const char* name; //!< the media type
   const char* id;
-  const char* list;
   const char* fields;
   const char* filter; //!< nullptr for a kind that takes no filter
   const char* rules; //!< the smart playlist type a filter's rules are written for
@@ -82,19 +81,18 @@ struct KindTraits
 };
 
 constexpr KindTraits KINDS[] = {
-    {VideoKind::Movie, MediaTypeMovie, "movieId", "movies", "Video.Fields.Movie",
-     "Video.Filter.Movies", "movies", MOVIE_FILTERS, "Video.Details.Movie.Set"},
-    {VideoKind::Set, MediaTypeVideoCollection, "setId", "sets", "Video.Fields.MovieSet", nullptr,
-     "", NO_FILTERS, "Video.Details.MovieSet.Set"},
-    {VideoKind::TVShow, MediaTypeTvShow, "tvShowId", "tvShows", "Video.Fields.TVShow",
-     "Video.Filter.TVShows", "tvshows", TVSHOW_FILTERS, "Video.Details.TVShow.Set"},
-    {VideoKind::Season, MediaTypeSeason, "seasonId", "seasons", "Video.Fields.Season", nullptr, "",
-     NO_FILTERS, "Video.Details.Season.Set"},
-    {VideoKind::Episode, MediaTypeEpisode, "episodeId", "episodes", "Video.Fields.Episode",
+    {VideoKind::Movie, MediaTypeMovie, "movieId", "Video.Fields.Movie", "Video.Filter.Movies",
+     "movies", MOVIE_FILTERS, "Video.Details.Movie.Set"},
+    {VideoKind::Set, MediaTypeVideoCollection, "setId", "Video.Fields.MovieSet", nullptr, "",
+     NO_FILTERS, "Video.Details.MovieSet.Set"},
+    {VideoKind::TVShow, MediaTypeTvShow, "tvShowId", "Video.Fields.TVShow", "Video.Filter.TVShows",
+     "tvshows", TVSHOW_FILTERS, "Video.Details.TVShow.Set"},
+    {VideoKind::Season, MediaTypeSeason, "seasonId", "Video.Fields.Season", nullptr, "", NO_FILTERS,
+     "Video.Details.Season.Set"},
+    {VideoKind::Episode, MediaTypeEpisode, "episodeId", "Video.Fields.Episode",
      "Video.Filter.Episodes", "episodes", EPISODE_FILTERS, "Video.Details.Episode.Set"},
-    {VideoKind::MusicVideo, MediaTypeMusicVideo, "musicVideoId", "musicVideos",
-     "Video.Fields.MusicVideo", "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS,
-     "Video.Details.MusicVideo.Set"},
+    {VideoKind::MusicVideo, MediaTypeMusicVideo, "musicVideoId", "Video.Fields.MusicVideo",
+     "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS, "Video.Details.MusicVideo.Set"},
 };
 
 const KindTraits& TraitsOf(VideoKind kind)
@@ -154,12 +152,7 @@ JSONRPC_STATUS CVideoLibrary::GetItems(const CVariant& parameterObject, CVariant
       status != OK)
     return status;
 
-  if (const JSONRPC_STATUS status = Query(traits->kind, Listing::All, checked, result);
-      status != OK)
-    return status;
-
-  RenameList(result, traits->list, "items");
-  return OK;
+  return Query(traits->kind, Listing::All, checked, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
@@ -191,7 +184,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
     if (!listed)
       return InternalError;
 
-    return HandleItems(traits.id, traits.list, items, parameterObject, result, true);
+    return HandleItems(traits.id, "items", items, parameterObject, result, true);
   }
 
   if (listing == Listing::InProgress)
@@ -199,7 +192,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
     if (!videodatabase.GetInProgressTvShowsNav("videodb://inprogresstvshows/", items, details))
       return InternalError;
 
-    return HandleItems(traits.id, traits.list, items, parameterObject, result, true);
+    return HandleItems(traits.id, "items", items, parameterObject, result, true);
   }
 
   const int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
@@ -216,7 +209,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
     if (!listed)
       return InternalError;
 
-    HandleFileItemList(traits.id, false, traits.list, items, parameterObject, result);
+    HandleFileItemList(traits.id, false, "items", items, parameterObject, result);
     return OK;
   }
 
@@ -278,7 +271,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
                                                 details))
     return InternalError;
 
-  return HandleItems(traits.id, traits.list, items, parameterObject, result, false);
+  return HandleItems(traits.id, "items", items, parameterObject, result, false);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetItemProperties(const CVariant& parameterObject, CVariant& result)

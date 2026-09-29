@@ -72,6 +72,11 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   is announced once, with the values it set.
 - `VideoLibrary.GetInProgressTVShows` applies `sort` and `limits`; it answered every in-progress
   show in title order whatever they said.
+- Every library list method (`VideoLibrary.GetMovies`, `GetRecentlyAddedMovies`,
+  `GetInProgressTVShows`, `AudioLibrary.GetArtists`, `GetSongs` and the rest) answers
+  `{limits, items}`, as `GetItems` does, in place of a list named for the kind (`movies`,
+  `tvShows`, `episodes`, ...). The calls are unchanged. A music list that finds nothing answers
+  an empty `items`, where it answered no list.
 
 ### Deprecated
 
