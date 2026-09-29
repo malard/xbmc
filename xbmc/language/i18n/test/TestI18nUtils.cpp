@@ -8,9 +8,9 @@
 
 #include "language/i18n/test/TestI18nUtils.h"
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Bcp47Common.h"
 #include "language/i18n/Bcp47Parser.h"
+#include "utils/StringUtils.h"
 
 namespace KODI::LANGUAGE::I18N
 {

@@ -6,11 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Bcp47.h"
 #include "language/i18n/Bcp47Formatter.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryManager.h"
 #include "language/i18n/test/TestI18nUtils.h"
+#include "utils/StringUtils.h"
 
 #include <memory>
 

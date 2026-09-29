@@ -8,11 +8,11 @@
 
 #include "language/i18n/Bcp47.h"
 
-#include "utils/RegExp.h"
-#include "utils/StringUtils.h"
 #include "language/i18n/Bcp47Formatter.h"
 #include "language/i18n/Bcp47Parser.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryManager.h"
+#include "utils/RegExp.h"
+#include "utils/StringUtils.h"
 
 #include <algorithm>
 

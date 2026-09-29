@@ -8,10 +8,10 @@
 
 #include "language/i18n/Bcp47Parser.h"
 
+#include "language/i18n/Bcp47.h"
 #include "threads/CriticalSection.h"
 #include "utils/RegExp.h"
 #include "utils/StringUtils.h"
-#include "language/i18n/Bcp47.h"
 
 #include <algorithm>
 #include <array>

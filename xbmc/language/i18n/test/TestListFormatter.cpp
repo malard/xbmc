@@ -6,8 +6,8 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "utils/ILocalizer.h"
 #include "language/i18n/ListFormatter.h"
+#include "utils/ILocalizer.h"
 
 #include <cstdint>
 #include <map>

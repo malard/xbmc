@@ -6,11 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "test/TestUtils.h"
 #include "language/i18n/Bcp47Registry/RegistryRecordProvider.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryFile.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryManager.h"
 #include "language/i18n/test/TestI18nUtils.h"
+#include "test/TestUtils.h"
 
 #include <memory>
 

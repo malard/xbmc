@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryTypes.h"
+#include "utils/StringUtils.h"
 #include "utils/log.h"
 
 #include <optional>

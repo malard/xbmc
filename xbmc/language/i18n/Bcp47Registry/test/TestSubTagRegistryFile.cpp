@@ -6,8 +6,8 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "test/TestUtils.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryFile.h"
+#include "test/TestUtils.h"
 
 #include <gtest/gtest.h>
 

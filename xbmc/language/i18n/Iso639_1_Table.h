@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Iso639.h"
+#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <array>

@@ -8,8 +8,8 @@
 
 #include "language/i18n/Bcp47Formatter.h"
 
-#include "utils/StringUtils.h"
 #include "language/i18n/Bcp47.h"
+#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <functional>
