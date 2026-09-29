@@ -88,7 +88,9 @@ protected:
                                      CFileItemList& pictures,
                                      CFileItemList& media);
 
-  static JSONRPC_STATUS PlayFileItemList(CFileItemList& list, const CVariant& options);
+  static JSONRPC_STATUS PlayFileItemList(CFileItemList& list,
+                                         const CVariant& options,
+                                         CVariant& result);
 
 private:
   //! Sends a volume step action and answers with the volume now in force.
@@ -102,13 +104,23 @@ private:
   static PlayerType GetTarget(const CVariant& playlist);
   /*!
    * \brief Run a verb on the player for each target; it succeeds if it succeeds for any of them.
-   * A named playlist that is not playing fails.
+   * A named playlist that is not playing fails, and so does a verb with nothing playing, for the
+   * reason nothing-playing.
+   * \param result The verb's result, which the one that answers for the call is left in
    */
   static JSONRPC_STATUS ForEachTarget(const CVariant& parameterObject,
+                                      CVariant& result,
                                       const std::function<JSONRPC_STATUS(PlayerType)>& verb);
-  //! As ForEachTarget, for a verb about the playlist, which may name one that is not playing.
+  /*!
+   * \brief As ForEachTarget, for a verb about the playlist, which may name one that is not playing.
+   * A failure's reason concerns the playlist of the player it failed on, unless the verb names
+   * another target.
+   */
   static JSONRPC_STATUS ForEachOnList(const CVariant& parameterObject,
+                                      CVariant& result,
                                       const std::function<JSONRPC_STATUS(PlayerType)>& verb);
+  //! Whether anything is seen or heard: playback or a slideshow.
+  static bool IsAnythingPlaying();
   /*!
    * \return The playlist a verb or property is about: the one named, else the playing one, else
    * the one matching the player; none for the slideshow.

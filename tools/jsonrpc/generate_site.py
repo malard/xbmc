@@ -59,6 +59,7 @@ class SiteBuilder:
         self.vdir = "v" + self.version.split(".")[0]
         self.render = SchemaRenderer(self.vdir)
         self.taxonomy = kodi_schema.load_error_taxonomy()
+        self.reasons = kodi_schema.load_reason_taxonomy()
         self.service = kodi_schema.load_service()
         self.examples = self._load_examples()
         self.reverse_refs = self._reverse_refs()
@@ -204,6 +205,16 @@ class SiteBuilder:
                 for error in method["errors"])
             parts.append(f"<ul>{items}</ul>")
             also = "also "
+        if method["reasons"]:
+            errors_of = {reason["name"]: reason["error"] for reason in self.reasons}
+            items = "".join(
+                f'<li><a href="../errors.html#{esc(reason)}"><code>{esc(reason)}</code></a> '
+                f"({esc(errors_of[reason])})</li>"
+                for reason in method["reasons"])
+            parts.append("<h3>Reasons</h3>"
+                         "<p>A failure for one of these carries it as "
+                         "<code>error.data.reason</code>.</p>"
+                         f"<ul>{items}</ul>")
         parts.append(
             f'<p>Any method can {also}return the <a href="../errors.html">standard '
             "errors</a>; <code>-32602</code> (Invalid params) carries "
@@ -308,6 +319,23 @@ class SiteBuilder:
             "<th>Description</th><th><code>error.data</code> populated</th>"
             "</tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div>")
+        reason_rows = "".join(
+            f'<tr id="{esc(reason["name"])}">'
+            f"<td><code>{esc(reason['name'])}</code></td>"
+            f'<td><a href="#{esc(reason["error"])}">{esc(reason["error"])}</a></td>'
+            f"<td>{esc(reason['description'])}</td>"
+            "</tr>"
+            for reason in self.reasons)
+        body += (
+            "<h2>Reasons</h2>"
+            "<p>A failure a client can act on names its reason: "
+            "<code>error.data</code> is <code>{\"reason\": ..., \"target\": {...}}</code>, "
+            "where the optional target is what the failure concerns, as the call "
+            "addresses it. Each reason refines one error, and each method's page "
+            "lists the reasons it can fail for.</p>"
+            '<div class="tablewrap"><table>'
+            "<thead><tr><th>Reason</th><th>Error</th><th>Description</th></tr></thead>"
+            f"<tbody>{reason_rows}</tbody></table></div>")
         self.page(f"{self.vdir}/errors.html",
                   "Errors - Kodi JSON-RPC API", body)
 

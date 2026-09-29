@@ -122,6 +122,49 @@ def load_error_taxonomy(header_path=UTILS_HEADER):
     return taxonomy
 
 
+_REASON_ENTRY = re.compile(
+    r"\{\s*Reason::(\w+)\s*,\s*(\w+)\s*,\s*"
+    r"(" + _STRING_LITERALS + r")\s*,\s*"
+    r"(" + _STRING_LITERALS + r")\s*,?\s*\}",
+    re.DOTALL)
+
+
+def load_reason_taxonomy(header_path=UTILS_HEADER):
+    """Parse JSONRPCUtils.h into a list of failure reasons.
+
+    Each entry is {"name", "enumerator", "error", "description"}, in the
+    order of the JSONRPC_REASON_DESCRIPTIONS table; "error" is the name of
+    the status the reason belongs to.
+    """
+    text = Path(header_path).read_text(encoding="utf-8")
+    status_names = {}
+    for entry in _DESCRIPTION_ENTRY.finditer(text):
+        status_names[entry.group(1)] = _join_literals(entry.group(2))
+    enum = re.search(r"enum\s+class\s+Reason\s*\{(.*?)\}", text, re.DOTALL)
+    if enum is None:
+        raise ValueError("Reason enum not found")
+    enumerators = re.findall(r"\b(\w+)\s*,", re.sub(r"//[^\n]*", "", enum.group(1)))
+    table = re.search(
+        r"JSONRPC_REASON_DESCRIPTIONS\s*\[\s*\]\s*=\s*\{(.*?)\}\s*;",
+        text, re.DOTALL)
+    if table is None:
+        raise ValueError("JSONRPC_REASON_DESCRIPTIONS table not found")
+    reasons = []
+    for entry in _REASON_ENTRY.finditer(table.group(1)):
+        enumerator, status, name, description = entry.groups()
+        if status not in status_names:
+            raise ValueError(f"reason {enumerator} belongs to unknown status {status}")
+        reasons.append({
+            "name": _join_literals(name),
+            "enumerator": enumerator,
+            "error": status_names[status],
+            "description": _join_literals(description),
+        })
+    if [reason["enumerator"] for reason in reasons] != enumerators:
+        raise ValueError("JSONRPC_REASON_DESCRIPTIONS does not describe every Reason in order")
+    return reasons
+
+
 def _load_json(schema_dir, name):
     path = Path(schema_dir) / name
     with open(path, encoding="utf-8") as handle:

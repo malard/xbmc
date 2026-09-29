@@ -13,6 +13,8 @@
 #include "utils/Artwork.h"
 
 #include <array>
+#include <cstddef>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -60,7 +62,7 @@ struct JsonRpcStatusDescription
   const char* name;
   const char* message;
   const char* description;
-  //! Whether responses with this status populate the optional "error.data" member
+  //! Whether responses with this status populate "error.data" even without a reason
   bool hasData;
 };
 
@@ -115,6 +117,81 @@ inline const JsonRpcStatusDescription* StatusToDescription(JSONRPC_STATUS status
 
   return nullptr;
 }
+
+/*!
+ \ingroup jsonrpc
+ \brief Why a call failed, reported to the client as "error.data.reason"
+
+ Each reason belongs to one JSONRPC_STATUS, which a call failing for that reason answers with.
+ A method declares the reasons it can fail for beside its errors in methods.json.
+ */
+enum class Reason
+{
+  NothingPlaying,
+  NotApplicable,
+  NotSeekable,
+  NotPausable,
+  TempoUnsupported,
+  Paused,
+  NoSuchStream,
+  Unreachable,
+};
+
+struct JsonRpcReasonDescription
+{
+  Reason reason;
+  JSONRPC_STATUS status;
+  //! The stable name a client matches on
+  const char* name;
+  const char* description;
+};
+
+//! Every Reason, in declaration order
+inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
+    {Reason::NothingPlaying, FailedToExecute, "nothing-playing",
+     "Nothing is playing, or not the playlist the call named."},
+    {Reason::NotApplicable, FailedToExecute, "not-applicable",
+     "The call does not apply to what is playing, such as zooming a video or choosing a subtitle "
+     "for music."},
+    {Reason::NotSeekable, FailedToExecute, "not-seekable", "What is playing cannot seek."},
+    {Reason::NotPausable, FailedToExecute, "not-pausable", "What is playing cannot pause."},
+    {Reason::TempoUnsupported, FailedToExecute, "tempo-unsupported",
+     "The player of what is playing cannot change its tempo."},
+    {Reason::Paused, FailedToExecute, "paused", "The call needs playback that is not paused."},
+    {Reason::NoSuchStream, InvalidParams, "no-such-stream",
+     "What is playing has no stream at the given index."},
+    {Reason::Unreachable, Unavailable, "unreachable",
+     "The file cannot be read at the moment, as when its share is offline."},
+};
+
+constexpr bool ReasonsAreDescribedInOrder()
+{
+  for (size_t index = 0; index < std::size(JSONRPC_REASON_DESCRIPTIONS); ++index)
+  {
+    if (JSONRPC_REASON_DESCRIPTIONS[index].reason != static_cast<Reason>(index))
+      return false;
+  }
+  return true;
+}
+static_assert(ReasonsAreDescribedInOrder());
+
+inline const JsonRpcReasonDescription& ReasonToDescription(Reason reason)
+{
+  return JSONRPC_REASON_DESCRIPTIONS[static_cast<size_t>(reason)];
+}
+
+/*!
+ \brief Fails a call for a declared reason, which the response carries in "error.data"
+ \param result The handler's result, replaced by the error data
+ \param reason Why the call failed
+ \param target What the failure concerns, as the caller addresses it, e.g. {"movieId": 3}
+ \return The status the reason belongs to
+ */
+JSONRPC_STATUS Fail(CVariant& result, Reason reason);
+JSONRPC_STATUS Fail(CVariant& result, Reason reason, const CVariant& target);
+
+//! A failure's target of one member, e.g. Target("playlist", "audio")
+CVariant Target(const std::string& key, const CVariant& value);
 
 /*!
  \brief The handler of a JSON-RPC method

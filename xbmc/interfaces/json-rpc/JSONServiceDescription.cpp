@@ -1314,7 +1314,37 @@ bool JsonRpcMethod::Parse(const CVariant& value)
     return false;
   }
 
-  return parseErrors(value);
+  return parseErrors(value) && parseReasons(value);
+}
+
+bool JsonRpcMethod::parseReasons(const CVariant& value)
+{
+  reasons.clear();
+  if (!value.isMember("reasons"))
+    return true;
+
+  if (!value["reasons"].isArray())
+  {
+    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined reasons list", name);
+    return false;
+  }
+
+  for (auto reason = value["reasons"].begin_array(); reason != value["reasons"].end_array();
+       ++reason)
+  {
+    const std::string reasonName = reason->asString();
+    const auto description = std::ranges::find_if(
+        JSONRPC_REASON_DESCRIPTIONS, [&reasonName](const JsonRpcReasonDescription& candidate)
+        { return reasonName == candidate.name; });
+    if (description == std::end(JSONRPC_REASON_DESCRIPTIONS))
+    {
+      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown reason \"{}\"", name, reasonName);
+      return false;
+    }
+    reasons.push_back(&(*description));
+  }
+
+  return true;
 }
 
 bool JsonRpcMethod::parseErrors(const CVariant& value)
@@ -1834,6 +1864,7 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
   CJsonRpcMethodMap methods;
   std::map<std::string, CVariant> notifications;
   std::vector<const JsonRpcStatusDescription*> errors;
+  std::vector<const JsonRpcReasonDescription*> reasons;
 
   int clientPermissions = client->GetPermissionFlags();
   int transportCapabilities = transport->GetCapabilities();
@@ -1940,6 +1971,12 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
           if (std::find(errors.begin(), errors.end(), error) == errors.end())
             errors.push_back(error);
         }
+
+        for (const auto* reason : methodIterator->second.reasons)
+        {
+          if (std::ranges::find(reasons, reason) == reasons.end())
+            reasons.push_back(reason);
+        }
       }
 
       for (const auto& referencedType : referencedTypes)
@@ -1960,6 +1997,9 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     errors.reserve(JSONRPC_STATUS_DESCRIPTIONS.size());
     for (const auto& description : JSONRPC_STATUS_DESCRIPTIONS)
       errors.push_back(&description);
+
+    for (const auto& description : JSONRPC_REASON_DESCRIPTIONS)
+      reasons.push_back(&description);
   }
 
   // Print the header
@@ -2041,6 +2081,10 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     for (const auto* error : methodIterator->second.errors)
       currentMethod["errors"].append(error->name);
 
+    currentMethod["reasons"] = CVariant(CVariant::VariantTypeArray);
+    for (const auto* reason : methodIterator->second.reasons)
+      currentMethod["reasons"].append(reason->name);
+
     result["methods"][methodIterator->second.name] = currentMethod;
   }
 
@@ -2064,6 +2108,17 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     currentError["hasdata"] = status->hasData;
 
     result["errors"][status->name] = currentError;
+  }
+
+  for (const auto* reason : reasons)
+  {
+    CVariant currentReason = CVariant(CVariant::VariantTypeObject);
+
+    currentReason["error"] = StatusToDescription(reason->status)->name;
+    if (printDescriptions)
+      currentReason["description"] = reason->description;
+
+    result["reasons"][reason->name] = currentReason;
   }
 
   return OK;

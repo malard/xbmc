@@ -103,6 +103,17 @@ Notifications:
 - `Playlist.OnPropertiesChanged`
 - `Settings.OnLevelChanged`
 
+Failure reasons:
+
+- A failure a client can act on carries `error.data` as `{"reason": ..., "target": {...}}`: a
+  stable kebab-case reason, and what the failure concerns as the call addresses it
+  (`{"playlist": "audio"}`), when there is one. Each reason belongs to one error.
+- Each method declares the `reasons` it can fail for beside its `errors`. `JSONRPC.Introspect`
+  serves them, with the reason taxonomy under `reasons`; `openrpc.json` carries them as
+  `x-kodi-reasons`.
+- `Player`: `nothing-playing`, `not-applicable`, `not-seekable`, `not-pausable`,
+  `tempo-unsupported`, `paused`, `no-such-stream`, and `unreachable` from `Player.Open`.
+
 Properties and types:
 
 - The error taxonomy in `JSONRPC.Introspect` (`errors`, and `"error"` as a filter type), and each

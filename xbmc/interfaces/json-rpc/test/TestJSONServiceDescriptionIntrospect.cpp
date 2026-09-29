@@ -44,6 +44,7 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
   for (auto method = result["methods"].begin_map(); method != result["methods"].end_map(); ++method)
   {
     EXPECT_TRUE(method->second["errors"].isArray()) << method->first << " declares no errors";
+    EXPECT_TRUE(method->second["reasons"].isArray()) << method->first << " declares no reasons";
   }
 }
 
@@ -98,6 +99,47 @@ TEST_F(TestJSONServiceDescriptionIntrospect, AMethodDeclaringNoErrorsServesAnEmp
   EXPECT_TRUE(errors.isArray());
   EXPECT_EQ(0u, errors.size());
   EXPECT_EQ(0u, result["errors"].size());
+}
+
+//! \brief A method's declared reasons are served under it, and each names the error it refines
+TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredReasonsAreServedWithTheMethod)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Reasons": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [], "returns": "string", "errors": ["FailedToExecute"],
+    "reasons": ["nothing-playing", "not-seekable"]
+  }})",
+                                                 StubMethod));
+
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false,
+                                               "Test.Reasons", "method"));
+
+  const CVariant& reasons = result["methods"]["Test.Reasons"]["reasons"];
+  ASSERT_EQ(2u, reasons.size());
+  EXPECT_EQ("nothing-playing", reasons[0].asString());
+  EXPECT_EQ("not-seekable", reasons[1].asString());
+
+  EXPECT_EQ(2u, result["reasons"].size());
+  EXPECT_EQ("FailedToExecute", result["reasons"]["nothing-playing"]["error"].asString());
+  EXPECT_FALSE(result["reasons"]["not-seekable"]["description"].asString().empty());
+}
+
+TEST_F(TestJSONServiceDescriptionIntrospect, EveryReasonIsServedUnfiltered)
+{
+  CVariant result;
+  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+
+  EXPECT_EQ(std::size(JSONRPC_REASON_DESCRIPTIONS), result["reasons"].size());
+}
+
+TEST_F(TestJSONServiceDescriptionIntrospect, AnUnknownReasonIsRejected)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.UnknownReason": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [], "returns": "string", "errors": ["FailedToExecute"], "reasons": ["no-such-reason"]
+  }})",
+                                                  StubMethod));
 }
 
 TEST_F(TestJSONServiceDescriptionIntrospect, AnUnknownErrorNameIsRejected)

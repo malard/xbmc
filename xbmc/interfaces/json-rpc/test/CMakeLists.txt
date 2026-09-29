@@ -8,6 +8,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestFileItemHandler.cpp
             TestFileOperations.cpp
             TestGUIPropertySchema.cpp
+            TestJSONRPCErrorData.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
             TestJSONServiceDescription.cpp

@@ -747,6 +747,16 @@ the same flag for offline tooling.
 New since Kodi 21 and safe to ignore until you want it. The
 [changelog](CHANGELOG.md) has the complete list.
 
+- **A failure says why.** Where a client can act on it, `error.data` names
+  the reason and what it concerns, whatever the code:
+
+  ```json
+  {"jsonrpc": "2.0", "id": 1, "error": {"code": -32100, "message": "Failed to execute method.",
+   "data": {"reason": "nothing-playing"}}}
+  ```
+
+  Each method lists its `reasons` beside its `errors` in `JSONRPC.Introspect`.
+  Match on `reason`, never on `message`.
 - **Playback failure is reported.** `Player.OnPlaybackFailed` fires when
   playback was requested and did not happen, with a `reason` of `unplayable`,
   `unresolved`, `locked` or `error`.

@@ -362,11 +362,34 @@ inline void CJSONRPC::BuildResponse(const CVariant& request,
 
       response["error"]["code"] = status->status;
       response["error"]["message"] = status->message;
-      if (status->hasData && !result.isNull())
+      if (result["reason"].isString() || (status->hasData && !result.isNull()))
         response["error"]["data"] = result;
       break;
     }
   }
+}
+
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result, Reason reason)
+{
+  const JsonRpcReasonDescription& description = ReasonToDescription(reason);
+  result = CVariant(CVariant::VariantTypeObject);
+  result["reason"] = description.name;
+  return description.status;
+}
+
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result, Reason reason, const CVariant& target)
+{
+  const JSONRPC_STATUS status = Fail(result, reason);
+  if (!target.isNull())
+    result["target"] = target;
+  return status;
+}
+
+CVariant JSONRPC::Target(const std::string& key, const CVariant& value)
+{
+  CVariant target(CVariant::VariantTypeObject);
+  target[key] = value;
+  return target;
 }
 
 void CJSONRPCUtils::NotifyItemUpdated()

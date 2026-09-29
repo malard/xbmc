@@ -53,7 +53,7 @@ TEST(TestJSONRPCStatus, CodesAndNamesAreUnique)
   }
 }
 
-//! \brief CJSONRPC::BuildResponse populates "error.data" for InvalidParams and nothing else
+//! \brief Only InvalidParams populates "error.data" without a reason; the validator writes it
 TEST(TestJSONRPCStatus, OnlyInvalidParamsCarriesData)
 {
   for (const auto& description : JSONRPC_STATUS_DESCRIPTIONS)
@@ -67,5 +67,33 @@ TEST(TestJSONRPCStatus, EveryDescriptionIsPopulated)
     EXPECT_FALSE(std::string_view(description.name).empty());
     EXPECT_FALSE(std::string_view(description.message).empty());
     EXPECT_FALSE(std::string_view(description.description).empty());
+  }
+}
+
+TEST(TestJSONRPCStatus, ReasonNamesAreUniqueAndKebabCase)
+{
+  std::set<std::string_view> names;
+
+  for (const auto& description : JSONRPC_REASON_DESCRIPTIONS)
+  {
+    const std::string_view name{description.name};
+    EXPECT_TRUE(names.insert(name).second) << "duplicate reason " << name;
+    EXPECT_FALSE(name.empty());
+    EXPECT_EQ(std::string_view::npos, name.find_first_not_of("abcdefghijklmnopqrstuvwxyz-"))
+        << name;
+    EXPECT_NE('-', name.front()) << name;
+    EXPECT_NE('-', name.back()) << name;
+    EXPECT_EQ(std::string_view::npos, name.find("--")) << name;
+  }
+}
+
+//! \brief A reason refines an error, so its status must be one that reaches a client as an error
+TEST(TestJSONRPCStatus, EveryReasonBelongsToAnErrorStatus)
+{
+  for (const auto& description : JSONRPC_REASON_DESCRIPTIONS)
+  {
+    EXPECT_NE(nullptr, StatusToDescription(description.status)) << description.name;
+    EXPECT_EQ(&description, &ReasonToDescription(description.reason)) << description.name;
+    EXPECT_FALSE(std::string_view(description.description).empty()) << description.name;
   }
 }
