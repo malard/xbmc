@@ -21,6 +21,6 @@ namespace JSONRPC
 class CDatabaseOperations
 {
 public:
-  static JSONRPC_STATUS GetDatabaseNameByType(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetDatabaseName(const CVariant& parameterObject, CVariant& result);
 };
 } // namespace JSONRPC

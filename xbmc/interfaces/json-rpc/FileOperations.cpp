@@ -39,7 +39,7 @@ using namespace KODI::REGEXP;
 using namespace JSONRPC;
 using namespace XFILE;
 
-JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);

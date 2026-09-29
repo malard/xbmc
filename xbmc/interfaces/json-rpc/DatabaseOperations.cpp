@@ -14,8 +14,8 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CDatabaseOperations::GetDatabaseNameByType(const CVariant& parameterObject,
-                                                          CVariant& result)
+JSONRPC_STATUS CDatabaseOperations::GetDatabaseName(const CVariant& parameterObject,
+                                                    CVariant& result)
 {
   const std::string dbType = parameterObject["type"].asString();
   const std::string dbName = CServiceBroker::GetDatabaseManager().GetDatabaseNameByType(dbType);

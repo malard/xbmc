@@ -128,7 +128,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Playlist.Swap",                                CPlaylistOperations::Swap },
 
 // Files
-  { "Files.GetSources",                             CFileOperations::GetRootDirectory },
+  { "Files.GetSources",                             CFileOperations::GetSources },
   { "Files.GetDirectory",                           CFileOperations::GetDirectory },
   { "Files.GetFileDetails",                         CFileOperations::GetFileDetails },
   { "Files.SetFileDetails",                         CFileOperations::SetFileDetails },
@@ -310,7 +310,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "XBMC.GetInfoBooleans",                         CGUIOperations::GetInfoBooleans },
 
 // Database operations
-  { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseNameByType },
+  { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseName },
 };
 
 // clang-format on
