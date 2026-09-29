@@ -271,3 +271,25 @@ TEST_F(TestAddonInfoBuilder, ALanguagePackMustNameItsLanguage)
   EXPECT_EQ(nullptr, GenerateLanguagePack("not a language"));
   EXPECT_EQ(nullptr, GenerateLanguagePack(""));
 }
+
+TEST_F(TestAddonInfoBuilder, ATranslationInNoLanguageIsIgnored)
+{
+  const std::string xml = R"xml(
+<addon id="plugin.test" name="Test" version="1.0.0" provider-name="Team Kodi">
+  <extension point="xbmc.python.pluginsource" library="default.py"/>
+  <extension point="kodi.addon.metadata">
+    <summary lang="not a language">Lost</summary>
+    <description lang="de_DE">Deutsch</description>
+    <platform>all</platform>
+  </extension>
+</addon>
+)xml";
+
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(xml));
+  const AddonInfoPtr addon{CAddonInfoBuilder::Generate(doc.RootElement(), RepositoryDirInfo{})};
+  ASSERT_NE(nullptr, addon);
+
+  EXPECT_EQ("", addon->Summary());
+  EXPECT_EQ("Deutsch", addon->Description());
+}

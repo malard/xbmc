@@ -73,7 +73,8 @@ private:
   static bool ParseXMLExtension(CAddonExtensions& addonExt, const tinyxml2::XMLElement* element);
   static bool GetTextList(const tinyxml2::XMLElement* element,
                           const std::string& tag,
-                          LocalizedStringsMap& translatedValues);
+                          LocalizedStringsMap& translatedValues,
+                          const std::string& addonId);
   static const char* GetPlatformLibraryName(const tinyxml2::XMLElement* element);
   static bool PlatformSupportsAddon(const AddonInfoPtr& addon);
 };

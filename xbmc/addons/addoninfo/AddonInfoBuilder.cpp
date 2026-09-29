@@ -459,17 +459,17 @@ bool CAddonInfoBuilder::ParseXML(const AddonInfoPtr& addon,
       /*
        * Parse addon.xml "<summary lang="..">...</summary>"
        */
-      GetTextList(child, "summary", addon->m_summary);
+      GetTextList(child, "summary", addon->m_summary, addon->m_id);
 
       /*
        * Parse addon.xml "<description lang="..">...</description>"
        */
-      GetTextList(child, "description", addon->m_description);
+      GetTextList(child, "description", addon->m_description, addon->m_id);
 
       /*
        * Parse addon.xml "<disclaimer lang="..">...</disclaimer>"
        */
-      GetTextList(child, "disclaimer", addon->m_disclaimer);
+      GetTextList(child, "disclaimer", addon->m_disclaimer, addon->m_id);
 
       /*
        * Parse addon.xml "<assets>...</assets>"
@@ -574,7 +574,7 @@ bool CAddonInfoBuilder::ParseXML(const AddonInfoPtr& addon,
           else
             addon->m_lifecycleState = AddonLifecycleState::NORMAL;
 
-          GetTextList(child, "lifecyclestate", addon->m_lifecycleStateDescription);
+          GetTextList(child, "lifecyclestate", addon->m_lifecycleStateDescription, addon->m_id);
         }
       }
 
@@ -601,7 +601,7 @@ bool CAddonInfoBuilder::ParseXML(const AddonInfoPtr& addon,
        * In the event that the changelog (news) in addon.xml is empty, check
        * whether it is an installed addon and read a changelog.txt as a
        * replacement, if available. */
-      GetTextList(child, "news", addon->m_changelog);
+      GetTextList(child, "news", addon->m_changelog, addon->m_id);
       if (addon->m_changelog.empty() && !isRepoXMLContent && !addonPath.empty())
       {
         using XFILE::CFile;
@@ -814,7 +814,8 @@ bool CAddonInfoBuilder::ParseXMLExtension(CAddonExtensions& addonExt,
 
 bool CAddonInfoBuilder::GetTextList(const tinyxml2::XMLElement* element,
                                     const std::string& tag,
-                                    LocalizedStringsMap& translatedValues)
+                                    LocalizedStringsMap& translatedValues,
+                                    const std::string& addonId)
 {
   if (!element)
     return false;
@@ -828,7 +829,9 @@ bool CAddonInfoBuilder::GetTextList(const tinyxml2::XMLElement* element,
     const char* text = child->GetText();
     if (lang != nullptr)
     {
-      if (strcmp(lang, "no") == 0)
+      if (!KODI::LANGUAGE::CLanguageTag::TryParse(lang).has_value())
+        CLog::LogF(LOGERROR, "{}: unknown {} language '{}', ignored", addonId, tag, lang);
+      else if (strcmp(lang, "no") == 0)
         translatedValues.try_emplace("nb_NO", text != nullptr ? text : "");
       else
         translatedValues.try_emplace(lang, text != nullptr ? text : "");
