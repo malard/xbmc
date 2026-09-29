@@ -1,8 +1,8 @@
-# Migrating a client from JSON-RPC 13 to 14
+# Migrating a client from JSON-RPC 13 or 14 to 15
 
-Version 14 is a breaking release: a version 13 client is not guaranteed to
-work against it unchanged. Everything that breaks is listed here, with what to
-do about it.
+Version 15 is a breaking release: a client written against version 13 or 14
+is not guaranteed to work against it unchanged. Everything that breaks is
+listed here, with what to do about it.
 
 The baseline is **13.5.0, the version Kodi 21 (Omega) shipped** — the last
 version delivered in a stable release. The Kodi 22 pre-releases carried
@@ -17,7 +17,7 @@ Check what you are talking to before you assume either shape:
 ```
 
 ```json
-{"jsonrpc": "2.0", "id": 1, "result": {"version": {"major": 14, "minor": 0, "patch": 0}}}
+{"jsonrpc": "2.0", "id": 1, "result": {"version": {"major": 15, "minor": 0, "patch": 0}}}
 ```
 
 Nothing below depends on Kodi's own version. A client that supports both
@@ -31,7 +31,7 @@ should branch on `version.major`.
 only the failures changed.
 
 Version 13 answered `-32602 InvalidParams` for almost everything that went
-wrong after the parameters had been validated. Version 14 separates them:
+wrong after the parameters had been validated. Version 15 separates them:
 
 | Code | Name | Means |
 |---|---|---|
@@ -44,7 +44,7 @@ wrong after the parameters had been validated. Version 14 separates them:
 Affected since 13.200.0: every `AudioLibrary` and `VideoLibrary`
 `Get*Details`, `Set*Details` and `Refresh*` method answers `NotFound` for an
 id no item has, and `Player.Open` answers `Unavailable` for an item it cannot
-reach. New in 14: `Files.GetDirectory`, `Files.GetFileDetails`,
+reach. New in 15: `Files.GetDirectory`, `Files.GetFileDetails`,
 `Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
 `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
 `AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
@@ -80,7 +80,7 @@ dropped silently whatever it could not resolve.
 {"result": "OK"}
 ```
 
-Version 14 says what happened:
+Version 15 says what happened:
 
 ```json
 {"result": {"added": 2,
@@ -136,8 +136,8 @@ unconditionally will now fault on `null`.
 
 ## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are deprecated
 
-They still work and are the same implementation. **Everything deprecated in
-14 is removed in 15.**
+They still work and are the same implementation, and a later major version may
+remove them.
 
 ```diff
 - {"method": "XBMC.GetInfoLabels", "params": {"labels": ["System.Time"]}}
@@ -210,7 +210,7 @@ it:
  "filetype": "file", "label": "Hail, Caesar!"}
 ```
 
-Version 14 keeps the entry the caller was browsing and annotates it:
+Version 15 keeps the entry the caller was browsing and annotates it:
 
 ```json
 {"file": "smb://nas/Movies/Hail Caesar (2016)/",
@@ -271,33 +271,43 @@ none, and a value Kodi does not recognise passes through unchanged.
 **What to do.** Match on the primary subtag (`en` from `en-AU`) rather than
 on a three-letter code. Since 13.200.0.
 
-## 11. A playerid is a player, a playlistid is a playlist
+## 11. Playlists are named, and players are addressed by playlist
 
-The two share a range, and version 13 resolved a `playerid` through the
-playlist in use: playerid 1 was accepted only while the video playlist was
-current, and accepted even when nothing played. Version 14 separates them.
-
-- `playerid` names the player: 0 audio, 1 video, 2 pictures, however it was
-  started. A player that is not running answers `Unavailable` (-32097).
-- `playlistid`, accepted by every `Player` method in place of `playerid`,
-  names the playlist a running player is working through. A playlist nothing
-  is playing through answers `Unavailable`.
-- Both in one request is `InvalidParams`.
+A playlist is `video`, `audio` or `picture`, in place of the numeric
+`playlistid` every `Playlist` method and notification took, and
+`Playlist.GetPlaylists` answers the names.
 
 ```diff
-  {"method": "Player.Stop", "params": {"playerid": 1}}
-+ {"method": "Player.Stop", "params": {"playlistid": 0}}
+- {"method": "Playlist.GetItems", "params": {"playlistid": 1}}
++ {"method": "Playlist.GetItems", "params": {"playlist": "video"}}
 ```
 
-Notifications and `Player.GetActivePlayers` publish both numbers, and their
-`playerid` is the player's own. A disc opened as `bluray://` plays through
-the music playlist; version 13 announced it as playerid 0 and refused
-playerid 1 for it. Version 14 announces `{"playerid": 1, "playlistid": 0}`,
-and either number addresses it.
+`playerid` is gone from every `Player` method. Version 13 resolved it through
+the playlist in use, so it never named a player: playerid 1 was accepted only
+while the video playlist was current, and accepted even when nothing played.
+A `Player` method now takes an optional `playlist`, `video` or `audio`. With
+none, it acts on everything playing, the playback and a slideshow beside it.
+A named playlist that nothing is playing through answers `FailedToExecute`.
 
-**What to do.** Take the `playerid` from `Player.GetActivePlayers` or the
-notification rather than assuming one from the media type, and treat
-`Unavailable` as "nothing to control" where version 13 answered defaults.
+```diff
+- {"method": "Player.Stop", "params": {"playerid": 1}}
++ {"method": "Player.Stop"}
+```
+
+`Player.GetActivePlayers` is removed. `Player.GetProperties` reports the
+`playlist` being played and the `playertype`, and the `player` object of every
+`Player.On*` notification carries `players`, the playlists the playback holds,
+in place of `playerid`.
+
+`Playlist.GetItems` answers each entry with its `position` in the list and its
+`displayorder`, its place in play order; the two differ while the playlist is
+shuffled. `Player.GoTo` and `Playlist.Remove` take a `position`.
+`Player.GetProperties` reports `displayorder` beside `position`.
+
+**What to do.** Send playlist names where you sent numbers. Drop `playerid`
+from `Player` calls, or send the `playlist` you mean. Read what is playing
+from `Player.GetProperties` or from the notification's `players` rather than
+from `Player.GetActivePlayers`.
 
 ## 12. Settings writes need the `WriteSetting` permission
 

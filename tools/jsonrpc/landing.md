@@ -52,8 +52,7 @@ Machine-readable artifacts:
 
 {upgrading-banner}
 
-- [Migrating from 13 to 14]({v}/MIGRATING-v13-to-v14.html)
-- [Changelog]({v}/CHANGELOG.html)
+{upgrading-links}
 
 ## Reference
 

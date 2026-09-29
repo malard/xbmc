@@ -37,7 +37,7 @@ LANDING_PATH = Path(__file__).resolve().parent / "landing.md"
 
 # Hand-written documents in docs/jsonrpc, rendered into the site as pages
 PROSE_DOCUMENTS = {
-    "MIGRATING-v13-to-v14.md": "Migrating from 13 to 14",
+    "MIGRATING-v13-v14-to-v15.md": "Migrating from 13 or 14 to 15",
     "CHANGELOG.md": "Changelog",
 }
 
@@ -171,9 +171,9 @@ class SiteBuilder:
         ]
         if method.get("deprecated"):
             parts.append('<p class="deprecated"><strong>Deprecated.</strong> '
-                         "Still served, but it will be removed in the next "
-                         "major version of the API. The description says what "
-                         "to use instead.</p>")
+                         "Still served, but a later major version of the API "
+                         "may remove it. The description says what to use "
+                         "instead.</p>")
         badges = [f'<span class="badge">Permission: '
                   f"{esc(method['permission'])}</span>"]
         badges.extend(f'<span class="badge">Transport: {esc(label)}</span>'
@@ -368,10 +368,16 @@ class SiteBuilder:
                 "by name.</p>"),
             "upgrading-banner": (
                 f'<p class="deprecated"><strong>Version {esc(self.version)} is a '
-                "breaking release.</strong> A client written against version 13 "
-                "is not guaranteed to work unchanged. The migration guide lists "
-                "every break and what to do about each.</p>"
+                "breaking release.</strong> A client written against an earlier "
+                "version is not guaranteed to work unchanged. The migration guide "
+                "lists every break and what to do about each.</p>"
                 if self.version.endswith(".0.0") else ""),
+            "upgrading-links": (
+                "<ul>"
+                + "".join(f'<li><a href="{v}/{source[:-len(".md")]}.html">'
+                          f"{esc(title)}</a></li>"
+                          for source, title in PROSE_DOCUMENTS.items())
+                + "</ul>"),
             "reference": (
                 "<ul>"
                 f'<li><a href="{v}/methods/index.html">Methods</a> - '

@@ -3,14 +3,15 @@
 The version reported by `JSONRPC.Version` and carried in `openrpc.json` and
 `asyncapi.json`. It moves independently of Kodi's own version.
 
-This changelog starts at version 14. Earlier versions were not tracked here;
+This changelog starts at version 15. Earlier versions were not tracked here;
 for those, the commit history of `xbmc/interfaces/json-rpc/` is the record.
 
-## 14.0.0
+## 15.0.0
 
-**A breaking release.** A client written against version 13 is not guaranteed
-to work unchanged. [MIGRATING-v13-to-v14.md](MIGRATING-v13-to-v14.md) covers
-every break below, with what to do about each.
+**A breaking release.** A client written against version 13 or 14 is not
+guaranteed to work unchanged.
+[MIGRATING-v13-v14-to-v15.md](MIGRATING-v13-v14-to-v15.md) covers every break
+below, with what to do about each.
 
 Everything here is new since **13.5.0, the version Kodi 21 (Omega) shipped**,
 the last version delivered in a stable release. The Kodi 22 pre-releases
@@ -18,7 +19,7 @@ carried 13.8.0 (22.0a1, 22.0a2), 13.9.0 (22.0a3), 13.11.0 (22.0b1) and
 13.200.0 (22.0b2). A client tested against 22.0b2 already has two of the
 breaks: `NotFound` for a library id no item has, with `Unavailable` for an
 unreachable `Player.Open` item, and BCP 47 stream languages. The rest are new
-in 14.
+in 15.
 
 ### Breaking
 
@@ -51,7 +52,7 @@ in 14.
   are unchanged.
 - `Files.GetDirectory` honours the requested `properties` under
   `"media": "files"`. 13.201.0 answers them through the video window's own
-  loader, which can still replace a matched folder; 14 answers them per entry
+  loader, which can still replace a matched folder; 15 answers them per entry
   and keeps every folder a folder. A request naming only file properties
   (`file`, `filetype`, `label`, `mimetype`, `size`, `lastmodified`) still gets
   a plain listing and consults no library.
@@ -64,7 +65,7 @@ in 14.
   A library id no item has is `NotFound` on every `AudioLibrary` and
   `VideoLibrary` `Get*Details`, `Set*Details` and `Refresh*` method, and a
   `Player.Open` item that cannot be reached is `Unavailable`; both since
-  13.200.0. New in 14: `Files.GetDirectory`, `Files.GetFileDetails`,
+  13.200.0. New in 15: `Files.GetDirectory`, `Files.GetFileDetails`,
   `Files.SetFileDetails`, `Files.PrepareDownload`, `Files.Download`,
   `Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean` and
   `AudioLibrary.GetArtistDetails`. A lookup by library id that fails in the
@@ -74,16 +75,23 @@ in 14.
 - Every `PVR` method that names a channel, channel group, broadcast, timer or
   recording by id answers `NotFound` (-32098) for an id nothing has, in place
   of `InvalidParams`.
-- A `playerid` names a player, however that player was started, and a
-  `Player` method answers `Unavailable` (-32097) for a player that is not
-  running. Version 13 accepted an idle `playerid` when the playlist in use
-  matched it and answered defaults. Every `Player` method also takes a
-  `playlistid` in place of `playerid`, naming the playlist a running player is
-  working through; giving both is `InvalidParams`.
-- The `player` object of every `Player.On*` notification and each entry of
-  `Player.GetActivePlayers` carry `playlistid`, and their `playerid` is the
-  player's own: a disc played through the music playlist is `playerid` 1 on
-  both, where version 13 announced it as 0.
+- A playlist is named, `video`, `audio` or `picture`, in place of a numeric
+  `playlistid`, by every `Playlist` method and notification, and
+  `Playlist.GetPlaylists` answers the names. `Player.Open` plays a playlist
+  given by name.
+- `Player` methods take an optional `playlist`, `video` or `audio`, in place
+  of the `playerid` they required. With none, a verb acts on everything
+  playing: the playback, and a slideshow beside it. A named playlist that
+  nothing is playing through answers `FailedToExecute`. Version 13 resolved a
+  `playerid` through the playlist in use and accepted an idle one.
+- `Player.GetActivePlayers` is removed. `Player.GetProperties` reports the
+  `playlist` being played and the `playertype`.
+- The `player` object of every `Player.On*` notification carries `players`,
+  the playlists the playback holds, in place of `playerid`.
+- `Playlist.GetItems` answers `Playlist.Entry`: each item with its
+  `position` in the list and its `displayorder`, its place in play order,
+  which differ while shuffled. `Player.GetProperties` reports `displayorder`
+  beside `position`.
 - `Settings.GetSettingValue`, `Settings.SetSettingValue` and
   `Settings.ResetSettingValue` answer `NotFound` for a setting that does not
   exist, and the two writers answer `Unavailable` for one disabled by its
@@ -99,7 +107,8 @@ in 14.
 
 ### Deprecated
 
-**Everything deprecated in 14 is removed in 15.**
+A deprecated name keeps working. It may be removed in a later major version,
+which this changelog will list as a break.
 
 Anything deprecated carries `"deprecated": true` on its method or its schema,
 reported by `JSONRPC.Introspect` even when a client asks for no descriptions
@@ -109,8 +118,13 @@ and in `openrpc.json`. The description names the replacement.
   `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`. The old names still work and
   are served by the same implementation.
 - `seasonnum` and `episodenum` on `PVR.Details.Broadcast`, superseded by
-  `season` and `episode`. Deprecated in prose since 13.6.0; 14 is the first
+  `season` and `episode`. Deprecated in prose since 13.6.0; 15 is the first
   version to carry the annotation.
+- `isplayable` on `PVR.Details.Broadcast`, superseded by
+  `PVR.GetBroadcastIsPlayable`; the `random` option of `Player.Open`'s
+  `item`, superseded by `options.shuffled`; and the `genreid` and `genre`
+  filters of `AudioLibrary.GetArtists`, superseded by `songgenreid` and
+  `songgenre`. All deprecated in prose before 15.
 - `VideoLibrary.RefreshMovie`, `VideoLibrary.RefreshTVShow`,
   `VideoLibrary.RefreshEpisode` and `VideoLibrary.RefreshMusicVideo`,
   superseded by `VideoLibrary.Refresh`. The old names still work and are served
@@ -154,6 +168,17 @@ and in `openrpc.json`. The description names the replacement.
   time range, for catchup availability.
 - `Player.GetChapters` - the chapters of the playing item, with
   `Player.Chapter`.
+- `Player.SetGeometry` and `Player.GetGeometry` - the room geometry in force
+  during playback, for a system driving motorised masking or lenses; the
+  same geometry can be given to `Player.Open`.
+- `Player.SetDeclaredAspectRatio` and `Player.GetDeclaredAspectRatio` - the
+  aspect ratio declared for the content playing, overriding what is detected.
+- `Player.NotifyAudioChainReady` - ends a playback hold for an audio format
+  change early, for an add-on that can see the receiver.
+- `VideoLibrary.RefreshContentGeometry` - measures an item's content geometry
+  again, replacing what is stored.
+- `GUI.SetScreenAlignment` and `GUI.GetScreenAlignment` - the screen
+  alignment frames, for programming masking or lens memory presets.
 - `Playlist.SetShuffle` and `Playlist.SetRepeat`.
 - `Settings.GetLevel` and `Settings.SetLevel` - the setting level in force,
   the one the settings window shows. `Settings.SetLevel` answers
@@ -175,6 +200,8 @@ and in `openrpc.json`. The description names the replacement.
   happen.
 - `Playlist.OnPropertyChanged`, raised when a playlist's shuffle or repeat
   state changes.
+- `Player.OnContentGeometryChange`, raised when the picture rectangle in force
+  changes, carrying the rectangles.
 - `Settings.OnLevelChanged`, raised when the setting level in force changes,
   including when the profile's settings lock lowers it. `Settings` is a new
   notification namespace; a client receives it unless it has narrowed its
@@ -202,6 +229,8 @@ and in `openrpc.json`. The description names the replacement.
   read.
 - `shuffled` and `repeat` on `Playlist.GetProperties`.
 - `Playlist.AddResult` and `Playlist.UnresolvedItem`.
+- `contentrect` on `Player.GetProperties` and on the video streams of a
+  library item: the picture within the frame, with `Video.ContentRect`.
 - `stationname` on `List.Item.Base`, the radio station serving an internet
   stream. `episodename` and `episodepart` are also newly requestable in
   `List.Fields.All`.
