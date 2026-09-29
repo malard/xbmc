@@ -534,7 +534,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
       <li>"For complex actions they can have their own setter and getter, but they are in the minority and far more uncommon to be called anyway."</li>
       <li>Read-only properties are marked <code>readOnly</code> in the target's property schema.</li>
     </ul>
-    <div class="note caution"><span class="note-label">Open</span><p>Proposed, not ruled on: a property is state set to an absolute value, where setting it twice equals setting it once (volume, speed, repeat, time). Relative changes (volume up, seek +30 s) and events (play, stop, scan) are actions.</p></div>
+    <p>A property is state set to an absolute value, where setting it twice equals setting it once (volume, speed, repeat, time). Relative changes and events are actions: "separate action for stepping", so volume up is <code>Player.VolumeUp</code>, not a relative value in <code>SetProperties</code>.</p>
   </section>
 
   <section id="notifications">
@@ -604,7 +604,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <ul class="prose">
       <li><strong>Delivery.</strong> "One atomic change, or as close to." The epic is flattened, then cut into reviewable pieces for master; slicing is not a design constraint.</li>
       <li><strong>Out of scope.</strong> Reorganising the application code behind the API, deferred to a later discussion. Typed parameters: not a goal, and no C++ is generated from the schema.</li>
-      <li><strong>Open.</strong> The property and action line (<a href="#shape">04</a>) and the transport consequences (<a href="#transports">11</a>).</li>
+      <li><strong>Open.</strong> The transport consequences (<a href="#transports">11</a>).</li>
     </ul>
   </section>
 
