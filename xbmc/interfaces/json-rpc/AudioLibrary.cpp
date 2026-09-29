@@ -419,6 +419,9 @@ JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject,
   if (!musicdatabase.Open())
     return InternalError;
 
+  // Announced once below, with what changed
+  musicdatabase.SetAnnounceUpdates(false);
+
   const int id = static_cast<int>(parameterObject["item"]["id"].asInteger());
   JSONRPC_STATUS status{InternalError};
   switch (traits->kind)

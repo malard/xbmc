@@ -777,7 +777,7 @@ using the names `GetItemProperties` answers with.
 or a refresh; read the item again then. `transaction` and `added` are
 carried as before. An update to a file that is not a library item used to
 arrive with `id` -1; it is no longer sent. A change made with
-`SetItemProperties` is announced to every client, with the values it set.
+`SetItemProperties` is announced to every client once, with the values it set.
 
 **What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
 into what you hold for the item, or read it with `GetItemProperties` when

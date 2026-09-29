@@ -3725,7 +3725,7 @@ void CVideoDatabase::DeleteResumeBookMark(const CFileItem& item)
 
     const MediaType content = VideoContentTypeToString(item.GetVideoContentType());
 
-    if (!content.empty())
+    if (!content.empty() && m_announceUpdates)
     {
       AnnounceUpdate(content, item.GetVideoInfoTag()->m_iDbId);
     }
@@ -5717,7 +5717,8 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
 
 void CVideoDatabase::UpdateArtForItem(int mediaId, const MediaType& mediaType) const
 {
-  AnnounceUpdate(mediaType, mediaId);
+  if (m_announceUpdates)
+    AnnounceUpdate(mediaType, mediaId);
 }
 
 bool CVideoDatabase::SetArtForItem(int mediaId,
@@ -6773,7 +6774,8 @@ void CVideoDatabase::UpdateFanart(const CFileItem& item, VideoDbContentType type
   {
     m_pDS->exec(exec);
 
-    AnnounceUpdate(mediaType, mediaId);
+    if (m_announceUpdates)
+      AnnounceUpdate(mediaType, mediaId);
   }
   catch (...)
   {
@@ -6824,7 +6826,7 @@ CDateTime CVideoDatabase::SetPlayCount(const CFileItem& item, int count, const C
     m_pDS->exec(strSQL);
 
     // We only need to announce changes to video items in the library
-    if (item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iDbId > 0)
+    if (m_announceUpdates && item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iDbId > 0)
     {
       CVariant data;
       if (CVideoLibraryQueue::GetInstance().IsScanningLibrary())
@@ -6898,7 +6900,8 @@ void CVideoDatabase::UpdateMovieTitle(int idMovie,
     if (!content.empty())
     {
       SetSingleValue(iType, idMovie, Field::TITLE, strNewMovieTitle);
-      AnnounceUpdate(content, idMovie);
+      if (m_announceUpdates)
+        AnnounceUpdate(content, idMovie);
     }
   }
   catch (...)
@@ -6924,7 +6927,8 @@ bool CVideoDatabase::UpdateVideoSortTitle(int idDb,
 
     if (SetSingleValue(iType, idDb, Field::SORT_TITLE, strNewSortTitle))
     {
-      AnnounceUpdate(content, idDb);
+      if (m_announceUpdates)
+        AnnounceUpdate(content, idDb);
       return true;
     }
   }

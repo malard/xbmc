@@ -231,34 +231,60 @@ public:
   int m_songId{-1};
 };
 
-//! Keeps each library update that says which properties changed
+//! Keeps every library update announced, in order
 class CUpdateListener : public ANNOUNCEMENT::IAnnouncer
 {
 public:
+  explicit CUpdateListener(std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> announcements)
+    : m_announcements(std::move(announcements))
+  {
+    m_announcements->AddAnnouncer(this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary |
+                                            ANNOUNCEMENT::Other);
+    m_announcements->Start();
+  }
+
+  ~CUpdateListener() override { m_announcements->RemoveAnnouncer(this); }
+
   void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                 const std::string& sender,
                 const std::string& message,
                 const CVariant& data) override
   {
-    if (message != "OnUpdate" || !data.isMember("properties"))
-      return;
-
     std::unique_lock lock(m_lock);
-    m_updates.push_back(data);
+    if (message == DRAINED)
+      m_drained = true;
+    else if (message == "OnUpdate")
+      m_updates.push_back(data);
     m_arrived.notify_all();
   }
 
-  CVariant NextUpdate()
+  //! The updates announced about the item of \p kind with \p id, once all announced so far arrived
+  std::vector<CVariant> UpdatesTo(const std::string& kind, int id)
   {
+    m_announcements->Announce(ANNOUNCEMENT::Other, DRAINED);
+
     std::unique_lock lock(m_lock);
-    m_arrived.wait_for(lock, std::chrono::seconds(5), [this] { return !m_updates.empty(); });
-    return m_updates.empty() ? CVariant{} : m_updates.front();
+    m_arrived.wait_for(lock, std::chrono::seconds(5), [this] { return m_drained; });
+    m_drained = false;
+
+    std::vector<CVariant> updates;
+    for (const CVariant& update : m_updates)
+    {
+      const CVariant& item{update.isMember("item") ? update["item"] : update};
+      if (item["type"].asString() == kind && item["id"].asInteger() == id)
+        updates.push_back(update);
+    }
+    return updates;
   }
 
 private:
+  static constexpr const char* DRAINED = "TestLibraryItemsDrained";
+
+  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_announcements;
   std::mutex m_lock;
   std::condition_variable m_arrived;
   std::vector<CVariant> m_updates;
+  bool m_drained{false};
 };
 } // unnamed namespace
 
@@ -477,24 +503,39 @@ TEST_F(TestLibraryItemsInDatabase, AMusicItemIsSetAndReadBack)
 
 TEST_F(TestLibraryItemsInDatabase, SettingAnnouncesTheItemAndWhatChanged)
 {
-  CUpdateListener listener;
-  const std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> announcements{
-      CServiceBroker::GetAnnouncementManager()};
-  announcements->AddAnnouncer(&listener, ANNOUNCEMENT::VideoLibrary);
-  announcements->Start();
+  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
 
   CVariant result;
-  const JSONRPC_STATUS status{Invoke("VideoLibrary.SetItemProperties",
-                                     R"({"item": {"kind": "movie", "id": )" +
-                                         std::to_string(m_movieId) +
-                                         R"(}, "properties": {"plot": "Announced"}})",
-                                     result)};
-  const CVariant update{listener.NextUpdate()};
-  announcements->RemoveAnnouncer(&listener);
+  ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
+                       R"({"item": {"kind": "movie", "id": )" + std::to_string(m_movieId) +
+                           R"(}, "properties": {"plot": "Announced"}})",
+                       result));
 
-  ASSERT_EQ(OK, status);
-  EXPECT_EQ("movie", update["type"].asString());
-  EXPECT_EQ(m_movieId, update["id"].asInteger());
-  EXPECT_EQ("Announced", update["properties"]["plot"].asString());
-  EXPECT_EQ(1u, update["properties"].size());
+  const std::vector<CVariant> updates{listener.UpdatesTo("movie", m_movieId)};
+  ASSERT_EQ(1u, updates.size());
+  EXPECT_EQ("Announced", updates[0]["properties"]["plot"].asString());
+  EXPECT_EQ(1u, updates[0]["properties"].size());
+}
+
+TEST_F(TestLibraryItemsInDatabase, APlayCountSetIsAnnouncedOnce)
+{
+  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
+
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
+                       R"({"item": {"kind": "movie", "id": )" + std::to_string(m_movieId) +
+                           R"(}, "properties": {"playCount": 3}})",
+                       result));
+  ASSERT_EQ(OK, Invoke("AudioLibrary.SetItemProperties",
+                       R"({"item": {"kind": "song", "id": )" + std::to_string(m_songId) +
+                           R"(}, "properties": {"playCount": 4}})",
+                       result));
+
+  const std::vector<CVariant> movie{listener.UpdatesTo("movie", m_movieId)};
+  ASSERT_EQ(1u, movie.size());
+  EXPECT_EQ(3, movie[0]["properties"]["playCount"].asInteger());
+
+  const std::vector<CVariant> song{listener.UpdatesTo("song", m_songId)};
+  ASSERT_EQ(1u, song.size());
+  EXPECT_EQ(4, song[0]["properties"]["playCount"].asInteger());
 }

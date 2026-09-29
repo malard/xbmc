@@ -319,6 +319,9 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
   if (!videodatabase.Open())
     return InternalError;
 
+  // Announced once below, with what changed
+  videodatabase.SetAnnounceUpdates(false);
+
   const int id = static_cast<int>(parameterObject["item"]["id"].asInteger());
   JSONRPC_STATUS status{InternalError};
   switch (traits->kind)
@@ -666,6 +669,8 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id,
                                           false))
       return InternalError;
 
+    // each episode is an item of its own, which the show's announcement does not cover
+    videodatabase.SetAnnounceUpdates(true);
     videodatabase.BeginTransaction();
     for (const auto& episode : episodes)
     {
@@ -1321,12 +1326,7 @@ void CVideoLibrary::StorePlaybackEdit(const CVariant& parameterObject,
                                       CVideoDatabase& videodatabase)
 {
   if (before.playCount != details.GetPlayCount() || before.lastPlayed != details.m_lastPlayed)
-  {
-    // restore the original playcount, or the new one won't be announced
-    const int playCount = details.GetPlayCount();
-    details.SetPlayCount(before.playCount);
-    videodatabase.SetPlayCount(CFileItem(details), playCount, details.m_lastPlayed);
-  }
+    videodatabase.SetPlayCount(CFileItem(details), details.GetPlayCount(), details.m_lastPlayed);
 
   UpdateResumePoint(parameterObject, details, videodatabase);
 }
