@@ -32,7 +32,6 @@ public:
    */
   static const CSubTagRegistryManager& GetInstance();
 
-  CSubTagRegistryManager() = default;
   ~CSubTagRegistryManager();
 
   bool Initialize(std::unique_ptr<IRegistryRecordProvider> provider = nullptr);
@@ -50,12 +49,6 @@ public:
   const CSubTagsCollection<RedundantTag>& GetRedundantTags() const { return m_redundantTags; }
 
 private:
-  //! Selects the constructor that loads the registry Kodi ships
-  struct Shipped
-  {
-  };
-  explicit CSubTagRegistryManager(Shipped);
-
   bool Load(IRegistryRecordProvider* provider);
 
   /*!

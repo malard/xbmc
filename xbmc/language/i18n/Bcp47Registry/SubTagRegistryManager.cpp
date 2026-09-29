@@ -33,28 +33,22 @@ using namespace KODI::LANGUAGE::I18N;
 static const std::string DEFAULTREGISTRYFILEPATH(
     "special://xbmc/system/language-subtag-registry.txt");
 
-CSubTagRegistryManager::CSubTagRegistryManager(Shipped)
+CSubTagRegistryManager::~CSubTagRegistryManager()
 {
-  // The shipped registry is read once and never again, so a failure here is not a failure to
-  // read a file - it is every language in the process going unrecognized from now on
-  if (!Initialize())
-  {
-    CLog::LogF(LOGERROR,
-               "the shipped subtag registry could not be read, so no text will be recognized as a "
-               "language for the rest of this run");
-  }
+  Deinitialize();
 }
 
 const CSubTagRegistryManager& CSubTagRegistryManager::GetInstance()
 {
   // Never destroyed: tags are parsed until process exit, after logging has been torn down
-  static const CSubTagRegistryManager* const registry = new CSubTagRegistryManager(Shipped{});
-  return *registry;
-}
-
-CSubTagRegistryManager::~CSubTagRegistryManager()
-{
-  Deinitialize();
+  static const CSubTagRegistryManager* const instance = []
+  {
+    auto* registry = new CSubTagRegistryManager();
+    if (!registry->Initialize())
+      CLog::Log(LOGERROR, "IANA Language Subtag Registry: not loaded, tags will not validate");
+    return registry;
+  }();
+  return *instance;
 }
 
 bool CSubTagRegistryManager::Initialize(std::unique_ptr<IRegistryRecordProvider> provider)
