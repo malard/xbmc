@@ -32,6 +32,7 @@ DEFAULT_OUT = DOCS_DIR / "site"
 EXAMPLES_DIR = Path(__file__).resolve().parent / "examples"
 STYLESHEET_PATH = Path(__file__).resolve().parent / "site.css"
 HOW_IT_WORKS_PATH = Path(__file__).resolve().parent / "how-the-api-works.md"
+LANDING_PATH = Path(__file__).resolve().parent / "landing.md"
 
 
 # Hand-written documents in docs/jsonrpc, rendered into the site as pages
@@ -327,31 +328,14 @@ class SiteBuilder:
         runtime_enums = sorted(name for name, schema
                                in self.service["types"].items()
                                if schema.get("x-kodi-runtime-enum"))
-        runtime_enum_count = len(runtime_enums)
         runtime_enum_names = ", ".join(f"<code>{esc(name)}</code>"
                                        for name in runtime_enums)
-        parts = [
-            "<h1>Kodi JSON-RPC API</h1>",
-            f'<p class="meta"><span class="badge">schema version '
-            f"{esc(self.version)}</span></p>",
-            "<p>Reference documentation for the JSON-RPC API exposed by "
-            "<a href=\"https://kodi.tv\">Kodi</a>, the open source media "
-            "center. It covers every request/response method, every "
-            "server-initiated notification, every schema type and the "
-            "error taxonomy, and is generated directly from the "
-            "machine-readable schema shipped inside Kodi itself.</p>",
 
-            md_to_html(HOW_IT_WORKS_PATH.read_text(encoding="utf-8")),
-
-            "<h2>Worked examples</h2>",
-            "<p>Each example shows the exact envelopes on the wire. The "
-            "curl command targets the HTTP transport; the same request "
-            "envelope works over WebSocket and raw TCP verbatim.</p>",
-        ]
+        examples = []
         for example in self.examples:
             if "method" in example:
                 name = example["method"]
-                parts.append(
+                examples.append(
                     f"<h3>{esc(example['title'])}</h3>"
                     f'<p class="muted"><a href="{v}/methods/{esc(name)}'
                     f'.html">{esc(name)}</a></p>')
@@ -361,107 +345,54 @@ class SiteBuilder:
                 curl = ("curl -X POST http://localhost:8080/jsonrpc "
                         "-H 'content-type: application/json' "
                         f"-d '{compact}'")
-                parts.append(f"<pre><code>{esc(curl)}</code></pre>")
-                parts.append(pre_json(example["request"]))
-                parts.append(pre_json(example["response"]))
+                examples.append(f"<pre><code>{esc(curl)}</code></pre>")
+                examples.append(pre_json(example["request"]))
+                examples.append(pre_json(example["response"]))
             else:
                 name = example["notification"]
-                parts.append(
+                examples.append(
                     f"<h3>{esc(example['title'])}</h3>"
                     f'<p class="muted"><a href="{v}/notifications/'
                     f'{esc(name)}.html">{esc(name)}</a> - pushed over '
                     "WebSocket/TCP only</p>")
-                parts.append(pre_json(example["message"]))
-        parts.extend([
-            "<h2>Discovering the API at runtime</h2>",
-            "<p>This site and the artifacts below describe a release. "
-            f'<a href="{v}/methods/JSONRPC.Introspect.html">'
-            "JSONRPC.Introspect</a> describes the instance you are connected "
-            "to. Call it for three things.</p>",
+                examples.append(pre_json(example["message"]))
 
-            "<p><strong>The values of a runtime enumeration.</strong> "
-            f"{runtime_enum_count} types carry no values here "
-            f"({runtime_enum_names}); the running instance holds them. Read "
-            "them from Introspect to build a filter, or to activate a window "
-            "by name.</p>",
+        computed = {
+            "how-it-works": md_to_html(HOW_IT_WORKS_PATH.read_text(encoding="utf-8")),
+            "examples": "".join(examples),
+            "runtime-enums": (
+                "<p><strong>The values of a runtime enumeration.</strong> "
+                f"{len(runtime_enums)} types carry no values here "
+                f"({runtime_enum_names}); the running instance holds them. Read "
+                "them from Introspect to build a filter, or to activate a window "
+                "by name.</p>"),
+            "upgrading-banner": (
+                f'<p class="deprecated"><strong>Version {esc(self.version)} is a '
+                "breaking release.</strong> A client written against version 13 "
+                "is not guaranteed to work unchanged. The migration guide lists "
+                "every break and what to do about each.</p>"
+                if self.version.endswith(".0.0") else ""),
+            "reference": (
+                "<ul>"
+                f'<li><a href="{v}/methods/index.html">Methods</a> - '
+                f"{len(self.service['methods'])} request/response methods</li>"
+                f'<li><a href="{v}/notifications/index.html">Notifications</a> '
+                f"- {len(self.service['notifications'])} server-initiated "
+                "notifications</li>"
+                f'<li><a href="{v}/types/index.html">Types</a> - '
+                f"{len(self.service['types'])} schema types</li>"
+                f'<li><a href="{v}/errors.html">Errors</a> - the error '
+                "taxonomy</li>"
+                "</ul>"),
+        }
 
-            "<p><strong>What your connection may call.</strong> Introspect "
-            "reports the methods your permissions and your transport allow, "
-            "not every method that exists. Calling one your permissions leave "
-            f'out returns <a href="{v}/errors.html">BadPermission</a>; one '
-            "not served over the transport you used, or one that does not "
-            "exist at all, returns MethodNotFound.</p>",
-
-            "<p><strong>Which version you are talking to.</strong> Call "
-            "<code>JSONRPC.Version</code>, then Introspect if you need the "
-            "shape as well as the number. Do this before assuming any "
-            "behaviour described here.</p>",
-
-            "<p>For code generation, offline tooling and comparing one "
-            "release against another, use the artifacts below instead.</p>",
-
-            "<p>Introspect answers with the whole description by default, "
-            "which is large. Narrow it:</p>",
-            pre_json({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "JSONRPC.Introspect",
-                "params": {
-                    "filter": {"type": "type", "id": "GUI.Window"},
-                    "getdescriptions": False,
-                },
-            }),
-            "<p><code>filter.type</code> accepts <code>method</code>, "
-            "<code>namespace</code>, <code>type</code>, "
-            "<code>notification</code> and <code>error</code>. "
-            "<code>getdescriptions</code> and <code>getmetadata</code> strip "
-            "the documentation out of the answer; a method's "
-            "<code>deprecated</code> note is reported either way.</p>",
-
-            "<h2>About this documentation</h2>",
-            "<p>This site is generated from the machine-readable schema "
-            "shipped inside Kodi "
-            "(<code>xbmc/interfaces/json-rpc/schema</code>) on every "
-            "change, so it cannot drift from the implementation. The same "
-            "schema is served live by a running Kodi instance via the "
-            f'<a href="{v}/methods/JSONRPC.Introspect.html">'
-            "JSONRPC.Introspect</a> method.</p>",
-            "<p>Machine-readable artifacts:</p>",
-            "<ul>"
-            f'<li><a href="{v}/openrpc.json">openrpc.json</a> - '
-            '<a href="https://open-rpc.org/">OpenRPC</a> document covering '
-            "all request/response methods</li>"
-            f'<li><a href="{v}/asyncapi.json">asyncapi.json</a> - '
-            '<a href="https://www.asyncapi.com/">AsyncAPI</a> document '
-            "covering the notifications</li>"
-            "</ul>",
-
-            "<h2>Upgrading</h2>",
-            (f'<p class="deprecated"><strong>Version {esc(self.version)} is a '
-             "breaking release.</strong> A client written against version 13 "
-             "is not guaranteed to work unchanged. The migration guide lists "
-             "every break and what to do about each.</p>"
-             if self.version.endswith(".0.0") else ""),
-            "<ul>"
-            f'<li><a href="{v}/MIGRATING-v13-to-v14.html">Migrating from 13 '
-            "to 14</a></li>"
-            f'<li><a href="{v}/CHANGELOG.html">Changelog</a></li>'
-            "</ul>",
-
-            "<h2>Reference</h2>",
-            "<ul>"
-            f'<li><a href="{v}/methods/index.html">Methods</a> - '
-            f"{len(self.service['methods'])} request/response methods</li>"
-            f'<li><a href="{v}/notifications/index.html">Notifications</a> '
-            f"- {len(self.service['notifications'])} server-initiated "
-            "notifications</li>"
-            f'<li><a href="{v}/types/index.html">Types</a> - '
-            f"{len(self.service['types'])} schema types</li>"
-            f'<li><a href="{v}/errors.html">Errors</a> - the error '
-            "taxonomy</li>"
-            "</ul>",
-        ])
-        self.page("index.html", "Kodi JSON-RPC API", "".join(parts))
+        body = md_to_html(LANDING_PATH.read_text(encoding="utf-8").replace("{v}", v))
+        for marker, html in computed.items():
+            body = body.replace(f"<p>{{{marker}}}</p>", html)
+        header = ("<h1>Kodi JSON-RPC API</h1>"
+                  f'<p class="meta"><span class="badge">schema version '
+                  f"{esc(self.version)}</span></p>")
+        self.page("index.html", "Kodi JSON-RPC API", header + body)
 
     # ------------------------------------------------------------------
 
