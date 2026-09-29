@@ -1357,8 +1357,11 @@ bool CDVDDemuxFFmpeg::WaitingOutInputStall(bool readPacingExpired)
   const int64_t position = m_pInput->Seek(0, SEEK_CUR);
   if (position >= 0)
   {
+    // A zero read short of the length is the stall itself; at the length it is the end answering
     uint8_t probe = 0;
-    if (m_pInput->Read(&probe, 1) >= 0)
+    const int read = m_pInput->Read(&probe, 1);
+    const int64_t length = m_pInput->GetLength();
+    if (read > 0 || (read == 0 && length > 0 && position >= length))
     {
       m_pInput->Seek(position, SEEK_SET);
       // A seek is what resets the demuxer's latched end-of-file

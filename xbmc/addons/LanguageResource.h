@@ -29,11 +29,9 @@ public:
   const std::string& GetGuiCharset() const { return m_charsetGui; }
   const std::string& GetSubtitleCharset() const { return m_charsetSubtitle; }
 
-
   const std::set<std::string, std::less<>>& GetSortTokens() const { return m_sortTokens; }
 
   static std::string GetAddonId(const std::string& locale);
-
 
 protected:
   Published PublishedFiles() const override;
@@ -43,7 +41,6 @@ private:
 
   std::string m_charsetGui;
   std::string m_charsetSubtitle;
-
 
   std::set<std::string, std::less<>> m_sortTokens;
 };

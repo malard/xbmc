@@ -692,8 +692,7 @@ void CTCPServer::CTCPClient::StopWorker()
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
 {
-  // This is a bare thread entry point: an escaping exception calls std::terminate. Executing
-  // inline used to run under CThread, which catches, so nothing below has been asked to.
+  // A bare thread entry point: an escaping exception would call std::terminate.
   try
   {
     RunRequests(self, host.get());

@@ -17,6 +17,7 @@
 #include "settings/lib/Setting.h"
 #include "threads/Thread.h"
 #include "utils/MemUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/log.h"
 
 #include <mutex>
@@ -101,16 +102,6 @@ private:
   std::chrono::milliseconds m_time;
   int64_t  m_size;
 };
-
-namespace
-{
-int64_t SteadyMilliseconds()
-{
-  return std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::steady_clock::now().time_since_epoch())
-      .count();
-}
-} // unnamed namespace
 
 CFileCache::CFileCache(const unsigned int flags)
   : CFileCache(flags, std::make_unique<CFileCacheSource>())
@@ -510,9 +501,9 @@ void CFileCache::Process()
     if (maxSourceRead > 0)
     {
       // Published for CancelStalledSourceRead
-      m_sourceReadStart = SteadyMilliseconds();
+      m_sourceReadStart = CTimeUtils::MonotonicMs();
       iRead = m_source->Read(buffer.get(), maxSourceRead);
-      const int64_t answeredIn = SteadyMilliseconds() - m_sourceReadStart;
+      const int64_t answeredIn = CTimeUtils::MonotonicMs() - m_sourceReadStart;
       const bool wasCancelled = m_sourceReadCancelled;
       m_sourceReadStart = 0;
       m_sourceReadCancelled = false;
@@ -721,7 +712,7 @@ void CFileCache::CancelStalledSourceRead()
 
   const int64_t startedAt = m_sourceReadStart;
   if (startedAt == 0 ||
-      SteadyMilliseconds() - startedAt <
+      CTimeUtils::MonotonicMs() - startedAt <
           std::chrono::duration_cast<std::chrono::milliseconds>(answerTimeout).count())
     return;
 

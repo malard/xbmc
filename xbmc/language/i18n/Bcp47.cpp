@@ -158,7 +158,7 @@ bool CBcp47::IsValidRegion() const
   if (m_region.empty())
     return true;
 
-  return IsRegionSubtag(m_region);
+  return IsRegionSubtag(m_region, m_registry);
 }
 
 bool CBcp47::HasDuplicateVariants() const

@@ -124,7 +124,6 @@ TEST(MusicDatabaseGetResultSonglessAlbumTest, AlbumWithNoSongsIsRetrievedWithAnE
   EXPECT_EQ(db.TryGetAlbum(ALBUM_ID, withSongs, true), GetResult::Ok);
   EXPECT_TRUE(withSongs.songs.empty());
 
-  // Unchanged from before the distinction existed.
   EXPECT_TRUE(db.GetAlbum(ALBUM_ID, album, false));
   EXPECT_FALSE(db.GetAlbum(ALBUM_ID, withSongs, true));
 

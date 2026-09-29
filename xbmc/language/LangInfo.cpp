@@ -10,6 +10,7 @@
 
 #include "ServiceBroker.h"
 #include "XBDateTime.h"
+#include "language/Language.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
@@ -26,7 +27,6 @@
 
 #include <algorithm>
 #include <array>
-#include <span>
 
 namespace
 {

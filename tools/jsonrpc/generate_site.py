@@ -23,7 +23,8 @@ import shutil
 from pathlib import Path
 
 import kodi_schema
-from markup import dumps, esc, md_to_html, pre_json
+import method_errors
+from markup import esc, md_to_html, pre_json
 from schema_render import SchemaRenderer
 
 DOCS_DIR = kodi_schema.REPO_ROOT / "docs" / "jsonrpc"
@@ -176,10 +177,6 @@ class SiteBuilder:
                   f"{esc(method['permission'])}</span>"]
         badges.extend(f'<span class="badge">Transport: {esc(label)}</span>'
                       for label in transports(method))
-        for key, value in method.items():
-            if key.startswith("x-kodi-"):
-                badges.append(f'<span class="badge">{esc(key[7:])}: '
-                              f"{esc(dumps(value))}</span>")
         parts.append(f'<p class="meta">{" ".join(badges)}</p>')
         example = next((entry for entry in self.examples
                         if entry.get("method") == name), None)
@@ -300,7 +297,8 @@ class SiteBuilder:
         body = (
             "<h1>Errors</h1>"
             "<p>Every error a call can fail with. Each method's page lists "
-            "the ones its implementation returns; the rest can answer any "
+            "the ones its implementation returns; only "
+            f"{esc(', '.join(method_errors.PRE_DISPATCH))} can answer any "
             "request. The error object is returned in the <code>error</code> "
             "member of the response envelope with the listed "
             "<code>code</code> and <code>message</code>.</p>"
@@ -389,10 +387,10 @@ class SiteBuilder:
 
             "<p><strong>What your connection may call.</strong> Introspect "
             "reports the methods your permissions and your transport allow, "
-            "not every method that exists. A method missing from the answer "
-            f'returns <a href="{v}/errors.html">MethodNotFound</a> if you '
-            "call it anyway, as does one that does not exist at all and one "
-            "that is not served over the transport you used.</p>",
+            "not every method that exists. Calling one your permissions leave "
+            f'out returns <a href="{v}/errors.html">BadPermission</a>; one '
+            "not served over the transport you used, or one that does not "
+            "exist at all, returns MethodNotFound.</p>",
 
             "<p><strong>Which version you are talking to.</strong> Call "
             "<code>JSONRPC.Version</code>, then Introspect if you need the "

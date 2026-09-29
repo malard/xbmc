@@ -20,9 +20,6 @@ TEST(TestResolution, DeclaredShapeIsTheShapeReported)
   EXPECT_NEAR(wide.DisplayRatio(), 21.0f / 9.0f, 0.001f);
 }
 
-// The case that hid this: when the declaration agrees with the pixels the correction is 1.0 and
-// the arithmetic is a no-op whichever way round it is written. Every Estuary variant but one is
-// this case.
 TEST(TestResolution, PixelsAgreeingWithTheDeclarationNeedNoCorrection)
 {
   const RESOLUTION_INFO square(1920, 1080, 16.0f / 9.0f);

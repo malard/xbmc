@@ -182,6 +182,13 @@ static float ParseDeclaredAspect(const std::string& strAspect,
         aspect = w / h;
     }
 
+    if (aspect <= 0.0f)
+    {
+      CLog::Log(LOGDEBUG, "Skin {}: the {}x{} layout declares aspect=\"{}\", which is not a ratio.",
+                skinId, width, height, strAspect);
+      return 0.0f;
+    }
+
     const bool matchesPixels =
         height > 0 && std::fabs(aspect - (static_cast<float>(width) / height)) < 0.005f;
 

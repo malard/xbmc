@@ -11,7 +11,6 @@
 #include "XBDateTime.h"
 #include "interfaces/json-rpc/JSONRPCUtils.h"
 #include "interfaces/json-rpc/PVROperations.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
 #include <map>

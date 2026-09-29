@@ -68,7 +68,7 @@ void CPlayerSettings::SettingOptionsRasterAspectRatios(const SettingConstPtr& /*
 {
   using namespace KODI::UTILS;
 
-  list.emplace_back(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40834), 0);
+  list.emplace_back(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40835), 0);
 
   CAspectRatioVocabulary::AppendDeclareChoices(list);
 }

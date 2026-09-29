@@ -442,6 +442,7 @@ public:
   static constexpr auto SETTING_AUDIOOUTPUT_STREAMSILENCE = "audiooutput.streamsilence";
   static constexpr auto SETTING_AUDIOOUTPUT_STREAMNOISE = "audiooutput.streamnoise";
   static constexpr auto SETTING_AUDIOOUTPUT_DELAYFORMATCHANGE = "audiooutput.delayformatchange";
+  static constexpr auto SETTING_AUDIOOUTPUT_SILENCEFILLER = "audiooutput.silencefiller";
   static constexpr auto SETTING_AUDIOOUTPUT_MIXSUBLEVEL = "audiooutput.mixsublevel";
   static constexpr auto SETTING_AUDIOOUTPUT_GUISOUNDMODE = "audiooutput.guisoundmode";
   static constexpr auto SETTING_AUDIOOUTPUT_GUISOUNDVOLUME = "audiooutput.guisoundvolume";

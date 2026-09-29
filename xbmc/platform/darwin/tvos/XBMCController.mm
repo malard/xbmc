@@ -17,8 +17,6 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
@@ -404,13 +402,6 @@ int KODI_Run(bool renderGUI)
 #endif
   CServiceBroker::GetLogging().SetLogLevel(
       CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel);
-
-  // not a failure if returns false, just means someone
-  // did the init before us.
-  if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialized())
-  {
-    //! @todo
-  }
 
   CAnnounceReceiver::GetInstance()->Initialize();
 

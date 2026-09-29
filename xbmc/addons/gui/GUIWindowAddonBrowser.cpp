@@ -29,7 +29,6 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
-#include "language/LangInfo.h"
 #include "language/Language.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "platform/Platform.h"

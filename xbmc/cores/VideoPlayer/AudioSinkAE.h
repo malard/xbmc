@@ -38,7 +38,7 @@ public:
   void Resume();
   bool Create(const DVDAudioFrame &audioframe, AVCodecID codec, bool needresampler);
   bool IsValidFormat(const DVDAudioFrame &audioframe);
-  //! rief Whether the engine reconfigured the sink for this stream, ie. the format on
+  //! \brief Whether the engine reconfigured the sink for this stream, ie. the format on
   //!        the wire changed and a downstream device has to acquire it again.
   bool HasSinkFormatChanged();
   void Destroy(bool finish);

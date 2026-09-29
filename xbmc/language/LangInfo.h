@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "language/Language.h"
-#include "language/LanguageTag.h"
 #include "language/Territory.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"

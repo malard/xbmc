@@ -11,7 +11,6 @@
 #include "JSONRPCUtils.h"
 #include "dbwrappers/Database.h"
 #include "interfaces/PlaybackValues.h"
-#include "playlists/PlayListTypes.h"
 #include "playlists/SmartPlayList.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
@@ -20,17 +19,12 @@
 #include "utils/Variant.h"
 
 #include <set>
-#include <optional>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include <string_view>
 #include <vector>
 
 class CDateTime;
-struct AudioStreamInfo;
-struct SubtitleStreamInfo;
-struct VideoStreamInfo;
 
 namespace JSONRPC
 {

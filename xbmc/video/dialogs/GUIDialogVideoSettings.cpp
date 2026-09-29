@@ -437,8 +437,8 @@ void CGUIDialogVideoSettings::InitializeSettings()
     AddList(groupVideo, SETTING_VIDEO_VIEW_MODE, 629, SettingLevel::Basic, videoSettings.m_ViewMode, CViewModeSettings::ViewModesFiller, 629);
   }
 
-  AddList(groupVideo, SETTING_VIDEO_DECLARED_ASPECT, 40862, SettingLevel::Basic,
-          CAspectRatioVocabulary::Key(videoSettings.m_declaredAspect), DeclaredAspectFiller, 40862);
+  AddList(groupVideo, SETTING_VIDEO_DECLARED_ASPECT, 40863, SettingLevel::Basic,
+          CAspectRatioVocabulary::Key(videoSettings.m_declaredAspect), DeclaredAspectFiller, 40863);
 
   if (appPlayer->Supports(RENDERFEATURE_ZOOM))
     AddSlider(groupVideo, SETTING_VIDEO_ZOOM, 216, SettingLevel::Basic,

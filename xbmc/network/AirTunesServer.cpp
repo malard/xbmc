@@ -157,8 +157,9 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
 
   // The info manager and the application hold separate items; both need the art, while the
   // application item is the AirTunes pipe.
+  const auto playing = g_application.CurrentFileItemPtr();
   if (ServerInstance != NULL && ServerInstance->m_pPipe != NULL &&
-      g_application.CurrentFileItem().GetPath() == ServerInstance->m_pPipe->GetName())
+      playing->GetPath() == ServerInstance->m_pPipe->GetName())
   {
     // UpdateInfo copies the mime type and the art; an empty url clears the previous thumbnail.
     auto item = std::make_unique<CFileItem>();

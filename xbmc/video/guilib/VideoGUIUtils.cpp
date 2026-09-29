@@ -360,12 +360,10 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
 
 namespace KODI::VIDEO::UTILS
 {
-void PlayItem(const std::shared_ptr<CFileItem>& itemIn,
+void PlayItem(const std::shared_ptr<CFileItem>& item,
               const std::string& player,
               ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
 {
-  const auto& item = itemIn;
-
   if (item->IsFolder() && !item->IsPlugin())
   {
     AddItemToPlayListAndPlay(item, nullptr, player, mode);
@@ -413,9 +411,8 @@ void PlayItem(const std::shared_ptr<CFileItem>& itemIn,
   }
 }
 
-void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
+void QueueItem(const std::shared_ptr<CFileItem>& item, QueuePosition pos)
 {
-  const auto& item = itemIn;
   const auto playLists = CServiceBroker::GetPlayLists();
 
   // Determine the proper list to queue this element

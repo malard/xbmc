@@ -39,7 +39,6 @@
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/dialogs/GUIDialogMusicInfo.h"
 #include "network/NetworkFileItemClassify.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
@@ -68,7 +67,6 @@
 #include "video/guilib/VideoPlayActionProcessor.h"
 #include "video/guilib/VideoSelectActionProcessor.h"
 #include "view/GUIViewState.h"
-#include "windows/GUIWindowPlayList.h"
 
 #include <map>
 #include <memory>

@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
+#include "MessengerPayload.h"
 #include "PlaybackModes.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationPlayLists.h"
@@ -26,6 +27,7 @@
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <optional>
 #include <string_view>
 #include <vector>
@@ -364,8 +366,9 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const std::string& method,
   else if (playList)
   {
     //! @todo Stop should be a delegator method to avoid GUI coupling! Same goes for other player controls.
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
-                                               static_cast<void*>(new CAction(ACTION_STOP)));
+    CServiceBroker::GetAppMessenger()->PostMsg(
+        TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
+        TransferToMessenger(std::make_unique<CAction>(ACTION_STOP)));
     CServiceBroker::GetSlideShowDelegator().Reset();
   }
   return ACK;

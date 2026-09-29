@@ -10,7 +10,6 @@
 #include "ServiceDescription.h"
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_epg.h"
 #include "pvr/recordings/PVRRecording.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
 #include <set>

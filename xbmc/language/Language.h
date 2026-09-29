@@ -96,7 +96,7 @@ private:
   {
   }
 
-  static CLanguagePreference Parse(const std::string& setting, Kind unrecognized);
+  static CLanguagePreference Parse(const std::string& setting);
 
   Kind m_kind{Kind::FollowUI};
   CLanguageTag m_language;

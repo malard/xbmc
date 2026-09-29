@@ -19,7 +19,6 @@ using namespace JSONRPC;
 namespace
 {
 
-// ResolveInfoProviderView is protected, so a subclass reaches it.
 class TestableAudioLibrary : public CAudioLibrary
 {
 public:

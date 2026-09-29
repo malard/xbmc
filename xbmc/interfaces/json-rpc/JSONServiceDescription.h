@@ -101,7 +101,8 @@ namespace JSONRPC
     std::vector<JSONSchemaTypeDefinitionPtr> unionTypes;
 
     /*!
-     \brief Set by the containing object's "required" array, never by the schema itself
+     \brief Set by whatever contains the schema: an object's "required" array, a method
+     parameter's "required" flag, or a union; never by the schema itself
      */
     bool optional = true;
 

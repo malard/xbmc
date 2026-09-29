@@ -310,8 +310,6 @@ public:
   PLT_DeviceDataReference m_device;
   NPT_UInt32 m_instance = 0;
 
-  PLT_PositionInfo m_posinfo;
-
   PLT_PositionInfo GetPosition() const
   {
     std::unique_lock lock(m_section);
@@ -349,6 +347,7 @@ private:
 
   mutable CCriticalSection m_section;
   PLT_TransportInfo m_trainfo;
+  PLT_PositionInfo m_posinfo;
   // Polling starts with the first position reply, which OpenFile asks for.
   bool m_pollOutstanding = true;
   XbmcThreads::EndTime<> m_nextPoll;

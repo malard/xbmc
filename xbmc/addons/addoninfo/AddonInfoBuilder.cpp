@@ -15,7 +15,6 @@
 #include "addons/addoninfo/AddonType.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
-#include "language/LangInfo.h"
 #include "language/LanguageTag.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"

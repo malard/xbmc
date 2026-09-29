@@ -72,6 +72,7 @@
 #include "filesystem/UPnPDirectory.h"
 #endif
 #include "guilib/TextureManager.h"
+#include "language/LanguageTag.h"
 #include "network/Network.h"
 #include "network/NetworkFileItemClassify.h"
 #include "platform/Environment.h"
@@ -2193,17 +2194,6 @@ std::optional<StreamFlags> ExternalStreamFlagFromToken(std::string_view token)
 
   return it->second;
 }
-
-/*!
- * \brief The language a filename token states.
- * \param[in] token One token of the filename.
- * \return The language, or nullopt where the token states none.
- */
-std::optional<KODI::LANGUAGE::CLanguageTag> ExternalStreamLanguageFromToken(
-    const std::string& token)
-{
-  return KODI::LANGUAGE::CLanguageTag::TryParse(token);
-}
 } // namespace
 
 ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string& videoPath, const std::string& associatedFile)
@@ -2251,7 +2241,7 @@ ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string
 
       if (!languageFound)
       {
-        if (const auto tag = ExternalStreamLanguageFromToken(*it); tag.has_value())
+        if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(*it); tag.has_value())
         {
           info.language = *tag;
           languageFound = true;

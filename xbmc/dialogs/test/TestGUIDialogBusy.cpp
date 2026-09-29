@@ -24,9 +24,9 @@ using namespace std::chrono_literals;
 
 namespace
 {
-// Every test here keeps the timeout at or under displaytime, so the wait is answered before the
-// busy dialog is looked up. That lookup needs a GUI component and a windowing system, and the test
-// environment registers neither. Raising the timeout past this would crash rather than fail.
+// Tests without the stub GUI keep the timeout at or under displaytime, so the wait is answered
+// before the busy dialog is looked up. That lookup needs a GUI component and a windowing system,
+// which the test environment does not register.
 constexpr unsigned int DISPLAY_TIME{5000};
 
 std::chrono::milliseconds Elapsed(const std::chrono::steady_clock::time_point start)
@@ -36,8 +36,7 @@ std::chrono::milliseconds Elapsed(const std::chrono::steady_clock::time_point st
 }
 
 // Enough of a windowing system for CGUIWindowManager::GetWindow, which takes the graphics context
-// lock. Duplicated from xbmc/guilib/test/TestGUIWindowOnAction.cpp rather than shared, to keep this
-// change to the files it already touches.
+// lock.
 class CTestRenderSystem : public CRenderSystemBase
 {
 public:
@@ -182,8 +181,7 @@ TEST(TestGUIDialogBusy, ATimeoutEndsTheWaitWithNoBusyDialogToShow)
     CEvent event;
     const auto start{std::chrono::steady_clock::now()};
 
-    // longer than displaytime, so the dialog is looked up: without one, master returned at once
-    // and reported the event had arrived
+    // longer than displaytime, so the dialog is looked up and found missing
     EXPECT_FALSE(CGUIDialogBusy::WaitOnEvent(event, 100, true, 400ms));
     EXPECT_GE(Elapsed(start), 400ms);
   }

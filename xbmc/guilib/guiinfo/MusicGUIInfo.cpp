@@ -597,13 +597,7 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
     return true;
   }
 
-  // The path labels are answered from the item itself. Loading the tag for them opens a database
-  // connection, which is expensive on a remote database and yields nothing for items that are not
-  // part of the music library.
-  const bool needsTag = info.GetInfo() != PLAYER_PATH && info.GetInfo() != PLAYER_FILEPATH &&
-                        info.GetInfo() != PLAYER_FILENAME;
-
-  if (needsTag && playlistItem->HasMusicInfoTag() && !playlistItem->GetMusicInfoTag()->Loaded())
+  if (info.GetInfo() == MUSICPLAYER_COVER)
   {
     value = playlistItem->HasArt("thumb") ? playlistItem->GetArt("thumb") : "DefaultAlbumCover.png";
     return true;

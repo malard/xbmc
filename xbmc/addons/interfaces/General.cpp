@@ -90,7 +90,7 @@ char* Interface_General::get_language(void* kodiBase, int format, bool region)
     return nullptr;
   }
 
-  // The addon enum and the expander enum name the same three formats with the same values, and
+  // The addon enum and CLanguageTag::Notation name the same three formats with the same values, and
   // anything else has always been served as the English name
   KODI::LANGUAGE::CLanguageTag::Notation langFormat{KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME};
   switch (format)

@@ -260,11 +260,6 @@ void CGUIWindowSlideShow::Reset()
 
 void CGUIWindowSlideShow::OnDeinitWindow(int nextWindowID)
 {
-  if (m_Resolution != CDisplaySettings::GetInstance().GetCurrentResolution())
-  {
-    //! @todo use the video resolution rather than the GUI resolution
-  }
-
   if (nextWindowID != WINDOW_FULLSCREEN_VIDEO &&
       nextWindowID != WINDOW_FULLSCREEN_GAME)
   {

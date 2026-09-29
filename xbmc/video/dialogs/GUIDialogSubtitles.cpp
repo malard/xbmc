@@ -407,8 +407,7 @@ void CGUIDialogSubtitles::Search(const std::string &search/*=""*/)
     case KODI::LANGUAGE::CLanguagePreference::Kind::ForcedOnly:
     case KODI::LANGUAGE::CLanguagePreference::Kind::MediaDefault:
       // Answered by a stream flag, or by wanting no subtitles at all. There is no language for a
-      // service to search on, and the setting's own text is not one - it was being sent as though
-      // it were, so an addon was asked for subtitles in "none".
+      // service to search on, and the setting's own text is not one.
       break;
   }
 

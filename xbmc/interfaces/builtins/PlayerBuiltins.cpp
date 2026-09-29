@@ -67,7 +67,7 @@ void NotifyPlayOrder(const CApplicationPlayLists& playLists,
 {
   constexpr int STRING_PLAYLIST = 559;
   constexpr int STRING_SHUFFLE = 191;
-  constexpr int STRING_ON = 593;
+  constexpr int STRING_ALL = 593;
   constexpr int STRING_OFF = 591;
   const auto localize = [](int code) -> const std::string&
   { return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(code); };
@@ -76,7 +76,7 @@ void NotifyPlayOrder(const CApplicationPlayLists& playLists,
     CGUIDialogKaiToast::QueueNotification(
         CGUIDialogKaiToast::Info, localize(STRING_PLAYLIST),
         StringUtils::Format("{}: {}", localize(STRING_SHUFFLE),
-                            localize(shuffled ? STRING_ON : STRING_OFF)));
+                            localize(shuffled ? STRING_ALL : STRING_OFF)));
 
   if (const CApplicationPlayLists::Repeat repeat = playLists.GetRepeat(type); repeat != wasRepeat)
     CGUIDialogKaiToast::QueueNotification(

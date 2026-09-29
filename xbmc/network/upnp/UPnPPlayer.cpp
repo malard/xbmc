@@ -233,9 +233,8 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
     NPT_CHECK_LABEL_SEVERE(m_delegate->SendGetTransportInfo(action), failed_waitplaying);
     if (NPT_FAILED(m_delegate->WaitForReply(*action, timeout)))
     {
-      // Reaching the deadline ends this loop, it does not fail the open - that is what the loop
-      // condition below did before the wait honoured a deadline of its own. A wait that ends
-      // while the deadline is still live is the user cancelling.
+      // Reaching the deadline ends the loop without failing the open; a wait that ends before the
+      // deadline is the user cancelling.
       if (timeout.IsTimePast())
         break;
       goto failed_waitplaying;
@@ -596,7 +595,7 @@ failed:
 int64_t CUPnPPlayer::GetTime()
 {
   NPT_CHECK_POINTER_LABEL_SEVERE(m_delegate, failed);
-  return m_delegate->m_posinfo.rel_time.ToMillis();
+  return m_delegate->GetPosition().rel_time.ToMillis();
 failed:
   return 0;
 }
@@ -604,7 +603,7 @@ failed:
 int64_t CUPnPPlayer::GetTotalTime()
 {
   NPT_CHECK_POINTER_LABEL_SEVERE(m_delegate, failed);
-  return m_delegate->m_posinfo.track_duration.ToMillis();
+  return m_delegate->GetPosition().track_duration.ToMillis();
 failed:
   return 0;
 };

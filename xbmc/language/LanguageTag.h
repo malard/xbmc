@@ -163,7 +163,8 @@ public:
    *
    * Narrowing: region, script and variant subtags have no ISO 639 equivalent and are dropped.
    *
-   * \return The code, or the tag itself when no ISO 639-2 code exists for the language.
+   * \return The code, or the primary language subtag when ISO 639-2 assigns the language
+   *         none. Text that named no language is returned as given.
    */
   std::string AsIso6392B() const;
 
@@ -173,7 +174,8 @@ public:
    * Narrowing, as AsIso6392B is. The two forms differ for about twenty languages and are
    * spelled the same for every other.
    *
-   * \return The code, or the tag itself when no ISO 639-2 code exists for the language.
+   * \return The code, or the primary language subtag when ISO 639-2 assigns the language
+   *         none. Text that named no language is returned as given.
    */
   std::string AsIso6392T() const;
 

@@ -285,7 +285,7 @@
   },
   "Player.Open": {
     "type": "method",
-    "description": "Start playback of either the playlist with the given ID, the given directory (a slideshow of its pictures, or a playlist of its media when it holds no pictures) or a single file or an item from the database.",
+    "description": "Start playback of either the named playlist, the given directory (a slideshow of its pictures, or a playlist of its media when it holds no pictures) or a single file or an item from the database.",
     "transport": "Response",
     "permission": "ControlPlayback",
     "params": [

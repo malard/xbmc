@@ -135,8 +135,7 @@ public:
   {
     auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
 
-    // Three of the subtitle choices are answered by something other than a language, so they are
-    // asked of the preference itself rather than by reading the setting back
+    // None, original and forced only name no language, so they are asked of the preference
     const CLanguagePreference& preference{CLanguage::GetInstance().SubtitlePreference()};
     m_isSubNone = preference.Is(CLanguagePreference::Kind::None);
     m_isPrefOriginal = preference.Is(CLanguagePreference::Kind::Original);
@@ -6371,8 +6370,6 @@ void CVideoPlayer::GetVideoStreamInfo(int streamId, VideoStreamInfo& info) const
 
   const SelectionStream& s = m_content.m_selectionStreams.Get(StreamType::VIDEO, streamId);
 
-  // Every caller describes a stream into a fresh VideoStreamInfo, so there is nothing here to
-  // preserve by leaving a field as it was
   info.language = s.language;
   info.name = s.name;
 

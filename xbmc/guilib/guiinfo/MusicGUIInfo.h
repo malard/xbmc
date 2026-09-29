@@ -10,7 +10,6 @@
 
 #include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoProvider.h"
-#include "playlists/PlayListTypes.h"
 
 #include <memory>
 

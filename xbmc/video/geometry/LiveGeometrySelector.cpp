@@ -14,6 +14,7 @@
 #include "video/geometry/GeometryTransforms.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 
 using namespace KODI::UTILS;

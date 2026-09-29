@@ -12,7 +12,6 @@
 #include "guilib/guiinfo/GUIInfoProvider.h"
 #include "threads/CriticalSection.h"
 #include "video/geometry/EffectiveGeometry.h"
-#include "playlists/PlayListTypes.h"
 
 #include <deque>
 #include <memory>
@@ -81,8 +80,7 @@ private:
   //! reference handed out for another.
   mutable std::unordered_map<std::string, KODI::VIDEO::GEOMETRY::ContentAspectSet> m_itemAspects;
 
-  //! \brief Insertion order. A full cache costs the oldest item rather than all of them:
-  //! scrolling a list longer than the cache used to re-resolve every row still on screen.
+  //! \brief Insertion order, so a full cache evicts its oldest entry.
   mutable std::deque<std::string> m_itemAspectOrder;
 
   const std::shared_ptr<CApplicationPlayer> m_appPlayer;

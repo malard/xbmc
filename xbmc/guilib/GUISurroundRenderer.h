@@ -30,7 +30,7 @@ public:
   void Render();
 
   //! \brief Forget what the surround is painted with, so the next frame resolves it again.
-  //! Call when a surround setting moves; a skin change arrives via ReleaseResources().
+  //! Call when a surround setting moves or the skin changes.
   void Invalidate();
 
   //! \brief Let go of the image and its texture handle. Call on GUI shutdown, before the

@@ -1045,7 +1045,8 @@ void CActiveAESink::OpenSink()
 
   const auto settingsComponent = CServiceBroker::GetSettingsComponent();
   const auto settings = settingsComponent ? settingsComponent->GetSettings() : nullptr;
-  m_silenceFiller = passthrough && settings && settings->GetBool("audiooutput.silencefiller");
+  m_silenceFiller =
+      passthrough && settings && settings->GetBool(CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
   m_fillerArmed = m_silenceFiller;
   m_fillerUsed = false;
   if (m_silenceFiller)

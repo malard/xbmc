@@ -31,10 +31,7 @@ TEST(TestAudioLibrarySetInfoProviderSchema, OffersTheThreeScopesOfTheDialog)
   ASSERT_NE(nullptr, applyTo);
   ASSERT_TRUE((*applyTo)["required"].asBoolean());
 
-  std::set<std::string> scopes;
-  for (unsigned int index = 0; index < (*applyTo)["schema"]["enum"].size(); index++)
-    scopes.insert((*applyTo)["schema"]["enum"][index].asString());
-  EXPECT_EQ((std::set<std::string>{"item", "view", "default"}), scopes);
+  EXPECT_EQ((std::set<std::string>{"item", "view", "default"}), EnumValues((*applyTo)["schema"]));
 }
 
 TEST(TestAudioLibrarySetInfoProviderSchema, ScraperIdIsOptionalSoABindingCanBeCleared)

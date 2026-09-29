@@ -536,9 +536,8 @@ TEST(TestVideoInfoTag, ContentGeometryRoundTripsThroughNfo)
   written.m_contentGeometry.identity = FileIdentity{68'719'476'736, 1'700'000'000};
   written.m_contentGeometry.computed = CDateTime(2026, 8, 6, 21, 30, 0);
 
-  // The shapes travel too. They are what varies is acted on with, so an NFO carrying the flag
-  // and not them describes a title that changes shape and names none of the shapes - and a
-  // library refresh from one wrote that empty list over a measured column.
+  // The shapes travel too: an NFO carrying the flag without them describes a title that
+  // changes shape and names none of the shapes.
   written.m_contentGeometry.sections.push_back(CRectInt{0, 264, 3840, 1896});
   written.m_contentGeometry.sections.push_back(CRectInt{0, 0, 3840, 2160});
   ASSERT_TRUE(written.HasContentGeometry());

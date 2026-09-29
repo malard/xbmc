@@ -40,7 +40,7 @@ PRE_DISPATCH = ("InvalidRequest", "MethodNotFound", "InvalidParams",
 SUCCESS = ("OK", "ACK")
 
 _DEFINITION = re.compile(
-    r"^[ 	]*(?:static\s+)?JSONRPC_STATUS\s+((?:JSONRPC::)?(?:\w+::)?\w+)\s*\(",
+    r"^[ \t]*(?:static\s+)?JSONRPC_STATUS\s+((?:JSONRPC::)?(?:\w+::)?\w+)\s*\(",
     re.MULTILINE)
 # A call written without an object: a static of the same class, a qualified
 # static, or a free function; obj.f( and ptr->f( are excluded.
@@ -206,7 +206,7 @@ def write(schema_dir=kodi_schema.SCHEMA_DIR, source_dir=SOURCE_DIR):
         entries.insert(after + 1, ("errors", derived[name]))
         methods[name] = dict(entries)
     path.write_text(json.dumps(methods, indent=2, ensure_ascii=False) + "\n",
-                    encoding="utf-8")
+                    encoding="utf-8", newline="\n")
 
 
 def main(argv):

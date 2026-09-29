@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "language/Language.h"
 #include "pictures/PictureScalingAlgorithm.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"

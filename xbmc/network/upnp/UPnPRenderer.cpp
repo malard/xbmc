@@ -33,7 +33,6 @@
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
-#include "video/VideoFileItemClassify.h"
 
 #include <inttypes.h>
 #include <mutex>

@@ -230,7 +230,8 @@ bool CStreamDetailSubtitle::IsWorseThan(const CStreamDetail& that) const
     return false;
 
   // the best subtitle should be the one in the user's preferred language
-  // If preferred language is set to "original" this is "eng"
+  // A preference naming no language falls back to the audio preference, then the interface
+  // language.
   return m_language.IsUndetermined() ||
          KODI::LANGUAGE::CLanguage::GetInstance().Subtitle().Matches(other);
 }

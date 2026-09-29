@@ -545,6 +545,9 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
 
   std::unique_lock lock(*this);
 
+  // FIXME Wayland windowing needs some way to "deny" resolution updates, since what Kodi
+  // requests might not get set by the compositor. Other windowing code expects the new
+  // state to be set when SetFullScreen() is called, so it is set before the switch anyway.
   float origFPSOverride = m_fFPSOverride;
 
   UpdateInternalStateWithResolution(res);

@@ -156,10 +156,7 @@ std::set<std::string> DeclaredIdentifiers()
 {
   std::set<std::string> identifiers;
 
-  CVariant parsed;
-  CJSONVariantParser::Parse(ShippedDefinition("Playlist.Item"), parsed);
-
-  const CVariant& alternatives{parsed["Playlist.Item"]["anyOf"]};
+  const CVariant alternatives{ShippedType("Playlist.Item")["anyOf"]};
   for (auto alternative = alternatives.begin_array(); alternative != alternatives.end_array();
        ++alternative)
   {

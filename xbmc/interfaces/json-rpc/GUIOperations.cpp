@@ -38,8 +38,6 @@
 #include "utils/Variant.h"
 #include "video/geometry/GeometryPublication.h"
 
-#include <vector>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -372,9 +370,6 @@ JSONRPC_STATUS CGUIOperations::GetInfoLabels(const std::string& method,
 
   for (unsigned int i = 0; i < parameterObject["labels"].size(); i++)
   {
-    std::string field = parameterObject["labels"][i].asString();
-    StringUtils::ToLower(field);
-
     info.push_back(parameterObject["labels"][i].asString());
   }
 

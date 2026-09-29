@@ -10,7 +10,6 @@
 #include "ServiceDescription.h"
 #include "interfaces/IAnnouncer.h"
 #include "settings/lib/SettingLevel.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
 #include <array>
@@ -52,14 +51,7 @@ TEST(TestSettingLevelName, TheNamesAreExactlyTheSchemaEnum)
     named.insert(SettingLevelToString(level));
   }
 
-  std::set<std::string> declared;
-  const CVariant& values{ShippedType("Setting.Level")["enum"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-  {
-    declared.insert(value->asString());
-  }
-
-  EXPECT_EQ(named, declared);
+  EXPECT_EQ(named, EnumValues(ShippedType("Setting.Level")));
 }
 
 TEST(TestSettingsLevelSchema, TheLevelInForceCanBeRead)

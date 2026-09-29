@@ -9,7 +9,6 @@
 #include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
 #include "interfaces/json-rpc/PVREpgFields.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
 #include <set>
@@ -77,18 +76,7 @@ namespace
 
 std::set<std::string> ShippedEnum(const std::string& type)
 {
-  std::set<std::string> values;
-
-  CVariant parsed;
-  CJSONVariantParser::Parse(ShippedDefinition(type), parsed);
-
-  const CVariant& members{parsed[type]["items"]["enum"]};
-  for (auto member = members.begin_array(); member != members.end_array(); ++member)
-  {
-    values.insert(member->asString());
-  }
-
-  return values;
+  return EnumValues(ShippedType(type)["items"]);
 }
 
 class TestPVRBroadcastFields : public JSONServiceDescriptionTestBase

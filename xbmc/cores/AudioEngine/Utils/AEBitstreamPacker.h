@@ -27,8 +27,7 @@ public:
   bool PackPause(CAEStreamInfo &info, unsigned int millis, bool iecBursts);
 
   //! Re-emit the last complete burst. Returns false when none has been packed
-  //! yet; the caller skips byte-swapping, as the retained burst is already
-  //! swapped.
+  //! yet.
   bool PackLastBurst();
   void Reset();
   uint8_t* GetBuffer();

@@ -16,7 +16,6 @@
 class CFileItem;
 class CDVDDemux;
 class CDVDVideoCodec;
-class CDVDStreamInfo;
 class CStreamDetails;
 class CStreamDetailSubtitle;
 class CDVDInputStream;

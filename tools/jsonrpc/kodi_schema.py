@@ -66,7 +66,7 @@ _ENUM_ENTRY = re.compile(r"^\s*(\w+)\s*=\s*(-?\d+)", re.MULTILINE)
 
 
 def load_version(schema_dir=SCHEMA_DIR):
-    """Return the API version string from version.txt, e.g. "14.0.0"."""
+    """Return the API version string from version.txt, e.g. "15.0.0"."""
     text = (Path(schema_dir) / "version.txt").read_text(encoding="utf-8")
     match = re.search(r"JSONRPC_VERSION\s+(\S+)", text)
     if match is None:

@@ -391,13 +391,8 @@ public:
   void OnResetDisplay() override;
 
   /*!
-   \brief Hold presentation while a passthrough format change settles downstream
-
-   Opening a passthrough stream re-trains the HDMI link. On a chain with a matrix
-   or an AV processor in it the picture and sound can take many seconds to return,
-   and playback runs on regardless — the opening of the film is neither seen nor
-   heard. This is the audio-side counterpart of videoscreen.delayrefreshchange,
-   which only ever arms on a display mode change.
+   \brief Hold presentation after the audio format on the wire changes, until the downstream
+   chain reports ready or the delay setting expires.
    */
   void HoldForAudioFormatChange();
   void ReleaseAudioFormatHold();

@@ -10,7 +10,6 @@
 
 #include "ServiceBroker.h"
 #include "imagefiles/ImageFileURL.h"
-#include "language/Language.h"
 #include "language/LanguageTag.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"

@@ -416,14 +416,11 @@ void CGUIWindowPlayList<Base>::MoveItem(int iStart, int iDest)
 }
 
 template<typename Base>
-bool CGUIWindowPlayList<Base>::MoveCurrentPlayListItem(int iItem, int iAction, bool bUpdate)
+void CGUIWindowPlayList<Base>::MoveCurrentPlayListItem(int iItem, int iAction)
 {
   const int destination = iAction == ACTION_MOVE_ITEM_UP ? iItem - 1 : iItem + 1;
-  if (!m_playLists->Swap(m_type, iItem, destination))
-    return false;
-  if (bUpdate)
+  if (m_playLists->Swap(m_type, iItem, destination))
     this->Refresh();
-  return true;
 }
 
 template<typename Base>

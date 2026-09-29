@@ -26,7 +26,7 @@ struct SamplingParams
 {
   unsigned int points{9}; //!< sample positions across the title
 
-  //! \brief Runtime to leave unsampled at the start, in seconds. Never zero.
+  //! \brief Runtime to leave unsampled at the start, in seconds.
   double leadInSeconds{120.0};
 
   //! \brief Runtime to leave unsampled at the end, in seconds.
@@ -60,7 +60,7 @@ std::vector<double> UnsampledOffsets(const std::vector<double>& candidates,
                                      double minSeparation = 1.0);
 
 //! \brief Positions, in seconds, at which to sample a title of \p durationSeconds. Spread
-//! across the window, never at t=0 or the very end. Empty when it cannot be sampled.
+//! across the window. Empty when it cannot be sampled.
 std::vector<double> SampleOffsets(double durationSeconds, const SamplingParams& params = {});
 
 //! \brief The first and last position that will be sampled, in seconds.

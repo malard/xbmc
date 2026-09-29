@@ -662,12 +662,10 @@ bool IsAutoPlayNextItem(const CFileItem& item)
          !settings->GetBool(CSettings::SETTING_MUSICPLAYER_QUEUEBYDEFAULT);
 }
 
-void PlayItem(const std::shared_ptr<CFileItem>& itemIn,
+void PlayItem(const std::shared_ptr<CFileItem>& item,
               const std::string& player,
               ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
 {
-  const auto& item = itemIn;
-
   if (item->IsFolder())
   {
     AddItemToPlayListAndPlay(item, nullptr, player);
@@ -713,9 +711,8 @@ void PlayItem(const std::shared_ptr<CFileItem>& itemIn,
   }
 }
 
-void QueueItem(const std::shared_ptr<CFileItem>& itemIn, QueuePosition pos)
+void QueueItem(const std::shared_ptr<CFileItem>& item, QueuePosition pos)
 {
-  const auto& item = itemIn;
   auto& components = CServiceBroker::GetAppComponents();
   const auto playLists = CServiceBroker::GetPlayLists();
 

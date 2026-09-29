@@ -11,7 +11,6 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
-#include "URL.h"
 #include "Util.h"
 #include "addons/AddonManager.h"
 #include "addons/Scraper.h"

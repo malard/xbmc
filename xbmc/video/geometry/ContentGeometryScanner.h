@@ -32,13 +32,9 @@ std::optional<ContentGeometryRecord> MeasureContentGeometry(
     SamplingDepth depth = SamplingDepth::Normal,
     const std::function<bool()>& cancelled = {});
 
-//! \brief Measure the file \p item plays, unless something already has, and store it. Blocks,
-//! so the rectangle is known before the first frame. Skips a file with a declared ratio.
-void MeasureContentGeometryBeforePlayback(const CFileItem& item,
-                                          const std::function<bool()>& cancelled);
-
-//! \brief MeasureContentGeometryBeforePlayback() under the busy dialog. Video items only;
-//! backing out abandons the measurement and starts the film.
+//! \brief Measure the file \p item plays, unless something already has, and store it, under
+//! the busy dialog. Blocks, so the rectangle is known before the first frame. Skips a file with
+//! a declared ratio. Video items only; backing out abandons the measurement and starts the film.
 void MeasureContentGeometryBeforePlaybackBlocking(const CFileItem& item);
 
 //! \brief Measure \p item again and replace what is stored, without asking whether the work is
@@ -81,8 +77,7 @@ private:
   CContentGeometryScanner(const CContentGeometryScanner&) = delete;
   CContentGeometryScanner& operator=(const CContentGeometryScanner&) = delete;
 
-  //! \brief The job manager owns the job and may destroy it before the completion callback
-  //! arrives.
+  //! \brief A sweep job is queued or running; cleared by its completion or abort callback.
   std::atomic<bool> m_sweeping{false};
   std::atomic<bool> m_stop{false};
   std::atomic<bool> m_opening{false};

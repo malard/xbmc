@@ -15,7 +15,6 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 

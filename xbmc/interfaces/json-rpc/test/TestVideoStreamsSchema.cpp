@@ -8,7 +8,6 @@
 
 #include "JSONRPCTestUtils.h"
 #include "ServiceDescription.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/StreamDetails.h"
 #include "utils/Variant.h"
 

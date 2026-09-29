@@ -952,7 +952,6 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
 
   m_history.AddPath(m_vecItems->GetPath(), m_strFilterPath);
 
-
   return true;
 }
 
@@ -1261,7 +1260,6 @@ bool CGUIMediaWindow::GoParentFolder()
   if (URIUtils::PathEquals(m_vecItems->GetPath(), GetRootPath()))
     return false;
 
-
   const std::string currentPath = m_vecItems->GetPath();
   std::string parentPath = m_history.GetParentPath();
   // Check if a) the current folder is on the stack more than once, (parent is
@@ -1492,7 +1490,6 @@ void CGUIMediaWindow::SetHistoryForPath(const std::string& strDirectory)
   }
   else
     m_history.ClearPathHistory();
-
 }
 
 /*!

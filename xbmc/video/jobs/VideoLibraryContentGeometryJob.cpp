@@ -110,7 +110,7 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
     if (auto* dialog = gui->GetWindowManager().GetWindow<CGUIDialogExtendedProgressBar>(
             WINDOW_DIALOG_EXT_PROGRESS))
       SetProgressBar(dialog->GetHandle(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40814)));
+          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40815)));
   }
 
   unsigned int measured{0};

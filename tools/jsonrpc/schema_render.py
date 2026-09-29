@@ -52,7 +52,6 @@ def is_simple(schema):
     return True
 
 
-
 def members_table(rows):
     """A name/type/required/default/description table around the given rows."""
     return (
@@ -61,6 +60,7 @@ def members_table(rows):
         "<th>Default</th><th>Description</th></tr></thead>"
         f"<tbody>{''.join(rows)}</tbody>"
         "</table></div>")
+
 
 class SchemaRenderer:
     """Renders schema fragments; `vdir` is the major-version directory type
@@ -147,12 +147,7 @@ class SchemaRenderer:
                 "<td>No</td><td></td>"
                 f"<td>{esc(extra.get('description', ''))}</td>"
                 "</tr>")
-        return (
-            '<div class="tablewrap"><table>'
-            "<thead><tr><th>Name</th><th>Type</th><th>Required</th>"
-            "<th>Default</th><th>Description</th></tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody>"
-            "</table></div>")
+        return members_table(rows)
 
     def render_block(self, schema, depth):
         """Render a schema as a block (returns section / type pages)."""
@@ -227,9 +222,8 @@ class SchemaRenderer:
         for descriptor in params:
             schema = descriptor.get("schema", {})
             default = ""
-            source = descriptor if "default" in descriptor else schema
-            if isinstance(source, dict) and "default" in source:
-                default = f"<code>{esc(dumps(source['default']))}</code>"
+            if isinstance(schema, dict) and "default" in schema:
+                default = f"<code>{esc(dumps(schema['default']))}</code>"
             description = descriptor.get("description") \
                 or (schema.get("description", "")
                     if isinstance(schema, dict) else "")

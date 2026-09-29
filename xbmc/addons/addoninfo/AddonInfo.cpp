@@ -15,7 +15,6 @@
 #include "addons/IAddon.h"
 #include "addons/addoninfo/AddonType.h"
 #include "filesystem/Directory.h"
-#include "language/LangInfo.h"
 #include "language/Language.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"

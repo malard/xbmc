@@ -31,7 +31,6 @@
 #include "utils/Variant.h"
 
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -790,8 +789,11 @@ std::vector<std::shared_ptr<CPVREpgInfoTag>> CPVROperations::GetBroadcastsInRang
   if (!start.IsValid() || !end.IsValid())
     return epg.GetTags();
 
-  // the ranged query fills the gaps between broadcasts with placeholder tags
+  // The ranged query fills the gaps between broadcasts with placeholder tags, and from the database
+  // it also answers the broadcasts that only touch the range
   std::vector<std::shared_ptr<CPVREpgInfoTag>> tags{epg.GetTimeline(start, end, start, end)};
-  std::erase_if(tags, [](const std::shared_ptr<CPVREpgInfoTag>& tag) { return tag->IsGapTag(); });
+  std::erase_if(
+      tags, [&start, &end](const std::shared_ptr<CPVREpgInfoTag>& tag)
+      { return tag->IsGapTag() || tag->EndAsUTC() <= start || tag->StartAsUTC() >= end; });
   return tags;
 }

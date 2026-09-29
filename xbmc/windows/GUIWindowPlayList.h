@@ -71,7 +71,7 @@ private:
 
   void OnMove(int iItem, int iAction);
   void MoveItem(int iStart, int iDest);
-  bool MoveCurrentPlayListItem(int iItem, int iAction, bool bUpdate = true);
+  void MoveCurrentPlayListItem(int iItem, int iAction);
   void RemovePlayListItem(int iItem);
   void ClearPlayList();
   void SavePlayList();

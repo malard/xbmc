@@ -247,11 +247,8 @@ TEST_F(TestLiveGeometryMonitor, ALetterboxedFrameIsServedAsItsRatio)
 }
 
 /*!
- * The defect this file was written for. On a half side-by-side frame the region measured is one
- * 960-wide view, and that view is displayed at the whole frame's 16:9 - so its pixels are twice
- * as wide and a 960x816 picture in it is 2.35, not 1.18. Taking the pixel aspect from the
- * packing instead classified the same picture as Movietone, which is a real entry and so was
- * not refused - it was served, and the room was driven to it.
+ * On a half side-by-side frame the region measured is one 960-wide view, displayed at the whole
+ * frame's 16:9, so its pixels are twice as wide and a 960x816 picture in it is 2.35, not 1.18.
  */
 TEST_F(TestLiveGeometryMonitor, AHalfSideBySideViewIsReadAtItsOwnPixelAspect)
 {

@@ -63,7 +63,7 @@ std::optional<std::string> ChosenCharset(const std::string& settingId)
 }
 } // namespace
 
-CLanguagePreference CLanguagePreference::Parse(const std::string& setting, Kind unrecognized)
+CLanguagePreference CLanguagePreference::Parse(const std::string& setting)
 {
   if (Names(setting, languageSettingDefault))
     return {Kind::FollowUI, {}};
@@ -77,7 +77,7 @@ CLanguagePreference CLanguagePreference::Parse(const std::string& setting, Kind 
   if (!setting.empty())
     CLog::LogF(LOGERROR, "'{}' does not name a language, ignoring it", setting);
 
-  return {unrecognized, {}};
+  return {Kind::FollowUI, {}};
 }
 
 CLanguagePreference CLanguagePreference::ForAudio(const std::string& setting)
@@ -85,7 +85,7 @@ CLanguagePreference CLanguagePreference::ForAudio(const std::string& setting)
   if (Names(setting, audioLanguageSettingMediaDefault))
     return {Kind::MediaDefault, {}};
 
-  return Parse(setting, Kind::FollowUI);
+  return Parse(setting);
 }
 
 CLanguagePreference CLanguagePreference::ForSubtitles(const std::string& setting)
@@ -96,7 +96,7 @@ CLanguagePreference CLanguagePreference::ForSubtitles(const std::string& setting
   if (Names(setting, subtitleLanguageSettingForcedOnly))
     return {Kind::ForcedOnly, {}};
 
-  return Parse(setting, Kind::FollowUI);
+  return Parse(setting);
 }
 
 CLanguageTag CLanguagePreference::Resolve(const CLanguageTag& ui) const

@@ -467,8 +467,8 @@ constexpr uint32_t STRING_STARTS_WITH                = 422;
 constexpr uint32_t STRING_ENDS_WITH                  = 423;
 constexpr uint32_t STRING_CONTAINS                   = 424;
 
-constexpr uint32_t VIDEOPLAYER_HASPREVIOUS           = 425;
-constexpr uint32_t VIDEOPLAYER_HASNEXT               = 426;
+constexpr uint32_t VIDEOPLAYER_HASPREVIOUS           = 430;
+constexpr uint32_t VIDEOPLAYER_HASNEXT               = 431;
 
 constexpr uint32_t INTEGER_IS_EQUAL                  = 450;
 constexpr uint32_t INTEGER_GREATER_THAN              = 451;

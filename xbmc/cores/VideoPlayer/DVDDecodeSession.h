@@ -34,7 +34,7 @@ struct DVDDecodeSession
 };
 
 //! \brief Open \p fileItem for decoding: input stream, demuxer with every stream but the first
-//! real video one disabled, and a software codec for it.
+//! real video one disabled, and a codec for it opened with \p codecOptions.
 std::optional<DVDDecodeSession> OpenDVDDecodeSession(const CFileItem& fileItem,
                                                      int codecOptions,
                                                      const std::string& redactPath);

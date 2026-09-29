@@ -109,8 +109,6 @@ std::optional<StorageTarget> ResolveStorageTarget(const CFileItem& item, CVideoD
   return StorageTarget{identity, idFile};
 }
 
-} // unnamed namespace
-
 void MeasureContentGeometryBeforePlayback(const CFileItem& item,
                                           const std::function<bool()>& cancelled)
 {
@@ -134,9 +132,6 @@ void MeasureContentGeometryBeforePlayback(const CFileItem& item,
   if (record)
     db.SetContentGeometry(target->idFile, *record);
 }
-
-namespace
-{
 
 //! \brief Hosts MeasureContentGeometryBeforePlayback() under the busy dialog, so the user can
 //! back out.
