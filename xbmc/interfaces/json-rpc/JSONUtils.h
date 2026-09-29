@@ -10,7 +10,6 @@
 
 #include "JSONRPCUtils.h"
 #include "dbwrappers/Database.h"
-#include "interfaces/PlaybackValues.h"
 #include "playlists/SmartPlayList.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
@@ -50,12 +49,6 @@ enum JSONSchemaType
    json rpc method calls.*/
 class CJSONUtils
 {
-public:
-  static void MillisecondsToTimeObject(int time, CVariant& result)
-  {
-    KODI::INTERFACES::MillisecondsToTimeObject(time, result);
-  }
-
 protected:
   //! Empty when the value is not an array.
   static std::set<std::string> FieldNames(const CVariant& properties)

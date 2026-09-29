@@ -33,6 +33,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
+#include "interfaces/PlaybackValues.h"
 #include "interfaces/builtins/Builtins.h"
 #include "messaging/ApplicationMessenger.h"
 #include "music/MusicDatabase.h"
@@ -1741,7 +1742,7 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
   static const auto timeObject = [](int milliseconds)
   {
     CVariant time;
-    MillisecondsToTimeObject(milliseconds, time);
+    INTERFACES::MillisecondsToTimeObject(milliseconds, time);
     return time;
   };
 
