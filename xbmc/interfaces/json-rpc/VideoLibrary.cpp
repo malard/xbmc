@@ -567,34 +567,19 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, C
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.UpdateDetailsForMovie(id, infos, artwork, updatedDetails) <= 0)
+  if (videodatabase.UpdateDetailsForMovie(id, infos, edit.artwork, edit.updatedDetails) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
-  UpdateResumePoint(parameterObject, infos, videodatabase);
-
-  CJSONRPCUtils::NotifyItemUpdated(infos, artwork);
+  CJSONRPCUtils::NotifyItemUpdated(infos, edit.artwork);
   return ACK;
 }
 
@@ -610,18 +595,12 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSetInfo(id, infos)); status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.SetDetailsForMovieSet(infos, artwork, id) <= 0)
+  if (videodatabase.SetDetailsForMovieSet(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, "set", removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, "set", edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -641,25 +620,19 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
-
   KODI::ART::SeasonsArtwork seasonArt;
   videodatabase.GetTvShowSeasonArt(infos.m_iDbId, seasonArt);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
   videodatabase.RemoveTagsFromItem(id, MediaTypeTvShow);
 
-  if (!videodatabase.UpdateDetailsForTvShow(id, infos, artwork, seasonArt))
+  if (!videodatabase.UpdateDetailsForTvShow(id, infos, edit.artwork, seasonArt))
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, edit.removedArtwork))
     return InternalError;
 
   const bool updatePlaycount = ParameterNotNull(parameterObject, "playcount");
@@ -711,20 +684,14 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
   if (infos.m_iIdShow <= 0)
     return NotFound;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
-
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
   if (ParameterNotNull(parameterObject, "title"))
     infos.SetSortTitle(parameterObject["title"].asString());
 
-  if (videodatabase.SetDetailsForSeason(infos, artwork, infos.m_iIdShow, id) <= 0)
+  if (videodatabase.SetDetailsForSeason(infos, edit.artwork, infos.m_iIdShow, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeSeason, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeSeason, edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -748,32 +715,17 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
   if (tvshowid <= 0)
     return NotFound;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.SetDetailsForEpisode(infos, artwork, tvshowid, id) <= 0)
+  if (videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvshowid, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
-
-  UpdateResumePoint(parameterObject, infos, videodatabase);
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -793,36 +745,21 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObje
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
-
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
   videodatabase.RemoveTagsFromItem(id, MediaTypeMusicVideo);
 
-  if (videodatabase.SetDetailsForMusicVideo(infos, artwork, id) <= 0)
+  if (videodatabase.SetDetailsForMusicVideo(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount()|| lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
-
-  UpdateResumePoint(parameterObject, infos, videodatabase);
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -1357,6 +1294,32 @@ JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
   item.SetFromVideoInfoTag(details);
 
   return OK;
+}
+
+CVideoLibrary::DetailsEdit CVideoLibrary::EditDetails(const CVariant& parameterObject,
+                                                      CVideoInfoTag& details,
+                                                      CVideoDatabase& videodatabase)
+{
+  DetailsEdit edit;
+  videodatabase.GetArtForItem(details.m_iDbId, details.m_type, edit.artwork);
+  UpdateVideoTag(parameterObject, details, edit.artwork, edit.removedArtwork, edit.updatedDetails);
+  return edit;
+}
+
+void CVideoLibrary::StorePlaybackEdit(const CVariant& parameterObject,
+                                      const PlaybackUpdate& before,
+                                      CVideoInfoTag& details,
+                                      CVideoDatabase& videodatabase)
+{
+  if (before.playCount != details.GetPlayCount() || before.lastPlayed != details.m_lastPlayed)
+  {
+    // restore the original playcount, or the new one won't be announced
+    const int playCount = details.GetPlayCount();
+    details.SetPlayCount(before.playCount);
+    videodatabase.SetPlayCount(CFileItem(details), playCount, details.m_lastPlayed);
+  }
+
+  UpdateResumePoint(parameterObject, details, videodatabase);
 }
 
 void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase)

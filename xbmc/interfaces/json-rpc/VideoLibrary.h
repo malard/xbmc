@@ -106,6 +106,25 @@ namespace JSONRPC
                                                                bool updateLastplayed,
                                                                const CVideoInfoTag& episode);
 
+    //! What a Set*Details call changes about an item's artwork, and which details it names
+    struct DetailsEdit
+    {
+      KODI::ART::Artwork artwork;
+      std::set<std::string, std::less<>> removedArtwork;
+      std::set<std::string, std::less<>> updatedDetails;
+    };
+
+    //! Applies the caller's edit to \p details and to the item's stored artwork.
+    static DetailsEdit EditDetails(const CVariant& parameterObject,
+                                   CVideoInfoTag& details,
+                                   CVideoDatabase& videodatabase);
+
+    //! Stores the playcount, last played date and resume point an edit changed from \p before.
+    static void StorePlaybackEdit(const CVariant& parameterObject,
+                                  const PlaybackUpdate& before,
+                                  CVideoInfoTag& details,
+                                  CVideoDatabase& videodatabase);
+
   public:
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 
