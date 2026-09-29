@@ -54,13 +54,6 @@ TEST(TestContentBarDetector, CleanBarsEightBitLimited)
   ExpectRect(result.rect, 0, 60, 640, 300);
   EXPECT_FALSE(result.degenerate);
   EXPECT_GT(result.confidence, 0.9f);
-  EXPECT_TRUE(result.top.measured);
-  EXPECT_TRUE(result.bottom.measured);
-  EXPECT_FALSE(result.left.measured);
-  EXPECT_FALSE(result.right.measured);
-  EXPECT_EQ(60u, result.top.thickness);
-  EXPECT_EQ(60u, result.bottom.thickness);
-  EXPECT_EQ(28u, result.thresholdUsed);
 }
 
 /*!
@@ -76,8 +69,6 @@ TEST(TestContentBarDetector, CleanBarsTenBitLimited)
   ExpectRect(result.rect, 0, 60, 640, 300);
   EXPECT_FALSE(result.degenerate);
   EXPECT_GT(result.confidence, 0.9f);
-  EXPECT_EQ(112u, result.thresholdUsed); // (16 + 12) << 2
-  EXPECT_EQ(64u, result.blackFloorObserved);
 }
 
 TEST(TestContentBarDetector, CleanBarsTwelveBitLimited)
@@ -86,7 +77,6 @@ TEST(TestContentBarDetector, CleanBarsTwelveBitLimited)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_EQ(448u, result.thresholdUsed); // (16 + 12) << 4
 }
 
 // --- robust flatness ------------------------------------------------------------------
@@ -182,8 +172,6 @@ TEST(TestContentBarDetector, FullRangeBlackAtZero)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_EQ(12u, result.thresholdUsed);
-  EXPECT_EQ(0u, result.blackFloorObserved);
 }
 
 /*!
@@ -216,8 +204,6 @@ TEST(TestContentBarDetector, UnspecifiedRangeAssumesLimitedAndCostsConfidence)
   const DetectionResult assumed = DetectContentRect(unspecified);
 
   ExpectRect(assumed.rect, 0, 60, 640, 300);
-  EXPECT_TRUE(assumed.rangeAssumed);
-  EXPECT_FALSE(known.rangeAssumed);
   EXPECT_LT(assumed.confidence, known.confidence);
 }
 
@@ -237,7 +223,6 @@ TEST(TestContentBarDetector, DarkSaturatedPictureIsNotABar)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 40, 640, 360);
-  EXPECT_TRUE(result.chromaTested);
 
   // The control: identical luma, achromatic. Nothing but the chroma test separates the
   // two, and without it the whole frame reads as bar.
@@ -283,8 +268,6 @@ TEST(TestContentBarDetector, SubtitleInBarDoesNotMoveTheRect)
   const DetectionResult result = DetectContentRect(subtitled.Ref());
 
   ExpectRect(result.rect, expected.rect.x1, expected.rect.y1, expected.rect.x2, expected.rect.y2);
-  EXPECT_GT(result.overlayLines, 0u);
-  EXPECT_FALSE(result.overlaySuspected);
 }
 
 TEST(TestContentBarDetector, LogoInBarDoesNotMoveTheRect)
@@ -295,7 +278,6 @@ TEST(TestContentBarDetector, LogoInBarDoesNotMoveTheRect)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_GT(result.overlayLines, 0u);
 }
 
 /*!
@@ -312,7 +294,6 @@ TEST(TestContentBarDetector, OverWideOverlayFailsWide)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   EXPECT_GT(result.rect.y2, 300);
-  EXPECT_TRUE(result.overlaySuspected);
 }
 
 // --- degenerate and near-degenerate ---------------------------------------------------
@@ -362,10 +343,6 @@ TEST(TestContentBarDetector, ContentAtItsTrueAspectGetsNoInventedBars)
 
   ExpectRect(result.rect, 0, 0, 640, 360);
   EXPECT_FALSE(result.degenerate);
-  EXPECT_FALSE(result.top.measured);
-  EXPECT_FALSE(result.bottom.measured);
-  EXPECT_FALSE(result.left.measured);
-  EXPECT_FALSE(result.right.measured);
   EXPECT_GT(result.confidence, 0.9f);
 }
 
@@ -395,9 +372,6 @@ TEST(TestContentBarDetector, PillarboxOnly)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 80, 0, 560, 360);
-  EXPECT_TRUE(result.left.measured);
-  EXPECT_TRUE(result.right.measured);
-  EXPECT_FALSE(result.top.measured);
 }
 
 /*!
@@ -437,7 +411,6 @@ TEST(TestContentBarDetector, OffCentreBarsAreReportedNotCorrected)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 40, 640, 280);
-  EXPECT_LT(result.symmetry, 1.0f);
   EXPECT_FALSE(result.degenerate);
 }
 
@@ -459,8 +432,6 @@ TEST(TestContentBarDetector, SubFloorEdgeIsNotABar)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_TRUE(result.subFloorEdgesIgnored);
-  EXPECT_FALSE(result.left.measured);
   EXPECT_GT(result.confidence, 0.7f);
 }
 
@@ -478,7 +449,6 @@ TEST(TestContentBarDetector, SingleBlackLineOnCorrectlyCodedContentIsIgnored)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 0, 640, 360);
-  EXPECT_TRUE(result.subFloorEdgesIgnored);
 }
 
 /*!
@@ -498,7 +468,6 @@ TEST(TestContentBarDetector, OneMarginalBarLineDoesNotZeroSeparation)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_GT(result.separation, 0.8f);
   EXPECT_GT(result.confidence, 0.8f);
 }
 
@@ -547,7 +516,6 @@ TEST(TestContentBarDetector, MissingChromaPlanesSkipTheNeutralityTest)
   const DetectionResult result = DetectContentRect(frame.Ref());
 
   ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_FALSE(result.chromaTested);
   EXPECT_LT(result.confidence, 1.0f);
 }
 

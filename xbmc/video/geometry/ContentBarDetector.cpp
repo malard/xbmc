@@ -80,9 +80,17 @@ struct LineOutcome
 {
   LineClass classification{LineClass::Picture};
   unsigned int high{0}; //!< p99.5 of the bar portion
-  unsigned int low{0}; //!< p0.5 of the bar portion
   unsigned int spread{0}; //!< interquartile range of the bar portion
-  bool suspectedOverlay{false};
+};
+
+//! \brief Per-edge boundary sharpness. A letterbox boundary is a large luma step across most
+//! of the boundary; a dark scene's is a small step over a fraction of it.
+struct EdgeMetrics
+{
+  bool measured{false}; //!< false when this edge has no bar at all, so no boundary exists
+  unsigned int thickness{0}; //!< bar lines removed on this edge
+  float step{0.0f}; //!< luma step across the boundary as a fraction of full scale
+  float coverage{0.0f}; //!< fraction of the boundary showing that step
 };
 
 //! \brief The robust statistics a line is judged dark-and-flat by.
@@ -125,9 +133,9 @@ private:
   //! \brief Fold one classified bar line into the running quality figures.
   void Accumulate(const LineOutcome& outcome);
 
-  //! \brief Fold the accumulated evidence into the quality figures and the confidence. Evidence
-  //! about the rect, never a correction to it.
-  void ScoreResult(DetectionResult& result);
+  //! \brief Fold the accumulated evidence and the four edges into a confidence. Evidence about
+  //! the rect, never a correction to it.
+  float Score(const std::array<EdgeMetrics, 4>& edges) const;
 
   /*!
    * \brief Walk lines inward from one edge until the first picture line, accumulating the bar
@@ -141,7 +149,6 @@ private:
     while (step > 0 ? edge < limit : edge > limit)
     {
       const LineOutcome outcome = Classify(line(step > 0 ? edge : edge - 1));
-      m_overlaySuspected |= outcome.suspectedOverlay;
       if (outcome.classification == LineClass::Picture)
         break;
       Accumulate(outcome);
@@ -169,11 +176,8 @@ private:
   CHistogram m_chromaV;
 
   unsigned int m_barLines{0};
-  unsigned int m_overlayLines{0};
-  bool m_overlaySuspected{false};
   CHistogram m_lineHighs;
   CHistogram m_lineSpreads;
-  unsigned int m_lowestSeen{BUCKET_COUNT - 1};
 };
 
 template<typename T>
@@ -321,7 +325,6 @@ LineOutcome CDetector<T>::Classify(const LineSpec& line)
   const LineStats stats = RobustStats(m_histogram);
 
   outcome.high = stats.high;
-  outcome.low = stats.low;
   outcome.spread = stats.spread;
 
   std::optional<bool> neutral;
@@ -361,14 +364,11 @@ LineOutcome CDetector<T>::Classify(const LineSpec& line)
     return outcome;
 
   outcome.high = remainder.high;
-  outcome.low = remainder.low;
   outcome.spread = remainder.spread;
 
   // Subtitles, logos and burn-ins are horizontally localised where real picture is not.
   if (static_cast<float>(extent) < m_params.overlayMaxExtent * static_cast<float>(count))
     outcome.classification = LineClass::Overlay;
-  else
-    outcome.suspectedOverlay = true;
 
   return outcome;
 }
@@ -379,9 +379,6 @@ void CDetector<T>::Accumulate(const LineOutcome& outcome)
   ++m_barLines;
   m_lineHighs.Add(outcome.high);
   m_lineSpreads.Add(outcome.spread);
-  m_lowestSeen = std::min(m_lowestSeen, outcome.low);
-  if (outcome.classification == LineClass::Overlay)
-    ++m_overlayLines;
 }
 
 //! \brief Measure the boundary between the last bar line and the first picture line.
@@ -428,9 +425,6 @@ template<typename T>
 DetectionResult CDetector<T>::Run()
 {
   DetectionResult result;
-  result.rangeAssumed = m_rangeAssumed;
-  result.chromaTested = m_hasChroma;
-  result.thresholdUsed = m_threshold << m_shift;
 
   m_roi = m_frame.roi;
   if (m_roi.IsEmpty())
@@ -475,7 +469,6 @@ DetectionResult CDetector<T>::Run()
     if (thickness == 0 || thickness >= m_params.edgeThicknessFloor)
       return;
     edge = limit;
-    result.subFloorEdgesIgnored = true;
   };
   discardSubFloor(top, y0, true);
   discardSubFloor(bottom, y1, false);
@@ -501,34 +494,33 @@ DetectionResult CDetector<T>::Run()
   const unsigned int leftBar = left - x0;
   const unsigned int rightBar = x1 - right;
 
-  result.top = MeasureEdge(Row(top - 1, left, right), Row(top, left, right), topBar);
-  result.bottom = MeasureEdge(Row(bottom, left, right), Row(bottom - 1, left, right), bottomBar);
-  result.left = MeasureEdge(Column(left - 1, top, bottom), Column(left, top, bottom), leftBar);
-  result.right = MeasureEdge(Column(right, top, bottom), Column(right - 1, top, bottom), rightBar);
+  // Top, bottom, left, right.
+  const std::array<EdgeMetrics, 4> edges{
+      MeasureEdge(Row(top - 1, left, right), Row(top, left, right), topBar),
+      MeasureEdge(Row(bottom, left, right), Row(bottom - 1, left, right), bottomBar),
+      MeasureEdge(Column(left - 1, top, bottom), Column(left, top, bottom), leftBar),
+      MeasureEdge(Column(right, top, bottom), Column(right - 1, top, bottom), rightBar)};
 
-  result.overlayLines = m_overlayLines;
-  result.overlaySuspected = m_overlaySuspected;
-  result.blackFloorObserved = m_barLines > 0 ? (m_lowestSeen << m_shift) : 0;
-
-  ScoreResult(result);
+  result.confidence = Score(edges);
   return result;
 }
 
 template<typename T>
-void CDetector<T>::ScoreResult(DetectionResult& result)
+float CDetector<T>::Score(const std::array<EdgeMetrics, 4>& edges) const
 {
   const float margin = static_cast<float>(m_params.margin);
   const float band = static_cast<float>(m_params.flatBand);
 
-  result.separation = 1.0f;
-  result.flatness = 1.0f;
+  // Threshold headroom and dispersion headroom on the worst bar line.
+  float separation = 1.0f;
+  float flatness = 1.0f;
   if (m_barLines > 0)
   {
     const float highs = static_cast<float>(m_lineHighs.Percentile(0.9));
     const float spreads = static_cast<float>(m_lineSpreads.Percentile(0.9));
-    result.separation = std::clamp((static_cast<float>(m_threshold) - highs) / margin, 0.0f, 1.0f);
+    separation = std::clamp((static_cast<float>(m_threshold) - highs) / margin, 0.0f, 1.0f);
     // Full marks until half the permitted dispersion is used.
-    result.flatness = std::clamp((band - spreads) / (band * 0.5f), 0.0f, 1.0f);
+    flatness = std::clamp((band - spreads) / (band * 0.5f), 0.0f, 1.0f);
   }
 
   // Costs confidence, never moves an edge.
@@ -538,9 +530,9 @@ void CDetector<T>::ScoreResult(DetectionResult& result)
     const unsigned int difference = a > b ? a - b : b - a;
     return std::clamp(static_cast<float>(difference) / static_cast<float>(reference), 0.0f, 1.0f);
   };
-  const float worstAsymmetry = std::max(asymmetry(result.top.thickness, result.bottom.thickness),
-                                        asymmetry(result.left.thickness, result.right.thickness));
-  result.symmetry = 1.0f - m_params.symmetryPenalty * worstAsymmetry;
+  const float worstAsymmetry = std::max(asymmetry(edges[0].thickness, edges[1].thickness),
+                                        asymmetry(edges[2].thickness, edges[3].thickness));
+  const float symmetry = 1.0f - m_params.symmetryPenalty * worstAsymmetry;
 
   const auto score = [this](const EdgeMetrics& edge)
   { return std::clamp(edge.step / m_params.edgeStepReference, 0.0f, 1.0f) * edge.coverage; };
@@ -549,24 +541,24 @@ void CDetector<T>::ScoreResult(DetectionResult& result)
   bool haveEvidence = false;
   if (m_barLines > 0)
   {
-    confidence = std::min(result.separation, result.flatness);
+    confidence = std::min(separation, flatness);
     haveEvidence = true;
   }
-  for (const EdgeMetrics* edge : {&result.top, &result.bottom, &result.left, &result.right})
+  for (const EdgeMetrics& edge : edges)
   {
-    if (!edge->measured)
+    if (!edge.measured)
       continue;
-    confidence = haveEvidence ? std::min(confidence, score(*edge)) : score(*edge);
+    confidence = haveEvidence ? std::min(confidence, score(edge)) : score(edge);
     haveEvidence = true;
   }
 
-  confidence *= result.symmetry;
-  if (result.rangeAssumed)
+  confidence *= symmetry;
+  if (m_rangeAssumed)
     confidence *= m_params.rangeAssumedPenalty;
-  if (!result.chromaTested)
+  if (!m_hasChroma)
     confidence *= m_params.chromaAbsentPenalty;
 
-  result.confidence = std::clamp(confidence, 0.0f, 1.0f);
+  return std::clamp(confidence, 0.0f, 1.0f);
 }
 
 } // unnamed namespace

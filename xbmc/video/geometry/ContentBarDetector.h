@@ -78,16 +78,6 @@ struct DetectorParams
   float chromaAbsentPenalty{0.9f}; //!< applied when the neutrality test could not run
 };
 
-//! \brief Per-edge boundary sharpness. A letterbox boundary is a large luma step across most
-//! of the boundary; a dark scene's is a small step over a fraction of it.
-struct EdgeMetrics
-{
-  bool measured{false}; //!< false when this edge has no bar at all, so no boundary exists
-  unsigned int thickness{0}; //!< bar lines removed on this edge
-  float step{0.0f}; //!< luma step across the boundary as a fraction of full scale
-  float coverage{0.0f}; //!< fraction of the boundary showing that step
-};
-
 //! \brief The detector's per-frame answer.
 struct DetectionResult
 {
@@ -96,27 +86,9 @@ struct DetectionResult
   //! \brief A black frame carries no reading, and rect is left at the whole frame.
   bool degenerate{false};
 
-  //! \brief [0,1]: the weakest of the factors below rather than their average, then reduced by
-  //! the penalties for anything that had to be assumed.
+  //! \brief [0,1]: the weakest of the bar lines' headroom and each edge's sharpness rather
+  //! than their average, then reduced by bar asymmetry and by anything that had to be assumed.
   float confidence{0.0f};
-
-  EdgeMetrics top;
-  EdgeMetrics bottom;
-  EdgeMetrics left;
-  EdgeMetrics right;
-
-  float separation{0.0f}; //!< threshold headroom on the worst bar line
-  float flatness{0.0f}; //!< dispersion headroom on the worst bar line
-  float symmetry{0.0f}; //!< top/bottom and left/right bar agreement, advisory only
-
-  unsigned int overlayLines{0}; //!< bar lines admitted by the overlay rule
-  bool overlaySuspected{false}; //!< a bounded run too wide to admit stopped the walk
-  bool rangeAssumed{false}; //!< color_range was Unspecified and Limited was assumed
-  bool chromaTested{false}; //!< both chroma planes were present
-  bool subFloorEdgesIgnored{false}; //!< an edge thinner than the floor was found and dropped
-
-  unsigned int thresholdUsed{0}; //!< bar threshold in native code values
-  unsigned int blackFloorObserved{0}; //!< darkest bar level seen, in native code values
 };
 
 /*!
