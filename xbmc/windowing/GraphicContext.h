@@ -15,7 +15,6 @@
 #include "utils/Geometry.h" // for CRect/CPoint
 #include "utils/TransformMatrix.h" // for the members m_guiTransform etc.
 
-#include <atomic>
 #include <cstdint>
 #include <stack>
 #include <string>
@@ -295,12 +294,6 @@ protected:
   //! \brief The hold put through ComputeGuiKeepShape() for the state in hand.
   bool GuiKeepShapeInForce() const;
 
-  //! \brief Discard the held raster rect. Call from anything GetRasterRect() reads.
-  void InvalidateRasterRect() { m_rasterGeneration.fetch_add(1, std::memory_order_release); }
-
-  std::atomic<uint32_t> m_rasterGeneration{1};
-  mutable std::atomic<uint32_t> m_rasterRectGeneration{0};
-  mutable CRect m_rasterRect;
   bool m_bFullScreenRoot = true;
   bool m_bFullScreenVideo = false;
   bool m_bCalibrating = false;

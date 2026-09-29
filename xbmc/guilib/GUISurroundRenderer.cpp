@@ -49,20 +49,17 @@ const CGUISurroundRenderer::SurroundArt& CGUISurroundRenderer::Art()
     return m_art;
 
   m_art = {};
-
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  const auto values = settings ? settings->GetSettings() : nullptr;
-  if (!values)
-    return m_art; // nothing to resolve from yet, so try again rather than hold the emptiness
-
   m_artResolved = true;
+
+  const auto values = CServiceBroker::GetSettingsComponent()->GetSettings();
+  std::string colour;
 
   switch (static_cast<CSettings::GuiSurround>(
       values->GetInt(CSettings::SETTING_VIDEOSCREEN_GUISURROUND)))
   {
     using enum CSettings::GuiSurround;
     case COLOUR:
-      m_art.colour = values->GetString(CSettings::SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR);
+      colour = values->GetString(CSettings::SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR);
       break;
     case IMAGE:
       m_art.image = values->GetString(CSettings::SETTING_VIDEOSCREEN_GUISURROUNDIMAGE);
@@ -72,11 +69,14 @@ const CGUISurroundRenderer::SurroundArt& CGUISurroundRenderer::Art()
     default:
       if (const auto skin = CServiceBroker::GetGUI()->GetSkinInfo())
       {
-        m_art.colour = skin->GetSurroundColour();
+        colour = skin->GetSurroundColour();
         m_art.image = skin->GetSurroundImage();
       }
       break;
   }
+
+  if (!colour.empty())
+    m_art.colour = KODI::UTILS::COLOR::ConvertHexToColor(colour);
 
   return m_art;
 }
@@ -105,8 +105,8 @@ void CGUISurroundRenderer::Render()
   const CRect previousClip = context.SetClip(raster);
   context.SetTransform(TransformMatrix());
 
-  if (!art.colour.empty())
-    PaintBands(bands, PaintColour(art.colour));
+  if (art.colour)
+    PaintBands(bands, *art.colour);
 
   if (!art.image.empty())
     RenderImage(art.image, raster, bands, context);
@@ -115,17 +115,6 @@ void CGUISurroundRenderer::Render()
 
   context.RemoveTransform();
   context.SetClip(previousClip);
-}
-
-KODI::UTILS::COLOR::Color CGUISurroundRenderer::PaintColour(const std::string& colour)
-{
-  if (colour != m_colourText)
-  {
-    m_colourText = colour;
-    m_colour = KODI::UTILS::COLOR::ConvertHexToColor(colour);
-  }
-
-  return m_colour;
 }
 
 void CGUISurroundRenderer::RenderImage(const std::string& image,

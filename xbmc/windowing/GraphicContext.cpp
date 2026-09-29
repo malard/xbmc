@@ -369,7 +369,6 @@ void CGraphicContext::SetRasterAspect(float aspect)
 {
   std::unique_lock lock(*this);
   m_rasterAspect = aspect;
-  InvalidateRasterRect();
 }
 
 float CGraphicContext::GetRasterAspect() const
@@ -414,14 +413,7 @@ CRect CGraphicContext::GetRasterRect() const
   if (!(raster > 0.0f) || m_Resolution == RES_INVALID)
     return ScreenRect();
 
-  const uint32_t generation = m_rasterGeneration.load(std::memory_order_acquire);
-  if (m_rasterRectGeneration.load(std::memory_order_relaxed) != generation)
-  {
-    m_rasterRect = ComputeRasterRect(GetResInfo(), raster);
-    m_rasterRectGeneration.store(generation, std::memory_order_release);
-  }
-
-  return m_rasterRect;
+  return ComputeRasterRect(GetResInfo(), raster);
 }
 
 RESOLUTION_INFO CGraphicContext::GetRasterResInfo() const
@@ -487,10 +479,6 @@ bool CGraphicContext::IsCalibrating() const
 void CGraphicContext::SetCalibrating(bool bOnOff)
 {
   m_bCalibrating = bOnOff;
-
-  // The raster is suspended while a screen tool is up, and the tool edits the calibration the
-  // raster is derived from.
-  InvalidateRasterRect();
 }
 
 bool CGraphicContext::IsValidResolution(RESOLUTION res)
@@ -634,8 +622,6 @@ void CGraphicContext::UpdateInternalStateWithResolution(RESOLUTION res)
   m_iScreenHeight = info_mod.iHeight;
   m_Resolution = res;
   m_fFPSOverride = 0;
-
-  InvalidateRasterRect();
 }
 
 void CGraphicContext::ApplyModeChange(RESOLUTION res)
@@ -683,10 +669,6 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
   info.iScreenWidth = info.iWidth;
   info.iScreenHeight = info.iHeight;
   ResetOverscan(res, info.Overscan);
-
-  // The calibration this rewrites is what the raster is placed inside, and it goes straight
-  // into the display settings.
-  InvalidateRasterRect();
 }
 
 void CGraphicContext::Clear()

@@ -12,6 +12,7 @@
 #include "utils/Geometry.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 class CGraphicContext;
@@ -41,10 +42,10 @@ private:
   //! \brief What the surround is painted with. Both can be in force.
   struct SurroundArt
   {
-    std::string colour;
+    std::optional<KODI::UTILS::COLOR::Color> colour;
     std::string image;
 
-    bool Nothing() const { return colour.empty() && image.empty(); }
+    bool Nothing() const { return !colour && image.empty(); }
   };
 
   //! \brief The art in force, resolved from the settings and the skin. Held because Render()
@@ -57,15 +58,9 @@ private:
                    const CRect (&bands)[4],
                    CGraphicContext& context);
 
-  //! \brief The colour in force, parsed, held beside the text it came from.
-  KODI::UTILS::COLOR::Color PaintColour(const std::string& colour);
-
   //! \brief The image drawn in the surround, kept between frames.
   std::unique_ptr<CGUIImage> m_image;
   std::string m_imagePath;
-
-  std::string m_colourText;
-  KODI::UTILS::COLOR::Color m_colour{0};
 
   SurroundArt m_art;
   bool m_artResolved{false};
