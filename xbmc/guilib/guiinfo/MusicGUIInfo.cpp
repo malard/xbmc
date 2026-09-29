@@ -571,6 +571,24 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
   const auto found = GUIINFO::GetPlayListEntry(*m_playLists, PLAYLIST::Audio, info);
   if (!found)
     return false;
+
+  if (info.GetInfo() == MUSICPLAYER_PLAYLISTPOS)
+  {
+    value = std::to_string(
+        m_playLists->GetPlayList(PLAYLIST::Audio).GetPlayOrderPosition(found->entry) + 1);
+    return true;
+  }
+
+  // The path labels are answered from the item itself. Loading the tag for them opens a database
+  // connection, which is expensive on a remote database.
+  if (info.GetInfo() == PLAYER_PATH || info.GetInfo() == PLAYER_FILEPATH ||
+      info.GetInfo() == PLAYER_FILENAME)
+  {
+    if (GetLabel(value, found->item.get(), 0, CGUIInfo(info.GetInfo()), nullptr))
+      return true;
+    return GUIINFO::GetFileFallbackLabel(value, *found->item, info.GetInfo());
+  }
+
   CFileItemPtr playlistItem = found->item;
   // asked every frame, so an entry's tag and art are looked up once, on a copy written back to
   // the playlist
@@ -589,12 +607,6 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
     }
     m_playLists->ReplaceItem(PLAYLIST::Audio, found->entry, *playlistItem);
     m_lookedUp.Add(found->entry, m_playLists->GetPlayList(PLAYLIST::Audio).GetItem(found->entry));
-  }
-  if (info.GetInfo() == MUSICPLAYER_PLAYLISTPOS)
-  {
-    value = std::to_string(
-        m_playLists->GetPlayList(PLAYLIST::Audio).GetPlayOrderPosition(found->entry) + 1);
-    return true;
   }
 
   if (info.GetInfo() == MUSICPLAYER_COVER)
