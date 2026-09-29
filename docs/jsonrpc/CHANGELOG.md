@@ -116,6 +116,8 @@ Failure reasons:
 - `VideoLibrary`, `AudioLibrary` and `PVR`: `no-such-item` for an id nothing has, with the id as
   its target (`{"movieId": 3}`); `no-such-source` from `VideoLibrary.Scan`, `not-in-library` from
   `VideoLibrary.Clean`, and `no-such-addon` for a scraper that does not exist.
+- `Files`: `outside-sources`, `no-such-path`, and `unreachable` for a directory that cannot be
+  listed, each naming the path it was given.
 
 Properties and types:
 

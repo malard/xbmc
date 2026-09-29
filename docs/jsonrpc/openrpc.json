@@ -3435,7 +3435,11 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        }
+      ],
       "x-kodi-transport": [
         "Response",
         "FileDownloadRedirect"
@@ -3582,7 +3586,14 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/unreachable"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/outside-sources"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3655,7 +3666,14 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/outside-sources"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -3748,6 +3766,12 @@
       "x-kodi-reasons": [
         {
           "$ref": "#/components/x-kodi-reasons/no-such-item"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-path"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/outside-sources"
         }
       ],
       "x-kodi-transport": "Response"
@@ -22024,7 +22048,7 @@
         "error": {
           "$ref": "#/components/errors/Unavailable"
         },
-        "description": "The file cannot be read at the moment, as when its share is offline."
+        "description": "The path cannot be read at the moment, as when its share is offline."
       },
       "no-such-item": {
         "error": {
@@ -22049,6 +22073,18 @@
           "$ref": "#/components/errors/NotFound"
         },
         "description": "No enabled add-on has the given id."
+      },
+      "no-such-path": {
+        "error": {
+          "$ref": "#/components/errors/NotFound"
+        },
+        "description": "Nothing exists at the given path."
+      },
+      "outside-sources": {
+        "error": {
+          "$ref": "#/components/errors/AccessDenied"
+        },
+        "description": "The path lies outside every source shared for remote access."
       }
     }
   }

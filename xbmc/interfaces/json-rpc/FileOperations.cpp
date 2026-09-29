@@ -85,7 +85,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
   std::string strPath = parameterObject["directory"].asString();
 
   if (!CFileUtils::RemoteAccessAllowed(strPath))
-    return AccessDenied;
+    return Fail(result, Reason::OutsideSources, Target("directory", parameterObject["directory"]));
 
   std::vector<std::string> regexps;
   std::string extensions;
@@ -181,17 +181,17 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
     return OK;
   }
 
-  return Unavailable;
+  return Fail(result, Reason::Unreachable, Target("directory", parameterObject["directory"]));
 }
 
 JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string file = parameterObject["file"].asString();
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return AccessDenied;
+    return Fail(result, Reason::OutsideSources, Target("file", parameterObject["file"]));
 
   if (!CFileUtils::Exists(file))
-    return NotFound;
+    return Fail(result, Reason::NoSuchPath, Target("file", parameterObject["file"]));
 
   std::string path = URIUtils::GetDirectory(file);
 
@@ -245,10 +245,10 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
 
   std::string file = parameterObject["file"].asString();
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return AccessDenied;
+    return Fail(result, Reason::OutsideSources, Target("file", parameterObject["file"]));
 
   if (!CFileUtils::Exists(file))
-    return NotFound;
+    return Fail(result, Reason::NoSuchPath, Target("file", parameterObject["file"]));
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -303,7 +303,7 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
     return OK;
   }
 
-  return NotFound;
+  return Fail(result, Reason::NoSuchPath, Target("path", parameterObject["path"]));
 }
 
 JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,

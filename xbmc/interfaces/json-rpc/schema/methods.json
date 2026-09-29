@@ -2025,7 +2025,9 @@
     "errors": [
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-path"
+    ]
   },
   "Files.Download": {
     "type": "method",
@@ -2113,7 +2115,10 @@
       "Unavailable",
       "AccessDenied"
     ],
-    "reasons": []
+    "reasons": [
+      "unreachable",
+      "outside-sources"
+    ]
   },
   "Files.GetFileDetails": {
     "type": "method",
@@ -2159,7 +2164,10 @@
       "NotFound",
       "AccessDenied"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-path",
+      "outside-sources"
+    ]
   },
   "Files.SetFileDetails": {
     "type": "method",
@@ -2219,7 +2227,9 @@
       "AccessDenied"
     ],
     "reasons": [
-      "no-such-item"
+      "no-such-item",
+      "no-such-path",
+      "outside-sources"
     ]
   },
   "AudioLibrary.GetProperties": {

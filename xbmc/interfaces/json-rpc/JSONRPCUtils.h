@@ -139,6 +139,8 @@ enum class Reason
   NoSuchSource,
   NotInLibrary,
   NoSuchAddon,
+  NoSuchPath,
+  OutsideSources,
 };
 
 struct JsonRpcReasonDescription
@@ -165,7 +167,7 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::NoSuchStream, InvalidParams, "no-such-stream",
      "What is playing has no stream at the given index."},
     {Reason::Unreachable, Unavailable, "unreachable",
-     "The file cannot be read at the moment, as when its share is offline."},
+     "The path cannot be read at the moment, as when its share is offline."},
     {Reason::NoSuchItem, NotFound, "no-such-item",
      "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, "
      "timer or recording."},
@@ -174,6 +176,9 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::NotInLibrary, NotFound, "not-in-library",
      "The library holds nothing under the directory."},
     {Reason::NoSuchAddon, NotFound, "no-such-addon", "No enabled add-on has the given id."},
+    {Reason::NoSuchPath, NotFound, "no-such-path", "Nothing exists at the given path."},
+    {Reason::OutsideSources, AccessDenied, "outside-sources",
+     "The path lies outside every source shared for remote access."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

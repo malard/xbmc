@@ -27,7 +27,26 @@ CVariant ParamsWithProperties(std::initializer_list<std::string_view> properties
     params["properties"].append(std::string(property));
   return params;
 }
+
+CVariant File(const std::string& path)
+{
+  CVariant params(CVariant::VariantTypeObject);
+  params["file"] = path;
+  return params;
+}
 } // unnamed namespace
+
+//! \brief A shared file that does not exist is no-such-path, naming the path as given
+TEST(TestFileOperations, AMissingFileIsNoSuchPath)
+{
+  // add-on data is always shared, so only the file's absence can refuse it
+  const std::string path{"special://profile/addon_data/jsonrpc-no-such-file.txt"};
+
+  CVariant result;
+  EXPECT_EQ(NotFound, CFileOperations::GetFileDetails(File(path), result));
+  EXPECT_EQ("no-such-path", result["reason"].asString());
+  EXPECT_EQ(path, result["target"]["file"].asString());
+}
 
 TEST(TestFileOperations, MissingPropertiesDoesNotNeedLibraryLookup)
 {
