@@ -207,24 +207,23 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
                                      const std::shared_ptr<const CFileItem>& slide,
                                      bool running)
 {
-  using Phase = CApplicationPlayLists::Phase;
   CVariant data;
   data["player"]["players"] = SlideShowPlayers();
   std::string message;
   switch (event)
   {
     case SlideShowEvent::Play:
-      m_playLists->SetSlideShowPhase(running ? Phase::Playing : Phase::Paused);
+      m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = running ? 1 : 0;
       message = "OnPlay";
       break;
     case SlideShowEvent::Pause:
-      m_playLists->SetSlideShowPhase(Phase::Paused);
+      m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = 0;
       message = "OnPause";
       break;
     case SlideShowEvent::Stop:
-      m_playLists->SetSlideShowPhase(Phase::Idle);
+      m_playLists->SetSlideShowRunning(false);
       data["end"] = true;
       message = "OnStop";
       break;

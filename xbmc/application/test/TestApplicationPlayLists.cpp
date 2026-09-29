@@ -1014,7 +1014,7 @@ TEST(TestApplicationPlayLists, ASlideShowDoesNotMakeAnIdleVideoPlayListPlay)
   FillVideo(playLists);
   playLists.SetPlayingType(PLAYLIST::Video);
 
-  playLists.SetSlideShowPhase(CApplicationPlayLists::Phase::Playing);
+  playLists.SetSlideShowRunning(true);
 
   EXPECT_TRUE(playLists.IsSlideShowRunning());
   EXPECT_EQ(PLAYLIST::Video, playLists.GetPlayingType()) << "the slideshow takes no playlist";

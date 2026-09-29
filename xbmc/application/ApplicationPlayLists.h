@@ -56,13 +56,6 @@ public:
     Failed
   };
 
-  enum class Phase
-  {
-    Idle,
-    Playing,
-    Paused
-  };
-
   /*!
    * \brief The three states of the repeat button, composed from the playlist's repeat of the
    * current entry and its wrap.
@@ -174,11 +167,6 @@ public:
    * \brief Choose the playlist the player works through. Choosing another one drops the feed.
    */
   void SetPlayingType(KODI::PLAYLIST::Type type);
-
-  /*!
-   * \brief The player works through no playlist. Drops the feed.
-   */
-  void ClearPlayingType();
 
   /*!
    * \return Whether what plays is audio: the playing entry holds audio only or, for playback
@@ -526,12 +514,11 @@ public:
 
   void SetObserver(IObserver* observer);
   void SetGUIListener(IGUIListener* listener);
-  void ReportPlayListsChanged() const;
 
   /*!
    * \brief The picture slideshow keeps its own list and cursor, and holds Video while it runs.
    */
-  void SetSlideShowPhase(Phase phase);
+  void SetSlideShowRunning(bool running);
   bool IsSlideShowRunning() const;
 
 protected:
@@ -572,6 +559,7 @@ private:
    * \return Whether it did.
    */
   bool ReportRepeat(KODI::PLAYLIST::Type type);
+  void ReportPlayListsChanged() const;
   //! Put back the saved shuffle and repeat, as when a feed goes.
   void RestoreSavedPlayOrder(KODI::PLAYLIST::Type type);
 
@@ -580,6 +568,8 @@ private:
    * outside the playlist's lock. A playlist that wraps starts its feed over when it runs out.
    */
   void TopUp(KODI::PLAYLIST::Type type);
+  //! The feed of the fed playlist, if one has a feed.
+  std::shared_ptr<KODI::PLAYLIST::IFeed> GetFeed() const;
   void TopUpOnce(KODI::PLAYLIST::Type type);
   void OnPlayListChanged(KODI::PLAYLIST::Type type,
                          const std::vector<KODI::PLAYLIST::PlayListChange>& changes);
@@ -624,7 +614,7 @@ private:
   std::atomic<bool> m_composingFeed{false};
   //! Top-up requests per playlist; one runs at a time and serves those that arrive meanwhile.
   std::array<std::atomic<int>, 2> m_topUpRequests{};
-  Phase m_slideShowPhase{Phase::Idle};
+  bool m_slideShowRunning{false};
   bool m_audioFollowsVideo{false};
   bool m_playbackStarted{false};
   KODI::PLAYLIST::EntryId m_queued{KODI::PLAYLIST::NO_ENTRY};

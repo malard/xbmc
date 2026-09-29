@@ -180,11 +180,6 @@ void CApplicationPlayLists::SetPlayingType(Type type)
   ChangePlayingType(type);
 }
 
-void CApplicationPlayLists::ClearPlayingType()
-{
-  ChangePlayingType(std::nullopt);
-}
-
 void CApplicationPlayLists::ChangePlayingType(std::optional<Type> type)
 {
   {
@@ -647,17 +642,9 @@ int CApplicationPlayLists::Queue(Type type,
                                  const std::shared_ptr<CFileItem>& item,
                                  Placement placement /* = Placement::End */)
 {
-  if (!CanBeEntry(*item))
-    return -1;
-
-  if (GetPlayList(type).GetFeed())
-    placement = Placement::Next;
-
-  CPlayList& playList = EditPlayList(type);
-  playList.SetSourcePath("");
-  if (placement == Placement::Next && GetPlayingType() == type)
-    return playList.GetPosition(playList.QueueNext(item));
-  return playList.GetPosition(playList.Add(item));
+  CFileItemList items;
+  items.Add(item);
+  return Queue(type, items, placement);
 }
 
 void CApplicationPlayLists::Insert(Type type, const CFileItemList& items, int position)
@@ -1185,17 +1172,21 @@ void CApplicationPlayLists::DropFeed()
     EditPlayList(*type).Clear();
 }
 
-int CApplicationPlayLists::GetFeedTotal() const
+std::shared_ptr<IFeed> CApplicationPlayLists::GetFeed() const
 {
   const std::optional<Type> type = GetFedType();
-  const std::shared_ptr<IFeed> feed = type ? GetPlayList(*type).GetFeed() : nullptr;
+  return type ? GetPlayList(*type).GetFeed() : nullptr;
+}
+
+int CApplicationPlayLists::GetFeedTotal() const
+{
+  const std::shared_ptr<IFeed> feed = GetFeed();
   return feed ? feed->GetTotal() : -1;
 }
 
 int CApplicationPlayLists::GetFeedLeft() const
 {
-  const std::optional<Type> type = GetFedType();
-  const std::shared_ptr<IFeed> feed = type ? GetPlayList(*type).GetFeed() : nullptr;
+  const std::shared_ptr<IFeed> feed = GetFeed();
   return feed ? feed->GetLeft() : -1;
 }
 
@@ -1250,7 +1241,7 @@ void CApplicationPlayLists::ClearPlayLists()
 void CApplicationPlayLists::Reset()
 {
   ClearPlayLists();
-  ClearPlayingType();
+  ChangePlayingType(std::nullopt);
 }
 
 void CApplicationPlayLists::SetObserver(IObserver* observer)
@@ -1269,15 +1260,15 @@ void CApplicationPlayLists::ReportPlayListsChanged() const
     listener->OnPlayListsChanged();
 }
 
-void CApplicationPlayLists::SetSlideShowPhase(Phase phase)
+void CApplicationPlayLists::SetSlideShowRunning(bool running)
 {
   std::unique_lock lock(m_critSection);
-  m_slideShowPhase = phase;
+  m_slideShowRunning = running;
 }
 
 bool CApplicationPlayLists::IsSlideShowRunning() const
 {
   std::unique_lock lock(m_critSection);
-  return m_slideShowPhase != Phase::Idle;
+  return m_slideShowRunning;
 }
 
