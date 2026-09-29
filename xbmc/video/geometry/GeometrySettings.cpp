@@ -24,50 +24,39 @@ namespace
 
 std::shared_ptr<CSettings> Settings()
 {
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  return settings ? settings->GetSettings() : nullptr;
+  return CServiceBroker::GetSettingsComponent()->GetSettings();
 }
 
 std::shared_ptr<CAdvancedSettings> Advanced()
 {
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  return settings ? settings->GetAdvancedSettings() : nullptr;
+  return CServiceBroker::GetSettingsComponent()->GetAdvancedSettings();
 }
 
 } // unnamed namespace
 
 bool ContentGeometryEnabledFromSettings()
 {
-  const auto values = Settings();
-  return values && values->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY);
+  return Settings()->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY);
 }
 
 bool ContentGeometryNonLiveFromSettings()
 {
   const auto values = Settings();
-  return values && values->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY) &&
+  return values->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY) &&
          values->GetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN);
 }
 
 VariableGeometryPolicy ContentGeometryPolicyFromSettings()
 {
-  const auto values = Settings();
-  if (!values)
-    return VariableGeometryPolicy::Envelope;
-
-  return values->GetInt(CSettings::SETTING_VIDEOSCREEN_VARIABLECONTENTGEOMETRY) == 1
+  return Settings()->GetInt(CSettings::SETTING_VIDEOSCREEN_VARIABLECONTENTGEOMETRY) == 1
              ? VariableGeometryPolicy::Dominant
              : VariableGeometryPolicy::Envelope;
 }
 
 float RasterAspectFromSettings()
 {
-  const auto values = Settings();
-  if (!values)
-    return 0.0f;
-
   return KODI::UTILS::CAspectRatioVocabulary::RatioForKey(
-      values->GetInt(CSettings::SETTING_VIDEOSCREEN_RASTERASPECT));
+      Settings()->GetInt(CSettings::SETTING_VIDEOSCREEN_RASTERASPECT));
 }
 
 float ContentGeometryAtRestFromSettings()
@@ -94,9 +83,6 @@ SamplingParams ContentGeometrySamplingFromSettings(SamplingDepth depth)
   }
 
   const auto values = Settings();
-  if (!values)
-    return sampling;
-
   sampling.points = static_cast<unsigned int>(
       std::max(1, values->GetInt(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYSAMPLES)));
 
@@ -113,12 +99,7 @@ SamplingParams ContentGeometrySamplingFromSettings(SamplingDepth depth)
 CombinerParams ContentGeometryCombiningFromSettings()
 {
   CombinerParams combining;
-
-  const auto advanced = Advanced();
-  if (!advanced)
-    return combining;
-
-  combining.variesShare = advanced->m_videoContentGeometryVariesShare;
+  combining.variesShare = Advanced()->m_videoContentGeometryVariesShare;
   return combining;
 }
 
@@ -127,9 +108,6 @@ LiveGeometrySettings LiveGeometryFromSettings()
   LiveGeometrySettings live;
 
   const auto values = Settings();
-  if (!values)
-    return live;
-
   live.enabled = values->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY) &&
                  values->GetBool(CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY);
 
@@ -140,8 +118,7 @@ LiveGeometrySettings LiveGeometryFromSettings()
   live.leadOutSeconds =
       60.0 * std::max(0, values->GetInt(CSettings::SETTING_VIDEOSCREEN_LIVEGEOMETRYLEADOUT));
 
-  if (const auto advanced = Advanced())
-    live.reductionWidth = static_cast<unsigned int>(advanced->m_videoContentGeometryReductionWidth);
+  live.reductionWidth = static_cast<unsigned int>(Advanced()->m_videoContentGeometryReductionWidth);
 
   return live;
 }

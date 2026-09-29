@@ -40,9 +40,8 @@ namespace
 //! set to close to it.
 float GuiShapeAspect()
 {
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  const auto values = settings ? settings->GetSettings() : nullptr;
-  if (!values || !values->GetBool(CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE) ||
+  const auto values = CServiceBroker::GetSettingsComponent()->GetSettings();
+  if (!values->GetBool(CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE) ||
       values->GetInt(CSettings::SETTING_VIDEOSCREEN_GUISURROUND) !=
           static_cast<int>(CSettings::GuiSurround::REPORT_SHAPE))
     return 0.0f;
@@ -77,9 +76,7 @@ CRect WholePixels(const CRect& rect)
 
 } // unnamed namespace
 
-CApplicationContentGeometry::CApplicationContentGeometry() : m_current(AtRestGeometry())
-{
-}
+CApplicationContentGeometry::CApplicationContentGeometry() = default;
 
 void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
                                            const DrawnGeometry& drawn)
