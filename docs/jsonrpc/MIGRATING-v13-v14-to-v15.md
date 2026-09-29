@@ -286,9 +286,11 @@ A playlist is `video`, `audio` or `picture`, in place of the numeric
 `playerid` is gone from every `Player` method. Version 13 resolved it through
 the playlist in use, so it never named a player: playerid 1 was accepted only
 while the video playlist was current, and accepted even when nothing played.
-A `Player` method now takes an optional `playlist`, `video` or `audio`. With
-none, it acts on everything playing, the playback and a slideshow beside it.
-A named playlist that nothing is playing through answers `FailedToExecute`.
+A `Player` method now takes an optional `playlist`: `playing`, the default,
+or `video`, `audio` or `picture`, the slideshow. With `playing` it acts on
+everything playing, the playback and a slideshow beside it, and a query
+answers for the playback, then the slideshow. A named playlist that nothing
+is playing through answers `FailedToExecute`.
 
 ```diff
 - {"method": "Player.Stop", "params": {"playerid": 1}}

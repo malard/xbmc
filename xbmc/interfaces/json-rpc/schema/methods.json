@@ -566,7 +566,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -662,7 +662,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -699,7 +699,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -725,7 +725,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -794,7 +794,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -859,7 +859,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -900,7 +900,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -995,7 +995,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1047,7 +1047,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1092,7 +1092,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1326,7 +1326,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1369,7 +1369,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1400,7 +1400,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1444,7 +1444,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1492,7 +1492,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1528,7 +1528,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1582,7 +1582,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1993,7 +1993,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Optional.Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],

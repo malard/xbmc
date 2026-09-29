@@ -1661,6 +1661,8 @@ std::vector<PlayerType> CPlayerOperations::GetTargets(const CVariant& playlist)
   const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(playlist.asString());
   if (named == PLAYLIST::Audio)
     return {Audio};
+  if (playlist.asString() == "picture")
+    return {Picture};
 
   const auto playLists = CServiceBroker::GetPlayLists();
   const bool slideShow = playLists->IsSlideShowRunning();
@@ -1689,16 +1691,15 @@ JSONRPC_STATUS CPlayerOperations::ForEachTarget(
     const std::function<JSONRPC_STATUS(PlayerType)>& verb)
 {
   // a named playlist that is not playing has no player to act on
-  if (const std::optional<PLAYLIST::Type> named =
-          PLAYLIST::TypeFromName(parameterObject["playlist"].asString());
-      named)
-  {
-    const auto playLists = CServiceBroker::GetPlayLists();
-    if (playLists->GetPlayingType() != named &&
-        !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning()))
-      return Fail(result, FailedToExecute, Reason::NothingPlaying,
-                  Target("playlist", parameterObject["playlist"]));
-  }
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const std::string& name = parameterObject["playlist"].asString();
+  const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
+  const bool idle = named ? playLists->GetPlayingType() != named &&
+                                !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
+                          : name == "picture" && !playLists->IsSlideShowRunning();
+  if (idle)
+    return Fail(result, FailedToExecute, Reason::NothingPlaying,
+                Target("playlist", parameterObject["playlist"]));
 
   const JSONRPC_STATUS status = ForEachOnList(parameterObject, result, verb);
   // with nothing playing, the player acted on was only a guess

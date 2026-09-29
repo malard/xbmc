@@ -851,7 +851,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1047,7 +1047,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1112,7 +1112,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1168,7 +1168,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1319,7 +1319,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1413,7 +1413,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1483,7 +1483,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1611,7 +1611,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1694,7 +1694,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -1768,7 +1768,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2193,7 +2193,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2268,7 +2268,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2328,7 +2328,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2404,7 +2404,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2485,7 +2485,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2554,7 +2554,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -2640,7 +2640,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -3376,7 +3376,7 @@
         {
           "name": "playlist",
           "schema": {
-            "$ref": "#/components/schemas/Optional.Player.Playlist"
+            "$ref": "#/components/schemas/Player.Target"
           }
         }
       ],
@@ -22395,17 +22395,16 @@
           "audio"
         ]
       },
-      "Optional.Player.Playlist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/components/schemas/Player.Playlist"
-          }
+      "Player.Target": {
+        "type": "string",
+        "enum": [
+          "playing",
+          "video",
+          "audio",
+          "picture"
         ],
-        "default": null,
-        "description": "The playlist a call acts on; none names everything playing."
+        "default": "playing",
+        "description": "What a Player call acts on. \"playing\" is everything seen or heard now: a verb acts on all of it, a query answers for the playback, then the slideshow. A playlist names the player playing it; \"picture\" is the slideshow."
       },
       "Addon.Types": {
         "type": "string",

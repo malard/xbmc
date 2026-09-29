@@ -96,8 +96,9 @@ private:
   //! Sends a volume step action and answers with the volume now in force.
   static JSONRPC_STATUS StepVolume(int action, CVariant& result);
   /*!
-   * \brief The players a verb acts on: the one \p playlist names, or with none everything playing
-   * (the playback and a slideshow beside it), or the playlist the player would act on.
+   * \brief The players a verb acts on: the one \p playlist names ("picture" is the slideshow), or
+   * for "playing" everything playing (the playback and a slideshow beside it), or the playlist the
+   * player would act on.
    */
   static std::vector<PlayerType> GetTargets(const CVariant& playlist);
   //! The player a query answers for: the first of GetTargets().

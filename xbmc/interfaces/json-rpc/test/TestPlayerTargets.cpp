@@ -67,12 +67,13 @@ class TestPlayerTargetParameter : public JSONServiceDescriptionTestBase
 };
 
 /*!
- \brief A playlist the caller does not name reaches the handler unnamed
+ \brief A playlist the caller does not name reaches the handler as "playing"
 
  The validator fills an omitted parameter with its default, and the first value of an enum
- without one, which would name the video playlist for every call that names none.
+ without one, so a target that named a playlist first would name it for every call that names
+ none.
  */
-TEST_F(TestPlayerTargetParameter, AnOmittedPlaylistIsNotNamed)
+TEST_F(TestPlayerTargetParameter, AnOmittedPlaylistIsPlaying)
 {
   AddShippedServiceDescription();
 
@@ -92,11 +93,31 @@ TEST_F(TestPlayerTargetParameter, AnOmittedPlaylistIsNotNamed)
     ++checked;
     CVariant output;
     ASSERT_EQ(OK, Call(name.c_str(), "{}", output)) << name << ": " << ToJson(output);
-    EXPECT_TRUE(output["playlist"].isNull()) << name << " names " << ToJson(output["playlist"]);
+    EXPECT_EQ("playing", output["playlist"].asString()) << name;
   }
   EXPECT_GT(checked, 0);
 
   CVariant output;
   ASSERT_EQ(OK, Call("Player.Stop", R"({"playlist": "audio"})", output));
   EXPECT_EQ("audio", output["playlist"].asString());
+  ASSERT_EQ(OK, Call("Player.Stop", R"({"playlist": "picture"})", output));
+  EXPECT_EQ("picture", output["playlist"].asString());
+}
+
+//! \brief "playing" is what naming nothing means
+TEST(TestPlayerTargets, PlayingNamesNoPlaylist)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::Seek(Named("playing"), result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
+  EXPECT_FALSE(result.isMember("target"));
+}
+
+//! \brief The picture playlist names the slideshow, which is not running
+TEST(TestPlayerTargets, AVerbOnAnIdleSlideshowIsNothingPlaying)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::Stop(Named("picture"), result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
+  EXPECT_EQ("picture", result["target"]["playlist"].asString());
 }

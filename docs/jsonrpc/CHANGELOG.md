@@ -35,8 +35,9 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `AudioLibrary.GetArtistDetails` and `Settings.*SettingValue`.
 - Playlists are named `video`, `audio` or `picture`, not numbered, in every `Playlist` method and
   notification and in `Player.Open`.
-- `Player` methods take an optional `playlist` in place of the required `playerid`. With none they
-  act on everything playing; an idle named playlist is `FailedToExecute`.
+- `Player` methods take an optional `playlist`, a `Player.Target`, in place of the required
+  `playerid`: `playing` (the default), `video`, `audio` or `picture`, the slideshow. With `playing`
+  they act on everything playing; an idle named playlist is `FailedToExecute`.
 - `Player.GetActivePlayers` is removed. `Player.GetProperties` reports `playlist` and `playertype`.
 - `Player.On*` notifications carry `players` in place of `playerid`.
 - `Playlist.GetItems` returns `Playlist.Entry` with `position` and `displayorder`.
@@ -188,7 +189,8 @@ Properties and types:
 - `Player.Open` with a `channelId` while PVR is off no longer crashes Kodi. Every PVR item it
   opens answers `FailedToExecute` (`pvr-not-started`) until PVR has started.
 - A `Player` method called without `playlist` acts on everything playing. The validator had filled
-  the omitted parameter with `video`, so a call naming nothing failed while only audio played.
+  the omitted parameter with `video`, so a call naming nothing failed while only audio played; it
+  now fills it with `playing`.
 - Announcements are not held up by a busy TCP server, and each connection's requests run on its
   own thread, so a modal dialog stalls no other client.
 - A failing send gives up instead of spinning.
