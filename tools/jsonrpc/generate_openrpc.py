@@ -19,6 +19,7 @@ import method_errors
 OUTPUT_PATH = kodi_schema.REPO_ROOT / "docs" / "jsonrpc" / "openrpc.json"
 
 SCHEMA_PREFIX = kodi_schema.COMPONENT_SCHEMA_PREFIX
+REASON_PREFIX = "#/components/x-kodi-reasons/"
 
 DESCRIPTION = (
     "Kodi's JSON-RPC 2.0 API. All methods are served from a single endpoint "
@@ -51,6 +52,8 @@ def build_method(name, method, taxonomy):
                    for error in taxonomy
                    if error["name"] in can_return],
         "x-kodi-permission": method["permission"],
+        "x-kodi-reasons": {error: [{"$ref": REASON_PREFIX + reason} for reason in reasons]
+                           for error, reasons in method["reasons"].items()},
     }
     if "transport" in method:
         entry["x-kodi-transport"] = method["transport"]
@@ -73,6 +76,10 @@ def build_document():
             "message": error["message"],
             "data": {"description": error["description"]},
         }
+    # a failure for a reason carries {"reason": <name>, "target": {...}} as "error.data"
+    reasons = {}
+    for reason in kodi_schema.load_reason_taxonomy():
+        reasons[reason["name"]] = {"description": reason["description"]}
     return {
         "openrpc": "1.3.2",
         "info": {
@@ -103,6 +110,7 @@ def build_document():
         "components": {
             "schemas": schemas,
             "errors": errors,
+            "x-kodi-reasons": reasons,
         },
     }
 

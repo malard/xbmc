@@ -39,6 +39,23 @@ using namespace KODI::REGEXP;
 using namespace JSONRPC;
 using namespace XFILE;
 
+namespace
+{
+//! A directory that cannot be listed is missing when one above it can be; otherwise its source
+//! is out of reach.
+bool IsMissing(const std::string& directory)
+{
+  std::string parent;
+  for (std::string current = directory;
+       URIUtils::GetParentPath(current, parent) && parent != current; current = parent)
+  {
+    if (CDirectory::Exists(parent, false))
+      return true;
+  }
+  return false;
+}
+} // namespace
+
 JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
@@ -85,7 +102,8 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
   std::string strPath = parameterObject["directory"].asString();
 
   if (!CFileUtils::RemoteAccessAllowed(strPath))
-    return AccessDenied;
+    return Fail(result, AccessDenied, Reason::OutsideSources,
+                Target("directory", parameterObject["directory"]));
 
   std::vector<std::string> regexps;
   std::string extensions;
@@ -181,17 +199,22 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
     return OK;
   }
 
-  return Unavailable;
+  if (IsMissing(strPath))
+    return Fail(result, NotFound, Reason::NoSuchPath,
+                Target("directory", parameterObject["directory"]));
+  return Fail(result, Unavailable, Reason::Unreachable,
+              Target("directory", parameterObject["directory"]));
 }
 
 JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string file = parameterObject["file"].asString();
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return AccessDenied;
+    return Fail(result, AccessDenied, Reason::OutsideSources,
+                Target("file", parameterObject["file"]));
 
   if (!CFileUtils::Exists(file))
-    return NotFound;
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", parameterObject["file"]));
 
   std::string path = URIUtils::GetDirectory(file);
 
@@ -245,10 +268,11 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
 
   std::string file = parameterObject["file"].asString();
   if (!CFileUtils::RemoteAccessAllowed(file))
-    return AccessDenied;
+    return Fail(result, AccessDenied, Reason::OutsideSources,
+                Target("file", parameterObject["file"]));
 
   if (!CFileUtils::Exists(file))
-    return NotFound;
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", parameterObject["file"]));
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -259,7 +283,8 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
     return InternalError;
 
   CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId));
+  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId),
+                                              result, Target("file", parameterObject["file"]));
       status != OK)
     return status;
 
@@ -293,24 +318,10 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
                                  protocol))
   {
     result["protocol"] = protocol;
-
-    if ((transport->GetCapabilities() & FileDownloadDirect) == FileDownloadDirect)
-      result["mode"] = "direct";
-    else
-      result["mode"] = "redirect";
-
     return OK;
   }
 
-  return NotFound;
-}
-
-JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result)
-{
-  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : NotFound;
+  return Fail(result, NotFound, Reason::NoSuchPath, Target("path", parameterObject["path"]));
 }
 
 bool CFileOperations::FillFileItem(

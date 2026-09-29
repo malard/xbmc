@@ -76,6 +76,8 @@ TEST(TestSettingsValueGate, AnUnknownSettingIsNotFound)
   EXPECT_EQ(CSettingsOperations::GetSettingValue(Request("no.such.setting"), result), NotFound);
   EXPECT_EQ(CSettingsOperations::SetSettingValue(Request("no.such.setting"), result), NotFound);
   EXPECT_EQ(CSettingsOperations::ResetSettingValue(Request("no.such.setting"), result), NotFound);
+  EXPECT_EQ("no-such-setting", result["reason"].asString());
+  EXPECT_EQ("no.such.setting", result["target"]["setting"].asString());
 }
 
 /*!
@@ -132,6 +134,10 @@ TEST(TestSettingsValueGate, ADisabledSettingRefusesWritesAsUnavailable)
 
   CVariant result;
   EXPECT_EQ(CSettingsOperations::SetSettingValue(params, result), Unavailable);
+  EXPECT_EQ("setting-disabled", result["reason"].asString());
+  EXPECT_EQ(CSettings::SETTING_DEBUG_SHOWLOGINFO, result["target"]["setting"].asString());
+  result = CVariant();
   EXPECT_EQ(CSettingsOperations::ResetSettingValue(params, result), Unavailable);
+  EXPECT_EQ("setting-disabled", result["reason"].asString());
   EXPECT_EQ(CSettingsOperations::GetSettingValue(params, result), OK);
 }

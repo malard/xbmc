@@ -100,6 +100,7 @@ TEST(TestSettingsValueRefusal, DISABLED_AChangeAHandlerDeclinesIsUnavailable)
   EXPECT_EQ(CSettingsOperations::SetSettingValue(
                 Write(CSettings::SETTING_DEBUG_SHOWLOGINFO, !before), result),
             Unavailable);
+  EXPECT_EQ("change-declined", result["reason"].asString());
   EXPECT_EQ(before, setting->GetValue());
 }
 

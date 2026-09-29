@@ -1245,7 +1245,8 @@ int CMusicDatabase::AddSong(const int idSong,
     // Song genres added, and genre string updated to use the standardised genre names
     AddSongGenres(idNew, genres);
 
-    AnnounceUpdate(MediaTypeSong, idNew, true);
+    if (m_announceUpdates)
+      AnnounceUpdate(MediaTypeSong, idNew, true);
   }
   catch (...)
   {
@@ -1453,7 +1454,7 @@ int CMusicDatabase::UpdateSong(int idSong,
 
   bool status = ExecuteQuery(strSQL);
 
-  if (status)
+  if (status && m_announceUpdates)
     AnnounceUpdate(MediaTypeSong, idSong);
   return idSong;
 }
@@ -1648,7 +1649,7 @@ int CMusicDatabase::UpdateAlbum(int idAlbum,
   strSQL += PrepareSQL(" WHERE idAlbum = %i", idAlbum);
 
   bool status = ExecuteQuery(strSQL);
-  if (status)
+  if (status && m_announceUpdates)
     AnnounceUpdate(MediaTypeAlbum, idAlbum);
   return idAlbum;
 }
@@ -2102,7 +2103,7 @@ int CMusicDatabase::UpdateArtist(int idArtist,
   strSQL += PrepareSQL(" WHERE idArtist = %i", idArtist);
 
   bool status = ExecuteQuery(strSQL);
-  if (status)
+  if (status && m_announceUpdates)
     AnnounceUpdate(MediaTypeArtist, idArtist);
   return idArtist;
 }
@@ -2132,7 +2133,8 @@ bool CMusicDatabase::UpdateArtistScrapedMBID(int idArtist,
   bool status = ExecuteQuery(strSQL);
   if (status)
   {
-    AnnounceUpdate(MediaTypeArtist, idArtist);
+    if (m_announceUpdates)
+      AnnounceUpdate(MediaTypeArtist, idArtist);
     return true;
   }
   return false;

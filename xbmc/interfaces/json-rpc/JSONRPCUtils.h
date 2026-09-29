@@ -13,6 +13,8 @@
 #include "utils/Artwork.h"
 
 #include <array>
+#include <cstddef>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -60,7 +62,7 @@ struct JsonRpcStatusDescription
   const char* name;
   const char* message;
   const char* description;
-  //! Whether responses with this status populate the optional "error.data" member
+  //! Whether responses with this status populate "error.data" even without a reason
   bool hasData;
 };
 
@@ -115,6 +117,145 @@ inline const JsonRpcStatusDescription* StatusToDescription(JSONRPC_STATUS status
 
   return nullptr;
 }
+
+/*!
+ \ingroup jsonrpc
+ \brief Why a call failed, reported to the client as "error.data.reason"
+
+ A reason refines the status a call fails with, and may refine more than one. A method declares
+ the reasons it can fail for under the errors they come with in methods.json.
+ */
+enum class Reason
+{
+  NothingPlaying,
+  NotApplicable,
+  NotSeekable,
+  NotPausable,
+  TempoUnsupported,
+  Paused,
+  NoSuchStream,
+  Unreachable,
+  NoSuchItem,
+  NoSuchSource,
+  NotInLibrary,
+  NoSuchAddon,
+  NoSuchPath,
+  OutsideSources,
+  NotAFile,
+  NoSuchSetting,
+  SettingDisabled,
+  ChangeDeclined,
+  LevelLocked,
+  PvrNotStarted,
+  NotRecordable,
+  BackendRefused,
+  PlaybackRefused,
+  FeatureDisabled,
+  NoScreenshotFolder,
+  CaptureFailed,
+  DeleteFailed,
+  NotSupported,
+  DatabaseNotOpen,
+  MeasureFailed,
+  PartyModeElsewhere,
+  TimerExists,
+  NotPlayable,
+};
+
+struct JsonRpcReasonDescription
+{
+  Reason reason;
+  //! The stable name a client matches on
+  const char* name;
+  const char* description;
+};
+
+//! Every Reason, in declaration order
+inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
+    {Reason::NothingPlaying, "nothing-playing",
+     "Nothing is playing, or not the playlist the call named."},
+    {Reason::NotApplicable, "not-applicable",
+     "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle "
+     "for music or repeating the picture playlist."},
+    {Reason::NotSeekable, "not-seekable", "What is playing cannot seek."},
+    {Reason::NotPausable, "not-pausable", "What is playing cannot pause."},
+    {Reason::TempoUnsupported, "tempo-unsupported",
+     "The player of what is playing cannot change its tempo."},
+    {Reason::Paused, "paused", "The call needs playback that is not paused."},
+    {Reason::NoSuchStream, "no-such-stream", "What is playing has no stream at the given index."},
+    {Reason::Unreachable, "unreachable",
+     "The path cannot be read at the moment, as when its share is offline."},
+    {Reason::NoSuchItem, "no-such-item",
+     "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, "
+     "timer or recording."},
+    {Reason::NoSuchSource, "no-such-source", "The directory lies inside no source of the library."},
+    {Reason::NotInLibrary, "not-in-library", "The library holds nothing under the directory."},
+    {Reason::NoSuchAddon, "no-such-addon",
+     "No add-on has the given id, or none that is enabled where the call needs one."},
+    {Reason::NoSuchPath, "no-such-path", "Nothing exists at the given path."},
+    {Reason::OutsideSources, "outside-sources",
+     "The path lies outside every source shared for remote access."},
+    {Reason::NotAFile, "not-a-file", "The path names a directory, not a file."},
+    {Reason::NoSuchSetting, "no-such-setting", "No setting has the given id."},
+    {Reason::SettingDisabled, "setting-disabled",
+     "The setting is disabled by the settings it depends on, so it cannot change now."},
+    {Reason::ChangeDeclined, "change-declined",
+     "Kodi declined the change, as when a new display mode is not kept or a required add-on "
+     "would be disabled."},
+    {Reason::LevelLocked, "level-locked", "The profile's settings lock keeps the setting level."},
+    {Reason::PvrNotStarted, "pvr-not-started", "PVR is off, or has not finished starting."},
+    {Reason::NotRecordable, "not-recordable", "The channel cannot be recorded."},
+    {Reason::BackendRefused, "backend-refused",
+     "The PVR add-on refused the request or failed to carry it out."},
+    {Reason::PlaybackRefused, "playback-refused",
+     "Playback did not start, as when a parental lock is not unlocked or a prompt is cancelled."},
+    {Reason::FeatureDisabled, "feature-disabled",
+     "A setting on this installation turns the feature off."},
+    {Reason::NoScreenshotFolder, "no-screenshot-folder", "No screenshot folder is configured."},
+    {Reason::CaptureFailed, "capture-failed",
+     "The frame did not arrive, or the screenshot could not be written."},
+    {Reason::DeleteFailed, "delete-failed", "The file could not be deleted."},
+    {Reason::NotSupported, "not-supported",
+     "The system cannot do it, or its power settings do not allow it."},
+    {Reason::DatabaseNotOpen, "database-not-open",
+     "Kodi has not opened that database, because it is still starting or opening it failed."},
+    {Reason::MeasureFailed, "measure-failed", "The file could not be read or decoded to measure."},
+    {Reason::PartyModeElsewhere, "party-mode-elsewhere",
+     "Party mode is running on the other playlist."},
+    {Reason::TimerExists, "timer-exists", "A timer already exists for the broadcast."},
+    {Reason::NotPlayable, "not-playable",
+     "The item cannot go in the playlist, or holds nothing it can play."},
+};
+
+constexpr bool ReasonsAreDescribedInOrder()
+{
+  for (size_t index = 0; index < std::size(JSONRPC_REASON_DESCRIPTIONS); ++index)
+  {
+    if (JSONRPC_REASON_DESCRIPTIONS[index].reason != static_cast<Reason>(index))
+      return false;
+  }
+  return true;
+}
+static_assert(ReasonsAreDescribedInOrder());
+
+inline const JsonRpcReasonDescription& ReasonToDescription(Reason reason)
+{
+  return JSONRPC_REASON_DESCRIPTIONS[static_cast<size_t>(reason)];
+}
+
+/*!
+ \brief Fails a call for a declared reason, which the response carries in "error.data"
+ \param result The handler's result, replaced by the error data
+ \param status The status the call fails with
+ \param reason Why the call failed
+ \param target What the failure concerns, as the caller addresses it, e.g. {"movieId": 3}
+ \return status
+ */
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason);
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason, const CVariant& target);
+
+//! A failure's target of one member, e.g. Target("playlist", "audio")
+CVariant Target(const std::string& key, const CVariant& value);
 
 /*!
  \brief The handler of a JSON-RPC method

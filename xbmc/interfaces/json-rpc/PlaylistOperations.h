@@ -36,12 +36,16 @@ public:
 private:
   /*!
      * \brief Read the items a request names, as the media the playlist takes. What resolved
-     * arrives in items, in request order; everything else arrives in unresolved, each with a
-     * "reason" of notfound, unavailable or invalid.
+     * arrives in items, in request order; everything else arrives in unresolved, each with the
+     * reason its diagnosis gives.
+     * \param failure Set to the error data of the call if it adds nothing
+     * \return The status of the call if it adds nothing: the first item whose reference has gone,
+     * else the first that was malformed
      */
-  static void ReadItems(std::string_view media,
-                        const CVariant& itemParam,
-                        CFileItemList& items,
-                        CVariant& unresolved);
+  static JSONRPC_STATUS ReadItems(std::string_view media,
+                                  const CVariant& itemParam,
+                                  CFileItemList& items,
+                                  CVariant& unresolved,
+                                  CVariant& failure);
 };
 } // namespace JSONRPC

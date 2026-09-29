@@ -262,11 +262,6 @@ bool CTCPServer::PrepareDownload(const char *path, CVariant &details, std::strin
   return false;
 }
 
-bool CTCPServer::Download(const char *path, CVariant &result)
-{
-  return false;
-}
-
 int CTCPServer::GetCapabilities()
 {
   return Response | Announcing;
@@ -289,6 +284,8 @@ void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   }
 
   std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(flag, sender, message, data, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
+  if (str.empty())
+    return;
 
   for (const auto& connection : connections)
   {

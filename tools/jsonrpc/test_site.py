@@ -245,6 +245,22 @@ class TestSiteGeneration(unittest.TestCase):
                 if not method["errors"]:
                     self.assertNotIn('href="../errors.html#', page)
 
+    def test_method_pages_list_their_declared_reasons(self):
+        for name, method in self.service["methods"].items():
+            page = (self.out / self.vdir / "methods"
+                    / f"{name}.html").read_text(encoding="utf-8")
+            with self.subTest(method=name):
+                for reasons in method["reasons"].values():
+                    for reason in reasons:
+                        self.assertIn(f'href="../errors.html#{reason}"', page)
+
+    def test_errors_page_lists_every_reason(self):
+        text = (self.out / self.vdir
+                / "errors.html").read_text(encoding="utf-8")
+        for reason in kodi_schema.load_reason_taxonomy():
+            with self.subTest(reason=reason["name"]):
+                self.assertIn(f'id="{reason["name"]}"', text)
+
     def test_output_is_deterministic(self):
         with tempfile.TemporaryDirectory() as second:
             again = Path(second) / "site"

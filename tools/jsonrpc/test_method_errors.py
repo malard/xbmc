@@ -28,7 +28,10 @@ class TestDeclarations(unittest.TestCase):
         cls.methods = kodi_schema.load_service()["methods"]
         cls.taxonomy = {error["name"]
                         for error in kodi_schema.load_error_taxonomy()}
+        cls.reasons = {reason["name"]: reason
+                       for reason in kodi_schema.load_reason_taxonomy()}
         cls.derived = method_errors.derive()
+        cls.derived_reasons = method_errors.derive_reasons()
 
     def test_every_method_declares_a_list(self):
         for name, method in self.methods.items():
@@ -50,6 +53,41 @@ class TestDeclarations(unittest.TestCase):
         for name, errors in self.derived.items():
             with self.subTest(method=name):
                 self.assertEqual(self.methods[name]["errors"], errors)
+
+    def test_every_method_declares_a_reason_map(self):
+        for name, method in self.methods.items():
+            with self.subTest(method=name):
+                self.assertIsInstance(method.get("reasons"), dict)
+
+    def test_declared_reasons_match_the_handlers(self):
+        for name, reasons in self.derived_reasons.items():
+            with self.subTest(method=name):
+                self.assertEqual(self.methods[name]["reasons"], reasons)
+
+    def test_reasons_are_declared_under_declared_errors(self):
+        for name, method in self.methods.items():
+            for error, reasons in method["reasons"].items():
+                with self.subTest(method=name, error=error):
+                    self.assertIn(error, method["errors"])
+                    self.assertTrue(reasons)
+                    self.assertTrue(set(reasons) <= set(self.reasons))
+
+    def test_every_reason_is_used(self):
+        used = {reason for method in self.methods.values()
+                for reasons in method["reasons"].values() for reason in reasons}
+        self.assertEqual(set(self.reasons), used)
+
+    def test_an_unresolved_items_reason_is_one_playlist_add_can_fail_with(self):
+        types = kodi_schema.load_service()["types"]
+        declared = types["Playlist.UnresolvedItem"]["properties"]["reason"]["enum"]
+        reasons = {reason for reasons in self.derived_reasons["Playlist.Add"].values()
+                   for reason in reasons}
+        self.assertEqual(set(declared), reasons)
+
+    def test_reason_names_are_kebab_case(self):
+        for name in self.reasons:
+            with self.subTest(reason=name):
+                self.assertRegex(name, r"^[a-z]+(-[a-z]+)*$")
 
 
 class TestDerivation(unittest.TestCase):
@@ -107,6 +145,26 @@ class TestDerivation(unittest.TestCase):
         {
           return Collect(parameterObject, Helper);
         }
+
+        template<Kind K, Listing From>
+        JSONRPC_STATUS CTest::List(const CVariant& parameterObject, CVariant& result)
+        {
+          return Inner(parameterObject);
+        }
+
+        JSONRPC_STATUS CTest::Refuse(const CVariant& parameterObject, CVariant& result)
+        {
+          // Reason::NotSeekable in a comment does not count
+          return Fail(result, FailedToExecute, Reason::NothingPlaying);
+        }
+
+        JSONRPC_STATUS CTest::Delegate(const CVariant& parameterObject, CVariant& result)
+        {
+          if (parameterObject.isNull())
+            return Fail(result, parameterObject.isArray() ? NotFound : Unavailable,
+                        Reason::Unreachable, Target("path", parameterObject));
+          return Refuse(parameterObject, result);
+        }
         """)
 
     METHOD_MAP = textwrap.dedent("""
@@ -114,6 +172,9 @@ class TestDerivation(unittest.TestCase):
           { "Test.Outer", CTest::Outer },
           { "Test.Open",  CTest::Open },
           { "Test.Forward", CTest::Forward },
+          { "Test.Preset", CTest::List<Kind::Movie, Listing::RecentlyAdded> },
+          { "Test.Refuse", CTest::Refuse },
+          { "Test.Delegate", CTest::Delegate },
         };
         """)
 
@@ -124,6 +185,7 @@ class TestDerivation(unittest.TestCase):
         (source_dir / method_errors.METHOD_MAP.name).write_text(
             self.METHOD_MAP, encoding="utf-8")
         self.derived = method_errors.derive(source_dir)
+        self.derived_reasons = method_errors.derive_reasons(source_dir)
 
     def tearDown(self):
         self.tempdir.cleanup()
@@ -142,10 +204,52 @@ class TestDerivation(unittest.TestCase):
         # database.Open() must not pull in CTest::Open's Unavailable
         self.assertNotIn("Unavailable", self.derived["Test.Outer"])
 
+    def test_a_template_handler_has_the_statuses_of_its_template(self):
+        self.assertEqual(self.derived["Test.Preset"], ["InternalError", "NotFound"])
+
     def test_comments_and_strings_are_ignored(self):
         self.assertNotIn("AccessDenied", self.derived["Test.Outer"])
         self.assertNotIn("Unavailable", self.derived["Test.Outer"])
         self.assertEqual(self.derived["Test.Open"], ["Unavailable"])
+
+    def test_a_reason_is_declared_under_the_status_its_call_names(self):
+        self.assertEqual(self.derived_reasons["Test.Refuse"],
+                         {"FailedToExecute": ["nothing-playing"]})
+        self.assertEqual(self.derived["Test.Refuse"], ["FailedToExecute"])
+
+    def test_a_reason_can_come_with_more_than_one_status(self):
+        self.assertEqual(self.derived_reasons["Test.Delegate"],
+                         {"FailedToExecute": ["nothing-playing"],
+                          "NotFound": ["unreachable"],
+                          "Unavailable": ["unreachable"]})
+        self.assertEqual(self.derived["Test.Delegate"],
+                         ["FailedToExecute", "NotFound", "Unavailable"])
+
+    def test_a_method_naming_no_reason_derives_none(self):
+        self.assertEqual(self.derived_reasons["Test.Outer"], {})
+
+    def test_a_reason_outside_a_fail_call_is_an_error(self):
+        source_dir = Path(self.tempdir.name)
+        (source_dir / "Bad.cpp").write_text(textwrap.dedent("""
+            JSONRPC_STATUS CBad::Refuse(const CVariant& parameterObject, CVariant& result)
+            {
+              const Reason reason = Reason::NothingPlaying;
+              return Fail(result, FailedToExecute, reason);
+            }
+            """), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            method_errors.derive(source_dir)
+
+    def test_an_undescribed_reason_is_an_error(self):
+        source_dir = Path(self.tempdir.name)
+        (source_dir / "Bad.cpp").write_text(textwrap.dedent("""
+            JSONRPC_STATUS CBad::Refuse(const CVariant& parameterObject, CVariant& result)
+            {
+              return Fail(result, NotFound, Reason::NoSuchReason);
+            }
+            """), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            method_errors.derive(source_dir)
 
 
 if __name__ == "__main__":

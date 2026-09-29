@@ -19,6 +19,7 @@
 #include "PlaybackModes.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
+#include "URL.h"
 #include "Util.h"
 #include "VideoLibrary.h"
 #include "application/Application.h"
@@ -371,7 +372,7 @@ JSONRPC_STATUS CPlayerOperations::StepVolume(int action, CVariant& result)
 
 JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -381,7 +382,7 @@ JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVa
                            {
                              const auto appPlayer = AppPlayer();
                              if (!appPlayer->CanPause())
-                               return FailedToExecute;
+                               return Fail(result, FailedToExecute, Reason::NotPausable);
 
                              if (parameterObject["play"].isString())
                                CBuiltins::GetInstance().Execute("playercontrol(play)");
@@ -429,7 +430,7 @@ JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVa
 JSONRPC_STATUS CPlayerOperations::Stop(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         switch (player)
@@ -469,7 +470,7 @@ JSONRPC_STATUS CPlayerOperations::NotifyAudioChainReady(const CVariant& paramete
 
 JSONRPC_STATUS CPlayerOperations::SetAudioDelay(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -522,6 +523,7 @@ JSONRPC_STATUS CPlayerOperations::SetAudioDelay(const CVariant& parameterObject,
                            }
                            case Audio:
                            case Picture:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            case None:
                            default:
                              return FailedToExecute;
@@ -531,7 +533,7 @@ JSONRPC_STATUS CPlayerOperations::SetAudioDelay(const CVariant& parameterObject,
 
 JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -571,6 +573,7 @@ JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVar
                            }
 
                            case Picture:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            case None:
                            default:
                              return FailedToExecute;
@@ -581,7 +584,7 @@ JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVar
 JSONRPC_STATUS CPlayerOperations::SetTempo(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         switch (player)
@@ -590,8 +593,10 @@ JSONRPC_STATUS CPlayerOperations::SetTempo(const CVariant& parameterObject, CVar
           case Audio:
           {
             const auto appPlayer = AppPlayer();
-            if (!appPlayer->SupportsTempo() || appPlayer->IsPausedPlayback())
-              return FailedToExecute;
+            if (!appPlayer->SupportsTempo())
+              return Fail(result, FailedToExecute, Reason::TempoUnsupported);
+            if (appPlayer->IsPausedPlayback())
+              return Fail(result, FailedToExecute, Reason::Paused);
 
             if (parameterObject["tempo"].isDouble())
               appPlayer->SetTempo(parameterObject["tempo"].asFloat());
@@ -610,6 +615,7 @@ JSONRPC_STATUS CPlayerOperations::SetTempo(const CVariant& parameterObject, CVar
           }
 
           case Picture:
+            return Fail(result, FailedToExecute, Reason::NotApplicable);
           case None:
           default:
             return FailedToExecute;
@@ -648,7 +654,7 @@ void HandleResumeOption(const CVariant& optionResume, CFileItem& item)
 JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         switch (player)
@@ -658,7 +664,7 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant
           {
             const auto appPlayer = AppPlayer();
             if (!appPlayer->CanSeek())
-              return FailedToExecute;
+              return Fail(result, FailedToExecute, Reason::NotSeekable);
 
             const CVariant& value = parameterObject["value"];
             if (value.isMember("percentage"))
@@ -692,6 +698,7 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant
           }
 
           case Picture:
+            return Fail(result, FailedToExecute, Reason::NotApplicable);
           case None:
           default:
             return FailedToExecute;
@@ -702,7 +709,7 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant
 JSONRPC_STATUS CPlayerOperations::Move(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         std::string direction = parameterObject["direction"].asString();
@@ -746,7 +753,7 @@ JSONRPC_STATUS CPlayerOperations::Move(const CVariant& parameterObject, CVariant
 
 JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          CVariant zoom = parameterObject["zoom"];
@@ -773,6 +780,7 @@ JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant& parameterObject, CVariant
 
                            case Video:
                            case Audio:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            case None:
                            default:
                              return FailedToExecute;
@@ -949,7 +957,9 @@ JSONRPC_STATUS CPlayerOperations::SetDeclaredAspectRatio(const CVariant& paramet
   const auto appPlayer = AppPlayer();
 
   if (!appPlayer || !appPlayer->IsPlayingVideo())
-    return FailedToExecute;
+    return Fail(result, FailedToExecute,
+                appPlayer && appPlayer->IsPlaying() ? Reason::NotApplicable
+                                                    : Reason::NothingPlaying);
 
   const CVariant& ratio = parameterObject["aspectRatio"];
 
@@ -1000,7 +1010,7 @@ JSONRPC_STATUS CPlayerOperations::GetDeclaredAspectRatio(const CVariant& paramet
 
 JSONRPC_STATUS CPlayerOperations::Rotate(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -1014,6 +1024,7 @@ JSONRPC_STATUS CPlayerOperations::Rotate(const CVariant& parameterObject, CVaria
 
                            case Video:
                            case Audio:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            case None:
                            default:
                              return FailedToExecute;
@@ -1082,7 +1093,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     CFileItemList media;
     if (ListSlideshowDirectory(path, recursive, pictures, media) && pictures.IsEmpty() &&
         !media.IsEmpty())
-      return PlayFileItemList(media, options);
+      return PlayFileItemList(media, options, result);
 
     bool random = (optionShuffled.isBoolean() && optionShuffled.asBoolean()) ||
                   (!optionShuffled.isBoolean() && parameterObject["item"]["random"].asBoolean());
@@ -1099,15 +1110,21 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
   }
   else if (parameterObject["item"].isMember("broadcastId"))
   {
+    if (!CServiceBroker::GetPVRManager().IsStarted())
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
+
     const std::shared_ptr<CPVREpgInfoTag> epgTag =
         CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
             static_cast<unsigned int>(parameterObject["item"]["broadcastId"].asInteger()));
 
-    if (!epgTag || !epgTag->IsPlayable())
+    if (!epgTag)
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("broadcastId", parameterObject["item"]["broadcastId"]));
+    if (!epgTag->IsPlayable())
       return InvalidParams;
 
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayEpgTag(CFileItem(epgTag)))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1115,13 +1132,15 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
   {
     const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer =
         CServiceBroker::GetPVRManager().ChannelGroups();
-    if (!channelGroupContainer)
-      return FailedToExecute;
+    // the containers exist before PVR has loaded them, and are not safe to search until then
+    if (!CServiceBroker::GetPVRManager().IsStarted() || !channelGroupContainer)
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<const CPVRChannel> channel = channelGroupContainer->GetChannelById(
         static_cast<int>(parameterObject["item"]["channelId"].asInteger()));
     if (!channel)
-      return InvalidParams;
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("channelId", parameterObject["item"]["channelId"]));
 
     const std::shared_ptr<CPVRChannelGroupMember> groupMember =
         CServiceBroker::GetPVRManager().Get<PVR::GUI::Channels>().GetChannelGroupMember(channel);
@@ -1130,7 +1149,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(
             CFileItem(groupMember)))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1138,18 +1157,19 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
   {
     const std::shared_ptr<const CPVRRecordings> recordingsContainer =
         CServiceBroker::GetPVRManager().Recordings();
-    if (!recordingsContainer)
-      return FailedToExecute;
+    if (!CServiceBroker::GetPVRManager().IsStarted() || !recordingsContainer)
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<CPVRRecording> recording = recordingsContainer->GetById(
         static_cast<int>(parameterObject["item"]["recordingId"].asInteger()));
     if (!recording)
-      return InvalidParams;
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("recordingId", parameterObject["item"]["recordingId"]));
 
     CFileItem recItem{recording};
     HandleResumeOption(optionResume, recItem);
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
-      return FailedToExecute;
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
@@ -1182,41 +1202,46 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       }
       else if (list.Size() == 1 && URIUtils::IsPVRChannel(list[0]->GetPath()))
       {
+        if (!CServiceBroker::GetPVRManager().IsStarted())
+          return Fail(result, FailedToExecute, Reason::PvrNotStarted);
         if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
-          return FailedToExecute;
+          return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
       {
         const std::shared_ptr<const CPVRRecordings> recordingsContainer{
             CServiceBroker::GetPVRManager().Recordings()};
-        if (!recordingsContainer)
-          return FailedToExecute;
+        if (!CServiceBroker::GetPVRManager().IsStarted() || !recordingsContainer)
+          return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
         std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
         if (!recording)
           recording = recordingsContainer->GetByPath(list[0]->GetPath());
 
         if (!recording)
-          return InvalidParams;
+          return Fail(result, NotFound, Reason::NoSuchPath,
+                      Target("file", parameterObject["item"]["file"]));
 
         CFileItem recItem{recording};
         HandleResumeOption(optionResume, recItem);
         if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
-          return FailedToExecute;
+          return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else
-        return PlayFileItemList(list, options);
+        return PlayFileItemList(list, options, result);
 
       return ACK;
     }
     else
-      return DiagnoseUnresolvedItem(parameterObject["item"]);
+      return DiagnoseUnresolvedItem(parameterObject["item"], result);
   }
 
   return InvalidParams;
 }
 
-JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list, const CVariant& options)
+JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
+                                                   const CVariant& options,
+                                                   CVariant& result)
 {
   const CVariant& optionShuffled = options["shuffled"];
   const CVariant& optionRepeat = options["repeat"];
@@ -1271,7 +1296,8 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list, const CV
 
   // Playback is posted asynchronously; nothing after this point can be reported to the caller.
   if (list.Size() == 1 && !IsReachable(*list[0]))
-    return Unavailable;
+    return Fail(result, Unavailable, Reason::Unreachable,
+                Target("file", CURL(list[0]->GetDynPath()).GetWithoutUserDetails()));
 
   auto items = std::make_unique<CFileItemList>();
   items->Copy(list);
@@ -1319,7 +1345,7 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
 JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachOnList(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         CVariant to = parameterObject["to"];
@@ -1382,7 +1408,7 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant
               SendSlideshowAction(actionID);
             }
             else
-              return FailedToExecute;
+              return Fail(result, FailedToExecute, Reason::NotApplicable);
             break;
 
           case None:
@@ -1397,7 +1423,7 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant
 JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachOnList(
-      parameterObject,
+      parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
       {
         switch (player)
@@ -1406,12 +1432,12 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, 
           case Audio:
           {
             if (IsPVRChannel())
-              return FailedToExecute;
+              return Fail(result, FailedToExecute, Reason::NotApplicable);
 
             const PLAYLIST::Type type = player == Video ? PLAYLIST::Video : PLAYLIST::Audio;
             const bool enabled = PARTYMODE::IsRunning();
             if (enabled && !PARTYMODE::IsRunning(type))
-              return InvalidParams;
+              return Fail(result, FailedToExecute, Reason::PartyModeElsewhere);
 
             const bool toggle = parameterObject["partyMode"].isString();
             const bool wanted = toggle ? !enabled : parameterObject["partyMode"].asBoolean();
@@ -1422,6 +1448,7 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, 
           }
 
           case Picture:
+            return Fail(result, FailedToExecute, Reason::NotApplicable);
           default:
             return FailedToExecute;
         }
@@ -1432,7 +1459,7 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -1466,16 +1493,17 @@ JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject
                                  index = static_cast<int>(parameterObject["stream"].asInteger());
 
                                if (index < 0 || appPlayer->GetAudioStreamCount() <= index)
-                                 return InvalidParams;
+                                 return Fail(result, InvalidParams, Reason::NoSuchStream);
 
                                appPlayer->SetAudioStream(index);
                              }
                              else
-                               return FailedToExecute;
+                               return Fail(result, FailedToExecute, Reason::NothingPlaying);
                              break;
                            }
 
                            case Picture:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            default:
                              return FailedToExecute;
                          }
@@ -1486,19 +1514,16 @@ JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject
 
 JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          if (player != Video)
-                           return FailedToExecute;
+                           return Fail(result, FailedToExecute, Reason::NotApplicable);
 
                          const auto appPlayer = AppPlayer();
 
                          if (!appPlayer->HasPlayer())
-                           return FailedToExecute;
-
-                         if (!parameterObject["subtitle"].isString())
-                           return FailedToExecute;
+                           return Fail(result, FailedToExecute, Reason::NothingPlaying);
 
                          std::string sub = parameterObject["subtitle"].asString();
                          appPlayer->AddSubtitle(sub);
@@ -1508,7 +1533,7 @@ JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -1551,7 +1576,7 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, C
                                  index = static_cast<int>(parameterObject["subtitle"].asInteger());
 
                                if (index < 0 || appPlayer->GetSubtitleCount() <= index)
-                                 return InvalidParams;
+                                 return Fail(result, InvalidParams, Reason::NoSuchStream);
 
                                appPlayer->SetSubtitle(index);
 
@@ -1561,12 +1586,13 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, C
                                  appPlayer->SetSubtitleVisible(true);
                              }
                              else
-                               return FailedToExecute;
+                               return Fail(result, FailedToExecute, Reason::NothingPlaying);
                              break;
                            }
 
                            case Audio:
                            case Picture:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            default:
                              return FailedToExecute;
                          }
@@ -1577,7 +1603,7 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant& parameterObject, CVariant& result)
 {
-  return ForEachTarget(parameterObject,
+  return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
                        {
                          switch (player)
@@ -1611,16 +1637,17 @@ JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant& parameterObject
                                  index = static_cast<int>(parameterObject["stream"].asInteger());
 
                                if (index < 0 || streamCount <= index)
-                                 return InvalidParams;
+                                 return Fail(result, InvalidParams, Reason::NoSuchStream);
 
                                appPlayer->SetVideoStream(index);
                              }
                              else
-                               return FailedToExecute;
+                               return Fail(result, FailedToExecute, Reason::NotApplicable);
                              break;
                            }
                            case Audio:
                            case Picture:
+                             return Fail(result, FailedToExecute, Reason::NotApplicable);
                            default:
                              return FailedToExecute;
                          }
@@ -1634,6 +1661,8 @@ std::vector<PlayerType> CPlayerOperations::GetTargets(const CVariant& playlist)
   const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(playlist.asString());
   if (named == PLAYLIST::Audio)
     return {Audio};
+  if (playlist.asString() == "picture")
+    return {Picture};
 
   const auto playLists = CServiceBroker::GetPlayLists();
   const bool slideShow = playLists->IsSlideShowRunning();
@@ -1657,35 +1686,71 @@ PlayerType CPlayerOperations::GetTarget(const CVariant& playlist)
 }
 
 JSONRPC_STATUS CPlayerOperations::ForEachTarget(
-    const CVariant& parameterObject, const std::function<JSONRPC_STATUS(PlayerType)>& verb)
+    const CVariant& parameterObject,
+    CVariant& result,
+    const std::function<JSONRPC_STATUS(PlayerType)>& verb)
 {
   // a named playlist that is not playing has no player to act on
-  if (const std::optional<PLAYLIST::Type> named =
-          PLAYLIST::TypeFromName(parameterObject["playlist"].asString());
-      named)
-  {
-    const auto playLists = CServiceBroker::GetPlayLists();
-    if (playLists->GetPlayingType() != named &&
-        !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning()))
-      return FailedToExecute;
-  }
-  return ForEachOnList(parameterObject, verb);
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const std::string& name = parameterObject["playlist"].asString();
+  const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
+  const bool idle = named ? playLists->GetPlayingType() != named &&
+                                !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
+                          : name == "picture" && !playLists->IsSlideShowRunning();
+  if (idle)
+    return Fail(result, FailedToExecute, Reason::NothingPlaying,
+                Target("playlist", parameterObject["playlist"]));
+
+  const JSONRPC_STATUS status = ForEachOnList(parameterObject, result, verb);
+  // with nothing playing, the player acted on was only a guess
+  if (status == FailedToExecute && !IsAnythingPlaying())
+    return Fail(result, FailedToExecute, Reason::NothingPlaying);
+  return status;
 }
 
 JSONRPC_STATUS CPlayerOperations::ForEachOnList(
-    const CVariant& parameterObject, const std::function<JSONRPC_STATUS(PlayerType)>& verb)
+    const CVariant& parameterObject,
+    CVariant& result,
+    const std::function<JSONRPC_STATUS(PlayerType)>& verb)
 {
   std::optional<JSONRPC_STATUS> succeeded;
   std::optional<JSONRPC_STATUS> failed;
+  CVariant failure;
   for (const PlayerType player : GetTargets(parameterObject["playlist"]))
   {
+    // a failure's error data must not reach a success, nor overwrite what another verb answered
+    CVariant answered = result;
     const JSONRPC_STATUS status = verb(player);
     if (status == OK || status == ACK)
+    {
       succeeded = succeeded.value_or(status);
-    else
-      failed = failed.value_or(status);
+      continue;
+    }
+
+    if (!failed)
+    {
+      failed = status;
+      failure = std::move(result);
+      if (failure.isMember("reason") && !failure.isMember("target"))
+      {
+        const std::optional<PLAYLIST::Type> playList =
+            GetPlayList(player, parameterObject["playlist"]);
+        failure["target"] =
+            Target("playlist", playList ? std::string{PLAYLIST::NameOf(*playList)} : "picture");
+      }
+    }
+    result = std::move(answered);
   }
-  return succeeded ? *succeeded : *failed;
+
+  if (succeeded)
+    return *succeeded;
+  result = std::move(failure);
+  return *failed;
+}
+
+bool CPlayerOperations::IsAnythingPlaying()
+{
+  return AppPlayer()->IsPlaying() || CServiceBroker::GetPlayLists()->IsSlideShowRunning();
 }
 
 std::optional<PLAYLIST::Type> CPlayerOperations::GetPlayList(PlayerType player,
@@ -2017,18 +2082,11 @@ std::shared_ptr<CPVREpgInfoTag> CPlayerOperations::GetCurrentEpg()
 
 JSONRPC_STATUS CPlayerOperations::GetChapters(const CVariant& parameterObject, CVariant& result)
 {
-  // Return the chapters list of the running video or empty list if none
-  switch (GetTarget(parameterObject["playlist"]))
-  {
-    case Video:
-      break;
-    default:
-      return InvalidParams;
-  }
   const auto appPlayer = AppPlayer();
-
-  if (!appPlayer->IsPlayingVideo())
-    return FailedToExecute; // No running video
+  if (!IsAnythingPlaying())
+    return Fail(result, FailedToExecute, Reason::NothingPlaying);
+  if (GetTarget(parameterObject["playlist"]) != Video || !appPlayer->IsPlayingVideo())
+    return Fail(result, FailedToExecute, Reason::NotApplicable);
 
   // Extract chapters from CApplicationPlayer
   const int chapterCount = appPlayer->GetChapterCount();

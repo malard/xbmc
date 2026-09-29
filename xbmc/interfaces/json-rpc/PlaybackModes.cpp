@@ -51,7 +51,7 @@ JSONRPC_STATUS ApplyRepeat(PLAYLIST::Type type, const CVariant& repeat)
   return CApplicationPlayLists::ParseRepeat(wanted) == after ? ACK : FailedToExecute;
 }
 
-JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle)
+JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle, CVariant& result)
 {
   CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
   if (slideShow.NumSlides() < 0)
@@ -59,7 +59,11 @@ JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle)
 
   const bool toggle = shuffle.isString() && shuffle.asString() == "toggle";
   if (slideShow.IsShuffled())
-    return (shuffle.isBoolean() && !shuffle.asBoolean()) || toggle ? FailedToExecute : ACK;
+  {
+    if ((shuffle.isBoolean() && !shuffle.asBoolean()) || toggle)
+      return Fail(result, FailedToExecute, Reason::NotApplicable);
+    return ACK;
+  }
 
   if ((shuffle.isBoolean() && shuffle.asBoolean()) || toggle)
     slideShow.Shuffle();

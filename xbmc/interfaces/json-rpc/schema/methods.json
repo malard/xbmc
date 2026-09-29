@@ -62,7 +62,8 @@
     "returns": "object",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "JSONRPC.Version": {
     "type": "method",
@@ -103,7 +104,8 @@
         "version"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "JSONRPC.Permission": {
     "type": "method",
@@ -170,7 +172,8 @@
         "ControlPVR"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "JSONRPC.Ping": {
     "type": "method",
@@ -179,7 +182,8 @@
     "permission": "ReadData",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "JSONRPC.GetConfiguration": {
     "type": "method",
@@ -190,7 +194,8 @@
     "returns": {
       "$ref": "#/$defs/Configuration"
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "JSONRPC.SetConfiguration": {
     "type": "method",
@@ -251,7 +256,8 @@
     },
     "errors": [
       "BadPermission"
-    ]
+    ],
+    "reasons": {}
   },
   "JSONRPC.NotifyAll": {
     "type": "method",
@@ -281,7 +287,8 @@
       }
     ],
     "returns": {},
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.Open": {
     "type": "method",
@@ -466,7 +473,24 @@
       "FailedToExecute",
       "NotFound",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "not-a-file",
+        "not-playable"
+      ],
+      "FailedToExecute": [
+        "pvr-not-started",
+        "playback-refused"
+      ],
+      "NotFound": [
+        "no-such-item",
+        "no-such-path"
+      ],
+      "Unavailable": [
+        "unreachable"
+      ]
+    }
   },
   "Player.GetPlayers": {
     "type": "method",
@@ -519,7 +543,8 @@
         ]
       }
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.GetProperties": {
     "type": "method",
@@ -541,7 +566,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -551,7 +576,8 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.SetProperties": {
     "type": "method",
@@ -588,7 +614,8 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.VolumeUp": {
     "type": "method",
@@ -602,7 +629,8 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.VolumeDown": {
     "type": "method",
@@ -616,7 +644,8 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.GetItem": {
     "type": "method",
@@ -633,7 +662,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -651,7 +680,8 @@
     "errors": [
       "InternalError",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.PlayPause": {
     "type": "method",
@@ -669,7 +699,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -678,7 +708,13 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-pausable"
+      ]
+    }
   },
   "Player.Stop": {
     "type": "method",
@@ -689,14 +725,19 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing"
+      ]
+    }
   },
   "Player.NotifyAudioChainReady": {
     "type": "method",
@@ -705,7 +746,8 @@
     "permission": "ControlPlayback",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.GetAudioDelay": {
     "type": "method",
@@ -725,7 +767,8 @@
         "offset"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.SetAudioDelay": {
     "type": "method",
@@ -751,7 +794,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -770,7 +813,13 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetSpeed": {
     "type": "method",
@@ -810,7 +859,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -820,7 +869,13 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetTempo": {
     "type": "method",
@@ -845,7 +900,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -855,7 +910,15 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable",
+        "tempo-unsupported",
+        "paused"
+      ]
+    }
   },
   "Player.Seek": {
     "type": "method",
@@ -932,7 +995,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -953,7 +1016,14 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable",
+        "not-seekable"
+      ]
+    }
   },
   "Player.Move": {
     "type": "method",
@@ -977,7 +1047,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -985,7 +1055,12 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing"
+      ]
+    }
   },
   "Player.Zoom": {
     "type": "method",
@@ -1017,7 +1092,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1025,7 +1100,13 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetViewMode": {
     "type": "method",
@@ -1053,7 +1134,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.SetGeometry": {
     "type": "method",
@@ -1072,7 +1154,8 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.GetGeometry": {
     "type": "method",
@@ -1109,7 +1192,8 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Player.GetViewMode": {
     "type": "method",
@@ -1144,7 +1228,8 @@
         "nonlinearStretch"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.SetDeclaredAspectRatio": {
     "type": "method",
@@ -1176,7 +1261,13 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.GetDeclaredAspectRatio": {
     "type": "method",
@@ -1212,7 +1303,8 @@
         "declared"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Player.Rotate": {
     "type": "method",
@@ -1234,14 +1326,20 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.GoTo": {
     "type": "method",
@@ -1271,7 +1369,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1279,7 +1377,12 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetPartymode": {
     "type": "method",
@@ -1297,15 +1400,20 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-applicable",
+        "party-mode-elsewhere"
+      ]
+    }
   },
   "Player.SetAudioStream": {
     "type": "method",
@@ -1336,7 +1444,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1344,7 +1452,16 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "no-such-stream"
+      ],
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetVideoStream": {
     "type": "method",
@@ -1375,7 +1492,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1383,7 +1500,16 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "no-such-stream"
+      ],
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.AddSubtitle": {
     "type": "method",
@@ -1402,14 +1528,20 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Player.SetSubtitle": {
     "type": "method",
@@ -1450,7 +1582,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1458,7 +1590,16 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "no-such-stream"
+      ],
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Playlist.GetPlaylists": {
     "type": "method",
@@ -1485,7 +1626,8 @@
         ]
       }
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Playlist.GetProperties": {
     "type": "method",
@@ -1517,7 +1659,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Playlist.GetItems": {
     "type": "method",
@@ -1569,7 +1712,8 @@
         "items"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Playlist.Add": {
     "type": "method",
@@ -1608,7 +1752,17 @@
     "errors": [
       "InvalidParams",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "not-a-file",
+        "not-playable"
+      ],
+      "NotFound": [
+        "no-such-item",
+        "no-such-path"
+      ]
+    }
   },
   "Playlist.Insert": {
     "type": "method",
@@ -1655,7 +1809,20 @@
       "InvalidParams",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "InvalidParams": [
+        "not-a-file",
+        "not-playable"
+      ],
+      "FailedToExecute": [
+        "not-applicable"
+      ],
+      "NotFound": [
+        "no-such-item",
+        "no-such-path"
+      ]
+    }
   },
   "Playlist.Remove": {
     "type": "method",
@@ -1682,7 +1849,12 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-applicable"
+      ]
+    }
   },
   "Playlist.Clear": {
     "type": "method",
@@ -1699,7 +1871,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Playlist.SetRepeat": {
     "type": "method",
@@ -1735,7 +1908,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-applicable"
+      ]
+    }
   },
   "Playlist.SetShuffle": {
     "type": "method",
@@ -1762,7 +1940,13 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    }
   },
   "Playlist.Swap": {
     "type": "method",
@@ -1795,7 +1979,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-applicable"
+      ]
+    }
   },
   "Player.GetChapters": {
     "type": "method",
@@ -1804,7 +1993,7 @@
       {
         "name": "playlist",
         "schema": {
-          "$ref": "#/$defs/Player.Playlist"
+          "$ref": "#/$defs/Player.Target"
         }
       }
     ],
@@ -1824,9 +2013,14 @@
       ]
     },
     "errors": [
-      "InvalidParams",
       "FailedToExecute"
     ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ]
+    },
     "transport": "Response"
   },
   "Files.GetSources": {
@@ -1870,7 +2064,8 @@
         "sources"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Files.PrepareDownload": {
     "type": "method",
@@ -1902,47 +2097,21 @@
         },
         "details": {
           "description": "Transport specific details on how/from where to download the given file"
-        },
-        "mode": {
-          "type": "string",
-          "enum": [
-            "redirect",
-            "direct"
-          ],
-          "description": "Direct mode allows using Files.Download whereas redirect mode requires the usage of a different protocol"
         }
       },
       "required": [
         "protocol",
-        "details",
-        "mode"
+        "details"
       ]
     },
     "errors": [
       "NotFound"
-    ]
-  },
-  "Files.Download": {
-    "type": "method",
-    "description": "Downloads the given file",
-    "transport": [
-      "Response",
-      "FileDownloadDirect"
     ],
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "path",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      }
-    ],
-    "returns": {},
-    "errors": [
-      "NotFound"
-    ]
+    "reasons": {
+      "NotFound": [
+        "no-such-path"
+      ]
+    }
   },
   "Files.GetDirectory": {
     "type": "method",
@@ -2004,9 +2173,21 @@
     },
     "errors": [
       "InternalError",
+      "NotFound",
       "Unavailable",
       "AccessDenied"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-path"
+      ],
+      "Unavailable": [
+        "unreachable"
+      ],
+      "AccessDenied": [
+        "outside-sources"
+      ]
+    }
   },
   "Files.GetFileDetails": {
     "type": "method",
@@ -2051,7 +2232,15 @@
       "InvalidParams",
       "NotFound",
       "AccessDenied"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-path"
+      ],
+      "AccessDenied": [
+        "outside-sources"
+      ]
+    }
   },
   "Files.SetFileDetails": {
     "type": "method",
@@ -2109,7 +2298,16 @@
       "InternalError",
       "NotFound",
       "AccessDenied"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item",
+        "no-such-path"
+      ],
+      "AccessDenied": [
+        "outside-sources"
+      ]
+    }
   },
   "AudioLibrary.GetProperties": {
     "type": "method",
@@ -2134,7 +2332,242 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
+  },
+  "AudioLibrary.GetItems": {
+    "type": "method",
+    "description": "Retrieves the items of one kind. AudioLibrary.GetArtists and the other list methods are this query with preset values",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Audio.Item.Kind"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the kind named: Audio.Fields.Artist for an artist, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Fields.Artist"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Album"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Song"
+            }
+          ]
+        }
+      },
+      {
+        "name": "limits",
+        "schema": {
+          "$ref": "#/$defs/List.Limits"
+        }
+      },
+      {
+        "name": "sort",
+        "schema": {
+          "$ref": "#/$defs/List.Sort"
+        }
+      },
+      {
+        "name": "filter",
+        "description": "A filter of the kind named",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Filter.Artists"
+            },
+            {
+              "$ref": "#/$defs/Audio.Filter.Albums"
+            },
+            {
+              "$ref": "#/$defs/Audio.Filter.Songs"
+            }
+          ]
+        }
+      },
+      {
+        "name": "albumArtistsOnly",
+        "description": "Artists only. Whether to include only album artists rather than the artists of individual songs as well. The GUI setting applies when null",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "includeSingles",
+        "description": "Albums and songs only. Whether singles are included; when null, albums leave them out and songs include them",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "singlesOnly",
+        "description": "Songs only. Only singles when true, overriding includeSingles",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "allRoles",
+        "description": "Whether to include every role when filtering by artist, rather than only the artist role. When true it overrides any role filter",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/$defs/List.LimitsReturned"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Audio.Details.Artist"
+              },
+              {
+                "$ref": "#/$defs/Audio.Details.Album"
+              },
+              {
+                "$ref": "#/$defs/Audio.Details.Song"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "limits",
+        "items"
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ],
+    "reasons": {}
+  },
+  "AudioLibrary.GetItemProperties": {
+    "type": "method",
+    "description": "Retrieves the values of the given properties of a library item",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "item",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Audio.Item"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the item's kind: Audio.Fields.Artist for a artist, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Fields.Artist"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Album"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Song"
+            }
+          ]
+        }
+      }
+    ],
+    "returns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Audio.Details.Artist"
+        },
+        {
+          "$ref": "#/$defs/Audio.Details.Album"
+        },
+        {
+          "$ref": "#/$defs/Audio.Details.Song"
+        }
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
+  },
+  "AudioLibrary.SetItemProperties": {
+    "type": "method",
+    "description": "Changes the properties named, and only those, and answers with the values now in force of those it can read back",
+    "transport": "Response",
+    "permission": "UpdateData",
+    "params": [
+      {
+        "name": "item",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Audio.Item"
+        }
+      },
+      {
+        "name": "properties",
+        "required": true,
+        "description": "Properties of the item's kind: Audio.Details.Artist.Set for a artist, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Details.Artist.Set"
+            },
+            {
+              "$ref": "#/$defs/Audio.Details.Album.Set"
+            },
+            {
+              "$ref": "#/$defs/Audio.Details.Song.Set"
+            }
+          ]
+        }
+      }
+    ],
+    "returns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Audio.Details.Artist"
+        },
+        {
+          "$ref": "#/$defs/Audio.Details.Album"
+        },
+        {
+          "$ref": "#/$defs/Audio.Details.Song"
+        }
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "AudioLibrary.GetArtists": {
     "type": "method",
@@ -2170,232 +2603,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "deprecated": true,
-                  "description": "Use songGenreId instead. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genreId. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "songGenreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songGenreId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songGenreId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "deprecated": true,
-                  "description": "Use songGenre instead. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "songGenre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songGenre",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songGenre",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "album": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "album"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Role contributed by artist. Overridden by allRoles parameter"
-                }
-              },
-              "required": [
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "role": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Role contributed by artist. Overridden by allRoles parameter"
-                }
-              },
-              "required": [
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Artists"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Artists"
         }
       },
       {
@@ -2413,7 +2621,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "artists": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Artist"
@@ -2421,46 +2629,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "AudioLibrary.GetArtistDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific artist",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "artistId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Audio.Fields.Artist"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "artistDetails": {
-          "$ref": "#/$defs/Audio.Details.Artist"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "AudioLibrary.GetAlbums": {
     "type": "method",
@@ -2489,131 +2666,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artistId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artist",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Albums"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Albums"
         }
       },
       {
@@ -2638,7 +2691,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "albums": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Album"
@@ -2646,46 +2699,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "AudioLibrary.GetAlbumDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific album",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "albumId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Audio.Fields.Album"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "albumDetails": {
-          "$ref": "#/$defs/Audio.Details.Album"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "AudioLibrary.GetSongs": {
     "type": "method",
@@ -2714,156 +2736,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artistId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artist",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "album": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "album"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Songs"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Songs"
         }
       },
       {
@@ -2897,7 +2770,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "songs": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Song"
@@ -2905,46 +2778,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "AudioLibrary.GetSongDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific song",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "songId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Audio.Fields.Song"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "songDetails": {
-          "$ref": "#/$defs/Audio.Details.Song"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "AudioLibrary.GetRecentlyAddedAlbums": {
     "type": "method",
@@ -2977,7 +2819,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "albums": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Album"
@@ -2985,12 +2827,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetRecentlyAddedSongs": {
     "type": "method",
@@ -3030,7 +2875,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "songs": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Song"
@@ -3038,12 +2883,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetRecentlyPlayedAlbums": {
     "type": "method",
@@ -3076,7 +2924,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "albums": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Album"
@@ -3084,12 +2932,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetRecentlyPlayedSongs": {
     "type": "method",
@@ -3122,7 +2973,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "songs": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Audio.Details.Song"
@@ -3130,12 +2981,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetGenres": {
     "type": "method",
@@ -3182,7 +3036,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetSources": {
     "type": "method",
@@ -3229,7 +3084,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetRoles": {
     "type": "method",
@@ -3276,7 +3132,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetAvailableArtTypes": {
     "type": "method",
@@ -3333,7 +3190,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "AudioLibrary.GetAvailableArt": {
     "type": "method",
@@ -3413,573 +3271,8 @@
     },
     "errors": [
       "InternalError"
-    ]
-  },
-  "AudioLibrary.SetArtistDetails": {
-    "type": "method",
-    "description": "Update the given artist with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "artistId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "artist",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "instrument",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "style",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "mood",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "born",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "formed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "description",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "died",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "disbanded",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "yearsActive",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "musicBrainzArtistId",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "sortName",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "type",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "gender",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "disambiguation",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      }
     ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "AudioLibrary.SetAlbumDetails": {
-    "type": "method",
-    "description": "Update the given album with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "albumId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "artist",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "description",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "theme",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "mood",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "style",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "type",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "albumLabel",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "year",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "votes",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "musicBrainzAlbumId",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "musicBrainzReleaseGroupId",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "sortArtist",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "displayArtist",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "musicBrainzAlbumArtistId",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "isBoxSet",
-        "schema": {
-          "$ref": "#/$defs/Optional.Boolean"
-        }
-      },
-      {
-        "name": "releaseDate",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "originalDate",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "AudioLibrary.SetSongDetails": {
-    "type": "method",
-    "description": "Update the given song with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "songId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "artist",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "year",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "track",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "disc",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "duration",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "comment",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "musicBrainzTrackId",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "musicBrainzArtistId",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "playCount",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "lastPlayed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "votes",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "displayArtist",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "sortArtist",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "mood",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "discTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "releaseDate",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "originalDate",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "bpm",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "songVideoUrl",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "AudioLibrary.RefreshArtist": {
     "type": "method",
@@ -3999,7 +3292,12 @@
     "errors": [
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "AudioLibrary.RefreshAlbum": {
     "type": "method",
@@ -4019,7 +3317,12 @@
     "errors": [
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "AudioLibrary.SetInfoProvider": {
     "type": "method",
@@ -4100,7 +3403,13 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item",
+        "no-such-addon"
+      ]
+    }
   },
   "AudioLibrary.Scan": {
     "type": "method",
@@ -4125,7 +3434,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "AudioLibrary.Export": {
     "type": "method",
@@ -4172,7 +3482,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "AudioLibrary.Clean": {
     "type": "method",
@@ -4190,7 +3501,286 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
+  },
+  "VideoLibrary.GetItems": {
+    "type": "method",
+    "description": "Retrieves the items of one kind. VideoLibrary.GetMovies and the other list methods are this query with preset values",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Video.Item.Kind"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the kind named: Video.Fields.Movie for a movie, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Fields.Movie"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MovieSet"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.TVShow"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Season"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Episode"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MusicVideo"
+            }
+          ]
+        }
+      },
+      {
+        "name": "limits",
+        "schema": {
+          "$ref": "#/$defs/List.Limits"
+        }
+      },
+      {
+        "name": "sort",
+        "schema": {
+          "$ref": "#/$defs/List.Sort"
+        }
+      },
+      {
+        "name": "filter",
+        "description": "A filter of the kind named. A set or a season takes none",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Filter.Movies"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.TVShows"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.Episodes"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.MusicVideos"
+            }
+          ]
+        }
+      },
+      {
+        "name": "tvShowId",
+        "description": "The show whose seasons or episodes are listed",
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "season",
+        "description": "The season whose episodes are listed. Requires tvShowId",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": -1
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/$defs/List.LimitsReturned"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Video.Details.Movie"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.MovieSet"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.TVShow"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.Season"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.Episode"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.MusicVideo"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "limits",
+        "items"
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ],
+    "reasons": {}
+  },
+  "VideoLibrary.GetItemProperties": {
+    "type": "method",
+    "description": "Retrieves the values of the given properties of a library item",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "item",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Video.Item"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the item's kind: Video.Fields.Movie for a movie, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Fields.Movie"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MovieSet"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.TVShow"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Season"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Episode"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MusicVideo"
+            }
+          ]
+        }
+      }
+    ],
+    "returns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Video.Details.Movie"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.MovieSet"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.TVShow"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.Season"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.Episode"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.MusicVideo"
+        }
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
+  },
+  "VideoLibrary.SetItemProperties": {
+    "type": "method",
+    "description": "Changes the properties named, and only those, and answers with the values now in force of those it can read back",
+    "transport": "Response",
+    "permission": "UpdateData",
+    "params": [
+      {
+        "name": "item",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Video.Item"
+        }
+      },
+      {
+        "name": "properties",
+        "required": true,
+        "description": "Properties of the item's kind: Video.Details.Movie.Set for a movie, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Details.Movie.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.MovieSet.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.TVShow.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.Season.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.Episode.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.MusicVideo.Set"
+            }
+          ]
+        }
+      }
+    ],
+    "returns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Video.Details.Movie"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.MovieSet"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.TVShow"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.Season"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.Episode"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.MusicVideo"
+        }
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.GetMovies": {
     "type": "method",
@@ -4219,139 +3809,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "country": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "country"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "setId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "setId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "set": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "set"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Movies"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.Movies"
         }
       }
     ],
@@ -4361,7 +3819,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "movies": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.Movie"
@@ -4369,46 +3827,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetMovieDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific movie",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "movieId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.Movie"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "movieDetails": {
-          "$ref": "#/$defs/Video.Details.Movie"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetMovieSets": {
     "type": "method",
@@ -4441,7 +3868,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "sets": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.MovieSet"
@@ -4449,62 +3876,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetMovieSetDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific movie set",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "setId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.MovieSet"
-        }
-      },
-      {
-        "name": "movies",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "properties": {
-              "$ref": "#/$defs/Video.Fields.Movie"
-            },
-            "limits": {
-              "$ref": "#/$defs/List.Limits"
-            },
-            "sort": {
-              "$ref": "#/$defs/List.Sort"
-            }
-          }
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "setDetails": {
-          "$ref": "#/$defs/Video.Details.MovieSet.Extended"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetTVShows": {
     "type": "method",
@@ -4533,88 +3913,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.TVShows"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.TVShows"
         }
       }
     ],
@@ -4624,7 +3923,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "tvShows": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.TVShow"
@@ -4632,46 +3931,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetTVShowDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific tv show",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "tvShowId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.TVShow"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "tvShowDetails": {
-          "$ref": "#/$defs/Video.Details.TVShow"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetSeasons": {
     "type": "method",
@@ -4710,7 +3978,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "seasons": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.Season"
@@ -4718,45 +3986,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetSeasonDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific tv show season",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "seasonId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.Season"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "seasonDetails": {
-          "$ref": "#/$defs/Video.Details.Season"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetEpisodes": {
     "type": "method",
@@ -4799,78 +4037,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Episodes"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.Episodes"
         }
       }
     ],
@@ -4880,7 +4047,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "episodes": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.Episode"
@@ -4888,46 +4055,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetEpisodeDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific tv show episode",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "episodeId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.Episode"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "episodeDetails": {
-          "$ref": "#/$defs/Video.Details.Episode"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetMusicVideos": {
     "type": "method",
@@ -4956,101 +4092,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.MusicVideos"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.MusicVideos"
         }
       }
     ],
@@ -5060,7 +4102,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "musicVideos": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.MusicVideo"
@@ -5068,46 +4110,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
-  },
-  "VideoLibrary.GetMusicVideoDetails": {
-    "type": "method",
-    "description": "Retrieve details about a specific music video",
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "musicVideoId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "properties",
-        "schema": {
-          "$ref": "#/$defs/Video.Fields.MusicVideo"
-        }
-      }
     ],
-    "returns": {
-      "type": "object",
-      "properties": {
-        "musicVideoDetails": {
-          "$ref": "#/$defs/Video.Details.MusicVideo"
-        }
-      }
-    },
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.GetRecentlyAddedMovies": {
     "type": "method",
@@ -5140,7 +4151,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "movies": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.Movie"
@@ -5148,12 +4159,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetRecentlyAddedEpisodes": {
     "type": "method",
@@ -5186,7 +4200,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "episodes": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.Episode"
@@ -5194,12 +4208,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetRecentlyAddedMusicVideos": {
     "type": "method",
@@ -5232,7 +4249,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "musicVideos": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.MusicVideo"
@@ -5240,12 +4257,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetInProgressTVShows": {
     "type": "method",
@@ -5278,7 +4298,7 @@
         "limits": {
           "$ref": "#/$defs/List.LimitsReturned"
         },
-        "tvShows": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Video.Details.TVShow"
@@ -5286,12 +4306,15 @@
         }
       },
       "required": [
-        "limits"
+        "limits",
+        "items"
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetGenres": {
     "type": "method",
@@ -5350,7 +4373,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetTags": {
     "type": "method",
@@ -5409,7 +4433,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetAvailableArtTypes": {
     "type": "method",
@@ -5514,7 +4539,8 @@
     },
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.GetAvailableArt": {
     "type": "method",
@@ -5642,1023 +4668,8 @@
     },
     "errors": [
       "InternalError"
-    ]
-  },
-  "VideoLibrary.SetMovieDetails": {
-    "type": "method",
-    "description": "Update the given movie with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "movieId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "playCount",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "runtime",
-        "description": "Runtime in seconds",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "director",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "studio",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "year",
-        "description": "linked with premiered. Overridden by premiered parameter",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "plot",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "mpaa",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "imdbNumber",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "votes",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "lastPlayed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "originalTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "trailer",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "tagline",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "plotOutline",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "writer",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "country",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "top250",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "sortTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "set",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "showLink",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "thumbnail",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "fanart",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "tag",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "resume",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Video.Resume"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "ratings",
-        "schema": {
-          "$ref": "#/$defs/Video.Ratings.Set"
-        }
-      },
-      {
-        "name": "dateAdded",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "premiered",
-        "description": "linked with year. Overrides year",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "uniqueId",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.UniqueID.Set"
-            }
-          ],
-          "default": null
-        }
-      }
     ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "VideoLibrary.SetMovieSetDetails": {
-    "type": "method",
-    "description": "Update the given movie set with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "setId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "plot",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "VideoLibrary.SetTVShowDetails": {
-    "type": "method",
-    "description": "Update the given tvshow with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "tvShowId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "playCount",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "studio",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "plot",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "mpaa",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "imdbNumber",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "premiered",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "votes",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "lastPlayed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "originalTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "trailer",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "sortTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "episodeGuide",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "thumbnail",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "fanart",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "tag",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "ratings",
-        "schema": {
-          "$ref": "#/$defs/Video.Ratings.Set"
-        }
-      },
-      {
-        "name": "dateAdded",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "runtime",
-        "description": "Runtime in seconds",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "status",
-        "description": "Valid values: 'returning series', 'in production', 'planned', 'cancelled', 'ended'",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "uniqueId",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.UniqueID.Set"
-            }
-          ],
-          "default": null
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "VideoLibrary.SetSeasonDetails": {
-    "type": "method",
-    "description": "Update the given season with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "seasonId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "VideoLibrary.SetEpisodeDetails": {
-    "type": "method",
-    "description": "Update the given episode with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "episodeId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "playCount",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "runtime",
-        "description": "Runtime in seconds",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "director",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "plot",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "votes",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "lastPlayed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "writer",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "firstAired",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "productionCode",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "season",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "episode",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "originalTitle",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "thumbnail",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "fanart",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "resume",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Video.Resume"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "ratings",
-        "schema": {
-          "$ref": "#/$defs/Video.Ratings.Set"
-        }
-      },
-      {
-        "name": "dateAdded",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "uniqueId",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.UniqueID.Set"
-            }
-          ],
-          "default": null
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
-  },
-  "VideoLibrary.SetMusicVideoDetails": {
-    "type": "method",
-    "description": "Update the given music video with the given details",
-    "transport": "Response",
-    "permission": "UpdateData",
-    "params": [
-      {
-        "name": "musicVideoId",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Library.Id"
-        }
-      },
-      {
-        "name": "title",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "playCount",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "runtime",
-        "description": "Runtime in seconds",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "director",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "studio",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "year",
-        "description": "linked with premiered. Overridden by premiered parameter",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "plot",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "album",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "artist",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ]
-        }
-      },
-      {
-        "name": "genre",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "track",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "lastPlayed",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "thumbnail",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "fanart",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "tag",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Array.String"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "art",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.Artwork.Set"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "resume",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Video.Resume"
-            }
-          ],
-          "default": null
-        }
-      },
-      {
-        "name": "rating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Number"
-        }
-      },
-      {
-        "name": "userRating",
-        "schema": {
-          "$ref": "#/$defs/Optional.Integer"
-        }
-      },
-      {
-        "name": "dateAdded",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "premiered",
-        "description": "linked with year. Overrides year",
-        "schema": {
-          "$ref": "#/$defs/Optional.String"
-        }
-      },
-      {
-        "name": "uniqueId",
-        "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Media.UniqueID.Set"
-            }
-          ],
-          "default": null
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InternalError",
-      "NotFound"
-    ]
+    "reasons": {}
   },
   "VideoLibrary.Refresh": {
     "type": "method",
@@ -6777,7 +4788,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.RefreshMovie": {
     "type": "method",
@@ -6815,7 +4831,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.RefreshTVShow": {
     "type": "method",
@@ -6861,7 +4882,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.RefreshEpisode": {
     "type": "method",
@@ -6899,7 +4925,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.RefreshContentGeometry": {
     "type": "method",
@@ -6979,7 +5010,18 @@
       "FailedToExecute",
       "NotFound",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "feature-disabled"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ],
+      "Unavailable": [
+        "measure-failed"
+      ]
+    }
   },
   "VideoLibrary.RefreshMusicVideo": {
     "type": "method",
@@ -7017,7 +5059,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "VideoLibrary.RemoveMovie": {
     "type": "method",
@@ -7036,7 +5083,8 @@
     "returns": "string",
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.RemoveTVShow": {
     "type": "method",
@@ -7055,7 +5103,8 @@
     "returns": "string",
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.RemoveEpisode": {
     "type": "method",
@@ -7074,7 +5123,8 @@
     "returns": "string",
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.RemoveMusicVideo": {
     "type": "method",
@@ -7093,7 +5143,8 @@
     "returns": "string",
     "errors": [
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "VideoLibrary.Scan": {
     "type": "method",
@@ -7121,7 +5172,12 @@
     "errors": [
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-source"
+      ]
+    }
   },
   "VideoLibrary.SetSourceContent": {
     "type": "method",
@@ -7227,7 +5283,12 @@
       "InvalidParams",
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "VideoLibrary.Export": {
     "type": "method",
@@ -7279,7 +5340,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "VideoLibrary.Clean": {
     "type": "method",
@@ -7322,7 +5384,12 @@
     "errors": [
       "InternalError",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "not-in-library"
+      ]
+    }
   },
   "GUI.ActivateWindow": {
     "type": "method",
@@ -7352,7 +5419,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "GUI.ShowNotification": {
     "type": "method",
@@ -7404,7 +5472,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "GUI.GetProperties": {
     "type": "method",
@@ -7430,7 +5499,8 @@
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "GUI.SetFullscreen": {
     "type": "method",
@@ -7453,7 +5523,8 @@
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "GUI.SetStereoscopicMode": {
     "type": "method",
@@ -7487,7 +5558,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "GUI.GetStereoscopicModes": {
     "type": "method",
@@ -7507,7 +5579,8 @@
         }
       }
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "GUI.ActivateScreenSaver": {
     "type": "method",
@@ -7516,7 +5589,8 @@
     "permission": "ControlGUI",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "GUI.TakeScreenshot": {
     "type": "method",
@@ -7563,7 +5637,17 @@
       "InvalidParams",
       "FailedToExecute",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable",
+        "capture-failed"
+      ],
+      "Unavailable": [
+        "no-screenshot-folder"
+      ]
+    }
   },
   "GUI.DeleteScreenshots": {
     "type": "method",
@@ -7595,7 +5679,18 @@
       "FailedToExecute",
       "NotFound",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "delete-failed"
+      ],
+      "NotFound": [
+        "no-such-path"
+      ],
+      "Unavailable": [
+        "feature-disabled"
+      ]
+    }
   },
   "GUI.GetInfoLabels": {
     "type": "method",
@@ -7623,7 +5718,8 @@
         "type": "string"
       }
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "GUI.GetInfoBooleans": {
     "type": "method",
@@ -7651,7 +5747,8 @@
         "type": "boolean"
       }
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "GUI.SetScreenAlignment": {
     "type": "method",
@@ -7683,7 +5780,8 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "GUI.GetScreenAlignment": {
     "type": "method",
@@ -7696,7 +5794,8 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Addons.GetAddons": {
     "type": "method",
@@ -7781,7 +5880,8 @@
         "limits"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Addons.GetAddonDetails": {
     "type": "method",
@@ -7819,8 +5919,14 @@
       ]
     },
     "errors": [
-      "InvalidParams"
-    ]
+      "InvalidParams",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "Addons.SetAddonEnabled": {
     "type": "method",
@@ -7845,8 +5951,18 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams"
-    ]
+      "InvalidParams",
+      "NotFound",
+      "Unavailable"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ],
+      "Unavailable": [
+        "change-declined"
+      ]
+    }
   },
   "Addons.ExecuteAddon": {
     "type": "method",
@@ -7895,8 +6011,14 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams"
-    ]
+      "InvalidParams",
+      "NotFound"
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "PVR.GetProperties": {
     "type": "method",
@@ -7922,7 +6044,12 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetChannelGroups": {
     "type": "method",
@@ -7964,7 +6091,12 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetChannelGroupDetails": {
     "type": "method",
@@ -8005,7 +6137,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetChannels": {
     "type": "method",
@@ -8060,7 +6200,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetChannelDetails": {
     "type": "method",
@@ -8093,7 +6241,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetClients": {
     "type": "method",
@@ -8128,7 +6284,12 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetBroadcasts": {
     "type": "method",
@@ -8193,7 +6354,15 @@
       "InternalError",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetBroadcastsByChannelGroup": {
     "type": "method",
@@ -8264,7 +6433,15 @@
       "InvalidParams",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetBroadcastDetails": {
     "type": "method",
@@ -8297,7 +6474,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetBroadcastIsPlayable": {
     "type": "method",
@@ -8318,7 +6503,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetPlayableBroadcasts": {
     "type": "method",
@@ -8380,7 +6573,15 @@
       "InternalError",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetTimers": {
     "type": "method",
@@ -8427,7 +6628,12 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetTimerDetails": {
     "type": "method",
@@ -8460,7 +6666,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.AddTimer": {
     "type": "method",
@@ -8495,10 +6709,19 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused",
+        "timer-exists"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.DeleteTimer": {
     "type": "method",
@@ -8519,7 +6742,16 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.ToggleTimer": {
     "type": "method",
@@ -8549,7 +6781,16 @@
       "InvalidParams",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.GetRecordings": {
     "type": "method",
@@ -8596,7 +6837,12 @@
     },
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ]
+    }
   },
   "PVR.GetRecordingDetails": {
     "type": "method",
@@ -8629,7 +6875,15 @@
     "errors": [
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.Record": {
     "type": "method",
@@ -8665,10 +6919,21 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "InternalError",
       "FailedToExecute",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable",
+        "pvr-not-started",
+        "not-recordable",
+        "backend-refused"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
   },
   "PVR.Scan": {
     "type": "method",
@@ -8687,7 +6952,13 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "pvr-not-started",
+        "backend-refused"
+      ]
+    }
   },
   "Application.GetTextures": {
     "type": "method",
@@ -8725,7 +6996,8 @@
     "errors": [
       "InvalidParams",
       "InternalError"
-    ]
+    ],
+    "reasons": {}
   },
   "Application.RemoveTexture": {
     "type": "method",
@@ -8745,7 +7017,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Profiles.GetProfiles": {
     "type": "method",
@@ -8790,7 +7063,8 @@
         "profiles"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Profiles.GetCurrentProfile": {
     "type": "method",
@@ -8808,7 +7082,8 @@
     "returns": {
       "$ref": "#/$defs/Profiles.Details.Profile"
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Profiles.LoadProfile": {
     "type": "method",
@@ -8841,7 +7116,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "System.GetProperties": {
     "type": "method",
@@ -8866,7 +7142,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "System.EjectOpticalDrive": {
     "type": "method",
@@ -8877,7 +7154,8 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "System.Shutdown": {
     "type": "method",
@@ -8888,7 +7166,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Suspend": {
     "type": "method",
@@ -8899,7 +7182,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Hibernate": {
     "type": "method",
@@ -8910,7 +7198,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "System.Reboot": {
     "type": "method",
@@ -8921,7 +7214,12 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "not-supported"
+      ]
+    }
   },
   "Input.SendText": {
     "type": "method",
@@ -8947,7 +7245,8 @@
       }
     ],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.ExecuteAction": {
     "type": "method",
@@ -8966,7 +7265,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Input.ButtonEvent": {
     "type": "method",
@@ -9009,7 +7309,8 @@
     "returns": "string",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Input.Left": {
     "type": "method",
@@ -9018,7 +7319,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Right": {
     "type": "method",
@@ -9027,7 +7329,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Down": {
     "type": "method",
@@ -9036,7 +7339,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Up": {
     "type": "method",
@@ -9045,7 +7349,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Select": {
     "type": "method",
@@ -9054,7 +7359,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Back": {
     "type": "method",
@@ -9063,7 +7369,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.ContextMenu": {
     "type": "method",
@@ -9072,7 +7379,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Info": {
     "type": "method",
@@ -9081,7 +7389,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.Home": {
     "type": "method",
@@ -9090,7 +7399,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.ShowCodec": {
     "type": "method",
@@ -9101,7 +7411,8 @@
     "returns": "string",
     "errors": [
       "MethodNotFound"
-    ]
+    ],
+    "reasons": {}
   },
   "Input.ShowOSD": {
     "type": "method",
@@ -9110,7 +7421,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Input.ShowPlayerProcessInfo": {
     "type": "method",
@@ -9119,7 +7431,8 @@
     "permission": "Navigate",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Application.GetProperties": {
     "type": "method",
@@ -9144,7 +7457,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Application.SetLogLevel": {
     "type": "method",
@@ -9190,7 +7504,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Application.Quit": {
     "type": "method",
@@ -9199,7 +7514,8 @@
     "permission": "ControlPower",
     "params": [],
     "returns": "string",
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Favourites.GetFavourites": {
     "type": "method",
@@ -9245,7 +7561,8 @@
         "limits"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Favourites.AddFavourite": {
     "type": "method",
@@ -9298,7 +7615,8 @@
     "errors": [
       "InvalidParams",
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {}
   },
   "Settings.GetLevel": {
     "type": "method",
@@ -9316,7 +7634,8 @@
         "level"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Settings.SetLevel": {
     "type": "method",
@@ -9345,7 +7664,12 @@
     },
     "errors": [
       "AccessDenied"
-    ]
+    ],
+    "reasons": {
+      "AccessDenied": [
+        "level-locked"
+      ]
+    }
   },
   "Settings.GetSections": {
     "type": "method",
@@ -9396,7 +7720,8 @@
         "sections"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Settings.GetCategories": {
     "type": "method",
@@ -9456,7 +7781,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Settings.GetSettings": {
     "type": "method",
@@ -9519,7 +7845,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Settings.GetSettingValue": {
     "type": "method",
@@ -9550,7 +7877,12 @@
     "errors": [
       "InvalidParams",
       "NotFound"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-setting"
+      ]
+    }
   },
   "Settings.SetSettingValue": {
     "type": "method",
@@ -9587,7 +7919,16 @@
       "InvalidParams",
       "NotFound",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-setting"
+      ],
+      "Unavailable": [
+        "setting-disabled",
+        "change-declined"
+      ]
+    }
   },
   "Settings.ResetSettingValue": {
     "type": "method",
@@ -9609,7 +7950,15 @@
       "InvalidParams",
       "NotFound",
       "Unavailable"
-    ]
+    ],
+    "reasons": {
+      "NotFound": [
+        "no-such-setting"
+      ],
+      "Unavailable": [
+        "setting-disabled"
+      ]
+    }
   },
   "Settings.GetSkinSettingValue": {
     "type": "method",
@@ -9642,7 +7991,8 @@
     },
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Settings.SetSkinSettingValue": {
     "type": "method",
@@ -9672,7 +8022,8 @@
     "returns": "boolean",
     "errors": [
       "InvalidParams"
-    ]
+    ],
+    "reasons": {}
   },
   "Settings.GetSkinSettings": {
     "type": "method",
@@ -9721,7 +8072,8 @@
         "skin"
       ]
     },
-    "errors": []
+    "errors": [],
+    "reasons": {}
   },
   "Application.GetDatabaseName": {
     "type": "method",
@@ -9740,6 +8092,11 @@
     "returns": "string",
     "errors": [
       "FailedToExecute"
-    ]
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "database-not-open"
+      ]
+    }
   }
 }

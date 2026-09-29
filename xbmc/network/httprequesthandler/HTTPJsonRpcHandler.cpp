@@ -153,11 +153,6 @@ bool CHTTPJsonRpcHandler::CHTTPTransportLayer::PrepareDownload(const char *path,
   return true;
 }
 
-bool CHTTPJsonRpcHandler::CHTTPTransportLayer::Download(const char *path, CVariant &result)
-{
-  return false;
-}
-
 int CHTTPJsonRpcHandler::CHTTPTransportLayer::GetCapabilities()
 {
   return JSONRPC::Response | JSONRPC::FileDownloadRedirect;

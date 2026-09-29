@@ -8,6 +8,7 @@
 
 #include "DatabaseManager.h"
 #include "GUIInfoManager.h"
+#include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -42,6 +43,8 @@ class TestAudioLibrary : public testing::TestWithParam<bool>
 protected:
   void SetUp() override
   {
+    JSONRPC::CJSONServiceDescription::Cleanup();
+    JSONRPC::AddShippedServiceDescription();
     m_previousAnnouncements = CServiceBroker::GetAnnouncementManager();
     CServiceBroker::RegisterAnnouncementManager(
         std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
@@ -74,6 +77,7 @@ protected:
                                               m_lastScanned.c_str())));
     m_db.Close();
     CServiceBroker::RegisterAnnouncementManager(m_previousAnnouncements);
+    JSONRPC::CJSONServiceDescription::Cleanup();
   }
 
   TestGUI m_gui;
@@ -130,12 +134,13 @@ TEST_P(TestAudioLibrary, SetArtistDetailsPreservesDiscographyAndVideoLinks)
   ASSERT_TRUE(m_db.ExecuteQuery("UPDATE versiontagscan SET lastscanned = '2000-01-01 00:00:00'"));
 
   CVariant params(CVariant::VariantTypeObject);
-  params["artistId"] = m_artistId;
-  params["description"] = "Updated biography";
-  params["art"]["thumb"] = "new-thumb";
-  params["art"]["banner"] = CVariant(CVariant::VariantTypeNull);
+  params["item"]["kind"] = "artist";
+  params["item"]["id"] = m_artistId;
+  params["properties"]["description"] = "Updated biography";
+  params["properties"]["art"]["thumb"] = "new-thumb";
+  params["properties"]["art"]["banner"] = CVariant(CVariant::VariantTypeNull);
   CVariant result;
-  ASSERT_EQ(JSONRPC::ACK, JSONRPC::CAudioLibrary::SetArtistDetails(params, result));
+  ASSERT_EQ(JSONRPC::OK, JSONRPC::CAudioLibrary::SetItemProperties(params, result));
 
   EXPECT_EQ("Updated biography",
             m_db.GetSingleValue(m_db.PrepareSQL(

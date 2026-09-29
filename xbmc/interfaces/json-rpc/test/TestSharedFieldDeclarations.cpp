@@ -25,8 +25,9 @@ std::map<std::string, std::string> DeclarationsOf(const std::string& property)
 
   for (const auto& [name, type] : JSONRPC::ShippedTypes())
   {
+    // What a setter takes adds null, which leaves the value as it is
     const CVariant& properties{type["properties"]};
-    if (!properties.isMember(property))
+    if (!properties.isMember(property) || name.ends_with(".Set"))
     {
       continue;
     }

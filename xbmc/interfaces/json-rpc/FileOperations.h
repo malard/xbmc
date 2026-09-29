@@ -30,10 +30,6 @@ public:
                                         IClient* client,
                                         const CVariant& parameterObject,
                                         CVariant& result);
-  static JSONRPC_STATUS Download(ITransportLayer* transport,
-                                 IClient* client,
-                                 const CVariant& parameterObject,
-                                 CVariant& result);
 
   static bool FillFileItem(const std::shared_ptr<CFileItem>& originalItem,
                            std::shared_ptr<CFileItem>& item,

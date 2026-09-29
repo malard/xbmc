@@ -134,28 +134,25 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Files.GetFileDetails",                         CFileOperations::GetFileDetails },
   { "Files.SetFileDetails",                         CFileOperations::SetFileDetails },
   { "Files.PrepareDownload",                        CFileOperations::PrepareDownload },
-  { "Files.Download",                               CFileOperations::Download },
 
 // Music Library
   { "AudioLibrary.GetProperties",                   CAudioLibrary::GetProperties },
-  { "AudioLibrary.GetArtists",                      CAudioLibrary::GetArtists },
-  { "AudioLibrary.GetArtistDetails",                CAudioLibrary::GetArtistDetails },
-  { "AudioLibrary.GetAlbums",                       CAudioLibrary::GetAlbums },
-  { "AudioLibrary.GetAlbumDetails",                 CAudioLibrary::GetAlbumDetails },
-  { "AudioLibrary.GetSongs",                        CAudioLibrary::GetSongs },
-  { "AudioLibrary.GetSongDetails",                  CAudioLibrary::GetSongDetails },
-  { "AudioLibrary.GetRecentlyAddedAlbums",          CAudioLibrary::GetRecentlyAddedAlbums },
-  { "AudioLibrary.GetRecentlyAddedSongs",           CAudioLibrary::GetRecentlyAddedSongs },
-  { "AudioLibrary.GetRecentlyPlayedAlbums",         CAudioLibrary::GetRecentlyPlayedAlbums },
-  { "AudioLibrary.GetRecentlyPlayedSongs",          CAudioLibrary::GetRecentlyPlayedSongs },
+  { "AudioLibrary.GetItems",                        CAudioLibrary::GetItems },
+  { "AudioLibrary.GetItemProperties",               CAudioLibrary::GetItemProperties },
+  { "AudioLibrary.SetItemProperties",               CAudioLibrary::SetItemProperties },
+  { "AudioLibrary.GetArtists",                      CAudioLibrary::List<AudioKind::Artist> },
+  { "AudioLibrary.GetAlbums",                       CAudioLibrary::List<AudioKind::Album> },
+  { "AudioLibrary.GetSongs",                        CAudioLibrary::List<AudioKind::Song> },
+  { "AudioLibrary.GetRecentlyAddedAlbums",          CAudioLibrary::List<AudioKind::Album, Listing::RecentlyAdded> },
+  { "AudioLibrary.GetRecentlyAddedSongs",           CAudioLibrary::List<AudioKind::Song, Listing::RecentlyAdded> },
+  { "AudioLibrary.GetRecentlyPlayedAlbums",         CAudioLibrary::List<AudioKind::Album, Listing::RecentlyPlayed> },
+  { "AudioLibrary.GetRecentlyPlayedSongs",          CAudioLibrary::List<AudioKind::Song, Listing::RecentlyPlayed> },
+
   { "AudioLibrary.GetGenres",                       CAudioLibrary::GetGenres },
   { "AudioLibrary.GetRoles",                        CAudioLibrary::GetRoles },
   { "AudioLibrary.GetSources",                      CAudioLibrary::GetSources },
   { "AudioLibrary.GetAvailableArtTypes",            CAudioLibrary::GetAvailableArtTypes },
   { "AudioLibrary.GetAvailableArt",                 CAudioLibrary::GetAvailableArt },
-  { "AudioLibrary.SetArtistDetails",                CAudioLibrary::SetArtistDetails },
-  { "AudioLibrary.SetAlbumDetails",                 CAudioLibrary::SetAlbumDetails },
-  { "AudioLibrary.SetSongDetails",                  CAudioLibrary::SetSongDetails },
   { "AudioLibrary.RefreshArtist",                   CAudioLibrary::RefreshArtist },
   { "AudioLibrary.RefreshAlbum",                    CAudioLibrary::RefreshAlbum },
   { "AudioLibrary.SetInfoProvider",                 CAudioLibrary::SetInfoProvider },
@@ -164,32 +161,24 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "AudioLibrary.Clean",                           CAudioLibrary::Clean },
 
 // Video Library
+  { "VideoLibrary.GetItems",                        CVideoLibrary::GetItems },
+  { "VideoLibrary.GetItemProperties",               CVideoLibrary::GetItemProperties },
+  { "VideoLibrary.SetItemProperties",               CVideoLibrary::SetItemProperties },
+  { "VideoLibrary.GetMovies",                       CVideoLibrary::List<VideoKind::Movie> },
+  { "VideoLibrary.GetMovieSets",                    CVideoLibrary::List<VideoKind::Set> },
+  { "VideoLibrary.GetTVShows",                      CVideoLibrary::List<VideoKind::TVShow> },
+  { "VideoLibrary.GetSeasons",                      CVideoLibrary::List<VideoKind::Season> },
+  { "VideoLibrary.GetEpisodes",                     CVideoLibrary::List<VideoKind::Episode> },
+  { "VideoLibrary.GetMusicVideos",                  CVideoLibrary::List<VideoKind::MusicVideo> },
+  { "VideoLibrary.GetRecentlyAddedMovies",          CVideoLibrary::List<VideoKind::Movie, Listing::RecentlyAdded> },
+  { "VideoLibrary.GetRecentlyAddedEpisodes",        CVideoLibrary::List<VideoKind::Episode, Listing::RecentlyAdded> },
+  { "VideoLibrary.GetRecentlyAddedMusicVideos",     CVideoLibrary::List<VideoKind::MusicVideo, Listing::RecentlyAdded> },
+  { "VideoLibrary.GetInProgressTVShows",            CVideoLibrary::List<VideoKind::TVShow, Listing::InProgress> },
+
   { "VideoLibrary.GetGenres",                       CVideoLibrary::GetGenres },
   { "VideoLibrary.GetTags",                         CVideoLibrary::GetTags },
   { "VideoLibrary.GetAvailableArtTypes",            CVideoLibrary::GetAvailableArtTypes },
   { "VideoLibrary.GetAvailableArt",                 CVideoLibrary::GetAvailableArt },
-  { "VideoLibrary.GetMovies",                       CVideoLibrary::GetMovies },
-  { "VideoLibrary.GetMovieDetails",                 CVideoLibrary::GetMovieDetails },
-  { "VideoLibrary.GetMovieSets",                    CVideoLibrary::GetMovieSets },
-  { "VideoLibrary.GetMovieSetDetails",              CVideoLibrary::GetMovieSetDetails },
-  { "VideoLibrary.GetTVShows",                      CVideoLibrary::GetTVShows },
-  { "VideoLibrary.GetTVShowDetails",                CVideoLibrary::GetTVShowDetails },
-  { "VideoLibrary.GetSeasons",                      CVideoLibrary::GetSeasons },
-  { "VideoLibrary.GetSeasonDetails",                CVideoLibrary::GetSeasonDetails },
-  { "VideoLibrary.GetEpisodes",                     CVideoLibrary::GetEpisodes },
-  { "VideoLibrary.GetEpisodeDetails",               CVideoLibrary::GetEpisodeDetails },
-  { "VideoLibrary.GetMusicVideos",                  CVideoLibrary::GetMusicVideos },
-  { "VideoLibrary.GetMusicVideoDetails",            CVideoLibrary::GetMusicVideoDetails },
-  { "VideoLibrary.GetRecentlyAddedMovies",          CVideoLibrary::GetRecentlyAddedMovies },
-  { "VideoLibrary.GetRecentlyAddedEpisodes",        CVideoLibrary::GetRecentlyAddedEpisodes },
-  { "VideoLibrary.GetRecentlyAddedMusicVideos",     CVideoLibrary::GetRecentlyAddedMusicVideos },
-  { "VideoLibrary.GetInProgressTVShows",            CVideoLibrary::GetInProgressTVShows },
-  { "VideoLibrary.SetMovieDetails",                 CVideoLibrary::SetMovieDetails },
-  { "VideoLibrary.SetMovieSetDetails",              CVideoLibrary::SetMovieSetDetails },
-  { "VideoLibrary.SetTVShowDetails",                CVideoLibrary::SetTVShowDetails },
-  { "VideoLibrary.SetSeasonDetails",                CVideoLibrary::SetSeasonDetails },
-  { "VideoLibrary.SetEpisodeDetails",               CVideoLibrary::SetEpisodeDetails },
-  { "VideoLibrary.SetMusicVideoDetails",            CVideoLibrary::SetMusicVideoDetails },
   { "VideoLibrary.Refresh",                         CVideoLibrary::Refresh },
   { "VideoLibrary.RefreshMovie",                    CVideoLibrary::RefreshMovie },
   { "VideoLibrary.RefreshTVShow",                   CVideoLibrary::RefreshTVShow },
@@ -1314,7 +1303,53 @@ bool JsonRpcMethod::Parse(const CVariant& value)
     return false;
   }
 
-  return parseErrors(value);
+  return parseErrors(value) && parseReasons(value);
+}
+
+bool JsonRpcMethod::parseReasons(const CVariant& value)
+{
+  reasons.clear();
+  if (!value.isMember("reasons"))
+    return true;
+
+  if (!value["reasons"].isObject())
+  {
+    CLog::Log(LOGDEBUG, "JSONRPC: Method {} has a badly defined reasons map", name);
+    return false;
+  }
+
+  for (auto entry = value["reasons"].begin_map(); entry != value["reasons"].end_map(); ++entry)
+  {
+    // a reason refines an error the method declares
+    const std::string& errorName = entry->first;
+    const auto error = std::ranges::find_if(errors, [&errorName](const auto* candidate)
+                                            { return errorName == candidate->name; });
+    if (error == errors.end() || !entry->second.isArray())
+    {
+      CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares reasons for an undeclared error \"{}\"",
+                name, errorName);
+      return false;
+    }
+
+    std::vector<const JsonRpcReasonDescription*> refined;
+    for (auto reason = entry->second.begin_array(); reason != entry->second.end_array(); ++reason)
+    {
+      const std::string reasonName = reason->asString();
+      const auto description = std::ranges::find_if(
+          JSONRPC_REASON_DESCRIPTIONS, [&reasonName](const JsonRpcReasonDescription& candidate)
+          { return reasonName == candidate.name; });
+      if (description == std::end(JSONRPC_REASON_DESCRIPTIONS))
+      {
+        CLog::Log(LOGDEBUG, "JSONRPC: Method {} declares an unknown reason \"{}\"", name,
+                  reasonName);
+        return false;
+      }
+      refined.push_back(&(*description));
+    }
+    reasons.emplace_back(*error, std::move(refined));
+  }
+
+  return true;
 }
 
 bool JsonRpcMethod::parseErrors(const CVariant& value)
@@ -2040,6 +2075,15 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
     currentMethod["errors"] = CVariant(CVariant::VariantTypeArray);
     for (const auto* error : methodIterator->second.errors)
       currentMethod["errors"].append(error->name);
+
+    currentMethod["reasons"] = CVariant(CVariant::VariantTypeObject);
+    for (const auto& [error, refined] : methodIterator->second.reasons)
+    {
+      CVariant& names = currentMethod["reasons"][error->name];
+      names = CVariant(CVariant::VariantTypeArray);
+      for (const auto* reason : refined)
+        names.append(reason->name);
+    }
 
     result["methods"][methodIterator->second.name] = currentMethod;
   }
