@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON-RPC API strategy</title>
+<style>
+:root {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+
+  --serif: Constantia, Cambria, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+
+  --measure: 70ch;
+  --rail: 14.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #0D1013;
+    --surface: #151A1F;
+    --sunk:    #10151A;
+    --ink:     #E4E9ED;
+    --muted:   #8B96A2;
+    --rule:    #252D35;
+    --rule-firm:#38434E;
+    --accent:  #3FB4BE;
+    --accent-soft: #10333A;
+    --lit:     #E0B45C;
+    --lit-soft:#3A2F17;
+    --warn:    #D2854E;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0D1013;
+  --surface: #151A1F;
+  --sunk:    #10151A;
+  --ink:     #E4E9ED;
+  --muted:   #8B96A2;
+  --rule:    #252D35;
+  --rule-firm:#38434E;
+  --accent:  #3FB4BE;
+  --accent-soft: #10333A;
+  --lit:     #E0B45C;
+  --lit-soft:#3A2F17;
+  --warn:    #D2854E;
+}
+:root[data-theme="light"] {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.masthead-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2.75rem 2rem 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+}
+.eyebrow .dot { color: var(--rule-firm); }
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin: 0;
+}
+.standfirst {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0;
+}
+.factbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2.2rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+.fact { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.3rem 0; }
+.fact dt {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fact dd { margin: 0; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- summary band ---------- */
+
+.band { border-bottom: 1px solid var(--rule); background: var(--sunk); }
+.band-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.9rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.5rem 2.5rem;
+}
+.tldr h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.tldr p, .tldr ul { max-width: 46ch; }
+.tldr p { margin: 0; font-size: 0.97rem; }
+.tldr ul { margin: 0; padding-left: 1.1rem; font-size: 0.92rem; }
+.tldr li { margin-bottom: 0.3rem; }
+.tldr li:last-child { margin-bottom: 0; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 3.25rem;
+  align-items: start;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2.25rem 0;
+  border-right: 1px solid var(--rule);
+}
+.rail h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.8rem;
+  font-weight: 600;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.rail li { counter-increment: toc; }
+.rail a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 2rem;
+  font-size: 0.855rem;
+  line-height: 1.3;
+  color: var(--muted);
+  text-decoration: none;
+  position: relative;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+}
+.rail a::before {
+  content: counter(toc, decimal-leading-zero);
+  position: absolute;
+  left: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--rule-firm);
+}
+.rail a:hover { color: var(--ink); }
+.rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rail a.here { color: var(--accent); border-left-color: var(--accent); }
+.rail a.here::before { color: var(--accent); }
+
+/* ---------- content ---------- */
+
+.content { padding: 2.25rem 0 0; min-width: 0; }
+section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
+
+h2.sec {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.3rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+h2.sec .num {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  flex: none;
+}
+.sec-rule { border: 0; border-top: 1px solid var(--rule-firm); margin: 0 0 1.35rem; }
+
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 1.9rem 0 0.55rem;
+}
+
+p, ul, ol.prose { max-width: var(--measure); }
+p { margin: 0 0 0.9rem; }
+ul.prose, ol.prose { margin: 0 0 1rem; padding-left: 1.15rem; }
+ul.prose li, ol.prose li { margin-bottom: 0.35rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+code, .mono { font-family: var(--mono); font-size: 0.875em; }
+p code, li code, td code {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  padding: 0.05em 0.32em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.lead { font-size: 1.05rem; line-height: 1.55; color: var(--ink); max-width: 62ch; }
+
+/* ---------- notes ---------- */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1rem;
+  margin: 1.1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: var(--measure);
+}
+.note.caution { border-left-color: var(--warn); background: var(--lit-soft); }
+.note p { margin: 0 0 0.5rem; max-width: none; }
+.note p:last-child { margin: 0; }
+.note-label {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.note.caution .note-label { color: var(--warn); }
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 34rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--sunk);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.m, th.m { font-family: var(--mono); font-size: 0.79rem; white-space: nowrap; }
+td.w { min-width: 10rem; }
+.chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--rule-firm);
+  color: var(--muted);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chip.brk { border-color: var(--warn); color: var(--warn); }
+.chip.ok { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- code ---------- */
+
+pre {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-firm);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: 1rem 0 1.35rem;
+  tab-size: 2;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; white-space: pre; }
+.c-com { color: var(--muted); font-style: italic; }
+
+/* ---------- figures ---------- */
+
+figure {
+  margin: 1.35rem 0 1.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 1.2rem;
+  max-width: var(--measure);
+}
+figure svg { display: block; width: 100%; height: auto; }
+
+/* ---------- footer ---------- */
+
+footer { border-top: 1px solid var(--rule); background: var(--surface); padding: 2rem 2rem 3rem; }
+.footer-inner { max-width: 76rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
+.footer-inner p { max-width: 60ch; margin: 0; }
+
+/* ---------- theme toggle ---------- */
+
+.toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--rule-firm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.toggle:hover { color: var(--ink); border-color: var(--accent); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rail {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding: 1.35rem 0;
+  }
+  .rail ol { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
+  .rail a { padding-left: 1.6rem; border-left: 0; }
+}
+@media (max-width: 40rem) {
+  .masthead-inner, .band-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">
+      <span>JSON-RPC&nbsp;15</span><span class="dot">/</span>
+      <span>Strategy</span>
+    </div>
+    <h1>JSON-RPC API strategy</h1>
+    <p class="standfirst">The API grew one method at a time, wherever the code happened to live. This is the shape it is rebuilt to: every namespace names what it acts on, and every target reads, writes and announces its state the same way.</p>
+
+    <dl class="factbar">
+      <div class="fact"><dt>Status</dt><dd>agreed 2026-09-29</dd></div>
+      <div class="fact"><dt>Scope</dt><dd>the public JSON-RPC surface</dd></div>
+      <div class="fact"><dt>Compatibility</dt><dd>not kept</dd></div>
+      <div class="fact"><dt>Delivery</dt><dd>one change on the headline branch</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="band">
+  <div class="band-inner">
+
+    <div class="tldr">
+      <h2>Plainly</h2>
+      <p>Kodi's remote-control API is used by web interfaces, apps, add-ons and, increasingly, AI that writes bespoke interfaces for people. It is being reorganised so that anything written against it can guess where a thing is, what it will do, and why it failed.</p>
+    </div>
+
+    <div class="tldr">
+      <h2>Substance</h2>
+      <ul>
+        <li>A namespace is the target acted on: <code>Player</code> is whatever is seen or heard right now.</li>
+        <li>Each target has <code>GetProperties</code>, partial <code>SetProperties</code>, actions, and one <code>OnPropertiesChanged</code>.</li>
+        <li>Library items are targets too, with ids that are never reused.</li>
+        <li>Errors carry declared reasons; asynchronous completion is declared; TCP and WebSocket never block.</li>
+      </ul>
+    </div>
+
+    <div class="tldr">
+      <h2>Where to look</h2>
+      <ul>
+        <li><a href="#targets">02</a> and <a href="#shape">04</a>: the organising rules.</li>
+        <li><a href="#library">07</a>: the largest surface.</li>
+        <li><a href="#open">12</a>: what is still open.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#consumers">Consumers</a></li>
+      <li><a href="#targets">Namespaces are targets</a></li>
+      <li><a href="#player">Player</a></li>
+      <li><a href="#shape">Properties and actions</a></li>
+      <li><a href="#notifications">Notifications</a></li>
+      <li><a href="#errors">Errors</a></li>
+      <li><a href="#library">Library items</a></li>
+      <li><a href="#identity">Identity</a></li>
+      <li><a href="#names">Names</a></li>
+      <li><a href="#docs">Documentation</a></li>
+      <li><a href="#transports">Transports</a></li>
+      <li><a href="#open">Open and out of scope</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+  <section id="consumers">
+    <h2 class="sec"><span class="num">01</span>Consumers</h2>
+    <hr class="sec-rule">
+    <p class="lead">"Going forward it will be AI, but it's mainly used for web interfaces, addons and apps, there is no human consumer."</p>
+    <p>AI already drives the API for testing and development, and will build "bespoke interfaces for each user's bespoke requirements". Two roles follow: the operator, which calls the live system, and the author, which writes a client from the published description alone.</p>
+    <p>Existing clients (Kore, Yatse, Chorus, Home Assistant, add-ons) "will get patched"; compatibility is not a constraint. The layer reports what the application knows and does not work things out itself (2026-09-05).</p>
+  </section>
+
+  <section id="targets">
+    <h2 class="sec"><span class="num">02</span>Namespaces are targets</h2>
+    <hr class="sec-rule">
+    <p class="lead">"A target: <code>GUI.X</code> does something on the GUI, <code>Application.Quit</code> does something to the internals, <code>Player.Play</code> does something I can see or hear."</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Namespace</th><th>Target</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><td class="m">JSONRPC</td><td>the API itself</td><td>none</td></tr>
+        <tr><td class="m">Application</td><td>Kodi's internals: identity, language, log level, quit</td><td>loses volume, mute, <code>contentrect</code>; gains <code>Textures</code> and <code>Database</code></td></tr>
+        <tr><td class="m">System</td><td>the machine: power and what it is able to do</td><td>none</td></tr>
+        <tr><td class="m">GUI</td><td>the interface</td><td>none</td></tr>
+        <tr><td class="m">Input</td><td>user input</td><td>stays first class</td></tr>
+        <tr><td class="m">Player</td><td>what is seen and heard now</td><td>gains volume, mute; loses repeat, shuffle</td></tr>
+        <tr><td class="m">Playlist</td><td>the queue</td><td>sole owner of repeat and shuffle</td></tr>
+        <tr><td class="m">VideoLibrary, AudioLibrary, PVR</td><td>the libraries and their items</td><td>see <a href="#library">07</a></td></tr>
+        <tr><td class="m">Files, Addons, Settings, Profiles, Favourites</td><td>as named</td><td>none</td></tr>
+        <tr><td class="m">XBMC</td><td>none</td><td>removed</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="player">
+    <h2 class="sec"><span class="num">03</span>Player</h2>
+    <hr class="sec-rule">
+    <p class="lead">"A general space for anything you are actively seeing or hearing right now, in the abstract."</p>
+    <ul class="prose">
+      <li>Volume, mute, audio delay and view mode belong here and work with nothing playing.</li>
+      <li>A call may name a target playlist to disambiguate, for a slideshow running over music. "If you don't need to state it, don't force it": the target is optional, and methods where it means nothing do not take it.</li>
+      <li>With no target named, verbs act on everything playing and succeed if any does; queries answer for the playback, then the slideshow.</li>
+    </ul>
+  </section>
+
+  <section id="shape">
+    <h2 class="sec"><span class="num">04</span>Properties and actions</h2>
+    <hr class="sec-rule">
+    <p class="lead">Every target has <code>GetProperties</code>, <code>SetProperties</code> and action methods.</p>
+    <ul class="prose">
+      <li><code>SetProperties</code> is partial: a property not named is untouched. It answers with the values in force, so a clamped or refused change is visible.</li>
+      <li>"For complex actions they can have their own setter and getter, but they are in the minority and far more uncommon to be called anyway."</li>
+      <li>Read-only properties are marked <code>readOnly</code> in the target's property schema.</li>
+    </ul>
+    <div class="note caution"><span class="note-label">Open</span><p>Proposed, not ruled on: a property is state set to an absolute value, where setting it twice equals setting it once (volume, speed, repeat, time). Relative changes (volume up, seek +30 s) and events (play, stop, scan) are actions.</p></div>
+  </section>
+
+  <section id="notifications">
+    <h2 class="sec"><span class="num">05</span>Notifications</h2>
+    <hr class="sec-rule">
+    <p>Every state change is <code>&lt;Target&gt;.OnPropertiesChanged</code>, carrying only what changed, under the names <code>GetProperties</code> uses. Pause is <code>speed</code> becoming 0; a volume change is <code>Player.OnPropertiesChanged</code>. Only true events keep their own notification: <code>OnPlay</code>, <code>OnStop</code>, <code>OnAVStart</code>, <code>OnPlaybackFailed</code>, scan finished, <code>OnQuit</code>.</p>
+  </section>
+
+  <section id="errors">
+    <h2 class="sec"><span class="num">06</span>Errors</h2>
+    <hr class="sec-rule">
+    <p>Every error carries <code>error.data</code> with a stable machine-readable reason (<code>nothing-playing</code>, <code>not-seekable</code>) and the target concerned. Each method's schema declares its reasons beside the statuses it already declares. Today only <code>InvalidParams</code> fills <code>error.data</code>.</p>
+  </section>
+
+  <section id="library">
+    <h2 class="sec"><span class="num">07</span>Library items</h2>
+    <hr class="sec-rule">
+    <p class="lead">A library item is a target, addressed by kind and id.</p>
+    <ul class="prose">
+      <li>Its properties are read and written through <code>GetProperties</code> and <code>SetProperties</code>; changes arrive as that item's <code>OnPropertiesChanged</code>. This replaces the per-kind <code>Get*Details</code> and <code>Set*Details</code> families and <code>VideoLibrary.OnUpdate</code>.</li>
+      <li>Each library has one query taking the kind, filter, sort, limits and properties. "Keep the original ones as wrappers with preset values": <code>GetMovies</code>, <code>GetRecentlyAddedMovies</code> and the rest stay, each a preset over the query.</li>
+    </ul>
+  </section>
+
+  <section id="identity">
+    <h2 class="sec"><span class="num">08</span>Identity</h2>
+    <hr class="sec-rule">
+    <p>"We should change to autoincrement and promise." Library tables move to SQLite <code>AUTOINCREMENT</code>, and the API promises an item id is never reused.</p>
+    <p>Today SQLite reuses <code>max(rowid)+1</code>, so a stored id can later resolve to a different item with no error. Nobody chose this: the schema predates the 2009 import, and the MySQL backend already appends <code>auto_increment</code>.</p>
+  </section>
+
+  <section id="names">
+    <h2 class="sec"><span class="num">09</span>Names</h2>
+    <hr class="sec-rule">
+    <p>camelCase throughout: every property, parameter and enum name. Today 651 names run lowercase together (<code>musicbrainzalbumartistid</code>), with camelCase, snake_case and PascalCase outliers.</p>
+  </section>
+
+  <section id="docs">
+    <h2 class="sec"><span class="num">10</span>Documentation</h2>
+    <hr class="sec-rule">
+    <ul class="prose">
+      <li>The schema is the source. It generates the OpenRPC and AsyncAPI documents, which api.kodi.tv publishes; that pipeline exists.</li>
+      <li>No tests check prose.</li>
+      <li>A method that completes later declares, as structured data, the notifications that complete it: <code>Player.Open</code> completes with <code>OnAVStart</code> or <code>OnPlaybackFailed</code>.</li>
+    </ul>
+  </section>
+
+  <section id="transports">
+    <h2 class="sec"><span class="num">11</span>Transports</h2>
+    <hr class="sec-rule">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Transport</th><th>Standing</th><th>Today</th></tr></thead>
+      <tbody>
+        <tr><td class="m">TCP 9090</td><td>first class</td><td>one thread runs requests inline; a dialog-raising call blocks the connection</td></tr>
+        <tr><td class="m">WebSocket</td><td>first class</td><td>as TCP; over 64 KB it disconnects instead of erroring</td></tr>
+        <tr><td class="m">In-process</td><td>kept</td><td>Python and Android callers</td></tr>
+        <tr><td class="m">HTTP POST</td><td>deprecated</td><td>thread per connection, 64 KB, no notifications</td></tr>
+      </tbody>
+    </table></div>
+    <p>"WebSocket/TCP should never be blocked."</p>
+    <div class="note caution"><span class="note-label">Open</span><p>Consequences drawn, not yet ruled on: responses on one connection may arrive out of order and are matched by <code>id</code>, as JSON-RPC 2.0 allows; a call that raises a dialog returns at once and completes through a declared notification.</p></div>
+  </section>
+
+  <section id="open">
+    <h2 class="sec"><span class="num">12</span>Open and out of scope</h2>
+    <hr class="sec-rule">
+    <ul class="prose">
+      <li><strong>Delivery.</strong> "One atomic change, or as close to." The epic is flattened, then cut into reviewable pieces for master; slicing is not a design constraint.</li>
+      <li><strong>Out of scope.</strong> Reorganising the application code behind the API, deferred to a later discussion. Typed parameters: not a goal, and no C++ is generated from the schema.</li>
+      <li><strong>Open.</strong> The property and action line (<a href="#shape">04</a>) and the transport consequences (<a href="#transports">11</a>).</li>
+    </ul>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p>Not a Team Kodi publication.</p>
+  </div>
+</footer>
+
+<button class="toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme">Theme</button>
+
+<script>
+(function () {
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var root = document.documentElement;
+    var current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var sections = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 120) { best = i; }
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () { mark(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  mark();
+})();
+</script>
+
+</body>
+</html>
