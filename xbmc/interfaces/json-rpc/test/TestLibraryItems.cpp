@@ -19,8 +19,12 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
 
+#include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -225,6 +229,36 @@ public:
   int m_albumId{-1};
   int m_pathId{-1};
   int m_songId{-1};
+};
+
+//! Keeps each library update that says which properties changed
+class CUpdateListener : public ANNOUNCEMENT::IAnnouncer
+{
+public:
+  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
+                const std::string& sender,
+                const std::string& message,
+                const CVariant& data) override
+  {
+    if (message != "OnUpdate" || !data.isMember("properties"))
+      return;
+
+    std::unique_lock lock(m_lock);
+    m_updates.push_back(data);
+    m_arrived.notify_all();
+  }
+
+  CVariant NextUpdate()
+  {
+    std::unique_lock lock(m_lock);
+    m_arrived.wait_for(lock, std::chrono::seconds(5), [this] { return !m_updates.empty(); });
+    return m_updates.empty() ? CVariant{} : m_updates.front();
+  }
+
+private:
+  std::mutex m_lock;
+  std::condition_variable m_arrived;
+  std::vector<CVariant> m_updates;
 };
 } // unnamed namespace
 
@@ -439,4 +473,28 @@ TEST_F(TestLibraryItemsInDatabase, AMusicItemIsSetAndReadBack)
                            R"(}, "properties": ["sortName"]})",
                        result));
   EXPECT_EQ("JSON-RPC test artist", result["artist"].asString());
+}
+
+TEST_F(TestLibraryItemsInDatabase, SettingAnnouncesTheItemAndWhatChanged)
+{
+  CUpdateListener listener;
+  const std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> announcements{
+      CServiceBroker::GetAnnouncementManager()};
+  announcements->AddAnnouncer(&listener, ANNOUNCEMENT::VideoLibrary);
+  announcements->Start();
+
+  CVariant result;
+  const JSONRPC_STATUS status{Invoke("VideoLibrary.SetItemProperties",
+                                     R"({"item": {"kind": "movie", "id": )" +
+                                         std::to_string(m_movieId) +
+                                         R"(}, "properties": {"plot": "Announced"}})",
+                                     result)};
+  const CVariant update{listener.NextUpdate()};
+  announcements->RemoveAnnouncer(&listener);
+
+  ASSERT_EQ(OK, status);
+  EXPECT_EQ("movie", update["type"].asString());
+  EXPECT_EQ(m_movieId, update["id"].asInteger());
+  EXPECT_EQ("Announced", update["properties"]["plot"].asString());
+  EXPECT_EQ(1u, update["properties"].size());
 }

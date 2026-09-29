@@ -10,6 +10,7 @@
 
 #include "JSONRPC.h"
 #include "JSONUtils.h"
+#include "interfaces/IAnnouncer.h"
 
 #include <memory>
 #include <optional>
@@ -155,6 +156,13 @@ protected:
 
   //! The members of \p values given a value that a client can read back through \p fieldsType
   static CVariant ReadableNames(const CVariant& values, const char* fieldsType);
+
+  //! Announces the \p names of the item of \p kind with \p id changed, to the values in \p item
+  static void AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
+                             const std::string& kind,
+                             int id,
+                             const CVariant& names,
+                             const CVariant& item);
 
 private:
   static void Sort(CFileItemList& items, const CVariant& parameterObject);

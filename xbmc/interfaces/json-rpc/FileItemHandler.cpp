@@ -20,6 +20,7 @@
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_epg.h" // EPG_TAG_INVALID_UID
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
+#include "interfaces/AnnouncementManager.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
@@ -696,6 +697,27 @@ CVariant CFileItemHandler::ReadableNames(const CVariant& values, const char* fie
       names.push_back(value->first);
   }
   return names;
+}
+
+void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
+                                      const std::string& kind,
+                                      int id,
+                                      const CVariant& names,
+                                      const CVariant& item)
+{
+  if (names.empty())
+    return;
+
+  CVariant data{CVariant::VariantTypeObject};
+  data["type"] = kind;
+  data["id"] = id;
+  data["properties"] = CVariant{CVariant::VariantTypeObject};
+  for (auto name = names.begin_array(); name != names.end_array(); ++name)
+  {
+    if (item.isMember(name->asString()))
+      data["properties"][name->asString()] = item[name->asString()];
+  }
+  CServiceBroker::GetAnnouncementManager()->Announce(library, "OnUpdate", data);
 }
 
 void CFileItemHandler::Sort(CFileItemList& items, const CVariant& parameterObject)

@@ -67,8 +67,8 @@
         "Playlist.OnPropertiesChanged": {
           "$ref": "#/components/messages/Playlist.OnPropertiesChanged"
         },
-        "AudioLibrary.OnUpdate": {
-          "$ref": "#/components/messages/AudioLibrary.OnUpdate"
+        "AudioLibrary.OnItemPropertiesChanged": {
+          "$ref": "#/components/messages/AudioLibrary.OnItemPropertiesChanged"
         },
         "AudioLibrary.OnRemove": {
           "$ref": "#/components/messages/AudioLibrary.OnRemove"
@@ -88,8 +88,8 @@
         "AudioLibrary.OnExport": {
           "$ref": "#/components/messages/AudioLibrary.OnExport"
         },
-        "VideoLibrary.OnUpdate": {
-          "$ref": "#/components/messages/VideoLibrary.OnUpdate"
+        "VideoLibrary.OnItemPropertiesChanged": {
+          "$ref": "#/components/messages/VideoLibrary.OnItemPropertiesChanged"
         },
         "VideoLibrary.OnExport": {
           "$ref": "#/components/messages/VideoLibrary.OnExport"
@@ -282,14 +282,14 @@
         }
       ]
     },
-    "AudioLibrary.OnUpdate": {
+    "AudioLibrary.OnItemPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnUpdate"
+          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnItemPropertiesChanged"
         }
       ]
     },
@@ -359,14 +359,14 @@
         }
       ]
     },
-    "VideoLibrary.OnUpdate": {
+    "VideoLibrary.OnItemPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnUpdate"
+          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemPropertiesChanged"
         }
       ]
     },
@@ -1112,9 +1112,9 @@
           ]
         }
       },
-      "AudioLibrary.OnUpdate": {
-        "name": "AudioLibrary.OnUpdate",
-        "summary": "An audio item has been updated.",
+      "AudioLibrary.OnItemPropertiesChanged": {
+        "name": "AudioLibrary.OnItemPropertiesChanged",
+        "summary": "A music library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
         "payload": {
           "type": "object",
           "properties": {
@@ -1122,7 +1122,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "AudioLibrary.OnUpdate"
+              "const": "AudioLibrary.OnItemPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1133,11 +1133,11 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
+                    "item": {
+                      "$ref": "#/components/schemas/Audio.Item"
                     },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Audio.Type"
+                    "properties": {
+                      "type": "object"
                     },
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
@@ -1145,12 +1145,11 @@
                     },
                     "added": {
                       "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the update is for a newly added item."
+                      "description": "True if the item was newly added."
                     }
                   },
                   "required": [
-                    "id",
-                    "type"
+                    "item"
                   ]
                 }
               },
@@ -1410,9 +1409,9 @@
           ]
         }
       },
-      "VideoLibrary.OnUpdate": {
-        "name": "VideoLibrary.OnUpdate",
-        "summary": "A video item has been updated.",
+      "VideoLibrary.OnItemPropertiesChanged": {
+        "name": "VideoLibrary.OnItemPropertiesChanged",
+        "summary": "A video library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
         "payload": {
           "type": "object",
           "properties": {
@@ -1420,7 +1419,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "VideoLibrary.OnUpdate"
+              "const": "VideoLibrary.OnItemPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1431,16 +1430,11 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
+                    "item": {
+                      "$ref": "#/components/schemas/Video.Item"
                     },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Video.Type"
-                    },
-                    "playCount": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "default": -1
+                    "properties": {
+                      "type": "object"
                     },
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
@@ -1448,12 +1442,11 @@
                     },
                     "added": {
                       "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the update is for a newly added item."
+                      "description": "True if the item was newly added."
                     }
                   },
                   "required": [
-                    "id",
-                    "type"
+                    "item"
                   ]
                 }
               },
@@ -2954,6 +2947,61 @@
           "item",
           "player"
         ]
+      },
+      "Audio.Item.Kind": {
+        "type": "string",
+        "description": "A kind of music library item, named by its media type",
+        "enum": [
+          "artist",
+          "album",
+          "song"
+        ]
+      },
+      "Audio.Item": {
+        "type": "object",
+        "description": "A music library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Audio.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Item.Kind": {
+        "type": "string",
+        "description": "A kind of video library item, named by its media type",
+        "enum": [
+          "movie",
+          "set",
+          "tvshow",
+          "season",
+          "episode",
+          "musicvideo"
+        ]
+      },
+      "Video.Item": {
+        "type": "object",
+        "description": "A video library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Video.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
       },
       "Video.ContentRect": {
         "type": "object",

@@ -66,6 +66,10 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `SetItemProperties`. The answer is the item, not wrapped; `SetItemProperties` answers with the
   values in force, not `"OK"`. A movie set no longer lists its movies: `GetItems` with a `setId`
   filter does.
+- `VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are `OnItemPropertiesChanged`, carrying the
+  item as `{"kind", "id"}` and, when known, what changed under `properties` (`playCount`, not
+  `playcount`). An update to no library item (`id` -1) is not sent. A `SetItemProperties` change
+  is announced with the values it set.
 
 ### Deprecated
 

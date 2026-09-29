@@ -436,8 +436,13 @@ JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject,
   if (status != OK)
     return status;
 
-  return ReadItem(traits->kind, id, ReadableNames(properties, traits->fields), musicdatabase,
-                  result);
+  const CVariant names{ReadableNames(properties, traits->fields)};
+  status = ReadItem(traits->kind, id, names, musicdatabase, result);
+  if (status != OK)
+    return status;
+
+  AnnounceChange(ANNOUNCEMENT::AudioLibrary, traits->name, id, names, result);
+  return OK;
 }
 
 JSONRPC_STATUS CAudioLibrary::ReadItem(

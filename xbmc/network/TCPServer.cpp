@@ -289,6 +289,8 @@ void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   }
 
   std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(flag, sender, message, data, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
+  if (str.empty())
+    return;
 
   for (const auto& connection : connections)
   {

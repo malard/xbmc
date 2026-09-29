@@ -12,6 +12,7 @@
 #include "utils/JSONVariantWriter.h"
 #include "utils/Variant.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -23,6 +24,7 @@ public:
   ~IJSONRPCAnnouncer() override = default;
 
 protected:
+  //! \return the notification, or nothing when the announcement is not one clients receive
   static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
                                            const std::string& sender,
                                            const std::string& method,
@@ -35,6 +37,8 @@ protected:
     std::string name = method;
     CVariant payload = data;
     AsPropertiesChanged(flag, name, payload);
+    if (!AsItemPropertiesChanged(flag, name, payload))
+      return {};
 
     std::string namespaceMethod = ANNOUNCEMENT::AnnouncementFlagToString(flag);
     namespaceMethod += ".";
@@ -78,6 +82,45 @@ private:
     changed["player"]["players"] = player["players"];
     method = "OnPropertiesChanged";
     data = std::move(changed);
+  }
+
+  /*!
+   \brief Sends a library update as the item's OnItemPropertiesChanged, carrying the properties
+   it names under the names GetItemProperties answers with, when it names any.
+
+   The announcement keeps its name inside Kodi, where components react to it.
+
+   \return false for an update to no library item, which is not sent
+   */
+  static bool AsItemPropertiesChanged(ANNOUNCEMENT::AnnouncementFlag flag,
+                                      std::string& method,
+                                      CVariant& data)
+  {
+    if ((flag != ANNOUNCEMENT::VideoLibrary && flag != ANNOUNCEMENT::AudioLibrary) ||
+        method != "OnUpdate")
+      return true;
+
+    const CVariant& item = data.isMember("item") ? data["item"] : data;
+    const int64_t id = item["id"].asInteger(-1);
+    if (id <= 0)
+      return false;
+
+    CVariant changed(CVariant::VariantTypeObject);
+    changed["item"]["kind"] = item["type"];
+    changed["item"]["id"] = id;
+    if (data.isMember("properties"))
+      changed["properties"] = data["properties"];
+    else if (data.isMember("playcount"))
+      changed["properties"]["playCount"] = data["playcount"];
+    for (const char* marker : {"transaction", "added"})
+    {
+      if (data.isMember(marker))
+        changed[marker] = data[marker];
+    }
+
+    method = "OnItemPropertiesChanged";
+    data = std::move(changed);
+    return true;
   }
 };
 } // namespace JSONRPC

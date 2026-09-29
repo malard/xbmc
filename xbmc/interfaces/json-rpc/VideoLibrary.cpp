@@ -345,8 +345,13 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
   if (status != OK)
     return status;
 
-  return ReadItem(traits->kind, id, ReadableNames(properties, traits->fields), videodatabase,
-                  result);
+  const CVariant names{ReadableNames(properties, traits->fields)};
+  status = ReadItem(traits->kind, id, names, videodatabase, result);
+  if (status != OK)
+    return status;
+
+  AnnounceChange(ANNOUNCEMENT::VideoLibrary, traits->name, id, names, result);
+  return OK;
 }
 
 JSONRPC_STATUS CVideoLibrary::ReadItem(

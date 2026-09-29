@@ -760,6 +760,29 @@ ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
 
 **What to do.** Replace each call as above. Read the answer as the item.
 
+## 19. A library item's changes arrive as `OnItemPropertiesChanged`
+
+`VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are
+`VideoLibrary.OnItemPropertiesChanged` and
+`AudioLibrary.OnItemPropertiesChanged`. The item is addressed as
+`SetItemProperties` addresses it, and what changed is under `properties`,
+using the names `GetItemProperties` answers with.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",                "params": {"data": {"item": {"id": 12, "type": "episode"}, "playcount": 1}}}
++ {"method": "VideoLibrary.OnItemPropertiesChanged", "params": {"data": {"item": {"kind": "episode", "id": 12}, "properties": {"playCount": 1}}}}
+```
+
+`properties` is absent when Kodi does not say what changed, as after a scan
+or a refresh; read the item again then. `transaction` and `added` are
+carried as before. An update to a file that is not a library item used to
+arrive with `id` -1; it is no longer sent. A change made with
+`SetItemProperties` is announced to every client, with the values it set.
+
+**What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
+into what you hold for the item, or read it with `GetItemProperties` when
+there is none.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
