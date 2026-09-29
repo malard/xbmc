@@ -182,6 +182,8 @@ Properties and types:
 
 ### Fixed
 
+- `Player.Open` with a `channelId` while PVR is off no longer crashes Kodi. Every PVR item it
+  opens answers `FailedToExecute` (`pvr-not-started`) until PVR has started.
 - A `Player` method called without `playlist` acts on everything playing. The validator had filled
   the omitted parameter with `video`, so a call naming nothing failed while only audio played.
 - Announcements are not held up by a busy TCP server, and each connection's requests run on its
