@@ -74,11 +74,6 @@ bool CVideoDatabase::SetContentGeometry(int idFile, const ContentGeometryRecord&
   return false;
 }
 
-int CVideoDatabase::GetPlayedFileId(const CFileItem& item)
-{
-  return GetFileId(item);
-}
-
 ContentGeometryLookup CVideoDatabase::GetContentGeometry(int idFile, const FileIdentity& identity)
 {
   std::optional<ContentGeometryRecord> stored{GetStoredContentGeometry(idFile)};

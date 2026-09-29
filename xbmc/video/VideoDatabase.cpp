@@ -2231,10 +2231,8 @@ CVideoDatabase::GetResult CVideoDatabase::TryGetSeasonInfo(int idSeason,
 
       CFileItemList seasons;
       if (!GetSeasonsNav(StringUtils::Format("videodb://tvshows/titles/{}/", idShow), seasons, -1,
-                         -1, -1, -1, idShow, false))
-        return GetResult::Error;
-
-      if (seasons.Size() <= 0)
+                         -1, -1, -1, idShow, false) ||
+          seasons.Size() <= 0)
         return GetResult::Error;
 
       for (int index = 0; index < seasons.Size(); index++)

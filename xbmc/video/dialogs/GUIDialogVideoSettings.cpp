@@ -70,11 +70,7 @@ using namespace KODI::UTILS;
 
 std::shared_ptr<CSetting> CalibrationSetting()
 {
-  const auto settingsComponent = CServiceBroker::GetSettingsComponent();
-  if (!settingsComponent || !settingsComponent->GetSettings())
-    return nullptr;
-
-  return settingsComponent->GetSettings()->GetSetting(
+  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
       CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
 }
 
@@ -497,9 +493,7 @@ void CGUIDialogVideoSettings::InitializeSettings()
   // general settings
   AddButton(groupSaveAsDefault, SETTING_VIDEO_MAKE_DEFAULT, 12376, SettingLevel::Basic);
 
-  const std::shared_ptr<CSetting> calibration = CalibrationSetting();
-  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214,
-            calibration ? calibration->GetLevel() : SettingLevel::Expert);
+  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, CalibrationSetting()->GetLevel());
 }
 
 void CGUIDialogVideoSettings::AddVideoStreams(const std::shared_ptr<CSettingGroup>& group,

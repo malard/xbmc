@@ -119,7 +119,6 @@ public:
   //! A default geometry when nothing was measured.
   KODI::VIDEO::GEOMETRY::EffectiveGeometry ResolveContentGeometry() const;
 
-  void SerializeContentGeometry(CVariant& streamdetails) const;
   bool IsEmpty() const;
 
   const std::string& GetPath() const
@@ -463,6 +462,8 @@ protected:
   bool SaveTvShowSeasons(TiXmlNode* node) const;
 
 private:
+  void SerializeContentGeometry(CVariant& streamdetails) const;
+
   /* \brief Parse our native XML format for video info.
    See Load for a description of the available tag types.
 

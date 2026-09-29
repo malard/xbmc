@@ -354,6 +354,13 @@ public:
                            int idFile = -1);
 
   int GetPathId(const std::string& strPath);
+
+  /*! \brief Get the id of this fileitem
+   Works for both videodb:// items and normal fileitems
+   \param item CFileItem to grab the fileid of
+   \return id of the file, -1 if it is not in the db.
+   */
+  int GetFileId(const CFileItem& item);
   /*! \brief Get the id of a path, also accepting the zip:// or archive:// equivalent of an
    *         archive path (AddPath() stores these interchangeably).
    */
@@ -621,10 +628,6 @@ public:
   //! \brief What is stored for a file, including a record that found nothing, without checking
   //! it still describes the file. Anything acting on the rectangle uses GetContentGeometry().
   std::optional<KODI::VIDEO::GEOMETRY::ContentGeometryRecord> GetStoredContentGeometry(int idFile);
-
-  //! \brief The file row an item plays, resolving versions and extras as GetVideoSettings()
-  //! does. Negative when the item is not in the library.
-  int GetPlayedFileId(const CFileItem& item);
 
   //! \brief Every file in the library with whatever content geometry is stored for it,
   //! unfiltered.
@@ -1200,12 +1203,6 @@ protected:
 
   int GetMusicVideoId(const std::string& strFilenameAndPath);
 
-  /*! \brief Get the id of this fileitem
-   Works for both videodb:// items and normal fileitems
-   \param item CFileItem to grab the fileid of
-   \return id of the file, -1 if it is not in the db.
-   */
-  int GetFileId(const CFileItem &item);
   int GetFileId(const CVideoInfoTag& details);
 
   /*! \brief Get the id of the file of this item and store it in the item

@@ -97,7 +97,7 @@ std::optional<StorageTarget> ResolveStorageTarget(const CFileItem& item, CVideoD
     return std::nullopt;
 
   // An item outside the library has nowhere to store a measurement.
-  const int idFile{db.GetPlayedFileId(item)};
+  const int idFile{db.GetFileId(item)};
   if (idFile < 0)
     return std::nullopt;
 
