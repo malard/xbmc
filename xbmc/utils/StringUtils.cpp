@@ -1030,7 +1030,6 @@ static const uint16_t* const planemap[256] = {
 };
 // clang-format on
 
-
 namespace
 {
 // True when the accent-folding fallback is in use to mirror the utf8_general_ci ordering
@@ -1053,7 +1052,7 @@ static bool CollationMirrorsMySql()
 static wchar_t GetCollationWeight(const wchar_t& r)
 {
   // Nordic languages order some accented vowels as distinct letters at the end of their
-  // alphabet rather than as accented variants of a/o (see StringUtils::GetNordicCollationWeight).
+  // alphabet rather than as accented variants of a/o (see I18N::NordicCollationWeight).
   // Apply that override, when applicable, ahead of the generic accent-folding table below.
   //
   //! @todo: This is a temporary workaround for the lack of language-specific collation facets

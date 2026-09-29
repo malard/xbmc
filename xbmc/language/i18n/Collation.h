@@ -20,8 +20,6 @@ namespace KODI::LANGUAGE::I18N
  * \brief The collation weight a language gives a letter its alphabet places after z, where the
  *        generic accent folding would treat it as a variant of a or o.
  *
- * \todo Remove with the accent-folding fallback, once every platform collates by locale.
- *
  * \param[in] language The language whose alphabet orders the comparison.
  * \param[in] codepoint The upper or lower case codepoint being weighted.
  * \return A weight that sorts after 'z', or 0 where the language gives the codepoint no order
