@@ -783,6 +783,16 @@ arrive with `id` -1; it is no longer sent. A change made with
 into what you hold for the item, or read it with `GetItemProperties` when
 there is none.
 
+## 20. `GetInProgressTVShows` sorts and limits as asked
+
+`VideoLibrary.GetInProgressTVShows` took `sort` and `limits` but answered
+every in-progress show in title order, with only the returned `limits`
+reflecting what was asked. It now sorts and limits like every other list
+method.
+
+**What to do.** Nothing, unless you sent `sort` or `limits` and relied on
+their being ignored: drop them to get every in-progress show, as before.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its

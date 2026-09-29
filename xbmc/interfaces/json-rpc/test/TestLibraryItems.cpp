@@ -143,6 +143,8 @@ public:
     m_music.Close();
 
     m_videos.DeleteTvShow(m_showId);
+    for (const int idShow : m_extraShows)
+      m_videos.DeleteTvShow(idShow);
     m_videos.DeleteMovie(m_movieId);
     m_videos.DeleteMovie(m_otherMovieId);
     m_videos.DeleteSet(m_setId);
@@ -173,10 +175,10 @@ public:
     return m_videos.SetDetailsForMovie(tag, KODI::ART::Artwork{});
   }
 
-  int AddShow(const std::string& showPath)
+  int AddShow(const std::string& showPath, const std::string& title = "JSON-RPC test show")
   {
     CVideoInfoTag tag;
-    tag.m_strTitle = "JSON-RPC test show";
+    tag.m_strTitle = title;
     tag.m_strPath = showPath;
     return m_videos.SetDetailsForTvShow({showPath}, tag, KODI::ART::Artwork{},
                                         KODI::ART::SeasonsArtwork{});
@@ -188,6 +190,21 @@ public:
     tag.m_iSeason = 1;
     tag.m_iEpisode = episode;
     return m_videos.SetDetailsForEpisode(tag, KODI::ART::Artwork{}, idShow);
+  }
+
+  //! A show of two episodes, one of them watched, removed with the fixture
+  int AddShowInProgress(const std::string& title)
+  {
+    const std::string path{"/jsonrpc-test/library/" + title + "/"};
+    const int idShow{AddShow(path, title)};
+    m_extraShows.push_back(idShow);
+    const int idEpisode{AddEpisode(idShow, path + "S01E01.mkv", 1)};
+    AddEpisode(idShow, path + "S01E02.mkv", 2);
+
+    CVideoInfoTag watched;
+    m_videos.GetEpisodeInfo("", watched, idEpisode);
+    m_videos.SetPlayCount(CFileItem(watched), 1);
+    return idShow;
   }
 
   //! Answers \p list and GetItems for \p kind with the same parameters, and expects the same items
@@ -223,6 +240,7 @@ public:
   int m_otherMovieId{-1};
   int m_setId{-1};
   int m_showId{-1};
+  std::vector<int> m_extraShows;
   int m_seasonId{-1};
   int m_episodeId{-1};
   int m_artistId{-1};
@@ -538,4 +556,27 @@ TEST_F(TestLibraryItemsInDatabase, APlayCountSetIsAnnouncedOnce)
   const std::vector<CVariant> song{listener.UpdatesTo("song", m_songId)};
   ASSERT_EQ(1u, song.size());
   EXPECT_EQ(4, song[0]["properties"]["playCount"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)
+{
+  const int first{AddShowInProgress("AAA JSON-RPC in progress")};
+  const int last{AddShowInProgress("zzz JSON-RPC in progress")};
+
+  CVariant ascending;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetInProgressTVShows",
+                       R"({"sort": {"method": "title", "order": "ascending"}})", ascending));
+  const int total{static_cast<int>(ascending["limits"]["total"].asInteger())};
+  ASSERT_GE(total, 2);
+  EXPECT_EQ(first, ascending["tvShows"][0]["tvShowId"].asInteger());
+
+  CVariant descending;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetInProgressTVShows",
+                       R"({"sort": {"method": "title", "order": "descending"},
+                           "limits": {"start": 0, "end": 1}})",
+                       descending));
+  ASSERT_EQ(1u, descending["tvShows"].size());
+  EXPECT_EQ(last, descending["tvShows"][0]["tvShowId"].asInteger());
+  EXPECT_EQ(total, descending["limits"]["total"].asInteger());
+  EXPECT_EQ(1, descending["limits"]["end"].asInteger());
 }

@@ -70,6 +70,8 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   item as `{"kind", "id"}` and, when known, what changed under `properties` (`playCount`, not
   `playcount`). An update to no library item (`id` -1) is not sent. A `SetItemProperties` change
   is announced once, with the values it set.
+- `VideoLibrary.GetInProgressTVShows` applies `sort` and `limits`; it answered every in-progress
+  show in title order whatever they said.
 
 ### Deprecated
 

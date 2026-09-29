@@ -194,13 +194,12 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
     return HandleItems(traits.id, traits.list, items, parameterObject, result, true);
   }
 
-  // Every in-progress show is answered: the caller's sort and limits only shape "limits"
   if (listing == Listing::InProgress)
   {
     if (!videodatabase.GetInProgressTvShowsNav("videodb://inprogresstvshows/", items, details))
       return InternalError;
 
-    return HandleItems(traits.id, traits.list, items, parameterObject, result, false);
+    return HandleItems(traits.id, traits.list, items, parameterObject, result, true);
   }
 
   const int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
