@@ -43,21 +43,7 @@ JSONRPC_STATUS CPVROperations::GetProperties(const CVariant& parameterObject, CV
   if (!CServiceBroker::GetPVRManager().IsStarted())
     return FailedToExecute;
 
-  CVariant properties{CVariant::VariantTypeObject};
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); ++index)
-  {
-    const std::string propertyName{parameterObject["properties"][index].asString()};
-    CVariant property;
-    const JSONRPC_STATUS ret{GetPropertyValue(propertyName, property)};
-    if (ret != OK)
-      return ret;
-
-    properties[propertyName] = property;
-  }
-
-  result = properties;
-
-  return OK;
+  return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
 JSONRPC_STATUS CPVROperations::GetChannelGroups(const CVariant& parameterObject, CVariant& result)

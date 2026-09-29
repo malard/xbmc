@@ -39,21 +39,7 @@ using namespace JSONRPC;
 JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant& parameterObject,
                                                      CVariant& result)
 {
-  CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
-  {
-    std::string propertyName = parameterObject["properties"][index].asString();
-    CVariant property;
-    JSONRPC_STATUS ret;
-    if ((ret = GetPropertyValue(propertyName, property)) != OK)
-      return ret;
-
-    properties[propertyName] = property;
-  }
-
-  result = properties;
-
-  return OK;
+  return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
 JSONRPC_STATUS CApplicationOperations::SetVolume(const CVariant& parameterObject, CVariant& result)

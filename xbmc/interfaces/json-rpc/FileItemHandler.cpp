@@ -9,6 +9,7 @@
 #include "FileItemHandler.h"
 
 #include "AudioLibrary.h"
+#include "DbUrl.h"
 #include "FileItemList.h"
 #include "FileOperations.h"
 #include "JSONServiceDescription.h"
@@ -548,6 +549,34 @@ void CFileItemHandler::HandleFileItem(const char* ID,
     else
       result[resultname] = object;
   }
+}
+
+bool CFileItemHandler::ApplyFilter(const CVariant& filter,
+                                   std::span<const FilterField> fields,
+                                   const std::string& rulesType,
+                                   CDbUrl& url)
+{
+  for (const FilterField& field : fields)
+  {
+    if (!filter.isMember(field.name))
+      continue;
+
+    if (field.number)
+      url.AddOption(field.option, static_cast<int>(filter[field.name].asInteger()));
+    else
+      url.AddOption(field.option, filter[field.name].asString());
+    return true;
+  }
+
+  if (!filter.isObject())
+    return true;
+
+  std::string xsp;
+  if (!GetXspFiltering(rulesType, filter, xsp))
+    return false;
+
+  url.AddOption("xsp", xsp);
+  return true;
 }
 
 bool CFileItemHandler::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)

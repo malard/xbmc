@@ -9,6 +9,7 @@
 #include "GUIOperations.h"
 
 #include "GUIInfoManager.h"
+#include "JSONUtils.h"
 #include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "addons/AddonManager.h"
@@ -59,21 +60,7 @@ CGUIWindowScreenAlignment* GetScreenAlignmentWindow()
 
 JSONRPC_STATUS CGUIOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
-  CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
-  {
-    std::string propertyName = parameterObject["properties"][index].asString();
-    CVariant property;
-    JSONRPC_STATUS ret;
-    if ((ret = GetPropertyValue(propertyName, property)) != OK)
-      return ret;
-
-    properties[propertyName] = property;
-  }
-
-  result = properties;
-
-  return OK;
+  return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
 JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant& parameterObject, CVariant& result)

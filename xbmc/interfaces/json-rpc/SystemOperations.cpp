@@ -8,6 +8,7 @@
 
 #include "SystemOperations.h"
 
+#include "JSONUtils.h"
 #include "ServiceBroker.h"
 #include "interfaces/builtins/Builtins.h"
 #include "messaging/ApplicationMessenger.h"
@@ -21,21 +22,9 @@ JSONRPC_STATUS CSystemOperations::GetProperties(ITransportLayer* transport,
                                                 const CVariant& parameterObject,
                                                 CVariant& result)
 {
-  CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
-  {
-    std::string propertyName = parameterObject["properties"][index].asString();
-    CVariant property;
-    JSONRPC_STATUS ret;
-    if ((ret = GetPropertyValue(client->GetPermissionFlags(), propertyName, property)) != OK)
-      return ret;
-
-    properties[propertyName] = property;
-  }
-
-  result = properties;
-
-  return OK;
+  return GetNamedProperties(
+      parameterObject, result, [client](const std::string& property, CVariant& value)
+      { return GetPropertyValue(client->GetPermissionFlags(), property, value); });
 }
 
 JSONRPC_STATUS CSystemOperations::EjectOpticalDrive(const CVariant& parameterObject,

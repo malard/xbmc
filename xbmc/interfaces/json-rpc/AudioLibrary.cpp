@@ -107,41 +107,16 @@ JSONRPC_STATUS CAudioLibrary::GetArtists(const CVariant& parameterObject, CVaria
   if (!musicUrl.FromString("musicdb://artists/"))
     return InternalError;
 
-  bool allroles = false;
-  if (parameterObject["allroles"].isBoolean())
-    allroles = parameterObject["allroles"].asBoolean();
-
-  const CVariant &filter = parameterObject["filter"];
-
-  if (allroles)
-    musicUrl.AddOption("roleid", -1000); //All roles, any negative parameter overrides implicit roleid=1 filter required for backward compatibility
-  else if (filter.isMember("roleid"))
-    musicUrl.AddOption("roleid", static_cast<int>(filter["roleid"].asInteger()));
-  else if (filter.isMember("role"))
-    musicUrl.AddOption("role", filter["role"].asString());
-  // Only one of (song) genreid/genre, albumid/album or songid/song or rules type filter is allowed by filter syntax
-  if (filter.isMember("genreid"))  //Deprecated. Use "songgenre" or "artistgenre"
-    musicUrl.AddOption("genreid", static_cast<int>(filter["genreid"].asInteger()));
-  else if (filter.isMember("genre"))
-    musicUrl.AddOption("genre", filter["genre"].asString());
-  if (filter.isMember("songgenreid"))
-    musicUrl.AddOption("genreid", static_cast<int>(filter["songgenreid"].asInteger()));
-  else if (filter.isMember("songgenre"))
-    musicUrl.AddOption("genre", filter["songgenre"].asString());
-  else if (filter.isMember("albumid"))
-    musicUrl.AddOption("albumid", static_cast<int>(filter["albumid"].asInteger()));
-  else if (filter.isMember("album"))
-    musicUrl.AddOption("album", filter["album"].asString());
-  else if (filter.isMember("songid"))
-    musicUrl.AddOption("songid", static_cast<int>(filter["songid"].asInteger()));
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("artists", filter, xsp))
-      return InvalidParams;
-
-    musicUrl.AddOption("xsp", xsp);
-  }
+  ApplyRoleFilter(parameterObject, musicUrl);
+  static constexpr FilterField filters[] = {FilterField::Number("genreid"),
+                                            FilterField::Text("genre"),
+                                            FilterField::Number("songgenreid", "genreid"),
+                                            FilterField::Text("songgenre", "genre"),
+                                            FilterField::Number("albumid"),
+                                            FilterField::Text("album"),
+                                            FilterField::Number("songid")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "artists", musicUrl))
+    return InvalidParams;
 
   bool albumArtistsOnly = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS);
   if (parameterObject["albumartistsonly"].isBoolean())
@@ -222,35 +197,12 @@ JSONRPC_STATUS CAudioLibrary::GetAlbums(const CVariant& parameterObject, CVarian
   if (parameterObject["includesingles"].asBoolean())
     musicUrl.AddOption("show_singles", true);
 
-  bool allroles = false;
-  if (parameterObject["allroles"].isBoolean())
-    allroles = parameterObject["allroles"].asBoolean();
-
-  const CVariant &filter = parameterObject["filter"];
-
-  if (allroles)
-    musicUrl.AddOption("roleid", -1000); //All roles, override implicit roleid=1 filter required for backward compatibility
-  else if (filter.isMember("roleid"))
-    musicUrl.AddOption("roleid", static_cast<int>(filter["roleid"].asInteger()));
-  else if (filter.isMember("role"))
-    musicUrl.AddOption("role", filter["role"].asString());
-  // Only one of genreid/genre, artistid/artist or rules type filter is allowed by filter syntax
-  if (filter.isMember("artistid"))
-    musicUrl.AddOption("artistid", static_cast<int>(filter["artistid"].asInteger()));
-  else if (filter.isMember("artist"))
-    musicUrl.AddOption("artist", filter["artist"].asString());
-  else if (filter.isMember("genreid"))
-    musicUrl.AddOption("genreid", static_cast<int>(filter["genreid"].asInteger()));
-  else if (filter.isMember("genre"))
-    musicUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("albums", filter, xsp))
-      return InvalidParams;
-
-    musicUrl.AddOption("xsp", xsp);
-  }
+  ApplyRoleFilter(parameterObject, musicUrl);
+  static constexpr FilterField filters[] = {
+      FilterField::Number("artistid"), FilterField::Text("artist"), FilterField::Number("genreid"),
+      FilterField::Text("genre")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "albums", musicUrl))
+    return InvalidParams;
 
   SortDescription sorting;
   ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
@@ -369,39 +321,13 @@ JSONRPC_STATUS CAudioLibrary::GetSongs(const CVariant& parameterObject, CVariant
   else if (!parameterObject["includesingles"].asBoolean())
     musicUrl.AddOption("singles", false);
 
-  bool allroles = false;
-  if (parameterObject["allroles"].isBoolean())
-    allroles = parameterObject["allroles"].asBoolean();
-
-  const CVariant &filter = parameterObject["filter"];
-
-  if (allroles)
-    musicUrl.AddOption("roleid", -1000); //All roles, override implicit roleid=1 filter required for backward compatibility
-  else if (filter.isMember("roleid"))
-    musicUrl.AddOption("roleid", static_cast<int>(filter["roleid"].asInteger()));
-  else if (filter.isMember("role"))
-    musicUrl.AddOption("role", filter["role"].asString());
-  // Only one of genreid/genre, artistid/artist, albumid/album or rules type filter is allowed by filter syntax
-  if (filter.isMember("artistid"))
-    musicUrl.AddOption("artistid", static_cast<int>(filter["artistid"].asInteger()));
-  else if (filter.isMember("artist"))
-    musicUrl.AddOption("artist", filter["artist"].asString());
-  else if (filter.isMember("genreid"))
-    musicUrl.AddOption("genreid", static_cast<int>(filter["genreid"].asInteger()));
-  else if (filter.isMember("genre"))
-    musicUrl.AddOption("genre", filter["genre"].asString());
-  else if (filter.isMember("albumid"))
-    musicUrl.AddOption("albumid", static_cast<int>(filter["albumid"].asInteger()));
-  else if (filter.isMember("album"))
-    musicUrl.AddOption("album", filter["album"].asString());
-  else if (filter.isObject())
-  {
-    std::string xsp;
-    if (!GetXspFiltering("songs", filter, xsp))
-      return InvalidParams;
-
-    musicUrl.AddOption("xsp", xsp);
-  }
+  ApplyRoleFilter(parameterObject, musicUrl);
+  static constexpr FilterField filters[] = {
+      FilterField::Number("artistid"), FilterField::Text("artist"),
+      FilterField::Number("genreid"),  FilterField::Text("genre"),
+      FilterField::Number("albumid"),  FilterField::Text("album")};
+  if (!ApplyFilter(parameterObject["filter"], filters, "songs", musicUrl))
+    return InvalidParams;
 
   SortDescription sorting;
   ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
@@ -1225,6 +1151,18 @@ void CAudioLibrary::FillItemArtistIDs(const std::vector<int>& artistids,
     artistidObj.push_back(artistid);
 
   item->SetProperty("artistid", artistidObj);
+}
+
+void CAudioLibrary::ApplyRoleFilter(const CVariant& parameterObject, CMusicDbUrl& url)
+{
+  const CVariant& filter = parameterObject["filter"];
+  // any negative role id lifts the implicit roleid=1 (artist) that clients rely on
+  if (parameterObject["allroles"].isBoolean() && parameterObject["allroles"].asBoolean())
+    url.AddOption("roleid", -1000);
+  else if (filter.isMember("roleid"))
+    url.AddOption("roleid", static_cast<int>(filter["roleid"].asInteger()));
+  else if (filter.isMember("role"))
+    url.AddOption("role", filter["role"].asString());
 }
 
 void CAudioLibrary::FillAlbumItem(const CAlbum& album,

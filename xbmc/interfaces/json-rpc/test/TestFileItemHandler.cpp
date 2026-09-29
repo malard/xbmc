@@ -11,11 +11,14 @@
 #include "ThumbLoader.h"
 #include "interfaces/json-rpc/FileItemHandler.h"
 #include "media/MediaType.h"
+#include "music/MusicDbUrl.h"
 #include "utils/Variant.h"
+#include "video/VideoDbUrl.h"
 #include "video/VideoInfoTag.h"
 
 #include <memory>
 #include <set>
+#include <span>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -47,6 +50,13 @@ public:
   }
 
   static JSONRPC_STATUS Diagnose(const CVariant& item) { return DiagnoseUnresolvedItem(item); }
+
+  static bool Filter(const CVariant& filter,
+                     std::span<const CFileItemHandler::FilterField> fields,
+                     CDbUrl& url)
+  {
+    return ApplyFilter(filter, fields, url.GetType(), url);
+  }
 
 private:
   template<typename Fields>
@@ -213,4 +223,71 @@ TEST_F(TestUnresolvedItemDiagnosis, AnItemNamingNothingResolvableIsMalformed)
   item["nosuchid"] = 1;
 
   EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item));
+}
+
+using FilterField = CFileItemHandler::FilterField;
+
+TEST(TestListFilter, TheFirstFieldTheFilterNamesSetsItsOption)
+{
+  static constexpr FilterField fields[] = {
+      FilterField::Number("genreid"),
+      FilterField::Text("genre")};
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  CVariant filter{CVariant::VariantTypeObject};
+  filter["genre"] = "Drama";
+
+  ASSERT_TRUE(CTestFileItemHandler::Filter(filter, fields, url));
+
+  CVariant genre;
+  ASSERT_TRUE(url.GetOption("genre", genre));
+  EXPECT_EQ("Drama", genre.asString());
+  EXPECT_FALSE(url.HasOption("genreid"));
+  EXPECT_FALSE(url.HasOption("xsp"));
+}
+
+TEST(TestListFilter, AFieldSetsTheOptionItIsMappedTo)
+{
+  static constexpr FilterField fields[] = {
+      FilterField::Number("songgenreid", "genreid")};
+  CMusicDbUrl url;
+  ASSERT_TRUE(url.FromString("musicdb://artists/"));
+  CVariant filter{CVariant::VariantTypeObject};
+  filter["songgenreid"] = 3;
+
+  ASSERT_TRUE(CTestFileItemHandler::Filter(filter, fields, url));
+
+  CVariant genreId;
+  ASSERT_TRUE(url.GetOption("genreid", genreId));
+  EXPECT_EQ(3, genreId.asInteger());
+}
+
+TEST(TestListFilter, AFilterNamingNoFieldIsReadAsRules)
+{
+  static constexpr FilterField fields[] = {
+      FilterField::Text("genre")};
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  CVariant filter{CVariant::VariantTypeObject};
+  filter["field"] = "title";
+  filter["operator"] = "contains";
+  filter["value"] = "Parade";
+
+  ASSERT_TRUE(CTestFileItemHandler::Filter(filter, fields, url));
+
+  EXPECT_TRUE(url.HasOption("xsp"));
+  EXPECT_FALSE(url.HasOption("genre"));
+}
+
+TEST(TestListFilter, NoFilterLeavesTheUrlAsItWas)
+{
+  static constexpr FilterField fields[] = {
+      FilterField::Text("genre")};
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  const std::string before = url.ToString();
+
+  ASSERT_TRUE(CTestFileItemHandler::Filter(CVariant{}, fields, url));
+
+  EXPECT_EQ(before, url.ToString());
 }
