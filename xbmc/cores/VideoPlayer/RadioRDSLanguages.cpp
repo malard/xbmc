@@ -47,7 +47,7 @@ LANGUAGE::CLanguageTag Language(unsigned int index)
   if (code.empty())
     return LANGUAGE::CLanguageTag::Undetermined();
 
-  return LANGUAGE::CLanguageTag::ParseStreamLanguage(std::string{code});
+  return LANGUAGE::CLanguageTag::Parse(std::string{code});
 }
 
 } // namespace KODI::RDS
