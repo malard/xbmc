@@ -756,6 +756,7 @@
                     }
                   },
                   "required": [
+                    "player",
                     "contentRect"
                   ]
                 }
