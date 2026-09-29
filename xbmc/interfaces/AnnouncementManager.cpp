@@ -38,7 +38,7 @@ void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
 
   objItem["type"] = "channel";
   objItem["title"] = channel.ChannelName();
-  objItem["channeltype"] = channel.IsRadio() ? "radio" : "tv";
+  objItem["channelType"] = channel.IsRadio() ? "radio" : "tv";
 
   objItem["id"] = channel.ChannelID();
 }
@@ -102,7 +102,7 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
         if (tag.m_iSeason >= 0)
           objItem["season"] = tag.m_iSeason;
         if (!tag.m_strShowTitle.empty())
-          objItem["showtitle"] = tag.m_strShowTitle;
+          objItem["showTitle"] = tag.m_strShowTitle;
         break;
       case MUSICVIDEOS:
         if (!tag.m_strAlbum.empty())
