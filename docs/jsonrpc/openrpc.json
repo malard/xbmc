@@ -3764,6 +3764,161 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "AudioLibrary.GetItemProperties",
+      "summary": "Retrieves the values of the given properties of a library item",
+      "tags": [
+        {
+          "name": "AudioLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Audio.Item"
+          }
+        },
+        {
+          "name": "properties",
+          "description": "Fields of the item's kind: Audio.Fields.Artist for a artist, and so on",
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Audio.Fields.Artist"
+              },
+              {
+                "$ref": "#/components/schemas/Audio.Fields.Album"
+              },
+              {
+                "$ref": "#/components/schemas/Audio.Fields.Song"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Audio.Details.Artist"
+            },
+            {
+              "$ref": "#/components/schemas/Audio.Details.Album"
+            },
+            {
+              "$ref": "#/components/schemas/Audio.Details.Song"
+            }
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "AudioLibrary.SetItemProperties",
+      "summary": "Changes the properties named, and only those, and answers with the values now in force of those it can read back",
+      "tags": [
+        {
+          "name": "AudioLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Audio.Item"
+          }
+        },
+        {
+          "name": "properties",
+          "required": true,
+          "description": "Properties of the item's kind: Audio.Details.Artist.Set for a artist, and so on",
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Audio.Details.Artist.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Audio.Details.Album.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Audio.Details.Song.Set"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Audio.Details.Artist"
+            },
+            {
+              "$ref": "#/components/schemas/Audio.Details.Album"
+            },
+            {
+              "$ref": "#/components/schemas/Audio.Details.Song"
+            }
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        }
+      ],
+      "x-kodi-permission": "UpdateData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "AudioLibrary.GetArtists",
       "summary": "Retrieve all artists. For backward compatibility by default this implicitly does not include those that only contribute other roles, however absolutely all artists can be returned using allRoles=true",
       "tags": [
@@ -3857,67 +4012,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "AudioLibrary.GetArtistDetails",
-      "summary": "Retrieve details about a specific artist",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "artistId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Audio.Fields.Artist"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "artistDetails": {
-              "$ref": "#/components/schemas/Audio.Details.Artist"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "AudioLibrary.GetAlbums",
       "summary": "Retrieve all albums from specified artist (and role) or that has songs of the specified genre",
       "tags": [
@@ -4005,67 +4099,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "AudioLibrary.GetAlbumDetails",
-      "summary": "Retrieve details about a specific album",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "albumId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Audio.Fields.Album"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "albumDetails": {
-              "$ref": "#/components/schemas/Audio.Details.Album"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -4168,67 +4201,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "AudioLibrary.GetSongDetails",
-      "summary": "Retrieve details about a specific song",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "songId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Audio.Fields.Song"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "songDetails": {
-              "$ref": "#/components/schemas/Audio.Details.Song"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -4938,662 +4910,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "AudioLibrary.SetArtistDetails",
-      "summary": "Update the given artist with the given details",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "artistId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "artist",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "instrument",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "style",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "mood",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "born",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "formed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "description",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "died",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "disbanded",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "yearsActive",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "musicBrainzArtistId",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "sortName",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "type",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "gender",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "disambiguation",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "AudioLibrary.SetAlbumDetails",
-      "summary": "Update the given album with the given details",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "albumId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "artist",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "description",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "theme",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "mood",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "style",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "type",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "albumLabel",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "year",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "votes",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "musicBrainzAlbumId",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "musicBrainzReleaseGroupId",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "sortArtist",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "displayArtist",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "musicBrainzAlbumArtistId",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "isBoxSet",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Boolean"
-          }
-        },
-        {
-          "name": "releaseDate",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "originalDate",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "AudioLibrary.SetSongDetails",
-      "summary": "Update the given song with the given details",
-      "tags": [
-        {
-          "name": "AudioLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "songId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "artist",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "year",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "track",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "disc",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "duration",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "comment",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "musicBrainzTrackId",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "musicBrainzArtistId",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "playCount",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "lastPlayed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "votes",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "displayArtist",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "sortArtist",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "mood",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "discTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "releaseDate",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "originalDate",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "bpm",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "songVideoUrl",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "AudioLibrary.RefreshArtist",
       "summary": "Refresh the additional information for the given artist",
       "tags": [
@@ -6130,6 +5446,197 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "VideoLibrary.GetItemProperties",
+      "summary": "Retrieves the values of the given properties of a library item",
+      "tags": [
+        {
+          "name": "VideoLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Video.Item"
+          }
+        },
+        {
+          "name": "properties",
+          "description": "Fields of the item's kind: Video.Fields.Movie for a movie, and so on",
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Video.Fields.Movie"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Fields.MovieSet"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Fields.TVShow"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Fields.Season"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Fields.Episode"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Fields.MusicVideo"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Video.Details.Movie"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.MovieSet"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.TVShow"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.Season"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.Episode"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.MusicVideo"
+            }
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        }
+      ],
+      "x-kodi-permission": "ReadData",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "VideoLibrary.SetItemProperties",
+      "summary": "Changes the properties named, and only those, and answers with the values now in force of those it can read back",
+      "tags": [
+        {
+          "name": "VideoLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "item",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/Video.Item"
+          }
+        },
+        {
+          "name": "properties",
+          "required": true,
+          "description": "Properties of the item's kind: Video.Details.Movie.Set for a movie, and so on",
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Video.Details.Movie.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.MovieSet.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.TVShow.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.Season.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.Episode.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Video.Details.Movie"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.MovieSet"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.TVShow"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.Season"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.Episode"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.MusicVideo"
+            }
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        }
+      ],
+      "x-kodi-permission": "UpdateData",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "VideoLibrary.GetMovies",
       "summary": "Retrieve all movies",
       "tags": [
@@ -6208,67 +5715,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "VideoLibrary.GetMovieDetails",
-      "summary": "Retrieve details about a specific movie",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "movieId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.Movie"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "movieDetails": {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "VideoLibrary.GetMovieSets",
       "summary": "Retrieve all movie sets",
       "tags": [
@@ -6335,84 +5781,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.GetMovieSetDetails",
-      "summary": "Retrieve details about a specific movie set",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "setId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.MovieSet"
-          }
-        },
-        {
-          "name": "movies",
-          "schema": {
-            "type": "object",
-            "properties": {
-              "properties": {
-                "$ref": "#/components/schemas/Video.Fields.Movie"
-              },
-              "limits": {
-                "$ref": "#/components/schemas/List.Limits"
-              },
-              "sort": {
-                "$ref": "#/components/schemas/List.Sort"
-              }
-            }
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "setDetails": {
-              "$ref": "#/components/schemas/Video.Details.MovieSet.Extended"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -6497,67 +5865,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "VideoLibrary.GetTVShowDetails",
-      "summary": "Retrieve details about a specific tv show",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "tvShowId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.TVShow"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "tvShowDetails": {
-              "$ref": "#/components/schemas/Video.Details.TVShow"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "VideoLibrary.GetSeasons",
       "summary": "Retrieve all tv seasons",
       "tags": [
@@ -6630,67 +5937,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.GetSeasonDetails",
-      "summary": "Retrieve details about a specific tv show season",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "seasonId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.Season"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "seasonDetails": {
-              "$ref": "#/components/schemas/Video.Details.Season"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -6789,67 +6035,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "VideoLibrary.GetEpisodeDetails",
-      "summary": "Retrieve details about a specific tv show episode",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "episodeId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.Episode"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "episodeDetails": {
-              "$ref": "#/components/schemas/Video.Details.Episode"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "VideoLibrary.GetMusicVideos",
       "summary": "Retrieve all music videos",
       "tags": [
@@ -6922,67 +6107,6 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.GetMusicVideoDetails",
-      "summary": "Retrieve details about a specific music video",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "musicVideoId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "properties",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Fields.MusicVideo"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "musicVideoDetails": {
-              "$ref": "#/components/schemas/Video.Details.MusicVideo"
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
@@ -7729,1202 +6853,6 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetMovieDetails",
-      "summary": "Update the given movie with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "movieId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "playCount",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "runtime",
-          "description": "Runtime in seconds",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "director",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "studio",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "year",
-          "description": "linked with premiered. Overridden by premiered parameter",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "plot",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "mpaa",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "imdbNumber",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "votes",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "lastPlayed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "originalTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "trailer",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "tagline",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "plotOutline",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "writer",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "country",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "top250",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "sortTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "set",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "showLink",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "thumbnail",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "fanart",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "tag",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "resume",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "ratings",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Ratings.Set"
-          }
-        },
-        {
-          "name": "dateAdded",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "premiered",
-          "description": "linked with year. Overrides year",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "uniqueId",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetMovieSetDetails",
-      "summary": "Update the given movie set with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "setId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "plot",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetTVShowDetails",
-      "summary": "Update the given tvshow with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "tvShowId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "playCount",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "studio",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "plot",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "mpaa",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "imdbNumber",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "premiered",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "votes",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "lastPlayed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "originalTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "trailer",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "sortTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "episodeGuide",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "thumbnail",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "fanart",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "tag",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "ratings",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Ratings.Set"
-          }
-        },
-        {
-          "name": "dateAdded",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "runtime",
-          "description": "Runtime in seconds",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "status",
-          "description": "Valid values: 'returning series', 'in production', 'planned', 'cancelled', 'ended'",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "uniqueId",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetSeasonDetails",
-      "summary": "Update the given season with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "seasonId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetEpisodeDetails",
-      "summary": "Update the given episode with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "episodeId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "playCount",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "runtime",
-          "description": "Runtime in seconds",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "director",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "plot",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "votes",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "lastPlayed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "writer",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "firstAired",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "productionCode",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "season",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "episode",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "originalTitle",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "thumbnail",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "fanart",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "resume",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "ratings",
-          "schema": {
-            "$ref": "#/components/schemas/Video.Ratings.Set"
-          }
-        },
-        {
-          "name": "dateAdded",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "uniqueId",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "VideoLibrary.SetMusicVideoDetails",
-      "summary": "Update the given music video with the given details",
-      "tags": [
-        {
-          "name": "VideoLibrary"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "musicVideoId",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Library.Id"
-          }
-        },
-        {
-          "name": "title",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "playCount",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "runtime",
-          "description": "Runtime in seconds",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "director",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "studio",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "year",
-          "description": "linked with premiered. Overridden by premiered parameter",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "plot",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "album",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "artist",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ]
-          }
-        },
-        {
-          "name": "genre",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "track",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "lastPlayed",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "thumbnail",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "fanart",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "tag",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "art",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "resume",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
-          }
-        },
-        {
-          "name": "rating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Number"
-          }
-        },
-        {
-          "name": "userRating",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.Integer"
-          }
-        },
-        {
-          "name": "dateAdded",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "premiered",
-          "description": "linked with year. Overrides year",
-          "schema": {
-            "$ref": "#/components/schemas/Optional.String"
-          }
-        },
-        {
-          "name": "uniqueId",
-          "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        },
-        {
-          "$ref": "#/components/errors/NotFound"
-        }
-      ],
-      "x-kodi-permission": "UpdateData",
       "x-kodi-transport": "Response"
     },
     {
@@ -16292,6 +14220,23 @@
           "song"
         ]
       },
+      "Audio.Item": {
+        "type": "object",
+        "description": "A music library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Audio.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
+      },
       "Audio.Album.ReleaseType": {
         "type": "string",
         "enum": [
@@ -16504,6 +14449,112 @@
           "artist"
         ]
       },
+      "Audio.Details.Artist.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on an artist. A property not named is left as it is",
+        "properties": {
+          "artist": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "instrument": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "born": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "formed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "died": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "disbanded": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "yearsActive": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "musicBrainzArtistId": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "sortName": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "disambiguation": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          }
+        },
+        "additionalProperties": false
+      },
       "Audio.Details.Album": {
         "allOf": [
           {
@@ -16572,6 +14623,138 @@
         "required": [
           "albumId"
         ]
+      },
+      "Audio.Details.Album.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on an album. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "artist": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "description": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "type": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "albumLabel": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "year": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "votes": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "musicBrainzAlbumId": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "musicBrainzReleaseGroupId": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "sortArtist": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "displayArtist": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "musicBrainzAlbumArtistId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "isBoxSet": {
+            "$ref": "#/components/schemas/Optional.Boolean"
+          },
+          "releaseDate": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "originalDate": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "albumStatus": {
+            "$ref": "#/components/schemas/Optional.String"
+          }
+        },
+        "additionalProperties": false
       },
       "Audio.Details.Song": {
         "allOf": [
@@ -16674,6 +14857,109 @@
         "required": [
           "songId"
         ]
+      },
+      "Audio.Details.Song.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a song. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "artist": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "year": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "track": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "disc": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "musicBrainzTrackId": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "musicBrainzArtistId": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "playCount": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "lastPlayed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "votes": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "displayArtist": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "sortArtist": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "mood": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "discTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "releaseDate": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "originalDate": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "bpm": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "songVideoUrl": {
+            "$ref": "#/components/schemas/Optional.String"
+          }
+        },
+        "additionalProperties": false
       },
       "Audio.Property.Name": {
         "type": "string",
@@ -16957,6 +15243,23 @@
           "episode",
           "musicvideo"
         ]
+      },
+      "Video.Item": {
+        "type": "object",
+        "description": "A video library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Video.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
       },
       "Video.Cast": {
         "type": "array",
@@ -17403,6 +15706,195 @@
           "movieId"
         ]
       },
+      "Video.Details.Movie.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a movie. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "playCount": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "runtime": {
+            "description": "Runtime in seconds",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "director": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "studio": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "year": {
+            "description": "linked with premiered. Overridden by premiered parameter",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "plot": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "mpaa": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "imdbNumber": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "votes": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "lastPlayed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "originalTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "trailer": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "tagline": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "plotOutline": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "writer": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "top250": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "sortTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "set": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "showLink": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "fanart": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "resume": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Resume"
+              }
+            ],
+            "default": null
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "ratings": {
+            "$ref": "#/components/schemas/Video.Ratings.Set"
+          },
+          "dateAdded": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "premiered": {
+            "description": "linked with year. Overrides year",
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "uniqueId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.UniqueID.Set"
+              }
+            ],
+            "default": null
+          }
+        },
+        "additionalProperties": false
+      },
       "Video.Details.MovieSet": {
         "allOf": [
           {
@@ -17421,26 +15913,29 @@
           "setId"
         ]
       },
-      "Video.Details.MovieSet.Extended": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Video.Details.MovieSet"
-          }
-        ],
+      "Video.Details.MovieSet.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a movie set. A property not named is left as it is",
         "properties": {
-          "limits": {
-            "$ref": "#/components/schemas/List.LimitsReturned"
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
           },
-          "movies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            }
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "plot": {
+            "$ref": "#/components/schemas/Optional.String"
           }
         },
-        "required": [
-          "limits"
-        ]
+        "additionalProperties": false
       },
       "Video.Details.TVShow": {
         "allOf": [
@@ -17525,6 +16020,130 @@
           "tvShowId"
         ]
       },
+      "Video.Details.TVShow.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a tv show. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "playCount": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "studio": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "plot": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "mpaa": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "imdbNumber": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "premiered": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "votes": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "lastPlayed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "originalTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "trailer": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "sortTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "episodeGuide": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "fanart": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "ratings": {
+            "$ref": "#/components/schemas/Video.Ratings.Set"
+          },
+          "dateAdded": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "runtime": {
+            "description": "Runtime in seconds",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "status": {
+            "description": "Valid values: 'returning series', 'in production', 'planned', 'cancelled', 'ended'",
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "uniqueId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.UniqueID.Set"
+              }
+            ],
+            "default": null
+          }
+        },
+        "additionalProperties": false
+      },
       "Video.Details.Season": {
         "allOf": [
           {
@@ -17561,6 +16180,30 @@
           "seasonId",
           "season"
         ]
+      },
+      "Video.Details.Season.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a season. A property not named is left as it is",
+        "properties": {
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          }
+        },
+        "additionalProperties": false
       },
       "Video.Details.Episode": {
         "allOf": [
@@ -17634,6 +16277,120 @@
           "episodeId"
         ]
       },
+      "Video.Details.Episode.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on an episode. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "playCount": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "runtime": {
+            "description": "Runtime in seconds",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "director": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "plot": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "votes": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "lastPlayed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "writer": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "firstAired": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "productionCode": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "season": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "episode": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "originalTitle": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "fanart": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "resume": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Resume"
+              }
+            ],
+            "default": null
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "ratings": {
+            "$ref": "#/components/schemas/Video.Ratings.Set"
+          },
+          "dateAdded": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "uniqueId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.UniqueID.Set"
+              }
+            ],
+            "default": null
+          }
+        },
+        "additionalProperties": false
+      },
       "Video.Details.MusicVideo": {
         "allOf": [
           {
@@ -17681,6 +16438,145 @@
         "required": [
           "musicVideoId"
         ]
+      },
+      "Video.Details.MusicVideo.Set": {
+        "type": "object",
+        "description": "What SetItemProperties can change on a music video. A property not named is left as it is",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "playCount": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "runtime": {
+            "description": "Runtime in seconds",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "director": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "studio": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "year": {
+            "description": "linked with premiered. Overridden by premiered parameter",
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "plot": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "album": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "artist": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ]
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "track": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "lastPlayed": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "fanart": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Array.String"
+              }
+            ],
+            "default": null
+          },
+          "art": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.Artwork.Set"
+              }
+            ],
+            "default": null
+          },
+          "resume": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Resume"
+              }
+            ],
+            "default": null
+          },
+          "rating": {
+            "$ref": "#/components/schemas/Optional.Number"
+          },
+          "userRating": {
+            "$ref": "#/components/schemas/Optional.Integer"
+          },
+          "dateAdded": {
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "premiered": {
+            "description": "linked with year. Overrides year",
+            "$ref": "#/components/schemas/Optional.String"
+          },
+          "uniqueId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Media.UniqueID.Set"
+              }
+            ],
+            "default": null
+          }
+        },
+        "additionalProperties": false
       },
       "PVR.Property.Name": {
         "type": "string",

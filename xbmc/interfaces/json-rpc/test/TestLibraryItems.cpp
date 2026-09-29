@@ -116,15 +116,24 @@ public:
     m_albumId = std::stoi(m_music.GetSingleValue("SELECT MAX(idAlbum) FROM album"));
     ASSERT_TRUE(m_music.ExecuteQuery(m_music.PrepareSQL(
         "INSERT INTO album_artist (idArtist, idAlbum) VALUES (%i, %i)", m_artistId, m_albumId)));
-    ASSERT_TRUE(m_music.ExecuteQuery(m_music.PrepareSQL(
-        "INSERT INTO song (idAlbum, iTrack, strTitle) VALUES (%i, 1, 'JSON-RPC test song')",
-        m_albumId)));
+    ASSERT_TRUE(m_music.ExecuteQuery("INSERT INTO path (strPath) VALUES ('/jsonrpc-test/music/')"));
+    m_pathId = std::stoi(m_music.GetSingleValue("SELECT MAX(idPath) FROM path"));
+    ASSERT_TRUE(m_music.ExecuteQuery(
+        m_music.PrepareSQL("INSERT INTO song (idAlbum, idPath, strFileName, iTrack, strTitle) "
+                           "VALUES (%i, %i, 'song.flac', 1, 'JSON-RPC test song')",
+                           m_albumId, m_pathId)));
     m_songId = std::stoi(m_music.GetSingleValue("SELECT MAX(idSong) FROM song"));
+    ASSERT_TRUE(m_music.ExecuteQuery(
+        m_music.PrepareSQL("INSERT INTO song_artist (idArtist, idSong, idRole, iOrder, strArtist) "
+                           "VALUES (%i, %i, 1, 0, 'JSON-RPC test artist')",
+                           m_artistId, m_songId)));
   }
 
   void TearDown() override
   {
+    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM song_artist WHERE idSong = %i", m_songId));
     m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM song WHERE idSong = %i", m_songId));
+    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM path WHERE idPath = %i", m_pathId));
     m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM album WHERE idAlbum = %i", m_albumId));
     m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM artist WHERE idArtist = %i", m_artistId));
     m_music.Close();
@@ -214,6 +223,7 @@ public:
   int m_episodeId{-1};
   int m_artistId{-1};
   int m_albumId{-1};
+  int m_pathId{-1};
   int m_songId{-1};
 };
 } // unnamed namespace
@@ -306,4 +316,127 @@ TEST_F(TestLibraryItemsInDatabase, TheQueryAnswersAnEmptyListAsAList)
 
   EXPECT_TRUE(result["items"].isArray());
   EXPECT_EQ(0u, result["items"].size());
+}
+
+TEST_F(TestLibraryItems, AnItemRefusesAPropertyItsKindDoesNotHave)
+{
+  EXPECT_EQ("properties",
+            Refused("VideoLibrary.GetItemProperties",
+                    R"({"item": {"kind": "season", "id": 1}, "properties": ["plot"]})"));
+  EXPECT_EQ("properties",
+            Refused("VideoLibrary.SetItemProperties",
+                    R"({"item": {"kind": "set", "id": 1}, "properties": {"runtime": 60}})"));
+  EXPECT_EQ("properties",
+            Refused("AudioLibrary.SetItemProperties",
+                    R"({"item": {"kind": "artist", "id": 1}, "properties": {"artist": ["A"]}})"));
+}
+
+TEST_F(TestLibraryItemsInDatabase, AnItemAnswersItsPropertiesAsTheListDoes)
+{
+  const std::string movie{std::to_string(m_movieId)};
+  CVariant listed;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItems",
+                       R"({"kind": "movie", "filter": {"set": "JSON-RPC test set"},
+                           "properties": ["title", "set", "setId", "file", "playCount"]})",
+                       listed));
+
+  CVariant item;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItemProperties",
+                       R"({"item": {"kind": "movie", "id": )" + movie +
+                           R"(}, "properties": ["title", "set", "setId", "file", "playCount"]})",
+                       item));
+
+  ASSERT_EQ(1u, listed["items"].size());
+  EXPECT_EQ(ToJson(listed["items"][0]), ToJson(item));
+  EXPECT_EQ(SET_NAME, item["set"].asString());
+}
+
+TEST_F(TestLibraryItemsInDatabase, AnItemThatDoesNotExistIsNotFound)
+{
+  CVariant result;
+  EXPECT_EQ(NotFound, Invoke("VideoLibrary.GetItemProperties",
+                             R"({"item": {"kind": "movie", "id": 987654}})", result));
+  EXPECT_EQ(NotFound, Invoke("VideoLibrary.SetItemProperties",
+                             R"({"item": {"kind": "episode", "id": 987654},
+                                 "properties": {"title": "Nobody"}})",
+                             result));
+  EXPECT_EQ(NotFound, Invoke("AudioLibrary.GetItemProperties",
+                             R"({"item": {"kind": "song", "id": 987654}})", result));
+}
+
+TEST_F(TestLibraryItemsInDatabase, SettingChangesOnlyWhatIsNamedAndAnswersItsValue)
+{
+  const std::string item{R"({"kind": "movie", "id": )" + std::to_string(m_movieId) + "}"};
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
+                       R"({"item": )" + item + R"(, "properties": {"plot": "Before"}})", result));
+
+  ASSERT_EQ(
+      OK, Invoke("VideoLibrary.SetItemProperties",
+                 R"({"item": )" + item + R"(, "properties": {"title": "Renamed", "playCount": 2}})",
+                 result));
+
+  EXPECT_EQ("Renamed", result["title"].asString());
+  EXPECT_EQ(2, result["playCount"].asInteger());
+  EXPECT_EQ(m_movieId, result["movieId"].asInteger());
+  EXPECT_FALSE(result.isMember("plot"));
+
+  CVariant read;
+  ASSERT_EQ(OK,
+            Invoke("VideoLibrary.GetItemProperties",
+                   R"({"item": )" + item + R"(, "properties": ["title", "plot", "set"]})", read));
+  EXPECT_EQ("Renamed", read["title"].asString());
+  EXPECT_EQ("Before", read["plot"].asString());
+  EXPECT_EQ(SET_NAME, read["set"].asString());
+}
+
+TEST_F(TestLibraryItemsInDatabase, ASetSeasonAndEpisodeAreItemsToo)
+{
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
+                       R"({"item": {"kind": "set", "id": )" + std::to_string(m_setId) +
+                           R"(}, "properties": {"plot": "A set of one"}})",
+                       result));
+  EXPECT_EQ("A set of one", result["plot"].asString());
+
+  ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
+                       R"({"item": {"kind": "season", "id": )" + std::to_string(m_seasonId) +
+                           R"(}, "properties": {"userRating": 7}})",
+                       result));
+  EXPECT_EQ(7, result["userRating"].asInteger());
+
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItemProperties",
+                       R"({"item": {"kind": "episode", "id": )" + std::to_string(m_episodeId) +
+                           R"(}, "properties": ["tvShowId", "season", "episode"]})",
+                       result));
+  EXPECT_EQ(m_showId, result["tvShowId"].asInteger());
+  EXPECT_EQ(1, result["episode"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, AMusicItemIsSetAndReadBack)
+{
+  const std::string song{R"({"kind": "song", "id": )" + std::to_string(m_songId) + "}"};
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("AudioLibrary.SetItemProperties",
+                       R"({"item": )" + song +
+                           R"(, "properties": {"title": "Retitled", "releaseDate": "2001-02-03",
+                                                "votes": 12}})",
+                       result));
+
+  EXPECT_EQ("Retitled", result["title"].asString());
+  EXPECT_EQ("2001-02-03", result["releaseDate"].asString());
+  EXPECT_EQ(12, result["votes"].asInteger());
+  EXPECT_EQ(m_songId, result["songId"].asInteger());
+
+  ASSERT_EQ(OK, Invoke("AudioLibrary.SetItemProperties",
+                       R"({"item": {"kind": "album", "id": )" + std::to_string(m_albumId) +
+                           R"(}, "properties": {"albumStatus": "official"}})",
+                       result));
+  EXPECT_EQ("official", result["albumStatus"].asString());
+
+  ASSERT_EQ(OK, Invoke("AudioLibrary.GetItemProperties",
+                       R"({"item": {"kind": "artist", "id": )" + std::to_string(m_artistId) +
+                           R"(}, "properties": ["sortName"]})",
+                       result));
+  EXPECT_EQ("JSON-RPC test artist", result["artist"].asString());
 }

@@ -1758,6 +1758,23 @@
       "song"
     ]
   },
+  "Audio.Item": {
+    "type": "object",
+    "description": "A music library item, addressed by its kind and id",
+    "properties": {
+      "kind": {
+        "$ref": "#/$defs/Audio.Item.Kind"
+      },
+      "id": {
+        "$ref": "#/$defs/Library.Id"
+      }
+    },
+    "required": [
+      "kind",
+      "id"
+    ],
+    "additionalProperties": false
+  },
   "Audio.Album.ReleaseType": {
     "type": "string",
     "enum": [
@@ -1970,6 +1987,112 @@
       "artist"
     ]
   },
+  "Audio.Details.Artist.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on an artist. A property not named is left as it is",
+    "properties": {
+      "artist": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "instrument": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "mood": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "born": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "formed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "description": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "died": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "disbanded": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "yearsActive": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "musicBrainzArtistId": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "sortName": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "type": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "gender": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "disambiguation": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      }
+    },
+    "additionalProperties": false
+  },
   "Audio.Details.Album": {
     "allOf": [
       {
@@ -2038,6 +2161,138 @@
     "required": [
       "albumId"
     ]
+  },
+  "Audio.Details.Album.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on an album. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "artist": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "description": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "theme": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "mood": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "type": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "albumLabel": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "year": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "votes": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "musicBrainzAlbumId": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "musicBrainzReleaseGroupId": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "sortArtist": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "displayArtist": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "musicBrainzAlbumArtistId": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "isBoxSet": {
+        "$ref": "#/$defs/Optional.Boolean"
+      },
+      "releaseDate": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "originalDate": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "albumStatus": {
+        "$ref": "#/$defs/Optional.String"
+      }
+    },
+    "additionalProperties": false
   },
   "Audio.Details.Song": {
     "allOf": [
@@ -2140,6 +2395,109 @@
     "required": [
       "songId"
     ]
+  },
+  "Audio.Details.Song.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a song. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "artist": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "year": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "track": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "disc": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "duration": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "comment": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "musicBrainzTrackId": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "musicBrainzArtistId": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "playCount": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "lastPlayed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "votes": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "displayArtist": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "sortArtist": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "mood": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "discTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "releaseDate": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "originalDate": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "bpm": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "songVideoUrl": {
+        "$ref": "#/$defs/Optional.String"
+      }
+    },
+    "additionalProperties": false
   },
   "Audio.Property.Name": {
     "type": "string",
@@ -2423,6 +2781,23 @@
       "episode",
       "musicvideo"
     ]
+  },
+  "Video.Item": {
+    "type": "object",
+    "description": "A video library item, addressed by its kind and id",
+    "properties": {
+      "kind": {
+        "$ref": "#/$defs/Video.Item.Kind"
+      },
+      "id": {
+        "$ref": "#/$defs/Library.Id"
+      }
+    },
+    "required": [
+      "kind",
+      "id"
+    ],
+    "additionalProperties": false
   },
   "Video.Cast": {
     "type": "array",
@@ -2869,6 +3244,195 @@
       "movieId"
     ]
   },
+  "Video.Details.Movie.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a movie. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "playCount": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "runtime": {
+        "description": "Runtime in seconds",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "director": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "studio": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "year": {
+        "description": "linked with premiered. Overridden by premiered parameter",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "plot": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "mpaa": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "imdbNumber": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "votes": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "lastPlayed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "originalTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "trailer": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "tagline": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "plotOutline": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "writer": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "country": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "top250": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "sortTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "set": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "showLink": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "thumbnail": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "fanart": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "tag": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "resume": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Video.Resume"
+          }
+        ],
+        "default": null
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "ratings": {
+        "$ref": "#/$defs/Video.Ratings.Set"
+      },
+      "dateAdded": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "premiered": {
+        "description": "linked with year. Overrides year",
+        "$ref": "#/$defs/Optional.String"
+      },
+      "uniqueId": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
+      }
+    },
+    "additionalProperties": false
+  },
   "Video.Details.MovieSet": {
     "allOf": [
       {
@@ -2887,26 +3451,29 @@
       "setId"
     ]
   },
-  "Video.Details.MovieSet.Extended": {
-    "allOf": [
-      {
-        "$ref": "#/$defs/Video.Details.MovieSet"
-      }
-    ],
+  "Video.Details.MovieSet.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a movie set. A property not named is left as it is",
     "properties": {
-      "limits": {
-        "$ref": "#/$defs/List.LimitsReturned"
+      "title": {
+        "$ref": "#/$defs/Optional.String"
       },
-      "movies": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/Video.Details.Movie"
-        }
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "plot": {
+        "$ref": "#/$defs/Optional.String"
       }
     },
-    "required": [
-      "limits"
-    ]
+    "additionalProperties": false
   },
   "Video.Details.TVShow": {
     "allOf": [
@@ -2991,6 +3558,130 @@
       "tvShowId"
     ]
   },
+  "Video.Details.TVShow.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a tv show. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "playCount": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "studio": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "plot": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "mpaa": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "imdbNumber": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "premiered": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "votes": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "lastPlayed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "originalTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "trailer": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "sortTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "episodeGuide": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "thumbnail": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "fanart": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "tag": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "ratings": {
+        "$ref": "#/$defs/Video.Ratings.Set"
+      },
+      "dateAdded": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "runtime": {
+        "description": "Runtime in seconds",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "status": {
+        "description": "Valid values: 'returning series', 'in production', 'planned', 'cancelled', 'ended'",
+        "$ref": "#/$defs/Optional.String"
+      },
+      "uniqueId": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
+      }
+    },
+    "additionalProperties": false
+  },
   "Video.Details.Season": {
     "allOf": [
       {
@@ -3027,6 +3718,30 @@
       "seasonId",
       "season"
     ]
+  },
+  "Video.Details.Season.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a season. A property not named is left as it is",
+    "properties": {
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      }
+    },
+    "additionalProperties": false
   },
   "Video.Details.Episode": {
     "allOf": [
@@ -3100,6 +3815,120 @@
       "episodeId"
     ]
   },
+  "Video.Details.Episode.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on an episode. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "playCount": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "runtime": {
+        "description": "Runtime in seconds",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "director": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "plot": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "votes": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "lastPlayed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "writer": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "firstAired": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "productionCode": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "season": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "episode": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "originalTitle": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "thumbnail": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "fanart": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "resume": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Video.Resume"
+          }
+        ],
+        "default": null
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "ratings": {
+        "$ref": "#/$defs/Video.Ratings.Set"
+      },
+      "dateAdded": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "uniqueId": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
+      }
+    },
+    "additionalProperties": false
+  },
   "Video.Details.MusicVideo": {
     "allOf": [
       {
@@ -3147,6 +3976,145 @@
     "required": [
       "musicVideoId"
     ]
+  },
+  "Video.Details.MusicVideo.Set": {
+    "type": "object",
+    "description": "What SetItemProperties can change on a music video. A property not named is left as it is",
+    "properties": {
+      "title": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "playCount": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "runtime": {
+        "description": "Runtime in seconds",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "director": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "studio": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "year": {
+        "description": "linked with premiered. Overridden by premiered parameter",
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "plot": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "album": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "artist": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ]
+      },
+      "genre": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "track": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "lastPlayed": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "thumbnail": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "fanart": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "tag": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Array.String"
+          }
+        ],
+        "default": null
+      },
+      "art": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
+      "resume": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Video.Resume"
+          }
+        ],
+        "default": null
+      },
+      "rating": {
+        "$ref": "#/$defs/Optional.Number"
+      },
+      "userRating": {
+        "$ref": "#/$defs/Optional.Integer"
+      },
+      "dateAdded": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "premiered": {
+        "description": "linked with year. Overrides year",
+        "$ref": "#/$defs/Optional.String"
+      },
+      "uniqueId": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
+      }
+    },
+    "additionalProperties": false
   },
   "PVR.Property.Name": {
     "type": "string",

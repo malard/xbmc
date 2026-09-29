@@ -42,12 +42,14 @@
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string.h>
 #include <string>
+#include <vector>
 
 using namespace MUSIC_INFO;
 using namespace JSONRPC;
@@ -666,6 +668,34 @@ void CFileItemHandler::RenameList(CVariant& result, const char* from, const char
     result.erase(from);
   }
   result[to] = std::move(list);
+}
+
+CVariant CFileItemHandler::GivenMembers(const CVariant& object)
+{
+  CVariant given{CVariant::VariantTypeObject};
+  for (auto member = object.begin_map(); member != object.end_map(); ++member)
+  {
+    if (!member->second.isNull())
+      given[member->first] = member->second;
+  }
+  return given;
+}
+
+CVariant CFileItemHandler::ReadableNames(const CVariant& values, const char* fieldsType)
+{
+  CVariant names{CVariant::VariantTypeArray};
+  const JSONSchemaTypeDefinitionPtr fields{CJSONServiceDescription::GetType(fieldsType)};
+  if (!fields || !fields->items)
+    return names;
+
+  const std::vector<CVariant>& readable{fields->items->enums};
+  for (auto value = values.begin_map(); value != values.end_map(); ++value)
+  {
+    if (!value->second.isNull() &&
+        std::ranges::find(readable, CVariant{value->first}) != readable.end())
+      names.push_back(value->first);
+  }
+  return names;
 }
 
 void CFileItemHandler::Sort(CFileItemList& items, const CVariant& parameterObject)

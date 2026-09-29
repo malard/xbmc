@@ -61,6 +61,11 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and `Player.OnSeek` are removed:
   each is `Player.OnPropertiesChanged`, carrying `speed` for the first three and `time` for a seek,
   with `player`. A pause is `speed` 0.
+- The `Get*Details` and `Set*Details` methods of `VideoLibrary` and `AudioLibrary` are removed: an
+  item is addressed by `{"kind", "id"}` and read and changed with `GetItemProperties` and
+  `SetItemProperties`. The answer is the item, not wrapped; `SetItemProperties` answers with the
+  values in force, not `"OK"`. A movie set no longer lists its movies: `GetItems` with a `setId`
+  filter does.
 
 ### Deprecated
 
@@ -94,6 +99,9 @@ Methods:
 - `VideoLibrary.Refresh`, `VideoLibrary.RefreshContentGeometry`, `VideoLibrary.SetSourceContent`
 - `VideoLibrary.GetItems`, `AudioLibrary.GetItems`: one query per library over the kind named;
   `GetMovies`, `GetRecentlyAddedMovies` and the other list methods are it with preset values
+- `VideoLibrary.GetItemProperties`, `VideoLibrary.SetItemProperties`,
+  `AudioLibrary.GetItemProperties`, `AudioLibrary.SetItemProperties`; an album's `albumStatus` can
+  be set, and a song's `releaseDate` and `votes`, which were declared but never stored, are
 - `confirmed` on `Settings.SetSettingValue`
 - `starttime` and `endtime` on `PVR.GetBroadcasts`
 

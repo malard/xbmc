@@ -47,18 +47,14 @@ public:
   template<AudioKind Kind, Listing From = Listing::All>
   static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
 
-  static JSONRPC_STATUS GetArtistDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetAlbumDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetSongDetails(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
+
   static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetRoles(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetSources(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
-
-  static JSONRPC_STATUS SetArtistDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetAlbumDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetSongDetails(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS Scan(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS Export(const CVariant& parameterObject, CVariant& result);
@@ -131,6 +127,24 @@ private:
                               Listing listing,
                               const CVariant& parameterObject,
                               CVariant& result);
+
+  //! Answers the \p fields of the item of \p kind with \p id
+  static JSONRPC_STATUS ReadItem(AudioKind kind,
+                                 int id,
+                                 const CVariant& fields,
+                                 CMusicDatabase& musicdatabase,
+                                 CVariant& result);
+
+  //! Store each of \p properties given a value on the item of their kind with \p id
+  static JSONRPC_STATUS SetArtistDetails(int id,
+                                         const CVariant& properties,
+                                         CMusicDatabase& musicdatabase);
+  static JSONRPC_STATUS SetAlbumDetails(int id,
+                                        const CVariant& properties,
+                                        CMusicDatabase& musicdatabase);
+  static JSONRPC_STATUS SetSongDetails(int id,
+                                       const CVariant& properties,
+                                       CMusicDatabase& musicdatabase);
 
   //! Adds the art and fanart the JSON listing leaves out to each item of \p list
   static void FillListArt(CVariant& list,

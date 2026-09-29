@@ -727,6 +727,39 @@ answers and notifications, using the table.
 | `windowparameter` | `windowParameter` |
 | `yearsactive` | `yearsActive` |
 
+## 18. A library item is a target: `GetItemProperties` and `SetItemProperties`
+
+The `Get*Details` and `Set*Details` methods of both libraries are removed. An
+item is addressed by its kind and id, and its properties are read with
+`GetItemProperties` and changed with `SetItemProperties`.
+
+```diff
+- {"method": "VideoLibrary.GetMovieDetails",   "params": {"movieId": 3, "properties": ["title", "playCount"]}}
++ {"method": "VideoLibrary.GetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": ["title", "playCount"]}}
+- {"method": "VideoLibrary.SetMovieDetails",   "params": {"movieId": 3, "playCount": 1}}
++ {"method": "VideoLibrary.SetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": {"playCount": 1}}}
+```
+
+| Removed | Kind |
+| --- | --- |
+| `VideoLibrary.GetMovieDetails`, `SetMovieDetails` | `movie` |
+| `VideoLibrary.GetMovieSetDetails`, `SetMovieSetDetails` | `set` |
+| `VideoLibrary.GetTVShowDetails`, `SetTVShowDetails` | `tvshow` |
+| `VideoLibrary.GetSeasonDetails`, `SetSeasonDetails` | `season` |
+| `VideoLibrary.GetEpisodeDetails`, `SetEpisodeDetails` | `episode` |
+| `VideoLibrary.GetMusicVideoDetails`, `SetMusicVideoDetails` | `musicvideo` |
+| `AudioLibrary.GetArtistDetails`, `SetArtistDetails` | `artist` |
+| `AudioLibrary.GetAlbumDetails`, `SetAlbumDetails` | `album` |
+| `AudioLibrary.GetSongDetails`, `SetSongDetails` | `song` |
+
+`GetItemProperties` answers the item itself, not wrapped in `movieDetails`
+and the like. `SetItemProperties` takes the values under `properties`,
+changes only those given, and answers like `GetItemProperties` for the ones
+it can read back, in place of `"OK"`. A movie set no longer lists its movies:
+ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
+
+**What to do.** Replace each call as above. Read the answer as the item.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
@@ -760,6 +793,9 @@ New since Kodi 21 and safe to ignore until you want it. The
 - **`VideoLibrary.SetSourceContent`** assigns a content type and scraper to a
   source path, which previously only the "Set content" dialog could do.
 - **`Player.GetChapters`** returns the playing item's chapters.
+- **`VideoLibrary.GetItems` and `AudioLibrary.GetItems`** list any kind of
+  item with one method; `GetMovies` and the other list methods are the same
+  query with preset values, and answer as before.
 - **`GUI.TakeScreenshot`**, `Database.GetDatabaseName`,
   `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist`.
 - **PVR image properties are URLs** the web server's `/image/` endpoint can

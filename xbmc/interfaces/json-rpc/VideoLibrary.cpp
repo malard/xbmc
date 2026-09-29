@@ -78,21 +78,23 @@ struct KindTraits
   const char* filter; //!< nullptr for a kind that takes no filter
   const char* rules; //!< the smart playlist type a filter's rules are written for
   std::span<const FilterField> filterFields;
+  const char* settable;
 };
 
 constexpr KindTraits KINDS[] = {
     {VideoKind::Movie, MediaTypeMovie, "movieId", "movies", "Video.Fields.Movie",
-     "Video.Filter.Movies", "movies", MOVIE_FILTERS},
+     "Video.Filter.Movies", "movies", MOVIE_FILTERS, "Video.Details.Movie.Set"},
     {VideoKind::Set, MediaTypeVideoCollection, "setId", "sets", "Video.Fields.MovieSet", nullptr,
-     "", NO_FILTERS},
+     "", NO_FILTERS, "Video.Details.MovieSet.Set"},
     {VideoKind::TVShow, MediaTypeTvShow, "tvShowId", "tvShows", "Video.Fields.TVShow",
-     "Video.Filter.TVShows", "tvshows", TVSHOW_FILTERS},
+     "Video.Filter.TVShows", "tvshows", TVSHOW_FILTERS, "Video.Details.TVShow.Set"},
     {VideoKind::Season, MediaTypeSeason, "seasonId", "seasons", "Video.Fields.Season", nullptr, "",
-     NO_FILTERS},
+     NO_FILTERS, "Video.Details.Season.Set"},
     {VideoKind::Episode, MediaTypeEpisode, "episodeId", "episodes", "Video.Fields.Episode",
-     "Video.Filter.Episodes", "episodes", EPISODE_FILTERS},
+     "Video.Filter.Episodes", "episodes", EPISODE_FILTERS, "Video.Details.Episode.Set"},
     {VideoKind::MusicVideo, MediaTypeMusicVideo, "musicVideoId", "musicVideos",
-     "Video.Fields.MusicVideo", "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS},
+     "Video.Fields.MusicVideo", "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS,
+     "Video.Details.MusicVideo.Set"},
 };
 
 const KindTraits& TraitsOf(VideoKind kind)
@@ -280,142 +282,134 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   return HandleItems(traits.id, traits.list, items, parameterObject, result, false);
 }
 
-JSONRPC_STATUS CVideoLibrary::GetMovieDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::GetItemProperties(const CVariant& parameterObject, CVariant& result)
 {
-  int id = static_cast<int>(parameterObject["movieId"].asInteger());
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CVideoInfoTag infos;
-  //! @todo API support for video version id
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMovieInfo(
-          "", infos, id, -1, -1, RequiresAdditionalDetails(MediaTypeMovie, parameterObject)));
+  CVariant fields;
+  if (const JSONRPC_STATUS status = CheckAgainstType(traits->fields, "properties",
+                                                     parameterObject["properties"], fields, result);
       status != OK)
     return status;
 
-  HandleFileItem("movieId", true, "movieDetails", std::make_shared<CFileItem>(infos),
-                 parameterObject, parameterObject["properties"], result, false);
-  return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetMovieSetDetails(const CVariant& parameterObject, CVariant& result)
-{
-  int id = static_cast<int>(parameterObject["setId"].asInteger());
-
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
     return InternalError;
 
-  // Get movie set details
-  CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSetInfo(id, infos)); status != OK)
-    return status;
-
-  HandleFileItem("setId", false, "setDetails", std::make_shared<CFileItem>(infos), parameterObject,
-                 parameterObject["properties"], result, false);
-
-  // Get movies from the set
-  CFileItemList items;
-  if (!videodatabase.GetMoviesNav(
-          "videodb://movies/titles/", items, -1, -1, -1, -1, -1, -1, id, -1, SortDescription(),
-          RequiresAdditionalDetails(MediaTypeMovie, parameterObject["movies"])))
-    return InternalError;
-
-  return HandleItems("movieId", "movies", items, parameterObject["movies"], result["setDetails"],
-                     true);
+  return ReadItem(traits->kind, static_cast<int>(parameterObject["item"]["id"].asInteger()), fields,
+                  videodatabase, result);
 }
 
-JSONRPC_STATUS CVideoLibrary::GetTVShowDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject, CVariant& result)
 {
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
-  int id = static_cast<int>(parameterObject["tvShowId"].asInteger());
-
-  CFileItemPtr fileItem(new CFileItem());
-  CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetTvShowInfo(
-          "", infos, id, fileItem.get(),
-          RequiresAdditionalDetails(MediaTypeTvShow, parameterObject)));
+  CVariant properties;
+  if (const JSONRPC_STATUS status =
+          CheckAgainstType(traits->settable, "properties",
+                           GivenMembers(parameterObject["properties"]), properties, result);
       status != OK)
     return status;
 
-  fileItem->SetFromVideoInfoTag(infos);
-  HandleFileItem("tvShowId", true, "tvShowDetails", fileItem, parameterObject,
-                 parameterObject["properties"], result, false);
-  return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, CVariant& result)
-{
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
     return InternalError;
 
-  int id = static_cast<int>(parameterObject["seasonId"].asInteger());
+  const int id = static_cast<int>(parameterObject["item"]["id"].asInteger());
+  JSONRPC_STATUS status{InternalError};
+  switch (traits->kind)
+  {
+    case VideoKind::Movie:
+      status = SetMovieDetails(id, properties, videodatabase);
+      break;
+    case VideoKind::Set:
+      status = SetMovieSetDetails(id, properties, videodatabase);
+      break;
+    case VideoKind::TVShow:
+      status = SetTVShowDetails(id, properties, videodatabase);
+      break;
+    case VideoKind::Season:
+      status = SetSeasonDetails(id, properties, videodatabase);
+      break;
+    case VideoKind::Episode:
+      status = SetEpisodeDetails(id, properties, videodatabase);
+      break;
+    case VideoKind::MusicVideo:
+      status = SetMusicVideoDetails(id, properties, videodatabase);
+      break;
+  }
+  if (status != OK)
+    return status;
+
+  return ReadItem(traits->kind, id, ReadableNames(properties, traits->fields), videodatabase,
+                  result);
+}
+
+JSONRPC_STATUS CVideoLibrary::ReadItem(
+    VideoKind kind, int id, const CVariant& fields, CVideoDatabase& videodatabase, CVariant& result)
+{
+  const KindTraits& traits = TraitsOf(kind);
+
+  CVariant request(CVariant::VariantTypeObject);
+  request["properties"] = fields;
+  const int details = RequiresAdditionalDetails(traits.name, request);
 
   CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSeasonInfo(id, infos));
-      status != OK)
+  std::shared_ptr<CFileItem> item;
+  CDatabase::GetResult lookup{CDatabase::GetResult::Error};
+  switch (kind)
+  {
+    case VideoKind::Movie:
+      //! @todo API support for video version id
+      lookup = videodatabase.TryGetMovieInfo("", infos, id, -1, -1, details);
+      break;
+    case VideoKind::Set:
+      lookup = videodatabase.TryGetSetInfo(id, infos);
+      break;
+    case VideoKind::TVShow:
+      item = std::make_shared<CFileItem>();
+      lookup = videodatabase.TryGetTvShowInfo("", infos, id, item.get(), details);
+      break;
+    case VideoKind::Season:
+      lookup = videodatabase.TryGetSeasonInfo(id, infos);
+      break;
+    case VideoKind::Episode:
+      lookup = videodatabase.TryGetEpisodeInfo("", infos, id, details);
+      break;
+    case VideoKind::MusicVideo:
+      lookup = videodatabase.TryGetMusicVideoInfo("", infos, id, details);
+      break;
+  }
+  if (const JSONRPC_STATUS status = StatusFor(lookup); status != OK)
     return status;
-  if (infos.m_iIdShow <= 0)
+
+  if (item)
+    item->SetFromVideoInfoTag(infos);
+  else
+    item = std::make_shared<CFileItem>(infos);
+
+  if (kind == VideoKind::Season && infos.m_iIdShow <= 0)
     return NotFound;
 
-  CFileItemPtr pItem = std::make_shared<CFileItem>(infos);
-  HandleFileItem("seasonId", false, "seasonDetails", pItem, parameterObject,
-                 parameterObject["properties"], result, false);
-  return OK;
-}
+  if (kind == VideoKind::Episode)
+  {
+    // the show's path is what finds the fanart
+    int tvshowid = infos.m_iIdShow;
+    if (tvshowid <= 0)
+      tvshowid = videodatabase.GetTvShowForEpisode(id);
 
-JSONRPC_STATUS CVideoLibrary::GetEpisodeDetails(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
+    item->SetPath(
+        StringUtils::Format("videodb://tvshows/titles/{}/{}/{}", tvshowid, infos.m_iSeason, id));
+  }
 
-  int id = static_cast<int>(parameterObject["episodeId"].asInteger());
-
-  CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetEpisodeInfo(
-          "", infos, id, RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)));
-      status != OK)
-    return status;
-
-  CFileItemPtr pItem = std::make_shared<CFileItem>(infos);
-  // We need to set the correct base path to get the valid fanart
-  int tvshowid = infos.m_iIdShow;
-  if (tvshowid <= 0)
-    tvshowid = videodatabase.GetTvShowForEpisode(id);
-
-  std::string basePath =
-      StringUtils::Format("videodb://tvshows/titles/{}/{}/{}", tvshowid, infos.m_iSeason, id);
-  pItem->SetPath(basePath);
-
-  HandleFileItem("episodeId", true, "episodeDetails", pItem, parameterObject,
-                 parameterObject["properties"], result, false);
-  return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetMusicVideoDetails(const CVariant& parameterObject,
-                                                   CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  int id = static_cast<int>(parameterObject["musicVideoId"].asInteger());
-
-  CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMusicVideoInfo(
-          "", infos, id, RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)));
-      status != OK)
-    return status;
-
-  HandleFileItem("musicVideoId", true, "musicVideoDetails", std::make_shared<CFileItem>(infos),
-                 parameterObject, parameterObject["properties"], result, false);
+  CVariant answer;
+  HandleFileItem(traits.id, kind != VideoKind::Set && kind != VideoKind::Season, "item", item,
+                 request, fields, answer, false);
+  result = std::move(answer["item"]);
   return OK;
 }
 
@@ -581,14 +575,10 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
   return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetMovieDetails(int id,
+                                              const CVariant& properties,
+                                              CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["movieId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   //! @todo API support for video version id
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMovieInfo("", infos, id, -1));
@@ -597,7 +587,7 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, C
 
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
 
   if (videodatabase.UpdateDetailsForMovie(id, infos, edit.artwork, edit.updatedDetails) <= 0)
     return InternalError;
@@ -605,25 +595,21 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, C
   if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, edit.removedArtwork))
     return InternalError;
 
-  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
+  StorePlaybackEdit(properties, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated(infos, edit.artwork);
-  return ACK;
+  return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(int id,
+                                                 const CVariant& properties,
+                                                 CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["setId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSetInfo(id, infos)); status != OK)
     return status;
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
 
   if (videodatabase.SetDetailsForMovieSet(infos, edit.artwork, id) <= 0)
     return InternalError;
@@ -632,17 +618,13 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
-  return ACK;
+  return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id,
+                                               const CVariant& properties,
+                                               CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["tvShowId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetTvShowInfo("", infos, id));
       status != OK)
@@ -651,7 +633,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
   KODI::ART::SeasonsArtwork seasonArt;
   videodatabase.GetTvShowSeasonArt(infos.m_iDbId, seasonArt);
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
@@ -663,8 +645,8 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
   if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, edit.removedArtwork))
     return InternalError;
 
-  const bool updatePlaycount = ParameterNotNull(parameterObject, "playCount");
-  const bool updateLastplayed = ParameterNotNull(parameterObject, "lastPlayed");
+  const bool updatePlaycount = ParameterNotNull(properties, "playCount");
+  const bool updateLastplayed = ParameterNotNull(properties, "lastPlayed");
   if (updatePlaycount || updateLastplayed)
   {
     // a tvshow has no file row of its own - its playcount is derived from its
@@ -694,17 +676,13 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
   }
 
   CJSONRPCUtils::NotifyItemUpdated();
-  return ACK;
+  return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(int id,
+                                               const CVariant& properties,
+                                               CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["seasonId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSeasonInfo(id, infos));
       status != OK)
@@ -712,9 +690,9 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
   if (infos.m_iIdShow <= 0)
     return NotFound;
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
-  if (ParameterNotNull(parameterObject, "title"))
-    infos.SetSortTitle(parameterObject["title"].asString());
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
+  if (ParameterNotNull(properties, "title"))
+    infos.SetSortTitle(properties["title"].asString());
 
   if (videodatabase.SetDetailsForSeason(infos, edit.artwork, infos.m_iIdShow, id) <= 0)
     return InternalError;
@@ -723,17 +701,13 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
-  return ACK;
+  return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(int id,
+                                                const CVariant& properties,
+                                                CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["episodeId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetEpisodeInfo("", infos, id));
       status != OK)
@@ -745,7 +719,7 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
 
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
 
   if (videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvshowid, id) <= 0)
     return InternalError;
@@ -753,21 +727,16 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
   if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, edit.removedArtwork))
     return InternalError;
 
-  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
+  StorePlaybackEdit(properties, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
-  return ACK;
+  return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObject,
-                                                   CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(int id,
+                                                   const CVariant& properties,
+                                                   CVideoDatabase& videodatabase)
 {
-  int id = static_cast<int>(parameterObject["musicVideoId"].asInteger());
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMusicVideoInfo("", infos, id));
       status != OK)
@@ -775,7 +744,7 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObje
 
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
@@ -787,10 +756,10 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObje
   if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, edit.removedArtwork))
     return InternalError;
 
-  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
+  StorePlaybackEdit(properties, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
-  return ACK;
+  return OK;
 }
 
 JSONRPC_STATUS CVideoLibrary::Refresh(const CVariant& parameterObject, CVariant& result)

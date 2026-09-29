@@ -47,24 +47,13 @@ public:
   template<VideoKind Kind, Listing From = Listing::All>
   static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
 
-  static JSONRPC_STATUS GetMovieDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMovieSetDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetTVShowDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetSeasonDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetEpisodeDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMusicVideoDetails(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetTags(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
-
-  static JSONRPC_STATUS SetMovieDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetMovieSetDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetTVShowDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetSeasonDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetEpisodeDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetMusicVideoDetails(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS Refresh(const CVariant& parameterObject, CVariant& result);
 
@@ -148,6 +137,33 @@ private:
                               Listing listing,
                               const CVariant& parameterObject,
                               CVariant& result);
+
+  //! Answers the \p fields of the item of \p kind with \p id
+  static JSONRPC_STATUS ReadItem(VideoKind kind,
+                                 int id,
+                                 const CVariant& fields,
+                                 CVideoDatabase& videodatabase,
+                                 CVariant& result);
+
+  //! Store each of \p properties given a value on the item of their kind with \p id
+  static JSONRPC_STATUS SetMovieDetails(int id,
+                                        const CVariant& properties,
+                                        CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetMovieSetDetails(int id,
+                                           const CVariant& properties,
+                                           CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetTVShowDetails(int id,
+                                         const CVariant& properties,
+                                         CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetSeasonDetails(int id,
+                                         const CVariant& properties,
+                                         CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetEpisodeDetails(int id,
+                                          const CVariant& properties,
+                                          CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetMusicVideoDetails(int id,
+                                             const CVariant& properties,
+                                             CVideoDatabase& videodatabase);
 
   static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant& parameterObject);
   static JSONRPC_STATUS HandleItems(const char* idProperty,
