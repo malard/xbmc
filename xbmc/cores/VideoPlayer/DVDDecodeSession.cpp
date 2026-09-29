@@ -114,11 +114,10 @@ bool SeekAndDecodePictureAt(CDVDDemux& demuxer,
     codec.AddData(*pPacket);
     CDVDDemuxUtils::FreeDemuxPacket(pPacket);
 
+    // A filter holding a frame back answers VC_NONE, so the codec is not asked for ever.
     iDecoderState = CDVDVideoCodec::VC_NONE;
-    while (iDecoderState == CDVDVideoCodec::VC_NONE)
-    {
+    for (int asks = 50; asks > 0 && iDecoderState == CDVDVideoCodec::VC_NONE; --asks)
       iDecoderState = codec.GetPicture(&picture);
-    }
 
     if (iDecoderState == CDVDVideoCodec::VC_PICTURE)
     {
