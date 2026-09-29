@@ -1043,10 +1043,8 @@ void CActiveAESink::OpenSink()
     m_sampleOfSilence.pkt->pause_burst_ms = m_sinkFormat.m_streamInfo.GetDuration();
   }
 
-  const auto settingsComponent = CServiceBroker::GetSettingsComponent();
-  const auto settings = settingsComponent ? settingsComponent->GetSettings() : nullptr;
-  m_silenceFiller =
-      passthrough && settings && settings->GetBool(CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
+  m_silenceFiller = passthrough && CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+                                       CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
   m_fillerArmed = m_silenceFiller;
   m_fillerUsed = false;
   m_lastRawOut = RawOut::NONE;

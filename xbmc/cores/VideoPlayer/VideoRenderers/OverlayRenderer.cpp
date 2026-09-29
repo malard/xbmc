@@ -336,11 +336,8 @@ void CRenderer::SetContentRect(SUBTITLES::STYLE::renderOpts& opts) const
   if (!m_subtitleAlignToContent)
     return;
 
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto geometry = components.GetComponent<CApplicationContentGeometry>();
-  if (!geometry)
-    return;
-
+  const auto geometry =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
   const CRect picture =
       KODI::VIDEO::GEOMETRY::PictureOnScreen(geometry->GetRenderInputs().geometry, m_rs, m_rd);
   opts.contentWidth = picture.Width();

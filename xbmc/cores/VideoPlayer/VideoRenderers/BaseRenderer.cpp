@@ -368,12 +368,10 @@ CRect CBaseRenderer::ApplyContentGeometry(float& contentRatio)
 {
   CRect renderWindow = m_viewRect;
 
-  const auto geometry =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
-  if (!geometry)
-    return renderWindow;
-
-  const CApplicationContentGeometry::RenderInputs inputs{geometry->GetRenderInputs()};
+  const CApplicationContentGeometry::RenderInputs inputs{
+      CServiceBroker::GetAppComponents()
+          .GetComponent<CApplicationContentGeometry>()
+          ->GetRenderInputs()};
 
   if (CServiceBroker::GetWinSystem()->GetGfxContext().IsRasterShapeStated())
   {
