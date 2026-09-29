@@ -36,6 +36,17 @@ CVariant File(const std::string& path)
 }
 } // unnamed namespace
 
+//! \brief A path no source shares is refused as outside-sources, naming the path as given
+TEST(TestFileOperations, APathOutsideEverySourceIsOutsideSources)
+{
+  const std::string path{"special://temp/jsonrpc-outside-sources.txt"};
+
+  CVariant result;
+  EXPECT_EQ(AccessDenied, CFileOperations::GetFileDetails(File(path), result));
+  EXPECT_EQ("outside-sources", result["reason"].asString());
+  EXPECT_EQ(path, result["target"]["file"].asString());
+}
+
 //! \brief A shared file that does not exist is no-such-path, naming the path as given
 TEST(TestFileOperations, AMissingFileIsNoSuchPath)
 {
