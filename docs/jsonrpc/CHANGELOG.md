@@ -105,7 +105,7 @@ Methods:
   `GetMovies`, `GetRecentlyAddedMovies` and the other list methods are it with preset values
 - `VideoLibrary.GetItemProperties`, `VideoLibrary.SetItemProperties`,
   `AudioLibrary.GetItemProperties`, `AudioLibrary.SetItemProperties`; an album's `albumStatus` can
-  be set, and a song's `releaseDate` and `votes`, which were declared but never stored, are
+  be set
 - `confirmed` on `Settings.SetSettingValue`
 - `starttime` and `endtime` on `PVR.GetBroadcasts`
 
@@ -171,3 +171,6 @@ Properties and types:
 - The schema declares what the serializers send: stream `source`, `version`, `flags`,
   `stereomode`, `language`, `hdrdetail`; broadcast `imdbnumber` as a string; `genre` as an array;
   `textureid` required; `volume` listed once.
+- A song's `releaseDate` and `votes` are stored when set; they were declared and ignored.
+- The `director` filter of `VideoLibrary.GetMovies`, `GetEpisodes` and `GetMusicVideos` finds
+  what the director directed, where it failed with `InvalidParams`.
