@@ -280,6 +280,7 @@ private:
   PlayListEntry MakeEntryLocked(const std::shared_ptr<CFileItem>& item) const;
   EntryId InsertLocked(const std::shared_ptr<CFileItem>& item, int position, Changes& changes);
   void RemoveLocked(int position, Changes& changes);
+  void RemoveIfLocked(const std::function<bool(const PlayListEntry&)>& remove, Changes& changes);
   void ClearLocked(Changes& changes);
   void MoveCurrentLocked(EntryId entry, Changes& changes);
   void MoveLocked(int from, int to, Changes& changes);

@@ -149,6 +149,18 @@ void CPlayList::RemoveLocked(int position, Changes& changes)
     changes.push_back({PlayListChange::Type::Current, m_current, FindLocked(m_current), nullptr});
 }
 
+void CPlayList::RemoveIfLocked(const std::function<bool(const PlayListEntry&)>& remove,
+                               Changes& changes)
+{
+  for (int position = 0; position < static_cast<int>(m_entries.size());)
+  {
+    if (remove(m_entries[position]))
+      RemoveLocked(position, changes);
+    else
+      ++position;
+  }
+}
+
 EntryId CPlayList::Add(const std::shared_ptr<CFileItem>& item)
 {
   return Insert(item, -1);
@@ -180,22 +192,9 @@ void CPlayList::AddFromFeed(const std::vector<std::shared_ptr<CFileItem>>& items
 
 void CPlayList::Insert(const CPlayList& playlist, int iPosition /* = -1 */)
 {
-  std::vector<std::shared_ptr<CFileItem>> items;
-  {
-    std::unique_lock lock(playlist.m_critSection);
-    for (const auto& entry : playlist.m_entries)
-      items.emplace_back(entry.item);
-  }
-
-  Changes changes;
-  {
-    std::unique_lock lock(m_critSection);
-    if (iPosition < 0 || iPosition > static_cast<int>(m_entries.size()))
-      iPosition = static_cast<int>(m_entries.size());
-    for (const auto& item : items)
-      InsertLocked(item, iPosition++, changes);
-  }
-  Notify(changes);
+  CFileItemList items;
+  playlist.GetItems(items);
+  Insert(items, iPosition);
 }
 
 void CPlayList::Insert(const CFileItemList& items, int iPosition /* = -1 */)
@@ -785,12 +784,12 @@ void CPlayList::Remove(const std::string& path, const std::vector<EntryId>& keep
   Changes changes;
   {
     std::unique_lock lock(m_critSection);
-    for (int position = 0; position < static_cast<int>(m_entries.size());)
-      if (m_entries[position].item->GetPath() == path &&
-          std::ranges::find(keep, m_entries[position].id) == keep.end())
-        RemoveLocked(position, changes);
-      else
-        ++position;
+    RemoveIfLocked(
+        [&path, &keep](const PlayListEntry& entry)
+        {
+          return entry.item->GetPath() == path && std::ranges::find(keep, entry.id) == keep.end();
+        },
+        changes);
   }
   Notify(changes);
 }
@@ -832,14 +831,8 @@ void CPlayList::RemoveDVDItems()
   Changes changes;
   {
     std::unique_lock lock(m_critSection);
-    for (int position = 0; position < static_cast<int>(m_entries.size());)
-    {
-      const CFileItem& item = *m_entries[position].item;
-      if (MUSIC::IsCDDA(item) || item.IsOnDVD())
-        RemoveLocked(position, changes);
-      else
-        ++position;
-    }
+    RemoveIfLocked([](const PlayListEntry& entry)
+                   { return MUSIC::IsCDDA(*entry.item) || entry.item->IsOnDVD(); }, changes);
   }
   Notify(changes);
 }
