@@ -69,11 +69,7 @@ void LoadLanguageCodes(const TiXmlElement* element)
     }
     else
     {
-      // A code declaring only one half of the pair states nothing, and dropping it in silence
-      // leaves the user with a block that does nothing and no way to see why
-      CLog::Log(LOGWARNING,
-                "CAdvancedSettings: <languagecodes> holds a <code> without both a <short> and a "
-                "<long>, which declares no language and is ignored");
+      CLog::Log(LOGWARNING, "<languagecodes>: a <code> needs both <short> and <long>, ignored");
     }
   }
 
@@ -93,7 +89,7 @@ void LoadSortTokens(const TiXmlNode* element, KODI::LANGUAGE::CLanguage::Tokens&
   for (const TiXmlElement* token = element->FirstChildElement("token"); token != nullptr;
        token = token->NextSiblingElement())
   {
-    if (token->FirstChild() == nullptr || token->FirstChild()->Value() == nullptr)
+    if (token->FirstChild() == nullptr)
       continue;
 
     const std::string word = token->FirstChild()->ValueStr();

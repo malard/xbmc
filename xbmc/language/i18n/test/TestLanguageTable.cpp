@@ -49,6 +49,19 @@ TEST_F(LanguageTableTest, NamesTheStandardLanguages)
   EXPECT_FALSE(Table().NameOf("qaa").has_value());
 }
 
+TEST_F(LanguageTableTest, ADeclarationReplacesTheOneBeforeIt)
+{
+  // advancedsettings.xml is read again on a profile switch, and the new profile's codes are the
+  // only ones that hold
+  Table().Declare({{"xpa", "Profile A Language"}, {"en", "Profile A English"}});
+  Table().Declare({{"xpb", "Profile B Language"}});
+
+  EXPECT_FALSE(Table().NameOf("xpa").has_value());
+  EXPECT_FALSE(Table().CodeOf("Profile A Language").has_value());
+  EXPECT_EQ(Table().NameOf("en"), "English");
+  EXPECT_EQ(Table().NameOf("xpb"), "Profile B Language");
+}
+
 TEST_F(LanguageTableTest, ADeclarationWithABlankHalfDeclaresNothing)
 {
   Table().Declare({{" ", "Blank Code"}, {"xbl", " "}});

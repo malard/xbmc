@@ -30,7 +30,8 @@ public:
   static CLanguageTable& GetInstance();
 
   /*!
-   * \brief Take the languages declared in advancedsettings.xml into the table.
+   * \brief Take the languages declared in advancedsettings.xml into the table, in place of any
+   *        declared before.
    * \param[in] languages The declarations, as language code to English name.
    */
   void Declare(const std::map<std::string, std::string>& languages);
@@ -78,6 +79,7 @@ public:
 private:
   CLanguageTable();
 
+  //! The ISO 639 data alone, discarding everything declared
   void Seed();
 
   //! Language code, lowercased, to English name

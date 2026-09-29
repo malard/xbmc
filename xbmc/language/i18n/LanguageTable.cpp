@@ -44,6 +44,10 @@ CLanguageTable& CLanguageTable::GetInstance()
 
 void CLanguageTable::Seed()
 {
+  m_names.clear();
+  m_codes.clear();
+  m_declared.clear();
+
   CIso639_1::ListLanguages(m_names);
   CIso639_2::ListLanguages(m_names);
 
@@ -60,6 +64,7 @@ void CLanguageTable::Seed()
 void CLanguageTable::Declare(const std::map<std::string, std::string>& languages)
 {
   std::unique_lock lock(m_section);
+  Seed();
 
   for (const auto& [code, name] : languages)
   {
@@ -94,11 +99,6 @@ void CLanguageTable::DeclareNames(const std::map<std::string, std::string>& lang
 void CLanguageTable::Reset()
 {
   std::unique_lock lock(m_section);
-
-  m_names.clear();
-  m_codes.clear();
-  m_declared.clear();
-
   Seed();
 }
 
