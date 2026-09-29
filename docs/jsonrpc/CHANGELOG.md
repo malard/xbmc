@@ -61,6 +61,26 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and `Player.OnSeek` are removed:
   each is `Player.OnPropertiesChanged`, carrying `speed` for the first three and `time` for a seek,
   with `player`. A pause is `speed` 0.
+- The `Get*Details` and `Set*Details` methods of `VideoLibrary` and `AudioLibrary` are removed: an
+  item is addressed by `{"kind", "id"}` and read and changed with `GetItemProperties` and
+  `SetItemProperties`. The answer is the item, not wrapped; `SetItemProperties` answers with the
+  values in force, not `"OK"`. A movie set no longer lists its movies: `GetItems` with a `setId`
+  filter does.
+- `VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are `OnItemPropertiesChanged`, carrying the
+  item as `{"kind", "id"}` and, when known, what changed under `properties` (`playCount`, not
+  `playcount`). An update to no library item (`id` -1) is not sent. A `SetItemProperties` change
+  is announced once, with the values it set. An update that added the item, which carried
+  `added`, is `OnItemAdded` instead, carrying the item and `transaction`.
+- `VideoLibrary.OnRemove` and `AudioLibrary.OnRemove` are `OnItemRemoved`, carrying the item as
+  `{"kind", "id"}` and `transaction`, in place of `id` and `type`. The removal of a movie's
+  version, which is no item a client can address, is not sent.
+- `VideoLibrary.GetInProgressTVShows` applies `sort` and `limits`; it answered every in-progress
+  show in title order whatever they said.
+- Every library list method (`VideoLibrary.GetMovies`, `GetRecentlyAddedMovies`,
+  `GetInProgressTVShows`, `AudioLibrary.GetArtists`, `GetSongs` and the rest) answers
+  `{limits, items}`, as `GetItems` does, in place of a list named for the kind (`movies`,
+  `tvShows`, `episodes`, ...). The calls are unchanged. A music list that finds nothing answers
+  an empty `items`, where it answered no list.
 
 ### Deprecated
 
@@ -92,12 +112,19 @@ Methods:
 - `PVR.GetBroadcastsByChannelGroup`, `PVR.GetPlayableBroadcasts`
 - `Settings.GetLevel`, `Settings.SetLevel`
 - `VideoLibrary.Refresh`, `VideoLibrary.RefreshContentGeometry`, `VideoLibrary.SetSourceContent`
+- `VideoLibrary.GetItems`, `AudioLibrary.GetItems`: one query per library over the kind named;
+  `GetMovies`, `GetRecentlyAddedMovies` and the other list methods are it with preset values
+- `VideoLibrary.GetItemProperties`, `VideoLibrary.SetItemProperties`,
+  `AudioLibrary.GetItemProperties`, `AudioLibrary.SetItemProperties`; an album's `albumStatus` can
+  be set
 - `confirmed` on `Settings.SetSettingValue`
 - `starttime` and `endtime` on `PVR.GetBroadcasts`
 
 Notifications:
 
 - `GUI.OnSkinLoaded`, `GUI.OnSkinLoadFailed`, `GUI.OnSkinUnloading`
+- `VideoLibrary.OnItemAdded`, `AudioLibrary.OnItemAdded`, `VideoLibrary.OnItemRemoved`,
+  `AudioLibrary.OnItemRemoved`
 - `Player.OnPlaybackFailed`
 - `Player.OnContentGeometryChange`
 - `Playlist.OnPropertiesChanged`
@@ -161,3 +188,6 @@ Properties and types:
 - The schema declares what the serializers send: stream `source`, `version`, `flags`,
   `stereomode`, `language`, `hdrdetail`; broadcast `imdbnumber` as a string; `genre` as an array;
   `textureid` required; `volume` listed once.
+- A song's `releaseDate` and `votes` are stored when set; they were declared and ignored.
+- The `director` filter of `VideoLibrary.GetMovies`, `GetEpisodes` and `GetMusicVideos` finds
+  what the director directed, where it failed with `InvalidParams`.

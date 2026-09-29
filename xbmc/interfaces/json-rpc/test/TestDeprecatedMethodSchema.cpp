@@ -72,12 +72,12 @@ constexpr std::array<DeprecatedProperty, 3> DEPRECATED_PROPERTIES{{
     {"PVR.Details.Broadcast", "isPlayable", "PVR.GetBroadcastIsPlayable"},
 }};
 
-//! \brief Deprecated members of a method parameter, as "Method(parameter).member" and what
-//! replaces them
-constexpr std::array<Supersession, 3> DEPRECATED_PARAMETER_MEMBERS{{
+//! \brief Deprecated members of a method parameter, as "Method(parameter).member", and of a type
+//! at any depth, as "Type.member", and what replaces them
+constexpr std::array<Supersession, 3> DEPRECATED_MEMBERS{{
     {"Player.Open(item).random", "shuffled"},
-    {"AudioLibrary.GetArtists(filter).genreId", "songGenreId"},
-    {"AudioLibrary.GetArtists(filter).genre", "songGenre"},
+    {"Audio.Filter.Artists.genreId", "songGenreId"},
+    {"Audio.Filter.Artists.genre", "songGenre"},
 }};
 
 //! \brief Calls \p visit with every member a schema declares, however deeply it is nested
@@ -128,12 +128,13 @@ std::vector<std::string> DeclaredDeprecations()
 
   for (const auto& [name, type] : ShippedTypes())
   {
-    const CVariant& properties = type["properties"];
-    for (auto property = properties.begin_map(); property != properties.end_map(); ++property)
-    {
-      if (property->second["deprecated"].asBoolean(false))
-        found.push_back(name + "." + property->first);
-    }
+    const std::string prefix{name + "."};
+    ForEachMember(type,
+                  [&found, &prefix](const std::string& member, const CVariant& schema)
+                  {
+                    if (schema["deprecated"].asBoolean(false))
+                      found.push_back(prefix + member);
+                  });
   }
 
   return found;
@@ -152,7 +153,7 @@ TEST(TestDeprecatedMethodSchema, EveryDeprecationIsAccountedFor)
     expected.emplace_back(deprecated);
   for (const auto& [type, property, replacement] : DEPRECATED_PROPERTIES)
     expected.emplace_back(std::string(type) + "." + property);
-  for (const auto& [member, replacement] : DEPRECATED_PARAMETER_MEMBERS)
+  for (const auto& [member, replacement] : DEPRECATED_MEMBERS)
     expected.emplace_back(member);
 
   std::vector<std::string> declared{DeclaredDeprecations()};
@@ -238,22 +239,24 @@ TEST(TestDeprecatedMethodSchema, TheSchemaDoesNotDateItsOwnRemovals)
   }
 }
 
-TEST(TestDeprecatedMethodSchema, ADeprecatedParameterMemberNamesItsReplacement)
+TEST(TestDeprecatedMethodSchema, ADeprecatedMemberNamesItsReplacement)
 {
   std::map<std::string, std::string> descriptions;
+  const auto describe = [&descriptions](const std::string& prefix, const CVariant& schema)
+  {
+    ForEachMember(schema, [&descriptions, &prefix](const std::string& member, const CVariant& value)
+                  { descriptions[prefix + member] = value["description"].asString(); });
+  };
   for (const auto& [name, method] : ShippedMethods())
   {
     const CVariant& params{method["params"]};
     for (auto param = params.begin_array(); param != params.end_array(); ++param)
-    {
-      const std::string prefix{name + "(" + (*param)["name"].asString() + ")."};
-      ForEachMember((*param)["schema"],
-                    [&descriptions, &prefix](const std::string& member, const CVariant& schema)
-                    { descriptions[prefix + member] = schema["description"].asString(); });
-    }
+      describe(name + "(" + (*param)["name"].asString() + ").", (*param)["schema"]);
   }
+  for (const auto& [name, type] : ShippedTypes())
+    describe(name + ".", type);
 
-  for (const auto& [member, replacement] : DEPRECATED_PARAMETER_MEMBERS)
+  for (const auto& [member, replacement] : DEPRECATED_MEMBERS)
   {
     ASSERT_TRUE(descriptions.contains(member)) << member;
     EXPECT_NE(std::string::npos, descriptions.at(member).find(replacement))

@@ -47,7 +47,9 @@ _DEFINITION = re.compile(
 _CALL = re.compile(r"(?<![\w.])(?<!->)((?:\w+::)?\w+)\s*\(")
 # A function passed by name as an argument, which the callee may call.
 _ARGUMENT = re.compile(r"[(,]\s*((?:\w+::)?\w+)\s*(?=[,)])")
-_MAP_ENTRY = re.compile(r'\{\s*"([\w.]+)"\s*,\s*(\w+::\w+)\s*\}')
+# A handler may be a template instantiated for the method, e.g. CLib::List<Kind::Movie>; its
+# statuses are the template's.
+_MAP_ENTRY = re.compile(r'\{\s*"([\w.]+)"\s*,\s*(\w+::\w+)(?:<[^{}]*>)?\s*\}')
 
 
 def _strip(text):

@@ -20,6 +20,7 @@
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_epg.h" // EPG_TAG_INVALID_UID
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
+#include "interfaces/AnnouncementManager.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
@@ -42,12 +43,14 @@
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string.h>
 #include <string>
+#include <vector>
 
 using namespace MUSIC_INFO;
 using namespace JSONRPC;
@@ -624,6 +627,97 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
   }
 
   return InvalidParams;
+}
+
+JSONRPC_STATUS CFileItemHandler::CheckAgainstType(const char* type,
+                                                  const char* parameter,
+                                                  const CVariant& value,
+                                                  CVariant& checked,
+                                                  CVariant& errorData)
+{
+  const JSONSchemaTypeDefinitionPtr definition{CJSONServiceDescription::GetType(type)};
+  if (!definition)
+    return InternalError;
+
+  CVariant data;
+  const JSONRPC_STATUS status{definition->Check(value, checked, data)};
+  if (status != OK)
+  {
+    errorData = data;
+    errorData["name"] = parameter;
+  }
+  return status;
+}
+
+JSONRPC_STATUS CFileItemHandler::RefuseForKind(const char* parameter,
+                                               const std::string& kind,
+                                               CVariant& errorData)
+{
+  errorData = CVariant(CVariant::VariantTypeObject);
+  errorData["name"] = parameter;
+  errorData["message"] = StringUtils::Format("Not accepted for a {}", kind);
+  return InvalidParams;
+}
+
+void CFileItemHandler::RenameList(CVariant& result, const char* from, const char* to)
+{
+  CVariant list{CVariant::VariantTypeArray};
+  if (result.isMember(from))
+  {
+    if (result[from].isArray())
+      list = std::move(result[from]);
+    result.erase(from);
+  }
+  result[to] = std::move(list);
+}
+
+CVariant CFileItemHandler::GivenMembers(const CVariant& object)
+{
+  CVariant given{CVariant::VariantTypeObject};
+  for (auto member = object.begin_map(); member != object.end_map(); ++member)
+  {
+    if (!member->second.isNull())
+      given[member->first] = member->second;
+  }
+  return given;
+}
+
+CVariant CFileItemHandler::ReadableNames(const CVariant& values, const char* fieldsType)
+{
+  CVariant names{CVariant::VariantTypeArray};
+  const JSONSchemaTypeDefinitionPtr fields{CJSONServiceDescription::GetType(fieldsType)};
+  if (!fields || !fields->items)
+    return names;
+
+  const std::vector<CVariant>& readable{fields->items->enums};
+  for (auto value = values.begin_map(); value != values.end_map(); ++value)
+  {
+    if (!value->second.isNull() &&
+        std::ranges::find(readable, CVariant{value->first}) != readable.end())
+      names.push_back(value->first);
+  }
+  return names;
+}
+
+void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
+                                      const std::string& kind,
+                                      int id,
+                                      const CVariant& names,
+                                      const CVariant& item)
+{
+  if (names.empty())
+    return;
+
+  CVariant data{CVariant::VariantTypeObject};
+  data["type"] = kind;
+  data["id"] = id;
+  data["properties"] = CVariant{CVariant::VariantTypeObject};
+  for (auto name = names.begin_array(); name != names.end_array(); ++name)
+  {
+    if (item.isMember(name->asString()))
+      data["properties"][name->asString()] = item[name->asString()];
+  }
+  CServiceBroker::GetAnnouncementManager()->Announce(library, "OnUpdate", data);
 }
 
 void CFileItemHandler::Sort(CFileItemList& items, const CVariant& parameterObject)

@@ -474,6 +474,13 @@ public:
    */
   static void AnnounceUpdate(const std::string& content, int id);
 
+  /*!
+   \brief Whether this connection's writes announce the items they update
+
+   A caller that announces what it changed itself turns this off, so a change is announced once.
+   */
+  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
+
   void SetTrailerForMovie(int idMovie, const std::string& trailer);
 
   bool SetSingleValue(VideoDbContentType type, int dbId, int dbField, const std::string& strValue);
@@ -1433,4 +1440,6 @@ private:
   static void AnnounceRemove(const std::string& content, int id, bool scanning = false);
 
   static CDateTime GetDateAdded(const std::string& filename, CDateTime dateAdded = CDateTime());
+
+  bool m_announceUpdates{true};
 };

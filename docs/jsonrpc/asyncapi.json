@@ -67,11 +67,14 @@
         "Playlist.OnPropertiesChanged": {
           "$ref": "#/components/messages/Playlist.OnPropertiesChanged"
         },
-        "AudioLibrary.OnUpdate": {
-          "$ref": "#/components/messages/AudioLibrary.OnUpdate"
+        "AudioLibrary.OnItemPropertiesChanged": {
+          "$ref": "#/components/messages/AudioLibrary.OnItemPropertiesChanged"
         },
-        "AudioLibrary.OnRemove": {
-          "$ref": "#/components/messages/AudioLibrary.OnRemove"
+        "AudioLibrary.OnItemAdded": {
+          "$ref": "#/components/messages/AudioLibrary.OnItemAdded"
+        },
+        "AudioLibrary.OnItemRemoved": {
+          "$ref": "#/components/messages/AudioLibrary.OnItemRemoved"
         },
         "AudioLibrary.OnScanStarted": {
           "$ref": "#/components/messages/AudioLibrary.OnScanStarted"
@@ -88,14 +91,17 @@
         "AudioLibrary.OnExport": {
           "$ref": "#/components/messages/AudioLibrary.OnExport"
         },
-        "VideoLibrary.OnUpdate": {
-          "$ref": "#/components/messages/VideoLibrary.OnUpdate"
+        "VideoLibrary.OnItemPropertiesChanged": {
+          "$ref": "#/components/messages/VideoLibrary.OnItemPropertiesChanged"
+        },
+        "VideoLibrary.OnItemAdded": {
+          "$ref": "#/components/messages/VideoLibrary.OnItemAdded"
+        },
+        "VideoLibrary.OnItemRemoved": {
+          "$ref": "#/components/messages/VideoLibrary.OnItemRemoved"
         },
         "VideoLibrary.OnExport": {
           "$ref": "#/components/messages/VideoLibrary.OnExport"
-        },
-        "VideoLibrary.OnRemove": {
-          "$ref": "#/components/messages/VideoLibrary.OnRemove"
         },
         "VideoLibrary.OnScanStarted": {
           "$ref": "#/components/messages/VideoLibrary.OnScanStarted"
@@ -282,25 +288,36 @@
         }
       ]
     },
-    "AudioLibrary.OnUpdate": {
+    "AudioLibrary.OnItemPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnUpdate"
+          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnItemPropertiesChanged"
         }
       ]
     },
-    "AudioLibrary.OnRemove": {
+    "AudioLibrary.OnItemAdded": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnRemove"
+          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnItemAdded"
+        }
+      ]
+    },
+    "AudioLibrary.OnItemRemoved": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/AudioLibrary.OnItemRemoved"
         }
       ]
     },
@@ -359,14 +376,36 @@
         }
       ]
     },
-    "VideoLibrary.OnUpdate": {
+    "VideoLibrary.OnItemPropertiesChanged": {
       "action": "send",
       "channel": {
         "$ref": "#/channels/jsonrpc"
       },
       "messages": [
         {
-          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnUpdate"
+          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemPropertiesChanged"
+        }
+      ]
+    },
+    "VideoLibrary.OnItemAdded": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemAdded"
+        }
+      ]
+    },
+    "VideoLibrary.OnItemRemoved": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnItemRemoved"
         }
       ]
     },
@@ -378,17 +417,6 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnExport"
-        }
-      ]
-    },
-    "VideoLibrary.OnRemove": {
-      "action": "send",
-      "channel": {
-        "$ref": "#/channels/jsonrpc"
-      },
-      "messages": [
-        {
-          "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnRemove"
         }
       ]
     },
@@ -1112,9 +1140,9 @@
           ]
         }
       },
-      "AudioLibrary.OnUpdate": {
-        "name": "AudioLibrary.OnUpdate",
-        "summary": "An audio item has been updated.",
+      "AudioLibrary.OnItemPropertiesChanged": {
+        "name": "AudioLibrary.OnItemPropertiesChanged",
+        "summary": "A music library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
         "payload": {
           "type": "object",
           "properties": {
@@ -1122,7 +1150,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "AudioLibrary.OnUpdate"
+              "const": "AudioLibrary.OnItemPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1133,24 +1161,19 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
+                    "item": {
+                      "$ref": "#/components/schemas/Audio.Item"
                     },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Audio.Type"
+                    "properties": {
+                      "type": "object"
                     },
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
                       "description": "True if the update is being performed within a transaction."
-                    },
-                    "added": {
-                      "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the update is for a newly added item."
                     }
                   },
                   "required": [
-                    "id",
-                    "type"
+                    "item"
                   ]
                 }
               },
@@ -1168,9 +1191,9 @@
           ]
         }
       },
-      "AudioLibrary.OnRemove": {
-        "name": "AudioLibrary.OnRemove",
-        "summary": "An audio item has been removed.",
+      "AudioLibrary.OnItemAdded": {
+        "name": "AudioLibrary.OnItemAdded",
+        "summary": "A music library item was added.",
         "payload": {
           "type": "object",
           "properties": {
@@ -1178,7 +1201,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "AudioLibrary.OnRemove"
+              "const": "AudioLibrary.OnItemAdded"
             },
             "params": {
               "type": "object",
@@ -1189,11 +1212,56 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
+                    "item": {
+                      "$ref": "#/components/schemas/Audio.Item"
                     },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Audio.Type"
+                    "transaction": {
+                      "$ref": "#/components/schemas/Optional.Boolean",
+                      "description": "True if the update is being performed within a transaction."
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "AudioLibrary.OnItemRemoved": {
+        "name": "AudioLibrary.OnItemRemoved",
+        "summary": "A music library item was removed.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "AudioLibrary.OnItemRemoved"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Audio.Item"
                     },
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
@@ -1201,8 +1269,7 @@
                     }
                   },
                   "required": [
-                    "id",
-                    "type"
+                    "item"
                   ]
                 }
               },
@@ -1410,9 +1477,9 @@
           ]
         }
       },
-      "VideoLibrary.OnUpdate": {
-        "name": "VideoLibrary.OnUpdate",
-        "summary": "A video item has been updated.",
+      "VideoLibrary.OnItemPropertiesChanged": {
+        "name": "VideoLibrary.OnItemPropertiesChanged",
+        "summary": "A video library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
         "payload": {
           "type": "object",
           "properties": {
@@ -1420,7 +1487,7 @@
               "const": "2.0"
             },
             "method": {
-              "const": "VideoLibrary.OnUpdate"
+              "const": "VideoLibrary.OnItemPropertiesChanged"
             },
             "params": {
               "type": "object",
@@ -1431,29 +1498,115 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
+                    "item": {
+                      "$ref": "#/components/schemas/Video.Item"
                     },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Video.Type"
-                    },
-                    "playCount": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "default": -1
+                    "properties": {
+                      "type": "object"
                     },
                     "transaction": {
                       "$ref": "#/components/schemas/Optional.Boolean",
                       "description": "True if the update is being performed within a transaction."
-                    },
-                    "added": {
-                      "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the update is for a newly added item."
                     }
                   },
                   "required": [
-                    "id",
-                    "type"
+                    "item"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "VideoLibrary.OnItemAdded": {
+        "name": "VideoLibrary.OnItemAdded",
+        "summary": "A video library item was added.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "VideoLibrary.OnItemAdded"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Video.Item"
+                    },
+                    "transaction": {
+                      "$ref": "#/components/schemas/Optional.Boolean",
+                      "description": "True if the update is being performed within a transaction."
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "VideoLibrary.OnItemRemoved": {
+        "name": "VideoLibrary.OnItemRemoved",
+        "summary": "A video library item was removed.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "VideoLibrary.OnItemRemoved"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "$ref": "#/components/schemas/Video.Item"
+                    },
+                    "transaction": {
+                      "$ref": "#/components/schemas/Optional.Boolean",
+                      "description": "True if the removal is being performed within a transaction."
+                    }
+                  },
+                  "required": [
+                    "item"
                   ]
                 }
               },
@@ -1510,58 +1663,6 @@
               },
               "required": [
                 "sender"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "jsonrpc",
-            "method",
-            "params"
-          ]
-        }
-      },
-      "VideoLibrary.OnRemove": {
-        "name": "VideoLibrary.OnRemove",
-        "summary": "A video item has been removed.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "jsonrpc": {
-              "const": "2.0"
-            },
-            "method": {
-              "const": "VideoLibrary.OnRemove"
-            },
-            "params": {
-              "type": "object",
-              "properties": {
-                "sender": {
-                  "type": "string"
-                },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "$ref": "#/components/schemas/Library.Id"
-                    },
-                    "type": {
-                      "$ref": "#/components/schemas/Notifications.Library.Video.Type"
-                    },
-                    "transaction": {
-                      "$ref": "#/components/schemas/Optional.Boolean",
-                      "description": "True if the removal is being performed within a transaction."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "type"
-                  ]
-                }
-              },
-              "required": [
-                "sender",
-                "data"
               ],
               "additionalProperties": false
             }
@@ -2955,6 +3056,61 @@
           "player"
         ]
       },
+      "Audio.Item.Kind": {
+        "type": "string",
+        "description": "A kind of music library item, named by its media type",
+        "enum": [
+          "artist",
+          "album",
+          "song"
+        ]
+      },
+      "Audio.Item": {
+        "type": "object",
+        "description": "A music library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Audio.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Item.Kind": {
+        "type": "string",
+        "description": "A kind of video library item, named by its media type",
+        "enum": [
+          "movie",
+          "set",
+          "tvshow",
+          "season",
+          "episode",
+          "musicvideo"
+        ]
+      },
+      "Video.Item": {
+        "type": "object",
+        "description": "A video library item, addressed by its kind and id",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Video.Item.Kind"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
+      },
       "Video.ContentRect": {
         "type": "object",
         "description": "The picture within the frame, after pixel aspect correction. Black bars coded into the video are outside it. The rectangle is absent when there is no frame behind it, which is the case while nothing is playing and Kodi is reporting the shape it rests at; aspect, label and name are always present, and are what a consumer acting on the shape rather than on the pixels should read.",
@@ -3075,21 +3231,6 @@
           "standard",
           "advanced",
           "expert"
-        ]
-      },
-      "Notifications.Library.Audio.Type": {
-        "type": "string",
-        "enum": [
-          "song"
-        ]
-      },
-      "Notifications.Library.Video.Type": {
-        "type": "string",
-        "enum": [
-          "movie",
-          "tvshow",
-          "episode",
-          "musicvideo"
         ]
       },
       "Playlist.Name": {

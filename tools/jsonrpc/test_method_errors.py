@@ -107,6 +107,12 @@ class TestDerivation(unittest.TestCase):
         {
           return Collect(parameterObject, Helper);
         }
+
+        template<Kind K, Listing From>
+        JSONRPC_STATUS CTest::List(const CVariant& parameterObject, CVariant& result)
+        {
+          return Inner(parameterObject);
+        }
         """)
 
     METHOD_MAP = textwrap.dedent("""
@@ -114,6 +120,7 @@ class TestDerivation(unittest.TestCase):
           { "Test.Outer", CTest::Outer },
           { "Test.Open",  CTest::Open },
           { "Test.Forward", CTest::Forward },
+          { "Test.Preset", CTest::List<Kind::Movie, Listing::RecentlyAdded> },
         };
         """)
 
@@ -141,6 +148,9 @@ class TestDerivation(unittest.TestCase):
     def test_a_member_call_is_not_a_handler_call(self):
         # database.Open() must not pull in CTest::Open's Unavailable
         self.assertNotIn("Unavailable", self.derived["Test.Outer"])
+
+    def test_a_template_handler_has_the_statuses_of_its_template(self):
+        self.assertEqual(self.derived["Test.Preset"], ["InternalError", "NotFound"])
 
     def test_comments_and_strings_are_ignored(self):
         self.assertNotIn("AccessDenied", self.derived["Test.Outer"])

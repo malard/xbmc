@@ -176,10 +176,6 @@ under `schema`. Tuple-form `items`, `additionalItems`, `divisibleBy` and the
 boolean `exclusiveMinimum`/`exclusiveMaximum` are no longer read; the shipped
 schema never used them.
 
-Two definitions that were inline and named by an `id` are now global types in
-their own right: `Notifications.Library.Audio.Type` and
-`Notifications.Library.Video.Type`.
-
 **What to do.** If you validate against the description, use a 2020-12
 validator. If you generate code from it, most generators support 2020-12
 directly and needed a shim for draft-03. You can also skip `Introspect`
@@ -727,6 +723,117 @@ answers and notifications, using the table.
 | `windowparameter` | `windowParameter` |
 | `yearsactive` | `yearsActive` |
 
+## 18. A library item is a target: `GetItemProperties` and `SetItemProperties`
+
+The `Get*Details` and `Set*Details` methods of both libraries are removed. An
+item is addressed by its kind and id, and its properties are read with
+`GetItemProperties` and changed with `SetItemProperties`.
+
+```diff
+- {"method": "VideoLibrary.GetMovieDetails",   "params": {"movieId": 3, "properties": ["title", "playCount"]}}
++ {"method": "VideoLibrary.GetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": ["title", "playCount"]}}
+- {"method": "VideoLibrary.SetMovieDetails",   "params": {"movieId": 3, "playCount": 1}}
++ {"method": "VideoLibrary.SetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": {"playCount": 1}}}
+```
+
+| Removed | Kind |
+| --- | --- |
+| `VideoLibrary.GetMovieDetails`, `SetMovieDetails` | `movie` |
+| `VideoLibrary.GetMovieSetDetails`, `SetMovieSetDetails` | `set` |
+| `VideoLibrary.GetTVShowDetails`, `SetTVShowDetails` | `tvshow` |
+| `VideoLibrary.GetSeasonDetails`, `SetSeasonDetails` | `season` |
+| `VideoLibrary.GetEpisodeDetails`, `SetEpisodeDetails` | `episode` |
+| `VideoLibrary.GetMusicVideoDetails`, `SetMusicVideoDetails` | `musicvideo` |
+| `AudioLibrary.GetArtistDetails`, `SetArtistDetails` | `artist` |
+| `AudioLibrary.GetAlbumDetails`, `SetAlbumDetails` | `album` |
+| `AudioLibrary.GetSongDetails`, `SetSongDetails` | `song` |
+
+`GetItemProperties` answers the item itself, not wrapped in `movieDetails`
+and the like. `SetItemProperties` takes the values under `properties`,
+changes only those given, and answers like `GetItemProperties` for the ones
+it can read back, in place of `"OK"`. A movie set no longer lists its movies:
+ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
+
+**What to do.** Replace each call as above. Read the answer as the item.
+
+## 19. A library item's changes, additions and removals are its own notifications
+
+`VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are
+`VideoLibrary.OnItemPropertiesChanged` and
+`AudioLibrary.OnItemPropertiesChanged`. The item is addressed as
+`SetItemProperties` addresses it, and what changed is under `properties`,
+using the names `GetItemProperties` answers with.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",                "params": {"data": {"item": {"id": 12, "type": "episode"}, "playcount": 1}}}
++ {"method": "VideoLibrary.OnItemPropertiesChanged", "params": {"data": {"item": {"kind": "episode", "id": 12}, "properties": {"playCount": 1}}}}
+```
+
+`properties` is absent when Kodi does not say what changed, as after a
+refresh; read the item again then. `transaction` is carried as before. An
+update to a file that is not a library item used to arrive with `id` -1; it
+is no longer sent. A change made with `SetItemProperties` is announced to
+every client once, with the values it set.
+
+A newly added item, which arrived as `OnUpdate` with `added`, is an event of
+its own: `VideoLibrary.OnItemAdded` and `AudioLibrary.OnItemAdded`, carrying
+the item and `transaction`. `OnItemPropertiesChanged` never carries `added`.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",    "params": {"data": {"item": {"id": 9, "type": "movie"}, "added": true, "transaction": true}}}
++ {"method": "VideoLibrary.OnItemAdded", "params": {"data": {"item": {"kind": "movie", "id": 9}, "transaction": true}}}
+```
+
+A removed item is `VideoLibrary.OnItemRemoved` or
+`AudioLibrary.OnItemRemoved`, in place of `OnRemove`, addressing the item
+the same way and carrying `transaction` when the removal is part of a clean.
+The removal of a movie's version, which arrived as `OnRemove` with
+`"type": "videoversion"`, is no longer sent: a version is not an item you
+can address.
+
+```diff
+- {"method": "VideoLibrary.OnRemove",      "params": {"data": {"id": 7, "type": "movie", "transaction": true}}}
++ {"method": "VideoLibrary.OnItemRemoved", "params": {"data": {"item": {"kind": "movie", "id": 7}, "transaction": true}}}
+```
+
+**What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
+into what you hold for the item, or read it with `GetItemProperties` when
+there is none. Listen for `OnItemAdded` and `OnItemRemoved` to learn of new
+and removed items.
+
+## 20. `GetInProgressTVShows` sorts and limits as asked
+
+`VideoLibrary.GetInProgressTVShows` took `sort` and `limits` but answered
+every in-progress show in title order, with only the returned `limits`
+reflecting what was asked. It now sorts and limits like every other list
+method.
+
+**What to do.** Nothing, unless you sent `sort` or `limits` and relied on
+their being ignored: drop them to get every in-progress show, as before.
+
+## 21. Every library list answers `items`
+
+The library list methods keep their names and parameters, but answer as
+`VideoLibrary.GetItems` and `AudioLibrary.GetItems` do: the list is `items`,
+not a name for the kind.
+
+```diff
+- {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "movies": [{"movieId": 1, "label": "The Matrix"}, ...]}}
++ {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "items":  [{"movieId": 1, "label": "The Matrix"}, ...]}}
+```
+
+This holds for `GetMovies`, `GetMovieSets`, `GetTVShows`, `GetSeasons`,
+`GetEpisodes`, `GetMusicVideos`, `GetRecentlyAddedMovies`,
+`GetRecentlyAddedEpisodes`, `GetRecentlyAddedMusicVideos`,
+`GetInProgressTVShows`, `GetArtists`, `GetAlbums`, `GetSongs`,
+`GetRecentlyAddedAlbums`, `GetRecentlyAddedSongs`, `GetRecentlyPlayedAlbums`
+and `GetRecentlyPlayedSongs`. Each item still carries its kind's id
+(`movieId`, `tvShowId`, ...). A music list that finds nothing answers an
+empty `items`, where it used to answer no list at all.
+
+**What to do.** Read `result.items` in place of `result.movies`,
+`result.tvShows` and the rest.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
@@ -760,6 +867,9 @@ New since Kodi 21 and safe to ignore until you want it. The
 - **`VideoLibrary.SetSourceContent`** assigns a content type and scraper to a
   source path, which previously only the "Set content" dialog could do.
 - **`Player.GetChapters`** returns the playing item's chapters.
+- **`VideoLibrary.GetItems` and `AudioLibrary.GetItems`** list any kind of
+  item with one method; `GetMovies` and the other list methods are the same
+  query with preset values.
 - **`GUI.TakeScreenshot`**, `Database.GetDatabaseName`,
   `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist`.
 - **PVR image properties are URLs** the web server's `/image/` endpoint can

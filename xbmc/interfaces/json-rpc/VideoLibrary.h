@@ -26,41 +26,34 @@ class CVariant;
 
 namespace JSONRPC
 {
+//! The kinds of item the video library holds
+enum class VideoKind
+{
+  Movie,
+  Set,
+  TVShow,
+  Season,
+  Episode,
+  MusicVideo,
+};
+
 class CVideoLibrary : public CFileItemHandler
 {
 public:
-  static JSONRPC_STATUS GetMovies(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMovieDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMovieSets(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMovieSetDetails(const CVariant& parameterObject, CVariant& result);
+  //! The query over one kind's items
+  static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
 
-  static JSONRPC_STATUS GetTVShows(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetTVShowDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetSeasons(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetSeasonDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetEpisodes(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetEpisodeDetails(const CVariant& parameterObject, CVariant& result);
+  //! A list method: the query over \p Kind with the listing \p From
+  template<VideoKind Kind, Listing From = Listing::All>
+  static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
 
-  static JSONRPC_STATUS GetMusicVideos(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetMusicVideoDetails(const CVariant& parameterObject, CVariant& result);
-
-  static JSONRPC_STATUS GetRecentlyAddedMovies(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetRecentlyAddedEpisodes(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetRecentlyAddedMusicVideos(const CVariant& parameterObject,
-                                                    CVariant& result);
-  static JSONRPC_STATUS GetInProgressTVShows(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetTags(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
-
-  static JSONRPC_STATUS SetMovieDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetMovieSetDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetTVShowDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetSeasonDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetEpisodeDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetMusicVideoDetails(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS Refresh(const CVariant& parameterObject, CVariant& result);
 
@@ -135,6 +128,43 @@ public:
   static int GetDetailsFromJsonParameters(const CVariant& parameterObject);
 
 private:
+  /*!
+     \brief Lists the items of \p kind that \p listing selects
+     \param parameterObject The caller's properties, limits, sort and filter, and the show and
+     season an episode or season list is narrowed to
+     */
+  static JSONRPC_STATUS Query(VideoKind kind,
+                              Listing listing,
+                              const CVariant& parameterObject,
+                              CVariant& result);
+
+  //! Answers the \p fields of the item of \p kind with \p id
+  static JSONRPC_STATUS ReadItem(VideoKind kind,
+                                 int id,
+                                 const CVariant& fields,
+                                 CVideoDatabase& videodatabase,
+                                 CVariant& result);
+
+  //! Store each of \p properties given a value on the item of their kind with \p id
+  static JSONRPC_STATUS SetMovieDetails(int id,
+                                        const CVariant& properties,
+                                        CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetMovieSetDetails(int id,
+                                           const CVariant& properties,
+                                           CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetTVShowDetails(int id,
+                                         const CVariant& properties,
+                                         CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetSeasonDetails(int id,
+                                         const CVariant& properties,
+                                         CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetEpisodeDetails(int id,
+                                          const CVariant& properties,
+                                          CVideoDatabase& videodatabase);
+  static JSONRPC_STATUS SetMusicVideoDetails(int id,
+                                             const CVariant& properties,
+                                             CVideoDatabase& videodatabase);
+
   static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant& parameterObject);
   static JSONRPC_STATUS HandleItems(const char* idProperty,
                                     const char* resultName,
@@ -159,4 +189,10 @@ private:
                                   std::vector<std::string>& fieldValue,
                                   std::set<std::string, std::less<>>& updatedDetails);
 };
+
+template<VideoKind Kind, Listing From>
+JSONRPC_STATUS CVideoLibrary::List(const CVariant& parameterObject, CVariant& result)
+{
+  return Query(Kind, From, parameterObject, result);
+}
 } // namespace JSONRPC

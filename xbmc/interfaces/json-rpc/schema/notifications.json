@@ -331,9 +331,9 @@
     ],
     "returns": null
   },
-  "AudioLibrary.OnUpdate": {
+  "AudioLibrary.OnItemPropertiesChanged": {
     "type": "notification",
-    "description": "An audio item has been updated.",
+    "description": "A music library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
     "params": [
       {
         "name": "sender",
@@ -348,33 +348,28 @@
         "schema": {
           "type": "object",
           "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
+            "item": {
+              "$ref": "#/$defs/Audio.Item"
             },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Audio.Type"
+            "properties": {
+              "type": "object"
             },
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
               "description": "True if the update is being performed within a transaction."
-            },
-            "added": {
-              "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the update is for a newly added item."
             }
           },
           "required": [
-            "id",
-            "type"
+            "item"
           ]
         }
       }
     ],
     "returns": null
   },
-  "AudioLibrary.OnRemove": {
+  "AudioLibrary.OnItemAdded": {
     "type": "notification",
-    "description": "An audio item has been removed.",
+    "description": "A music library item was added.",
     "params": [
       {
         "name": "sender",
@@ -389,11 +384,41 @@
         "schema": {
           "type": "object",
           "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
+            "item": {
+              "$ref": "#/$defs/Audio.Item"
             },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Audio.Type"
+            "transaction": {
+              "$ref": "#/$defs/Optional.Boolean",
+              "description": "True if the update is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "AudioLibrary.OnItemRemoved": {
+    "type": "notification",
+    "description": "A music library item was removed.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Audio.Item"
             },
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
@@ -401,8 +426,7 @@
             }
           },
           "required": [
-            "id",
-            "type"
+            "item"
           ]
         }
       }
@@ -524,9 +548,9 @@
     ],
     "returns": null
   },
-  "VideoLibrary.OnUpdate": {
+  "VideoLibrary.OnItemPropertiesChanged": {
     "type": "notification",
-    "description": "A video item has been updated.",
+    "description": "A video library item changed. properties carries what changed, under the names GetItemProperties answers with, when that is known; without it the item is to be read again",
     "params": [
       {
         "name": "sender",
@@ -541,29 +565,85 @@
         "schema": {
           "type": "object",
           "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
+            "item": {
+              "$ref": "#/$defs/Video.Item"
             },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Video.Type"
-            },
-            "playCount": {
-              "type": "integer",
-              "minimum": 0,
-              "default": -1
+            "properties": {
+              "type": "object"
             },
             "transaction": {
               "$ref": "#/$defs/Optional.Boolean",
               "description": "True if the update is being performed within a transaction."
-            },
-            "added": {
-              "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the update is for a newly added item."
             }
           },
           "required": [
-            "id",
-            "type"
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "VideoLibrary.OnItemAdded": {
+    "type": "notification",
+    "description": "A video library item was added.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Video.Item"
+            },
+            "transaction": {
+              "$ref": "#/$defs/Optional.Boolean",
+              "description": "True if the update is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "VideoLibrary.OnItemRemoved": {
+    "type": "notification",
+    "description": "A video library item was removed.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Video.Item"
+            },
+            "transaction": {
+              "$ref": "#/$defs/Optional.Boolean",
+              "description": "True if the removal is being performed within a transaction."
+            }
+          },
+          "required": [
+            "item"
           ]
         }
       }
@@ -600,43 +680,6 @@
               "default": 0
             }
           }
-        }
-      }
-    ],
-    "returns": null
-  },
-  "VideoLibrary.OnRemove": {
-    "type": "notification",
-    "description": "A video item has been removed.",
-    "params": [
-      {
-        "name": "sender",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "data",
-        "required": true,
-        "schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/Library.Id"
-            },
-            "type": {
-              "$ref": "#/$defs/Notifications.Library.Video.Type"
-            },
-            "transaction": {
-              "$ref": "#/$defs/Optional.Boolean",
-              "description": "True if the removal is being performed within a transaction."
-            }
-          },
-          "required": [
-            "id",
-            "type"
-          ]
         }
       }
     ],
