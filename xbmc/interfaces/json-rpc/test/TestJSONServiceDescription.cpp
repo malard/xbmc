@@ -29,6 +29,24 @@ class TestJSONServiceDescription : public JSONServiceDescriptionTestBase
 {
 };
 
+TEST_F(TestJSONServiceDescription, EveryShippedMethodHasAHandler)
+{
+  AddShippedServiceDescription();
+
+  for (const auto& [name, definition] : ShippedMethods())
+  {
+    std::string key = name;
+    StringUtils::ToLower(key);
+    MethodCall call;
+    CVariant output;
+    EXPECT_NE(MethodNotFound,
+              CJSONServiceDescription::CheckCall(key.c_str(), CVariant{}, &m_transport, &m_client,
+                                                 false, call, output))
+        << name << " is declared but not registered";
+    EXPECT_TRUE(call) << name << " has no handler";
+  }
+}
+
 TEST_F(TestJSONServiceDescription, MissingRequiredParameter)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Required": {

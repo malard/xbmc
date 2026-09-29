@@ -128,7 +128,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Playlist.Swap",                                CPlaylistOperations::Swap },
 
 // Files
-  { "Files.GetSources",                             CFileOperations::GetRootDirectory },
+  { "Files.GetSources",                             CFileOperations::GetSources },
   { "Files.GetDirectory",                           CFileOperations::GetDirectory },
   { "Files.GetFileDetails",                         CFileOperations::GetFileDetails },
   { "Files.SetFileDetails",                         CFileOperations::SetFileDetails },
@@ -310,7 +310,7 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "XBMC.GetInfoBooleans",                         CGUIOperations::GetInfoBooleans },
 
 // Database operations
-  { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseNameByType },
+  { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseName },
 };
 
 // clang-format on
@@ -725,11 +725,11 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
   if (!unionTypes.empty())
   {
     bool ok = false;
-    for (unsigned int unionIndex = 0; unionIndex < unionTypes.size(); unionIndex++)
+    for (const auto& alternative : unionTypes)
     {
       CVariant dummyError;
       CVariant testOutput = outputValue;
-      if (unionTypes.at(unionIndex)->Check(value, testOutput, dummyError) == OK)
+      if (alternative->Check(value, testOutput, dummyError) == OK)
       {
         ok = true;
         outputValue = testOutput;
@@ -749,16 +749,15 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
   // type first
   if (!extends.empty())
   {
-    for (unsigned int extendsIndex = 0; extendsIndex < extends.size(); extendsIndex++)
+    for (const auto& base : extends)
     {
-      JSONRPC_STATUS status = extends.at(extendsIndex)->Check(value, outputValue, errorData);
+      JSONRPC_STATUS status = base->Check(value, outputValue, errorData);
 
       if (status != OK)
       {
-        CLog::Log(LOGDEBUG, "JSONRPC: Value does not match extended type {} of type {}",
-                  extends.at(extendsIndex)->ID, name);
-        errorMessage = StringUtils::Format("value does not match extended type {}",
-                                           extends.at(extendsIndex)->ID);
+        CLog::Log(LOGDEBUG, "JSONRPC: Value does not match extended type {} of type {}", base->ID,
+                  name);
+        errorMessage = StringUtils::Format("value does not match extended type {}", base->ID);
         errorData["message"] = errorMessage.c_str();
         return status;
       }
@@ -1032,20 +1031,20 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
     if (!extends.empty())
     {
       output["allOf"] = CVariant(CVariant::VariantTypeArray);
-      for (unsigned int extendsIndex = 0; extendsIndex < extends.size(); extendsIndex++)
+      for (const auto& base : extends)
       {
         CVariant extendsOutput = CVariant(CVariant::VariantTypeObject);
-        extendsOutput["$ref"] = TypeIdToRef(extends.at(extendsIndex)->ID);
+        extendsOutput["$ref"] = TypeIdToRef(base->ID);
         output["allOf"].append(extendsOutput);
       }
     }
     else if (!unionTypes.empty())
     {
       output["anyOf"] = CVariant(CVariant::VariantTypeArray);
-      for (unsigned int unionIndex = 0; unionIndex < unionTypes.size(); unionIndex++)
+      for (const auto& alternative : unionTypes)
       {
         CVariant unionOutput = CVariant(CVariant::VariantTypeObject);
-        unionTypes.at(unionIndex)->Print(false, false, printDescriptions, unionOutput);
+        alternative->Print(false, false, printDescriptions, unionOutput);
         output["anyOf"].append(unionOutput);
       }
     }
@@ -1056,8 +1055,8 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
     if (!enums.empty())
     {
       output["enum"] = CVariant(CVariant::VariantTypeArray);
-      for (unsigned int enumIndex = 0; enumIndex < enums.size(); enumIndex++)
-        output["enum"].append(enums.at(enumIndex));
+      for (const auto& value : enums)
+        output["enum"].append(value);
     }
 
     // Printing integer/number fields
@@ -1742,11 +1741,11 @@ bool CJSONServiceDescription::AddEnum(
   else
     types.push_back(type);
 
-  for (unsigned int index = 0; index < values.size(); index++)
+  for (const auto& value : values)
   {
     if (autoType)
-      types.push_back(values[index].type());
-    else if (type != CVariant::VariantTypeConstNull && type != values[index].type())
+      types.push_back(value.type());
+    else if (type != CVariant::VariantTypeConstNull && type != value.type())
       return false;
   }
   definition->enums.insert(definition->enums.begin(), values.begin(), values.end());
@@ -1949,10 +1948,10 @@ JSONRPC_STATUS CJSONServiceDescription::Print(CVariant& result,
         }
       }
 
-      for (unsigned int index = 0; index < referencedTypes.size(); index++)
+      for (const auto& referencedType : referencedTypes)
       {
         std::map<std::string, JSONSchemaTypeDefinitionPtr>::const_iterator typeIterator =
-            m_types.find(referencedTypes.at(index));
+            m_types.find(referencedType);
         if (typeIterator != m_types.end())
           types[typeIterator->first] = typeIterator->second;
       }
@@ -2189,10 +2188,10 @@ void CJSONServiceDescription::getReferencedTypes(const JSONSchemaTypeDefinitionP
   // If the current type is a referenceable object, we can add it to the list
   if (!type->ID.empty())
   {
-    for (unsigned int index = 0; index < referencedTypes.size(); index++)
+    for (const auto& referencedType : referencedTypes)
     {
       // The referenceable object has already been added to the list so we can just skip it
-      if (type->ID == referencedTypes.at(index))
+      if (type->ID == referencedType)
         return;
     }
 
@@ -2213,12 +2212,12 @@ void CJSONServiceDescription::getReferencedTypes(const JSONSchemaTypeDefinitionP
     getReferencedTypes(type->items, referencedTypes);
 
   // If the current type extends others type we need to check those types
-  for (unsigned int index = 0; index < type->extends.size(); index++)
-    getReferencedTypes(type->extends.at(index), referencedTypes);
+  for (const auto& base : type->extends)
+    getReferencedTypes(base, referencedTypes);
 
   // If the current type is a union type we need to check those types
-  for (unsigned int index = 0; index < type->unionTypes.size(); index++)
-    getReferencedTypes(type->unionTypes.at(index), referencedTypes);
+  for (const auto& alternative : type->unionTypes)
+    getReferencedTypes(alternative, referencedTypes);
 }
 
 CJSONServiceDescription::CJsonRpcMethodMap::CJsonRpcMethodMap()

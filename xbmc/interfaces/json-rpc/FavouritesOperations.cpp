@@ -31,11 +31,9 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
 
   std::set<std::string> fields{RequestedFields(parameterObject)};
 
-  for (int i = 0; i < favourites.Size(); i++)
+  for (const auto& item : favourites)
   {
     CVariant object;
-    CFileItemPtr item = favourites.Get(i);
-
     const CFavouritesURL url(item->GetPath());
     if (!url.IsValid())
       continue;

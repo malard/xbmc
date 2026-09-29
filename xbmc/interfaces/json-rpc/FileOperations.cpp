@@ -39,7 +39,7 @@ using namespace KODI::REGEXP;
 using namespace JSONRPC;
 using namespace XFILE;
 
-JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -48,21 +48,21 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
   if (sources)
   {
     CFileItemList items;
-    for (unsigned int i = 0; i < static_cast<unsigned int>(sources->size()); i++)
+    for (const auto& source : *sources)
     {
       // Do not show sources which are locked
-      if (sources->at(i).GetLockInfo().IsLocked())
+      if (source.GetLockInfo().IsLocked())
         continue;
 
-      items.Add(std::make_shared<CFileItem>(sources->at(i)));
+      items.Add(std::make_shared<CFileItem>(source));
     }
 
-    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
+    for (const auto& item : items)
     {
-      if (items[i]->IsSmb())
+      if (item->IsSmb())
       {
-        CURL url(items[i]->GetPath());
-        items[i]->SetPath(url.GetWithoutUserDetails());
+        CURL url(item->GetPath());
+        item->SetPath(url.GetWithoutUserDetails());
       }
     }
 
@@ -128,29 +128,29 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
     CFileItemList filteredFiles;
     RegExpCache cache;
-    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
+    for (const auto& item : items)
     {
-      if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
+      if (CUtil::ExcludeFileOrFolder(item->GetPath(), regexps, &cache))
         continue;
 
-      if (items[i]->IsSmb())
+      if (item->IsSmb())
       {
-        CURL url(items[i]->GetPath());
-        items[i]->SetPath(url.GetWithoutUserDetails());
+        CURL url(item->GetPath());
+        item->SetPath(url.GetWithoutUserDetails());
       }
 
-      if ((media == "video" && items[i]->HasVideoInfoTag()) ||
-          (media == "music" && items[i]->HasMusicInfoTag()) ||
-          (media == "pictures" && items[i]->HasPictureInfoTag()) ||
+      if ((media == "video" && item->HasVideoInfoTag()) ||
+          (media == "music" && item->HasMusicInfoTag()) ||
+          (media == "pictures" && item->HasPictureInfoTag()) ||
           (media == "files" && !enrichFromLibrary) || URIUtils::IsUPnP(items.GetPath()))
-        filteredFiles.Add(items[i]);
+        filteredFiles.Add(item);
       else
       {
         CFileItemPtr fileItem(new CFileItem());
-        if (FillFileItem(items[i], fileItem, media, parameterObject))
+        if (FillFileItem(item, fileItem, media, parameterObject))
           filteredFiles.Add(fileItem);
         else
-          filteredFiles.Add(items[i]);
+          filteredFiles.Add(item);
       }
     }
 

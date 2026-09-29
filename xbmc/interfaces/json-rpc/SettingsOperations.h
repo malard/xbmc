@@ -23,12 +23,7 @@ class CSettingBool;
 class CSettingInt;
 class CSettingNumber;
 class CSettingString;
-class CSettingAction;
 class CSettingList;
-class CSettingPath;
-class CSettingAddon;
-class CSettingDate;
-class CSettingTime;
 class ISettingControl;
 
 namespace JSONRPC
@@ -62,24 +57,14 @@ private:
   static bool SerializeSettingGroup(const std::shared_ptr<const CSettingGroup>& setting,
                                     CVariant& obj);
   static bool SerializeSetting(const std::shared_ptr<const CSetting>& setting, CVariant& obj);
-  static bool SerializeSettingBool(const std::shared_ptr<const CSettingBool>& setting,
+  static void SerializeSettingBool(const std::shared_ptr<const CSettingBool>& setting,
                                    CVariant& obj);
-  static bool SerializeSettingInt(const std::shared_ptr<const CSettingInt>& setting, CVariant& obj);
-  static bool SerializeSettingNumber(const std::shared_ptr<const CSettingNumber>& setting,
+  static void SerializeSettingInt(const std::shared_ptr<const CSettingInt>& setting, CVariant& obj);
+  static void SerializeSettingNumber(const std::shared_ptr<const CSettingNumber>& setting,
                                      CVariant& obj);
-  static bool SerializeSettingString(const std::shared_ptr<const CSettingString>& setting,
-                                     CVariant& obj);
-  static bool SerializeSettingAction(const std::shared_ptr<const CSettingAction>& setting,
+  static void SerializeSettingString(const std::shared_ptr<const CSettingString>& setting,
                                      CVariant& obj);
   static bool SerializeSettingList(const std::shared_ptr<const CSettingList>& setting,
-                                   CVariant& obj);
-  static bool SerializeSettingPath(const std::shared_ptr<const CSettingPath>& setting,
-                                   CVariant& obj);
-  static bool SerializeSettingAddon(const std::shared_ptr<const CSettingAddon>& setting,
-                                    CVariant& obj);
-  static bool SerializeSettingDate(const std::shared_ptr<const CSettingDate>& setting,
-                                   CVariant& obj);
-  static bool SerializeSettingTime(const std::shared_ptr<const CSettingTime>& setting,
                                    CVariant& obj);
   static bool SerializeSettingControl(const std::shared_ptr<const ISettingControl>& control,
                                       CVariant& obj);

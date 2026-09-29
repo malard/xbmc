@@ -21,7 +21,7 @@ namespace JSONRPC
 class CFileOperations : public CFileItemHandler
 {
 public:
-  static JSONRPC_STATUS GetRootDirectory(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetSources(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetDirectory(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetFileDetails(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetFileDetails(const CVariant& parameterObject, CVariant& result);
