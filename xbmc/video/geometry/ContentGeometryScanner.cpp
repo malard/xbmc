@@ -27,20 +27,11 @@
 #include "video/jobs/VideoLibraryContentGeometryJob.h"
 #include "video/jobs/VideoLibraryJob.h"
 
+#include <mutex>
+#include <utility>
+
 namespace KODI::VIDEO::GEOMETRY
 {
-
-namespace
-{
-
-//! \brief A file the gates passed and the library row a measurement of it stores into.
-struct StorageTarget
-{
-  FileIdentity identity;
-  int idFile{-1};
-};
-
-} // unnamed namespace
 
 CContentGeometryScanner& CContentGeometryScanner::GetInstance()
 {
@@ -48,12 +39,16 @@ CContentGeometryScanner& CContentGeometryScanner::GetInstance()
   return instance;
 }
 
-bool CanMeasureContentGeometry(const CFileItem& item)
+std::optional<FileIdentity> MeasurableIdentity(const CFileItem& item)
 {
-  if (!CDVDFileInfo::CanExtract(item))
-    return false;
+  if (!CDVDFileInfo::CanExtract(item) || item.IsStack() || URIUtils::IsStack(item.GetDynPath()))
+    return std::nullopt;
 
-  return !item.IsStack() && !URIUtils::IsStack(item.GetDynPath());
+  const FileIdentity identity{GetFileIdentity(item.GetDynPath())};
+  if (!identity.IsKnown())
+    return std::nullopt;
+
+  return identity;
 }
 
 std::optional<ContentGeometryRecord> MeasureContentGeometry(const CFileItem& item,
@@ -69,8 +64,8 @@ std::optional<ContentGeometryRecord> MeasureContentGeometry(const CFileItem& ite
 
   const ContentGeometryRecord record{MakeContentGeometryRecord(scan, identity)};
 
-  // A scan that read nothing still produces a row, so the file is not measured again.
-  CLog::LogF(LOGDEBUG, "storing content geometry for {}: {}", CURL::GetRedacted(item.GetDynPath()),
+  // A scan that read nothing still produces a record, so the file is not measured again.
+  CLog::LogF(LOGDEBUG, "measured content geometry of {}: {}", CURL::GetRedacted(item.GetDynPath()),
              record.HasReading() ? EncodeContentAspects(record.aspects) : "no reading");
 
   return record;
@@ -78,6 +73,13 @@ std::optional<ContentGeometryRecord> MeasureContentGeometry(const CFileItem& ite
 
 namespace
 {
+
+//! \brief A file the gates passed and the library row a measurement of it stores into.
+struct StorageTarget
+{
+  FileIdentity identity;
+  int idFile{-1};
+};
 
 /*!
  * \brief The gates a measurement passes before it is worth taking: enabled, measurable, a
@@ -87,14 +89,11 @@ namespace
  */
 std::optional<StorageTarget> ResolveStorageTarget(const CFileItem& item, CVideoDatabase& db)
 {
-  if (!ContentGeometryEnabledFromSettings() || !CanMeasureContentGeometry(item))
+  if (!ContentGeometryEnabledFromSettings())
     return std::nullopt;
 
-  const FileIdentity identity{GetFileIdentity(item.GetDynPath())};
-  if (!identity.IsKnown())
-    return std::nullopt;
-
-  if (!db.Open())
+  const std::optional<FileIdentity> identity{MeasurableIdentity(item)};
+  if (!identity || !db.Open())
     return std::nullopt;
 
   // An item outside the library has nowhere to store a measurement.
@@ -102,7 +101,7 @@ std::optional<StorageTarget> ResolveStorageTarget(const CFileItem& item, CVideoD
   if (idFile < 0)
     return std::nullopt;
 
-  return StorageTarget{identity, idFile};
+  return StorageTarget{*identity, idFile};
 }
 
 void MeasureContentGeometryBeforePlayback(const CFileItem& item,
@@ -117,7 +116,7 @@ void MeasureContentGeometryBeforePlayback(const CFileItem& item,
   if (db.GetVideoSettings(item, settings) && settings.m_declaredAspect > 0.0f)
     return;
 
-  if (!NeedsContentGeometry(db.GetContentGeometryAttempt(target->idFile), target->identity))
+  if (!NeedsContentGeometry(db.GetStoredContentGeometry(target->idFile), target->identity))
     return;
 
   CLog::LogF(LOGDEBUG, "measuring content geometry before playback of {}",
@@ -184,30 +183,72 @@ void CContentGeometryScanner::Sweep(bool retryFailed /* = false */)
   if (!ContentGeometryNonLiveFromSettings())
     return;
 
-  bool idle{false};
-  if (!m_sweeping.compare_exchange_strong(idle, true))
-    return;
+  {
+    std::unique_lock lock(m_lock);
+    if (m_sweeping)
+    {
+      m_held = m_held.value_or(false) || retryFailed;
+      return;
+    }
 
-  m_stop = false;
+    m_sweeping = true;
+    m_stop = false;
+  }
 
+  Start(retryFailed);
+}
+
+bool CContentGeometryScanner::IsSweeping() const
+{
+  std::unique_lock lock(m_lock);
+  return m_sweeping;
+}
+
+void CContentGeometryScanner::StopSweep()
+{
+  std::unique_lock lock(m_lock);
+  m_held.reset();
+  m_stop = true;
+}
+
+void CContentGeometryScanner::Start(bool retryFailed)
+{
+  // Not under m_lock: the job manager calls back into Ended() while holding its own lock.
   // CVideoLibraryProgressJob reaches CJob down two paths; only CVideoLibraryJob converts
   // unambiguously.
   CVideoLibraryJob* job{new CVideoLibraryContentGeometryJob(retryFailed)};
-  if (CServiceBroker::GetJobManager()->AddJob(job, this, CJob::PRIORITY_LOW) == 0)
+  if (CServiceBroker::GetJobManager()->AddJob(job, this, CJob::PRIORITY_LOW_PAUSABLE) == 0)
   {
-    // Refused and already destroyed by the manager, so no completion callback will arrive.
+    // Refused and already destroyed by the manager, so no callback will arrive.
+    std::unique_lock lock(m_lock);
     m_sweeping = false;
+    m_held.reset();
   }
+}
+
+void CContentGeometryScanner::Ended()
+{
+  std::optional<bool> held;
+  {
+    std::unique_lock lock(m_lock);
+    held = std::exchange(m_held, std::nullopt);
+    m_sweeping = held.has_value();
+    if (held)
+      m_stop = false;
+  }
+
+  if (held)
+    Start(*held);
 }
 
 void CContentGeometryScanner::OnJobComplete(unsigned int jobID, bool success, CJob* job)
 {
-  m_sweeping = false;
+  Ended();
 }
 
 void CContentGeometryScanner::OnJobAbort(unsigned int jobID, CJob* job)
 {
-  m_sweeping = false;
+  Ended();
 }
 
 } // namespace KODI::VIDEO::GEOMETRY

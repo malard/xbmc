@@ -4959,7 +4959,8 @@ bool CVideoDatabase::GetStreamDetails(CVideoInfoTag& tag)
     tag.SetDuration(details.GetVideoDuration());
 
   // Unverified: the identity check needs the file stat'ing.
-  GetContentGeometryUnverified(fileId, tag.m_contentGeometry);
+  if (auto stored{GetStoredContentGeometry(fileId)})
+    tag.m_contentGeometry = std::move(*stored);
 
   return retVal;
 }

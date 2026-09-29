@@ -99,18 +99,10 @@ ContentGeometryState StateOf(const ContentGeometryRecord& record);
 //! \brief The widest ratio the record holds, which the masking opens to. Zero with no reading.
 float WidestAspect(const ContentGeometryRecord& record);
 
-//! \brief What is stored for one file, without reading back the whole record.
-struct ContentGeometryAttempt
-{
-  bool exists{false};
-  bool hasReading{false};
-  int algorithmVersion{0};
-  FileIdentity identity;
-};
-
-//! \brief Whether the file still needs measuring: the attempt is missing, superseded, or
-//! describes a different file. An attempt that found nothing counts as done until the file
-//! changes.
-bool NeedsContentGeometry(const ContentGeometryAttempt& attempt, const FileIdentity& identity);
+//! \brief Whether the file still needs measuring: nothing is stored, or what is stored is
+//! superseded or describes a different file. A record that found nothing counts as done until
+//! the file changes.
+bool NeedsContentGeometry(const std::optional<ContentGeometryRecord>& stored,
+                          const FileIdentity& identity);
 
 } // namespace KODI::VIDEO::GEOMETRY

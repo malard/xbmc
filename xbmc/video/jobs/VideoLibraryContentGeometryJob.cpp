@@ -26,7 +26,7 @@
 #include "video/geometry/GeometrySettings.h"
 
 #include <chrono>
-#include <cstring>
+#include <optional>
 #include <vector>
 
 using namespace KODI::VIDEO::GEOMETRY;
@@ -45,12 +45,25 @@ bool IsBusy()
   if (CVideoLibraryQueue::GetInstance().IsRunning())
     return true;
 
-  if (KODI::VIDEO::GEOMETRY::CContentGeometryScanner::GetInstance().IsOpeningForPlayback())
+  if (CContentGeometryScanner::GetInstance().IsOpeningForPlayback())
     return true;
 
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-  return appPlayer && appPlayer->IsPlaying();
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->IsPlaying();
+}
+
+bool StopRequested()
+{
+  return CContentGeometryScanner::GetInstance().IsStopRequested();
+}
+
+//! \brief Block until nothing is playing and no other library job is running.
+//! \return false if the sweep was stopped while waiting
+bool WaitUntilIdle()
+{
+  while (!StopRequested() && IsBusy())
+    KODI::TIME::Sleep(IDLE_POLL_INTERVAL);
+
+  return !StopRequested();
 }
 
 } // unnamed namespace
@@ -62,39 +75,6 @@ CVideoLibraryContentGeometryJob::CVideoLibraryContentGeometryJob(bool retryFaile
 }
 
 CVideoLibraryContentGeometryJob::~CVideoLibraryContentGeometryJob() = default;
-
-bool CVideoLibraryContentGeometryJob::Cancel()
-{
-  m_cancelled = true;
-  return true;
-}
-
-bool CVideoLibraryContentGeometryJob::Equals(const CJob* job) const
-{
-  if (std::strcmp(job->GetType(), GetType()) != 0)
-    return false;
-
-  const auto* other = dynamic_cast<const CVideoLibraryContentGeometryJob*>(job);
-  return other != nullptr && m_retryFailed == other->m_retryFailed;
-}
-
-bool CVideoLibraryContentGeometryJob::IsCancelled() const
-{
-  return m_cancelled || CContentGeometryScanner::GetInstance().IsStopRequested();
-}
-
-bool CVideoLibraryContentGeometryJob::ShouldYield() const
-{
-  return IsCancelled() || IsBusy();
-}
-
-bool CVideoLibraryContentGeometryJob::WaitUntilIdle() const
-{
-  while (!IsCancelled() && IsBusy())
-    KODI::TIME::Sleep(IDLE_POLL_INTERVAL);
-
-  return !IsCancelled();
-}
 
 bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
 {
@@ -126,22 +106,15 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
     SetProgress(static_cast<int>(index), static_cast<int>(candidates.size()));
 
     const CFileItem item{candidate.path, false};
-    if (!CanMeasureContentGeometry(item))
+    const std::optional<FileIdentity> identity{MeasurableIdentity(item)};
+    if (!identity)
     {
       ++index;
       continue;
     }
 
-    const FileIdentity identity{GetFileIdentity(candidate.path)};
-    if (!identity.IsKnown())
-    {
-      ++index;
-      continue;
-    }
-
-    const bool retryThisOne{m_retryFailed && candidate.attempt.exists &&
-                            !candidate.attempt.hasReading};
-    if (!retryThisOne && !NeedsContentGeometry(candidate.attempt, identity))
+    const bool retryThisOne{m_retryFailed && candidate.stored && !candidate.stored->HasReading()};
+    if (!retryThisOne && !NeedsContentGeometry(candidate.stored, *identity))
     {
       ++index;
       continue;
@@ -150,7 +123,7 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
     SetText(URIUtils::GetFileName(candidate.path));
 
     const std::optional<ContentGeometryRecord> record{MeasureContentGeometry(
-        item, identity, SamplingDepth::Normal, [this]() { return ShouldYield(); })};
+        item, *identity, SamplingDepth::Normal, []() { return StopRequested() || IsBusy(); })};
     if (!record)
       continue; // abandoned, not finished - take this file again once whatever interrupted it stops
 
@@ -164,7 +137,7 @@ bool CVideoLibraryContentGeometryJob::Work(CVideoDatabase& db)
   }
 
   CLog::LogF(LOGINFO, "measured {} of {} files, {} with no reading{}", measured, candidates.size(),
-             failed, IsCancelled() ? ", cancelled" : "");
+             failed, StopRequested() ? ", stopped" : "");
 
   return true;
 }

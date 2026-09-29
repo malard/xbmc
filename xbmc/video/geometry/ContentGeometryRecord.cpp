@@ -89,15 +89,16 @@ float WidestAspect(const ContentGeometryRecord& record)
                                 : *std::max_element(record.aspects.begin(), record.aspects.end());
 }
 
-bool NeedsContentGeometry(const ContentGeometryAttempt& attempt, const FileIdentity& identity)
+bool NeedsContentGeometry(const std::optional<ContentGeometryRecord>& stored,
+                          const FileIdentity& identity)
 {
-  if (!attempt.exists)
+  if (!stored)
     return true;
 
-  if (attempt.algorithmVersion < CONTENT_GEOMETRY_ALGORITHM_VERSION)
+  if (stored->algorithmVersion < CONTENT_GEOMETRY_ALGORITHM_VERSION)
     return true;
 
-  return !attempt.identity.Matches(identity);
+  return !stored->identity.Matches(identity);
 }
 
 void Archive(CArchive& ar, ContentGeometryRecord& record)

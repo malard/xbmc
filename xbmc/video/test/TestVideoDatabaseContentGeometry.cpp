@@ -190,12 +190,12 @@ TEST_F(TestVideoDatabaseContentGeometry, AnAttemptThatFoundNothingIsStored)
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
   EXPECT_EQ(1, CountRows(idFile));
 
-  const ContentGeometryAttempt attempt{m_db.GetContentGeometryAttempt(idFile)};
-  EXPECT_TRUE(attempt.exists);
-  EXPECT_FALSE(attempt.hasReading);
-  EXPECT_EQ(IDENTITY.size, attempt.identity.size);
-  EXPECT_EQ(IDENTITY.time, attempt.identity.time);
-  EXPECT_FALSE(NeedsContentGeometry(attempt, IDENTITY));
+  const std::optional<ContentGeometryRecord> stored{m_db.GetStoredContentGeometry(idFile)};
+  ASSERT_TRUE(stored);
+  EXPECT_FALSE(stored->HasReading());
+  EXPECT_EQ(IDENTITY.size, stored->identity.size);
+  EXPECT_EQ(IDENTITY.time, stored->identity.time);
+  EXPECT_FALSE(NeedsContentGeometry(stored, IDENTITY));
 }
 
 //! Nothing that resolves a rectangle should have to know the difference between never having
@@ -209,9 +209,6 @@ TEST_F(TestVideoDatabaseContentGeometry, AFailureReadsAsMissingToEveryConsumer)
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, record));
 
   EXPECT_EQ(ContentGeometryState::MISSING, m_db.GetContentGeometry(idFile, IDENTITY).state);
-
-  ContentGeometryRecord unverified;
-  EXPECT_FALSE(m_db.GetContentGeometryUnverified(idFile, unverified));
 }
 
 //! An NFO is trusted for the file as it stands when it is imported.
@@ -236,13 +233,13 @@ TEST_F(TestVideoDatabaseContentGeometry, ARecordWithNoIdentityTakesTheFilesOwn)
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
 }
 
-TEST_F(TestVideoDatabaseContentGeometry, AFileWithNoRowHasNoAttempt)
+TEST_F(TestVideoDatabaseContentGeometry, AFileWithNoRowHasNothingStored)
 {
   const int idFile{AddTestFile("neverattempted.mkv")};
 
-  const ContentGeometryAttempt attempt{m_db.GetContentGeometryAttempt(idFile)};
-  EXPECT_FALSE(attempt.exists);
-  EXPECT_TRUE(NeedsContentGeometry(attempt, {8'000'000'000, 1'700'000'000}));
+  const std::optional<ContentGeometryRecord> stored{m_db.GetStoredContentGeometry(idFile)};
+  EXPECT_FALSE(stored);
+  EXPECT_TRUE(NeedsContentGeometry(stored, {8'000'000'000, 1'700'000'000}));
 }
 
 /*!
@@ -274,16 +271,17 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
 
   const ContentGeometryCandidate first{find(measured)};
   EXPECT_EQ("/test/contentgeometry/candidate-measured.mkv", first.path);
-  EXPECT_TRUE(first.attempt.exists);
-  EXPECT_TRUE(first.attempt.hasReading);
-  EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, first.attempt.algorithmVersion);
-  EXPECT_EQ(IDENTITY.size, first.attempt.identity.size);
-  EXPECT_FALSE(NeedsContentGeometry(first.attempt, IDENTITY));
+  ASSERT_TRUE(first.stored);
+  EXPECT_TRUE(first.stored->HasReading());
+  EXPECT_EQ(CONTENT_GEOMETRY_ALGORITHM_VERSION, first.stored->algorithmVersion);
+  EXPECT_EQ(IDENTITY.size, first.stored->identity.size);
+  EXPECT_FALSE(NeedsContentGeometry(first.stored, IDENTITY));
 
-  EXPECT_FALSE(find(untouched).attempt.exists);
-  EXPECT_TRUE(NeedsContentGeometry(find(untouched).attempt, IDENTITY));
+  EXPECT_FALSE(find(untouched).stored);
+  EXPECT_TRUE(NeedsContentGeometry(find(untouched).stored, IDENTITY));
 
-  EXPECT_FALSE(find(failed).attempt.hasReading);
+  ASSERT_TRUE(find(failed).stored);
+  EXPECT_FALSE(find(failed).stored->HasReading());
 }
 
 /*!
@@ -447,20 +445,19 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
   migrated.Close();
 }
 
-//! The unverified read is for moving the row about, and never consults the file.
-TEST_F(TestVideoDatabaseContentGeometry, TheUnverifiedReadIgnoresIdentityEntirely)
+//! The stored read is for moving the row about, and never consults the file.
+TEST_F(TestVideoDatabaseContentGeometry, TheStoredReadIgnoresIdentityEntirely)
 {
   const int idFile{AddTestFile("export.mkv")};
 
   ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord(IDENTITY)));
 
-  ContentGeometryRecord record;
-  ASSERT_TRUE(m_db.GetContentGeometryUnverified(idFile, record));
-  EXPECT_EQ(IDENTITY.size, record.identity.size);
-  EXPECT_EQ(IDENTITY.time, record.identity.time);
+  const std::optional<ContentGeometryRecord> stored{m_db.GetStoredContentGeometry(idFile)};
+  ASSERT_TRUE(stored);
+  EXPECT_EQ(IDENTITY.size, stored->identity.size);
+  EXPECT_EQ(IDENTITY.time, stored->identity.time);
 
-  ContentGeometryRecord absent;
-  EXPECT_FALSE(m_db.GetContentGeometryUnverified(idFile + 100000, absent));
+  EXPECT_FALSE(m_db.GetStoredContentGeometry(idFile + 100000));
 }
 
 /*!

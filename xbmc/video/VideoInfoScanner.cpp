@@ -2173,14 +2173,13 @@ CVideoInfoScanner::~CVideoInfoScanner()
         CLog::LogF(LOGDEBUG, "Filestream details already present for {}", CURL::GetRedacted(path));
     }
 
-    if (GEOMETRY::ContentGeometryNonLiveFromSettings() && !movieDetails.HasContentGeometry() &&
-        GEOMETRY::CanMeasureContentGeometry(*pItem))
+    if (GEOMETRY::ContentGeometryNonLiveFromSettings() && !movieDetails.HasContentGeometry())
     {
-      const GEOMETRY::FileIdentity identity{GEOMETRY::GetFileIdentity(pItem->GetDynPath())};
-      if (identity.IsKnown())
+      if (const std::optional<GEOMETRY::FileIdentity> identity{
+              GEOMETRY::MeasurableIdentity(*pItem)})
       {
         const std::optional<GEOMETRY::ContentGeometryRecord> geometry{
-            GEOMETRY::MeasureContentGeometry(*pItem, identity, GEOMETRY::SamplingDepth::Normal,
+            GEOMETRY::MeasureContentGeometry(*pItem, *identity, GEOMETRY::SamplingDepth::Normal,
                                              [this]() { return m_bStop.load(); })};
 
         if (geometry && geometry->HasReading())

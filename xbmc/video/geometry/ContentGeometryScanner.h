@@ -9,6 +9,7 @@
 #pragma once
 
 #include "jobs/IJobCallback.h"
+#include "threads/CriticalSection.h"
 #include "video/geometry/ContentGeometryRecord.h"
 #include "video/geometry/FrameSampling.h"
 
@@ -21,11 +22,12 @@ class CFileItem;
 namespace KODI::VIDEO::GEOMETRY
 {
 
-//! \brief Whether \p item can be measured: the extractors' policy, plus no stacks.
-bool CanMeasureContentGeometry(const CFileItem& item);
+//! \brief The identity to measure \p item under. Nothing when the extractors' policy refuses
+//! it, it is a stack, or its size and time cannot be read.
+std::optional<FileIdentity> MeasurableIdentity(const CFileItem& item);
 
 //! \brief Sample \p item and produce the row to store. Nothing when sampling was abandoned; a
-//! file that could not be read is a Failed record rather than nothing.
+//! file that could not be read gives a record with no ratios.
 std::optional<ContentGeometryRecord> MeasureContentGeometry(
     const CFileItem& item,
     const FileIdentity& identity,
@@ -49,16 +51,17 @@ class CContentGeometryScanner : public IJobCallback
 public:
   static CContentGeometryScanner& GetInstance();
 
-  //! \brief Run the background sweep over everything that still needs measuring. Nothing when
-  //! one is already running or the library has not opted in. It suspends itself while any
-  //! other video library job runs rather than queueing behind it.
+  //! \brief Run the background sweep over everything that still needs measuring, unless the
+  //! library has not opted in. A request made while one runs is held and run when it ends.
+  //! It suspends itself while any other video library job runs rather than queueing behind it.
   void Sweep(bool retryFailed = false);
 
   //! \brief For tests only.
-  bool IsSweeping() const { return m_sweeping; }
+  bool IsSweeping() const;
 
-  //! \brief Ask a running sweep to stop, abandoning the file it is measuring.
-  void StopSweep() { m_stop = true; }
+  //! \brief Ask a running sweep to stop, abandoning the file it is measuring, and drop any
+  //! held request.
+  void StopSweep();
 
   //! \brief Read by the running sweep between files and between sample points.
   bool IsStopRequested() const { return m_stop; }
@@ -78,8 +81,17 @@ private:
   CContentGeometryScanner(const CContentGeometryScanner&) = delete;
   CContentGeometryScanner& operator=(const CContentGeometryScanner&) = delete;
 
-  //! \brief A sweep job is queued or running; cleared by its completion or abort callback.
-  std::atomic<bool> m_sweeping{false};
+  //! \brief Queue a sweep job, with m_sweeping already set.
+  void Start(bool retryFailed);
+
+  //! \brief A sweep job finished or was aborted: start the held request, if any.
+  void Ended();
+
+  mutable CCriticalSection m_lock;
+  //! \brief A sweep job is queued or running.
+  bool m_sweeping{false};
+  //! \brief A request made while a sweep ran, holding whether it retries failed files.
+  std::optional<bool> m_held;
   std::atomic<bool> m_stop{false};
   std::atomic<bool> m_opening{false};
 };

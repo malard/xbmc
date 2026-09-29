@@ -120,38 +120,36 @@ TEST(TestSampledGeometry, AScanThatReadNothingStoresNoRatio)
 
 TEST(TestSampledGeometry, NothingIsNeededForAnUpToDateMeasurement)
 {
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
-  attempt.identity = IDENTITY;
+  ContentGeometryRecord stored;
+  stored.aspects = {2.39f};
+  stored.identity = IDENTITY;
 
-  EXPECT_FALSE(NeedsContentGeometry(attempt, IDENTITY));
+  EXPECT_FALSE(NeedsContentGeometry(stored, IDENTITY));
 }
 
 TEST(TestSampledGeometry, AFileWithNoAttemptNeedsMeasuring)
 {
-  EXPECT_TRUE(NeedsContentGeometry({}, IDENTITY));
+  EXPECT_TRUE(NeedsContentGeometry(std::nullopt, IDENTITY));
 }
 
 TEST(TestSampledGeometry, ASupersededMeasurementNeedsMeasuringAgain)
 {
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION - 1;
-  attempt.identity = IDENTITY;
+  ContentGeometryRecord stored;
+  stored.aspects = {2.39f};
+  stored.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION - 1;
+  stored.identity = IDENTITY;
 
-  EXPECT_TRUE(NeedsContentGeometry(attempt, IDENTITY));
+  EXPECT_TRUE(NeedsContentGeometry(stored, IDENTITY));
 }
 
 TEST(TestSampledGeometry, AMeasurementOfDifferentContentNeedsMeasuringAgain)
 {
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
-  attempt.identity = IDENTITY;
+  ContentGeometryRecord stored;
+  stored.aspects = {2.39f};
+  stored.identity = IDENTITY;
 
-  EXPECT_TRUE(NeedsContentGeometry(attempt, {IDENTITY.size + 1, IDENTITY.time}));
-  EXPECT_TRUE(NeedsContentGeometry(attempt, {IDENTITY.size, IDENTITY.time + 1}));
+  EXPECT_TRUE(NeedsContentGeometry(stored, {IDENTITY.size + 1, IDENTITY.time}));
+  EXPECT_TRUE(NeedsContentGeometry(stored, {IDENTITY.size, IDENTITY.time + 1}));
 }
 
 /*!
@@ -161,24 +159,19 @@ TEST(TestSampledGeometry, AMeasurementOfDifferentContentNeedsMeasuringAgain)
  */
 TEST(TestSampledGeometry, AnAttemptThatFoundNothingCountsAsDoneUntilTheFileChanges)
 {
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.hasReading = false;
-  attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
-  attempt.identity = IDENTITY;
+  ContentGeometryRecord stored;
+  stored.identity = IDENTITY;
 
-  EXPECT_FALSE(NeedsContentGeometry(attempt, IDENTITY));
-  EXPECT_TRUE(NeedsContentGeometry(attempt, {IDENTITY.size + 1, IDENTITY.time}));
+  EXPECT_FALSE(NeedsContentGeometry(stored, IDENTITY));
+  EXPECT_TRUE(NeedsContentGeometry(stored, {IDENTITY.size + 1, IDENTITY.time}));
 }
 
 //! An identity nothing could establish matches nothing, including itself, so a caller that
 //! passed one would remeasure the file on every single run.
 TEST(TestSampledGeometry, AnUnknownIdentityAlwaysAsksForMeasurement)
 {
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.algorithmVersion = CONTENT_GEOMETRY_ALGORITHM_VERSION;
-  attempt.identity = {};
+  ContentGeometryRecord stored;
+  stored.aspects = {2.39f};
 
-  EXPECT_TRUE(NeedsContentGeometry(attempt, {}));
+  EXPECT_TRUE(NeedsContentGeometry(stored, FileIdentity{}));
 }

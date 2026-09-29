@@ -31,20 +31,7 @@ ContentGeometryRecord RecordFromDataset(dbiplus::Dataset& ds)
   return geometry;
 }
 
-//! \brief What is stored for one file, from a row carrying those columns.
-ContentGeometryAttempt AttemptFromDataset(dbiplus::Dataset& ds)
-{
-  ContentGeometryAttempt attempt;
-  attempt.exists = true;
-  attempt.hasReading = !ds.fv("aspects").get_asString().empty();
-  attempt.algorithmVersion = ds.fv("algorithmVersion").get_asInt();
-  attempt.identity.size = ds.fv("fileSize").get_asInt64();
-  attempt.identity.time = ds.fv("fileMTime").get_asInt64();
-  return attempt;
-}
-
-//! \brief What RecordFromDataset() and AttemptFromDataset() read and SetContentGeometry()
-//! writes.
+//! \brief What RecordFromDataset() reads and SetContentGeometry() writes.
 constexpr const char* RECORD_COLUMNS{"aspects, algorithmVersion, fileSize, fileMTime"};
 
 } // unnamed namespace
@@ -94,83 +81,48 @@ int CVideoDatabase::GetPlayedFileId(const CFileItem& item)
 
 ContentGeometryLookup CVideoDatabase::GetContentGeometry(int idFile, const FileIdentity& identity)
 {
-  ContentGeometryRecord stored;
-  if (!GetContentGeometryUnverified(idFile, stored))
+  std::optional<ContentGeometryRecord> stored{GetStoredContentGeometry(idFile)};
+  if (!stored || !stored->HasReading())
     return {};
 
-  if (!stored.identity.Matches(identity))
+  if (!stored->identity.Matches(identity))
   {
     CLog::LogF(LOGINFO,
                "discarding content geometry for file {}: measured from size {} mtime {}, "
                "file is now size {} mtime {}",
-               idFile, stored.identity.size, stored.identity.time, identity.size, identity.time);
+               idFile, stored->identity.size, stored->identity.time, identity.size, identity.time);
     return {};
   }
 
   ContentGeometryLookup lookup;
-  lookup.record = std::move(stored);
+  lookup.record = std::move(*stored);
   lookup.state = StateOf(lookup.record);
   return lookup;
 }
 
-bool CVideoDatabase::GetContentGeometryUnverified(int idFile, ContentGeometryRecord& geometry)
+std::optional<ContentGeometryRecord> CVideoDatabase::GetStoredContentGeometry(int idFile)
 {
   try
   {
     if (idFile < 0 || nullptr == m_pDB)
-      return false;
+      return std::nullopt;
 
     const std::unique_ptr<dbiplus::Dataset> ds{m_pDB->CreateDataset()};
     if (!ds)
-      return false;
+      return std::nullopt;
 
     ds->query(PrepareSQL("SELECT %s FROM contentgeometry WHERE idFile=%i", RECORD_COLUMNS, idFile));
-    if (ds->num_rows() == 0)
-    {
-      ds->close();
-      return false;
-    }
-
-    geometry = RecordFromDataset(*ds);
+    std::optional<ContentGeometryRecord> stored;
+    if (!ds->eof())
+      stored = RecordFromDataset(*ds);
     ds->close();
-
-    // An attempt that found nothing reads as no record; GetContentGeometryAttempt() sees it.
-    return geometry.HasReading();
+    return stored;
   }
   catch (...)
   {
     CLog::LogF(LOGERROR, "failed for file {}", idFile);
   }
-  return false;
-}
-
-ContentGeometryAttempt CVideoDatabase::GetContentGeometryAttempt(int idFile)
-{
-  ContentGeometryAttempt attempt;
-  try
-  {
-    if (idFile < 0 || nullptr == m_pDB)
-      return attempt;
-
-    const std::unique_ptr<dbiplus::Dataset> ds{m_pDB->CreateDataset()};
-    if (!ds)
-      return attempt;
-
-    ds->query(PrepareSQL("SELECT %s FROM contentgeometry WHERE idFile=%i", RECORD_COLUMNS, idFile));
-    if (ds->num_rows() == 0)
-    {
-      ds->close();
-      return attempt;
-    }
-
-    attempt = AttemptFromDataset(*ds);
-    ds->close();
-  }
-  catch (...)
-  {
-    CLog::LogF(LOGERROR, "failed for file {}", idFile);
-  }
-  return attempt;
+  return std::nullopt;
 }
 
 std::vector<ContentGeometryCandidate> CVideoDatabase::GetContentGeometryCandidates()
@@ -202,7 +154,7 @@ std::vector<ContentGeometryCandidate> CVideoDatabase::GetContentGeometryCandidat
                                                  ds->fv("strFileName").get_asString());
 
       if (!ds->fv("storedFile").get_isNull())
-        candidate.attempt = AttemptFromDataset(*ds);
+        candidate.stored = RecordFromDataset(*ds);
 
       candidates.emplace_back(std::move(candidate));
       ds->next();

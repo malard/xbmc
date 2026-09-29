@@ -158,7 +158,7 @@ struct ContentGeometryCandidate
 {
   int idFile{-1};
   std::string path;
-  KODI::VIDEO::GEOMETRY::ContentGeometryAttempt attempt;
+  std::optional<KODI::VIDEO::GEOMETRY::ContentGeometryRecord> stored;
 };
 
 class CVideoDatabase : public CDatabase
@@ -610,8 +610,7 @@ public:
    */
   ///@{
 
-  //! \brief Store the content geometry of a file, replacing any previous one. The diagnostics
-  //! are written only when the record states them.
+  //! \brief Store the content geometry of a file, replacing any previous one.
   bool SetContentGeometry(int idFile, const KODI::VIDEO::GEOMETRY::ContentGeometryRecord& geometry);
 
   //! \brief Look up the content geometry of a file, checking it still describes that file.
@@ -619,14 +618,9 @@ public:
   KODI::VIDEO::GEOMETRY::ContentGeometryLookup GetContentGeometry(
       int idFile, const KODI::VIDEO::GEOMETRY::FileIdentity& identity);
 
-  //! \brief Read a stored geometry without checking it still describes the file, for moving
-  //! data about. Anything acting on the rectangle uses GetContentGeometry() instead.
-  bool GetContentGeometryUnverified(int idFile,
-                                    KODI::VIDEO::GEOMETRY::ContentGeometryRecord& geometry);
-
-  //! \brief What has already been attempted for a file. Unlike GetContentGeometry() this does
-  //! see a failed attempt.
-  KODI::VIDEO::GEOMETRY::ContentGeometryAttempt GetContentGeometryAttempt(int idFile);
+  //! \brief What is stored for a file, including a record that found nothing, without checking
+  //! it still describes the file. Anything acting on the rectangle uses GetContentGeometry().
+  std::optional<KODI::VIDEO::GEOMETRY::ContentGeometryRecord> GetStoredContentGeometry(int idFile);
 
   //! \brief The file row an item plays, resolving versions and extras as GetVideoSettings()
   //! does. Negative when the item is not in the library.
