@@ -341,40 +341,6 @@ TEST(TestLanguageTag, NamesTheLanguageInEnglish)
   EXPECT_EQ(CLanguageTag::Parse("not a language").ToEnglishName(), "");
 }
 
-struct TestFindInText
-{
-  std::string input;
-  std::string expected;
-};
-
-// clang-format off
-const TestFindInText FindInTextTests[] = {
-    {"track name", ""},
-    {"track name {en}", "en"},
-    {"track name {en-US}", "en-US"},
-    {"track name {es-419}", "es-419"},
-    {"track name {en} more text", "en"},
-    {"{en} track name", "en"},
-    {"track name {", ""},
-    {"track name {}", ""},
-    {"}{en}{fr}", "en"},
-    {"track name {EN}", "en"},
-    {"track name { en }", "en"},
-};
-// clang-format on
-
-class FindInTextTester : public testing::Test, public testing::WithParamInterface<TestFindInText>
-{
-};
-
-TEST_P(FindInTextTester, Find)
-{
-  const auto tag = CLanguageTag::FindInText(GetParam().input);
-  EXPECT_EQ(GetParam().expected, tag.has_value() ? tag->ToString() : "");
-}
-
-INSTANTIATE_TEST_SUITE_P(TestLanguageTag, FindInTextTester, testing::ValuesIn(FindInTextTests));
-
 TEST(TestLanguageTag, PrefersTheCurrentCodeOverTheDeprecatedOne)
 {
   // Both spellings are held so that media tagged with the withdrawn one is understood, but a tag

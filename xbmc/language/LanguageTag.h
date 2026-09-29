@@ -95,15 +95,6 @@ public:
   static std::optional<CLanguageTag> TryParse(const std::string& text);
 
   /*!
-   * \brief Find a language tag written inside curly braces within text.
-   * \note Media carries a tag this way where its container cannot express one, so that a track
-   *       can state a language the container's own field could not hold.
-   * \param[in] text The text to search, such as a track title.
-   * \return The tag, or nullopt when the text holds none.
-   */
-  static std::optional<CLanguageTag> FindInText(const std::string& text);
-
-  /*!
    * \brief A tag for a stream that has a language, where that language is not known.
    * \note This is not the same as a stream with no language at all, which BCP 47 expresses as
    *       zxx and which media uses for instrumental audio.

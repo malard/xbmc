@@ -145,8 +145,7 @@ Parsed Read(const CBcp47& tag)
   Parsed parsed{.tag = tag.Format()};
 
   // Canonical BCP 47 leads with the primary language subtag, so its length places it
-  if (StringUtils::StartsWith(parsed.tag, tag.GetLanguage()))
-    parsed.languageLength = tag.GetLanguage().size();
+  parsed.languageLength = tag.GetLanguage().size();
 
   if (const std::string& region = tag.GetRegion(); !region.empty())
   {
@@ -198,14 +197,11 @@ std::optional<std::string> CodeOfName(const std::string& name)
   if (name.empty())
     return std::nullopt;
 
-  std::string text{name};
-  StringUtils::Trim(text);
-
-  if (const auto known = CLanguageTable::GetInstance().CodeOf(text); known.has_value())
+  if (const auto known = CLanguageTable::GetInstance().CodeOf(name); known.has_value())
     return known;
 
   const CSubTagRegistryManager& registry{CSubTagRegistryManager::GetInstance()};
-  if (const auto subTag = registry.GetLanguageSubTags().LookupByDescription(text);
+  if (const auto subTag = registry.GetLanguageSubTags().LookupByDescription(name);
       subTag.has_value())
     return subTag->m_subTag;
 
@@ -366,19 +362,6 @@ std::optional<CLanguageTag> CLanguageTag::TryParse(const std::string& text)
     return tag;
 
   return std::nullopt;
-}
-
-std::optional<CLanguageTag> CLanguageTag::FindInText(const std::string& text)
-{
-  const std::size_t begin = text.find('{');
-  if (begin == std::string::npos)
-    return std::nullopt;
-
-  const std::size_t end = text.find('}', begin + 1);
-  if (end == std::string::npos)
-    return std::nullopt;
-
-  return TryParse(text.substr(begin + 1, end - begin - 1));
 }
 
 std::string CLanguageTag::AsIso6392B() const
