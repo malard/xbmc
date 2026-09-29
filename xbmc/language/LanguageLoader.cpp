@@ -69,31 +69,55 @@ constexpr auto specialSubtitlesDownloadLangSettings = std::array{
 };
 
 /*!
- * \brief The pack a language names, whatever it was named by.
- * \param[in] language The pack, by addon id or by the locale it is for.
- * \return The pack, or nullptr where nothing of that name is a language pack.
+ * \brief Find the pack to use, enabling it or falling back to the default one.
+ * \param[in,out] language The pack asked for, by addon id or locale; rewritten to the addon
+ *                id of the pack found.
+ * \return The pack, or nullptr when not even the default one is there.
  */
-LanguageResourcePtr FindPack(const std::string& language)
+LanguageResourcePtr Resolve(std::string& language)
 {
+  auto& addonMgr = CServiceBroker::GetAddonMgr();
   ADDON::AddonPtr addon;
-  CServiceBroker::GetAddonMgr().GetAddon(ADDON::CLanguageResource::GetAddonId(language), addon,
-                                         ADDON::AddonType::RESOURCE_LANGUAGE,
-                                         ADDON::OnlyEnabled::CHOICE_YES);
 
-  // Anything that is not a language pack leaves nothing to load a language from
+  const std::string id{ADDON::CLanguageResource::GetAddonId(language)};
+  if (!addonMgr.GetAddon(id, addon, ADDON::AddonType::RESOURCE_LANGUAGE,
+                         ADDON::OnlyEnabled::CHOICE_YES) &&
+      addonMgr.IsAddonInstalled(id) && addonMgr.EnableAddon(id))
+  {
+    addonMgr.GetAddon(id, addon, ADDON::AddonType::RESOURCE_LANGUAGE,
+                      ADDON::OnlyEnabled::CHOICE_YES);
+  }
+
+  if (addon)
+  {
+    language = id;
+    return std::dynamic_pointer_cast<ADDON::CLanguageResource>(addon);
+  }
+
+  CLog::LogF(LOGWARNING, "language pack '{}' not found, using default", id);
+  language = std::static_pointer_cast<const CSettingString>(
+                 CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
+                     CSettings::SETTING_LOCALE_LANGUAGE))
+                 ->GetDefault();
+
+  if (!addonMgr.GetAddon(language, addon, ADDON::AddonType::RESOURCE_LANGUAGE,
+                         ADDON::OnlyEnabled::CHOICE_NO))
+  {
+    CLog::LogF(LOGFATAL, "default language pack '{}' not found", language);
+    return nullptr;
+  }
+
   return std::dynamic_pointer_cast<ADDON::CLanguageResource>(addon);
 }
 
-//! \brief Load the strings every installed addon ships for the language now in use.
-void LoadAddonStrings()
+//! \brief Load the strings every installed addon ships for the language pack \p locale.
+void LoadAddonStrings(const std::string& locale)
 {
   ADDON::VECADDONS addons;
   if (!CServiceBroker::GetAddonMgr().GetInstalledAddons(addons))
     return;
 
   auto& resources = CServiceBroker::GetResourcesComponent();
-  const std::string locale = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
-      CSettings::SETTING_LOCALE_LANGUAGE);
 
   std::ranges::for_each(
       addons,
@@ -102,6 +126,42 @@ void LoadAddonStrings()
         const std::string path = URIUtils::AddFileToFolder(addon->Path(), "resources", "language/");
         resources.GetLocalizeStrings().LoadAddonStrings(path, locale, addon->ID());
       });
+}
+
+/*!
+ * \brief The English names of every language Kodi knows of and every language the installed
+ * language addons name, sorted for display.
+ * \return The names, without duplicates.
+ */
+std::vector<std::string> GetLanguageNames()
+{
+  std::map<std::string, std::string> languages;
+  CLanguageTable::GetInstance().List(languages);
+
+  CLanguageLoader::GetAddonsLanguageCodes(languages);
+
+  std::set<std::string, sortstringbyname> names;
+  std::ranges::transform(languages, std::inserter(names, names.end()),
+                         [](const auto& language) { return language.second; });
+
+  return {names.begin(), names.end()};
+}
+
+//! \brief A language list: the setting's own choices, then every language by name.
+template<std::size_t N>
+void FillLanguageOptions(const std::array<SpecialLanguageSetting, N>& specials,
+                         std::vector<StringSettingOption>& list)
+{
+  for (const auto& special : specials)
+  {
+    list.emplace_back(
+        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(special.m_message),
+        std::string{special.m_code});
+  }
+
+  const std::vector<std::string> languages = GetLanguageNames();
+  std::ranges::transform(languages, std::back_inserter(list), [](const auto& language)
+                         { return StringSettingOption{language, language}; });
 }
 } // namespace
 
@@ -113,16 +173,7 @@ CLanguageLoader& CLanguageLoader::GetInstance()
 
 void CLanguageLoader::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  if (setting == nullptr)
-    return;
-
-  const auto settingsComponent = CServiceBroker::GetSettingsComponent();
-  if (!settingsComponent)
-    return;
-
-  const auto settings = settingsComponent->GetSettings();
-  if (!settings)
-    return;
+  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
 
   const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOCALE_AUDIOLANGUAGE)
@@ -139,54 +190,10 @@ void CLanguageLoader::OnSettingChanged(const std::shared_ptr<const CSetting>& se
   }
   else if (settingId == CSettings::SETTING_LOCALE_LANGUAGE)
   {
+    // Put the setting back to a language that does load
     if (!Load(std::static_pointer_cast<const CSettingString>(setting)->GetValue()))
-    {
-      // Put the setting back to a language that does load
-      const auto languageSetting = settings->GetSetting(CSettings::SETTING_LOCALE_LANGUAGE);
-      if (!languageSetting)
-      {
-        CLog::Log(LOGERROR, "Failed to load setting for: {}", CSettings::SETTING_LOCALE_LANGUAGE);
-        return;
-      }
-
-      std::static_pointer_cast<CSettingString>(languageSetting)->Reset();
-    }
+      settings->GetSetting(settingId)->Reset();
   }
-}
-
-bool CLanguageLoader::Resolve(std::string& language)
-{
-  auto& addonMgr = CServiceBroker::GetAddonMgr();
-  ADDON::AddonPtr addon;
-
-  // Find the chosen language add-on if it's enabled
-  if (addonMgr.GetAddon(language, addon, ADDON::AddonType::RESOURCE_LANGUAGE,
-                        ADDON::OnlyEnabled::CHOICE_YES))
-  {
-    return true;
-  }
-
-  if (addonMgr.IsAddonInstalled(language) &&
-      (!addonMgr.IsAddonDisabled(language) || addonMgr.EnableAddon(language)))
-  {
-    return true;
-  }
-
-  CLog::LogF(LOGWARNING, "Could not find or enable language add-on '{}', loading default...",
-             language);
-  language = std::static_pointer_cast<const CSettingString>(
-                 CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
-                     CSettings::SETTING_LOCALE_LANGUAGE))
-                 ->GetDefault();
-
-  if (!addonMgr.GetAddon(language, addon, ADDON::AddonType::RESOURCE_LANGUAGE,
-                         ADDON::OnlyEnabled::CHOICE_NO))
-  {
-    CLog::LogF(LOGFATAL, "Could not find default language add-on '{}'", language);
-    return false;
-  }
-
-  return true;
 }
 
 bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices /* = true */)
@@ -197,15 +204,9 @@ bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices 
         CSettings::SETTING_LOCALE_LANGUAGE);
   }
 
-  if (!Resolve(language))
-    return false;
-
-  const LanguageResourcePtr pack{FindPack(language)};
+  const LanguageResourcePtr pack{Resolve(language)};
   if (pack == nullptr)
-  {
-    CLog::LogF(LOGFATAL, "Unknown language {}", language);
     return false;
-  }
 
   CLanguage::GetInstance().SetPack(pack);
 
@@ -231,7 +232,7 @@ bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices 
     return false;
   }
 
-  LoadAddonStrings();
+  LoadAddonStrings(language);
 
   if (reloadServices)
   {
@@ -285,14 +286,7 @@ void CLanguageLoader::SettingOptionsAudioStreamLanguagesFiller(
     std::vector<StringSettingOption>& list,
     std::string& /*current*/)
 {
-  for (const auto& special : specialAudioLangSettings)
-  {
-    list.emplace_back(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(special.m_message),
-        std::string{special.m_code});
-  }
-
-  AddLanguages(list);
+  FillLanguageOptions(specialAudioLangSettings, list);
 }
 
 void CLanguageLoader::SettingOptionsSubtitleStreamLanguagesFiller(
@@ -300,14 +294,7 @@ void CLanguageLoader::SettingOptionsSubtitleStreamLanguagesFiller(
     std::vector<StringSettingOption>& list,
     std::string& /*current*/)
 {
-  for (const auto& special : specialSubtitlesLangSettings)
-  {
-    list.emplace_back(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(special.m_message),
-        std::string{special.m_code});
-  }
-
-  AddLanguages(list);
+  FillLanguageOptions(specialSubtitlesLangSettings, list);
 }
 
 void CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller(
@@ -315,34 +302,6 @@ void CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller(
     std::vector<StringSettingOption>& list,
     std::string& /*current*/)
 {
-  for (const auto& special : specialSubtitlesDownloadLangSettings)
-  {
-    list.emplace_back(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(special.m_message),
-        std::string{special.m_code});
-  }
-
-  AddLanguages(list);
+  FillLanguageOptions(specialSubtitlesDownloadLangSettings, list);
 }
 
-void CLanguageLoader::AddLanguages(std::vector<StringSettingOption>& list)
-{
-  const std::vector<std::string> languages = GetLanguageNames();
-
-  std::ranges::transform(languages, std::back_inserter(list), [](const auto& language)
-                         { return StringSettingOption{language, language}; });
-}
-
-std::vector<std::string> CLanguageLoader::GetLanguageNames()
-{
-  std::map<std::string, std::string> languages;
-  CLanguageTable::GetInstance().List(languages);
-
-  GetAddonsLanguageCodes(languages);
-
-  std::set<std::string, sortstringbyname> names;
-  std::ranges::transform(languages, std::inserter(names, names.end()),
-                         [](const auto& language) { return language.second; });
-
-  return {names.begin(), names.end()};
-}

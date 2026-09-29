@@ -79,21 +79,5 @@ public:
 private:
   CLanguageLoader() = default;
   ~CLanguageLoader() override = default;
-
-  /*!
-   * \brief Find the pack to use, enabling it or falling back to the default one.
-   * \param[in,out] language The pack asked for, rewritten when the default one is used instead.
-   * \return True when a pack is there to be loaded.
-   */
-  static bool Resolve(std::string& language);
-
-  static void AddLanguages(std::vector<StringSettingOption>& list);
-
-  /*!
-   * \brief The English names of every language Kodi knows of and every language the installed
-   * language addons name, sorted for display.
-   * \return The names, without duplicates.
-   */
-  static std::vector<std::string> GetLanguageNames();
 };
 } // namespace KODI::LANGUAGE
