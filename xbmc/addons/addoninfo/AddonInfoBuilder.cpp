@@ -827,7 +827,7 @@ bool CAddonInfoBuilder::GetTextList(const tinyxml2::XMLElement* element,
     if (lang != nullptr)
     {
       if (!KODI::LANGUAGE::CLanguageTag::TryParse(lang).has_value())
-        CLog::LogF(LOGERROR, "{}: unknown {} language '{}', ignored", addonId, tag, lang);
+        CLog::LogF(LOGWARNING, "{}: unknown {} language '{}', ignored", addonId, tag, lang);
       else if (strcmp(lang, "no") == 0)
         translatedValues.try_emplace("nb_NO", text != nullptr ? text : "");
       else

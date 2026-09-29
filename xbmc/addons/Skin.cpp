@@ -164,10 +164,7 @@ bool CSkinSettingBool::SerializeSetting(TiXmlElement* element) const
 }
 
 //! \brief The ratio a layout's aspect attribute declares; zero when nothing usable is stated.
-static float ParseDeclaredAspect(const std::string& strAspect,
-                                 int width,
-                                 int height,
-                                 const std::string& skinId)
+static float ParseDeclaredAspect(const std::string& strAspect, const std::string& skinId)
 {
   float aspect = 0;
 
@@ -182,21 +179,9 @@ static float ParseDeclaredAspect(const std::string& strAspect,
         aspect = w / h;
     }
 
-    if (aspect <= 0.0f)
-    {
-      CLog::Log(LOGDEBUG, "Skin {}: the {}x{} layout declares aspect=\"{}\", which is not a ratio.",
-                skinId, width, height, strAspect);
-      return 0.0f;
-    }
-
-    const bool matchesPixels =
-        height > 0 && std::fabs(aspect - (static_cast<float>(width) / height)) < 0.005f;
-
-    CLog::Log(LOGDEBUG,
-              "Skin {}: the {}x{} layout declares aspect=\"{}\", which is {}. Fractions are "
-              "deprecated - declare the ratio itself, as aspect=\"{:.2f}\".",
-              skinId, width, height, strAspect,
-              matchesPixels ? "the shape it already is" : "not the shape its pixels are", aspect);
+    if (aspect > 0.0f)
+      CLog::Log(LOGDEBUG, "Skin {}: aspect \"{}\" is a fraction, use \"{:.2f}\"", skinId, strAspect,
+                aspect);
   }
   else if (!strAspect.empty())
   {
@@ -208,7 +193,13 @@ static float ParseDeclaredAspect(const std::string& strAspect,
       aspect = canonical;
   }
 
-  return aspect;
+  if (aspect > 0.0f)
+    return aspect;
+
+  if (!strAspect.empty())
+    CLog::Log(LOGDEBUG, "Skin {}: aspect \"{}\" is not a ratio", skinId, strAspect);
+
+  return 0.0f;
 }
 
 CSkinInfo::CSkinInfo(const AddonInfoPtr& addonInfo,
@@ -240,7 +231,7 @@ CSkinInfo::CSkinInfo(const AddonInfoPtr& addonInfo) : CAddon(addonInfo, AddonTyp
     const bool defRes = values.GetValue("res@default").asBoolean();
     const std::string folder = values.GetValue("res@folder").asString();
     const std::string strAspect = values.GetValue("res@aspect").asString();
-    const float aspect = ParseDeclaredAspect(strAspect, width, height, ID());
+    const float aspect = ParseDeclaredAspect(strAspect, ID());
 
     if (width > 0 && height > 0)
     {
