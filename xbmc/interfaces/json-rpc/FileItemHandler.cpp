@@ -79,6 +79,26 @@ std::set<std::string> LibraryIdentifiers()
 
   return identifiers;
 }
+
+//! A started thumbnail loader for items like \p item, or none for an item no loader serves
+std::unique_ptr<CThumbLoader> ThumbLoaderFor(const CFileItem& item)
+{
+  std::unique_ptr<CThumbLoader> loader;
+  if (item.HasVideoInfoTag())
+    loader = std::make_unique<CVideoThumbLoader>();
+  else if (item.HasMusicInfoTag())
+    loader = std::make_unique<CMusicThumbLoader>();
+
+  if (loader)
+    loader->OnLoaderStart();
+  return loader;
+}
+
+bool IsLibraryItem(const CFileItem& item)
+{
+  return (item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iDbId > -1) ||
+         (item.HasMusicInfoTag() && item.GetMusicInfoTag()->GetDatabaseId() > -1);
+}
 } // unnamed namespace
 
 bool CFileItemHandler::GetField(const std::string& field,
@@ -224,15 +244,18 @@ bool CFileItemHandler::GetField(const std::string& field,
       return true;
     }
 
-    if (field == "art")
+    const auto fillLibraryArt = [&](bool missing)
     {
-      if (thumbLoader && !item->GetProperty("libraryartfilled").asBoolean() && !fetchedArt &&
-          ((item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_iDbId > -1) ||
-           (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDatabaseId() > -1)))
+      if (thumbLoader && missing && !fetchedArt && IsLibraryItem(*item))
       {
         thumbLoader->FillLibraryArt(*item);
         fetchedArt = true;
       }
+    };
+
+    if (field == "art")
+    {
+      fillLibraryArt(!item->GetProperty("libraryartfilled").asBoolean());
 
       const KODI::ART::Artwork& artMap = item->GetArt();
       CVariant artObj(CVariant::VariantTypeObject);
@@ -248,39 +271,21 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (field == "thumbnail")
     {
-      if (thumbLoader != nullptr && !item->HasArt("thumb") && !fetchedArt &&
-          ((item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_iDbId > -1) ||
-           (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDatabaseId() > -1)))
-      {
-        thumbLoader->FillLibraryArt(*item);
-        fetchedArt = true;
-      }
+      if (thumbLoader && !item->HasArt("thumb") && !fetchedArt && IsLibraryItem(*item))
+        fillLibraryArt(true);
       else if (item->HasPictureInfoTag() && !item->HasArt("thumb"))
         item->SetArt("thumb", IMAGE_FILES::URLFromFile(item->GetPath()));
 
-      if (item->HasArt("thumb"))
-        result["thumbnail"] = IMAGE_FILES::URLFromFile(item->GetArt("thumb"));
-      else
-        result["thumbnail"] = "";
-
+      result["thumbnail"] =
+          item->HasArt("thumb") ? IMAGE_FILES::URLFromFile(item->GetArt("thumb")) : "";
       return true;
     }
 
     if (field == "fanart")
     {
-      if (thumbLoader != nullptr && !item->HasArt("fanart") && !fetchedArt &&
-          ((item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_iDbId > -1) ||
-           (item->HasMusicInfoTag() && item->GetMusicInfoTag()->GetDatabaseId() > -1)))
-      {
-        thumbLoader->FillLibraryArt(*item);
-        fetchedArt = true;
-      }
-
-      if (item->HasArt("fanart"))
-        result["fanart"] = IMAGE_FILES::URLFromFile(item->GetArt("fanart"));
-      else
-        result["fanart"] = "";
-
+      fillLibraryArt(!item->HasArt("fanart"));
+      result["fanart"] =
+          item->HasArt("fanart") ? IMAGE_FILES::URLFromFile(item->GetArt("fanart")) : "";
       return true;
     }
 
@@ -367,17 +372,8 @@ void CFileItemHandler::HandleFileItemList(const char* ID,
     end = items.Size();
   }
 
-  CThumbLoader* thumbLoader = nullptr;
-  if (end - start > 0)
-  {
-    if (items.Get(start)->HasVideoInfoTag())
-      thumbLoader = new CVideoThumbLoader();
-    else if (items.Get(start)->HasMusicInfoTag())
-      thumbLoader = new CMusicThumbLoader();
-
-    if (thumbLoader != nullptr)
-      thumbLoader->OnLoaderStart();
-  }
+  const std::unique_ptr<CThumbLoader> thumbLoader =
+      end - start > 0 ? ThumbLoaderFor(*items.Get(start)) : nullptr;
 
   const std::set<std::string> fields{RequestedFields(parameterObject)};
 
@@ -386,10 +382,8 @@ void CFileItemHandler::HandleFileItemList(const char* ID,
   {
     CFileItemPtr item = items.Get(i);
     HandleFileItem(ID, allowFile, resultname, item, parameterObject, fields, result, true,
-                   thumbLoader);
+                   thumbLoader.get());
   }
-
-  delete thumbLoader;
 }
 
 void CFileItemHandler::HandleFileItem(const char* ID,
@@ -421,29 +415,20 @@ void CFileItemHandler::HandleFileItem(const char* ID,
 
   if (item.get())
   {
-    std::set<std::string>::const_iterator fileField = fields.find("file");
-    if (fileField != fields.end())
+    if (fields.erase("file") > 0 && allowFile)
     {
-      if (allowFile)
-      {
-        // A folder reports its own path so that file agrees with filetype
-        if (fields.contains("filetype") && item->IsFolder())
-        {
-          object["file"] = item->GetPath().c_str();
-        }
-        else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->GetPath().empty())
-        {
-          object["file"] = item->GetVideoInfoTag()->GetPath().c_str();
-        }
-        if (item->HasMusicInfoTag() && !item->GetMusicInfoTag()->GetURL().empty())
-          object["file"] = item->GetMusicInfoTag()->GetURL().c_str();
-        if (item->HasPVRTimerInfoTag() && !item->GetPVRTimerInfoTag()->Path().empty())
-          object["file"] = item->GetPVRTimerInfoTag()->Path().c_str();
+      // A folder reports its own path so that file agrees with filetype
+      if (fields.contains("filetype") && item->IsFolder())
+        object["file"] = item->GetPath();
+      else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->GetPath().empty())
+        object["file"] = item->GetVideoInfoTag()->GetPath();
+      if (item->HasMusicInfoTag() && !item->GetMusicInfoTag()->GetURL().empty())
+        object["file"] = item->GetMusicInfoTag()->GetURL();
+      if (item->HasPVRTimerInfoTag() && !item->GetPVRTimerInfoTag()->Path().empty())
+        object["file"] = item->GetPVRTimerInfoTag()->Path();
 
-        if (!object.isMember("file"))
-          object["file"] = item->GetDynPath().c_str();
-      }
-      fields.erase(fileField);
+      if (!object.isMember("file"))
+        object["file"] = item->GetDynPath();
     }
 
     if (item->HasProperty("playlistdisplayorder"))
@@ -452,19 +437,10 @@ void CFileItemHandler::HandleFileItem(const char* ID,
       object["displayorder"] = item->GetProperty("playlistdisplayorder");
     }
 
-    fileField = fields.find("mediapath");
-    if (fileField != fields.end())
-    {
-      object["mediapath"] = item->GetPath().c_str();
-      fields.erase(fileField);
-    }
-
-    fileField = fields.find("dynpath");
-    if (fileField != fields.end())
-    {
-      object["dynpath"] = item->GetDynPath().c_str();
-      fields.erase(fileField);
-    }
+    if (fields.erase("mediapath") > 0)
+      object["mediapath"] = item->GetPath();
+    if (fields.erase("dynpath") > 0)
+      object["dynpath"] = item->GetDynPath();
 
     if (ID)
     {
@@ -509,28 +485,15 @@ void CFileItemHandler::HandleFileItem(const char* ID,
           object["type"] = "unknown";
 
         if (fields.contains("filetype"))
-        {
-          if (item->IsFolder())
-            object["filetype"] = "directory";
-          else
-            object["filetype"] = "file";
-        }
+          object["filetype"] = item->IsFolder() ? "directory" : "file";
       }
     }
 
-    bool deleteThumbloader = false;
-    if (thumbLoader == nullptr)
+    std::unique_ptr<CThumbLoader> ownLoader;
+    if (!thumbLoader)
     {
-      if (item->HasVideoInfoTag())
-        thumbLoader = new CVideoThumbLoader();
-      else if (item->HasMusicInfoTag())
-        thumbLoader = new CMusicThumbLoader();
-
-      if (thumbLoader != nullptr)
-      {
-        deleteThumbloader = true;
-        thumbLoader->OnLoaderStart();
-      }
+      ownLoader = ThumbLoaderFor(*item);
+      thumbLoader = ownLoader.get();
     }
 
     if (item->HasPVRChannelInfoTag())
@@ -552,10 +515,7 @@ void CFileItemHandler::HandleFileItem(const char* ID,
 
     FillDetails(item.get(), item, fields, object, thumbLoader);
 
-    if (deleteThumbloader)
-      delete thumbLoader;
-
-    object["label"] = item->GetLabel().c_str();
+    object["label"] = item->GetLabel();
   }
   else
     object = CVariant(CVariant::VariantTypeNull);
