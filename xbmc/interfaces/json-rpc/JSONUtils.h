@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 class CDateTime;
@@ -486,6 +487,28 @@ namespace JSONRPC
       stringArray.clear();
       for (CVariant::const_iterator_array it = jsonStringArray.begin_array(); it != jsonStringArray.end_array(); ++it)
         stringArray.push_back(it->asString());
+    }
+
+    //! Copies the caller's value for \p key into \p target, if the caller gave one
+    template<typename T>
+    static void CopyIfGiven(const CVariant& parameterObject, const std::string& key, T& target)
+    {
+      if (!ParameterNotNull(parameterObject, key))
+        return;
+
+      const CVariant& value = parameterObject[key];
+      if constexpr (std::is_same_v<T, std::string>)
+        target = value.asString();
+      else if constexpr (std::is_same_v<T, std::vector<std::string>>)
+        CopyStringArray(value, target);
+      else if constexpr (std::is_same_v<T, bool>)
+        target = value.asBoolean();
+      else if constexpr (std::is_same_v<T, float>)
+        target = value.asFloat();
+      else if constexpr (std::is_same_v<T, int>)
+        target = static_cast<int>(value.asInteger());
+      else
+        static_assert(sizeof(T) == 0, "no conversion from a JSON value to this type");
     }
 
     static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);

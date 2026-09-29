@@ -1390,8 +1390,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   UpdateVideoTagField(parameterObject, "genre", genre, updatedDetails);
   details.SetGenre(genre);
 
-  if (ParameterNotNull(parameterObject, "track"))
-    details.m_iTrack = (int)parameterObject["track"].asInteger();
+  CopyIfGiven(parameterObject, "track", details.m_iTrack);
   if (ParameterNotNull(parameterObject, "rating"))
   {
     details.SetRating(parameterObject["rating"].asFloat());
@@ -1429,8 +1428,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
       }
     }
   }
-  if (ParameterNotNull(parameterObject, "userrating"))
-    details.m_iUserRating = static_cast<int>(parameterObject["userrating"].asInteger());
+  CopyIfGiven(parameterObject, "userrating", details.m_iUserRating);
   if (ParameterNotNull(parameterObject, "mpaa"))
     details.SetMPAARating(parameterObject["mpaa"].asString());
   if (ParameterNotNull(parameterObject, "imdbnumber"))
@@ -1470,10 +1468,8 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     SetFromDBDate(parameterObject["firstaired"], details.m_firstAired);
   if (ParameterNotNull(parameterObject, "productioncode"))
     details.SetProductionCode(parameterObject["productioncode"].asString());
-  if (ParameterNotNull(parameterObject, "season"))
-    details.m_iSeason = (int)parameterObject["season"].asInteger();
-  if (ParameterNotNull(parameterObject, "episode"))
-    details.m_iEpisode = (int)parameterObject["episode"].asInteger();
+  CopyIfGiven(parameterObject, "season", details.m_iSeason);
+  CopyIfGiven(parameterObject, "episode", details.m_iEpisode);
   if (ParameterNotNull(parameterObject, "originaltitle"))
     details.SetOriginalTitle(parameterObject["originaltitle"].asString());
   if (ParameterNotNull(parameterObject, "trailer"))
@@ -1493,8 +1489,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   UpdateVideoTagField(parameterObject, "country", country, updatedDetails);
   details.SetCountry(country);
 
-  if (ParameterNotNull(parameterObject, "top250"))
-    details.m_iTop250 = (int)parameterObject["top250"].asInteger();
+  CopyIfGiven(parameterObject, "top250", details.m_iTop250);
   if (ParameterNotNull(parameterObject, "sorttitle"))
     details.SetSortTitle(parameterObject["sorttitle"].asString());
   if (ParameterNotNull(parameterObject, "episodeguide"))

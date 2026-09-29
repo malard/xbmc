@@ -689,38 +689,22 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(const CVariant& parameterObject, 
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist)); status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "artist"))
-    artist.strArtist = parameterObject["artist"].asString();
-  if (ParameterNotNull(parameterObject, "instrument"))
-    CopyStringArray(parameterObject["instrument"], artist.instruments);
-  if (ParameterNotNull(parameterObject, "style"))
-    CopyStringArray(parameterObject["style"], artist.styles);
-  if (ParameterNotNull(parameterObject, "mood"))
-    CopyStringArray(parameterObject["mood"], artist.moods);
-  if (ParameterNotNull(parameterObject, "born"))
-    artist.strBorn = parameterObject["born"].asString();
-  if (ParameterNotNull(parameterObject, "formed"))
-    artist.strFormed = parameterObject["formed"].asString();
-  if (ParameterNotNull(parameterObject, "description"))
-    artist.strBiography = parameterObject["description"].asString();
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], artist.genre);
-  if (ParameterNotNull(parameterObject, "died"))
-    artist.strDied = parameterObject["died"].asString();
-  if (ParameterNotNull(parameterObject, "disbanded"))
-    artist.strDisbanded = parameterObject["disbanded"].asString();
-  if (ParameterNotNull(parameterObject, "yearsactive"))
-    CopyStringArray(parameterObject["yearsactive"], artist.yearsActive);
-  if (ParameterNotNull(parameterObject, "musicbrainzartistid"))
-    artist.strMusicBrainzArtistID = parameterObject["musicbrainzartistid"].asString();
-  if (ParameterNotNull(parameterObject, "sortname"))
-    artist.strSortName = parameterObject["sortname"].asString();
-  if (ParameterNotNull(parameterObject, "type"))
-    artist.strType = parameterObject["type"].asString();
-  if (ParameterNotNull(parameterObject, "gender"))
-    artist.strGender = parameterObject["gender"].asString();
-  if (ParameterNotNull(parameterObject, "disambiguation"))
-    artist.strDisambiguation = parameterObject["disambiguation"].asString();
+  CopyIfGiven(parameterObject, "artist", artist.strArtist);
+  CopyIfGiven(parameterObject, "instrument", artist.instruments);
+  CopyIfGiven(parameterObject, "style", artist.styles);
+  CopyIfGiven(parameterObject, "mood", artist.moods);
+  CopyIfGiven(parameterObject, "born", artist.strBorn);
+  CopyIfGiven(parameterObject, "formed", artist.strFormed);
+  CopyIfGiven(parameterObject, "description", artist.strBiography);
+  CopyIfGiven(parameterObject, "genre", artist.genre);
+  CopyIfGiven(parameterObject, "died", artist.strDied);
+  CopyIfGiven(parameterObject, "disbanded", artist.strDisbanded);
+  CopyIfGiven(parameterObject, "yearsactive", artist.yearsActive);
+  CopyIfGiven(parameterObject, "musicbrainzartistid", artist.strMusicBrainzArtistID);
+  CopyIfGiven(parameterObject, "sortname", artist.strSortName);
+  CopyIfGiven(parameterObject, "type", artist.strType);
+  CopyIfGiven(parameterObject, "gender", artist.strGender);
+  CopyIfGiven(parameterObject, "disambiguation", artist.strDisambiguation);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
@@ -782,13 +766,10 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
       status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "title"))
-    album.strAlbum = parameterObject["title"].asString();
-  if (ParameterNotNull(parameterObject, "displayartist"))
-    album.strArtistDesc = parameterObject["displayartist"].asString();
+  CopyIfGiven(parameterObject, "title", album.strAlbum);
+  CopyIfGiven(parameterObject, "displayartist", album.strArtistDesc);
   // Set album sort string before processing artist credits
-  if (ParameterNotNull(parameterObject, "sortartist"))
-    album.strArtistSort = parameterObject["sortartist"].asString();
+  CopyIfGiven(parameterObject, "sortartist", album.strArtistSort);
 
   // Match up artist names and mbids to make new artist credits
   // Mbid values only apply if there are names
@@ -798,8 +779,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
     std::vector<std::string> mbids;
     CopyStringArray(parameterObject["artist"], artists);
     // Check for Musicbrainz ids
-    if (ParameterNotNull(parameterObject, "musicbrainzalbumartistid"))
-      CopyStringArray(parameterObject["musicbrainzalbumartistid"], mbids);
+    CopyIfGiven(parameterObject, "musicbrainzalbumartistid", mbids);
     // When display artist is not provided and yet artists is changing make by concatenation
     if (!ParameterNotNull(parameterObject, "displayartist"))
       album.strArtistDesc = StringUtils::Join(artists, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
@@ -808,40 +788,23 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
     album.bArtistSongMerge = true;
   }
 
-  if (ParameterNotNull(parameterObject, "description"))
-    album.strReview = parameterObject["description"].asString();
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], album.genre);
-  if (ParameterNotNull(parameterObject, "theme"))
-    CopyStringArray(parameterObject["theme"], album.themes);
-  if (ParameterNotNull(parameterObject, "mood"))
-    CopyStringArray(parameterObject["mood"], album.moods);
-  if (ParameterNotNull(parameterObject, "style"))
-    CopyStringArray(parameterObject["style"], album.styles);
-  if (ParameterNotNull(parameterObject, "type"))
-    album.strType = parameterObject["type"].asString();
-  if (ParameterNotNull(parameterObject, "albumlabel"))
-    album.strLabel = parameterObject["albumlabel"].asString();
-  if (ParameterNotNull(parameterObject, "rating"))
-    album.fRating = parameterObject["rating"].asFloat();
-  if (ParameterNotNull(parameterObject, "userrating"))
-    album.iUserrating = static_cast<int>(parameterObject["userrating"].asInteger());
-  if (ParameterNotNull(parameterObject, "votes"))
-    album.iVotes = static_cast<int>(parameterObject["votes"].asInteger());
-  if (ParameterNotNull(parameterObject, "year"))
-    album.strReleaseDate = parameterObject["year"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainzalbumid"))
-    album.strMusicBrainzAlbumID = parameterObject["musicbrainzalbumid"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainzreleasegroupid"))
-    album.strReleaseGroupMBID = parameterObject["musicbrainzreleasegroupid"].asString();
-  if (ParameterNotNull(parameterObject, "isboxset"))
-    album.bBoxedSet = parameterObject["isboxset"].asBoolean();
-  if (ParameterNotNull(parameterObject, "originaldate"))
-    album.strOrigReleaseDate = parameterObject["originaldate"].asString();
-  if (ParameterNotNull(parameterObject, "releasedate"))
-    album.strReleaseDate = parameterObject["releasedate"].asString();
-  if (ParameterNotNull(parameterObject, "albumstatus"))
-    album.strReleaseStatus = parameterObject["albumstatus"].asString();
+  CopyIfGiven(parameterObject, "description", album.strReview);
+  CopyIfGiven(parameterObject, "genre", album.genre);
+  CopyIfGiven(parameterObject, "theme", album.themes);
+  CopyIfGiven(parameterObject, "mood", album.moods);
+  CopyIfGiven(parameterObject, "style", album.styles);
+  CopyIfGiven(parameterObject, "type", album.strType);
+  CopyIfGiven(parameterObject, "albumlabel", album.strLabel);
+  CopyIfGiven(parameterObject, "rating", album.fRating);
+  CopyIfGiven(parameterObject, "userrating", album.iUserrating);
+  CopyIfGiven(parameterObject, "votes", album.iVotes);
+  CopyIfGiven(parameterObject, "year", album.strReleaseDate);
+  CopyIfGiven(parameterObject, "musicbrainzalbumid", album.strMusicBrainzAlbumID);
+  CopyIfGiven(parameterObject, "musicbrainzreleasegroupid", album.strReleaseGroupMBID);
+  CopyIfGiven(parameterObject, "isboxset", album.bBoxedSet);
+  CopyIfGiven(parameterObject, "originaldate", album.strOrigReleaseDate);
+  CopyIfGiven(parameterObject, "releasedate", album.strReleaseDate);
+  CopyIfGiven(parameterObject, "albumstatus", album.strReleaseStatus);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
@@ -887,14 +850,11 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(const CVariant& parameterObject, CV
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(id, song)); status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "title"))
-    song.strTitle = parameterObject["title"].asString();
+  CopyIfGiven(parameterObject, "title", song.strTitle);
 
-  if (ParameterNotNull(parameterObject, "displayartist"))
-    song.strArtistDesc = parameterObject["displayartist"].asString();
+  CopyIfGiven(parameterObject, "displayartist", song.strArtistDesc);
   // Set album sort string before processing artist credits
-  if (ParameterNotNull(parameterObject, "sortartist"))
-    song.strArtistSort = parameterObject["sortartist"].asString();
+  CopyIfGiven(parameterObject, "sortartist", song.strArtistSort);
 
   // Match up artist names and mbids to make new artist credits
   // Mbid values only apply if there are names
@@ -905,48 +865,33 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(const CVariant& parameterObject, CV
     updateartists = true;
     CopyStringArray(parameterObject["artist"], artists);
     // Check for Musicbrainz ids
-    if (ParameterNotNull(parameterObject, "musicbrainzartistid"))
-      CopyStringArray(parameterObject["musicbrainzartistid"], mbids);
+    CopyIfGiven(parameterObject, "musicbrainzartistid", mbids);
     // When display artist is not provided and yet artists is changing make by concatenation
     if (!ParameterNotNull(parameterObject, "displayartist"))
       song.strArtistDesc = StringUtils::Join(artists, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
     song.SetArtistCredits(artists, std::vector<std::string>(), mbids);
   }
 
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], song.genre);
-  if (ParameterNotNull(parameterObject, "year"))
-    song.strReleaseDate = parameterObject["year"].asString();
-  if (ParameterNotNull(parameterObject, "rating"))
-    song.rating = parameterObject["rating"].asFloat();
-  if (ParameterNotNull(parameterObject, "userrating"))
-    song.userrating = static_cast<int>(parameterObject["userrating"].asInteger());
+  CopyIfGiven(parameterObject, "genre", song.genre);
+  CopyIfGiven(parameterObject, "year", song.strReleaseDate);
+  CopyIfGiven(parameterObject, "rating", song.rating);
+  CopyIfGiven(parameterObject, "userrating", song.userrating);
   if (ParameterNotNull(parameterObject, "track"))
     song.iTrack = (song.iTrack & 0xffff0000) | ((int)parameterObject["track"].asInteger() & 0xffff);
   if (ParameterNotNull(parameterObject, "disc"))
     song.iTrack = (song.iTrack & 0xffff) | ((int)parameterObject["disc"].asInteger() << 16);
-  if (ParameterNotNull(parameterObject, "duration"))
-    song.iDuration = (int)parameterObject["duration"].asInteger();
-  if (ParameterNotNull(parameterObject, "comment"))
-    song.strComment = parameterObject["comment"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainztrackid"))
-    song.strMusicBrainzTrackID = parameterObject["musicbrainztrackid"].asString();
-  if (ParameterNotNull(parameterObject, "playcount"))
-    song.iTimesPlayed = static_cast<int>(parameterObject["playcount"].asInteger());
+  CopyIfGiven(parameterObject, "duration", song.iDuration);
+  CopyIfGiven(parameterObject, "comment", song.strComment);
+  CopyIfGiven(parameterObject, "musicbrainztrackid", song.strMusicBrainzTrackID);
+  CopyIfGiven(parameterObject, "playcount", song.iTimesPlayed);
   if (ParameterNotNull(parameterObject, "lastplayed"))
     song.lastPlayed.SetFromDBDateTime(parameterObject["lastplayed"].asString());
-  if (ParameterNotNull(parameterObject, "mood"))
-    song.strMood = parameterObject["mood"].asString();
-  if (ParameterNotNull(parameterObject, "disctitle"))
-    song.strDiscSubtitle = parameterObject["disctitle"].asString();
-  if (ParameterNotNull(parameterObject, "bpm"))
-    song.iBPM = static_cast<int>(parameterObject["bpm"].asInteger());
-  if (ParameterNotNull(parameterObject, "originaldate"))
-    song.strOrigReleaseDate = parameterObject["originaldate"].asString();
-  if (ParameterNotNull(parameterObject, "albumreleasedate"))
-    song.strReleaseDate = parameterObject["albumreleasedate"].asString();
-  if (ParameterNotNull(parameterObject, "songvideourl"))
-    song.songVideoURL = parameterObject["songvideourl"].asString();
+  CopyIfGiven(parameterObject, "mood", song.strMood);
+  CopyIfGiven(parameterObject, "disctitle", song.strDiscSubtitle);
+  CopyIfGiven(parameterObject, "bpm", song.iBPM);
+  CopyIfGiven(parameterObject, "originaldate", song.strOrigReleaseDate);
+  CopyIfGiven(parameterObject, "albumreleasedate", song.strReleaseDate);
+  CopyIfGiven(parameterObject, "songvideourl", song.songVideoURL);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
