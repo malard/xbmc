@@ -25,6 +25,8 @@ public:
   {
     return Load(KODI::LANGUAGE::CLanguageLoader::GetLanguageInfoPath(language));
   }
+
+  using CLangInfo::PlatformLocaleName;
 };
 
 using KODI::LANGUAGE::CLanguageTag;
@@ -93,4 +95,39 @@ TEST(TestLangInfo, Load)
 
   EXPECT_EQ(langInfo.GetSpeedUnit(), CSpeed::UnitMilesPerHour);
   EXPECT_EQ(langInfo.GetTemperatureUnit(), CTemperature::UnitFahrenheit);
+}
+
+TEST(TestLangInfo, RegionalDateFormatsAreTheRegions)
+{
+  CLangInfoTest langInfo;
+
+  langInfo.SetShortDateFormat("regional");
+  langInfo.SetLongDateFormat("regional");
+
+  EXPECT_EQ(langInfo.GetShortDateFormat(), "DD/MM/YYYY");
+  EXPECT_EQ(langInfo.GetLongDateFormat(), "DDDD, D MMMM YYYY");
+}
+
+TEST(TestLangInfo, PlatformLocaleNamePairsLanguageAndPlace)
+{
+  using KODI::LANGUAGE::CTerritory;
+
+#ifdef TARGET_WINDOWS
+  EXPECT_EQ(
+      CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("en-GB"), CTerritory::FromCode("AU")),
+      "en-AU");
+  EXPECT_EQ(
+      CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("fil"), CTerritory::FromCode("PH")),
+      "fil-PH");
+#else
+  EXPECT_EQ(
+      CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("en-GB"), CTerritory::FromCode("AU")),
+      "en_AU.UTF-8");
+  EXPECT_EQ(
+      CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("fil"), CTerritory::FromCode("PH")),
+      "fil_PH.UTF-8");
+#endif
+
+  // Without a place, the platform's own locale
+  EXPECT_TRUE(CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("de"), CTerritory{}).empty());
 }

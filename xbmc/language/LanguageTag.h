@@ -189,6 +189,10 @@ public:
    */
   std::string AsIso6391() const;
 
+  //! The primary language subtag, as canonical BCP 47 spells it: the ISO 639-1 code where one
+  //! exists
+  std::string_view Language() const { return {m_tag.data(), m_languageLength}; }
+
   /*!
    * \brief Whether this is the same tag as another.
    * \note Tags, not languages: en and eng are the same tag once parsed, but en and en-AU are
@@ -265,9 +269,6 @@ private:
 
   //! Text that named no language, kept as it was given
   explicit CLanguageTag(std::string text) : m_tag(std::move(text)) {}
-
-  //! The primary language subtag, as canonical BCP 47 spells it
-  std::string_view Language() const { return {m_tag.data(), m_languageLength}; }
 
   //! The region subtag, as canonical BCP 47 spells it, or empty where the tag states none
   std::string_view Region() const { return {m_tag.data() + m_regionOffset, m_regionLength}; }

@@ -207,23 +207,7 @@ void CLangInfo::CRegion::SetSpeedUnit(const std::string& strUnit)
 
 void CLangInfo::CRegion::SetGlobalLocale(CLangInfo& langInfo)
 {
-  // A platform locale pairs the interface language with the place the selected region is for,
-  // which are two separate choices - a British pack with the Australian region is en_AU
-  const std::string language{CLanguage::GetInstance().UI().AsIso6391()};
-  const std::string territory{m_territory.AsIso3166_1Alpha2()};
-
-  // The name a platform's locale database answers to
-#ifdef TARGET_WINDOWS
-  static constexpr std::string_view separator{"-"};
-#else
-  static constexpr std::string_view separator{"_"};
-#endif
-  std::string strLocale{territory.empty() ? language
-                                          : language + std::string{separator} + territory};
-#ifdef TARGET_POSIX
-  if (!strLocale.empty())
-    strLocale += ".UTF-8";
-#endif
+  std::string strLocale{PlatformLocaleName(CLanguage::GetInstance().UI(), m_territory)};
   langInfo.m_originalLocale = std::locale(
       std::locale::classic(), new custom_numpunct(m_cDecimalSep, m_cThousandsSep, m_strGrouping));
 
@@ -292,6 +276,19 @@ void CLangInfo::CRegion::SetGlobalLocale(CLangInfo& langInfo)
 #endif
 }
 
+std::string CLangInfo::PlatformLocaleName(const CLanguageTag& language, const CTerritory& territory)
+{
+  const std::string place{territory.AsIso3166_1Alpha2()};
+  if (place.empty())
+    return {};
+
+#ifdef TARGET_WINDOWS
+  return std::string{language.Language()} + "-" + place;
+#else
+  return std::string{language.Language()} + "_" + place + ".UTF-8";
+#endif
+}
+
 CLangInfo::CLangInfo()
 {
   SetDefaults();
@@ -301,24 +298,12 @@ CLangInfo::CLangInfo()
   m_use24HourClock = DetermineUse24HourClockFromTimeFormat(m_defaultRegion.m_strTimeFormat);
   m_temperatureUnit = m_defaultRegion.m_tempUnit;
   m_speedUnit = m_defaultRegion.m_speedUnit;
-  m_localeCollation = LocaleCollation::UNCHECKED;
 }
 
 CLangInfo::~CLangInfo() = default;
 
 void CLangInfo::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  if (setting == nullptr)
-    return;
-
-  auto settingsComponent = CServiceBroker::GetSettingsComponent();
-  if (!settingsComponent)
-    return;
-
-  auto settings = settingsComponent->GetSettings();
-  if (!settings)
-    return;
-
   const std::string &settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOCALE_COUNTRY)
     SetCurrentRegion(std::static_pointer_cast<const CSettingString>(setting)->GetValue());
@@ -333,8 +318,8 @@ void CLangInfo::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
     Set24HourClock(std::static_pointer_cast<const CSettingString>(setting)->GetValue());
 
     // update the time format
-    settings->SetString(CSettings::SETTING_LOCALE_TIMEFORMAT,
-                        PrepareTimeFormat(GetTimeFormat(), m_use24HourClock));
+    CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
+        CSettings::SETTING_LOCALE_TIMEFORMAT, PrepareTimeFormat(GetTimeFormat(), m_use24HourClock));
   }
   else if (settingId == CSettings::SETTING_LOCALE_TEMPERATUREUNIT)
     SetTemperatureUnit(std::static_pointer_cast<const CSettingString>(setting)->GetValue());
@@ -399,13 +384,7 @@ bool CLangInfo::Load(const std::string& langInfoPath)
 
       const auto* pTime = pRegion->FirstChildElement("time");
       if (pTime && !pTime->NoChildren())
-      {
-        region.m_strTimeFormat=pTime->FirstChild()->Value();
-        region.m_strMeridiemSymbols[static_cast<int>(MeridiemSymbol::AM)] =
-            XMLUtils::GetAttribute(pTime, "symbolAM");
-        region.m_strMeridiemSymbols[static_cast<int>(MeridiemSymbol::PM)] =
-            XMLUtils::GetAttribute(pTime, "symbolPM");
-      }
+        region.m_strTimeFormat = pTime->FirstChild()->Value();
 
       const auto* pTempUnit = pRegion->FirstChildElement("tempunit");
       if (pTempUnit && !pTempUnit->NoChildren())
@@ -534,7 +513,7 @@ void CLangInfo::SetLongDateFormat(const std::string& longDateFormat)
 {
   std::string newLongDateFormat = longDateFormat;
   if (longDateFormat == SETTING_REGIONAL_DEFAULT)
-    newLongDateFormat = m_currentRegion->m_strDateFormatShort;
+    newLongDateFormat = m_currentRegion->m_strDateFormatLong;
 
   m_longDateFormat = newLongDateFormat;
 }
@@ -616,12 +595,7 @@ const std::string& CLangInfo::MeridiemSymbolToString(MeridiemSymbol symbol)
 void CLangInfo::GetRegionNames(std::vector<std::string>& array) const
 {
   std::ranges::transform(m_regions, std::back_inserter(array),
-                         [&rc = CServiceBroker::GetResourcesComponent()](const auto& region)
-                         {
-                           return region.first == "N/A"
-                                      ? rc.GetLocalizeStrings().Get(10005) // Not available
-                                      : region.first;
-                         });
+                         [](const auto& region) { return region.first; });
 }
 
 // Set the current region by its name, names from GetRegionNames() are valid.

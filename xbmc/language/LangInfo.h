@@ -35,18 +35,12 @@ struct StringSettingOption;
 
 namespace KODI::LANGUAGE
 {
+class CLanguageTag;
+
 enum class MeridiemSymbol
 {
   PM = 0,
   AM
-};
-
-//! Whether the platform's locale collation can order text, found out on first use
-enum class LocaleCollation
-{
-  UNCHECKED,
-  UNAVAILABLE,
-  AVAILABLE
 };
 
 /*!
@@ -148,10 +142,26 @@ public:
                                              const CLangInfo& langInfo);
 
 protected:
+  //! Whether the platform's locale collation can order text, found out on first use
+  enum class LocaleCollation
+  {
+    UNCHECKED,
+    UNAVAILABLE,
+    AVAILABLE
+  };
+
   void SetDefaults();
 
   static bool DetermineUse24HourClockFromTimeFormat(const std::string& timeFormat);
   static std::string PrepareTimeFormat(const std::string& timeFormat, bool use24HourClock);
+
+  /*!
+   * \brief The name a platform's locale database answers to. It pairs the interface language
+   *        with the region's place, two separate choices: a British pack under the Australian
+   *        region is en_AU.
+   * \return The name, empty for the platform's own locale where the region states no place.
+   */
+  static std::string PlatformLocaleName(const CLanguageTag& language, const CTerritory& territory);
 
   class CRegion final
   {
@@ -195,7 +205,6 @@ protected:
     std::string m_strDateFormatLong;
     std::string m_strDateFormatShort;
     std::string m_strTimeFormat;
-    std::string m_strMeridiemSymbols[2];
     std::string m_strGrouping;
     char m_cDecimalSep{'.'};
     char m_cThousandsSep{'.'};
