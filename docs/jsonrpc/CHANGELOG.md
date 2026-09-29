@@ -132,6 +132,10 @@ Properties and types:
 - `JSONRPC.Introspect` names Kodi, not XBMC.
 - `Player.Open` plays a directory with no pictures as a playlist.
 - `VideoLibrary.SetTVShowDetails` accepts `trailer`.
+- A removed library item's id is never given to another item: `movieId`, `tvShowId`, `seasonId`,
+  `episodeId`, `musicVideoId`, `setId`, video `genreId` and `tagId`, `artistId`, `albumId`,
+  `songId`, music `genreId`, `roleId` and `sourceId`. Ids removed before the upgrade to MyVideos
+  150 and MyMusic 85 are not remembered.
 
 ### Fixed
 
