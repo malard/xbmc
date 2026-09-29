@@ -75,20 +75,10 @@ public:
       const std::shared_ptr<const CSetting>& setting,
       std::vector<StringSettingOption>& list,
       std::string& current);
-  static void SettingOptionsISO6391LanguagesFiller(const std::shared_ptr<const CSetting>& setting,
-                                                   std::vector<StringSettingOption>& list,
-                                                   std::string& current);
 
 private:
   CLanguageLoader() = default;
   ~CLanguageLoader() override = default;
-
-  //! Which languages a list to choose from offers
-  enum class LanguageList
-  {
-    DEFAULT, //!< every language Kodi knows of
-    INCLUDE_ADDONS, //!< and every language the installed language addons name
-  };
 
   /*!
    * \brief Find the pack to use, enabling it or falling back to the default one.
@@ -100,10 +90,10 @@ private:
   static void AddLanguages(std::vector<StringSettingOption>& list);
 
   /*!
-   * \brief The English names of the languages a setting can offer, sorted for display.
-   * \param[in] list Whether the languages named by installed language addons are offered too.
+   * \brief The English names of every language Kodi knows of and every language the installed
+   * language addons name, sorted for display.
    * \return The names, without duplicates.
    */
-  static std::vector<std::string> GetLanguageNames(LanguageList list = LanguageList::DEFAULT);
+  static std::vector<std::string> GetLanguageNames();
 };
 } // namespace KODI::LANGUAGE

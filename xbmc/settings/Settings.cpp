@@ -462,8 +462,6 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller(
       "subtitledownloadlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller(
-      "iso6391languages", KODI::LANGUAGE::CLanguageLoader::SettingOptionsISO6391LanguagesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skincolors", ADDON::CSkinInfo::SettingOptionsSkinColorsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skinfonts", ADDON::CSkinInfo::SettingOptionsSkinFontsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skinthemes", ADDON::CSkinInfo::SettingOptionsSkinThemesFiller);
@@ -525,7 +523,6 @@ void CSettings::UninitializeOptionFillers()
   GetSettingsManager()->UnregisterSettingOptionsFiller("audiostreamlanguages");
   GetSettingsManager()->UnregisterSettingOptionsFiller("subtitlestreamlanguages");
   GetSettingsManager()->UnregisterSettingOptionsFiller("subtitledownloadlanguages");
-  GetSettingsManager()->UnregisterSettingOptionsFiller("iso6391languages");
   GetSettingsManager()->UnregisterSettingOptionsFiller("skincolors");
   GetSettingsManager()->UnregisterSettingOptionsFiller("skinfonts");
   GetSettingsManager()->UnregisterSettingOptionsFiller("skinthemes");

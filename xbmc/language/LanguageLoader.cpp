@@ -278,17 +278,6 @@ void CLanguageLoader::GetAddonsLanguageCodes(std::map<std::string, std::string>&
                          });
 }
 
-void CLanguageLoader::SettingOptionsISO6391LanguagesFiller(
-    const std::shared_ptr<const CSetting>& /*setting*/,
-    std::vector<StringSettingOption>& list,
-    std::string& /*current*/)
-{
-  const std::vector<std::string> languages = GetLanguageNames(LanguageList::DEFAULT);
-
-  std::ranges::transform(languages, std::back_inserter(list), [](const auto& language)
-                         { return StringSettingOption{language, language}; });
-}
-
 void CLanguageLoader::SettingOptionsAudioStreamLanguagesFiller(
     const std::shared_ptr<const CSetting>& /*setting*/,
     std::vector<StringSettingOption>& list,
@@ -336,19 +325,18 @@ void CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller(
 
 void CLanguageLoader::AddLanguages(std::vector<StringSettingOption>& list)
 {
-  const std::vector<std::string> languages = GetLanguageNames(LanguageList::INCLUDE_ADDONS);
+  const std::vector<std::string> languages = GetLanguageNames();
 
   std::ranges::transform(languages, std::back_inserter(list), [](const auto& language)
                          { return StringSettingOption{language, language}; });
 }
 
-std::vector<std::string> CLanguageLoader::GetLanguageNames(LanguageList list)
+std::vector<std::string> CLanguageLoader::GetLanguageNames()
 {
   std::map<std::string, std::string> languages;
   CLanguageTable::GetInstance().List(languages);
 
-  if (list == LanguageList::INCLUDE_ADDONS)
-    GetAddonsLanguageCodes(languages);
+  GetAddonsLanguageCodes(languages);
 
   std::set<std::string, sortstringbyname> names;
   std::ranges::transform(languages, std::inserter(names, names.end()),
