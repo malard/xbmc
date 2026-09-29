@@ -86,8 +86,8 @@ public:
 
 protected:
   /*!
-   * \brief Play what the disc in the given drive holds: video directly, audio tracks by collecting
-   * them into tracks for the caller to play.
+   * \brief Play the disc in the given drive: video directly, audio by collecting its tracks into
+   * \p tracks for the caller to play.
    */
   static bool RunDisc(XFILE::IDirectory* pDir,
                       const std::string& strDrive,

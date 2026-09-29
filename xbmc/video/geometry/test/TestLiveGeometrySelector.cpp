@@ -222,8 +222,8 @@ TEST_F(TestLiveGeometrySelector, AnInsertComposedInsideTheServedShapeIsNotAWider
 
 TEST_F(TestLiveGeometrySelector, TheInsertsOfAScopeSequenceNeverMoveTheShape)
 {
-  // The same film's 2:13 stretch, as served rectangles from the log: scope, a 1.90 insert,
-  // scope, a 16:9 insert, scope. One shape, however the inserts cut.
+  // The same film's 2:13 stretch, as served rectangles: scope, a 1.90 insert, scope, a 16:9
+  // insert, scope. One shape, however the inserts cut.
   const CRectInt IMAX_INSERT{384, 276, 384 + 3072, 276 + 1608};
   const CRectInt SIXTEEN_NINE_INSERT{506, 276, 506 + 2828, 276 + 1608};
 
@@ -274,8 +274,7 @@ TEST_F(TestLiveGeometrySelector, SeekIntoAnInsertKeepsTheServedShape)
 
 TEST_F(TestLiveGeometrySelector, AShapeCorrespondingToNoRealRatioIsRefused)
 {
-  // Still a detector failure rather than a discovery: the vocabulary is what separates the two,
-  // and it is the only thing that does now.
+  // Still a detector failure rather than a discovery: the vocabulary is what separates the two.
   Served(CODED);
   for (int i = 0; i < 10; ++i)
     Quiet(IMPLAUSIBLE);

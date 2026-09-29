@@ -100,7 +100,6 @@ TEST(TestContentGeometrySampler, IsRepeatable)
   EXPECT_EQ(first.samples.size(), second.samples.size());
 }
 
-//! Sampling honours the point count it is given.
 TEST(TestContentGeometrySampler, HonoursTheRequestedPointCount)
 {
   KODI::VIDEO::GEOMETRY::SamplingParams sampling;

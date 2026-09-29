@@ -23,7 +23,7 @@ enum class Type;
 
 /*!
  * \brief Party mode: a smart feed played in random order, wrapping, with anything queued playing
- * next. What the party buttons, labels, builtin and JSON-RPC call party mode is a feed playing.
+ * next. The party buttons, labels, builtin and JSON-RPC all report a playing feed as party mode.
  */
 namespace KODI::PARTYMODE
 {
@@ -47,7 +47,6 @@ bool IsRunning();
 //! Whether a feed is playing on this playlist.
 bool IsRunning(PLAYLIST::Type playList);
 
-//! Which library a matched id is in.
 enum class Library
 {
   Song,

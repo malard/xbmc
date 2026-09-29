@@ -179,13 +179,11 @@ public:
            MatchesPlayedAudioLanguage(ss.language) && MatchesSubtitleLanguage(ss.language);
   }
 
-  // Whether subtitles in the audio language are hidden
   bool HidesSameAudioLanguage() const { return m_hideSameAudioLang; }
   // Whether the subtitle language setting is "original"
   bool IsPreferredOriginal() const { return m_isPrefOriginal; }
   // Whether the subtitle language setting is "forced_only"
   bool IsPreferredForced() const { return m_isPrefForced; }
-  // Whether subtitles for the hearing impaired are preferred
   bool IsPreferredHearingImpaired() const { return m_isPrefHearingImp; }
 
   bool operator()(const SelectionStream& ss) const

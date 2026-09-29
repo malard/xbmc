@@ -267,7 +267,6 @@ bool MergeRatio(const tinyxml2::XMLElement* element, Vocabulary& vocabulary)
   if (const char* name = element->Attribute("name"))
     entry.name = name;
 
-  // An existing entry keeps its own ratio, so the log it holds is still the right one.
   if (existing != vocabulary.entries.end())
     *existing = Hold(std::move(entry));
   else

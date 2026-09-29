@@ -48,8 +48,6 @@ CRectInt RectFromVariant(const CVariant& value)
                         value["width"].asInteger32(0), value["height"].asInteger32(0));
 }
 
-// An older row decodes, each missing field falling back to its default.
-
 CVariant CombinerParamsToVariant(const CombinerParams& params)
 {
   CVariant value{CVariant::VariantTypeObject};

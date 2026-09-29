@@ -122,8 +122,8 @@ TEST(TestGeometryTransforms, SquarePixelsAreExactWhenTheStreamAgreesWithItsCodin
 /*!
  * The region and its pixel aspect are one answer, and the reason they are taken together rather
  * than separately. A half side-by-side view is half the packing's width at the packing's display
- * ratio, so its pixels are twice as wide - and a path that measured the view while taking the
- * packing's pixel aspect classified a scope picture as 1.2.
+ * ratio, so its pixels are twice as wide - measured with the packing's pixel aspect instead, a
+ * scope picture in the view classifies as 1.2.
  */
 TEST(TestGeometryTransforms, AStereoscopicViewCarriesItsOwnPixelAspect)
 {

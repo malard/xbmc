@@ -41,7 +41,7 @@ CLanguageResource::CLanguageResource(const AddonInfoPtr& addonInfo)
         Type(AddonType::RESOURCE_LANGUAGE)->GetValue("@locale").asString()))
 {
   // The locale is kept as written either way, so an addon naming a language Kodi does not know
-  // still loads - it simply cannot be matched against media, which is worth saying out loud
+  // still loads; it just cannot be matched against media.
   if (!m_language.IsValid())
   {
     CLog::Log(LOGWARNING,

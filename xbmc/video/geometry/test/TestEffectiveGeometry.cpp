@@ -383,7 +383,7 @@ TEST(TestEffectiveGeometry, MeasuredSectionsArePublishedInDisplaySpaceWithTheirO
 
 /*!
  * Half side-by-side: each view is 960x1080 of a 1920x1080 frame, and its pixels are squeezed
- * two to one, so a 2.39 picture in it measures 960 by 816. Resolved against the view that is
+ * two to one, so a 2.35 picture in it measures 960 by 816. Resolved against the view that is
  * 2.35; resolved against the whole frame it is 1.18, which is inside tolerance of Movietone -
  * a real entry, so nothing rejects it and the title is published as 1.19.
  */
@@ -445,8 +445,8 @@ TEST(TestEffectiveGeometry, AnotherStreamKeepsTheLiveReading)
 
 /*!
  * The schema says a label is empty when the ratio corresponds to none, because a client
- * compares it. Nearest() never rejects, so a section on no real ratio was published under the
- * nearest entry's label - indistinguishable from a title actually shot at it.
+ * compares it. Nearest() never rejects, so labelling through it would publish a section on no
+ * real ratio under the nearest entry's label - indistinguishable from a title actually shot at it.
  */
 TEST(TestEffectiveGeometry, ASectionOnNoRealRatioCarriesNoLabel)
 {

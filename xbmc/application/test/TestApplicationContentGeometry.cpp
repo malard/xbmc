@@ -124,8 +124,8 @@ TEST(TestApplicationContentGeometry, AnInstructionGivenDuringPlaybackAppliesImme
   EXPECT_FLOAT_EQ(1.78f, geometry.GetOverrides().maintainAspect);
 }
 
-// The one that was missing, and the reason this file exists. An override outliving its film
-// holds the room in that film's shape over the interface, with nothing on screen to explain it.
+// An override outliving its film holds the room in that film's shape over the interface, with
+// nothing on screen to explain it.
 TEST(TestApplicationContentGeometry, StoppingRevertsEveryOverride)
 {
   CApplicationContentGeometry geometry;
@@ -295,8 +295,8 @@ TEST(TestApplicationContentGeometry, DiscoveredShapesSurviveUntilTheFileChanges)
   EXPECT_TRUE(geometry.Discovered().empty());
 }
 
-//! The render path reads these together under one lock rather than asking three times, so they
-//! have to be the same answers the accessors they replaced give.
+//! The render path reads these together under one lock, so they must give the same answers as
+//! the individual accessors.
 TEST(TestApplicationContentGeometry, TheRenderInputsAgreeWithTheAccessorsTheyReplace)
 {
   CApplicationContentGeometry geometry;

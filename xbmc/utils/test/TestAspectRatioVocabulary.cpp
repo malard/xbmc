@@ -333,8 +333,7 @@ TEST_F(TestAspectRatioVocabularyDefinition, ABadDefinitionChangesNothingAtAll)
   const auto before = CAspectRatioVocabulary::Entries();
 
   //! Rejected after a good entry has already been merged, which is the case that would leave
-  //! a half-applied vocabulary if the merge were done in place. Held in a variable because a
-  //! raw string spanning lines cannot be passed straight into a macro.
+  //! a half-applied vocabulary if the merge were done in place.
   constexpr const char* definition =
       R"(<aspectratios><ratio value="2.66" name="valid"/><ratio value="notanumber"/></aspectratios>)";
   EXPECT_FALSE(CAspectRatioVocabulary::Apply(definition));

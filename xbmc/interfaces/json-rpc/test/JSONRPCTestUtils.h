@@ -146,7 +146,6 @@ inline std::string ShippedDefinition(const std::string& type)
   return ToJson(wrapper);
 }
 
-//! \brief The values of a schema's "enum"
 inline std::set<std::string> EnumValues(const CVariant& schema)
 {
   std::set<std::string> values;
@@ -166,7 +165,6 @@ inline std::set<std::string> RequiredMembers(const CVariant& object)
   return required;
 }
 
-//! \brief The member names of an object
 inline std::set<std::string> Keys(const CVariant& object)
 {
   std::set<std::string> keys;

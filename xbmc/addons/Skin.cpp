@@ -306,7 +306,6 @@ void CSkinInfo::Start()
 
   if (!m_resolutions.empty())
   {
-    // find the closest resolution to the raster
     const RESOLUTION_INFO target =
         CServiceBroker::GetWinSystem()->GetGfxContext().GetRasterResInfo();
     const RESOLUTION_INFO& res = *std::ranges::min_element(m_resolutions, closestRes(target));
@@ -330,7 +329,6 @@ std::string CSkinInfo::GetSkinPath(const std::string& strFile,
   if (!res)
     res = &tempRes;
 
-  // find the closest resolution to the raster
   const RESOLUTION_INFO target = CServiceBroker::GetWinSystem()->GetGfxContext().GetRasterResInfo();
   *res = *std::ranges::min_element(m_resolutions, closestRes(target));
 

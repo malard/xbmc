@@ -19,7 +19,7 @@ namespace
 constexpr int CODED_WIDTH{3840};
 constexpr int CODED_HEIGHT{2160};
 
-//! A 2.39:1 picture in a 16:9 frame.
+//! A 2.35:1 picture in a 16:9 frame.
 constexpr int CONTENT_TOP{264};
 constexpr int CONTENT_BOTTOM{1896};
 

@@ -271,7 +271,6 @@ const std::string& CAddonInfo::GetTranslatedText(const LocalizedStringsMap& loca
   else if (locales.empty())
     return StringUtils::Empty;
 
-  // find the language from the list that matches the interface language best
   const KODI::LANGUAGE::CLanguageTag& wanted{KODI::LANGUAGE::CLanguage::GetInstance().UI()};
   std::string matchingLanguage;
   int bestRank = -1;

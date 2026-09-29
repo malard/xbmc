@@ -10,9 +10,6 @@
 
 #include "interfaces/IAnnouncer.h"
 
-/*!
- * Handler for announcements of type settings
- */
 class CGUISettingsAnnouncementHandler : public ANNOUNCEMENT::IAnnouncer
 {
 public:

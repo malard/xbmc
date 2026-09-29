@@ -413,9 +413,9 @@ TEST(TestContentGeometryCombiner, ANearbyDiscardedReadingIsNotAnUnexplainedShape
 }
 
 /*!
- * The envelope, which the default Envelope policy serves and which no test asserted. It is
- * every corroborated cluster unioned - not the dominant one, and not the coded frame. Serving
- * the dominant crops the taller sequence; serving the frame opens a mask onto black.
+ * The envelope, which the default Envelope policy serves. It is every corroborated cluster
+ * unioned - not the dominant one, and not the coded frame. Serving the dominant crops the taller
+ * sequence; serving the frame opens a mask onto black.
  */
 TEST(TestContentGeometryCombiner, TheEnvelopeContainsEveryCorroboratedShape)
 {

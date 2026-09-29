@@ -115,7 +115,7 @@ TEST_P(VideoStreamSelectVideoOrderTest, OrderVideo)
 {
   const auto& params = GetParam();
 
-  // Instantiate SubtitleStreamInfoExt at execution time to avoid possible language table
+  // Instantiate VideoStreamInfoExt at execution time to avoid possible language table
   // static initialization order issues.
   std::vector<VideoStreamInfoExt> streams;
   streams.reserve(params.inputStreams.size());

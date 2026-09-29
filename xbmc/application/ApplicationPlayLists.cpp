@@ -426,7 +426,8 @@ bool CApplicationPlayLists::StartPlaying(Type type,
   if (playList.IsEmpty())
     return false;
 
-  // on the playlist already playing, the screen stays as the user is watching
+  // on the playlist already playing, the play order is kept unless the contents are new, and
+  // the screen stays as the user is watching
   const bool playing = GetPlayingType() == type;
   const bool newOrder = newContents || !playing;
   if (newOrder && options.inOrder)

@@ -47,7 +47,7 @@ TEST(TestI18nCollation, NordicCollationWeight)
     EXPECT_EQ(ae, NordicCollationWeight(lang, AE_UPPER));
     EXPECT_EQ(oe, NordicCollationWeight(lang, OE_UPPER));
     EXPECT_EQ(aa, NordicCollationWeight(lang, AA_UPPER));
-    // Swedish/Finnish a-umlaut and o-umlaut sort with ae and oe rather than folding to a/o
+    // a-umlaut and o-umlaut sort with ae and oe rather than folding to a/o
     EXPECT_EQ(ae, NordicCollationWeight(lang, A_UMLAUT_LOWER));
     EXPECT_EQ(ae, NordicCollationWeight(lang, A_UMLAUT_UPPER));
     EXPECT_EQ(oe, NordicCollationWeight(lang, O_UMLAUT_LOWER));

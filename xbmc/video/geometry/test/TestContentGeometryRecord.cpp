@@ -406,7 +406,7 @@ TEST(TestMergeDiscoveredGeometry, TheFirstShapeLearnedIsNotASecondShape)
 }
 
 //! \brief A record that already varies is not talked out of it by a watch that saw one shape.
-//! An NFO import carries no shapes at all, so this is the state that reaches the merge.
+//! An NFO written without shapes imports a record that has none, which is what reaches the merge.
 TEST(TestMergeDiscoveredGeometry, VariesIsNeverLoweredByAWatch)
 {
   ContentGeometryRecord record{ScannedScope()};

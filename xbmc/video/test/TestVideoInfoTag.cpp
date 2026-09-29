@@ -750,7 +750,7 @@ TEST(TestVideoInfoTag, AStaleRecordIsStillResolvedAndSaysSo)
 
 /*!
  * The stored shapes reach the answer, which is what makes a title reporting more than one ratio
- * possible from a listing at all - and is the half that used to require parsing the diagnostics.
+ * possible from a listing at all.
  */
 TEST(TestVideoInfoTag, TheStoredShapesReachTheResolvedSections)
 {

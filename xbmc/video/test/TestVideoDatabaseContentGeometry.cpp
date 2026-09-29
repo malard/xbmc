@@ -31,7 +31,7 @@ namespace
 constexpr int CODED_WIDTH{1920};
 constexpr int CODED_HEIGHT{1080};
 
-//! A 2.39:1 picture in a 16:9 frame - 132 lines of black top and bottom.
+//! A 2.35:1 picture in a 16:9 frame - 132 lines of black top and bottom.
 constexpr int CONTENT_TOP{132};
 constexpr int CONTENT_BOTTOM{948};
 
@@ -206,10 +206,9 @@ TEST_F(TestVideoDatabaseContentGeometry, TheSectionsRoundTripWithoutTheDiagnosti
 }
 
 /*!
- * The other half of a rule the scan's side already has a test for: an envelope that was never
- * set stores as an empty rectangle and reads back as a measurement claiming there is no picture
- * at all, so the write falls back to the rectangle. Implemented twice, and until now tested
- * once.
+ * The other half of a rule the scan's side also tests: an envelope that was never set stores as
+ * an empty rectangle and reads back as a measurement claiming there is no picture at all, so the
+ * write falls back to the rectangle.
  */
 TEST_F(TestVideoDatabaseContentGeometry, AnUnsetEnvelopeIsStoredAsTheRectangle)
 {
@@ -438,9 +437,9 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCandidateListCarriesEveryFileAndWhat
 
 /*!
  * The row and its diagnostics are two writes describing one measurement, so they land together
- * or not at all. Written unguarded, a diagnostics write that failed after the row was committed
- * answered false with the row stored - and a caller reading that as "not stored" measures the
- * file all over again. The failure is forced by taking away the table the second write needs.
+ * or not at all. Unguarded, a diagnostics write failing after the row was committed would answer
+ * false with the row stored - and a caller reading that as "not stored" measures the file all
+ * over again. The failure is forced by taking away the table the second write needs.
  */
 TEST_F(TestVideoDatabaseContentGeometry, AFailedDiagnosticsWriteLeavesNoRowBehind)
 {
@@ -553,7 +552,7 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
   //
   // Started at 149 rather than earlier because 149 is upstream's streamdetails migration, and
   // replaying it over a table the current schema already built adds a duplicate column and
-  // aborts. This test is about the upgrade this work introduces.
+  // aborts. This test is about the 150 upgrade.
   {
     CVideoDatabase old;
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,

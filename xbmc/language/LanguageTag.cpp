@@ -31,17 +31,14 @@ namespace
 //! The BCP 47 subtag for a language that is present but not known
 constexpr std::string_view UNDETERMINED{"und"};
 
-//! The BCP 47 primary subtag for English
 constexpr std::string_view ENGLISH{"en"};
 
 //! What a composed name ends with once cut short
 constexpr std::string_view COMPOSED_NAME_ELLIPSIS{"..."};
 static_assert(MAX_COMPOSED_NAME_LENGTH > COMPOSED_NAME_ELLIPSIS.size());
 
-//! The separator between a tag's subtags
 constexpr char SUBTAG_SEPARATOR{'-'};
 
-//! The subtag separator a POSIX locale name uses
 constexpr char POSIX_SUBTAG_SEPARATOR{'_'};
 
 //! What a POSIX locale name puts before its codeset and its modifier: sr_RS.UTF-8@latin

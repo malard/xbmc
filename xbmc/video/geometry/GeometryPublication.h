@@ -39,8 +39,8 @@ void SerializeDrawnGeometry(const DrawnGeometry& drawn, CVariant& value);
 //! not what it resolved to.
 void SerializeGeometryOverrides(const GeometryOverrides& overrides, CVariant& value);
 
-//! \brief Take a Player.Geometry object onto \p overrides. An unstated field is left alone;
-//! zero, or null for the placement, gives one back to its setting.
+//! \brief Take a Player.Geometry object onto \p overrides. An unstated (null) field is left
+//! alone; zero for a ratio, or "setting" for the placement, gives one back to its setting.
 void ParseGeometryOverrides(const CVariant& geometry, GeometryOverrides& overrides);
 
 } // namespace KODI::VIDEO::GEOMETRY

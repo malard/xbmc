@@ -31,7 +31,6 @@ constexpr wchar_t FIRST_AFTER_Z{L'z' + 1};
 constexpr wchar_t SECOND_AFTER_Z{L'z' + 2};
 constexpr wchar_t THIRD_AFTER_Z{L'z' + 3};
 
-//! Whether a language is one of a named set
 bool IsOneOf(std::span<const std::string_view> languages,
              const KODI::LANGUAGE::CLanguageTag& language)
 {

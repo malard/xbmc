@@ -38,8 +38,8 @@ TEST(TestSubtitleMargins, NoInsetWhenTheVideoFillsTheFrame)
 
 TEST(TestSubtitleMargins, InsetsToTheVideoWhenThePictureIsUnknown)
 {
-  // A 4:3 video pillarboxed by the player into a 16:9 screen. The bars are the player's, not
-  // the content's, and this is the behaviour that existed before a content rectangle did.
+  // A 4:3 video pillarboxed by the player into a 16:9 screen, with no content rectangle. The
+  // bars are the player's, not the content's.
   renderOpts opts = FullScreen();
   opts.videoWidth = 1440.0f;
 

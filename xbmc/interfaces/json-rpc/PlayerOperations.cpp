@@ -1207,7 +1207,6 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list, const CV
   const CVariant& optionPlayer = options["playername"];
 
   std::string playername;
-  // Handle the "playername" option
   if (!optionPlayer.isNull())
   {
     if (optionPlayer.isString())

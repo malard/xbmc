@@ -401,10 +401,9 @@ TEST(TestContentBarDetector, PillarboxOnly)
 }
 
 /*!
- * The correction that the design document does not carry: on a letterboxed frame every
- * column contains the bars, so a column walk run independently of the row walk is dark
- * and flat all the way across and consumes the whole frame. Columns must be judged only
- * over the rows that survived the row walk.
+ * On a letterboxed frame every column contains the bars, so a column walk run independently of
+ * the row walk is dark and flat all the way across and consumes the whole frame. Columns must be
+ * judged only over the rows that survived the row walk.
  */
 TEST(TestContentBarDetector, WindowboxNeedsColumnsJudgedOverPictureRowsOnly)
 {
@@ -483,9 +482,9 @@ TEST(TestContentBarDetector, SingleBlackLineOnCorrectlyCodedContentIsIgnored)
 }
 
 /*!
- * Also from The Menu: one marginal line at the transition, which is where ringing lives,
- * zeroed separation across a 263-line bar. Taking the worst line is the maximum-deviation
- * mistake one level up; the bar as a whole is what the score is about.
+ * On real content, one marginal line at the transition, which is where ringing lives, zeroed
+ * separation across a 263-line bar. Taking the worst line is the maximum-deviation mistake one
+ * level up; the bar as a whole is what the score is about.
  */
 TEST(TestContentBarDetector, OneMarginalBarLineDoesNotZeroSeparation)
 {
