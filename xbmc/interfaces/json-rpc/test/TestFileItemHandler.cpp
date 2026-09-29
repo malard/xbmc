@@ -229,9 +229,8 @@ using FilterField = CFileItemHandler::FilterField;
 
 TEST(TestListFilter, TheFirstFieldTheFilterNamesSetsItsOption)
 {
-  static constexpr FilterField fields[] = {
-      FilterField::Number("genreid"),
-      FilterField::Text("genre")};
+  static constexpr FilterField fields[] = {FilterField::Number("genreid"),
+                                           FilterField::Text("genre")};
   CVideoDbUrl url;
   ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
   CVariant filter{CVariant::VariantTypeObject};
@@ -248,8 +247,7 @@ TEST(TestListFilter, TheFirstFieldTheFilterNamesSetsItsOption)
 
 TEST(TestListFilter, AFieldSetsTheOptionItIsMappedTo)
 {
-  static constexpr FilterField fields[] = {
-      FilterField::Number("songgenreid", "genreid")};
+  static constexpr FilterField fields[] = {FilterField::Number("songgenreid", "genreid")};
   CMusicDbUrl url;
   ASSERT_TRUE(url.FromString("musicdb://artists/"));
   CVariant filter{CVariant::VariantTypeObject};
@@ -264,8 +262,7 @@ TEST(TestListFilter, AFieldSetsTheOptionItIsMappedTo)
 
 TEST(TestListFilter, AFilterNamingNoFieldIsReadAsRules)
 {
-  static constexpr FilterField fields[] = {
-      FilterField::Text("genre")};
+  static constexpr FilterField fields[] = {FilterField::Text("genre")};
   CVideoDbUrl url;
   ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
   CVariant filter{CVariant::VariantTypeObject};
@@ -281,8 +278,7 @@ TEST(TestListFilter, AFilterNamingNoFieldIsReadAsRules)
 
 TEST(TestListFilter, NoFilterLeavesTheUrlAsItWas)
 {
-  static constexpr FilterField fields[] = {
-      FilterField::Text("genre")};
+  static constexpr FilterField fields[] = {FilterField::Text("genre")};
   CVideoDbUrl url;
   ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
   const std::string before = url.ToString();

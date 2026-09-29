@@ -14,33 +14,33 @@
 
 namespace JSONRPC
 {
-  class IJSONRPCAnnouncer : public ANNOUNCEMENT::IAnnouncer
+class IJSONRPCAnnouncer : public ANNOUNCEMENT::IAnnouncer
+{
+public:
+  ~IJSONRPCAnnouncer() override = default;
+
+protected:
+  static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
+                                           const std::string& sender,
+                                           const std::string& method,
+                                           const CVariant& data,
+                                           bool compactOutput)
   {
-  public:
-    ~IJSONRPCAnnouncer() override = default;
+    CVariant root;
+    root["jsonrpc"] = "2.0";
 
-  protected:
-    static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
-                                             const std::string& sender,
-                                             const std::string& method,
-                                             const CVariant& data,
-                                             bool compactOutput)
-    {
-      CVariant root;
-      root["jsonrpc"] = "2.0";
+    std::string namespaceMethod = ANNOUNCEMENT::AnnouncementFlagToString(flag);
+    namespaceMethod += ".";
+    namespaceMethod += method;
+    root["method"] = namespaceMethod;
 
-      std::string namespaceMethod = ANNOUNCEMENT::AnnouncementFlagToString(flag);
-      namespaceMethod += ".";
-      namespaceMethod += method;
-      root["method"] = namespaceMethod;
+    root["params"]["data"] = data;
+    root["params"]["sender"] = sender;
 
-      root["params"]["data"] = data;
-      root["params"]["sender"] = sender;
+    std::string str;
+    CJSONVariantWriter::Write(root, str, compactOutput);
 
-      std::string str;
-      CJSONVariantWriter::Write(root, str, compactOutput);
-
-      return str;
-    }
-  };
-}
+    return str;
+  }
+};
+} // namespace JSONRPC

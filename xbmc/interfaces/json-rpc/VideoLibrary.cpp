@@ -67,7 +67,7 @@ JSONRPC_STATUS CVideoLibrary::GetMovies(const CVariant& parameterObject, CVarian
 
 JSONRPC_STATUS CVideoLibrary::GetMovieDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["movieid"].asInteger();
+  int id = static_cast<int>(parameterObject["movieid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -101,7 +101,7 @@ JSONRPC_STATUS CVideoLibrary::GetMovieSets(const CVariant& parameterObject, CVar
 
 JSONRPC_STATUS CVideoLibrary::GetMovieSetDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["setid"].asInteger();
+  int id = static_cast<int>(parameterObject["setid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -117,10 +117,13 @@ JSONRPC_STATUS CVideoLibrary::GetMovieSetDetails(const CVariant& parameterObject
 
   // Get movies from the set
   CFileItemList items;
-  if (!videodatabase.GetMoviesNav("videodb://movies/titles/", items, -1, -1, -1, -1, -1, -1, id, -1, SortDescription(), RequiresAdditionalDetails(MediaTypeMovie, parameterObject["movies"])))
+  if (!videodatabase.GetMoviesNav(
+          "videodb://movies/titles/", items, -1, -1, -1, -1, -1, -1, id, -1, SortDescription(),
+          RequiresAdditionalDetails(MediaTypeMovie, parameterObject["movies"])))
     return InternalError;
 
-  return HandleItems("movieid", "movies", items, parameterObject["movies"], result["setdetails"], true);
+  return HandleItems("movieid", "movies", items, parameterObject["movies"], result["setdetails"],
+                     true);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetTVShows(const CVariant& parameterObject, CVariant& result)
@@ -158,7 +161,7 @@ JSONRPC_STATUS CVideoLibrary::GetTVShowDetails(const CVariant& parameterObject, 
   if (!videodatabase.Open())
     return InternalError;
 
-  int id = (int)parameterObject["tvshowid"].asInteger();
+  int id = static_cast<int>(parameterObject["tvshowid"].asInteger());
 
   CFileItemPtr fileItem(new CFileItem());
   CVideoInfoTag infos;
@@ -169,7 +172,8 @@ JSONRPC_STATUS CVideoLibrary::GetTVShowDetails(const CVariant& parameterObject, 
     return status;
 
   fileItem->SetFromVideoInfoTag(infos);
-  HandleFileItem("tvshowid", true, "tvshowdetails", fileItem, parameterObject, parameterObject["properties"], result, false);
+  HandleFileItem("tvshowid", true, "tvshowdetails", fileItem, parameterObject,
+                 parameterObject["properties"], result, false);
   return OK;
 }
 
@@ -179,7 +183,7 @@ JSONRPC_STATUS CVideoLibrary::GetSeasons(const CVariant& parameterObject, CVaria
   if (!videodatabase.Open())
     return InternalError;
 
-  int tvshowID = (int)parameterObject["tvshowid"].asInteger();
+  int tvshowID = static_cast<int>(parameterObject["tvshowid"].asInteger());
 
   std::string strPath = StringUtils::Format("videodb://tvshows/titles/{}/", tvshowID);
   CFileItemList items;
@@ -196,7 +200,7 @@ JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, 
   if (!videodatabase.Open())
     return InternalError;
 
-  int id = (int)parameterObject["seasonid"].asInteger();
+  int id = static_cast<int>(parameterObject["seasonid"].asInteger());
 
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSeasonInfo(id, infos));
@@ -206,7 +210,8 @@ JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, 
     return NotFound;
 
   CFileItemPtr pItem = std::make_shared<CFileItem>(infos);
-  HandleFileItem("seasonid", false, "seasondetails", pItem, parameterObject, parameterObject["properties"], result, false);
+  HandleFileItem("seasonid", false, "seasondetails", pItem, parameterObject,
+                 parameterObject["properties"], result, false);
   return OK;
 }
 
@@ -221,8 +226,8 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodes(const CVariant& parameterObject, CVari
   if (!ParseSorting(parameterObject, sorting.sortBy, sorting.sortOrder, sorting.sortAttributes))
     return InvalidParams;
 
-  int tvshowID = (int)parameterObject["tvshowid"].asInteger();
-  int season   = (int)parameterObject["season"].asInteger();
+  int tvshowID = static_cast<int>(parameterObject["tvshowid"].asInteger());
+  int season = static_cast<int>(parameterObject["season"].asInteger());
 
   std::string strPath = StringUtils::Format("videodb://tvshows/titles/{}/{}/", tvshowID, season);
 
@@ -236,7 +241,8 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodes(const CVariant& parameterObject, CVari
   if (!ApplyFilter(parameterObject["filter"], filters, "episodes", videoUrl))
     return InvalidParams;
 
-  if (tvshowID <= 0 && (season > 0 || videoUrl.HasOption("genreid") || videoUrl.HasOption("genre") || videoUrl.HasOption("actor")))
+  if (tvshowID <= 0 && (season > 0 || videoUrl.HasOption("genreid") ||
+                        videoUrl.HasOption("genre") || videoUrl.HasOption("actor")))
     return InvalidParams;
 
   if (tvshowID > 0)
@@ -247,7 +253,9 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodes(const CVariant& parameterObject, CVari
   }
 
   CFileItemList items;
-  if (!videodatabase.GetEpisodesByWhere(videoUrl.ToString(), CDatabase::Filter(), items, false, sorting, RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
+  if (!videodatabase.GetEpisodesByWhere(
+          videoUrl.ToString(), CDatabase::Filter(), items, false, sorting,
+          RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
     return InvalidParams;
 
   return HandleItems("episodeid", "episodes", items, parameterObject, result, false);
@@ -259,7 +267,7 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodeDetails(const CVariant& parameterObject,
   if (!videodatabase.Open())
     return InternalError;
 
-  int id = (int)parameterObject["episodeid"].asInteger();
+  int id = static_cast<int>(parameterObject["episodeid"].asInteger());
 
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetEpisodeInfo(
@@ -277,7 +285,8 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodeDetails(const CVariant& parameterObject,
       StringUtils::Format("videodb://tvshows/titles/{}/{}/{}", tvshowid, infos.m_iSeason, id);
   pItem->SetPath(basePath);
 
-  HandleFileItem("episodeid", true, "episodedetails", pItem, parameterObject, parameterObject["properties"], result, false);
+  HandleFileItem("episodeid", true, "episodedetails", pItem, parameterObject,
+                 parameterObject["properties"], result, false);
   return OK;
 }
 
@@ -319,7 +328,7 @@ JSONRPC_STATUS CVideoLibrary::GetMusicVideoDetails(const CVariant& parameterObje
   if (!videodatabase.Open())
     return InternalError;
 
-  int id = (int)parameterObject["musicvideoid"].asInteger();
+  int id = static_cast<int>(parameterObject["musicvideoid"].asInteger());
 
   CVideoInfoTag infos;
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetMusicVideoInfo(
@@ -340,7 +349,9 @@ JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedMovies(const CVariant& parameterOb
     return InternalError;
 
   CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedMoviesNav("videodb://recentlyaddedmovies/", items, 0, RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
+  if (!videodatabase.GetRecentlyAddedMoviesNav(
+          "videodb://recentlyaddedmovies/", items, 0,
+          RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
     return InternalError;
 
   return HandleItems("movieid", "movies", items, parameterObject, result, true);
@@ -354,7 +365,9 @@ JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedEpisodes(const CVariant& parameter
     return InternalError;
 
   CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedEpisodesNav("videodb://recentlyaddedepisodes/", items, 0, RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
+  if (!videodatabase.GetRecentlyAddedEpisodesNav(
+          "videodb://recentlyaddedepisodes/", items, 0,
+          RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
     return InternalError;
 
   return HandleItems("episodeid", "episodes", items, parameterObject, result, true);
@@ -368,7 +381,9 @@ JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedMusicVideos(const CVariant& parame
     return InternalError;
 
   CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedMusicVideosNav("videodb://recentlyaddedmusicvideos/", items, 0, RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
+  if (!videodatabase.GetRecentlyAddedMusicVideosNav(
+          "videodb://recentlyaddedmusicvideos/", items, 0,
+          RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
     return InternalError;
 
   return HandleItems("musicvideoid", "musicvideos", items, parameterObject, result, true);
@@ -424,7 +439,7 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVarian
     return InternalError;
 
   /* need to set strTitle in each item*/
-  for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+  for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     items[i]->GetVideoInfoTag()->m_strTitle = items[i]->GetLabel();
 
   HandleFileItemList("genreid", false, "genres", items, parameterObject, result);
@@ -474,14 +489,11 @@ JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant&
 
 namespace
 {
-  const std::map<std::string, std::string> mediaIDTypes = {
-    {"episodeid", MediaTypeEpisode},
-    {"tvshowid", MediaTypeTvShow},
-    {"seasonid", MediaTypeSeason},
-    {"movieid", MediaTypeMovie},
-    {"setid", MediaTypeVideoCollection},
-    {"musicvideoid", MediaTypeMusicVideo},
-  };
+const std::map<std::string, std::string> mediaIDTypes = {
+    {"episodeid", MediaTypeEpisode},     {"tvshowid", MediaTypeTvShow},
+    {"seasonid", MediaTypeSeason},       {"movieid", MediaTypeMovie},
+    {"setid", MediaTypeVideoCollection}, {"musicvideoid", MediaTypeMusicVideo},
+};
 }
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
@@ -489,7 +501,8 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 {
   std::string mediaType;
   int mediaID = -1;
-  for (const auto& mediaIDType : mediaIDTypes) {
+  for (const auto& mediaIDType : mediaIDTypes)
+  {
     if (parameterObject["item"].isMember(mediaIDType.first))
     {
       mediaType = mediaIDType.second;
@@ -519,7 +532,8 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
 {
   std::string mediaType;
   int mediaID = -1;
-  for (const auto& mediaIDType : mediaIDTypes) {
+  for (const auto& mediaIDType : mediaIDTypes)
+  {
     if (parameterObject["item"].isMember(mediaIDType.first))
     {
       mediaType = mediaIDType.second;
@@ -555,7 +569,7 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["movieid"].asInteger();
+  int id = static_cast<int>(parameterObject["movieid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -567,40 +581,25 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(const CVariant& parameterObject, C
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.UpdateDetailsForMovie(id, infos, artwork, updatedDetails) <= 0)
+  if (videodatabase.UpdateDetailsForMovie(id, infos, edit.artwork, edit.updatedDetails) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
-  UpdateResumePoint(parameterObject, infos, videodatabase);
-
-  CJSONRPCUtils::NotifyItemUpdated(infos, artwork);
+  CJSONRPCUtils::NotifyItemUpdated(infos, edit.artwork);
   return ACK;
 }
 
 JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["setid"].asInteger();
+  int id = static_cast<int>(parameterObject["setid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -610,18 +609,12 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject
   if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetSetInfo(id, infos)); status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.SetDetailsForMovieSet(infos, artwork, id) <= 0)
+  if (videodatabase.SetDetailsForMovieSet(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, "set", removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, "set", edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -630,7 +623,7 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(const CVariant& parameterObject
 
 JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["tvshowid"].asInteger();
+  int id = static_cast<int>(parameterObject["tvshowid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -641,25 +634,19 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
-
   KODI::ART::SeasonsArtwork seasonArt;
   videodatabase.GetTvShowSeasonArt(infos.m_iDbId, seasonArt);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
   videodatabase.RemoveTagsFromItem(id, MediaTypeTvShow);
 
-  if (!videodatabase.UpdateDetailsForTvShow(id, infos, artwork, seasonArt))
+  if (!videodatabase.UpdateDetailsForTvShow(id, infos, edit.artwork, seasonArt))
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, edit.removedArtwork))
     return InternalError;
 
   const bool updatePlaycount = ParameterNotNull(parameterObject, "playcount");
@@ -698,7 +685,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["seasonid"].asInteger();
+  int id = static_cast<int>(parameterObject["seasonid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -711,20 +698,14 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
   if (infos.m_iIdShow <= 0)
     return NotFound;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
-
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
   if (ParameterNotNull(parameterObject, "title"))
     infos.SetSortTitle(parameterObject["title"].asString());
 
-  if (videodatabase.SetDetailsForSeason(infos, artwork, infos.m_iIdShow, id) <= 0)
+  if (videodatabase.SetDetailsForSeason(infos, edit.artwork, infos.m_iIdShow, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeSeason, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeSeason, edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -733,7 +714,7 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["episodeid"].asInteger();
+  int id = static_cast<int>(parameterObject["episodeid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -748,32 +729,17 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
   if (tvshowid <= 0)
     return NotFound;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
-
-  if (videodatabase.SetDetailsForEpisode(infos, artwork, tvshowid, id) <= 0)
+  if (videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvshowid, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
-
-  UpdateResumePoint(parameterObject, infos, videodatabase);
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -782,7 +748,7 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(const CVariant& parameterObject,
 JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  int id = (int)parameterObject["musicvideoid"].asInteger();
+  int id = static_cast<int>(parameterObject["musicvideoid"].asInteger());
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -793,36 +759,21 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(const CVariant& parameterObje
       status != OK)
     return status;
 
-  // get artwork
-  KODI::ART::Artwork artwork;
-  videodatabase.GetArtForItem(infos.m_iDbId, infos.m_type, artwork);
+  const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
 
-  int playcount = infos.GetPlayCount();
-  CDateTime lastPlayed = infos.m_lastPlayed;
-
-  std::set<std::string, std::less<>> removedArtwork;
-  std::set<std::string, std::less<>> updatedDetails;
-  UpdateVideoTag(parameterObject, infos, artwork, removedArtwork, updatedDetails);
+  const DetailsEdit edit = EditDetails(parameterObject, infos, videodatabase);
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
   videodatabase.RemoveTagsFromItem(id, MediaTypeMusicVideo);
 
-  if (videodatabase.SetDetailsForMusicVideo(infos, artwork, id) <= 0)
+  if (videodatabase.SetDetailsForMusicVideo(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, edit.removedArtwork))
     return InternalError;
 
-  if (playcount != infos.GetPlayCount()|| lastPlayed != infos.m_lastPlayed)
-  {
-    // restore original playcount or the new one won't be announced
-    int newPlaycount = infos.GetPlayCount();
-    infos.SetPlayCount(playcount);
-    videodatabase.SetPlayCount(CFileItem(infos), newPlaycount, infos.m_lastPlayed);
-  }
-
-  UpdateResumePoint(parameterObject, infos, videodatabase);
+  StorePlaybackEdit(parameterObject, before, infos, videodatabase);
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -1153,16 +1104,16 @@ bool CVideoLibrary::FillFileItem(
   return filled;
 }
 
-bool CVideoLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)
+bool CVideoLibrary::FillFileItemList(const CVariant& parameterObject, CFileItemList& list)
 {
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
     return false;
 
   std::string file = parameterObject["file"].asString();
-  int movieID = (int)parameterObject["movieid"].asInteger(-1);
-  int episodeID = (int)parameterObject["episodeid"].asInteger(-1);
-  int musicVideoID = (int)parameterObject["musicvideoid"].asInteger(-1);
+  int movieID = static_cast<int>(parameterObject["movieid"].asInteger(-1));
+  int episodeID = static_cast<int>(parameterObject["episodeid"].asInteger(-1));
+  int musicVideoID = static_cast<int>(parameterObject["musicvideoid"].asInteger(-1));
   int recordingID = static_cast<int>(parameterObject["recordingid"].asInteger());
 
   bool success = false;
@@ -1217,9 +1168,11 @@ bool CVideoLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
   return success;
 }
 
-int CVideoLibrary::RequiresAdditionalDetails(const MediaType& mediaType, const CVariant &parameterObject)
+int CVideoLibrary::RequiresAdditionalDetails(const MediaType& mediaType,
+                                             const CVariant& parameterObject)
 {
-  if (mediaType != MediaTypeMovie && mediaType != MediaTypeTvShow && mediaType != MediaTypeEpisode && mediaType != MediaTypeMusicVideo)
+  if (mediaType != MediaTypeMovie && mediaType != MediaTypeTvShow &&
+      mediaType != MediaTypeEpisode && mediaType != MediaTypeMusicVideo)
     return VideoDbDetailsNone;
 
   return GetDetailsFromJsonParameters(parameterObject);
@@ -1249,17 +1202,22 @@ int CVideoLibrary::GetDetailsFromJsonParameters(const CVariant& parameterObject)
   return details;
 }
 
-JSONRPC_STATUS CVideoLibrary::HandleItems(const char *idProperty, const char *resultName, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool limit /* = true */)
+JSONRPC_STATUS CVideoLibrary::HandleItems(const char* idProperty,
+                                          const char* resultName,
+                                          CFileItemList& items,
+                                          const CVariant& parameterObject,
+                                          CVariant& result,
+                                          bool limit /* = true */)
 {
   int size = items.Size();
   if (!limit && items.HasProperty("total") && items.GetProperty("total").asInteger() > size)
-    size = (int)items.GetProperty("total").asInteger();
+    size = static_cast<int>(items.GetProperty("total").asInteger());
   HandleFileItemList(idProperty, true, resultName, items, parameterObject, result, size, limit);
 
   return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant &parameterObject)
+JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant& parameterObject)
 {
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -1267,15 +1225,15 @@ JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant &parameterObject)
 
   if (parameterObject.isMember("movieid"))
   {
-    if (!videodatabase.DeleteMovie((int)parameterObject["movieid"].asInteger()))
+    if (!videodatabase.DeleteMovie(static_cast<int>(parameterObject["movieid"].asInteger())))
       return InternalError;
   }
   else if (parameterObject.isMember("tvshowid"))
-    videodatabase.DeleteTvShow((int)parameterObject["tvshowid"].asInteger());
+    videodatabase.DeleteTvShow(static_cast<int>(parameterObject["tvshowid"].asInteger()));
   else if (parameterObject.isMember("episodeid"))
-    videodatabase.DeleteEpisode((int)parameterObject["episodeid"].asInteger());
+    videodatabase.DeleteEpisode(static_cast<int>(parameterObject["episodeid"].asInteger()));
   else if (parameterObject.isMember("musicvideoid"))
-    videodatabase.DeleteMusicVideo((int)parameterObject["musicvideoid"].asInteger());
+    videodatabase.DeleteMusicVideo(static_cast<int>(parameterObject["musicvideoid"].asInteger()));
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -1359,17 +1317,45 @@ JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
   return OK;
 }
 
-void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase)
+CVideoLibrary::DetailsEdit CVideoLibrary::EditDetails(const CVariant& parameterObject,
+                                                      CVideoInfoTag& details,
+                                                      CVideoDatabase& videodatabase)
+{
+  DetailsEdit edit;
+  videodatabase.GetArtForItem(details.m_iDbId, details.m_type, edit.artwork);
+  UpdateVideoTag(parameterObject, details, edit.artwork, edit.removedArtwork, edit.updatedDetails);
+  return edit;
+}
+
+void CVideoLibrary::StorePlaybackEdit(const CVariant& parameterObject,
+                                      const PlaybackUpdate& before,
+                                      CVideoInfoTag& details,
+                                      CVideoDatabase& videodatabase)
+{
+  if (before.playCount != details.GetPlayCount() || before.lastPlayed != details.m_lastPlayed)
+  {
+    // restore the original playcount, or the new one won't be announced
+    const int playCount = details.GetPlayCount();
+    details.SetPlayCount(before.playCount);
+    videodatabase.SetPlayCount(CFileItem(details), playCount, details.m_lastPlayed);
+  }
+
+  UpdateResumePoint(parameterObject, details, videodatabase);
+}
+
+void CVideoLibrary::UpdateResumePoint(const CVariant& parameterObject,
+                                      CVideoInfoTag& details,
+                                      CVideoDatabase& videodatabase)
 {
   if (!parameterObject["resume"].isNull())
   {
-    double position = (double)parameterObject["resume"]["position"].asDouble();
+    double position = parameterObject["resume"]["position"].asDouble();
     if (position == 0.0)
       videodatabase.ClearBookMarksOfFile(details.m_strFileNameAndPath, CBookmark::RESUME);
     else
     {
       CBookmark bookmark;
-      double total = (double)parameterObject["resume"]["total"].asDouble();
+      double total = parameterObject["resume"]["total"].asDouble();
       if (total <= 0.0 && !videodatabase.GetResumeBookMark(details.m_strFileNameAndPath, bookmark))
         bookmark.totalTimeInSeconds = details.m_streamDetails.GetVideoDuration();
       else
@@ -1427,8 +1413,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   UpdateVideoTagField(parameterObject, "genre", genre, updatedDetails);
   details.SetGenre(genre);
 
-  if (ParameterNotNull(parameterObject, "track"))
-    details.m_iTrack = (int)parameterObject["track"].asInteger();
+  CopyIfGiven(parameterObject, "track", details.m_iTrack);
   if (ParameterNotNull(parameterObject, "rating"))
   {
     details.SetRating(parameterObject["rating"].asFloat());
@@ -1437,7 +1422,8 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   if (ParameterNotNull(parameterObject, "votes"))
   {
     details.SetVotes(StringUtils::ReturnDigits(parameterObject["votes"].asString()));
-    updatedDetails.insert("ratings"); //Votes and ratings both need updates now, this will trigger those
+    updatedDetails.insert(
+        "ratings"); //Votes and ratings both need updates now, this will trigger those
   }
   if (ParameterNotNull(parameterObject, "ratings"))
   {
@@ -1450,12 +1436,12 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
         if (ParameterNotNull(rating, "votes"))
         {
           details.SetRating(rating["rating"].asFloat(),
-                            static_cast<int>(rating["votes"].asInteger()),
-                            rIt->first,
+                            static_cast<int>(rating["votes"].asInteger()), rIt->first,
                             (ParameterNotNull(rating, "default") && rating["default"].asBoolean()));
         }
         else
-          details.SetRating(rating["rating"].asFloat(), rIt->first, (ParameterNotNull(rating, "default") && rating["default"].asBoolean()));
+          details.SetRating(rating["rating"].asFloat(), rIt->first,
+                            (ParameterNotNull(rating, "default") && rating["default"].asBoolean()));
 
         updatedDetails.insert("ratings");
       }
@@ -1466,8 +1452,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
       }
     }
   }
-  if (ParameterNotNull(parameterObject, "userrating"))
-    details.m_iUserRating = static_cast<int>(parameterObject["userrating"].asInteger());
+  CopyIfGiven(parameterObject, "userrating", details.m_iUserRating);
   if (ParameterNotNull(parameterObject, "mpaa"))
     details.SetMPAARating(parameterObject["mpaa"].asString());
   if (ParameterNotNull(parameterObject, "imdbnumber"))
@@ -1500,17 +1485,15 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     details.SetPremiered(premiered);
   }
   else if (ParameterNotNull(parameterObject, "year"))
-    details.SetYear((int)parameterObject["year"].asInteger());
+    details.SetYear(static_cast<int>(parameterObject["year"].asInteger()));
   if (ParameterNotNull(parameterObject, "lastplayed"))
     SetFromDBDateTime(parameterObject["lastplayed"], details.m_lastPlayed);
   if (ParameterNotNull(parameterObject, "firstaired"))
     SetFromDBDate(parameterObject["firstaired"], details.m_firstAired);
   if (ParameterNotNull(parameterObject, "productioncode"))
     details.SetProductionCode(parameterObject["productioncode"].asString());
-  if (ParameterNotNull(parameterObject, "season"))
-    details.m_iSeason = (int)parameterObject["season"].asInteger();
-  if (ParameterNotNull(parameterObject, "episode"))
-    details.m_iEpisode = (int)parameterObject["episode"].asInteger();
+  CopyIfGiven(parameterObject, "season", details.m_iSeason);
+  CopyIfGiven(parameterObject, "episode", details.m_iEpisode);
   if (ParameterNotNull(parameterObject, "originaltitle"))
     details.SetOriginalTitle(parameterObject["originaltitle"].asString());
   if (ParameterNotNull(parameterObject, "trailer"))
@@ -1530,8 +1513,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   UpdateVideoTagField(parameterObject, "country", country, updatedDetails);
   details.SetCountry(country);
 
-  if (ParameterNotNull(parameterObject, "top250"))
-    details.m_iTop250 = (int)parameterObject["top250"].asInteger();
+  CopyIfGiven(parameterObject, "top250", details.m_iTop250);
   if (ParameterNotNull(parameterObject, "sorttitle"))
     details.SetSortTitle(parameterObject["sorttitle"].asString());
   if (ParameterNotNull(parameterObject, "episodeguide"))

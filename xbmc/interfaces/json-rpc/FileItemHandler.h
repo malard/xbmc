@@ -31,88 +31,100 @@ class CPVRTimerInfoTag;
 
 namespace JSONRPC
 {
-  class CFileItemHandler : public CJSONUtils
+class CFileItemHandler : public CJSONUtils
+{
+public:
+  //! A list filter naming one field's value, and the database URL option it sets
+  struct FilterField
   {
-  public:
-    //! A list filter naming one field's value, and the database URL option it sets
-    struct FilterField
+    static constexpr FilterField Text(const char* name, const char* option = nullptr)
     {
-      static constexpr FilterField Text(const char* name, const char* option = nullptr)
-      {
-        return {name, option ? option : name, false};
-      }
-      static constexpr FilterField Number(const char* name, const char* option = nullptr)
-      {
-        return {name, option ? option : name, true};
-      }
+      return {name, option ? option : name, false};
+    }
+    static constexpr FilterField Number(const char* name, const char* option = nullptr)
+    {
+      return {name, option ? option : name, true};
+    }
 
-      const char* name;
-      const char* option;
-      bool number;
-    };
+    const char* name;
+    const char* option;
+    bool number;
+  };
 
-  protected:
-    static void FillDetails(const ISerializable* info,
-                            const std::shared_ptr<CFileItem>& item,
-                            std::set<std::string>& fields,
-                            CVariant& result,
-                            CThumbLoader* thumbLoader = nullptr);
-    static void HandleFileItemList(const char *ID, bool allowFile, const char *resultname, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool sortLimit = true);
-    static void HandleFileItemList(const char *ID, bool allowFile, const char *resultname, CFileItemList &items, const CVariant &parameterObject, CVariant &result, int size, bool sortLimit = true);
-    static void HandleFileItem(const char* ID,
-                               bool allowFile,
-                               const char* resultname,
-                               const std::shared_ptr<CFileItem>& item,
-                               const CVariant& parameterObject,
-                               const CVariant& validFields,
-                               CVariant& result,
-                               bool append = true,
-                               CThumbLoader* thumbLoader = nullptr);
-    static void HandleFileItem(const char* ID,
-                               bool allowFile,
-                               const char* resultname,
-                               const std::shared_ptr<CFileItem>& item,
-                               const CVariant& parameterObject,
-                               const std::set<std::string>& validFields,
-                               CVariant& result,
-                               bool append = true,
-                               CThumbLoader* thumbLoader = nullptr);
+protected:
+  static void FillDetails(const ISerializable* info,
+                          const std::shared_ptr<CFileItem>& item,
+                          std::set<std::string>& fields,
+                          CVariant& result,
+                          CThumbLoader* thumbLoader = nullptr);
+  static void HandleFileItemList(const char* ID,
+                                 bool allowFile,
+                                 const char* resultname,
+                                 CFileItemList& items,
+                                 const CVariant& parameterObject,
+                                 CVariant& result,
+                                 bool sortLimit = true);
+  static void HandleFileItemList(const char* ID,
+                                 bool allowFile,
+                                 const char* resultname,
+                                 CFileItemList& items,
+                                 const CVariant& parameterObject,
+                                 CVariant& result,
+                                 int size,
+                                 bool sortLimit = true);
+  static void HandleFileItem(const char* ID,
+                             bool allowFile,
+                             const char* resultname,
+                             const std::shared_ptr<CFileItem>& item,
+                             const CVariant& parameterObject,
+                             const CVariant& validFields,
+                             CVariant& result,
+                             bool append = true,
+                             CThumbLoader* thumbLoader = nullptr);
+  static void HandleFileItem(const char* ID,
+                             bool allowFile,
+                             const char* resultname,
+                             const std::shared_ptr<CFileItem>& item,
+                             const CVariant& parameterObject,
+                             const std::set<std::string>& validFields,
+                             CVariant& result,
+                             bool append = true,
+                             CThumbLoader* thumbLoader = nullptr);
 
-    static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+  static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
 
-
-    /*!
+  /*!
      \brief Narrows \p url by the caller's filter: the first of \p fields it names, else its rules
      \param rulesType The smart playlist type the rules are written for
      \return false if the rules do not parse
      */
-    static bool ApplyFilter(const CVariant& filter,
-                            std::span<const FilterField> fields,
-                            const std::string& rulesType,
-                            CDbUrl& url);
+  static bool ApplyFilter(const CVariant& filter,
+                          std::span<const FilterField> fields,
+                          const std::string& rulesType,
+                          CDbUrl& url);
 
-    /*!
+  /*!
      \brief Diagnoses an item FillFileItemList dropped without saying why
 
      Bypasses the caches so a cached hit cannot mask storage that has gone away.
 
      \return NotFound, or InvalidParams when nothing better applies
      */
-    static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
+  static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
 
-  private:
-    static void Sort(CFileItemList &items, const CVariant& parameterObject);
-    /*!
+private:
+  static void Sort(CFileItemList& items, const CVariant& parameterObject);
+  /*!
      \param epgRecording The item's EPG recording, looked up once; engaged and null when none
      \param epgTimer The item's EPG timer, looked up once; engaged and null when none
      */
-    static bool GetField(const std::string& field,
-                         const CVariant& info,
-                         const std::shared_ptr<CFileItem>& item,
-                         CVariant& result,
-                         bool& fetchedArt,
-                         std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
-                         std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>>& epgTimer,
-                         CThumbLoader* thumbLoader = nullptr);
-  };
-}
+  static bool GetField(const std::string& field,
+                       const CVariant& info,
+                       const std::shared_ptr<CFileItem>& item,
+                       CVariant& result,
+                       bool& fetchedArt,
+                       std::optional<std::shared_ptr<PVR::CPVRRecording>>& epgRecording,
+                       std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>>& epgTimer,
+                       CThumbLoader* thumbLoader = nullptr);
+};
+} // namespace JSONRPC

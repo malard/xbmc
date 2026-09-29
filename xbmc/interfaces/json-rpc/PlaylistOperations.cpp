@@ -174,11 +174,11 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObjec
     }
     else if (property == "repeat")
     {
-      result[property] = std::string{
-          playList && playList->type
-              ? CApplicationPlayLists::RepeatName(
-                    CServiceBroker::GetPlayLists()->GetRepeat(*playList->type))
-              : CApplicationPlayLists::RepeatName(CApplicationPlayLists::Repeat::Off)};
+      result[property] =
+          std::string{playList && playList->type
+                          ? CApplicationPlayLists::RepeatName(
+                                CServiceBroker::GetPlayLists()->GetRepeat(*playList->type))
+                          : CApplicationPlayLists::RepeatName(CApplicationPlayLists::Repeat::Off)};
     }
     else
     {

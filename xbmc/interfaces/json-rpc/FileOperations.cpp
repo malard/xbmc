@@ -48,7 +48,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
   if (sources)
   {
     CFileItemList items;
-    for (unsigned int i = 0; i < (unsigned int)sources->size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(sources->size()); i++)
     {
       // Do not show sources which are locked
       if (sources->at(i).GetLockInfo().IsLocked())
@@ -57,7 +57,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
       items.Add(std::make_shared<CFileItem>(sources->at(i)));
     }
 
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     {
       if (items[i]->IsSmb())
       {
@@ -70,7 +70,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
     param["properties"] = CVariant(CVariant::VariantTypeArray);
     param["properties"].append("file");
 
-    HandleFileItemList(NULL, true, "sources", items, param, result);
+    HandleFileItemList(nullptr, true, "sources", items, param, result);
   }
 
   return OK;
@@ -91,19 +91,25 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
   std::string extensions;
   if (media == "video")
   {
-    regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoExcludeFromListingRegExps;
+    regexps = CServiceBroker::GetSettingsComponent()
+                  ->GetAdvancedSettings()
+                  ->m_videoExcludeFromListingRegExps;
     extensions = CServiceBroker::GetFileExtensionProvider().GetVideoExtensions();
     items.SetProperty("set_videodb_details",
                       CVideoLibrary::GetDetailsFromJsonParameters(parameterObject));
   }
   else if (media == "music")
   {
-    regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_audioExcludeFromListingRegExps;
+    regexps = CServiceBroker::GetSettingsComponent()
+                  ->GetAdvancedSettings()
+                  ->m_audioExcludeFromListingRegExps;
     extensions = CServiceBroker::GetFileExtensionProvider().GetMusicExtensions();
   }
   else if (media == "pictures")
   {
-    regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_pictureExcludeFromListingRegExps;
+    regexps = CServiceBroker::GetSettingsComponent()
+                  ->GetAdvancedSettings()
+                  ->m_pictureExcludeFromListingRegExps;
     extensions = CServiceBroker::GetFileExtensionProvider().GetPictureExtensions();
   }
 
@@ -122,7 +128,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
     CFileItemList filteredFiles;
     RegExpCache cache;
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     {
       if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
         continue;
@@ -142,9 +148,9 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
       {
         CFileItemPtr fileItem(new CFileItem());
         if (FillFileItem(items[i], fileItem, media, parameterObject))
-            filteredFiles.Add(fileItem);
+          filteredFiles.Add(fileItem);
         else
-            filteredFiles.Add(items[i]);
+          filteredFiles.Add(items[i]);
       }
     }
 
@@ -224,7 +230,8 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, 
     param["properties"].append("file");
   param["properties"].append("filetype");
 
-  HandleFileItem("id", true, "filedetails", item, parameterObject, param["properties"], result, false);
+  HandleFileItem("id", true, "filedetails", item, parameterObject, param["properties"], result,
+                 false);
   return OK;
 }
 
@@ -282,7 +289,8 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
                                                 CVariant& result)
 {
   std::string protocol;
-  if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))
+  if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"],
+                                 protocol))
   {
     result["protocol"] = protocol;
 
@@ -311,7 +319,7 @@ bool CFileOperations::FillFileItem(
     const std::string& media /* = "" */,
     const CVariant& parameterObject /* = CVariant(CVariant::VariantTypeArray) */)
 {
-  if (originalItem.get() == NULL)
+  if (originalItem.get() == nullptr)
     return false;
 
   // copy all the available details
@@ -380,11 +388,11 @@ bool CFileOperations::FillFileItem(
   return status;
 }
 
-bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)
+bool CFileOperations::FillFileItemList(const CVariant& parameterObject, CFileItemList& list)
 {
   if (parameterObject.isMember("directory"))
   {
-    std::string media =  parameterObject["media"].asString();
+    std::string media = parameterObject["media"].asString();
     StringUtils::ToLower(media);
 
     std::string strPath = parameterObject["directory"].asString();
@@ -396,17 +404,23 @@ bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileIte
 
       if (media == "video")
       {
-        regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoExcludeFromListingRegExps;
+        regexps = CServiceBroker::GetSettingsComponent()
+                      ->GetAdvancedSettings()
+                      ->m_videoExcludeFromListingRegExps;
         extensions = CServiceBroker::GetFileExtensionProvider().GetVideoExtensions();
       }
       else if (media == "music")
       {
-        regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_audioExcludeFromListingRegExps;
+        regexps = CServiceBroker::GetSettingsComponent()
+                      ->GetAdvancedSettings()
+                      ->m_audioExcludeFromListingRegExps;
         extensions = CServiceBroker::GetFileExtensionProvider().GetMusicExtensions();
       }
       else if (media == "pictures")
       {
-        regexps = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_pictureExcludeFromListingRegExps;
+        regexps = CServiceBroker::GetSettingsComponent()
+                      ->GetAdvancedSettings()
+                      ->m_pictureExcludeFromListingRegExps;
         extensions = CServiceBroker::GetFileExtensionProvider().GetPictureExtensions();
       }
 
@@ -421,7 +435,7 @@ bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileIte
 
         CFileItemList filteredDirectories;
         RegExpCache cache;
-        for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+        for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
         {
           if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
             continue;

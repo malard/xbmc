@@ -104,7 +104,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
   }
 
   // remove library addons
-  for (int index = 0; index < (int)addons.size(); index++)
+  for (int index = 0; index < static_cast<int>(addons.size()); index++)
   {
     std::shared_ptr<CPluginSource> plugin;
     if (content != CPluginSource::Content::UNKNOWN)
@@ -112,8 +112,8 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
 
     if ((addons.at(index)->Type() <= AddonType::UNKNOWN ||
          addons.at(index)->Type() >= AddonType::MAX_TYPES) ||
-        ((content != CPluginSource::Content::UNKNOWN && plugin == NULL) ||
-         (plugin != NULL && !plugin->Provides(content))))
+        ((content != CPluginSource::Content::UNKNOWN && plugin == nullptr) ||
+         (plugin != nullptr && !plugin->Provides(content))))
     {
       addons.erase(addons.begin() + index);
       index--;
@@ -134,7 +134,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObjec
   std::string id = parameterObject["addonid"].asString();
   AddonPtr addon;
   if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_NO) ||
-      addon.get() == NULL || addon->Type() <= AddonType::UNKNOWN ||
+      addon.get() == nullptr || addon->Type() <= AddonType::UNKNOWN ||
       addon->Type() >= AddonType::MAX_TYPES)
     return InvalidParams;
 
@@ -179,7 +179,7 @@ JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, 
   std::string id = parameterObject["addonid"].asString();
   AddonPtr addon;
   if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_YES) ||
-      addon.get() == NULL || addon->Type() < AddonType::VISUALIZATION ||
+      addon.get() == nullptr || addon->Type() < AddonType::VISUALIZATION ||
       addon->Type() >= AddonType::MAX_TYPES)
     return InvalidParams;
 
@@ -249,7 +249,7 @@ void CAddonsOperations::FillDetails(const std::shared_ptr<ADDON::IAddon>& addon,
                                     CVariant& result,
                                     bool append)
 {
-  if (addon.get() == NULL)
+  if (addon.get() == nullptr)
     return;
 
   CVariant addonInfo = Serialize(addon);

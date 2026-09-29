@@ -23,7 +23,7 @@ namespace PVR
 {
 class CPVRChannelGroup;
 class CPVREpgInfoTag;
-}
+} // namespace PVR
 
 namespace KODI::PLAYLIST
 {
@@ -124,4 +124,4 @@ private:
   static bool IsPVRChannel();
   static std::shared_ptr<PVR::CPVREpgInfoTag> GetCurrentEpg();
 };
-}
+} // namespace JSONRPC

@@ -97,7 +97,9 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
   if (type.compare("unknown") == 0)
     return InvalidParams;
 
-  if ((type.compare("media") == 0 || type.compare("script") == 0 || type.compare("androidapp") == 0) && !ParameterNotNull(parameterObject, "path"))
+  if ((type.compare("media") == 0 || type.compare("script") == 0 ||
+       type.compare("androidapp") == 0) &&
+      !ParameterNotNull(parameterObject, "path"))
   {
     result["method"] = "Favourites.AddFavourite";
     result["stack"]["message"] = "Missing parameter";
@@ -147,7 +149,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
     return InvalidParams;
 
   item.SetLabel(title);
-  if (ParameterNotNull(parameterObject,"thumbnail"))
+  if (ParameterNotNull(parameterObject, "thumbnail"))
     item.SetArt("thumb", parameterObject["thumbnail"].asString());
 
   if (CServiceBroker::GetFavouritesService().AddOrRemove(item, contextWindow))

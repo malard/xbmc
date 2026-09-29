@@ -65,13 +65,15 @@ JSONRPC_STATUS CSettingsOperations::SetLevel(const CVariant& parameterObject, CV
 JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant& parameterObject, CVariant& result)
 {
   SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
-  bool listCategories = !parameterObject["properties"].empty() && parameterObject["properties"][0].asString() == "categories";
+  bool listCategories = !parameterObject["properties"].empty() &&
+                        parameterObject["properties"][0].asString() == "categories";
 
   result["level"] = SettingLevelToString(level);
   result["sections"] = CVariant(CVariant::VariantTypeArray);
 
   // apply the level filter
-  SettingSectionList allSections = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSections();
+  SettingSectionList allSections =
+      CServiceBroker::GetSettingsComponent()->GetSettings()->GetSections();
   for (const auto& itSection : allSections)
   {
     SettingCategoryList categories = itSection->GetCategories(level);
@@ -105,13 +107,15 @@ JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant& parameterObjec
 {
   SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
   std::string strSection = parameterObject["section"].asString();
-  bool listSettings = !parameterObject["properties"].empty() && parameterObject["properties"][0].asString() == "settings";
+  bool listSettings = !parameterObject["properties"].empty() &&
+                      parameterObject["properties"][0].asString() == "settings";
 
   std::vector<SettingSectionPtr> sections;
   if (!strSection.empty())
   {
-    SettingSectionPtr section = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSection(strSection);
-    if (section == NULL)
+    SettingSectionPtr section =
+        CServiceBroker::GetSettingsComponent()->GetSettings()->GetSection(strSection);
+    if (section == nullptr)
       return InvalidParams;
 
     sections.push_back(section);
@@ -170,7 +174,7 @@ JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant& parameterObjec
 JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant& parameterObject, CVariant& result)
 {
   SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
-  const CVariant &filter = parameterObject["filter"];
+  const CVariant& filter = parameterObject["filter"];
   bool doFilter = filter.isMember("section") && filter.isMember("category");
   std::string strSection, strCategory;
   if (doFilter)
@@ -183,8 +187,9 @@ JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant& parameterObject,
 
   if (doFilter)
   {
-    SettingSectionPtr section = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSection(strSection);
-    if (section == NULL)
+    SettingSectionPtr section =
+        CServiceBroker::GetSettingsComponent()->GetSettings()->GetSection(strSection);
+    if (section == nullptr)
       return InvalidParams;
 
     sections.push_back(section);
@@ -239,38 +244,39 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const CVariant& parameterObj
   std::string settingId = parameterObject["setting"].asString();
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL)
+  if (setting == nullptr)
     return NotFound;
 
   CVariant value;
   switch (setting->GetType())
   {
-  case SettingType::Boolean:
-    value = std::static_pointer_cast<CSettingBool>(setting)->GetValue();
-    break;
+    case SettingType::Boolean:
+      value = std::static_pointer_cast<CSettingBool>(setting)->GetValue();
+      break;
 
-  case SettingType::Integer:
-    value = std::static_pointer_cast<CSettingInt>(setting)->GetValue();
-    break;
+    case SettingType::Integer:
+      value = std::static_pointer_cast<CSettingInt>(setting)->GetValue();
+      break;
 
-  case SettingType::Number:
-    value = std::static_pointer_cast<CSettingNumber>(setting)->GetValue();
-    break;
+    case SettingType::Number:
+      value = std::static_pointer_cast<CSettingNumber>(setting)->GetValue();
+      break;
 
-  case SettingType::String:
-    value = std::static_pointer_cast<CSettingString>(setting)->GetValue();
-    break;
+    case SettingType::String:
+      value = std::static_pointer_cast<CSettingString>(setting)->GetValue();
+      break;
 
-  case SettingType::List:
-  {
-    SerializeSettingListValues(CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(settingId), value);
-    break;
-  }
+    case SettingType::List:
+    {
+      SerializeSettingListValues(
+          CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(settingId), value);
+      break;
+    }
 
-  case SettingType::Unknown:
-  case SettingType::Action:
-  default:
-    return InvalidParams;
+    case SettingType::Unknown:
+    case SettingType::Action:
+    default:
+      return InvalidParams;
   }
 
   result["value"] = value;
@@ -312,7 +318,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObj
   CVariant value = parameterObject["value"];
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL)
+  if (setting == nullptr)
     return NotFound;
   if (!setting->IsEnabled())
     return Unavailable;
@@ -325,71 +331,72 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObj
   bool changed = false;
   switch (setting->GetType())
   {
-  case SettingType::Boolean:
-    if (!value.isBoolean())
+    case SettingType::Boolean:
+      if (!value.isBoolean())
+        return InvalidParams;
+
+      changed = std::static_pointer_cast<CSettingBool>(setting)->SetValue(value.asBoolean());
+      break;
+
+    case SettingType::Integer:
+    {
+      if (!value.isInteger() && !value.isUnsignedInteger())
+        return InvalidParams;
+
+      const auto intSetting = std::static_pointer_cast<CSettingInt>(setting);
+      const int intValue = static_cast<int>(value.asInteger());
+      if (!intSetting->CheckValidity(intValue) || !IsListedOption(intSetting, intValue))
+        return InvalidParams;
+
+      changed = intSetting->SetValue(intValue);
+      break;
+    }
+
+    case SettingType::Number:
+    {
+      if (!value.isDouble())
+        return InvalidParams;
+
+      const auto numberSetting = std::static_pointer_cast<CSettingNumber>(setting);
+      if (!numberSetting->CheckValidity(value.asDouble()))
+        return InvalidParams;
+
+      changed = numberSetting->SetValue(value.asDouble());
+      break;
+    }
+
+    case SettingType::String:
+    {
+      if (!value.isString())
+        return InvalidParams;
+
+      const auto stringSetting = std::static_pointer_cast<CSettingString>(setting);
+      if (!stringSetting->CheckValidity(value.asString()) ||
+          !IsListedOption(stringSetting, value.asString()))
+        return InvalidParams;
+
+      changed = stringSetting->SetValue(value.asString());
+      break;
+    }
+
+    case SettingType::List:
+    {
+      if (!value.isArray())
+        return InvalidParams;
+
+      std::vector<CVariant> values;
+      for (CVariant::const_iterator_array itValue = value.begin_array();
+           itValue != value.end_array(); ++itValue)
+        values.push_back(*itValue);
+
+      changed = CServiceBroker::GetSettingsComponent()->GetSettings()->SetList(settingId, values);
+      break;
+    }
+
+    case SettingType::Unknown:
+    case SettingType::Action:
+    default:
       return InvalidParams;
-
-    changed = std::static_pointer_cast<CSettingBool>(setting)->SetValue(value.asBoolean());
-    break;
-
-  case SettingType::Integer:
-  {
-    if (!value.isInteger() && !value.isUnsignedInteger())
-      return InvalidParams;
-
-    const auto intSetting = std::static_pointer_cast<CSettingInt>(setting);
-    const int intValue = static_cast<int>(value.asInteger());
-    if (!intSetting->CheckValidity(intValue) || !IsListedOption(intSetting, intValue))
-      return InvalidParams;
-
-    changed = intSetting->SetValue(intValue);
-    break;
-  }
-
-  case SettingType::Number:
-  {
-    if (!value.isDouble())
-      return InvalidParams;
-
-    const auto numberSetting = std::static_pointer_cast<CSettingNumber>(setting);
-    if (!numberSetting->CheckValidity(value.asDouble()))
-      return InvalidParams;
-
-    changed = numberSetting->SetValue(value.asDouble());
-    break;
-  }
-
-  case SettingType::String:
-  {
-    if (!value.isString())
-      return InvalidParams;
-
-    const auto stringSetting = std::static_pointer_cast<CSettingString>(setting);
-    if (!stringSetting->CheckValidity(value.asString()) ||
-        !IsListedOption(stringSetting, value.asString()))
-      return InvalidParams;
-
-    changed = stringSetting->SetValue(value.asString());
-    break;
-  }
-
-  case SettingType::List:
-  {
-    if (!value.isArray())
-      return InvalidParams;
-
-    std::vector<CVariant> values;
-    for (CVariant::const_iterator_array itValue = value.begin_array(); itValue != value.end_array(); ++itValue)
-      values.push_back(*itValue);
-
-    changed = CServiceBroker::GetSettingsComponent()->GetSettings()->SetList(settingId, values);
-    break;
-  }
-
-  case SettingType::Unknown:
-  case SettingType::Action:
-  default:
-    return InvalidParams;
   }
 
   // A change handler declined the value, e.g. a display mode that was not kept.
@@ -406,31 +413,31 @@ JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant& parameterO
   std::string settingId = parameterObject["setting"].asString();
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == NULL)
+  if (setting == nullptr)
     return NotFound;
   if (!setting->IsEnabled())
     return Unavailable;
 
   switch (setting->GetType())
   {
-  case SettingType::Boolean:
-  case SettingType::Integer:
-  case SettingType::Number:
-  case SettingType::String:
-  case SettingType::List:
-    setting->Reset();
-    break;
+    case SettingType::Boolean:
+    case SettingType::Integer:
+    case SettingType::Number:
+    case SettingType::String:
+    case SettingType::List:
+      setting->Reset();
+      break;
 
-  case SettingType::Unknown:
-  case SettingType::Action:
-  default:
-    return InvalidParams;
+    case SettingType::Unknown:
+    case SettingType::Action:
+    default:
+      return InvalidParams;
   }
 
   return ACK;
 }
 
-SettingLevel CSettingsOperations::ParseSettingLevel(const std::string &strLevel)
+SettingLevel CSettingsOperations::ParseSettingLevel(const std::string& strLevel)
 {
   if (StringUtils::EqualsNoCase(strLevel, "basic"))
     return SettingLevel::Basic;
@@ -445,7 +452,7 @@ SettingLevel CSettingsOperations::ParseSettingLevel(const std::string &strLevel)
 bool CSettingsOperations::SerializeISetting(const std::shared_ptr<const ISetting>& setting,
                                             CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["id"] = setting->GetId();
@@ -561,7 +568,7 @@ bool CSettingsOperations::SerializeSetting(const std::shared_ptr<const CSetting>
 bool CSettingsOperations::SerializeSettingBool(const std::shared_ptr<const CSettingBool>& setting,
                                                CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["value"] = setting->GetValue();
@@ -573,7 +580,7 @@ bool CSettingsOperations::SerializeSettingBool(const std::shared_ptr<const CSett
 bool CSettingsOperations::SerializeSettingInt(const std::shared_ptr<const CSettingInt>& setting,
                                               CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["default"] = setting->GetDefault();
@@ -612,7 +619,8 @@ bool CSettingsOperations::SerializeSettingInt(const std::shared_ptr<const CSetti
     case SettingOptionsType::Dynamic:
     {
       obj["options"] = CVariant(CVariant::VariantTypeArray);
-      IntegerSettingOptions options = std::const_pointer_cast<CSettingInt>(setting)->UpdateDynamicOptions();
+      IntegerSettingOptions options =
+          std::const_pointer_cast<CSettingInt>(setting)->UpdateDynamicOptions();
       for (const auto& itOption : options)
       {
         CVariant varOption(CVariant::VariantTypeObject);
@@ -641,7 +649,7 @@ bool CSettingsOperations::SerializeSettingInt(const std::shared_ptr<const CSetti
 bool CSettingsOperations::SerializeSettingNumber(
     const std::shared_ptr<const CSettingNumber>& setting, CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["value"] = setting->GetValue();
@@ -657,7 +665,7 @@ bool CSettingsOperations::SerializeSettingNumber(
 bool CSettingsOperations::SerializeSettingString(
     const std::shared_ptr<const CSettingString>& setting, CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["default"] = setting->GetDefault();
@@ -699,7 +707,8 @@ bool CSettingsOperations::SerializeSettingString(
     case SettingOptionsType::Dynamic:
     {
       obj["options"] = CVariant(CVariant::VariantTypeArray);
-      StringSettingOptions options = std::const_pointer_cast<CSettingString>(setting)->UpdateDynamicOptions();
+      StringSettingOptions options =
+          std::const_pointer_cast<CSettingString>(setting)->UpdateDynamicOptions();
       for (const auto& itOption : options)
       {
         CVariant varOption(CVariant::VariantTypeObject);
@@ -747,7 +756,7 @@ bool CSettingsOperations::SerializeSettingString(
 bool CSettingsOperations::SerializeSettingAction(
     const std::shared_ptr<const CSettingAction>& setting, CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["data"] = setting->GetData();
@@ -758,12 +767,12 @@ bool CSettingsOperations::SerializeSettingAction(
 bool CSettingsOperations::SerializeSettingList(const std::shared_ptr<const CSettingList>& setting,
                                                CVariant& obj)
 {
-  if (setting == NULL ||
-      !SerializeSetting(setting->GetDefinition(), obj["definition"]))
+  if (setting == nullptr || !SerializeSetting(setting->GetDefinition(), obj["definition"]))
     return false;
 
   SerializeSettingListValues(CSettingUtils::GetList(setting), obj["value"]);
-  SerializeSettingListValues(CSettingUtils::ListToValues(setting, setting->GetDefault()), obj["default"]);
+  SerializeSettingListValues(CSettingUtils::ListToValues(setting, setting->GetDefault()),
+                             obj["default"]);
 
   obj["elementtype"] = obj["definition"]["type"];
   obj["delimiter"] = setting->GetDelimiter();
@@ -776,7 +785,7 @@ bool CSettingsOperations::SerializeSettingList(const std::shared_ptr<const CSett
 bool CSettingsOperations::SerializeSettingPath(const std::shared_ptr<const CSettingPath>& setting,
                                                CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["type"] = "path";
@@ -789,7 +798,7 @@ bool CSettingsOperations::SerializeSettingPath(const std::shared_ptr<const CSett
 bool CSettingsOperations::SerializeSettingAddon(const std::shared_ptr<const CSettingAddon>& setting,
                                                 CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["type"] = "addon";
@@ -801,7 +810,7 @@ bool CSettingsOperations::SerializeSettingAddon(const std::shared_ptr<const CSet
 bool CSettingsOperations::SerializeSettingDate(const std::shared_ptr<const CSettingDate>& setting,
                                                CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["type"] = "date";
@@ -812,7 +821,7 @@ bool CSettingsOperations::SerializeSettingDate(const std::shared_ptr<const CSett
 bool CSettingsOperations::SerializeSettingTime(const std::shared_ptr<const CSettingTime>& setting,
                                                CVariant& obj)
 {
-  if (setting == NULL)
+  if (setting == nullptr)
     return false;
 
   obj["type"] = "time";
@@ -823,7 +832,7 @@ bool CSettingsOperations::SerializeSettingTime(const std::shared_ptr<const CSett
 bool CSettingsOperations::SerializeSettingControl(
     const std::shared_ptr<const ISettingControl>& control, CVariant& obj)
 {
-  if (control == NULL)
+  if (control == nullptr)
     return false;
 
   const std::string& type = control->GetType();
@@ -833,7 +842,8 @@ bool CSettingsOperations::SerializeSettingControl(
 
   if (type == "spinner")
   {
-    std::shared_ptr<const CSettingControlSpinner> spinner = std::static_pointer_cast<const CSettingControlSpinner>(control);
+    std::shared_ptr<const CSettingControlSpinner> spinner =
+        std::static_pointer_cast<const CSettingControlSpinner>(control);
     if (spinner->GetFormatLabel() >= 0)
       obj["formatlabel"] = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
           spinner->GetFormatLabel());
@@ -845,7 +855,8 @@ bool CSettingsOperations::SerializeSettingControl(
   }
   else if (type == "edit")
   {
-    std::shared_ptr<const CSettingControlEdit> edit = std::static_pointer_cast<const CSettingControlEdit>(control);
+    std::shared_ptr<const CSettingControlEdit> edit =
+        std::static_pointer_cast<const CSettingControlEdit>(control);
     obj["hidden"] = edit->IsHidden();
     obj["verifynewvalue"] = edit->VerifyNewValue();
     if (edit->GetHeading() >= 0)
@@ -854,14 +865,16 @@ bool CSettingsOperations::SerializeSettingControl(
   }
   else if (type == "button")
   {
-    std::shared_ptr<const CSettingControlButton> button = std::static_pointer_cast<const CSettingControlButton>(control);
+    std::shared_ptr<const CSettingControlButton> button =
+        std::static_pointer_cast<const CSettingControlButton>(control);
     if (button->GetHeading() >= 0)
       obj["heading"] =
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(button->GetHeading());
   }
   else if (type == "list")
   {
-    std::shared_ptr<const CSettingControlList> list = std::static_pointer_cast<const CSettingControlList>(control);
+    std::shared_ptr<const CSettingControlList> list =
+        std::static_pointer_cast<const CSettingControlList>(control);
     if (list->GetHeading() >= 0)
       obj["heading"] =
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(list->GetHeading());
@@ -869,7 +882,8 @@ bool CSettingsOperations::SerializeSettingControl(
   }
   else if (type == "slider")
   {
-    std::shared_ptr<const CSettingControlSlider> slider = std::static_pointer_cast<const CSettingControlSlider>(control);
+    std::shared_ptr<const CSettingControlSlider> slider =
+        std::static_pointer_cast<const CSettingControlSlider>(control);
     if (slider->GetHeading() >= 0)
       obj["heading"] =
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(slider->GetHeading());
@@ -882,7 +896,8 @@ bool CSettingsOperations::SerializeSettingControl(
   }
   else if (type == "range")
   {
-    std::shared_ptr<const CSettingControlRange> range = std::static_pointer_cast<const CSettingControlRange>(control);
+    std::shared_ptr<const CSettingControlRange> range =
+        std::static_pointer_cast<const CSettingControlRange>(control);
     if (range->GetFormatLabel() >= 0)
       obj["formatlabel"] =
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(range->GetFormatLabel());
@@ -900,7 +915,8 @@ bool CSettingsOperations::SerializeSettingControl(
   return true;
 }
 
-void CSettingsOperations::SerializeSettingListValues(const std::vector<CVariant> &values, CVariant &obj)
+void CSettingsOperations::SerializeSettingListValues(const std::vector<CVariant>& values,
+                                                     CVariant& obj)
 {
   obj = CVariant(CVariant::VariantTypeArray);
   for (const auto& itValue : values)

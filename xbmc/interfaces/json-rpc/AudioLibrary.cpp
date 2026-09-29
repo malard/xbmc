@@ -68,7 +68,7 @@ JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant& parameterObject, CVa
     std::string propertyName = it->asString();
     CVariant property;
     if (propertyName == "missingartistid")
-      property = (int)BLANKARTIST_ID;
+      property = static_cast<int>(BLANKARTIST_ID);
     else if (propertyName == "librarylastupdated")
       property = musicdatabase.GetLibraryLastUpdated();
     else if (propertyName == "librarylastcleaned")
@@ -118,7 +118,8 @@ JSONRPC_STATUS CAudioLibrary::GetArtists(const CVariant& parameterObject, CVaria
   if (!ApplyFilter(parameterObject["filter"], filters, "artists", musicUrl))
     return InvalidParams;
 
-  bool albumArtistsOnly = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS);
+  bool albumArtistsOnly = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS);
   if (parameterObject["albumartistsonly"].isBoolean())
     albumArtistsOnly = parameterObject["albumartistsonly"].asBoolean();
   musicUrl.AddOption("albumartistsonly", albumArtistsOnly);
@@ -149,7 +150,7 @@ JSONRPC_STATUS CAudioLibrary::GetArtists(const CVariant& parameterObject, CVaria
 
 JSONRPC_STATUS CAudioLibrary::GetArtistDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int artistID = (int)parameterObject["artistid"].asInteger();
+  int artistID = static_cast<int>(parameterObject["artistid"].asInteger());
 
   CMusicDbUrl musicUrl;
   if (!musicUrl.FromString("musicdb://artists/"))
@@ -180,7 +181,8 @@ JSONRPC_STATUS CAudioLibrary::GetArtistDetails(const CVariant& parameterObject, 
   if (ret != OK)
     return ret;
 
-  HandleFileItem("artistid", false, "artistdetails", items[0], param, param["properties"], result, false);
+  HandleFileItem("artistid", false, "artistdetails", items[0], param, param["properties"], result,
+                 false);
   return OK;
 }
 
@@ -239,7 +241,8 @@ JSONRPC_STATUS CAudioLibrary::GetAlbums(const CVariant& parameterObject, CVarian
       for (unsigned int index = 0; index < result["albums"].size(); index++)
       {
         CFileItem item;
-        item.GetMusicInfoTag()->SetDatabaseId(result["albums"][index]["albumid"].asInteger32(), MediaTypeAlbum);
+        item.GetMusicInfoTag()->SetDatabaseId(result["albums"][index]["albumid"].asInteger32(),
+                                              MediaTypeAlbum);
 
         // Could use FillDetails, but it does unnecessary serialization of empty MusiInfoTag
         // CFileItemPtr itemptr(new CFileItem(item));
@@ -279,7 +282,7 @@ JSONRPC_STATUS CAudioLibrary::GetAlbums(const CVariant& parameterObject, CVarian
 
 JSONRPC_STATUS CAudioLibrary::GetAlbumDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int albumID = (int)parameterObject["albumid"].asInteger();
+  int albumID = static_cast<int>(parameterObject["albumid"].asInteger());
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -301,7 +304,8 @@ JSONRPC_STATUS CAudioLibrary::GetAlbumDetails(const CVariant& parameterObject, C
   if (ret != OK)
     return ret;
 
-  HandleFileItem("albumid", false, "albumdetails", items[0], parameterObject, parameterObject["properties"], result, false);
+  HandleFileItem("albumid", false, "albumdetails", items[0], parameterObject,
+                 parameterObject["properties"], result, false);
 
   return OK;
 }
@@ -369,7 +373,8 @@ JSONRPC_STATUS CAudioLibrary::GetSongs(const CVariant& parameterObject, CVariant
         CFileItem item;
         // Only needs song and album id (if we have it) set to get art
         // Getting art is quicker if "albumid" has been fetched
-        item.GetMusicInfoTag()->SetDatabaseId(result["songs"][index]["songid"].asInteger32(), MediaTypeSong);
+        item.GetMusicInfoTag()->SetDatabaseId(result["songs"][index]["songid"].asInteger32(),
+                                              MediaTypeSong);
         if (result["songs"][index].isMember("albumid"))
           item.GetMusicInfoTag()->SetAlbumId(result["songs"][index]["albumid"].asInteger32());
         else
@@ -420,7 +425,7 @@ JSONRPC_STATUS CAudioLibrary::GetSongs(const CVariant& parameterObject, CVariant
 
 JSONRPC_STATUS CAudioLibrary::GetSongDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int idSong = (int)parameterObject["songid"].asInteger();
+  int idSong = static_cast<int>(parameterObject["songid"].asInteger());
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -439,7 +444,8 @@ JSONRPC_STATUS CAudioLibrary::GetSongDetails(const CVariant& parameterObject, CV
   if (ret != OK)
     return ret;
 
-  HandleFileItem("songid", true, "songdetails", items[0], parameterObject, parameterObject["properties"], result, false);
+  HandleFileItem("songid", true, "songdetails", items[0], parameterObject,
+                 parameterObject["properties"], result, false);
   return OK;
 }
 
@@ -479,12 +485,13 @@ JSONRPC_STATUS CAudioLibrary::GetRecentlyAddedSongs(const CVariant& parameterObj
   if (!musicdatabase.Open())
     return InternalError;
 
-  int amount = (int)parameterObject["albumlimit"].asInteger();
+  int amount = static_cast<int>(parameterObject["albumlimit"].asInteger());
   if (amount < 0)
     amount = 0;
 
   CFileItemList items;
-  if (!musicdatabase.GetRecentlyAddedAlbumSongs("musicdb://songs/", items, (unsigned int)amount))
+  if (!musicdatabase.GetRecentlyAddedAlbumSongs("musicdb://songs/", items,
+                                                static_cast<unsigned int>(amount)))
     return InternalError;
 
   JSONRPC_STATUS ret = GetAdditionalSongDetails(parameterObject, items, musicdatabase);
@@ -554,7 +561,8 @@ JSONRPC_STATUS CAudioLibrary::GetGenres(const CVariant& parameterObject, CVarian
   std::set<std::string> checkProperties;
   checkProperties.insert("sourceid");
   std::set<std::string> additionalProperties;
-  if (CheckForAdditionalProperties(parameterObject["properties"], checkProperties, additionalProperties))
+  if (CheckForAdditionalProperties(parameterObject["properties"], checkProperties,
+                                   additionalProperties))
     sourcesneeded = (additionalProperties.contains("sourceid"));
 
   CFileItemList items;
@@ -576,7 +584,7 @@ JSONRPC_STATUS CAudioLibrary::GetRoles(const CVariant& parameterObject, CVariant
     return InternalError;
 
   /* need to set strTitle in each item*/
-  for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+  for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     items[i]->GetMusicInfoTag()->SetTitle(items[i]->GetLabel());
 
   HandleFileItemList("roleid", false, "roles", items, parameterObject, result);
@@ -679,7 +687,7 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CAudioLibrary::SetArtistDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["artistid"].asInteger();
+  int id = static_cast<int>(parameterObject["artistid"].asInteger());
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -689,38 +697,22 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(const CVariant& parameterObject, 
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist)); status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "artist"))
-    artist.strArtist = parameterObject["artist"].asString();
-  if (ParameterNotNull(parameterObject, "instrument"))
-    CopyStringArray(parameterObject["instrument"], artist.instruments);
-  if (ParameterNotNull(parameterObject, "style"))
-    CopyStringArray(parameterObject["style"], artist.styles);
-  if (ParameterNotNull(parameterObject, "mood"))
-    CopyStringArray(parameterObject["mood"], artist.moods);
-  if (ParameterNotNull(parameterObject, "born"))
-    artist.strBorn = parameterObject["born"].asString();
-  if (ParameterNotNull(parameterObject, "formed"))
-    artist.strFormed = parameterObject["formed"].asString();
-  if (ParameterNotNull(parameterObject, "description"))
-    artist.strBiography = parameterObject["description"].asString();
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], artist.genre);
-  if (ParameterNotNull(parameterObject, "died"))
-    artist.strDied = parameterObject["died"].asString();
-  if (ParameterNotNull(parameterObject, "disbanded"))
-    artist.strDisbanded = parameterObject["disbanded"].asString();
-  if (ParameterNotNull(parameterObject, "yearsactive"))
-    CopyStringArray(parameterObject["yearsactive"], artist.yearsActive);
-  if (ParameterNotNull(parameterObject, "musicbrainzartistid"))
-    artist.strMusicBrainzArtistID = parameterObject["musicbrainzartistid"].asString();
-  if (ParameterNotNull(parameterObject, "sortname"))
-    artist.strSortName = parameterObject["sortname"].asString();
-  if (ParameterNotNull(parameterObject, "type"))
-    artist.strType = parameterObject["type"].asString();
-  if (ParameterNotNull(parameterObject, "gender"))
-    artist.strGender = parameterObject["gender"].asString();
-  if (ParameterNotNull(parameterObject, "disambiguation"))
-    artist.strDisambiguation = parameterObject["disambiguation"].asString();
+  CopyIfGiven(parameterObject, "artist", artist.strArtist);
+  CopyIfGiven(parameterObject, "instrument", artist.instruments);
+  CopyIfGiven(parameterObject, "style", artist.styles);
+  CopyIfGiven(parameterObject, "mood", artist.moods);
+  CopyIfGiven(parameterObject, "born", artist.strBorn);
+  CopyIfGiven(parameterObject, "formed", artist.strFormed);
+  CopyIfGiven(parameterObject, "description", artist.strBiography);
+  CopyIfGiven(parameterObject, "genre", artist.genre);
+  CopyIfGiven(parameterObject, "died", artist.strDied);
+  CopyIfGiven(parameterObject, "disbanded", artist.strDisbanded);
+  CopyIfGiven(parameterObject, "yearsactive", artist.yearsActive);
+  CopyIfGiven(parameterObject, "musicbrainzartistid", artist.strMusicBrainzArtistID);
+  CopyIfGiven(parameterObject, "sortname", artist.strSortName);
+  CopyIfGiven(parameterObject, "type", artist.strType);
+  CopyIfGiven(parameterObject, "gender", artist.strGender);
+  CopyIfGiven(parameterObject, "disambiguation", artist.strDisambiguation);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
@@ -770,7 +762,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["albumid"].asInteger();
+  int id = static_cast<int>(parameterObject["albumid"].asInteger());
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -782,13 +774,10 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
       status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "title"))
-    album.strAlbum = parameterObject["title"].asString();
-  if (ParameterNotNull(parameterObject, "displayartist"))
-    album.strArtistDesc = parameterObject["displayartist"].asString();
+  CopyIfGiven(parameterObject, "title", album.strAlbum);
+  CopyIfGiven(parameterObject, "displayartist", album.strArtistDesc);
   // Set album sort string before processing artist credits
-  if (ParameterNotNull(parameterObject, "sortartist"))
-    album.strArtistSort = parameterObject["sortartist"].asString();
+  CopyIfGiven(parameterObject, "sortartist", album.strArtistSort);
 
   // Match up artist names and mbids to make new artist credits
   // Mbid values only apply if there are names
@@ -798,50 +787,34 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
     std::vector<std::string> mbids;
     CopyStringArray(parameterObject["artist"], artists);
     // Check for Musicbrainz ids
-    if (ParameterNotNull(parameterObject, "musicbrainzalbumartistid"))
-      CopyStringArray(parameterObject["musicbrainzalbumartistid"], mbids);
+    CopyIfGiven(parameterObject, "musicbrainzalbumartistid", mbids);
     // When display artist is not provided and yet artists is changing make by concatenation
     if (!ParameterNotNull(parameterObject, "displayartist"))
-      album.strArtistDesc = StringUtils::Join(artists, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
+      album.strArtistDesc = StringUtils::Join(
+          artists,
+          CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
     album.SetArtistCredits(artists, std::vector<std::string>(), mbids);
     // On updatealbum artists will be changed
     album.bArtistSongMerge = true;
   }
 
-  if (ParameterNotNull(parameterObject, "description"))
-    album.strReview = parameterObject["description"].asString();
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], album.genre);
-  if (ParameterNotNull(parameterObject, "theme"))
-    CopyStringArray(parameterObject["theme"], album.themes);
-  if (ParameterNotNull(parameterObject, "mood"))
-    CopyStringArray(parameterObject["mood"], album.moods);
-  if (ParameterNotNull(parameterObject, "style"))
-    CopyStringArray(parameterObject["style"], album.styles);
-  if (ParameterNotNull(parameterObject, "type"))
-    album.strType = parameterObject["type"].asString();
-  if (ParameterNotNull(parameterObject, "albumlabel"))
-    album.strLabel = parameterObject["albumlabel"].asString();
-  if (ParameterNotNull(parameterObject, "rating"))
-    album.fRating = parameterObject["rating"].asFloat();
-  if (ParameterNotNull(parameterObject, "userrating"))
-    album.iUserrating = static_cast<int>(parameterObject["userrating"].asInteger());
-  if (ParameterNotNull(parameterObject, "votes"))
-    album.iVotes = static_cast<int>(parameterObject["votes"].asInteger());
-  if (ParameterNotNull(parameterObject, "year"))
-    album.strReleaseDate = parameterObject["year"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainzalbumid"))
-    album.strMusicBrainzAlbumID = parameterObject["musicbrainzalbumid"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainzreleasegroupid"))
-    album.strReleaseGroupMBID = parameterObject["musicbrainzreleasegroupid"].asString();
-  if (ParameterNotNull(parameterObject, "isboxset"))
-    album.bBoxedSet = parameterObject["isboxset"].asBoolean();
-  if (ParameterNotNull(parameterObject, "originaldate"))
-    album.strOrigReleaseDate = parameterObject["originaldate"].asString();
-  if (ParameterNotNull(parameterObject, "releasedate"))
-    album.strReleaseDate = parameterObject["releasedate"].asString();
-  if (ParameterNotNull(parameterObject, "albumstatus"))
-    album.strReleaseStatus = parameterObject["albumstatus"].asString();
+  CopyIfGiven(parameterObject, "description", album.strReview);
+  CopyIfGiven(parameterObject, "genre", album.genre);
+  CopyIfGiven(parameterObject, "theme", album.themes);
+  CopyIfGiven(parameterObject, "mood", album.moods);
+  CopyIfGiven(parameterObject, "style", album.styles);
+  CopyIfGiven(parameterObject, "type", album.strType);
+  CopyIfGiven(parameterObject, "albumlabel", album.strLabel);
+  CopyIfGiven(parameterObject, "rating", album.fRating);
+  CopyIfGiven(parameterObject, "userrating", album.iUserrating);
+  CopyIfGiven(parameterObject, "votes", album.iVotes);
+  CopyIfGiven(parameterObject, "year", album.strReleaseDate);
+  CopyIfGiven(parameterObject, "musicbrainzalbumid", album.strMusicBrainzAlbumID);
+  CopyIfGiven(parameterObject, "musicbrainzreleasegroupid", album.strReleaseGroupMBID);
+  CopyIfGiven(parameterObject, "isboxset", album.bBoxedSet);
+  CopyIfGiven(parameterObject, "originaldate", album.strOrigReleaseDate);
+  CopyIfGiven(parameterObject, "releasedate", album.strReleaseDate);
+  CopyIfGiven(parameterObject, "albumstatus", album.strReleaseStatus);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
@@ -877,7 +850,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(const CVariant& parameterObject, C
 
 JSONRPC_STATUS CAudioLibrary::SetSongDetails(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["songid"].asInteger();
+  int id = static_cast<int>(parameterObject["songid"].asInteger());
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -887,14 +860,11 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(const CVariant& parameterObject, CV
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(id, song)); status != OK)
     return status;
 
-  if (ParameterNotNull(parameterObject, "title"))
-    song.strTitle = parameterObject["title"].asString();
+  CopyIfGiven(parameterObject, "title", song.strTitle);
 
-  if (ParameterNotNull(parameterObject, "displayartist"))
-    song.strArtistDesc = parameterObject["displayartist"].asString();
+  CopyIfGiven(parameterObject, "displayartist", song.strArtistDesc);
   // Set album sort string before processing artist credits
-  if (ParameterNotNull(parameterObject, "sortartist"))
-    song.strArtistSort = parameterObject["sortartist"].asString();
+  CopyIfGiven(parameterObject, "sortartist", song.strArtistSort);
 
   // Match up artist names and mbids to make new artist credits
   // Mbid values only apply if there are names
@@ -905,48 +875,37 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(const CVariant& parameterObject, CV
     updateartists = true;
     CopyStringArray(parameterObject["artist"], artists);
     // Check for Musicbrainz ids
-    if (ParameterNotNull(parameterObject, "musicbrainzartistid"))
-      CopyStringArray(parameterObject["musicbrainzartistid"], mbids);
+    CopyIfGiven(parameterObject, "musicbrainzartistid", mbids);
     // When display artist is not provided and yet artists is changing make by concatenation
     if (!ParameterNotNull(parameterObject, "displayartist"))
-      song.strArtistDesc = StringUtils::Join(artists, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
+      song.strArtistDesc = StringUtils::Join(
+          artists,
+          CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
     song.SetArtistCredits(artists, std::vector<std::string>(), mbids);
   }
 
-  if (ParameterNotNull(parameterObject, "genre"))
-    CopyStringArray(parameterObject["genre"], song.genre);
-  if (ParameterNotNull(parameterObject, "year"))
-    song.strReleaseDate = parameterObject["year"].asString();
-  if (ParameterNotNull(parameterObject, "rating"))
-    song.rating = parameterObject["rating"].asFloat();
-  if (ParameterNotNull(parameterObject, "userrating"))
-    song.userrating = static_cast<int>(parameterObject["userrating"].asInteger());
+  CopyIfGiven(parameterObject, "genre", song.genre);
+  CopyIfGiven(parameterObject, "year", song.strReleaseDate);
+  CopyIfGiven(parameterObject, "rating", song.rating);
+  CopyIfGiven(parameterObject, "userrating", song.userrating);
   if (ParameterNotNull(parameterObject, "track"))
-    song.iTrack = (song.iTrack & 0xffff0000) | ((int)parameterObject["track"].asInteger() & 0xffff);
+    song.iTrack = (song.iTrack & 0xffff0000) |
+                  (static_cast<int>(parameterObject["track"].asInteger()) & 0xffff);
   if (ParameterNotNull(parameterObject, "disc"))
-    song.iTrack = (song.iTrack & 0xffff) | ((int)parameterObject["disc"].asInteger() << 16);
-  if (ParameterNotNull(parameterObject, "duration"))
-    song.iDuration = (int)parameterObject["duration"].asInteger();
-  if (ParameterNotNull(parameterObject, "comment"))
-    song.strComment = parameterObject["comment"].asString();
-  if (ParameterNotNull(parameterObject, "musicbrainztrackid"))
-    song.strMusicBrainzTrackID = parameterObject["musicbrainztrackid"].asString();
-  if (ParameterNotNull(parameterObject, "playcount"))
-    song.iTimesPlayed = static_cast<int>(parameterObject["playcount"].asInteger());
+    song.iTrack =
+        (song.iTrack & 0xffff) | (static_cast<int>(parameterObject["disc"].asInteger()) << 16);
+  CopyIfGiven(parameterObject, "duration", song.iDuration);
+  CopyIfGiven(parameterObject, "comment", song.strComment);
+  CopyIfGiven(parameterObject, "musicbrainztrackid", song.strMusicBrainzTrackID);
+  CopyIfGiven(parameterObject, "playcount", song.iTimesPlayed);
   if (ParameterNotNull(parameterObject, "lastplayed"))
     song.lastPlayed.SetFromDBDateTime(parameterObject["lastplayed"].asString());
-  if (ParameterNotNull(parameterObject, "mood"))
-    song.strMood = parameterObject["mood"].asString();
-  if (ParameterNotNull(parameterObject, "disctitle"))
-    song.strDiscSubtitle = parameterObject["disctitle"].asString();
-  if (ParameterNotNull(parameterObject, "bpm"))
-    song.iBPM = static_cast<int>(parameterObject["bpm"].asInteger());
-  if (ParameterNotNull(parameterObject, "originaldate"))
-    song.strOrigReleaseDate = parameterObject["originaldate"].asString();
-  if (ParameterNotNull(parameterObject, "albumreleasedate"))
-    song.strReleaseDate = parameterObject["albumreleasedate"].asString();
-  if (ParameterNotNull(parameterObject, "songvideourl"))
-    song.songVideoURL = parameterObject["songvideourl"].asString();
+  CopyIfGiven(parameterObject, "mood", song.strMood);
+  CopyIfGiven(parameterObject, "disctitle", song.strDiscSubtitle);
+  CopyIfGiven(parameterObject, "bpm", song.iBPM);
+  CopyIfGiven(parameterObject, "originaldate", song.strOrigReleaseDate);
+  CopyIfGiven(parameterObject, "albumreleasedate", song.strReleaseDate);
+  CopyIfGiven(parameterObject, "songvideourl", song.songVideoURL);
 
   // Update existing art. Any existing artwork that isn't specified in this request stays as is.
   // If the value is null then the existing art with that type is removed.
@@ -1077,16 +1036,16 @@ bool CAudioLibrary::FillFileItem(
   return filled;
 }
 
-bool CAudioLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)
+bool CAudioLibrary::FillFileItemList(const CVariant& parameterObject, CFileItemList& list)
 {
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return false;
 
   std::string file = parameterObject["file"].asString();
-  int artistID = (int)parameterObject["artistid"].asInteger(-1);
-  int albumID = (int)parameterObject["albumid"].asInteger(-1);
-  int genreID = (int)parameterObject["genreid"].asInteger(-1);
+  int artistID = static_cast<int>(parameterObject["artistid"].asInteger(-1));
+  int albumID = static_cast<int>(parameterObject["albumid"].asInteger(-1));
+  int genreID = static_cast<int>(parameterObject["genreid"].asInteger(-1));
 
   // Sort only what this call resolved; the caller's list may already hold items.
   CFileItemList resolved;
@@ -1103,7 +1062,7 @@ bool CAudioLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
     success |= musicdatabase.GetSongsNav("musicdb://songs/", resolved, SortDescription(), genreID,
                                          artistID, albumID);
 
-  int songID = (int)parameterObject["songid"].asInteger(-1);
+  int songID = static_cast<int>(parameterObject["songid"].asInteger(-1));
   if (songID != -1)
   {
     CSong song;
@@ -1175,7 +1134,8 @@ void CAudioLibrary::FillAlbumItem(const CAlbum& album,
   FillItemArtistIDs(artistids, item);
 }
 
-JSONRPC_STATUS CAudioLibrary::GetAdditionalDetails(const CVariant &parameterObject, CFileItemList &items)
+JSONRPC_STATUS CAudioLibrary::GetAdditionalDetails(const CVariant& parameterObject,
+                                                   CFileItemList& items)
 {
   if (items.IsEmpty())
     return OK;
@@ -1204,7 +1164,8 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalArtistDetails(const CVariant& paramet
   checkProperties.insert("isalbumartist");
   checkProperties.insert("sourceid");
   std::set<std::string> additionalProperties;
-  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties, additionalProperties))
+  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties,
+                                    additionalProperties))
     return OK;
 
   if (additionalProperties.contains("roles"))
@@ -1254,7 +1215,8 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalAlbumDetails(const CVariant& paramete
   checkProperties.insert("songgenres");
   checkProperties.insert("sourceid");
   std::set<std::string> additionalProperties;
-  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties, additionalProperties))
+  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties,
+                                    additionalProperties))
     return OK;
 
   if (additionalProperties.contains("songgenres"))
@@ -1294,7 +1256,8 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalSongDetails(const CVariant& parameter
   checkProperties.insert("albumartistid");
   checkProperties.insert("musicbrainzalbumartistid");
   std::set<std::string> additionalProperties;
-  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties, additionalProperties))
+  if (!CheckForAdditionalProperties(parameterObject["properties"], checkProperties,
+                                    additionalProperties))
     return OK;
 
   for (int i = 0; i < items.Size(); i++)
@@ -1314,7 +1277,8 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalSongDetails(const CVariant& parameter
     }
     if (additionalProperties.contains("sourceid"))
     {
-      musicdatabase.GetSourcesBySong(item->GetMusicInfoTag()->GetDatabaseId(), item->GetPath(), item.get());
+      musicdatabase.GetSourcesBySong(item->GetMusicInfoTag()->GetDatabaseId(), item->GetPath(),
+                                     item.get());
     }
     if (item->GetMusicInfoTag()->GetAlbumId() > 0)
     {
@@ -1474,8 +1438,8 @@ JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& paramete
       return InvalidParams;
 
     target.scope = InfoProviderTarget::Scope::Default;
-    target.viewPath = target.content == ADDON::ContentType::ARTISTS ? "musicdb://artists/"
-                                                                   : "musicdb://albums/";
+    target.viewPath =
+        target.content == ADDON::ContentType::ARTISTS ? "musicdb://artists/" : "musicdb://albums/";
     return OK;
   }
 
@@ -1551,11 +1515,10 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
   {
     if (target.scope == InfoProviderTarget::Scope::Item)
     {
-      const std::string cmd =
-          StringUtils::Format("musiclibrary.{}({})",
-                              target.content == ADDON::ContentType::ARTISTS ? "refreshartist"
-                                                                            : "refreshalbum",
-                              target.itemId);
+      const std::string cmd = StringUtils::Format(
+          "musiclibrary.{}({})",
+          target.content == ADDON::ContentType::ARTISTS ? "refreshartist" : "refreshalbum",
+          target.itemId);
       CServiceBroker::GetAppMessenger()->SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr, cmd);
     }
     else
@@ -1565,7 +1528,9 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
   return ACK;
 }
 
-bool CAudioLibrary::CheckForAdditionalProperties(const CVariant &properties, const std::set<std::string> &checkProperties, std::set<std::string> &foundProperties)
+bool CAudioLibrary::CheckForAdditionalProperties(const CVariant& properties,
+                                                 const std::set<std::string>& checkProperties,
+                                                 std::set<std::string>& foundProperties)
 {
   if (!properties.isArray() || properties.empty())
     return false;
