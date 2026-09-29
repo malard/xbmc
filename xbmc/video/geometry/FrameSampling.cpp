@@ -34,22 +34,6 @@ std::pair<double, double> SampleWindow(double durationSeconds, const SamplingPar
   return {start, end};
 }
 
-bool WithinLiveLeadExclusion(double positionSeconds,
-                             double durationSeconds,
-                             double leadInSeconds,
-                             double leadOutSeconds,
-                             const SamplingParams& params)
-{
-  if (durationSeconds <= 0.0)
-    return false;
-
-  SamplingParams window = params;
-  window.leadInSeconds = leadInSeconds;
-  window.leadOutSeconds = leadOutSeconds;
-  const auto [start, end] = SampleWindow(durationSeconds, window);
-  return positionSeconds < start || positionSeconds > end;
-}
-
 std::vector<double> SampleOffsets(double durationSeconds, const SamplingParams& params)
 {
   std::vector<double> offsets;

@@ -66,12 +66,4 @@ std::vector<double> SampleOffsets(double durationSeconds, const SamplingParams& 
 //! \brief The first and last position that will be sampled, in seconds.
 std::pair<double, double> SampleWindow(double durationSeconds, const SamplingParams& params = {});
 
-//! \brief Whether \p positionSeconds is inside the opening or closing exclusion. Judged on
-//! playback position, not wall clock; a source with no duration excludes nothing.
-bool WithinLiveLeadExclusion(double positionSeconds,
-                             double durationSeconds,
-                             double leadInSeconds,
-                             double leadOutSeconds,
-                             const SamplingParams& params = {});
-
 } // namespace KODI::VIDEO::GEOMETRY

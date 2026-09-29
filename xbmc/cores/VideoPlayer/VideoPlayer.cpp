@@ -3663,7 +3663,7 @@ void CVideoPlayer::HandleMessages()
             }
             else
             {
-              geometry->SetLive(update.rect, update.varies, update.found);
+              geometry->SetLive(update.rect, update.varies);
             }
           });
     }

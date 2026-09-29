@@ -160,53 +160,6 @@ bool NeedsContentGeometry(const ContentGeometryAttempt& attempt, const FileIdent
   return !attempt.identity.Matches(identity);
 }
 
-std::optional<ContentGeometryRecord> MergeDiscoveredGeometry(const ContentGeometryRecord& record,
-                                                             const std::vector<CRectInt>& found,
-                                                             const CombinerParams& params)
-{
-  if (found.empty() || !record.hasReading)
-    return std::nullopt;
-
-  ContentGeometryRecord merged{record};
-
-  const auto known = [&merged, &params](const CRectInt& shape)
-  {
-    return std::any_of(merged.sections.begin(), merged.sections.end(),
-                       [&shape, &params](const CRectInt& section)
-                       { return EdgesWithin(section, shape, params.tolerance); });
-  };
-
-  bool changed{false};
-  bool learnedShape{false};
-  for (const CRectInt& shape : found)
-  {
-    if (shape.IsEmpty())
-      continue;
-
-    if (!known(shape))
-    {
-      merged.sections.push_back(shape);
-      learnedShape = true;
-      changed = true;
-    }
-
-    // Per axis: a title can contain a shape wider than anything sampled and another taller.
-    const CRectInt widened = CRectInt{merged.envelope}.Union(shape);
-    if (widened != merged.envelope)
-    {
-      merged.envelope = widened;
-      changed = true;
-    }
-  }
-
-  if (!changed)
-    return std::nullopt;
-
-  // Raised by a shape the record did not hold, and never lowered.
-  merged.varies = merged.varies || (learnedShape && merged.sections.size() > 1);
-  return merged;
-}
-
 std::string EncodeContentGeometryDetails(const ContentGeometryDetails& details)
 {
   CVariant value{CVariant::VariantTypeObject};

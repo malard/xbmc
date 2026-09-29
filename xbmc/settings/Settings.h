@@ -388,8 +388,6 @@ public:
   static constexpr auto SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY =
       "videoscreen.livecontentgeometry";
   static constexpr auto SETTING_VIDEOSCREEN_LIVEGEOMETRYNARROW = "videoscreen.livegeometrynarrow";
-  static constexpr auto SETTING_VIDEOSCREEN_LIVEGEOMETRYLEADIN = "videoscreen.livegeometryleadin";
-  static constexpr auto SETTING_VIDEOSCREEN_LIVEGEOMETRYLEADOUT = "videoscreen.livegeometryleadout";
   static constexpr auto SETTING_VIDEOSCREEN_SCREENALIGNMENT = "videoscreen.screenalignment";
 
   //! \brief The same tool as SETTING_VIDEOSCREEN_SCREENALIGNMENT, reached from the calibration

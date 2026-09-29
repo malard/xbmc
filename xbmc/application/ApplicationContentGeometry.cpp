@@ -188,7 +188,6 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
     std::unique_lock lock(m_section);
 
     m_inputs = {};
-    m_discovered.clear();
     m_inputs.cached = cached;
     m_inputs.sections = std::move(sections);
     m_inputs.declaredAspect = declaredAspect;
@@ -270,15 +269,11 @@ void CApplicationContentGeometry::RefreshOsdPlacement()
   m_osdPlacement.store(placement, std::memory_order_relaxed);
 }
 
-void CApplicationContentGeometry::SetLive(const CRectInt& rect,
-                                          bool varies,
-                                          std::vector<CRectInt> found)
+void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
 {
   bool republish{true};
   {
     std::unique_lock lock(m_section);
-
-    m_discovered = std::move(found);
 
     const float par{PixelAspectRatio(m_inputs.stream)};
     const float reading{rect.Height() > 0 ? static_cast<float>(rect.Width()) * par /
@@ -469,12 +464,6 @@ EffectiveGeometry CApplicationContentGeometry::Get() const
 {
   std::unique_lock lock(m_section);
   return m_current;
-}
-
-std::vector<CRectInt> CApplicationContentGeometry::Discovered() const
-{
-  std::unique_lock lock(m_section);
-  return m_discovered;
 }
 
 CApplicationContentGeometry::RenderInputs CApplicationContentGeometry::GetRenderInputs() const

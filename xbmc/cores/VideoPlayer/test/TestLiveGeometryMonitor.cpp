@@ -145,15 +145,6 @@ protected:
         CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY, false));
   }
 
-  //! \brief Put the playhead \p seconds into a title \p durationSeconds long. This is what the
-  //! lead-in and lead-out exclusions are measured against, and so what decides whether a shape
-  //! served now is remembered for the title.
-  void PlayheadAt(double seconds, double durationSeconds)
-  {
-    CServiceBroker::GetDataCacheCore().SetPlayTimes(0, static_cast<int64_t>(seconds * 1000.0), 0,
-                                                    static_cast<int64_t>(durationSeconds * 1000.0));
-  }
-
   //! \brief Open a stream that live detection is permitted on.
   void OpenStream()
   {
@@ -374,37 +365,3 @@ TEST_F(TestLiveGeometryMonitor, AResolutionChangeWithdrawsWhatTheOldStreamServed
       << "the old stream's shape was left standing over the new one";
 }
 
-/*!
- * The opening exclusion, and the reason it exists: a distributor ident is a real shape, held
- * long enough to confirm, and it is not the film's. It is served while it is on screen - the
- * room should follow what is actually being shown - but it must not enter the title's permanent
- * record, or every later playback opens to the ident's shape.
- */
-TEST_F(TestLiveGeometryMonitor, AShapeFoundInTheLeadInIsServedButNotRemembered)
-{
-  VideoPicture& picture = LetterboxedMono();
-
-  PlayheadAt(30.0, 2700.0); // half a minute into a 45 minute title, inside the two minute lead-in
-  OpenStream();
-  ASSERT_FALSE(Feed(picture).IsEmpty());
-
-  const std::optional<LiveGeometryUpdate> posted = LastPosted();
-  ASSERT_TRUE(posted.has_value()) << "the shape on screen was not served";
-  EXPECT_TRUE(posted->found.empty()) << "an ident's shape was written into the title's record";
-}
-
-//! The same reading, past the exclusion: this one is the film, and it is what the next playback
-//! opens to.
-TEST_F(TestLiveGeometryMonitor, AShapeFoundInTheBodyIsRemembered)
-{
-  VideoPicture& picture = LetterboxedMono();
-
-  PlayheadAt(1200.0, 2700.0);
-  OpenStream();
-  ASSERT_FALSE(Feed(picture).IsEmpty());
-
-  const std::optional<LiveGeometryUpdate> posted = LastPosted();
-  ASSERT_TRUE(posted.has_value());
-  ASSERT_EQ(1u, posted->found.size()) << "the film's own shape was not remembered";
-  EXPECT_EQ(posted->rect, posted->found.front());
-}

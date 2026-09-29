@@ -357,49 +357,6 @@ bool UpdatePlayCount(const CFileItem& fileItem, const CBookmark& bookmark)
   return false;
 }
 
-//! \brief Add the shapes this playback saw to what the file is recorded as containing.
-void RecordDiscoveredGeometry(const CFileItem& fileItem)
-{
-  const auto geometry =
-      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
-  if (!geometry)
-    return;
-
-  const std::vector<CRectInt> found = geometry->Discovered();
-  if (found.empty())
-    return;
-
-  CVideoDatabase dbs;
-  if (!dbs.Open())
-    return;
-
-  const int idFile{dbs.GetPlayedFileId(fileItem)};
-  if (idFile <= 0)
-  {
-    dbs.Close();
-    return;
-  }
-
-  const VIDEO::GEOMETRY::ContentGeometryLookup cached{
-      dbs.GetContentGeometry(idFile, VIDEO::GEOMETRY::GetFileIdentity(fileItem.GetDynPath()))};
-
-  if (cached.state != VIDEO::GEOMETRY::ContentGeometryState::VALID || !cached.record.hasReading)
-  {
-    dbs.Close();
-    return;
-  }
-
-  const std::optional<VIDEO::GEOMETRY::ContentGeometryRecord> merged{
-      VIDEO::GEOMETRY::MergeDiscoveredGeometry(cached.record, found)};
-  if (merged)
-  {
-    dbs.SetContentGeometry(idFile, *merged);
-    CLog::LogF(LOGDEBUG, "live detection updated the content geometry of file {}", idFile);
-  }
-
-  dbs.Close();
-}
-
 } // unnamed namespace
 
 void CApplicationPlayerCallback::OnPlayerCloseFile(const CFileItem& file,
@@ -411,12 +368,6 @@ void CApplicationPlayerCallback::OnPlayerCloseFile(const CFileItem& file,
 
   CFileItem fileItem{file};
   CBookmark bookmark{bookmarkParam};
-
-  if (VIDEO::IsVideo(fileItem) && CServiceBroker::GetSettingsComponent()
-                                      ->GetProfileManager()
-                                      ->GetCurrentProfile()
-                                      .canWriteDatabases())
-    RecordDiscoveredGeometry(fileItem);
 
   // Make sure we don't reset existing bookmark etc. on eg. player start failure
   if (bookmark.timeInSeconds == 0.0)

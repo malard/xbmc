@@ -131,12 +131,6 @@ void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& recor
 //! without a usable coded frame.
 std::optional<ContentGeometryRecord> LoadContentGeometryXML(const TiXmlElement& movie);
 
-//! \brief Add the \p found shapes to the sections and the envelope, leaving the dominant ratio
-//! alone. Nothing when the watch taught the record nothing new.
-std::optional<ContentGeometryRecord> MergeDiscoveredGeometry(const ContentGeometryRecord& record,
-                                                             const std::vector<CRectInt>& found,
-                                                             const CombinerParams& params = {});
-
 //! \brief What a lookup found.
 enum class ContentGeometryState
 {

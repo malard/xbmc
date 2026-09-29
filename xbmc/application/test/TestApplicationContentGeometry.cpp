@@ -279,22 +279,6 @@ TEST(TestApplicationContentGeometry, StoppingClosesTheMaskOpening)
   EXPECT_FLOAT_EQ(0.0f, geometry.GetRenderInputs().maskAspect);
 }
 
-//! \brief What a watch learned, held for whoever writes it back once the playback ends.
-TEST(TestApplicationContentGeometry, DiscoveredShapesSurviveUntilTheFileChanges)
-{
-  const std::vector<CRectInt> found{CRectInt{0, 0, 1920, 1080}};
-
-  CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), {}, 0.0f);
-  geometry.SetLive(found.front(), false, found);
-
-  EXPECT_EQ(found, geometry.Discovered());
-
-  // The next file has learned nothing yet, and must not inherit the last one's findings.
-  geometry.SetFileInputs(MeasuredScope(), {}, 0.0f);
-  EXPECT_TRUE(geometry.Discovered().empty());
-}
-
 //! The render path reads these together under one lock, so they must give the same answers as
 //! the individual accessors.
 TEST(TestApplicationContentGeometry, TheRenderInputsAgreeWithTheAccessorsTheyReplace)

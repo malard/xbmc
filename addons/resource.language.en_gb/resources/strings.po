@@ -26111,29 +26111,7 @@ msgctxt "#40854"
 msgid "Frames a smaller picture must persist for before it is reported."
 msgstr ""
 
-#. Label for the live detection opening exclusion setting
-#: system/settings/settings.xml
-msgctxt "#40855"
-msgid "Ignore at the start of playback"
-msgstr ""
-
-#. Help text for the live detection opening exclusion setting
-#: system/settings/settings.xml
-msgctxt "#40856"
-msgid "Runtime at the start of playback during which live readings are not taken."
-msgstr ""
-
-#. Label for the live detection closing exclusion setting
-#: system/settings/settings.xml
-msgctxt "#40857"
-msgid "Ignore at the end of playback"
-msgstr ""
-
-#. Help text for the live detection closing exclusion setting
-#: system/settings/settings.xml
-msgctxt "#40858"
-msgid "Runtime at the end of playback during which live readings are not taken."
-msgstr ""
+#empty strings from id 40855 to 40858
 
 #. Spinner format for the live detection frame guard setting
 #: system/settings/settings.xml

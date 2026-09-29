@@ -9,7 +9,6 @@
 #include "LiveGeometryMonitor.h"
 
 #include "ServiceBroker.h"
-#include "cores/DataCacheCore.h"
 #include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h"
 #include "cores/VideoPlayer/DVDFileGeometry.h"
 #include "cores/VideoPlayer/DVDMessage.h"
@@ -21,7 +20,6 @@
 #include "utils/TimeUtils.h"
 #include "utils/log.h"
 #include "video/geometry/ContentBarDetector.h"
-#include "video/geometry/FrameSampling.h"
 #include "video/geometry/GeometrySettings.h"
 #include "video/geometry/GeometryTransforms.h"
 
@@ -78,7 +76,6 @@ void CLiveGeometryMonitor::OnStreamOpened(const CDVDStreamInfo& hint)
   m_reducedLogged = false;
   m_reduceTotalMs = 0.0;
   m_reduceCount = 0;
-  m_found.clear();
   SetState(m_allowed ? "waiting for a frame" : "");
 }
 
@@ -236,20 +233,11 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
 
 void CLiveGeometryMonitor::PublishServed(const LiveGeometryReading& served)
 {
-  CDataCacheCore& cache = CServiceBroker::GetDataCacheCore();
-  const double position = static_cast<double>(cache.GetPlayTime()) / 1000.0;
-  const double duration = static_cast<double>(cache.GetMaxTime()) / 1000.0;
-  const bool recordable = !WithinLiveLeadExclusion(position, duration, m_settings.leadInSeconds,
-                                                   m_settings.leadOutSeconds);
+  CLog::LogF(LOGDEBUG, "live content geometry now {}x{} at {},{}{}", served.rect.Width(),
+             served.rect.Height(), served.rect.x1, served.rect.y1,
+             served.varies ? " (varies)" : "");
 
-  CLog::LogF(LOGDEBUG, "live content geometry now {}x{} at {},{}{}{}", served.rect.Width(),
-             served.rect.Height(), served.rect.x1, served.rect.y1, served.varies ? " (varies)" : "",
-             recordable ? "" : " (not recordable)");
-  if (recordable && std::none_of(m_found.begin(), m_found.end(),
-                                 [&served](const CRectInt& shape) { return shape == served.rect; }))
-    m_found.push_back(served.rect);
-
-  Post({.rect = served.rect, .varies = served.varies, .found = m_found});
+  Post({.rect = served.rect, .varies = served.varies});
 }
 
 CRectInt CLiveGeometryMonitor::InForce() const

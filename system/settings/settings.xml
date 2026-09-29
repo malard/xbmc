@@ -3526,46 +3526,6 @@
             <formatlabel>40859</formatlabel>
           </control>
         </setting>
-        <setting id="videoscreen.livegeometryleadin" type="integer" parent="videoscreen.livecontentgeometry" label="40855" help="40856">
-          <level>3</level>
-          <default>2</default> <!-- matches the scan lead-in default -->
-          <constraints>
-            <minimum label="40829">0</minimum>
-            <step>1</step>
-            <maximum>15</maximum>
-          </constraints>
-          <dependencies>
-            <dependency type="enable">
-              <and>
-                <condition setting="videoscreen.extractcontentgeometry" operator="is">true</condition>
-                <condition setting="videoscreen.livecontentgeometry" operator="is">true</condition>
-              </and>
-            </dependency>
-          </dependencies>
-          <control type="spinner" format="string">
-            <formatlabel>14044</formatlabel>
-          </control>
-        </setting>
-        <setting id="videoscreen.livegeometryleadout" type="integer" parent="videoscreen.livecontentgeometry" label="40857" help="40858">
-          <level>3</level>
-          <default>1</default>
-          <constraints>
-            <minimum label="40829">0</minimum>
-            <step>1</step>
-            <maximum>15</maximum>
-          </constraints>
-          <dependencies>
-            <dependency type="enable">
-              <and>
-                <condition setting="videoscreen.extractcontentgeometry" operator="is">true</condition>
-                <condition setting="videoscreen.livecontentgeometry" operator="is">true</condition>
-              </and>
-            </dependency>
-          </dependencies>
-          <control type="spinner" format="string">
-            <formatlabel>14044</formatlabel>
-          </control>
-        </setting>
         <setting id="videoscreen.scancontentgeometry" type="action" parent="videoscreen.extractcontentgeometry" label="40813" help="40814">
           <level>2</level>
           <dependencies>

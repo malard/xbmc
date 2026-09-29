@@ -48,11 +48,6 @@ struct LiveGeometrySettings
 
   LiveSelectorParams selector;
 
-  //! \brief Runtime excluded at each end of the title, live's own values defaulted to the
-  //! scan's.
-  double leadInSeconds{120.0};
-  double leadOutSeconds{60.0};
-
   //! \brief Width of the reduced copy a hardware-decoded picture is read through. Settable in
   //! advancedsettings.xml.
   unsigned int reductionWidth{960};

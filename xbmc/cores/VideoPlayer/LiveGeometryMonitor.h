@@ -38,9 +38,6 @@ struct LiveGeometryUpdate
   bool clear{false}; //!< withdraw the live reading rather than replace it
   CRectInt rect{};
   bool varies{false};
-
-  //! \brief Every shape served from outside the exclusions, carried on each change.
-  std::vector<CRectInt> found{};
 };
 
 /*!
@@ -119,10 +116,6 @@ private:
   //! \brief What producing the reductions has cost, for the debug overlay.
   double m_reduceTotalMs{0.0};
   uint64_t m_reduceCount{0};
-
-  //! \brief The shapes served from outside the exclusions, which the title may be recorded as
-  //! containing.
-  std::vector<CRectInt> m_found;
 
   mutable CCriticalSection m_section; //!< guards m_state, read by the render thread
   std::string m_state;

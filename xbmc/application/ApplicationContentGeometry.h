@@ -41,15 +41,11 @@ public:
   //! \brief Resolve again against the stream that is playing now.
   void Refresh();
 
-  //! \brief Take a reading confirmed during playback, in coded space, and serve it. \p found
-  //! is every shape this playback has seen, held for whoever writes them back.
-  void SetLive(const CRectInt& rect, bool varies, std::vector<CRectInt> found);
+  //! \brief Take a reading confirmed during playback, in coded space, and serve it.
+  void SetLive(const CRectInt& rect, bool varies);
 
   //! \brief Leaves the stored inputs to answer as they did before playback.
   void ClearLive();
-
-  //! \brief The shapes this playback saw.
-  std::vector<CRectInt> Discovered() const;
 
   //! \brief Take what an automation has stated for this playback, over the settings. Cleared
   //! as the next file opens.
@@ -140,8 +136,6 @@ private:
   KODI::VIDEO::GEOMETRY::GeometryOverrides m_overrides;
   KODI::VIDEO::GEOMETRY::GeometryOverrides m_pending;
 
-  //! \brief What live detection has seen this playback that may be written back.
-  std::vector<CRectInt> m_discovered;
   bool m_haveStream{false};
 
   //! \brief The floor a live reading must clear to be served, as a display ratio. Seeded from

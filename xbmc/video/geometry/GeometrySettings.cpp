@@ -113,10 +113,6 @@ LiveGeometrySettings LiveGeometryFromSettings()
 
   live.selector.narrowFrames = static_cast<unsigned int>(
       std::max(1, values->GetInt(CSettings::SETTING_VIDEOSCREEN_LIVEGEOMETRYNARROW)));
-  live.leadInSeconds =
-      60.0 * std::max(0, values->GetInt(CSettings::SETTING_VIDEOSCREEN_LIVEGEOMETRYLEADIN));
-  live.leadOutSeconds =
-      60.0 * std::max(0, values->GetInt(CSettings::SETTING_VIDEOSCREEN_LIVEGEOMETRYLEADOUT));
 
   live.reductionWidth = static_cast<unsigned int>(Advanced()->m_videoContentGeometryReductionWidth);
 
