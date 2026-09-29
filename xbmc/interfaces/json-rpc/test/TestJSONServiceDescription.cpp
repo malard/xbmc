@@ -47,6 +47,18 @@ TEST_F(TestJSONServiceDescription, EveryShippedMethodHasAHandler)
   }
 }
 
+TEST_F(TestJSONServiceDescription, APropertyLeftOutOfSetPropertiesStaysUnset)
+{
+  AddShippedServiceDescription();
+
+  CVariant output;
+  ASSERT_EQ(OK, Call("Player.SetProperties", R"({"properties": {"muted": true}})", output));
+
+  EXPECT_TRUE(output["properties"]["volume"].isNull())
+      << "an omitted volume must not reach the handler as 0";
+  EXPECT_TRUE(output["properties"]["muted"].asBoolean());
+}
+
 TEST_F(TestJSONServiceDescription, MissingRequiredParameter)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Required": {

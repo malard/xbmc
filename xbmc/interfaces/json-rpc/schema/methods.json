@@ -553,6 +553,71 @@
       "FailedToExecute"
     ]
   },
+  "Player.SetProperties": {
+    "type": "method",
+    "description": "Changes the properties named, and only those, and answers with the values now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [
+      {
+        "name": "properties",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "volume": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 100,
+              "default": null
+            },
+            "muted": {
+              "$ref": "#/$defs/Optional.Boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
+  "Player.VolumeUp": {
+    "type": "method",
+    "description": "Raises the volume by one step and answers with the volume now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
+  "Player.VolumeDown": {
+    "type": "method",
+    "description": "Lowers the volume by one step and answers with the volume now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
   "Player.GetItem": {
     "type": "method",
     "description": "Retrieves the currently played item",
@@ -1213,66 +1278,6 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "FailedToExecute"
-    ]
-  },
-  "Player.SetShuffle": {
-    "type": "method",
-    "description": "Turn shuffled play order on or off",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "shuffle",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Global.Toggle"
-        }
-      },
-      {
-        "name": "playlist",
-        "schema": {
-          "$ref": "#/$defs/Player.Playlist"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "FailedToExecute"
-    ]
-  },
-  "Player.SetRepeat": {
-    "type": "method",
-    "description": "Set the repeat mode of the player",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "repeat",
-        "required": true,
-        "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Player.Repeat"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "cycle"
-              ]
-            }
-          ]
-        }
-      },
-      {
-        "name": "playlist",
-        "schema": {
-          "$ref": "#/$defs/Player.Playlist"
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
       "FailedToExecute"
     ]
   },
@@ -8684,7 +8689,7 @@
       "FailedToExecute"
     ]
   },
-  "Textures.GetTextures": {
+  "Application.GetTextures": {
     "type": "method",
     "description": "Retrieve all textures",
     "transport": "Response",
@@ -8722,7 +8727,7 @@
       "InternalError"
     ]
   },
-  "Textures.RemoveTexture": {
+  "Application.RemoveTexture": {
     "type": "method",
     "description": "Remove the specified texture",
     "transport": "Response",
@@ -9138,60 +9143,7 @@
       "$ref": "#/$defs/Application.Property.Value"
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
-    ]
-  },
-  "Application.SetVolume": {
-    "type": "method",
-    "description": "Set the current volume",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "volume",
-        "required": true,
-        "schema": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            },
-            {
-              "$ref": "#/$defs/Global.IncrementDecrement"
-            }
-          ]
-        }
-      }
-    ],
-    "returns": "integer",
-    "errors": [
-      "InvalidParams",
-      "FailedToExecute"
-    ]
-  },
-  "Application.SetMute": {
-    "type": "method",
-    "description": "Toggle mute/unmute",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "mute",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Global.Toggle"
-        }
-      }
-    ],
-    "returns": {
-      "type": "boolean",
-      "description": "Mute state"
-    },
-    "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "InvalidParams"
     ]
   },
   "Application.SetLogLevel": {
@@ -9247,64 +9199,6 @@
     "permission": "ControlPower",
     "params": [],
     "returns": "string",
-    "errors": []
-  },
-  "XBMC.GetInfoLabels": {
-    "type": "method",
-    "description": "Retrieve info labels about Kodi and the system. Use GUI.GetInfoLabels instead.",
-    "deprecated": true,
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "labels",
-        "required": true,
-        "description": "See http://kodi.wiki/view/InfoLabels for a list of possible info labels",
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1
-        }
-      }
-    ],
-    "returns": {
-      "type": "object",
-      "description": "Object containing key-value pairs of the retrieved info labels",
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "errors": []
-  },
-  "XBMC.GetInfoBooleans": {
-    "type": "method",
-    "description": "Retrieve info booleans about Kodi and the system. Use GUI.GetInfoBooleans instead.",
-    "deprecated": true,
-    "transport": "Response",
-    "permission": "ReadData",
-    "params": [
-      {
-        "name": "booleans",
-        "required": true,
-        "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1
-        }
-      }
-    ],
-    "returns": {
-      "type": "object",
-      "description": "Object containing key-value pairs of the retrieved info booleans",
-      "additionalProperties": {
-        "type": "boolean"
-      }
-    },
     "errors": []
   },
   "Favourites.GetFavourites": {
@@ -9829,7 +9723,7 @@
     },
     "errors": []
   },
-  "Database.GetDatabaseName": {
+  "Application.GetDatabaseName": {
     "type": "method",
     "description": "Get the full database name currently in-use by its type",
     "transport": "Response",

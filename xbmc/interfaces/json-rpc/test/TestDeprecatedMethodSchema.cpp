@@ -38,12 +38,6 @@ struct Supersession
   const char* replacement;
 };
 
-//! \brief Deprecated names their replacement answers unchanged - a rename, nothing more
-constexpr std::array<Supersession, 2> RENAMED_METHODS{{
-    {"XBMC.GetInfoLabels", "GUI.GetInfoLabels"},
-    {"XBMC.GetInfoBooleans", "GUI.GetInfoBooleans"},
-}};
-
 /*!
  \brief Deprecated methods a replacement covers under a different signature
 
@@ -61,9 +55,7 @@ constexpr std::array<Supersession, 4> SUPERSEDED_METHODS{{
 //! \brief Every deprecated method, however its replacement is reached
 std::vector<Supersession> DeprecatedMethods()
 {
-  std::vector<Supersession> methods{RENAMED_METHODS.begin(), RENAMED_METHODS.end()};
-  methods.insert(methods.end(), SUPERSEDED_METHODS.begin(), SUPERSEDED_METHODS.end());
-  return methods;
+  return {SUPERSEDED_METHODS.begin(), SUPERSEDED_METHODS.end()};
 }
 
 //! \brief Deprecated properties, as type name, property, and what replaces it
@@ -202,31 +194,6 @@ TEST(TestDeprecatedMethodSchema, ADeprecatedPropertyNamesAReplacementThatExists)
     const std::string description{properties[property]["description"].asString()};
     EXPECT_NE(std::string::npos, description.find(replacement))
         << property << " does not name " << replacement << " in its description";
-  }
-}
-
-/*!
- A rename is the same implementation under two names, so request and answer must
- agree; a method superseded under a different signature is exempt.
- */
-TEST(TestDeprecatedMethodSchema, ARenamedMethodAgreesWithItsReplacement)
-{
-  const std::map<std::string, CVariant> methods{ShippedMethods()};
-
-  for (const auto& [deprecated, replacement] : RENAMED_METHODS)
-  {
-    ASSERT_TRUE(methods.contains(deprecated)) << deprecated;
-    ASSERT_TRUE(methods.contains(replacement)) << replacement;
-
-    const CVariant& from{methods.at(deprecated)};
-    const CVariant& to{methods.at(replacement)};
-
-    EXPECT_TRUE(from["params"] == to["params"])
-        << deprecated << " and " << replacement << " do not take the same parameters";
-    EXPECT_TRUE(from["returns"] == to["returns"])
-        << deprecated << " and " << replacement << " do not return the same thing";
-    EXPECT_EQ(from["permission"].asString(), to["permission"].asString())
-        << deprecated << " and " << replacement << " do not require the same permission";
   }
 }
 

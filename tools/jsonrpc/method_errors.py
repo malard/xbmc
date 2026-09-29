@@ -45,6 +45,8 @@ _DEFINITION = re.compile(
 # A call written without an object: a static of the same class, a qualified
 # static, or a free function; obj.f( and ptr->f( are excluded.
 _CALL = re.compile(r"(?<![\w.])(?<!->)((?:\w+::)?\w+)\s*\(")
+# A function passed by name as an argument, which the callee may call.
+_ARGUMENT = re.compile(r"[(,]\s*((?:\w+::)?\w+)\s*(?=[,)])")
 _MAP_ENTRY = re.compile(r'\{\s*"([\w.]+)"\s*,\s*(\w+::\w+)\s*\}')
 
 
@@ -124,7 +126,7 @@ def build_graph(source_dir=SOURCE_DIR, taxonomy=None):
         statuses[name] = set(status_pattern.findall(body)) - set(SUCCESS)
         cls = name.split("::")[0] if "::" in name else None
         callees = set()
-        for callee in _CALL.findall(body):
+        for callee in _CALL.findall(body) + _ARGUMENT.findall(body):
             if "::" in callee:
                 if callee in bodies:
                     callees.add(callee)

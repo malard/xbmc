@@ -83,6 +83,9 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Player.GetPlayers",                            CPlayerOperations::GetPlayers },
   { "Player.GetProperties",                         CPlayerOperations::GetProperties },
   { "Player.GetItem",                               CPlayerOperations::GetItem },
+  { "Player.SetProperties",                         CPlayerOperations::SetProperties },
+  { "Player.VolumeUp",                              CPlayerOperations::VolumeUp },
+  { "Player.VolumeDown",                            CPlayerOperations::VolumeDown },
 
   { "Player.PlayPause",                             CPlayerOperations::PlayPause },
   { "Player.Stop",                                  CPlayerOperations::Stop },
@@ -104,8 +107,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
 
   { "Player.Open",                                  CPlayerOperations::Open },
   { "Player.GoTo",                                  CPlayerOperations::GoTo },
-  { "Player.SetShuffle",                            CPlayerOperations::SetShuffle },
-  { "Player.SetRepeat",                             CPlayerOperations::SetRepeat },
   { "Player.SetPartymode",                          CPlayerOperations::SetPartymode },
 
   { "Player.SetAudioStream",                        CPlayerOperations::SetAudioStream },
@@ -279,8 +280,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
 
 // Application operations
   { "Application.GetProperties",                    CApplicationOperations::GetProperties },
-  { "Application.SetVolume",                        CApplicationOperations::SetVolume },
-  { "Application.SetMute",                          CApplicationOperations::SetMute },
   { "Application.SetLogLevel",                      CApplicationOperations::SetLogLevel },
   { "Application.Quit",                             CApplicationOperations::Quit },
 
@@ -289,8 +288,8 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Favourites.AddFavourite",                      CFavouritesOperations::AddFavourite },
 
 // Textures operations
-  { "Textures.GetTextures",                         CTextureOperations::GetTextures },
-  { "Textures.RemoveTexture",                       CTextureOperations::RemoveTexture },
+  { "Application.GetTextures",                      CTextureOperations::GetTextures },
+  { "Application.RemoveTexture",                    CTextureOperations::RemoveTexture },
 
 // Settings operations
   { "Settings.GetLevel",                            CSettingsOperations::GetLevel },
@@ -306,11 +305,9 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Settings.SetSkinSettingValue",                 CSettingsOperations::SetSkinSettingValue },
 
 // XBMC operations
-  { "XBMC.GetInfoLabels",                           CGUIOperations::GetInfoLabels },
-  { "XBMC.GetInfoBooleans",                         CGUIOperations::GetInfoBooleans },
 
 // Database operations
-  { "Database.GetDatabaseName",                     CDatabaseOperations::GetDatabaseName },
+  { "Application.GetDatabaseName",                    CDatabaseOperations::GetDatabaseName },
 };
 
 // clang-format on

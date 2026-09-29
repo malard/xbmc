@@ -9,14 +9,7 @@
 #include "ApplicationOperations.h"
 
 #include "CompileInfo.h"
-#include "InputOperations.h"
-#include "MessengerPayload.h"
 #include "ServiceBroker.h"
-#include "application/ApplicationComponents.h"
-#include "application/ApplicationContentGeometry.h"
-#include "application/ApplicationVolumeHandling.h"
-#include "input/actions/Action.h"
-#include "input/actions/ActionIDs.h"
 #include "language/Language.h"
 #include "messaging/ApplicationMessenger.h"
 #include "settings/AdvancedSettings.h"
@@ -25,12 +18,9 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/geometry/GeometryPublication.h"
 
 #include <array>
-#include <cmath>
 #include <memory>
-#include <string.h>
 #include <utility>
 #include <vector>
 
@@ -40,66 +30,6 @@ JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant& parameterOb
                                                      CVariant& result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
-}
-
-JSONRPC_STATUS CApplicationOperations::SetVolume(const CVariant& parameterObject, CVariant& result)
-{
-  bool up = false;
-  if (parameterObject["volume"].isInteger())
-  {
-    auto& components = CServiceBroker::GetAppComponents();
-    const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-    int oldVolume = static_cast<int>(appVolume->GetVolumePercent());
-    int volume = static_cast<int>(parameterObject["volume"].asInteger());
-
-    appVolume->SetVolume(static_cast<float>(volume), true);
-
-    up = oldVolume < volume;
-  }
-  else if (parameterObject["volume"].isString())
-  {
-    JSONRPC_STATUS ret;
-    std::string direction = parameterObject["volume"].asString();
-    if (direction.compare("increment") == 0)
-    {
-      ret = CInputOperations::SendAction(ACTION_VOLUME_UP, false, true);
-      up = true;
-    }
-    else if (direction.compare("decrement") == 0)
-    {
-      ret = CInputOperations::SendAction(ACTION_VOLUME_DOWN, false, true);
-      up = false;
-    }
-    else
-      return InvalidParams;
-
-    if (ret != ACK && ret != OK)
-      return ret;
-  }
-  else
-    return InvalidParams;
-
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_VOLUME_SHOW,
-                                             up ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN);
-
-  return GetPropertyValue("volume", result);
-}
-
-JSONRPC_STATUS CApplicationOperations::SetMute(const CVariant& parameterObject, CVariant& result)
-{
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-  if ((parameterObject["mute"].isString() &&
-       parameterObject["mute"].asString().compare("toggle") == 0) ||
-      (parameterObject["mute"].isBoolean() &&
-       parameterObject["mute"].asBoolean() != appVolume->IsMuted()))
-    CServiceBroker::GetAppMessenger()->SendMsg(
-        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-        TransferToMessenger(std::make_unique<CAction>(ACTION_MUTE)));
-  else if (!parameterObject["mute"].isBoolean() && !parameterObject["mute"].isString())
-    return InvalidParams;
-
-  return GetPropertyValue("muted", result);
 }
 
 namespace
@@ -205,16 +135,7 @@ JSONRPC_STATUS CApplicationOperations::Quit(const CVariant& parameterObject, CVa
 JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& property,
                                                         CVariant& result)
 {
-  if (property == "volume" || property == "muted")
-  {
-    const auto& components = CServiceBroker::GetAppComponents();
-    const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-    if (property == "volume")
-      result = static_cast<int>(std::lroundf(appVolume->GetVolumePercent()));
-    else if (property == "muted")
-      result = appVolume->IsMuted();
-  }
-  else if (property == "name")
+  if (property == "name")
     result = CCompileInfo::GetAppName();
   else if (property == "version")
   {
@@ -256,15 +177,6 @@ JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& prope
   }
   else if (property == "loglevel")
     result = LogLevelValue();
-  else if (property == "contentrect")
-  {
-    const auto& components = CServiceBroker::GetAppComponents();
-    const auto contentGeometry = components.GetComponent<CApplicationContentGeometry>();
-    if (!contentGeometry)
-      return FailedToExecute;
-
-    KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(contentGeometry->Get(), result);
-  }
   else
     return InvalidParams;
 

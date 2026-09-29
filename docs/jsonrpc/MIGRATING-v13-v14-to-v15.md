@@ -134,10 +134,10 @@ unconditionally will now fault on `null`.
 
 ---
 
-## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are deprecated
+## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed
 
-They still work and are the same implementation, and a later major version may
-remove them.
+The `XBMC` namespace is gone. `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`
+are the same methods.
 
 ```diff
 - {"method": "XBMC.GetInfoLabels", "params": {"labels": ["System.Time"]}}
@@ -345,6 +345,79 @@ Content-Type: application/json
 answers `true` as it always has. A client that checks `JSONRPC.Permission`
 first sees `WriteSetting` false on `GET` and true on `POST`.
 
+## 13. The texture cache is under `Application`
+
+A namespace names what it acts on, and the thumbnail cache is Kodi's
+internals.
+
+```diff
+- {"method": "Textures.GetTextures",    "params": {"properties": ["url"]}}
++ {"method": "Application.GetTextures", "params": {"properties": ["url"]}}
+```
+
+`Textures.RemoveTexture` is `Application.RemoveTexture`. Parameters, results
+and permissions are unchanged.
+
+## 14. Shuffle and repeat belong to the playlist
+
+`Player.SetShuffle` and `Player.SetRepeat` are removed. `Player.GetProperties`
+no longer reports `shuffled` or `repeat`, and `Player.OnPropertiesChanged` no
+longer carries them.
+
+```diff
+- {"method": "Player.SetShuffle",   "params": {"shuffle": true}}
++ {"method": "Playlist.SetShuffle", "params": {"playlist": "audio", "shuffle": true}}
+```
+
+**What to do.** Set shuffle and repeat with `Playlist.SetShuffle` and
+`Playlist.SetRepeat`, read them from `Playlist.GetProperties`, and follow
+them through `Playlist.OnPropertiesChanged`. The playlist being played is the
+`playlist` property of `Player.GetProperties`. A slideshow's shuffle is the
+`picture` playlist's.
+
+## 15. Volume belongs to `Player`
+
+`Player` is what is seen and heard now, whether or not anything plays.
+`Application.SetVolume` and `Application.SetMute` are removed, and
+`Application.GetProperties` no longer reports `volume`, `muted` or
+`contentrect`.
+
+```diff
+- {"method": "Application.SetVolume",  "params": {"volume": 40}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"volume": 40}}}
+- {"method": "Application.SetVolume",  "params": {"volume": "increment"}}
++ {"method": "Player.VolumeUp"}
+- {"method": "Application.SetMute",    "params": {"mute": true}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"muted": true}}}
+```
+
+`Player.SetProperties` changes only the properties named and answers with
+their values now in force. `Player.GetProperties` answers `volume`, `muted`
+and `contentrect` with nothing playing; every other property still needs
+something to play.
+
+**What to do.** Read volume, mute and `contentrect` from
+`Player.GetProperties`. There is no toggle: send the `muted` value you want.
+
+## 16. State changes arrive as `OnPropertiesChanged`
+
+`Player.OnPropertyChanged` and `Playlist.OnPropertyChanged` are renamed
+`Player.OnPropertiesChanged` and `Playlist.OnPropertiesChanged`, and what
+changed is under `data.properties`, using the names `GetProperties` answers
+with. `Application.OnVolumeChanged` is removed.
+
+```diff
+- {"method": "Application.OnVolumeChanged", "params": {"data": {"volume": 40, "muted": false}}}
++ {"method": "Player.OnPropertiesChanged",  "params": {"data": {"properties": {"volume": 40}}}}
+```
+
+Only what changed is carried: a volume change carries `volume`, a mute
+change `muted`. `player` is present when the change belongs to a playback,
+and absent for volume and mute, which change whether or not anything plays.
+
+**What to do.** Merge `data.properties` into the state you hold for the
+player or the playlist, as you would a `GetProperties` answer.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its
@@ -370,7 +443,7 @@ New since Kodi 21 and safe to ignore until you want it. The
   `unresolved`, `locked` or `error`.
 - **Playlist shuffle and repeat** are readable (`Playlist.GetProperties`),
   settable (`Playlist.SetShuffle`, `Playlist.SetRepeat`) and observable
-  (`Playlist.OnPropertyChanged`).
+  (`Playlist.OnPropertiesChanged`).
 - **Skin lifecycle notifications**: `GUI.OnSkinLoaded`,
   `GUI.OnSkinLoadFailed` and `GUI.OnSkinUnloading`.
 - **`PVR.GetPlayableBroadcasts`** answers which broadcasts in a time range can
@@ -385,7 +458,7 @@ New since Kodi 21 and safe to ignore until you want it. The
 - **A PVR channel keeps its own logo** in `icon` and `thumbnail` even when the
   programme airing has its own artwork; the programme's artwork is under
   `broadcastnow`.
-- **`Player.OnPropertyChanged`** carries every member its declared type
+- **`Player.OnPropertiesChanged`** carries every member its declared type
   promises, rather than a subset.
 - **New properties**: `stationname`, `episodename` and `episodepart` on list
   items, the parental rating fields on PVR broadcasts and recordings,

@@ -126,7 +126,6 @@ private:
                                const CVariant& value) const;
   void PublishListChange(std::string_view playList,
                          const KODI::PLAYLIST::PlayListChange& change) const;
-  void Announce(KODI::PLAYLIST::Type type, PlayerProperty property, const CVariant& value) const;
 
   std::shared_ptr<CApplicationPlayLists> m_playLists;
   Sink m_sink;

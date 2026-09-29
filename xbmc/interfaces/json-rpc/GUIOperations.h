@@ -30,10 +30,8 @@ public:
   static JSONRPC_STATUS TakeScreenshot(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS DeleteScreenshots(const CVariant& parameterObject, CVariant& result);
 
-  //! Also serves the deprecated XBMC.GetInfoLabels.
   static JSONRPC_STATUS GetInfoLabels(const CVariant& parameterObject, CVariant& result);
 
-  //! Also serves the deprecated XBMC.GetInfoBooleans.
   static JSONRPC_STATUS GetInfoBooleans(ITransportLayer* transport,
                                         IClient* client,
                                         const CVariant& parameterObject,

@@ -96,12 +96,24 @@ class TestDerivation(unittest.TestCase):
         }
 
         JSONRPC_STATUS CTest::Declared(const CVariant& value);
+
+        template<typename Getter>
+        JSONRPC_STATUS Collect(const CVariant& value, const Getter& get)
+        {
+          return get(value);
+        }
+
+        JSONRPC_STATUS CTest::Forward(const CVariant& parameterObject, CVariant& result)
+        {
+          return Collect(parameterObject, Helper);
+        }
         """)
 
     METHOD_MAP = textwrap.dedent("""
         JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
           { "Test.Outer", CTest::Outer },
           { "Test.Open",  CTest::Open },
+          { "Test.Forward", CTest::Forward },
         };
         """)
 
@@ -119,6 +131,9 @@ class TestDerivation(unittest.TestCase):
     def test_statuses_travel_through_called_functions(self):
         self.assertEqual(self.derived["Test.Outer"],
                          ["InternalError", "FailedToExecute", "BadPermission", "NotFound"])
+
+    def test_a_function_passed_by_name_reaches_its_statuses(self):
+        self.assertEqual(self.derived["Test.Forward"], ["NotFound"])
 
     def test_a_bare_call_reaches_an_inherited_static(self):
         self.assertIn("BadPermission", self.derived["Test.Outer"])
