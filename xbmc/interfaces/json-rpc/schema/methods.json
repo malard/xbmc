@@ -2005,7 +2005,6 @@
       ]
     },
     "errors": [
-      "InvalidParams",
       "FailedToExecute"
     ],
     "reasons": {
@@ -2198,10 +2197,14 @@
     },
     "errors": [
       "InternalError",
+      "NotFound",
       "Unavailable",
       "AccessDenied"
     ],
     "reasons": {
+      "NotFound": [
+        "no-such-path"
+      ],
       "Unavailable": [
         "unreachable"
       ],
@@ -8238,9 +8241,14 @@
       ]
     },
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "Addons.SetAddonEnabled": {
     "type": "method",
@@ -8265,9 +8273,14 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "Addons.ExecuteAddon": {
     "type": "method",
@@ -8316,9 +8329,14 @@
     ],
     "returns": "string",
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-addon"
+      ]
+    }
   },
   "PVR.GetProperties": {
     "type": "method",
@@ -9157,11 +9175,14 @@
     "returns": "string",
     "errors": [
       "InvalidParams",
-      "InternalError",
       "FailedToExecute",
       "NotFound"
     ],
     "reasons": {
+      "FailedToExecute": [
+        "nothing-playing",
+        "not-applicable"
+      ],
       "NotFound": [
         "no-such-item"
       ]

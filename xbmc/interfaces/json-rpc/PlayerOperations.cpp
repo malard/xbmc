@@ -1114,7 +1114,10 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
         CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
             static_cast<unsigned int>(parameterObject["item"]["broadcastId"].asInteger()));
 
-    if (!epgTag || !epgTag->IsPlayable())
+    if (!epgTag)
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("broadcastId", parameterObject["item"]["broadcastId"]));
+    if (!epgTag->IsPlayable())
       return InvalidParams;
 
     if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayEpgTag(CFileItem(epgTag)))
@@ -1132,7 +1135,8 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     const std::shared_ptr<const CPVRChannel> channel = channelGroupContainer->GetChannelById(
         static_cast<int>(parameterObject["item"]["channelId"].asInteger()));
     if (!channel)
-      return InvalidParams;
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("channelId", parameterObject["item"]["channelId"]));
 
     const std::shared_ptr<CPVRChannelGroupMember> groupMember =
         CServiceBroker::GetPVRManager().Get<PVR::GUI::Channels>().GetChannelGroupMember(channel);
@@ -1155,7 +1159,8 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     const std::shared_ptr<CPVRRecording> recording = recordingsContainer->GetById(
         static_cast<int>(parameterObject["item"]["recordingId"].asInteger()));
     if (!recording)
-      return InvalidParams;
+      return Fail(result, NotFound, Reason::NoSuchItem,
+                  Target("recordingId", parameterObject["item"]["recordingId"]));
 
     CFileItem recItem{recording};
     HandleResumeOption(optionResume, recItem);
@@ -1208,7 +1213,8 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
           recording = recordingsContainer->GetByPath(list[0]->GetPath());
 
         if (!recording)
-          return InvalidParams;
+          return Fail(result, NotFound, Reason::NoSuchPath,
+                      Target("file", parameterObject["item"]["file"]));
 
         CFileItem recItem{recording};
         HandleResumeOption(optionResume, recItem);
@@ -2072,19 +2078,11 @@ std::shared_ptr<CPVREpgInfoTag> CPlayerOperations::GetCurrentEpg()
 
 JSONRPC_STATUS CPlayerOperations::GetChapters(const CVariant& parameterObject, CVariant& result)
 {
-  // Return the chapters list of the running video or empty list if none
-  switch (GetTarget(parameterObject["playlist"]))
-  {
-    case Video:
-      break;
-    default:
-      return InvalidParams;
-  }
   const auto appPlayer = AppPlayer();
-
-  if (!appPlayer->IsPlayingVideo())
-    return Fail(result, FailedToExecute,
-                appPlayer->IsPlaying() ? Reason::NotApplicable : Reason::NothingPlaying);
+  if (!IsAnythingPlaying())
+    return Fail(result, FailedToExecute, Reason::NothingPlaying);
+  if (GetTarget(parameterObject["playlist"]) != Video || !appPlayer->IsPlayingVideo())
+    return Fail(result, FailedToExecute, Reason::NotApplicable);
 
   // Extract chapters from CApplicationPlayer
   const int chapterCount = appPlayer->GetChapterCount();

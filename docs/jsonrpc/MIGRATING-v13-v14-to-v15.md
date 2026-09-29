@@ -727,6 +727,28 @@ answers and notifications, using the table.
 | `windowparameter` | `windowParameter` |
 | `yearsactive` | `yearsActive` |
 
+## 18. Six failures answer with the status that fits
+
+The calls still work; only these failures changed code. Each now also names
+its reason in `error.data.reason`.
+
+| Call | Failure | Was | Now |
+|---|---|---|---|
+| `Addons.GetAddonDetails`, `Addons.SetAddonEnabled`, `Addons.ExecuteAddon` | no add-on has the id | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-addon` |
+| `Player.GetChapters` | no video playing | -32602 `InvalidParams` (audio or pictures playing) | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Player.Open` | unknown `broadcastId`, `channelId` or `recordingId` | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-item` |
+| `Player.Open` | a PVR recording path nothing has | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-path` |
+| `PVR.Record` | `"channel": "current"` with no channel playing | -32603 `InternalError` | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Files.GetDirectory` | the directory does not exist | -32097 `Unavailable` | -32098 `NotFound`, `no-such-path` |
+
+`Files.GetDirectory` still answers `Unavailable` (`unreachable`) when no
+directory above the one asked for can be listed either, as when its share
+is offline.
+
+**What to do.** Treat -32098 as "gone" for these calls, and read
+`error.data.reason` rather than the code where you need to tell the cases
+apart.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its

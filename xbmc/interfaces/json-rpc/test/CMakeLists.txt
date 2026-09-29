@@ -1,4 +1,5 @@
 set(SOURCES TestAddonsExecuteAddon.cpp
+            TestAddonsOperations.cpp
             TestAnnouncementToJSONRPC.cpp
             TestApplicationLogLevel.cpp
             TestAudioLibrary.cpp

@@ -12,6 +12,8 @@
 #include "FileItemList.h"
 #include "ServiceBroker.h"
 #include "XBDateTime.h"
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayer.h"
 #include "pvr/PVRManager.h"
 #include "pvr/PVRPlaybackState.h"
 #include "pvr/addons/PVRClients.h"
@@ -375,7 +377,12 @@ JSONRPC_STATUS CPVROperations::Record(const CVariant& parameterObject, CVariant&
   {
     pChannel = CServiceBroker::GetPVRManager().PlaybackState()->GetPlayingChannel();
     if (!pChannel)
-      return InternalError;
+    {
+      const bool playing{
+          CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->IsPlaying()};
+      return Fail(result, FailedToExecute,
+                  playing ? Reason::NotApplicable : Reason::NothingPlaying);
+    }
   }
   else if (channel.isInteger())
   {

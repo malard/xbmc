@@ -39,6 +39,23 @@ using namespace KODI::REGEXP;
 using namespace JSONRPC;
 using namespace XFILE;
 
+namespace
+{
+//! A directory that cannot be listed is missing when one above it can be; otherwise its source
+//! is out of reach.
+bool IsMissing(const std::string& directory)
+{
+  std::string parent;
+  for (std::string current = directory;
+       URIUtils::GetParentPath(current, parent) && parent != current; current = parent)
+  {
+    if (CDirectory::Exists(parent, false))
+      return true;
+  }
+  return false;
+}
+} // namespace
+
 JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
@@ -182,6 +199,9 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
     return OK;
   }
 
+  if (IsMissing(strPath))
+    return Fail(result, NotFound, Reason::NoSuchPath,
+                Target("directory", parameterObject["directory"]));
   return Fail(result, Unavailable, Reason::Unreachable,
               Target("directory", parameterObject["directory"]));
 }

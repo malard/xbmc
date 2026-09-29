@@ -54,6 +54,14 @@ TEST(TestPlayerTargets, AVerbFailsForNothingPlayingWhenNothingPlays)
   EXPECT_EQ("nothing-playing", result["reason"].asString());
 }
 
+//! \brief Chapters asked of a playlist that is not playing fail as the other verbs do
+TEST(TestPlayerTargets, ChaptersOfAnIdlePlaylistAreNothingPlaying)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::GetChapters(Named("audio"), result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
+}
+
 class TestPlayerTargetParameter : public JSONServiceDescriptionTestBase
 {
 };

@@ -3693,6 +3693,9 @@
           "$ref": "#/components/errors/BadPermission"
         },
         {
+          "$ref": "#/components/errors/NotFound"
+        },
+        {
           "$ref": "#/components/errors/Unavailable"
         },
         {
@@ -3701,6 +3704,11 @@
       ],
       "x-kodi-permission": "ReadData",
       "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-path"
+          }
+        ],
         "Unavailable": [
           {
             "$ref": "#/components/x-kodi-reasons/unreachable"
@@ -12049,10 +12057,19 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12101,10 +12118,19 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ManageAddon",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -12177,10 +12203,19 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ExecuteAddon",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-addon"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13567,9 +13602,6 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         {
-          "$ref": "#/components/errors/InternalError"
-        },
-        {
           "$ref": "#/components/errors/FailedToExecute"
         },
         {
@@ -13581,6 +13613,14 @@
       ],
       "x-kodi-permission": "ControlPVR",
       "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-applicable"
+          }
+        ],
         "NotFound": [
           {
             "$ref": "#/components/x-kodi-reasons/no-such-item"
@@ -22299,7 +22339,7 @@
         "description": "The library holds nothing under the directory."
       },
       "no-such-addon": {
-        "description": "No enabled add-on has the given id."
+        "description": "No add-on has the given id, or none that is enabled where the call needs one."
       },
       "no-such-path": {
         "description": "Nothing exists at the given path."

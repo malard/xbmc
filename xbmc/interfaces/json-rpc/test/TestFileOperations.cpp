@@ -59,6 +59,19 @@ TEST(TestFileOperations, AMissingFileIsNoSuchPath)
   EXPECT_EQ(path, result["target"]["file"].asString());
 }
 
+//! \brief A shared directory that does not exist is no-such-path, not unavailable
+TEST(TestFileOperations, AMissingDirectoryIsNoSuchPath)
+{
+  const std::string path{"special://profile/addon_data/jsonrpc-no-such-directory/deeper/"};
+  CVariant params(CVariant::VariantTypeObject);
+  params["directory"] = path;
+
+  CVariant result;
+  EXPECT_EQ(NotFound, CFileOperations::GetDirectory(params, result));
+  EXPECT_EQ("no-such-path", result["reason"].asString());
+  EXPECT_EQ(path, result["target"]["directory"].asString());
+}
+
 TEST(TestFileOperations, MissingPropertiesDoesNotNeedLibraryLookup)
 {
   const CVariant params(CVariant::VariantTypeObject);
