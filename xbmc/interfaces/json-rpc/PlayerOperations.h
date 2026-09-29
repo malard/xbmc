@@ -46,6 +46,9 @@ public:
   static JSONRPC_STATUS GetPlayers(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetItem(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS VolumeUp(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS VolumeDown(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS PlayPause(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS Stop(const CVariant& parameterObject, CVariant& result);
@@ -88,6 +91,8 @@ protected:
   static JSONRPC_STATUS PlayFileItemList(CFileItemList& list, const CVariant& options);
 
 private:
+  //! Sends a volume step action and answers with the volume now in force.
+  static JSONRPC_STATUS StepVolume(int action, CVariant& result);
   /*!
    * \brief The players a verb acts on: the one \p playlist names, or with none everything playing
    * (the playback and a slideshow beside it), or the playlist the player would act on.

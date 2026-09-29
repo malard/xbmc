@@ -13,6 +13,7 @@
 #include "FileItemList.h"
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
+#include "InputOperations.h"
 #include "MessengerPayload.h"
 #include "PartyMode.h"
 #include "PlaybackModes.h"
@@ -26,6 +27,7 @@
 #include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/ApplicationVolumeHandling.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
@@ -84,6 +86,11 @@ namespace
 std::shared_ptr<CApplicationPlayer> AppPlayer()
 {
   return CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
+}
+
+std::shared_ptr<CApplicationVolumeHandling> VolumeHandling()
+{
+  return CServiceBroker::GetAppComponents().GetComponent<CApplicationVolumeHandling>();
 }
 
 std::shared_ptr<CApplicationContentGeometry> ContentGeometryComponent()
@@ -311,6 +318,55 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
   HandleFileItem("id", !IsPVRChannel(), "item", fileItem, parameterObject,
                  parameterObject["properties"], result, false);
   return OK;
+}
+
+JSONRPC_STATUS CPlayerOperations::SetProperties(const CVariant& parameterObject, CVariant& result)
+{
+  const CVariant& properties = parameterObject["properties"];
+  const auto volume = VolumeHandling();
+
+  if (!properties["volume"].isNull())
+  {
+    const int wanted = static_cast<int>(properties["volume"].asInteger());
+    const bool up = wanted > static_cast<int>(volume->GetVolumePercent());
+    volume->SetVolume(static_cast<float>(wanted), true);
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_VOLUME_SHOW,
+                                               up ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN);
+  }
+  if (!properties["muted"].isNull() && properties["muted"].asBoolean() != volume->IsMuted())
+    CServiceBroker::GetAppMessenger()->SendMsg(
+        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        TransferToMessenger(std::make_unique<CAction>(ACTION_MUTE)));
+
+  CVariant named(CVariant::VariantTypeObject);
+  named["properties"] = CVariant(CVariant::VariantTypeArray);
+  for (auto property = properties.begin_map(); property != properties.end_map(); ++property)
+  {
+    if (!property->second.isNull())
+      named["properties"].push_back(property->first);
+  }
+  return GetNamedProperties(named, result, [](const std::string& property, CVariant& value)
+                            { return GetPropertyValue(None, property, value); });
+}
+
+JSONRPC_STATUS CPlayerOperations::VolumeUp(const CVariant& parameterObject, CVariant& result)
+{
+  return StepVolume(ACTION_VOLUME_UP, result);
+}
+
+JSONRPC_STATUS CPlayerOperations::VolumeDown(const CVariant& parameterObject, CVariant& result)
+{
+  return StepVolume(ACTION_VOLUME_DOWN, result);
+}
+
+JSONRPC_STATUS CPlayerOperations::StepVolume(int action, CVariant& result)
+{
+  if (const JSONRPC_STATUS status = CInputOperations::SendAction(action, false, true);
+      status != ACK && status != OK)
+    return status;
+
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_VOLUME_SHOW, action);
+  return GetPropertyValue(None, "volume", result["volume"]);
 }
 
 JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVariant& result)
@@ -1686,13 +1742,38 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
                                                    CVariant& result,
                                                    const CVariant& named /* = CVariant() */)
 {
-  if (player == None)
-    return FailedToExecute;
-
   using PlayList = std::optional<PLAYLIST::Type>;
   //! A property's value, or nothing when it cannot be read
   using Value = std::optional<CVariant>;
   using Getter = Value (*)(PlayerType player, const PlayList& playList);
+
+  // what is seen and heard whether or not anything plays
+  static const std::unordered_map<std::string_view, Value (*)()> output{
+      {"volume", []() -> Value
+       { return static_cast<int>(std::lroundf(VolumeHandling()->GetVolumePercent())); }},
+      {"muted", []() -> Value { return VolumeHandling()->IsMuted(); }},
+      {"contentrect",
+       []() -> Value
+       {
+         const auto contentGeometry = ContentGeometryComponent();
+         if (!contentGeometry)
+           return std::nullopt;
+         CVariant rect;
+         KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(contentGeometry->Get(), rect);
+         return rect;
+       }},
+  };
+  if (const auto getter = output.find(property); getter != output.end())
+  {
+    Value value = getter->second();
+    if (!value)
+      return FailedToExecute;
+    result = std::move(*value);
+    return OK;
+  }
+
+  if (player == None)
+    return FailedToExecute;
 
   static const auto timeObject = [](int milliseconds)
   {
@@ -1867,17 +1948,6 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
            streams.append(INTERFACES::StreamToObject(index, info));
          }
          return streams;
-       }},
-      {"contentrect",
-       [](PlayerType, const PlayList&) -> Value
-       {
-         // describes what is on the screen, whichever player is asked
-         const auto contentGeometry = ContentGeometryComponent();
-         if (!contentGeometry)
-           return std::nullopt;
-         CVariant rect;
-         KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(contentGeometry->Get(), rect);
-         return rect;
        }},
       {"subtitleenabled", [](PlayerType player, const PlayList&) -> Value
        { return player == Video && AppPlayer()->GetSubtitleVisible(); }},

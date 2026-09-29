@@ -45,6 +45,11 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Player.OnPropertyChanged` no longer carry `shuffled` or `repeat`. Shuffle and repeat belong to
   the playlist: `Playlist.SetShuffle`, `Playlist.SetRepeat`, `Playlist.GetProperties` and
   `Playlist.OnPropertyChanged`.
+- `Application.SetVolume` and `Application.SetMute` are removed, and `Application.GetProperties`
+  no longer reports `volume`, `muted` or `contentrect`. `Player` is what is seen and heard: its
+  `GetProperties` answers `volume`, `muted` and `contentrect` whether or not anything plays,
+  `Player.SetProperties` sets `volume` and `muted`, and `Player.VolumeUp` and `Player.VolumeDown`
+  step the volume.
 
 ### Deprecated
 
@@ -71,6 +76,7 @@ Methods:
 - `Player.SetGeometry`, `Player.GetGeometry`, and `geometry` on `Player.Open`
 - `Player.SetDeclaredAspectRatio`, `Player.GetDeclaredAspectRatio`
 - `Player.NotifyAudioChainReady`
+- `Player.SetProperties`, `Player.VolumeUp`, `Player.VolumeDown`
 - `Playlist.SetShuffle`, `Playlist.SetRepeat`
 - `PVR.GetBroadcastsByChannelGroup`, `PVR.GetPlayableBroadcasts`
 - `Settings.GetLevel`, `Settings.SetLevel`

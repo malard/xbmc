@@ -83,6 +83,9 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Player.GetPlayers",                            CPlayerOperations::GetPlayers },
   { "Player.GetProperties",                         CPlayerOperations::GetProperties },
   { "Player.GetItem",                               CPlayerOperations::GetItem },
+  { "Player.SetProperties",                         CPlayerOperations::SetProperties },
+  { "Player.VolumeUp",                              CPlayerOperations::VolumeUp },
+  { "Player.VolumeDown",                            CPlayerOperations::VolumeDown },
 
   { "Player.PlayPause",                             CPlayerOperations::PlayPause },
   { "Player.Stop",                                  CPlayerOperations::Stop },
@@ -277,8 +280,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
 
 // Application operations
   { "Application.GetProperties",                    CApplicationOperations::GetProperties },
-  { "Application.SetVolume",                        CApplicationOperations::SetVolume },
-  { "Application.SetMute",                          CApplicationOperations::SetMute },
   { "Application.SetLogLevel",                      CApplicationOperations::SetLogLevel },
   { "Application.Quit",                             CApplicationOperations::Quit },
 

@@ -375,6 +375,30 @@ them through `Playlist.OnPropertyChanged`. The playlist being played is the
 `playlist` property of `Player.GetProperties`. A slideshow's shuffle is the
 `picture` playlist's.
 
+## 15. Volume belongs to `Player`
+
+`Player` is what is seen and heard now, whether or not anything plays.
+`Application.SetVolume` and `Application.SetMute` are removed, and
+`Application.GetProperties` no longer reports `volume`, `muted` or
+`contentrect`.
+
+```diff
+- {"method": "Application.SetVolume",  "params": {"volume": 40}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"volume": 40}}}
+- {"method": "Application.SetVolume",  "params": {"volume": "increment"}}
++ {"method": "Player.VolumeUp"}
+- {"method": "Application.SetMute",    "params": {"mute": true}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"muted": true}}}
+```
+
+`Player.SetProperties` changes only the properties named and answers with
+their values now in force. `Player.GetProperties` answers `volume`, `muted`
+and `contentrect` with nothing playing; every other property still needs
+something to play.
+
+**What to do.** Read volume, mute and `contentrect` from
+`Player.GetProperties`. There is no toggle: send the `muted` value you want.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its

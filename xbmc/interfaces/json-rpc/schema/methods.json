@@ -553,6 +553,71 @@
       "FailedToExecute"
     ]
   },
+  "Player.SetProperties": {
+    "type": "method",
+    "description": "Changes the properties named, and only those, and answers with the values now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [
+      {
+        "name": "properties",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "volume": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 100,
+              "default": null
+            },
+            "muted": {
+              "$ref": "#/$defs/Optional.Boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
+  "Player.VolumeUp": {
+    "type": "method",
+    "description": "Raises the volume by one step and answers with the volume now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
+  "Player.VolumeDown": {
+    "type": "method",
+    "description": "Lowers the volume by one step and answers with the volume now in force",
+    "transport": "Response",
+    "permission": "ControlPlayback",
+    "params": [],
+    "returns": {
+      "$ref": "#/$defs/Player.Property.Value"
+    },
+    "errors": [
+      "InvalidParams",
+      "FailedToExecute"
+    ]
+  },
   "Player.GetItem": {
     "type": "method",
     "description": "Retrieves the currently played item",
@@ -9078,60 +9143,7 @@
       "$ref": "#/$defs/Application.Property.Value"
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
-    ]
-  },
-  "Application.SetVolume": {
-    "type": "method",
-    "description": "Set the current volume",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "volume",
-        "required": true,
-        "schema": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            },
-            {
-              "$ref": "#/$defs/Global.IncrementDecrement"
-            }
-          ]
-        }
-      }
-    ],
-    "returns": "integer",
-    "errors": [
-      "InvalidParams",
-      "FailedToExecute"
-    ]
-  },
-  "Application.SetMute": {
-    "type": "method",
-    "description": "Toggle mute/unmute",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "mute",
-        "required": true,
-        "schema": {
-          "$ref": "#/$defs/Global.Toggle"
-        }
-      }
-    ],
-    "returns": {
-      "type": "boolean",
-      "description": "Mute state"
-    },
-    "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "InvalidParams"
     ]
   },
   "Application.SetLogLevel": {

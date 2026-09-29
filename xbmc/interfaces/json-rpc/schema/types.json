@@ -917,6 +917,8 @@
     "type": "string",
     "enum": [
       "type",
+      "volume",
+      "muted",
       "partymode",
       "speed",
       "time",
@@ -948,6 +950,14 @@
   "Player.Property.Value": {
     "type": "object",
     "properties": {
+      "volume": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "muted": {
+        "type": "boolean"
+      },
       "type": {
         "$ref": "#/$defs/Player.Type"
       },
@@ -1064,7 +1074,7 @@
       },
       "contentrect": {
         "$ref": "#/$defs/Video.ContentRect",
-        "description": "Where the picture sits inside the frame, and what shape it is. A property of the player rather than of a stream, because it describes what is on the screen: it is served whether or not a video stream is selected, and it outlives any one stream within a playback."
+        "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
       }
     }
   },
@@ -5322,14 +5332,11 @@
   "Application.Property.Name": {
     "type": "string",
     "enum": [
-      "volume",
-      "muted",
       "name",
       "version",
       "sorttokens",
       "language",
-      "loglevel",
-      "contentrect"
+      "loglevel"
     ]
   },
   "Application.Property.Value": {
@@ -5337,14 +5344,6 @@
     "properties": {
       "loglevel": {
         "$ref": "#/$defs/Application.LogLevel.Value"
-      },
-      "volume": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 100
-      },
-      "muted": {
-        "type": "boolean"
       },
       "name": {
         "type": "string",
@@ -5395,10 +5394,6 @@
         "type": "string",
         "minLength": 1,
         "description": "The interface language as a BCP 47 language tag e.g. en-GB"
-      },
-      "contentrect": {
-        "$ref": "#/$defs/Video.ContentRect",
-        "description": "The shape on the screen, which is the picture while something is playing and the shape Kodi rests at otherwise. Answerable at any time, unlike the copy on Player.GetProperties, which describes a stream and so requires one to exist."
       }
     }
   },

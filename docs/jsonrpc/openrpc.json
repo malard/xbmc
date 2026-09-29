@@ -846,6 +846,146 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "Player.SetProperties",
+      "summary": "Changes the properties named, and only those, and answers with the values now in force",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "properties",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "volume": {
+                "type": [
+                  "null",
+                  "integer"
+                ],
+                "minimum": 0,
+                "maximum": 100,
+                "default": null
+              },
+              "muted": {
+                "$ref": "#/components/schemas/Optional.Boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/Player.Property.Value"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Player.VolumeUp",
+      "summary": "Raises the volume by one step and answers with the volume now in force",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/Player.Property.Value"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
+      "name": "Player.VolumeDown",
+      "summary": "Lowers the volume by one step and answers with the volume now in force",
+      "tags": [
+        {
+          "name": "Player"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [],
+      "result": {
+        "name": "result",
+        "schema": {
+          "$ref": "#/components/schemas/Player.Property.Value"
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        }
+      ],
+      "x-kodi-permission": "ControlPlayback",
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "Player.GetItem",
       "summary": "Retrieves the currently played item",
       "tags": [
@@ -13952,117 +14092,10 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
           "$ref": "#/components/errors/BadPermission"
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "Application.SetVolume",
-      "summary": "Set the current volume",
-      "tags": [
-        {
-          "name": "Application"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "volume",
-          "required": true,
-          "schema": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100
-              },
-              {
-                "$ref": "#/components/schemas/Global.IncrementDecrement"
-              }
-            ]
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "integer"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ControlPlayback",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "Application.SetMute",
-      "summary": "Toggle mute/unmute",
-      "tags": [
-        {
-          "name": "Application"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "mute",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Global.Toggle"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "boolean",
-          "description": "Mute state"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ControlPlayback",
       "x-kodi-transport": "Response"
     },
     {
@@ -15992,6 +16025,8 @@
         "type": "string",
         "enum": [
           "type",
+          "volume",
+          "muted",
           "partymode",
           "speed",
           "time",
@@ -16023,6 +16058,14 @@
       "Player.Property.Value": {
         "type": "object",
         "properties": {
+          "volume": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "muted": {
+            "type": "boolean"
+          },
           "type": {
             "$ref": "#/components/schemas/Player.Type"
           },
@@ -16139,7 +16182,7 @@
           },
           "contentrect": {
             "$ref": "#/components/schemas/Video.ContentRect",
-            "description": "Where the picture sits inside the frame, and what shape it is. A property of the player rather than of a stream, because it describes what is on the screen: it is served whether or not a video stream is selected, and it outlives any one stream within a playback."
+            "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
           }
         }
       },
@@ -20397,14 +20440,11 @@
       "Application.Property.Name": {
         "type": "string",
         "enum": [
-          "volume",
-          "muted",
           "name",
           "version",
           "sorttokens",
           "language",
-          "loglevel",
-          "contentrect"
+          "loglevel"
         ]
       },
       "Application.Property.Value": {
@@ -20412,14 +20452,6 @@
         "properties": {
           "loglevel": {
             "$ref": "#/components/schemas/Application.LogLevel.Value"
-          },
-          "volume": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "muted": {
-            "type": "boolean"
           },
           "name": {
             "type": "string",
@@ -20470,10 +20502,6 @@
             "type": "string",
             "minLength": 1,
             "description": "The interface language as a BCP 47 language tag e.g. en-GB"
-          },
-          "contentrect": {
-            "$ref": "#/components/schemas/Video.ContentRect",
-            "description": "The shape on the screen, which is the picture while something is playing and the shape Kodi rests at otherwise. Answerable at any time, unlike the copy on Player.GetProperties, which describes a stream and so requires one to exist."
           }
         }
       },

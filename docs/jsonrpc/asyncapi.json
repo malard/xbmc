@@ -2895,6 +2895,14 @@
       "Player.Property.Value": {
         "type": "object",
         "properties": {
+          "volume": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "muted": {
+            "type": "boolean"
+          },
           "type": {
             "$ref": "#/components/schemas/Player.Type"
           },
@@ -3011,7 +3019,7 @@
           },
           "contentrect": {
             "$ref": "#/components/schemas/Video.ContentRect",
-            "description": "Where the picture sits inside the frame, and what shape it is. A property of the player rather than of a stream, because it describes what is on the screen: it is served whether or not a video stream is selected, and it outlives any one stream within a playback."
+            "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
           }
         }
       },
