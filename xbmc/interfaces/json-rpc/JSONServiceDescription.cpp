@@ -340,7 +340,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     std::string refType = RefToTypeId(value["$ref"].asString());
     // Check if the referenced type exists
     JSONSchemaTypeDefinitionPtr referencedTypeDef = CJSONServiceDescription::GetType(refType);
-    if (refType.empty() || referencedTypeDef.get() == NULL)
+    if (refType.empty() || referencedTypeDef.get() == nullptr)
     {
       CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} references an unknown type {}", name,
                 refType);
@@ -416,7 +416,7 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       JSONSchemaTypeDefinitionPtr extendedTypeDef = CJSONServiceDescription::GetType(extendsName);
       // The base's type is copied here, so a base that is registered but not
       // yet parsed is as unusable as one that is missing
-      if (extendedTypeDef.get() == NULL || !extendedTypeDef->parsed)
+      if (extendedTypeDef.get() == nullptr || !extendedTypeDef->parsed)
       {
         extends.clear();
         CLog::Log(LOGDEBUG, "JSONRPC: JSON schema type {} extends an unknown type {}", name,
@@ -596,8 +596,8 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
       items = item;
     }
 
-    minItems = (unsigned int)value["minItems"].asUnsignedInteger(0);
-    maxItems = (unsigned int)value["maxItems"].asUnsignedInteger(0);
+    minItems = static_cast<unsigned int>(value["minItems"].asUnsignedInteger(0));
+    maxItems = static_cast<unsigned int>(value["maxItems"].asUnsignedInteger(0));
   }
 
   if (HasType(type, NumberValue) || HasType(type, IntegerValue))
@@ -609,15 +609,15 @@ bool JSONSchemaTypeDefinition::Parse(const CVariant& value)
     }
     else if ((type  & IntegerValue) == IntegerValue)
     {
-      minimum = (double)value["minimum"].asInteger(std::numeric_limits<int>::min());
-      maximum = (double)value["maximum"].asInteger(std::numeric_limits<int>::max());
+      minimum = static_cast<double>(value["minimum"].asInteger(std::numeric_limits<int>::min()));
+      maximum = static_cast<double>(value["maximum"].asInteger(std::numeric_limits<int>::max()));
     }
   }
 
   if (HasType(type, StringValue))
   {
-    minLength = (int)value["minLength"].asInteger(-1);
-    maxLength = (int)value["maxLength"].asInteger(-1);
+    minLength = static_cast<int>(value["minLength"].asInteger(-1));
+    maxLength = static_cast<int>(value["maxLength"].asInteger(-1));
   }
 
   // If the type definition is neither an
@@ -867,7 +867,7 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
     {
       // If additional properties are allowed we need to check if
       // they match the defined schema
-      if (hasAdditionalProperties && additionalProperties != NULL)
+      if (hasAdditionalProperties && additionalProperties != nullptr)
       {
         CVariant::const_iterator_map iter;
         CVariant::const_iterator_map iterEnd = value.end_map();
@@ -896,7 +896,7 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
       }
       // If we still have unchecked properties but additional
       // properties are not allowed, we have invalid parameters
-      else if (!hasAdditionalProperties || additionalProperties == NULL)
+      else if (!hasAdditionalProperties || additionalProperties == nullptr)
       {
         errorData["message"] = "Unexpected additional properties received";
         errorData.erase("property");
@@ -939,7 +939,7 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
     if (value.isDouble())
       numberValue = value.asDouble();
     else
-      numberValue = (double)value.asInteger();
+      numberValue = static_cast<double>(value.asInteger());
     // Check the minimum and maximum, both inclusive
     if (numberValue < minimum || numberValue > maximum)
     {
@@ -952,7 +952,7 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
       else
         errorMessage = StringUtils::Format(
             "Value between {} (inclusive) and {} (inclusive) expected but {} received",
-            (int)minimum, (int)maximum, (int)numberValue);
+            static_cast<int>(minimum), static_cast<int>(maximum), static_cast<int>(numberValue));
       errorData["message"] = errorMessage.c_str();
       return InvalidParams;
     }
@@ -1058,9 +1058,9 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
       else
       {
         if (minimum > std::numeric_limits<int>::min())
-          output["minimum"] = (int)minimum;
+          output["minimum"] = static_cast<int>(minimum);
         if (maximum < std::numeric_limits<int>::max())
-          output["maximum"] = (int)maximum;
+          output["maximum"] = static_cast<int>(maximum);
       }
 
     }
@@ -1111,7 +1111,7 @@ void JSONSchemaTypeDefinition::Print(bool isGlobal,
 
       if (!hasAdditionalProperties)
         output["additionalProperties"] = false;
-      else if (additionalProperties != NULL && additionalProperties->type != AnyValue)
+      else if (additionalProperties != nullptr && additionalProperties->type != AnyValue)
         additionalProperties->Print(false, true, printDescriptions, output["additionalProperties"]);
     }
   }
@@ -1168,7 +1168,7 @@ void JSONSchemaTypeDefinition::ResolveReference()
   if (!origDefaultValue.isNull())
     defaultValue = origDefaultValue;
 
-  if (referencedTypeDef.get() != NULL)
+  if (referencedTypeDef.get() != nullptr)
     referencedType = referencedTypeDef;
 
   // This will have been overwritten by the copy of the reference
@@ -1334,9 +1334,10 @@ bool JsonRpcMethod::parseErrors(const CVariant& value)
 
 JSONRPC_STATUS JsonRpcMethod::Check(const CVariant &requestParameters, ITransportLayer *transport, IClient *client, bool notification, MethodCall &methodCall, CVariant &outputParameters) const
 {
-  if (transport != NULL && (transport->GetCapabilities() & transportneed) == transportneed)
+  if (transport != nullptr && (transport->GetCapabilities() & transportneed) == transportneed)
   {
-    if (client != NULL && (client->GetPermissionFlags() & permission) == permission && (!notification || (permission & OPERATION_PERMISSION_NOTIFICATION) == permission))
+    if (client != nullptr && (client->GetPermissionFlags() & permission) == permission &&
+        (!notification || (permission & OPERATION_PERMISSION_NOTIFICATION) == permission))
     {
       methodCall = method;
 
@@ -1711,7 +1712,7 @@ bool CJSONServiceDescription::AddEnum(const std::string &name, const std::vector
   }
   definition->enums.insert(definition->enums.begin(), values.begin(), values.end());
 
-  int schemaType = (int)AnyValue;
+  int schemaType = static_cast<int>(AnyValue);
   for (unsigned int index = 0; index < types.size(); index++)
   {
     JSONSchemaType currentType;
@@ -1747,7 +1748,7 @@ bool CJSONServiceDescription::AddEnum(const std::string &name, const std::vector
     if (index == 0)
       schemaType = currentType;
     else
-      schemaType |= (int)currentType;
+      schemaType |= static_cast<int>(currentType);
   }
   definition->type = (JSONSchemaType)schemaType;
 

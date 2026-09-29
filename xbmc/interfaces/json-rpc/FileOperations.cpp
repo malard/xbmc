@@ -48,7 +48,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
   if (sources)
   {
     CFileItemList items;
-    for (unsigned int i = 0; i < (unsigned int)sources->size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(sources->size()); i++)
     {
       // Do not show sources which are locked
       if (sources->at(i).GetLockInfo().IsLocked())
@@ -57,7 +57,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
       items.Add(std::make_shared<CFileItem>(sources->at(i)));
     }
 
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     {
       if (items[i]->IsSmb())
       {
@@ -70,7 +70,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
     param["properties"] = CVariant(CVariant::VariantTypeArray);
     param["properties"].append("file");
 
-    HandleFileItemList(NULL, true, "sources", items, param, result);
+    HandleFileItemList(nullptr, true, "sources", items, param, result);
   }
 
   return OK;
@@ -122,7 +122,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
     CFileItemList filteredFiles;
     RegExpCache cache;
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
     {
       if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
         continue;
@@ -311,7 +311,7 @@ bool CFileOperations::FillFileItem(
     const std::string& media /* = "" */,
     const CVariant& parameterObject /* = CVariant(CVariant::VariantTypeArray) */)
 {
-  if (originalItem.get() == NULL)
+  if (originalItem.get() == nullptr)
     return false;
 
   // copy all the available details
@@ -421,7 +421,7 @@ bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileIte
 
         CFileItemList filteredDirectories;
         RegExpCache cache;
-        for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+        for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
         {
           if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
             continue;

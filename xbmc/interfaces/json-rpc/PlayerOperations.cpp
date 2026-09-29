@@ -208,7 +208,7 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
           // GUI item without also updating app item e.g. start playback of a
           // non-library item via JSON
           const CVideoInfoTag *currentVideoTag = CServiceBroker::GetGUI()->GetInfoManager().GetCurrentMovieTag();
-          if (currentVideoTag != NULL)
+          if (currentVideoTag != nullptr)
           {
             std::string originalLabel = fileItem->GetLabel();
             std::string originalPath = fileItem->GetPath();
@@ -269,7 +269,7 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
           // non-library item via JSON
           const MUSIC_INFO::CMusicInfoTag* currentMusicTag =
               CServiceBroker::GetGUI()->GetInfoManager().GetCurrentSongTag();
-          if (currentMusicTag != NULL)
+          if (currentMusicTag != nullptr)
           {
             std::string originalLabel = fileItem->GetLabel();
             std::string originalPath = fileItem->GetPath();
@@ -337,9 +337,10 @@ JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVa
                                else if (!appPlayer->IsPausedPlayback())
                                  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PAUSE);
                              }
-                             result["speed"] = appPlayer->IsPausedPlayback()
-                                                   ? 0
-                                                   : (int)lrint(appPlayer->GetPlaySpeed());
+                             result["speed"] =
+                                 appPlayer->IsPausedPlayback()
+                                     ? 0
+                                     : static_cast<int>(lrint(appPlayer->GetPlaySpeed()));
                              return OK;
                            }
                            case Picture:
@@ -481,7 +482,7 @@ JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVar
                              const auto appPlayer = AppPlayer();
                              if (parameterObject["speed"].isInteger())
                              {
-                               int speed = (int)parameterObject["speed"].asInteger();
+                               int speed = static_cast<int>(parameterObject["speed"].asInteger());
                                if (speed != 0)
                                {
                                  // If the player is paused we first need to unpause
@@ -502,9 +503,10 @@ JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVar
                              else
                                return InvalidParams;
 
-                             result["speed"] = appPlayer->IsPausedPlayback()
-                                                   ? 0
-                                                   : (int)lrint(appPlayer->GetPlaySpeed());
+                             result["speed"] =
+                                 appPlayer->IsPausedPlayback()
+                                     ? 0
+                                     : static_cast<int>(lrint(appPlayer->GetPlaySpeed()));
                              return OK;
                            }
 
@@ -692,7 +694,7 @@ JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant& parameterObject, CVariant
                            case Picture:
                              if (zoom.isInteger())
                                SendSlideshowAction(ACTION_ZOOM_LEVEL_NORMAL +
-                                                   ((int)zoom.asInteger() - 1));
+                                                   (static_cast<int>(zoom.asInteger()) - 1));
                              else if (zoom.isString())
                              {
                                std::string strZoom = zoom.asString();
@@ -1442,7 +1444,7 @@ JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject
                                    return InvalidParams;
                                }
                                else if (parameterObject["stream"].isInteger())
-                                 index = (int)parameterObject["stream"].asInteger();
+                                 index = static_cast<int>(parameterObject["stream"].asInteger());
 
                                if (index < 0 || appPlayer->GetAudioStreamCount() <= index)
                                  return InvalidParams;
@@ -1527,7 +1529,7 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, C
                                    return InvalidParams;
                                }
                                else if (parameterObject["subtitle"].isInteger())
-                                 index = (int)parameterObject["subtitle"].asInteger();
+                                 index = static_cast<int>(parameterObject["subtitle"].asInteger());
 
                                if (index < 0 || appPlayer->GetSubtitleCount() <= index)
                                  return InvalidParams;
@@ -1587,7 +1589,7 @@ JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant& parameterObject
                                    return InvalidParams;
                                }
                                else if (parameterObject["stream"].isInteger())
-                                 index = (int)parameterObject["stream"].asInteger();
+                                 index = static_cast<int>(parameterObject["stream"].asInteger());
 
                                if (index < 0 || streamCount <= index)
                                  return InvalidParams;

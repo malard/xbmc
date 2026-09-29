@@ -90,7 +90,7 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, 
 
 JSONRPC_STATUS CTextureOperations::RemoveTexture(const CVariant& parameterObject, CVariant& result)
 {
-  int id = (int)parameterObject["textureid"].asInteger();
+  int id = static_cast<int>(parameterObject["textureid"].asInteger());
 
   if (!CServiceBroker::GetTextureCache()->ClearCachedImage(id))
     return InvalidParams;
