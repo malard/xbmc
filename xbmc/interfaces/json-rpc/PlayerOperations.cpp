@@ -1519,9 +1519,6 @@ JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant& parameterObject, C
                          if (!appPlayer->HasPlayer())
                            return Fail(result, FailedToExecute, Reason::NothingPlaying);
 
-                         if (!parameterObject["subtitle"].isString())
-                           return FailedToExecute;
-
                          std::string sub = parameterObject["subtitle"].asString();
                          appPlayer->AddSubtitle(sub);
                          return ACK;
