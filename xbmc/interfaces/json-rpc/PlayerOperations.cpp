@@ -1338,51 +1338,6 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetShuffle(const CVariant& parameterObject, CVariant& result)
-{
-  return ForEachOnList(parameterObject,
-                       [&](PlayerType player) -> JSONRPC_STATUS
-                       {
-                         const CVariant& shuffle = parameterObject["shuffle"];
-                         switch (player)
-                         {
-                           case Video:
-                           case Audio:
-                             if (IsPVRChannel())
-                               return FailedToExecute;
-                             return ApplyShuffle(*GetPlayList(player, parameterObject["playlist"]),
-                                                 shuffle);
-
-                           case Picture:
-                             return ShuffleSlideshow(shuffle);
-
-                           default:
-                             return FailedToExecute;
-                         }
-                       });
-}
-
-JSONRPC_STATUS CPlayerOperations::SetRepeat(const CVariant& parameterObject, CVariant& result)
-{
-  return ForEachOnList(parameterObject,
-                       [&](PlayerType player) -> JSONRPC_STATUS
-                       {
-                         switch (player)
-                         {
-                           case Video:
-                           case Audio:
-                             if (IsPVRChannel())
-                               return FailedToExecute;
-                             return ApplyRepeat(*GetPlayList(player, parameterObject["playlist"]),
-                                                parameterObject["repeat"]);
-
-                           case Picture:
-                           default:
-                             return FailedToExecute;
-                         }
-                       });
-}
-
 JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachOnList(
@@ -1846,28 +1801,6 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          if (IsPVRChannel() || !playList)
            return -1;
          return CServiceBroker::GetPlayLists()->GetPlayingDisplayPosition(*playList);
-       }},
-      {"repeat",
-       [](PlayerType player, const PlayList& playList) -> Value
-       {
-         if (player == Picture || IsPVRChannel())
-           return "off";
-         return std::string{CApplicationPlayLists::RepeatName(
-             CServiceBroker::GetPlayLists()->GetRepeat(*playList))};
-       }},
-      {"shuffled",
-       [](PlayerType player, const PlayList& playList) -> Value
-       {
-         if (player == Picture)
-         {
-           const CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
-           if (slideShow.IsPlaying())
-             return slideShow.IsShuffled();
-           return -1;
-         }
-         if (IsPVRChannel())
-           return false;
-         return CServiceBroker::GetPlayLists()->IsShuffled(*playList);
        }},
       {"canseek", [](PlayerType player, const PlayList&) -> Value
        { return player != Picture && AppPlayer()->CanSeek(); }},

@@ -210,3 +210,22 @@ TEST_F(TestPlaybackAnnouncer, ASlideIsAnnouncedAsAPictureBeforeItsTagIsRead)
   ASSERT_NE(nullptr, Find("OnStop")->item);
   EXPECT_TRUE(Find("OnStop")->item->HasPictureInfoTag());
 }
+
+TEST_F(TestPlaybackAnnouncer, ShuffleAndRepeatAreAnnouncedOnTheirPlayListOnly)
+{
+  m_playLists->SetPlayingType(PLAYLIST::Audio);
+  CApplicationPlayLists::IObserver& observer = m_announcer;
+
+  observer.OnShuffled(PLAYLIST::Audio, true);
+  observer.OnRepeat(PLAYLIST::Audio, CApplicationPlayLists::Repeat::All);
+  m_announcer.OnSlideShowShuffled();
+
+  int onPlayList = 0;
+  for (const Published& published : m_published)
+  {
+    EXPECT_NE(ANNOUNCEMENT::Player, published.flag) << published.message;
+    if (published.flag == ANNOUNCEMENT::Playlist && published.message == "OnPropertyChanged")
+      ++onPlayList;
+  }
+  EXPECT_EQ(3, onPlayList);
+}

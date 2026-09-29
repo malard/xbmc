@@ -36,12 +36,20 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Player.GetProperties` reports `displayorder`.
 - A hidden setting is read and written like any other.
 - Stream languages are BCP 47 tags (`en`, `en-AU`), not ISO 639-2/B (`eng`).
+- `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed; `GUI.GetInfoLabels` and
+  `GUI.GetInfoBooleans` are the same methods.
+- `Textures.GetTextures` and `Textures.RemoveTexture` are `Application.GetTextures` and
+  `Application.RemoveTexture`: a namespace names what it acts on, and the texture cache is Kodi's
+  internals.
+- `Player.SetShuffle` and `Player.SetRepeat` are removed, and `Player.GetProperties` and
+  `Player.OnPropertyChanged` no longer carry `shuffled` or `repeat`. Shuffle and repeat belong to
+  the playlist: `Playlist.SetShuffle`, `Playlist.SetRepeat`, `Playlist.GetProperties` and
+  `Playlist.OnPropertyChanged`.
 
 ### Deprecated
 
 Marked `"deprecated": true`; each names its replacement.
 
-- `XBMC.GetInfoLabels`, `XBMC.GetInfoBooleans`: use `GUI.GetInfoLabels`, `GUI.GetInfoBooleans`.
 - `VideoLibrary.RefreshMovie`, `RefreshTVShow`, `RefreshEpisode`, `RefreshMusicVideo`: use
   `VideoLibrary.Refresh`.
 - `PVR.Details.Broadcast` `seasonnum`, `episodenum`, `isplayable`: use `season`, `episode`,
@@ -55,7 +63,7 @@ Methods:
 
 - `Application.SetLogLevel`
 - `AudioLibrary.RefreshAlbum`, `AudioLibrary.RefreshArtist`, `AudioLibrary.SetInfoProvider`
-- `Database.GetDatabaseName`
+- `Application.GetDatabaseName`
 - `GUI.GetInfoLabels`, `GUI.GetInfoBooleans`
 - `GUI.TakeScreenshot`, `GUI.DeleteScreenshots` (off unless `allowscreenshotdeletion` is set)
 - `GUI.SetScreenAlignment`, `GUI.GetScreenAlignment`

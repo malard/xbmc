@@ -134,10 +134,10 @@ unconditionally will now fault on `null`.
 
 ---
 
-## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are deprecated
+## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed
 
-They still work and are the same implementation, and a later major version may
-remove them.
+The `XBMC` namespace is gone. `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`
+are the same methods.
 
 ```diff
 - {"method": "XBMC.GetInfoLabels", "params": {"labels": ["System.Time"]}}
@@ -344,6 +344,36 @@ Content-Type: application/json
 
 answers `true` as it always has. A client that checks `JSONRPC.Permission`
 first sees `WriteSetting` false on `GET` and true on `POST`.
+
+## 13. The texture cache is under `Application`
+
+A namespace names what it acts on, and the thumbnail cache is Kodi's
+internals.
+
+```diff
+- {"method": "Textures.GetTextures",    "params": {"properties": ["url"]}}
++ {"method": "Application.GetTextures", "params": {"properties": ["url"]}}
+```
+
+`Textures.RemoveTexture` is `Application.RemoveTexture`. Parameters, results
+and permissions are unchanged.
+
+## 14. Shuffle and repeat belong to the playlist
+
+`Player.SetShuffle` and `Player.SetRepeat` are removed. `Player.GetProperties`
+no longer reports `shuffled` or `repeat`, and `Player.OnPropertyChanged` no
+longer carries them.
+
+```diff
+- {"method": "Player.SetShuffle",   "params": {"shuffle": true}}
++ {"method": "Playlist.SetShuffle", "params": {"playlist": "audio", "shuffle": true}}
+```
+
+**What to do.** Set shuffle and repeat with `Playlist.SetShuffle` and
+`Playlist.SetRepeat`, read them from `Playlist.GetProperties`, and follow
+them through `Playlist.OnPropertyChanged`. The playlist being played is the
+`playlist` property of `Player.GetProperties`. A slideshow's shuffle is the
+`picture` playlist's.
 
 ## Finding the rest
 

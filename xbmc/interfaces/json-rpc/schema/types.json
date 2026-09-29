@@ -925,8 +925,6 @@
       "playlist",
       "position",
       "displayorder",
-      "repeat",
-      "shuffled",
       "canseek",
       "canchangespeed",
       "canmove",
@@ -977,12 +975,6 @@
       "displayorder": {
         "$ref": "#/$defs/Playlist.Position",
         "description": "The current entry's place in play order, which is list order unless shuffled"
-      },
-      "repeat": {
-        "$ref": "#/$defs/Player.Repeat"
-      },
-      "shuffled": {
-        "type": "boolean"
       },
       "canseek": {
         "type": "boolean"

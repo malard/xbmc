@@ -2008,122 +2008,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "Player.SetShuffle",
-      "summary": "Turn shuffled play order on or off",
-      "tags": [
-        {
-          "name": "Player"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "shuffle",
-          "required": true,
-          "schema": {
-            "$ref": "#/components/schemas/Global.Toggle"
-          }
-        },
-        {
-          "name": "playlist",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Playlist"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ControlPlayback",
-      "x-kodi-transport": "Response"
-    },
-    {
-      "name": "Player.SetRepeat",
-      "summary": "Set the repeat mode of the player",
-      "tags": [
-        {
-          "name": "Player"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "repeat",
-          "required": true,
-          "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Player.Repeat"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "cycle"
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "playlist",
-          "schema": {
-            "$ref": "#/components/schemas/Player.Playlist"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "string"
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ControlPlayback",
-      "x-kodi-transport": "Response"
-    },
-    {
       "name": "Player.SetPartymode",
       "summary": "Turn partymode on or off",
       "tags": [
@@ -12908,11 +12792,11 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "Textures.GetTextures",
+      "name": "Application.GetTextures",
       "summary": "Retrieve all textures",
       "tags": [
         {
-          "name": "Textures"
+          "name": "Application"
         }
       ],
       "paramStructure": "either",
@@ -12971,11 +12855,11 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "Textures.RemoveTexture",
+      "name": "Application.RemoveTexture",
       "summary": "Remove the specified texture",
       "tags": [
         {
-          "name": "Textures"
+          "name": "Application"
         }
       ],
       "paramStructure": "either",
@@ -14287,114 +14171,6 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "XBMC.GetInfoLabels",
-      "summary": "Retrieve info labels about Kodi and the system. Use GUI.GetInfoLabels instead.",
-      "tags": [
-        {
-          "name": "XBMC"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "labels",
-          "required": true,
-          "description": "See http://kodi.wiki/view/InfoLabels for a list of possible info labels",
-          "schema": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "minItems": 1
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "description": "Object containing key-value pairs of the retrieved info labels",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response",
-      "deprecated": true
-    },
-    {
-      "name": "XBMC.GetInfoBooleans",
-      "summary": "Retrieve info booleans about Kodi and the system. Use GUI.GetInfoBooleans instead.",
-      "tags": [
-        {
-          "name": "XBMC"
-        }
-      ],
-      "paramStructure": "either",
-      "params": [
-        {
-          "name": "booleans",
-          "required": true,
-          "description": "See http://kodi.wiki/view/List_of_boolean_conditions for a list of possible boolean conditions",
-          "schema": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "minItems": 1
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "type": "object",
-          "description": "Object containing key-value pairs of the retrieved info booleans",
-          "additionalProperties": {
-            "type": "boolean"
-          }
-        }
-      },
-      "errors": [
-        {
-          "$ref": "#/components/errors/ParseError"
-        },
-        {
-          "$ref": "#/components/errors/InvalidRequest"
-        },
-        {
-          "$ref": "#/components/errors/MethodNotFound"
-        },
-        {
-          "$ref": "#/components/errors/InvalidParams"
-        },
-        {
-          "$ref": "#/components/errors/BadPermission"
-        }
-      ],
-      "x-kodi-permission": "ReadData",
-      "x-kodi-transport": "Response",
-      "deprecated": true
-    },
-    {
       "name": "Favourites.GetFavourites",
       "summary": "Retrieve all favourites",
       "tags": [
@@ -15249,11 +15025,11 @@
       "x-kodi-transport": "Response"
     },
     {
-      "name": "Database.GetDatabaseName",
+      "name": "Application.GetDatabaseName",
       "summary": "Get the full database name currently in-use by its type",
       "tags": [
         {
-          "name": "Database"
+          "name": "Application"
         }
       ],
       "paramStructure": "either",
@@ -16224,8 +16000,6 @@
           "playlist",
           "position",
           "displayorder",
-          "repeat",
-          "shuffled",
           "canseek",
           "canchangespeed",
           "canmove",
@@ -16276,12 +16050,6 @@
           "displayorder": {
             "$ref": "#/components/schemas/Playlist.Position",
             "description": "The current entry's place in play order, which is list order unless shuffled"
-          },
-          "repeat": {
-            "$ref": "#/components/schemas/Player.Repeat"
-          },
-          "shuffled": {
-            "type": "boolean"
           },
           "canseek": {
             "type": "boolean"

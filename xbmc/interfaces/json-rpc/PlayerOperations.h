@@ -68,8 +68,6 @@ public:
 
   static JSONRPC_STATUS Open(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GoTo(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetShuffle(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetRepeat(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetPartymode(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS SetAudioStream(const CVariant& parameterObject, CVariant& result);
