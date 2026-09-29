@@ -69,8 +69,8 @@ public:
   //! \brief The shape in force, for stamping onto the frame it was read from.
   const std::optional<CRectInt>& Published() const { return m_published; }
 
-  //! \brief The distinct shapes served this playback, which varies is decided from. Not what
-  //! gets written back.
+  //! \brief The distinct shapes served this playback, which varies is decided from. For tests
+  //! only.
   const std::vector<CRectInt>& Shapes() const { return m_shapes; }
 
   //! \brief One line of state for the player's debug overlay.

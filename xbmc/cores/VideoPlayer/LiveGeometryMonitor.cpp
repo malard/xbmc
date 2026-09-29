@@ -172,7 +172,12 @@ CRectInt CLiveGeometryMonitor::OnPicture(const VideoPicture& picture,
   }
 
   if (served)
-    PublishServed(*served);
+  {
+    CLog::LogF(LOGDEBUG, "live content geometry now {}x{} at {},{}{}", served->rect.Width(),
+               served->rect.Height(), served->rect.x1, served->rect.y1,
+               served->varies ? " (varies)" : "");
+    Post({.rect = served->rect, .varies = served->varies});
+  }
 
   return InForce();
 }
@@ -210,9 +215,7 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
     if (!m_unreadableLogged)
     {
       m_unreadableLogged = true;
-      CLog::LogF(LOGINFO,
-                 "live content geometry cannot read this stream's decoded frames ({}); "
-                 "typically a hardware decoder whose buffers expose no planes",
+      CLog::LogF(LOGINFO, "live content geometry: frames not readable ({})",
                  PixelFormatName(picture.pixelFormat));
     }
     SetState("unavailable: decoded frames are not readable");
@@ -222,22 +225,11 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
   if (!m_reducedLogged)
   {
     m_reducedLogged = true;
-    CLog::LogF(LOGINFO,
-               "live content geometry reading {}x{} reductions of this stream's decoded "
-               "frames ({}); the planes themselves are not readable",
-               m_reduction.width, m_reduction.height, PixelFormatName(picture.pixelFormat));
+    CLog::LogF(LOGINFO, "live content geometry: reading {}x{} reductions ({})", m_reduction.width,
+               m_reduction.height, PixelFormatName(picture.pixelFormat));
   }
 
   return true;
-}
-
-void CLiveGeometryMonitor::PublishServed(const LiveGeometryReading& served)
-{
-  CLog::LogF(LOGDEBUG, "live content geometry now {}x{} at {},{}{}", served.rect.Width(),
-             served.rect.Height(), served.rect.x1, served.rect.y1,
-             served.varies ? " (varies)" : "");
-
-  Post({.rect = served.rect, .varies = served.varies});
 }
 
 CRectInt CLiveGeometryMonitor::InForce() const

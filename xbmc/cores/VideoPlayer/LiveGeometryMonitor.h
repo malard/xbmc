@@ -86,9 +86,6 @@ private:
                     KODI::VIDEO::GEOMETRY::FrameRef& frame,
                     bool& reduced);
 
-  //! \brief Remember a newly served shape when it is recordable, and post it to the player.
-  void PublishServed(const KODI::VIDEO::GEOMETRY::LiveGeometryReading& served);
-
   CDVDMessageQueue& m_messageParent;
   CProcessInfo& m_processInfo;
 
