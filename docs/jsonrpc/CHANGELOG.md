@@ -92,6 +92,8 @@ Methods:
 - `PVR.GetBroadcastsByChannelGroup`, `PVR.GetPlayableBroadcasts`
 - `Settings.GetLevel`, `Settings.SetLevel`
 - `VideoLibrary.Refresh`, `VideoLibrary.RefreshContentGeometry`, `VideoLibrary.SetSourceContent`
+- `VideoLibrary.GetItems`, `AudioLibrary.GetItems`: one query per library over the kind named;
+  `GetMovies`, `GetRecentlyAddedMovies` and the other list methods are it with preset values
 - `confirmed` on `Settings.SetSettingValue`
 - `starttime` and `endtime` on `PVR.GetBroadcasts`
 

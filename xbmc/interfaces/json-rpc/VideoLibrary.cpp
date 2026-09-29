@@ -30,44 +30,254 @@
 #include "video/geometry/GeometrySettings.h"
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
+#include <span>
+#include <string_view>
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CVideoLibrary::GetMovies(const CVariant& parameterObject, CVariant& result)
+namespace
 {
+using FilterField = CFileItemHandler::FilterField;
+
+constexpr FilterField MOVIE_FILTERS[] = {FilterField::Number("genreId", "genreid"),
+                                         FilterField::Text("genre"),
+                                         FilterField::Number("year"),
+                                         FilterField::Text("actor"),
+                                         FilterField::Text("director"),
+                                         FilterField::Text("studio"),
+                                         FilterField::Text("country"),
+                                         FilterField::Number("setId", "setid"),
+                                         FilterField::Text("set"),
+                                         FilterField::Text("tag")};
+constexpr FilterField TVSHOW_FILTERS[] = {FilterField::Number("genreId", "genreid"),
+                                          FilterField::Text("genre"),
+                                          FilterField::Number("year"),
+                                          FilterField::Text("actor"),
+                                          FilterField::Text("studio"),
+                                          FilterField::Text("tag")};
+constexpr FilterField EPISODE_FILTERS[] = {
+    FilterField::Number("genreId", "genreid"), FilterField::Text("genre"),
+    FilterField::Number("year"), FilterField::Text("actor"), FilterField::Text("director")};
+constexpr FilterField MUSICVIDEO_FILTERS[] = {
+    FilterField::Text("artist"),   FilterField::Number("genreId", "genreid"),
+    FilterField::Text("genre"),    FilterField::Number("year"),
+    FilterField::Text("director"), FilterField::Text("studio"),
+    FilterField::Text("tag")};
+constexpr std::span<const FilterField> NO_FILTERS;
+
+//! What a client names a kind by, and the names and types of its items
+struct KindTraits
+{
+  VideoKind kind;
+  const char* name; //!< the media type
+  const char* id;
+  const char* list;
+  const char* fields;
+  const char* filter; //!< nullptr for a kind that takes no filter
+  const char* rules; //!< the smart playlist type a filter's rules are written for
+  std::span<const FilterField> filterFields;
+};
+
+constexpr KindTraits KINDS[] = {
+    {VideoKind::Movie, MediaTypeMovie, "movieId", "movies", "Video.Fields.Movie",
+     "Video.Filter.Movies", "movies", MOVIE_FILTERS},
+    {VideoKind::Set, MediaTypeVideoCollection, "setId", "sets", "Video.Fields.MovieSet", nullptr,
+     "", NO_FILTERS},
+    {VideoKind::TVShow, MediaTypeTvShow, "tvShowId", "tvShows", "Video.Fields.TVShow",
+     "Video.Filter.TVShows", "tvshows", TVSHOW_FILTERS},
+    {VideoKind::Season, MediaTypeSeason, "seasonId", "seasons", "Video.Fields.Season", nullptr, "",
+     NO_FILTERS},
+    {VideoKind::Episode, MediaTypeEpisode, "episodeId", "episodes", "Video.Fields.Episode",
+     "Video.Filter.Episodes", "episodes", EPISODE_FILTERS},
+    {VideoKind::MusicVideo, MediaTypeMusicVideo, "musicVideoId", "musicVideos",
+     "Video.Fields.MusicVideo", "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS},
+};
+
+const KindTraits& TraitsOf(VideoKind kind)
+{
+  return *std::ranges::find(KINDS, kind, &KindTraits::kind);
+}
+
+const KindTraits* TraitsNamed(std::string_view name)
+{
+  const auto traits = std::ranges::find_if(KINDS, [name](const KindTraits& candidate)
+                                           { return name == candidate.name; });
+  return traits == std::end(KINDS) ? nullptr : &*traits;
+}
+
+//! Checks the query's parameters against the kind the caller named; \p checked has them filled
+JSONRPC_STATUS CheckForKind(const KindTraits& traits,
+                            const CVariant& parameterObject,
+                            CVariant& checked,
+                            CVariant& errorData)
+{
+  if (const JSONRPC_STATUS status = CFileItemHandler::CheckAgainstType(
+          traits.fields, "properties", parameterObject["properties"], checked["properties"],
+          errorData);
+      status != OK)
+    return status;
+
+  if (!parameterObject["filter"].isNull())
+  {
+    if (!traits.filter)
+      return CFileItemHandler::RefuseForKind("filter", traits.name, errorData);
+
+    if (const JSONRPC_STATUS status = CFileItemHandler::CheckAgainstType(
+            traits.filter, "filter", parameterObject["filter"], checked["filter"], errorData);
+        status != OK)
+      return status;
+  }
+
+  if (parameterObject["tvShowId"].asInteger() != -1 && traits.kind != VideoKind::Season &&
+      traits.kind != VideoKind::Episode)
+    return CFileItemHandler::RefuseForKind("tvShowId", traits.name, errorData);
+
+  if (parameterObject["season"].asInteger() != -1 && traits.kind != VideoKind::Episode)
+    return CFileItemHandler::RefuseForKind("season", traits.name, errorData);
+
+  return OK;
+}
+} // unnamed namespace
+
+JSONRPC_STATUS CVideoLibrary::GetItems(const CVariant& parameterObject, CVariant& result)
+{
+  const KindTraits* traits = TraitsNamed(parameterObject["kind"].asString());
+  if (!traits)
+    return InvalidParams;
+
+  CVariant checked(parameterObject);
+  if (const JSONRPC_STATUS status = CheckForKind(*traits, parameterObject, checked, result);
+      status != OK)
+    return status;
+
+  if (const JSONRPC_STATUS status = Query(traits->kind, Listing::All, checked, result);
+      status != OK)
+    return status;
+
+  RenameList(result, traits->list, "items");
+  return OK;
+}
+
+JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
+                                    Listing listing,
+                                    const CVariant& parameterObject,
+                                    CVariant& result)
+{
+  const KindTraits& traits = TraitsOf(kind);
+
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
     return InternalError;
+
+  const int details = RequiresAdditionalDetails(traits.name, parameterObject);
+  CFileItemList items;
+
+  if (listing == Listing::RecentlyAdded)
+  {
+    bool listed = false;
+    if (kind == VideoKind::Movie)
+      listed = videodatabase.GetRecentlyAddedMoviesNav("videodb://recentlyaddedmovies/", items, 0,
+                                                       details);
+    else if (kind == VideoKind::Episode)
+      listed = videodatabase.GetRecentlyAddedEpisodesNav("videodb://recentlyaddedepisodes/", items,
+                                                         0, details);
+    else if (kind == VideoKind::MusicVideo)
+      listed = videodatabase.GetRecentlyAddedMusicVideosNav("videodb://recentlyaddedmusicvideos/",
+                                                            items, 0, details);
+    if (!listed)
+      return InternalError;
+
+    return HandleItems(traits.id, traits.list, items, parameterObject, result, true);
+  }
+
+  // Every in-progress show is answered: the caller's sort and limits only shape "limits"
+  if (listing == Listing::InProgress)
+  {
+    if (!videodatabase.GetInProgressTvShowsNav("videodb://inprogresstvshows/", items, details))
+      return InternalError;
+
+    return HandleItems(traits.id, traits.list, items, parameterObject, result, false);
+  }
+
+  const int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
+
+  // Sets and seasons are grouped in memory, where the caller's sort and limits apply
+  if (kind == VideoKind::Set || kind == VideoKind::Season)
+  {
+    const bool listed =
+        kind == VideoKind::Set
+            ? videodatabase.GetSetsNav("videodb://movies/sets/", items, VideoDbContentType::MOVIES)
+            : videodatabase.GetSeasonsNav(
+                  StringUtils::Format("videodb://tvshows/titles/{}/", tvshowID), items, -1, -1, -1,
+                  -1, tvshowID, false);
+    if (!listed)
+      return InternalError;
+
+    HandleFileItemList(traits.id, false, traits.list, items, parameterObject, result);
+    return OK;
+  }
 
   SortDescription sorting;
   ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
   if (!ParseSorting(parameterObject, sorting.sortBy, sorting.sortOrder, sorting.sortAttributes))
     return InvalidParams;
 
+  const int season = static_cast<int>(parameterObject["season"].asInteger());
+  std::string path;
+  if (kind == VideoKind::Movie)
+    path = "videodb://movies/titles/";
+  else if (kind == VideoKind::TVShow)
+    path = "videodb://tvshows/titles/";
+  else if (kind == VideoKind::Episode)
+    path = StringUtils::Format("videodb://tvshows/titles/{}/{}/", tvshowID, season);
+  else
+    path = "videodb://musicvideos/titles/";
+
   CVideoDbUrl videoUrl;
-  if (!videoUrl.FromString("videodb://movies/titles/"))
+  if (!videoUrl.FromString(path))
     return InternalError;
 
-  static constexpr FilterField filters[] = {FilterField::Number("genreId", "genreid"),
-                                            FilterField::Text("genre"),
-                                            FilterField::Number("year"),
-                                            FilterField::Text("actor"),
-                                            FilterField::Text("director"),
-                                            FilterField::Text("studio"),
-                                            FilterField::Text("country"),
-                                            FilterField::Number("setId", "setid"),
-                                            FilterField::Text("set"),
-                                            FilterField::Text("tag")};
-  if (!ApplyFilter(parameterObject["filter"], filters, "movies", videoUrl))
+  if (!ApplyFilter(parameterObject["filter"], traits.filterFields, traits.rules, videoUrl))
     return InvalidParams;
 
-  CFileItemList items;
-  if (!videodatabase.GetMoviesByWhere(videoUrl.ToString(), CDatabase::Filter(), items, sorting,
-                                      RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
-    return InvalidParams;
+  if (kind == VideoKind::Episode)
+  {
+    // a season, and the genre and actor filters, narrow one show's episodes
+    if (tvshowID <= 0 && (season > 0 || videoUrl.HasOption("genreid") ||
+                          videoUrl.HasOption("genre") || videoUrl.HasOption("actor")))
+      return InvalidParams;
 
-  return HandleItems("movieId", "movies", items, parameterObject, result, false);
+    if (tvshowID > 0)
+    {
+      videoUrl.AddOption("tvshowid", tvshowID);
+      if (season >= 0)
+        videoUrl.AddOption("season", season);
+    }
+  }
+
+  const std::string url = videoUrl.ToString();
+  if (kind == VideoKind::Movie)
+  {
+    if (!videodatabase.GetMoviesByWhere(url, CDatabase::Filter(), items, sorting, details))
+      return InvalidParams;
+  }
+  else if (kind == VideoKind::TVShow)
+  {
+    if (!videodatabase.GetTvShowsByWhere(url, CDatabase::Filter(), items, sorting, details))
+      return InvalidParams;
+  }
+  else if (kind == VideoKind::Episode)
+  {
+    if (!videodatabase.GetEpisodesByWhere(url, CDatabase::Filter(), items, false, sorting, details))
+      return InvalidParams;
+  }
+  else if (!videodatabase.GetMusicVideosByWhere(url, CDatabase::Filter(), items, true, sorting,
+                                                details))
+    return InternalError;
+
+  return HandleItems(traits.id, traits.list, items, parameterObject, result, false);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetMovieDetails(const CVariant& parameterObject, CVariant& result)
@@ -87,20 +297,6 @@ JSONRPC_STATUS CVideoLibrary::GetMovieDetails(const CVariant& parameterObject, C
 
   HandleFileItem("movieId", true, "movieDetails", std::make_shared<CFileItem>(infos),
                  parameterObject, parameterObject["properties"], result, false);
-  return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetMovieSets(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemList items;
-  if (!videodatabase.GetSetsNav("videodb://movies/sets/", items, VideoDbContentType::MOVIES))
-    return InternalError;
-
-  HandleFileItemList("setId", false, "sets", items, parameterObject, result);
   return OK;
 }
 
@@ -131,38 +327,6 @@ JSONRPC_STATUS CVideoLibrary::GetMovieSetDetails(const CVariant& parameterObject
                      true);
 }
 
-JSONRPC_STATUS CVideoLibrary::GetTVShows(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  SortDescription sorting;
-  ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
-  if (!ParseSorting(parameterObject, sorting.sortBy, sorting.sortOrder, sorting.sortAttributes))
-    return InvalidParams;
-
-  CVideoDbUrl videoUrl;
-  if (!videoUrl.FromString("videodb://tvshows/titles/"))
-    return InternalError;
-
-  static constexpr FilterField filters[] = {FilterField::Number("genreId", "genreid"),
-                                            FilterField::Text("genre"),
-                                            FilterField::Number("year"),
-                                            FilterField::Text("actor"),
-                                            FilterField::Text("studio"),
-                                            FilterField::Text("tag")};
-  if (!ApplyFilter(parameterObject["filter"], filters, "tvshows", videoUrl))
-    return InvalidParams;
-
-  CFileItemList items;
-  if (!videodatabase.GetTvShowsByWhere(videoUrl.ToString(), CDatabase::Filter(), items, sorting,
-                                       RequiresAdditionalDetails(MediaTypeTvShow, parameterObject)))
-    return InvalidParams;
-
-  return HandleItems("tvShowId", "tvShows", items, parameterObject, result, false);
-}
-
 JSONRPC_STATUS CVideoLibrary::GetTVShowDetails(const CVariant& parameterObject, CVariant& result)
 {
   CVideoDatabase videodatabase;
@@ -185,23 +349,6 @@ JSONRPC_STATUS CVideoLibrary::GetTVShowDetails(const CVariant& parameterObject, 
   return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::GetSeasons(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
-
-  std::string strPath = StringUtils::Format("videodb://tvshows/titles/{}/", tvshowID);
-  CFileItemList items;
-  if (!videodatabase.GetSeasonsNav(strPath, items, -1, -1, -1, -1, tvshowID, false))
-    return InternalError;
-
-  HandleFileItemList("seasonId", false, "seasons", items, parameterObject, result);
-  return OK;
-}
-
 JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, CVariant& result)
 {
   CVideoDatabase videodatabase;
@@ -221,52 +368,6 @@ JSONRPC_STATUS CVideoLibrary::GetSeasonDetails(const CVariant& parameterObject, 
   HandleFileItem("seasonId", false, "seasonDetails", pItem, parameterObject,
                  parameterObject["properties"], result, false);
   return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetEpisodes(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  SortDescription sorting;
-  ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
-  if (!ParseSorting(parameterObject, sorting.sortBy, sorting.sortOrder, sorting.sortAttributes))
-    return InvalidParams;
-
-  int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
-  int season = static_cast<int>(parameterObject["season"].asInteger());
-
-  std::string strPath = StringUtils::Format("videodb://tvshows/titles/{}/{}/", tvshowID, season);
-
-  CVideoDbUrl videoUrl;
-  if (!videoUrl.FromString(strPath))
-    return InternalError;
-
-  static constexpr FilterField filters[] = {
-      FilterField::Number("genreId", "genreid"), FilterField::Text("genre"),
-      FilterField::Number("year"), FilterField::Text("actor"), FilterField::Text("director")};
-  if (!ApplyFilter(parameterObject["filter"], filters, "episodes", videoUrl))
-    return InvalidParams;
-
-  if (tvshowID <= 0 && (season > 0 || videoUrl.HasOption("genreid") ||
-                        videoUrl.HasOption("genre") || videoUrl.HasOption("actor")))
-    return InvalidParams;
-
-  if (tvshowID > 0)
-  {
-    videoUrl.AddOption("tvshowid", tvshowID);
-    if (season >= 0)
-      videoUrl.AddOption("season", season);
-  }
-
-  CFileItemList items;
-  if (!videodatabase.GetEpisodesByWhere(
-          videoUrl.ToString(), CDatabase::Filter(), items, false, sorting,
-          RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
-    return InvalidParams;
-
-  return HandleItems("episodeId", "episodes", items, parameterObject, result, false);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetEpisodeDetails(const CVariant& parameterObject, CVariant& result)
@@ -298,38 +399,6 @@ JSONRPC_STATUS CVideoLibrary::GetEpisodeDetails(const CVariant& parameterObject,
   return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::GetMusicVideos(const CVariant& parameterObject, CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  SortDescription sorting;
-  ParseLimits(parameterObject, sorting.limitStart, sorting.limitEnd);
-  if (!ParseSorting(parameterObject, sorting.sortBy, sorting.sortOrder, sorting.sortAttributes))
-    return InvalidParams;
-
-  CVideoDbUrl videoUrl;
-  if (!videoUrl.FromString("videodb://musicvideos/titles/"))
-    return InternalError;
-
-  static constexpr FilterField filters[] = {
-      FilterField::Text("artist"),   FilterField::Number("genreId", "genreid"),
-      FilterField::Text("genre"),    FilterField::Number("year"),
-      FilterField::Text("director"), FilterField::Text("studio"),
-      FilterField::Text("tag")};
-  if (!ApplyFilter(parameterObject["filter"], filters, "musicvideos", videoUrl))
-    return InvalidParams;
-
-  CFileItemList items;
-  if (!videodatabase.GetMusicVideosByWhere(
-          videoUrl.ToString(), CDatabase::Filter(), items, true, sorting,
-          RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
-    return InternalError;
-
-  return HandleItems("musicVideoId", "musicVideos", items, parameterObject, result, false);
-}
-
 JSONRPC_STATUS CVideoLibrary::GetMusicVideoDetails(const CVariant& parameterObject,
                                                    CVariant& result)
 {
@@ -348,70 +417,6 @@ JSONRPC_STATUS CVideoLibrary::GetMusicVideoDetails(const CVariant& parameterObje
   HandleFileItem("musicVideoId", true, "musicVideoDetails", std::make_shared<CFileItem>(infos),
                  parameterObject, parameterObject["properties"], result, false);
   return OK;
-}
-
-JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedMovies(const CVariant& parameterObject,
-                                                     CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedMoviesNav(
-          "videodb://recentlyaddedmovies/", items, 0,
-          RequiresAdditionalDetails(MediaTypeMovie, parameterObject)))
-    return InternalError;
-
-  return HandleItems("movieId", "movies", items, parameterObject, result, true);
-}
-
-JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedEpisodes(const CVariant& parameterObject,
-                                                       CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedEpisodesNav(
-          "videodb://recentlyaddedepisodes/", items, 0,
-          RequiresAdditionalDetails(MediaTypeEpisode, parameterObject)))
-    return InternalError;
-
-  return HandleItems("episodeId", "episodes", items, parameterObject, result, true);
-}
-
-JSONRPC_STATUS CVideoLibrary::GetRecentlyAddedMusicVideos(const CVariant& parameterObject,
-                                                          CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemList items;
-  if (!videodatabase.GetRecentlyAddedMusicVideosNav(
-          "videodb://recentlyaddedmusicvideos/", items, 0,
-          RequiresAdditionalDetails(MediaTypeMusicVideo, parameterObject)))
-    return InternalError;
-
-  return HandleItems("musicVideoId", "musicVideos", items, parameterObject, result, true);
-}
-
-JSONRPC_STATUS CVideoLibrary::GetInProgressTVShows(const CVariant& parameterObject,
-                                                   CVariant& result)
-{
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  CFileItemList items;
-  if (!videodatabase.GetInProgressTvShowsNav(
-          "videodb://inprogresstvshows/", items,
-          RequiresAdditionalDetails(MediaTypeTvShow, parameterObject)))
-    return InternalError;
-
-  return HandleItems("tvShowId", "tvShows", items, parameterObject, result, false);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)

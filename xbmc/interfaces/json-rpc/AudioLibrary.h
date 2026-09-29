@@ -11,6 +11,7 @@
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
 #include "addons/Scraper.h"
+#include "media/MediaType.h"
 
 #include <memory>
 #include <set>
@@ -26,26 +27,34 @@ class CVariant;
 
 namespace JSONRPC
 {
+//! The kinds of item the music library holds
+enum class AudioKind
+{
+  Artist,
+  Album,
+  Song,
+};
+
 class CAudioLibrary : public CFileItemHandler
 {
 public:
   static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetArtists(const CVariant& parameterObject, CVariant& result);
+
+  //! The query over one kind's items
+  static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
+
+  //! A list method: the query over \p Kind with the listing \p From, answered as that kind's list
+  template<AudioKind Kind, Listing From = Listing::All>
+  static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
+
   static JSONRPC_STATUS GetArtistDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetAlbums(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAlbumDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetSongs(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetSongDetails(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetRoles(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetSources(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
-
-  static JSONRPC_STATUS GetRecentlyAddedAlbums(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetRecentlyAddedSongs(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetRecentlyPlayedAlbums(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetRecentlyPlayedSongs(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS SetArtistDetails(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetAlbumDetails(const CVariant& parameterObject, CVariant& result);
@@ -113,6 +122,22 @@ protected:
                                                   InfoProviderTarget& target);
 
 private:
+  /*!
+     \brief Lists the items of \p kind that \p listing selects, under the kind's own list name
+     \param parameterObject The caller's properties, limits, sort and filter, and the options
+     that narrow the kind's list
+     */
+  static JSONRPC_STATUS Query(AudioKind kind,
+                              Listing listing,
+                              const CVariant& parameterObject,
+                              CVariant& result);
+
+  //! Adds the art and fanart the JSON listing leaves out to each item of \p list
+  static void FillListArt(CVariant& list,
+                          const std::set<std::string, std::less<>>& fields,
+                          const char* idName,
+                          const MediaType& mediaType);
+
   //! Narrows \p url to the artists in the role the caller's filter names, or to every role
   static void ApplyRoleFilter(const CVariant& parameterObject, CMusicDbUrl& url);
 
@@ -126,4 +151,10 @@ private:
                                            const std::set<std::string>& checkProperties,
                                            std::set<std::string>& foundProperties);
 };
+
+template<AudioKind Kind, Listing From>
+JSONRPC_STATUS CAudioLibrary::List(const CVariant& parameterObject, CVariant& result)
+{
+  return Query(Kind, From, parameterObject, result);
+}
 } // namespace JSONRPC

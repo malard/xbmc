@@ -626,6 +626,48 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item)
   return InvalidParams;
 }
 
+JSONRPC_STATUS CFileItemHandler::CheckAgainstType(const char* type,
+                                                  const char* parameter,
+                                                  const CVariant& value,
+                                                  CVariant& checked,
+                                                  CVariant& errorData)
+{
+  const JSONSchemaTypeDefinitionPtr definition{CJSONServiceDescription::GetType(type)};
+  if (!definition)
+    return InternalError;
+
+  CVariant data;
+  const JSONRPC_STATUS status{definition->Check(value, checked, data)};
+  if (status != OK)
+  {
+    errorData = data;
+    errorData["name"] = parameter;
+  }
+  return status;
+}
+
+JSONRPC_STATUS CFileItemHandler::RefuseForKind(const char* parameter,
+                                               const std::string& kind,
+                                               CVariant& errorData)
+{
+  errorData = CVariant(CVariant::VariantTypeObject);
+  errorData["name"] = parameter;
+  errorData["message"] = StringUtils::Format("Not accepted for a {}", kind);
+  return InvalidParams;
+}
+
+void CFileItemHandler::RenameList(CVariant& result, const char* from, const char* to)
+{
+  CVariant list{CVariant::VariantTypeArray};
+  if (result.isMember(from))
+  {
+    if (result[from].isArray())
+      list = std::move(result[from]);
+    result.erase(from);
+  }
+  result[to] = std::move(list);
+}
+
 void CFileItemHandler::Sort(CFileItemList& items, const CVariant& parameterObject)
 {
   SortDescription sorting;

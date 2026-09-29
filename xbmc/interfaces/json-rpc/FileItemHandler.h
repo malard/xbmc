@@ -31,6 +31,15 @@ class CPVRTimerInfoTag;
 
 namespace JSONRPC
 {
+//! Which of a kind's items a library list answers with
+enum class Listing
+{
+  All, //!< those the caller's filter, sort and limits select
+  RecentlyAdded,
+  RecentlyPlayed,
+  InProgress,
+};
+
 class CFileItemHandler : public CJSONUtils
 {
 public:
@@ -111,6 +120,32 @@ protected:
      \return NotFound, or InvalidParams when nothing better applies
      */
   static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item);
+
+public:
+  /*!
+     \brief Validates \p value against a type of the service description
+
+     A parameter declared as any of several kinds' types is checked again against the one type
+     of the kind the caller named.
+
+     \param parameter The parameter \p value was given as, named in the error data
+     \param checked The value with every omitted member filled in
+     \param errorData Why the value does not validate, in the shape the validator reports
+     */
+  static JSONRPC_STATUS CheckAgainstType(const char* type,
+                                         const char* parameter,
+                                         const CVariant& value,
+                                         CVariant& checked,
+                                         CVariant& errorData);
+
+  //! Refuses \p parameter, which means nothing for the kind the caller named
+  static JSONRPC_STATUS RefuseForKind(const char* parameter,
+                                      const std::string& kind,
+                                      CVariant& errorData);
+
+protected:
+  //! Moves the list a query answered under \p from to \p to, as an empty list when there is none
+  static void RenameList(CVariant& result, const char* from, const char* to);
 
 private:
   static void Sort(CFileItemList& items, const CVariant& parameterObject);

@@ -1,0 +1,309 @@
+/*
+ *  Copyright (C) 2026 Team Kodi
+ *  This file is part of Kodi - https://kodi.tv
+ *
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *  See LICENSES/README.md for more information.
+ */
+
+#include "DatabaseManager.h"
+#include "FileItem.h"
+#include "GUIInfoManager.h"
+#include "JSONRPCTestUtils.h"
+#include "ServiceBroker.h"
+#include "guilib/GUIComponent.h"
+#include "guilib/GUIWindowManager.h"
+#include "interfaces/AnnouncementManager.h"
+#include "music/MusicDatabase.h"
+#include "utils/URIUtils.h"
+#include "video/VideoDatabase.h"
+#include "video/VideoInfoTag.h"
+
+#include <memory>
+#include <string>
+
+#include <gtest/gtest.h>
+
+using namespace JSONRPC;
+
+namespace
+{
+class TestGUI : public CGUIComponent
+{
+public:
+  TestGUI() : CGUIComponent(false)
+  {
+    m_pWindowManager = std::make_unique<CGUIWindowManager>();
+    m_guiInfoManager = std::make_unique<CGUIInfoManager>();
+    CServiceBroker::RegisterGUI(this);
+  }
+
+  ~TestGUI() override { m_pWindowManager.reset(); }
+};
+
+//! Calls methods as a client would: validated against the shipped schema, then handled
+class TestLibraryItems : public JSONServiceDescriptionTestBase
+{
+public:
+  void SetUp() override
+  {
+    JSONServiceDescriptionTestBase::SetUp();
+    AddShippedServiceDescription();
+  }
+
+  JSONRPC_STATUS Invoke(const char* method, const std::string& paramsJson, CVariant& result)
+  {
+    std::string key = method;
+    StringUtils::ToLower(key);
+    MethodCall call;
+    CVariant params;
+    result = CVariant();
+    const JSONRPC_STATUS status{CJSONServiceDescription::CheckCall(
+        key.c_str(), ParseJson(paramsJson), &m_transport, &m_client, false, call, params)};
+    if (status != OK)
+    {
+      result = params;
+      return status;
+    }
+    return call(&m_transport, &m_client, params, result);
+  }
+
+  //! The parameter a refusal names
+  std::string Refused(const char* method, const std::string& paramsJson)
+  {
+    CVariant result;
+    EXPECT_EQ(InvalidParams, Invoke(method, paramsJson, result)) << paramsJson;
+    return result["name"].asString();
+  }
+};
+
+//! A library of this test's own items in the profile's databases, removed afterwards
+class TestLibraryItemsInDatabase : public TestLibraryItems
+{
+public:
+  void SetUp() override
+  {
+    TestLibraryItems::SetUp();
+    m_previousAnnouncements = CServiceBroker::GetAnnouncementManager();
+    CServiceBroker::RegisterAnnouncementManager(
+        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
+    if (!CServiceBroker::GetDatabaseManager().CanOpen("MyVideos") ||
+        !CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
+    {
+      ASSERT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
+    }
+    ASSERT_TRUE(m_videos.Open());
+    ASSERT_TRUE(m_music.Open());
+
+    m_movieId = AddMovie("/jsonrpc-test/library/Set Member (2001).mkv", SET_NAME);
+    ASSERT_GT(m_movieId, 0);
+    m_otherMovieId = AddMovie("/jsonrpc-test/library/Loner (2002).mkv", "");
+    ASSERT_GT(m_otherMovieId, 0);
+    m_setId = std::stoi(m_videos.GetSingleValue(
+        m_videos.PrepareSQL("SELECT idSet FROM sets WHERE strSet = '%s'", SET_NAME)));
+
+    m_showId = AddShow("/jsonrpc-test/library/Show/");
+    ASSERT_GT(m_showId, 0);
+    m_episodeId = AddEpisode(m_showId, "/jsonrpc-test/library/Show/Show.S01E01.mkv", 1);
+    ASSERT_GT(m_episodeId, 0);
+    m_seasonId = m_videos.GetSeasonId(m_showId, 1);
+    ASSERT_GT(m_seasonId, 0);
+
+    m_artistId = m_music.AddArtist("JSON-RPC test artist", "");
+    ASSERT_GT(m_artistId, 0);
+    ASSERT_TRUE(
+        m_music.ExecuteQuery("INSERT INTO album (strAlbum) VALUES ('JSON-RPC test album')"));
+    m_albumId = std::stoi(m_music.GetSingleValue("SELECT MAX(idAlbum) FROM album"));
+    ASSERT_TRUE(m_music.ExecuteQuery(m_music.PrepareSQL(
+        "INSERT INTO album_artist (idArtist, idAlbum) VALUES (%i, %i)", m_artistId, m_albumId)));
+    ASSERT_TRUE(m_music.ExecuteQuery(m_music.PrepareSQL(
+        "INSERT INTO song (idAlbum, iTrack, strTitle) VALUES (%i, 1, 'JSON-RPC test song')",
+        m_albumId)));
+    m_songId = std::stoi(m_music.GetSingleValue("SELECT MAX(idSong) FROM song"));
+  }
+
+  void TearDown() override
+  {
+    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM song WHERE idSong = %i", m_songId));
+    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM album WHERE idAlbum = %i", m_albumId));
+    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM artist WHERE idArtist = %i", m_artistId));
+    m_music.Close();
+
+    m_videos.DeleteTvShow(m_showId);
+    m_videos.DeleteMovie(m_movieId);
+    m_videos.DeleteMovie(m_otherMovieId);
+    m_videos.DeleteSet(m_setId);
+    m_videos.Close();
+
+    CServiceBroker::RegisterAnnouncementManager(m_previousAnnouncements);
+    TestLibraryItems::TearDown();
+  }
+
+  static constexpr const char* SET_NAME = "JSON-RPC test set";
+
+  CVideoInfoTag Tag(const std::string& fileAndPath)
+  {
+    CVideoInfoTag tag;
+    tag.m_strTitle = URIUtils::GetFileName(fileAndPath);
+    tag.m_strFileNameAndPath = fileAndPath;
+    tag.m_strPath = URIUtils::GetDirectory(fileAndPath);
+    tag.m_basePath = CFileItem(fileAndPath, false).GetBaseMoviePath(false);
+    tag.m_parentPathID = m_videos.AddPath(URIUtils::GetParentPath(tag.m_basePath));
+    return tag;
+  }
+
+  int AddMovie(const std::string& fileAndPath, const std::string& set)
+  {
+    CVideoInfoTag tag{Tag(fileAndPath)};
+    if (!set.empty())
+      tag.SetSet(set);
+    return m_videos.SetDetailsForMovie(tag, KODI::ART::Artwork{});
+  }
+
+  int AddShow(const std::string& showPath)
+  {
+    CVideoInfoTag tag;
+    tag.m_strTitle = "JSON-RPC test show";
+    tag.m_strPath = showPath;
+    return m_videos.SetDetailsForTvShow({showPath}, tag, KODI::ART::Artwork{},
+                                        KODI::ART::SeasonsArtwork{});
+  }
+
+  int AddEpisode(int idShow, const std::string& fileAndPath, int episode)
+  {
+    CVideoInfoTag tag{Tag(fileAndPath)};
+    tag.m_iSeason = 1;
+    tag.m_iEpisode = episode;
+    return m_videos.SetDetailsForEpisode(tag, KODI::ART::Artwork{}, idShow);
+  }
+
+  //! Answers \p list and GetItems for \p kind with the same parameters, and expects the same items
+  void ExpectTheQueryAnswersAsTheListMethod(const char* libraryNamespace,
+                                            const char* listMethod,
+                                            const char* list,
+                                            const char* kind,
+                                            const std::string& params)
+  {
+    SCOPED_TRACE(listMethod);
+
+    CVariant listed;
+    ASSERT_EQ(OK, Invoke(listMethod, "{" + params + "}", listed));
+
+    CVariant queried;
+    const std::string query{std::string(libraryNamespace) + ".GetItems"};
+    ASSERT_EQ(OK, Invoke(query.c_str(),
+                         "{\"kind\": \"" + std::string(kind) + "\"" +
+                             (params.empty() ? "" : ", " + params) + "}",
+                         queried));
+
+    EXPECT_EQ(ToJson(listed["limits"]), ToJson(queried["limits"]));
+    EXPECT_EQ(ToJson(listed.isMember(list) ? listed[list] : CVariant(CVariant::VariantTypeArray)),
+              ToJson(queried["items"]));
+    EXPECT_TRUE(queried["items"].isArray());
+  }
+
+  TestGUI m_gui;
+  CVideoDatabase m_videos;
+  CMusicDatabase m_music;
+  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previousAnnouncements;
+  int m_movieId{-1};
+  int m_otherMovieId{-1};
+  int m_setId{-1};
+  int m_showId{-1};
+  int m_seasonId{-1};
+  int m_episodeId{-1};
+  int m_artistId{-1};
+  int m_albumId{-1};
+  int m_songId{-1};
+};
+} // unnamed namespace
+
+TEST_F(TestLibraryItems, TheQueryRefusesAPropertyTheKindDoesNotHave)
+{
+  EXPECT_EQ("properties",
+            Refused("VideoLibrary.GetItems", R"({"kind": "set", "properties": ["year"]})"));
+  EXPECT_EQ("properties",
+            Refused("AudioLibrary.GetItems", R"({"kind": "album", "properties": ["lyrics"]})"));
+}
+
+TEST_F(TestLibraryItems, TheQueryRefusesAFilterOfAnotherKind)
+{
+  EXPECT_EQ("filter",
+            Refused("VideoLibrary.GetItems", R"({"kind": "tvshow", "filter": {"country": "UK"}})"));
+  EXPECT_EQ("filter",
+            Refused("AudioLibrary.GetItems", R"({"kind": "album", "filter": {"songId": 1}})"));
+}
+
+TEST_F(TestLibraryItems, TheQueryRefusesAFilterForAKindThatTakesNone)
+{
+  EXPECT_EQ("filter",
+            Refused("VideoLibrary.GetItems", R"({"kind": "set", "filter": {"genre": "Drama"}})"));
+  EXPECT_EQ("filter", Refused("VideoLibrary.GetItems",
+                              R"({"kind": "season", "filter": {"genre": "Drama"}})"));
+}
+
+TEST_F(TestLibraryItems, TheQueryRefusesWhatNarrowsAnotherKind)
+{
+  EXPECT_EQ("tvShowId", Refused("VideoLibrary.GetItems", R"({"kind": "movie", "tvShowId": 3})"));
+  EXPECT_EQ("season",
+            Refused("VideoLibrary.GetItems", R"({"kind": "season", "tvShowId": 3, "season": 1})"));
+  EXPECT_EQ("albumArtistsOnly",
+            Refused("AudioLibrary.GetItems", R"({"kind": "song", "albumArtistsOnly": true})"));
+  EXPECT_EQ("includeSingles",
+            Refused("AudioLibrary.GetItems", R"({"kind": "artist", "includeSingles": true})"));
+  EXPECT_EQ("singlesOnly",
+            Refused("AudioLibrary.GetItems", R"({"kind": "album", "singlesOnly": false})"));
+}
+
+TEST_F(TestLibraryItemsInDatabase, TheVideoListMethodsAreTheQueryWithPresetValues)
+{
+  const std::string show{std::to_string(m_showId)};
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovies", "movies", "movie",
+                                       R"("properties": ["title", "setId", "set"])");
+  ExpectTheQueryAnswersAsTheListMethod(
+      "VideoLibrary", "VideoLibrary.GetMovies", "movies", "movie",
+      R"("filter": {"set": "JSON-RPC test set"}, "sort": {"method": "title"})");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMovieSets", "sets", "set",
+                                       R"("properties": ["title"], "limits": {"end": 3})");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetTVShows", "tvShows",
+                                       "tvshow", R"("properties": ["title", "episode"])");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetSeasons", "seasons",
+                                       "season",
+                                       R"("tvShowId": )" + show + R"(, "properties": ["season"])");
+  ExpectTheQueryAnswersAsTheListMethod(
+      "VideoLibrary", "VideoLibrary.GetEpisodes", "episodes", "episode",
+      R"("tvShowId": )" + show + R"(, "season": 1, "properties": ["title", "episode"])");
+  ExpectTheQueryAnswersAsTheListMethod("VideoLibrary", "VideoLibrary.GetMusicVideos", "musicVideos",
+                                       "musicvideo", "");
+}
+
+TEST_F(TestLibraryItemsInDatabase, TheQueryNarrowsToTheFilterGiven)
+{
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItems",
+                       R"({"kind": "movie", "filter": {"set": "JSON-RPC test set"}})", result));
+
+  ASSERT_EQ(1u, result["items"].size());
+  EXPECT_EQ(m_movieId, result["items"][0]["movieId"].asInteger());
+  EXPECT_EQ(1, result["limits"]["total"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, TheMusicListMethodsAreTheQueryWithPresetValues)
+{
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetArtists", "artists",
+                                       "artist", R"("properties": ["genre"], "allRoles": true)");
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetAlbums", "albums", "album",
+                                       R"("properties": ["title", "art"])");
+  ExpectTheQueryAnswersAsTheListMethod("AudioLibrary", "AudioLibrary.GetSongs", "songs", "song",
+                                       R"("properties": ["title", "albumId", "thumbnail"])");
+}
+
+TEST_F(TestLibraryItemsInDatabase, TheQueryAnswersAnEmptyListAsAList)
+{
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItems",
+                       R"({"kind": "movie", "filter": {"set": "No set is called this"}})", result));
+
+  EXPECT_TRUE(result["items"].isArray());
+  EXPECT_EQ(0u, result["items"].size());
+}

@@ -1749,6 +1749,15 @@
       ]
     }
   },
+  "Audio.Item.Kind": {
+    "type": "string",
+    "description": "A kind of music library item, named by its media type",
+    "enum": [
+      "artist",
+      "album",
+      "song"
+    ]
+  },
   "Audio.Album.ReleaseType": {
     "type": "string",
     "enum": [
@@ -2402,6 +2411,18 @@
         "uniqueId"
       ]
     }
+  },
+  "Video.Item.Kind": {
+    "type": "string",
+    "description": "A kind of video library item, named by its media type",
+    "enum": [
+      "movie",
+      "set",
+      "tvshow",
+      "season",
+      "episode",
+      "musicvideo"
+    ]
   },
   "Video.Cast": {
     "type": "array",
@@ -4433,6 +4454,910 @@
       },
       {
         "$ref": "#/$defs/List.Filter.Rule.Textures"
+      }
+    ]
+  },
+  "Video.Filter.Movies": {
+    "description": "A movie filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "director": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "director"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "studio": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "studio"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "country"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "setId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "setId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "set"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.Movies"
+      }
+    ]
+  },
+  "Video.Filter.TVShows": {
+    "description": "A tv show filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "studio": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "studio"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.TVShows"
+      }
+    ]
+  },
+  "Video.Filter.Episodes": {
+    "description": "An episode filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id",
+            "description": "Requires tvShowId to be set"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Requires tvShowId to be set"
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Requires tvShowId to be set"
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "director": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "director"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.Episodes"
+      }
+    ]
+  },
+  "Video.Filter.MusicVideos": {
+    "description": "A music video filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artist"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "director": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "director"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "studio": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "studio"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.MusicVideos"
+      }
+    ]
+  },
+  "Audio.Filter.Artists": {
+    "description": "An artist filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id",
+            "deprecated": true,
+            "description": "Use songGenreId instead. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenreId": {
+            "$ref": "#/$defs/Library.Id",
+            "description": "Song genreId. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "songGenreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenreId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "songGenreId",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenreId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "songGenreId",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1,
+            "deprecated": true,
+            "description": "Use songGenre instead. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Song genre. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "songGenre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenre": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "songGenre",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songGenre": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "songGenre",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "albumId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "albumId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "album": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "album"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "songId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "songId",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "songId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "songId",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "$ref": "#/$defs/Library.Id",
+            "description": "Role contributed by artist. Overridden by allRoles parameter"
+          }
+        },
+        "required": [
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Role contributed by artist. Overridden by allRoles parameter"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.Artists"
+      }
+    ]
+  },
+  "Audio.Filter.Albums": {
+    "description": "An album filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id",
+            "description": "Song genre. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Song genre. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artistId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artistId",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artistId",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artist"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artist",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artist",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.Albums"
+      }
+    ]
+  },
+  "Audio.Filter.Songs": {
+    "description": "A song filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "genreId": {
+            "$ref": "#/$defs/Library.Id",
+            "description": "Song genre. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genreId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "genre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Song genre. Filter for existence of songs with this genre"
+          }
+        },
+        "required": [
+          "genre"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artistId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artistId",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artistId",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artist"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artist",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "artist",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "albumId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "albumId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "album": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "album"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "$ref": "#/$defs/List.Filter.Songs"
       }
     ]
   },

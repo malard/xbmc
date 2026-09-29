@@ -2136,6 +2136,128 @@
       "InternalError"
     ]
   },
+  "AudioLibrary.GetItems": {
+    "type": "method",
+    "description": "Retrieves the items of one kind. AudioLibrary.GetArtists and the other list methods are this query with preset values",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Audio.Item.Kind"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the kind named: Audio.Fields.Artist for an artist, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Fields.Artist"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Album"
+            },
+            {
+              "$ref": "#/$defs/Audio.Fields.Song"
+            }
+          ]
+        }
+      },
+      {
+        "name": "limits",
+        "schema": {
+          "$ref": "#/$defs/List.Limits"
+        }
+      },
+      {
+        "name": "sort",
+        "schema": {
+          "$ref": "#/$defs/List.Sort"
+        }
+      },
+      {
+        "name": "filter",
+        "description": "A filter of the kind named",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Audio.Filter.Artists"
+            },
+            {
+              "$ref": "#/$defs/Audio.Filter.Albums"
+            },
+            {
+              "$ref": "#/$defs/Audio.Filter.Songs"
+            }
+          ]
+        }
+      },
+      {
+        "name": "albumArtistsOnly",
+        "description": "Artists only. Whether to include only album artists rather than the artists of individual songs as well. The GUI setting applies when null",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "includeSingles",
+        "description": "Albums and songs only. Whether singles are included; when null, albums leave them out and songs include them",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "singlesOnly",
+        "description": "Songs only. Only singles when true, overriding includeSingles",
+        "schema": {
+          "$ref": "#/$defs/Optional.Boolean"
+        }
+      },
+      {
+        "name": "allRoles",
+        "description": "Whether to include every role when filtering by artist, rather than only the artist role. When true it overrides any role filter",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/$defs/List.LimitsReturned"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Audio.Details.Artist"
+              },
+              {
+                "$ref": "#/$defs/Audio.Details.Album"
+              },
+              {
+                "$ref": "#/$defs/Audio.Details.Song"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "limits",
+        "items"
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
+  },
   "AudioLibrary.GetArtists": {
     "type": "method",
     "description": "Retrieve all artists. For backward compatibility by default this implicitly does not include those that only contribute other roles, however absolutely all artists can be returned using allRoles=true",
@@ -2170,232 +2292,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "deprecated": true,
-                  "description": "Use songGenreId instead. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genreId. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "songGenreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songGenreId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenreId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songGenreId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "deprecated": true,
-                  "description": "Use songGenre instead. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "songGenre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songGenre",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songGenre": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songGenre",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "album": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "album"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "songId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "songId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "songId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Role contributed by artist. Overridden by allRoles parameter"
-                }
-              },
-              "required": [
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "role": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Role contributed by artist. Overridden by allRoles parameter"
-                }
-              },
-              "required": [
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Artists"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Artists"
         }
       },
       {
@@ -2489,131 +2386,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artistId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artist",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Albums"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Albums"
         }
       },
       {
@@ -2714,156 +2487,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Song genre. Filter for existence of songs with this genre"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artistId",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "roleId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artist",
-                "roleId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "role": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist",
-                "role"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "album": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "album"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Songs"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Filter.Songs"
         }
       },
       {
@@ -2989,6 +2613,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -3042,6 +2667,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -3088,6 +2714,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -3134,6 +2761,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -4192,6 +3820,136 @@
     "returns": "string",
     "errors": []
   },
+  "VideoLibrary.GetItems": {
+    "type": "method",
+    "description": "Retrieves the items of one kind. VideoLibrary.GetMovies and the other list methods are this query with preset values",
+    "transport": "Response",
+    "permission": "ReadData",
+    "params": [
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "$ref": "#/$defs/Video.Item.Kind"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Fields of the kind named: Video.Fields.Movie for a movie, and so on",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Fields.Movie"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MovieSet"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.TVShow"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Season"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.Episode"
+            },
+            {
+              "$ref": "#/$defs/Video.Fields.MusicVideo"
+            }
+          ]
+        }
+      },
+      {
+        "name": "limits",
+        "schema": {
+          "$ref": "#/$defs/List.Limits"
+        }
+      },
+      {
+        "name": "sort",
+        "schema": {
+          "$ref": "#/$defs/List.Sort"
+        }
+      },
+      {
+        "name": "filter",
+        "description": "A filter of the kind named. A set or a season takes none",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Filter.Movies"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.TVShows"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.Episodes"
+            },
+            {
+              "$ref": "#/$defs/Video.Filter.MusicVideos"
+            }
+          ]
+        }
+      },
+      {
+        "name": "tvShowId",
+        "description": "The show whose seasons or episodes are listed",
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "season",
+        "description": "The season whose episodes are listed. Requires tvShowId",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": -1
+        }
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/$defs/List.LimitsReturned"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Video.Details.Movie"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.MovieSet"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.TVShow"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.Season"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.Episode"
+              },
+              {
+                "$ref": "#/$defs/Video.Details.MusicVideo"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "limits",
+        "items"
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError"
+    ]
+  },
   "VideoLibrary.GetMovies": {
     "type": "method",
     "description": "Retrieve all movies",
@@ -4219,139 +3977,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "country": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "country"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "setId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "setId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "set": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "set"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Movies"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.Movies"
         }
       }
     ],
@@ -4453,6 +4079,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -4533,88 +4160,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.TVShows"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.TVShows"
         }
       }
     ],
@@ -4722,6 +4268,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -4799,78 +4346,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id",
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "actor": {
-                  "type": "string",
-                  "minLength": 1,
-                  "description": "Requires tvShowId to be set"
-                }
-              },
-              "required": [
-                "actor"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.Episodes"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.Episodes"
         }
       }
     ],
@@ -4956,101 +4432,7 @@
       {
         "name": "filter",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "artist": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "artist"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genreId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "genreId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "genre": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "genre"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "year": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "year"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "director": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "director"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "studio": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "studio"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tag": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "tag"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "$ref": "#/$defs/List.Filter.MusicVideos"
-            }
-          ]
+          "$ref": "#/$defs/Video.Filter.MusicVideos"
         }
       }
     ],
@@ -5152,6 +4534,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -5198,6 +4581,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -5244,6 +4628,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
@@ -5290,6 +4675,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ]
   },
