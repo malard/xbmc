@@ -202,7 +202,8 @@ JSONRPC_STATUS CApplicationOperations::Quit(const CVariant& parameterObject, CVa
   return ACK;
 }
 
-JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string &property, CVariant &result)
+JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& property,
+                                                        CVariant& result)
 {
   if (property == "volume" || property == "muted")
   {

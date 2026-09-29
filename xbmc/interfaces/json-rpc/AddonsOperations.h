@@ -16,25 +16,25 @@ namespace ADDON
 {
 class CAddonDatabase;
 class IAddon;
-}
+} // namespace ADDON
 
 class CVariant;
 
 namespace JSONRPC
 {
-  class CAddonsOperations : public CJSONUtils
-  {
-  public:
-    static JSONRPC_STATUS GetAddons(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetAddonDetails(const CVariant& parameterObject, CVariant& result);
+class CAddonsOperations : public CJSONUtils
+{
+public:
+  static JSONRPC_STATUS GetAddons(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetAddonDetails(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS SetAddonEnabled(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS ExecuteAddon(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetAddonEnabled(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS ExecuteAddon(const CVariant& parameterObject, CVariant& result);
 
-  private:
-    static void FillDetails(const std::shared_ptr<ADDON::IAddon>& addon,
-                            const CVariant& fields,
-                            CVariant& result,
-                            bool append);
-  };
-}
+private:
+  static void FillDetails(const std::shared_ptr<ADDON::IAddon>& addon,
+                          const CVariant& fields,
+                          CVariant& result,
+                          bool append);
+};
+} // namespace JSONRPC

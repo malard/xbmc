@@ -37,7 +37,9 @@ bool CInputOperations::handleScreenSaver()
   return appPower->WakeUpScreenSaverAndDPMS();
 }
 
-JSONRPC_STATUS CInputOperations::SendAction(int actionID, bool wakeScreensaver /* = true */, bool waitResult /* = false */)
+JSONRPC_STATUS CInputOperations::SendAction(int actionID,
+                                            bool wakeScreensaver /* = true */,
+                                            bool waitResult /* = false */)
 {
   if (!wakeScreensaver || !handleScreenSaver())
   {
@@ -62,7 +64,7 @@ JSONRPC_STATUS CInputOperations::SendAction(int actionID, bool wakeScreensaver /
 
 JSONRPC_STATUS CInputOperations::activateWindow(int windowID)
 {
-  if(!handleScreenSaver())
+  if (!handleScreenSaver())
     CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTIVATE_WINDOW, windowID, 0);
 
   return ACK;
@@ -70,10 +72,12 @@ JSONRPC_STATUS CInputOperations::activateWindow(int windowID)
 
 JSONRPC_STATUS CInputOperations::SendText(const CVariant& parameterObject, CVariant& result)
 {
-  if (CGUIKeyboardFactory::SendTextToActiveKeyboard(parameterObject["text"].asString(), parameterObject["done"].asBoolean()))
+  if (CGUIKeyboardFactory::SendTextToActiveKeyboard(parameterObject["text"].asString(),
+                                                    parameterObject["done"].asBoolean()))
     return ACK;
 
-  CGUIWindow *window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog());
+  CGUIWindow* window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(
+      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog());
   if (!window)
     return ACK;
 

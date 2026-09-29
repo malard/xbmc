@@ -77,7 +77,9 @@ JSONRPC_STATUS CSystemOperations::Reboot(const CVariant& parameterObject, CVaria
     return FailedToExecute;
 }
 
-JSONRPC_STATUS CSystemOperations::GetPropertyValue(int permissions, const std::string &property, CVariant &result)
+JSONRPC_STATUS CSystemOperations::GetPropertyValue(int permissions,
+                                                   const std::string& property,
+                                                   CVariant& result)
 {
   if (property == "canshutdown")
     result = CServiceBroker::GetPowerManager().CanPowerdown() && (permissions & ControlPower);

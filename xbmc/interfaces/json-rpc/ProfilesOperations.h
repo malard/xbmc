@@ -15,11 +15,11 @@ class CVariant;
 
 namespace JSONRPC
 {
-  class CProfilesOperations : CFileItemHandler
-  {
-  public:
-    static JSONRPC_STATUS GetProfiles(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetCurrentProfile(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS LoadProfile(const CVariant& parameterObject, CVariant& result);
-  };
-}
+class CProfilesOperations : CFileItemHandler
+{
+public:
+  static JSONRPC_STATUS GetProfiles(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetCurrentProfile(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS LoadProfile(const CVariant& parameterObject, CVariant& result);
+};
+} // namespace JSONRPC

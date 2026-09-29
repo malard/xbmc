@@ -18,29 +18,28 @@ class CVariant;
 
 namespace JSONRPC
 {
-  class CFileOperations : public CFileItemHandler
-  {
-  public:
-    static JSONRPC_STATUS GetRootDirectory(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetDirectory(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetFileDetails(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS SetFileDetails(const CVariant& parameterObject, CVariant& result);
+class CFileOperations : public CFileItemHandler
+{
+public:
+  static JSONRPC_STATUS GetRootDirectory(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetDirectory(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetFileDetails(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetFileDetails(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS PrepareDownload(ITransportLayer* transport,
-                                          IClient* client,
-                                          const CVariant& parameterObject,
-                                          CVariant& result);
-    static JSONRPC_STATUS Download(ITransportLayer* transport,
-                                   IClient* client,
-                                   const CVariant& parameterObject,
-                                   CVariant& result);
+  static JSONRPC_STATUS PrepareDownload(ITransportLayer* transport,
+                                        IClient* client,
+                                        const CVariant& parameterObject,
+                                        CVariant& result);
+  static JSONRPC_STATUS Download(ITransportLayer* transport,
+                                 IClient* client,
+                                 const CVariant& parameterObject,
+                                 CVariant& result);
 
-    static bool FillFileItem(
-        const std::shared_ptr<CFileItem>& originalItem,
-        std::shared_ptr<CFileItem>& item,
-        const std::string& media = "",
-        const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
-    static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
-    static bool NeedsLibraryLookup(const CVariant& parameterObject);
-  };
-}
+  static bool FillFileItem(const std::shared_ptr<CFileItem>& originalItem,
+                           std::shared_ptr<CFileItem>& item,
+                           const std::string& media = "",
+                           const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
+  static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
+  static bool NeedsLibraryLookup(const CVariant& parameterObject);
+};
+} // namespace JSONRPC

@@ -228,55 +228,55 @@ inline const char* PermissionToString(const OperationPermission& permission)
       return "WriteSetting";
     default:
       return "Unknown";
-    }
   }
+}
 
-  /*!
+/*!
     \brief Returns the OperationPermission value for the given
     string representation
     \param permission String representation of the OperationPermission
     \return OperationPermission value of the given string representation, or
     nothing for a string that is not the name of a permission
     */
-  inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
-  {
-    if (permission.compare("ReadData") == 0)
-      return ReadData;
-    if (permission.compare("ControlPlayback") == 0)
-      return ControlPlayback;
-    if (permission.compare("ControlNotify") == 0)
-      return ControlNotify;
-    if (permission.compare("ControlPower") == 0)
-      return ControlPower;
-    if (permission.compare("UpdateData") == 0)
-      return UpdateData;
-    if (permission.compare("RemoveData") == 0)
-      return RemoveData;
-    if (permission.compare("Navigate") == 0)
-      return Navigate;
-    if (permission.compare("WriteFile") == 0)
-      return WriteFile;
-    if (permission.compare("ControlSystem") == 0)
-      return ControlSystem;
-    if (permission.compare("ControlGUI") == 0)
-      return ControlGUI;
-    if (permission.compare("ManageAddon") == 0)
-      return ManageAddon;
-    if (permission.compare("ExecuteAddon") == 0)
-      return ExecuteAddon;
-    if (permission.compare("ControlPVR") == 0)
-      return ControlPVR;
-    if (permission.compare("WriteSetting") == 0)
-      return WriteSetting;
+inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
+{
+  if (permission.compare("ReadData") == 0)
+    return ReadData;
+  if (permission.compare("ControlPlayback") == 0)
+    return ControlPlayback;
+  if (permission.compare("ControlNotify") == 0)
+    return ControlNotify;
+  if (permission.compare("ControlPower") == 0)
+    return ControlPower;
+  if (permission.compare("UpdateData") == 0)
+    return UpdateData;
+  if (permission.compare("RemoveData") == 0)
+    return RemoveData;
+  if (permission.compare("Navigate") == 0)
+    return Navigate;
+  if (permission.compare("WriteFile") == 0)
+    return WriteFile;
+  if (permission.compare("ControlSystem") == 0)
+    return ControlSystem;
+  if (permission.compare("ControlGUI") == 0)
+    return ControlGUI;
+  if (permission.compare("ManageAddon") == 0)
+    return ManageAddon;
+  if (permission.compare("ExecuteAddon") == 0)
+    return ExecuteAddon;
+  if (permission.compare("ControlPVR") == 0)
+    return ControlPVR;
+  if (permission.compare("WriteSetting") == 0)
+    return WriteSetting;
 
-    return std::nullopt;
-  }
-
-  class CJSONRPCUtils
-  {
-  public:
-    static void NotifyItemUpdated();
-    static void NotifyItemUpdated(const std::shared_ptr<CFileItem>& item);
-    static void NotifyItemUpdated(const CVideoInfoTag& info, const KODI::ART::Artwork& artwork);
-  };
+  return std::nullopt;
 }
+
+class CJSONRPCUtils
+{
+public:
+  static void NotifyItemUpdated();
+  static void NotifyItemUpdated(const std::shared_ptr<CFileItem>& item);
+  static void NotifyItemUpdated(const CVideoInfoTag& info, const KODI::ART::Artwork& artwork);
+};
+} // namespace JSONRPC
