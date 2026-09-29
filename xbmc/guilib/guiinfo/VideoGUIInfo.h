@@ -13,10 +13,8 @@
 #include "threads/CriticalSection.h"
 #include "video/geometry/EffectiveGeometry.h"
 
-#include <deque>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 class CApplicationPlayer;
 class CApplicationPlayLists;
@@ -59,7 +57,6 @@ public:
 
 private:
   int GetPercentPlayed(const CVideoInfoTag* tag) const;
-  static bool IsPlaylistInfo(const CGUIInfo& info);
   bool GetPlaylistInfo(std::string& value, const CGUIInfo& info) const;
 
   //! \brief Answer one content geometry member for \p item, or for the player when it is null.
@@ -69,19 +66,13 @@ private:
   //! \brief Whether the title's geometry changes partway through. \p item nullptr for the player.
   bool GetContentAspectVaries(const CFileItem* item) const;
 
-  //! \brief The ratios in force, resolved once for the refresh and held under m_geometrySection.
-  const KODI::VIDEO::GEOMETRY::ContentAspectSet& ContentAspects(const CFileItem* item) const;
+  //! \brief The ratios in force for \p item, or for the player when it is null. The player's
+  //! are resolved once per refresh, so every label agrees though live detection moves on.
+  KODI::VIDEO::GEOMETRY::ContentAspectSet ContentAspects(const CFileItem* item) const;
 
   mutable CCriticalSection m_geometrySection;
   mutable bool m_playerAspectsValid{false};
   mutable KODI::VIDEO::GEOMETRY::ContentAspectSet m_playerAspects;
-
-  //! \brief Keyed by item path. Node-based, so evicting one entry cannot invalidate a
-  //! reference handed out for another.
-  mutable std::unordered_map<std::string, KODI::VIDEO::GEOMETRY::ContentAspectSet> m_itemAspects;
-
-  //! \brief Insertion order, so a full cache evicts its oldest entry.
-  mutable std::deque<std::string> m_itemAspectOrder;
 
   const std::shared_ptr<CApplicationPlayer> m_appPlayer;
   const std::shared_ptr<CApplicationPlayLists> m_playLists;

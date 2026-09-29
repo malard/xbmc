@@ -89,7 +89,8 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
                              const CGUIInfo& info,
                              std::string* fallback) const
 {
-  if (IsPlaylistInfo(info))
+  if (GUIINFO::IsPlayListEntryInfo(info, MUSICPLAYER_OFFSET_POSITION_FIRST,
+                                   MUSICPLAYER_OFFSET_POSITION_LAST))
     return GetPlaylistInfo(value, info);
 
   const CMusicInfoTag* tag = item->GetMusicInfoTag();
@@ -557,15 +558,6 @@ bool CMusicGUIInfo::GetPartyModeLabel(std::string& value, const CGUIInfo& info) 
   return false;
 }
 
-bool CMusicGUIInfo::IsPlaylistInfo(const CGUIInfo& info)
-{
-  // an "offset" or "position" label names a playlist entry, not the item asked about
-  return info.GetData1() && ((info.GetInfo() >= MUSICPLAYER_OFFSET_POSITION_FIRST &&
-                              info.GetInfo() <= MUSICPLAYER_OFFSET_POSITION_LAST) ||
-                             (info.GetInfo() >= PLAYER_OFFSET_POSITION_FIRST &&
-                              info.GetInfo() <= PLAYER_OFFSET_POSITION_LAST));
-}
-
 bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
   const auto found = GUIINFO::GetPlayListEntry(*m_playLists, PLAYLIST::Audio, info);
@@ -589,25 +581,21 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
     return GUIINFO::GetFileFallbackLabel(value, *found->item, info.GetInfo());
   }
 
-  CFileItemPtr playlistItem = found->item;
-  // asked every frame, so an entry's tag and art are looked up once, on a copy written back to
-  // the playlist
-  if (m_lookedUp.NeedsLookUp(found->entry, found->item))
-  {
-    playlistItem = std::make_shared<CFileItem>(*found->item);
-    if (playlistItem->HasMusicInfoTag() && !playlistItem->GetMusicInfoTag()->Loaded())
-    {
-      playlistItem->LoadMusicTag();
-      playlistItem->GetMusicInfoTag()->SetLoaded();
-    }
-    if (!playlistItem->HasArt("thumb"))
-    {
-      CMusicThumbLoader loader;
-      loader.LoadItem(playlistItem.get());
-    }
-    m_playLists->ReplaceItem(PLAYLIST::Audio, found->entry, *playlistItem);
-    m_lookedUp.Add(found->entry, m_playLists->GetPlayList(PLAYLIST::Audio).GetItem(found->entry));
-  }
+  const CFileItemPtr playlistItem =
+      GUIINFO::LookUpOnce(*m_playLists, PLAYLIST::Audio, *found, m_lookedUp,
+                          [](CFileItem& item)
+                          {
+                            if (item.HasMusicInfoTag() && !item.GetMusicInfoTag()->Loaded())
+                            {
+                              item.LoadMusicTag();
+                              item.GetMusicInfoTag()->SetLoaded();
+                            }
+                            if (!item.HasArt("thumb"))
+                            {
+                              CMusicThumbLoader loader;
+                              loader.LoadItem(&item);
+                            }
+                          });
 
   if (info.GetInfo() == MUSICPLAYER_COVER)
   {
@@ -626,7 +614,8 @@ bool CMusicGUIInfo::GetFallbackLabel(std::string& value,
                                      const CGUIInfo& info,
                                      std::string* fallback)
 {
-  if (IsPlaylistInfo(info))
+  if (GUIINFO::IsPlayListEntryInfo(info, MUSICPLAYER_OFFSET_POSITION_FIRST,
+                                   MUSICPLAYER_OFFSET_POSITION_LAST))
     return false;
 
   const CMusicInfoTag* tag = item->GetMusicInfoTag();

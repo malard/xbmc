@@ -49,7 +49,6 @@ public:
 
 private:
   bool GetPartyModeLabel(std::string& value, const CGUIInfo& info) const;
-  static bool IsPlaylistInfo(const CGUIInfo& info);
   bool GetPlaylistInfo(std::string& value, const CGUIInfo& info) const;
 
   const std::shared_ptr<CApplicationPlayLists> m_playLists;

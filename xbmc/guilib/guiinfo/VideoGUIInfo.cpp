@@ -64,41 +64,25 @@ void CVideoGUIInfo::ResetContentGeometry()
   std::unique_lock lock(m_geometrySection);
   m_playerAspectsValid = false;
   m_playerAspects = {};
-  m_itemAspects.clear();
-  m_itemAspectOrder.clear();
 }
 
-const VIDEO::GEOMETRY::ContentAspectSet& CVideoGUIInfo::ContentAspects(const CFileItem* item) const
+VIDEO::GEOMETRY::ContentAspectSet CVideoGUIInfo::ContentAspects(const CFileItem* item) const
 {
-  if (!item)
+  if (item)
   {
-    if (!m_playerAspectsValid)
-    {
-      m_playerAspects = VIDEO::GEOMETRY::ContentAspectsOf(
-          CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Get());
-      m_playerAspectsValid = true;
-    }
-    return m_playerAspects;
+    const CVideoInfoTag* tag = item->GetVideoInfoTag();
+    return tag ? VIDEO::GEOMETRY::ContentAspectsOf(tag->ResolveContentGeometry())
+               : VIDEO::GEOMETRY::ContentAspectSet{};
   }
 
-  const std::string& key = item->GetPath();
-  if (const auto held = m_itemAspects.find(key); held != m_itemAspects.end())
-    return held->second;
-
-  const CVideoInfoTag* tag = item->GetVideoInfoTag();
-  VIDEO::GEOMETRY::ContentAspectSet resolved;
-  if (tag)
-    resolved = VIDEO::GEOMETRY::ContentAspectsOf(tag->ResolveContentGeometry());
-
-  static constexpr size_t MAX_HELD_ITEMS = 64;
-  if (m_itemAspects.size() >= MAX_HELD_ITEMS)
+  std::unique_lock lock(m_geometrySection);
+  if (!m_playerAspectsValid)
   {
-    m_itemAspects.erase(m_itemAspectOrder.front());
-    m_itemAspectOrder.pop_front();
+    m_playerAspects = VIDEO::GEOMETRY::ContentAspectsOf(
+        CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Get());
+    m_playerAspectsValid = true;
   }
-
-  m_itemAspectOrder.push_back(key);
-  return m_itemAspects.emplace(key, std::move(resolved)).first->second;
+  return m_playerAspects;
 }
 
 bool CVideoGUIInfo::GetContentAspectLabel(std::string& value,
@@ -106,8 +90,7 @@ bool CVideoGUIInfo::GetContentAspectLabel(std::string& value,
                                           int id,
                                           int index) const
 {
-  std::unique_lock lock(m_geometrySection);
-  const VIDEO::GEOMETRY::ContentAspectSet& aspects = ContentAspects(item);
+  const VIDEO::GEOMETRY::ContentAspectSet aspects = ContentAspects(item);
   const bool held = index >= 0 && static_cast<size_t>(index) < aspects.aspects.size();
 
   switch (id)
@@ -137,7 +120,6 @@ bool CVideoGUIInfo::GetContentAspectLabel(std::string& value,
 
 bool CVideoGUIInfo::GetContentAspectVaries(const CFileItem* item) const
 {
-  std::unique_lock lock(m_geometrySection);
   return ContentAspects(item).varies;
 }
 
@@ -194,7 +176,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
                              const CGUIInfo& info,
                              std::string* fallback) const
 {
-  if (IsPlaylistInfo(info))
+  if (GUIINFO::IsPlayListEntryInfo(info, VIDEOPLAYER_OFFSET_POSITION_FIRST,
+                                   VIDEOPLAYER_OFFSET_POSITION_LAST))
     return GetPlaylistInfo(value, info);
 
   const CVideoInfoTag* tag = item->GetVideoInfoTag();
@@ -863,31 +846,21 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
   return false;
 }
 
-bool CVideoGUIInfo::IsPlaylistInfo(const CGUIInfo& info)
-{
-  // an "offset" or "position" label names a playlist entry, not the item asked about
-  return info.GetData1() && ((info.GetInfo() >= VIDEOPLAYER_OFFSET_POSITION_FIRST &&
-                              info.GetInfo() <= VIDEOPLAYER_OFFSET_POSITION_LAST) ||
-                             (info.GetInfo() >= PLAYER_OFFSET_POSITION_FIRST &&
-                              info.GetInfo() <= PLAYER_OFFSET_POSITION_LAST));
-}
-
 bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) const
 {
   const auto found = GUIINFO::GetPlayListEntry(*m_playLists, PLAYLIST::Video, info);
   if (!found)
     return false;
-  CFileItemPtr playlistItem = found->item;
-  // asked every frame, so an entry's art is looked up once, on a copy written back to the
-  // playlist
-  if (m_lookedUp.NeedsLookUp(found->entry, found->item) && !playlistItem->HasArt("thumb"))
-  {
-    playlistItem = std::make_shared<CFileItem>(*found->item);
-    CVideoThumbLoader loader;
-    loader.LoadItem(playlistItem.get());
-    m_playLists->ReplaceItem(PLAYLIST::Video, found->entry, *playlistItem);
-    m_lookedUp.Add(found->entry, m_playLists->GetPlayList(PLAYLIST::Video).GetItem(found->entry));
-  }
+  const CFileItemPtr playlistItem =
+      GUIINFO::LookUpOnce(*m_playLists, PLAYLIST::Video, *found, m_lookedUp,
+                          [](CFileItem& item)
+                          {
+                            if (!item.HasArt("thumb"))
+                            {
+                              CVideoThumbLoader loader;
+                              loader.LoadItem(&item);
+                            }
+                          });
   if (info.GetInfo() == VIDEOPLAYER_PLAYLISTPOS)
   {
     value = std::to_string(
@@ -916,7 +889,8 @@ bool CVideoGUIInfo::GetFallbackLabel(std::string& value,
                                      const CGUIInfo& info,
                                      std::string* fallback)
 {
-  if (IsPlaylistInfo(info))
+  if (GUIINFO::IsPlayListEntryInfo(info, VIDEOPLAYER_OFFSET_POSITION_FIRST,
+                                   VIDEOPLAYER_OFFSET_POSITION_LAST))
     return false;
 
   const CVideoInfoTag* tag = item->GetVideoInfoTag();

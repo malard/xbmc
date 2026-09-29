@@ -11,6 +11,7 @@
 #include "playlists/PlayListTypes.h"
 #include "threads/CriticalSection.h"
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -47,9 +48,14 @@ std::string GetFileInfoLabelValueFromPath(int info, const std::string& filenameA
  */
 bool GetFileFallbackLabel(std::string& value, const CFileItem& item, int info);
 
+/*!
+ * \brief Whether info is an offset or position label, naming a playlist entry rather than the
+ * item asked about. \p first and \p last are the asking player's own offset range.
+ */
+bool IsPlayListEntryInfo(const CGUIInfo& info, int first, int last);
+
 struct PlayListEntryLabel
 {
-  int position;
   PLAYLIST::EntryId entry;
   std::shared_ptr<CFileItem> item;
 };
@@ -80,6 +86,16 @@ private:
   mutable CCriticalSection m_section;
   std::unordered_map<PLAYLIST::EntryId, std::weak_ptr<const CFileItem>> m_items;
 };
+
+/*!
+ * \brief The entry's item with its details. Labels are asked every frame, so the first time an
+ * entry is asked about \p load fills in a copy, which replaces the entry's item on the playlist.
+ */
+std::shared_ptr<CFileItem> LookUpOnce(CApplicationPlayLists& playLists,
+                                      PLAYLIST::Type type,
+                                      const PlayListEntryLabel& found,
+                                      CLookedUpItems& lookedUp,
+                                      const std::function<void(CFileItem&)>& load);
 
 std::string GetPlayListLengthLabel(const CApplicationPlayLists& playLists,
                                    std::optional<PLAYLIST::Type> type);

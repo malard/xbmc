@@ -179,6 +179,13 @@ bool GetFileFallbackLabel(std::string& value, const CFileItem& item, int info)
   }
 }
 
+bool IsPlayListEntryInfo(const CGUIInfo& info, int first, int last)
+{
+  return info.GetData1() && ((info.GetInfo() >= first && info.GetInfo() <= last) ||
+                             (info.GetInfo() >= PLAYER_OFFSET_POSITION_FIRST &&
+                              info.GetInfo() <= PLAYER_OFFSET_POSITION_LAST));
+}
+
 std::optional<PlayListEntryLabel> GetPlayListEntry(const CApplicationPlayLists& playLists,
                                                    PLAYLIST::Type type,
                                                    const CGUIInfo& info)
@@ -194,7 +201,7 @@ std::optional<PlayListEntryLabel> GetPlayListEntry(const CApplicationPlayLists& 
   std::shared_ptr<CFileItem> item = playList.GetItem(entry);
   if (!item)
     return std::nullopt;
-  return PlayListEntryLabel{position, entry, std::move(item)};
+  return PlayListEntryLabel{entry, std::move(item)};
 }
 
 bool CLookedUpItems::NeedsLookUp(PLAYLIST::EntryId entry,
@@ -210,6 +217,22 @@ void CLookedUpItems::Add(PLAYLIST::EntryId entry, const std::shared_ptr<const CF
   std::unique_lock lock(m_section);
   std::erase_if(m_items, [](const auto& looked) { return looked.second.expired(); });
   m_items[entry] = item;
+}
+
+std::shared_ptr<CFileItem> LookUpOnce(CApplicationPlayLists& playLists,
+                                      PLAYLIST::Type type,
+                                      const PlayListEntryLabel& found,
+                                      CLookedUpItems& lookedUp,
+                                      const std::function<void(CFileItem&)>& load)
+{
+  if (!lookedUp.NeedsLookUp(found.entry, found.item))
+    return found.item;
+
+  auto item = std::make_shared<CFileItem>(*found.item);
+  load(*item);
+  playLists.ReplaceItem(type, found.entry, *item);
+  lookedUp.Add(found.entry, playLists.GetPlayList(type).GetItem(found.entry));
+  return item;
 }
 
 std::string GetPlayListLengthLabel(const CApplicationPlayLists& playLists,
