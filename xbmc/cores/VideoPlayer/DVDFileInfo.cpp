@@ -93,17 +93,6 @@ int DegreeToOrientation(int degrees)
   }
 }
 
-bool CDVDFileInfo::SeekAndDecodeFirstPicture(CDVDDemux& demuxer,
-                                             CDVDVideoCodec& codec,
-                                             int videoStream,
-                                             int64_t seekTo_ms,
-                                             VideoPicture& picture,
-                                             int& packetsTried)
-{
-  return SeekAndDecodePictureAt(demuxer, codec, videoStream, seekTo_ms, {}, picture,
-                               packetsTried);
-}
-
 namespace
 {
 //! Convert a decoded picture to a BGRA texture sized for the thumbnail cache.
