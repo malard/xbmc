@@ -9710,7 +9710,9 @@
     "errors": [
       "AccessDenied"
     ],
-    "reasons": []
+    "reasons": [
+      "level-locked"
+    ]
   },
   "Settings.GetSections": {
     "type": "method",
@@ -9919,7 +9921,9 @@
       "InvalidParams",
       "NotFound"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-setting"
+    ]
   },
   "Settings.SetSettingValue": {
     "type": "method",
@@ -9957,7 +9961,11 @@
       "NotFound",
       "Unavailable"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-setting",
+      "setting-disabled",
+      "change-declined"
+    ]
   },
   "Settings.ResetSettingValue": {
     "type": "method",
@@ -9980,7 +9988,10 @@
       "NotFound",
       "Unavailable"
     ],
-    "reasons": []
+    "reasons": [
+      "no-such-setting",
+      "setting-disabled"
+    ]
   },
   "Settings.GetSkinSettingValue": {
     "type": "method",

@@ -122,6 +122,8 @@ Failure reasons:
   for shuffling a slideshow that is not running, and, when `Add` or `Insert` adds nothing, the
   reason the first missing item gives. `Player.Open` gives the same for an item it cannot resolve:
   `no-such-item`, `no-such-path` or `not-a-file`.
+- `Settings`: `no-such-setting`, `setting-disabled`, `change-declined` and `level-locked`, naming
+  the setting or level.
 
 Properties and types:
 

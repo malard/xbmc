@@ -50,7 +50,7 @@ JSONRPC_STATUS CSettingsOperations::SetLevel(const CVariant& parameterObject, CV
   if (level != viewStateSettings.GetSettingLevel())
   {
     if (!g_passwordManager.IsSettingLevelUnlocked(level))
-      return AccessDenied;
+      return Fail(result, Reason::LevelLocked, Target("level", parameterObject["level"]));
 
     viewStateSettings.SetSettingLevel(level);
     CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
@@ -244,7 +244,7 @@ JSONRPC_STATUS CSettingsOperations::GetSettingValue(const CVariant& parameterObj
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
   if (setting == nullptr)
-    return NotFound;
+    return Fail(result, Reason::NoSuchSetting, Target("setting", parameterObject["setting"]));
 
   CVariant value;
   switch (setting->GetType())
@@ -318,9 +318,9 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObj
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
   if (setting == nullptr)
-    return NotFound;
+    return Fail(result, Reason::NoSuchSetting, Target("setting", parameterObject["setting"]));
   if (!setting->IsEnabled())
-    return Unavailable;
+    return Fail(result, Reason::SettingDisabled, Target("setting", parameterObject["setting"]));
 
   // engaged for the rest of the call: a display mode change is kept without the prompt
   std::optional<CDisplaySettings::CConfirmedChange> confirmed;
@@ -400,7 +400,7 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObj
 
   // A change handler declined the value, e.g. a display mode that was not kept.
   if (!changed)
-    return Unavailable;
+    return Fail(result, Reason::ChangeDeclined, Target("setting", parameterObject["setting"]));
 
   result = true;
   return OK;
@@ -413,9 +413,9 @@ JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant& parameterO
 
   SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
   if (setting == nullptr)
-    return NotFound;
+    return Fail(result, Reason::NoSuchSetting, Target("setting", parameterObject["setting"]));
   if (!setting->IsEnabled())
-    return Unavailable;
+    return Fail(result, Reason::SettingDisabled, Target("setting", parameterObject["setting"]));
 
   switch (setting->GetType())
   {

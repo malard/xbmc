@@ -142,6 +142,10 @@ enum class Reason
   NoSuchPath,
   OutsideSources,
   NotAFile,
+  NoSuchSetting,
+  SettingDisabled,
+  ChangeDeclined,
+  LevelLocked,
 };
 
 struct JsonRpcReasonDescription
@@ -181,6 +185,13 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::OutsideSources, AccessDenied, "outside-sources",
      "The path lies outside every source shared for remote access."},
     {Reason::NotAFile, InvalidParams, "not-a-file", "The path names a directory, not a file."},
+    {Reason::NoSuchSetting, NotFound, "no-such-setting", "No setting has the given id."},
+    {Reason::SettingDisabled, Unavailable, "setting-disabled",
+     "The setting is disabled by the settings it depends on, so it cannot change now."},
+    {Reason::ChangeDeclined, Unavailable, "change-declined",
+     "Kodi declined the value, as when a new display mode is not kept."},
+    {Reason::LevelLocked, AccessDenied, "level-locked",
+     "The profile's settings lock keeps the setting level."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

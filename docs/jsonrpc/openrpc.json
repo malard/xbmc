@@ -15023,7 +15023,11 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/level-locked"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -15328,7 +15332,11 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-setting"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -15395,7 +15403,17 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-setting"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/setting-disabled"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/change-declined"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -15447,7 +15465,14 @@
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": [],
+      "x-kodi-reasons": [
+        {
+          "$ref": "#/components/x-kodi-reasons/no-such-setting"
+        },
+        {
+          "$ref": "#/components/x-kodi-reasons/setting-disabled"
+        }
+      ],
       "x-kodi-transport": "Response"
     },
     {
@@ -22139,6 +22164,30 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         "description": "The path names a directory, not a file."
+      },
+      "no-such-setting": {
+        "error": {
+          "$ref": "#/components/errors/NotFound"
+        },
+        "description": "No setting has the given id."
+      },
+      "setting-disabled": {
+        "error": {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        "description": "The setting is disabled by the settings it depends on, so it cannot change now."
+      },
+      "change-declined": {
+        "error": {
+          "$ref": "#/components/errors/Unavailable"
+        },
+        "description": "Kodi declined the value, as when a new display mode is not kept."
+      },
+      "level-locked": {
+        "error": {
+          "$ref": "#/components/errors/AccessDenied"
+        },
+        "description": "The profile's settings lock keeps the setting level."
       }
     }
   }
