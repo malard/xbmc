@@ -127,13 +127,15 @@ void CLanguageLoader::OnSettingChanged(const std::shared_ptr<const CSetting>& se
   const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOCALE_AUDIOLANGUAGE)
   {
-    CLanguage::GetInstance().SetAudio(
-        std::static_pointer_cast<const CSettingString>(setting)->GetValue());
+    if (!CLanguage::GetInstance().SetAudio(
+            std::static_pointer_cast<const CSettingString>(setting)->GetValue()))
+      settings->GetSetting(settingId)->Reset();
   }
   else if (settingId == CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)
   {
-    CLanguage::GetInstance().SetSubtitle(
-        std::static_pointer_cast<const CSettingString>(setting)->GetValue());
+    if (!CLanguage::GetInstance().SetSubtitle(
+            std::static_pointer_cast<const CSettingString>(setting)->GetValue()))
+      settings->GetSetting(settingId)->Reset();
   }
   else if (settingId == CSettings::SETTING_LOCALE_LANGUAGE)
   {

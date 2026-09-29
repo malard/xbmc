@@ -2846,8 +2846,11 @@ bool CApplication::LoadLanguage(bool reload)
   // set the proper audio and subtitle languages
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
   KODI::LANGUAGE::CLanguage& language = KODI::LANGUAGE::CLanguage::GetInstance();
-  language.SetAudio(settings->GetString(CSettings::SETTING_LOCALE_AUDIOLANGUAGE));
-  language.SetSubtitle(settings->GetString(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE));
+  // A value the settings list never offered is put back to the default
+  if (!language.SetAudio(settings->GetString(CSettings::SETTING_LOCALE_AUDIOLANGUAGE)))
+    settings->GetSetting(CSettings::SETTING_LOCALE_AUDIOLANGUAGE)->Reset();
+  if (!language.SetSubtitle(settings->GetString(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)))
+    settings->GetSetting(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)->Reset();
 
   return true;
 }

@@ -11,6 +11,7 @@
 #include "language/LanguageTag.h"
 
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -57,18 +58,17 @@ public:
 
   /*!
    * \brief Read an audio language setting.
-   * \param[in] setting The setting value.
-   * \return The preference. Text naming neither a language nor a known choice is reported and
-   *         treated as no preference, so a bad setting cannot leave playback matching nothing.
+   * \param[in] setting The setting value. Empty is no preference.
+   * \return The preference, or nothing where the text names neither a language nor a choice.
    */
-  static CLanguagePreference ForAudio(const std::string& setting);
+  static std::optional<CLanguagePreference> ForAudio(const std::string& setting);
 
   /*!
    * \brief Read a subtitle language setting.
    * \param[in] setting The setting value.
    * \return The preference, as ForAudio describes.
    */
-  static CLanguagePreference ForSubtitles(const std::string& setting);
+  static std::optional<CLanguagePreference> ForSubtitles(const std::string& setting);
 
   Kind GetKind() const { return m_kind; }
   bool Is(Kind kind) const { return m_kind == kind; }
@@ -88,7 +88,7 @@ private:
   {
   }
 
-  static CLanguagePreference Parse(const std::string& setting);
+  static std::optional<CLanguagePreference> Parse(const std::string& setting);
 
   Kind m_kind{Kind::FollowUI};
   CLanguageTag m_language;
@@ -183,11 +183,13 @@ public:
 
   //! \brief The interface language without loading a pack. For tests only.
   void SetUI(const CLanguageTag& language) { m_ui = language; }
-  void SetAudio(const std::string& setting) { m_audio = CLanguagePreference::ForAudio(setting); }
-  void SetSubtitle(const std::string& setting)
-  {
-    m_subtitle = CLanguagePreference::ForSubtitles(setting);
-  }
+  /*!
+   * \brief Apply the audio language setting.
+   * \return false where the value names nothing, which then follows the interface language.
+   */
+  bool SetAudio(const std::string& setting);
+  //! \brief Apply the subtitle language setting, as SetAudio describes.
+  bool SetSubtitle(const std::string& setting);
 
 private:
   void MergeSortTokens();

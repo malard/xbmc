@@ -63,38 +63,35 @@ std::optional<std::string> ChosenCharset(const std::string& settingId)
 }
 } // namespace
 
-CLanguagePreference CLanguagePreference::Parse(const std::string& setting)
+std::optional<CLanguagePreference> CLanguagePreference::Parse(const std::string& setting)
 {
-  if (Names(setting, languageSettingDefault))
-    return {Kind::FollowUI, {}};
+  if (setting.empty() || Names(setting, languageSettingDefault))
+    return CLanguagePreference{Kind::FollowUI, {}};
 
   if (Names(setting, languageSettingOriginal))
-    return {Kind::Original, {}};
+    return CLanguagePreference{Kind::Original, {}};
 
   if (const auto tag = CLanguageTag::TryParse(setting); tag.has_value())
-    return {Kind::Language, *tag};
+    return CLanguagePreference{Kind::Language, *tag};
 
-  if (!setting.empty())
-    CLog::LogF(LOGERROR, "'{}' does not name a language, ignoring it", setting);
-
-  return {Kind::FollowUI, {}};
+  return std::nullopt;
 }
 
-CLanguagePreference CLanguagePreference::ForAudio(const std::string& setting)
+std::optional<CLanguagePreference> CLanguagePreference::ForAudio(const std::string& setting)
 {
   if (Names(setting, audioLanguageSettingMediaDefault))
-    return {Kind::MediaDefault, {}};
+    return CLanguagePreference{Kind::MediaDefault, {}};
 
   return Parse(setting);
 }
 
-CLanguagePreference CLanguagePreference::ForSubtitles(const std::string& setting)
+std::optional<CLanguagePreference> CLanguagePreference::ForSubtitles(const std::string& setting)
 {
   if (Names(setting, subtitleLanguageSettingNone))
-    return {Kind::None, {}};
+    return CLanguagePreference{Kind::None, {}};
 
   if (Names(setting, subtitleLanguageSettingForcedOnly))
-    return {Kind::ForcedOnly, {}};
+    return CLanguagePreference{Kind::ForcedOnly, {}};
 
   return Parse(setting);
 }
@@ -119,6 +116,26 @@ CLanguageTag CLanguage::Subtitle(bool fallbackToUI /* = true */) const
     return m_audio.GetLanguage();
 
   return fallbackToUI ? m_ui : CLanguageTag{};
+}
+
+bool CLanguage::SetAudio(const std::string& setting)
+{
+  const auto preference = CLanguagePreference::ForAudio(setting);
+  if (!preference.has_value())
+    CLog::LogF(LOGWARNING, "unknown language '{}', using default", setting);
+
+  m_audio = preference.value_or(CLanguagePreference{});
+  return preference.has_value();
+}
+
+bool CLanguage::SetSubtitle(const std::string& setting)
+{
+  const auto preference = CLanguagePreference::ForSubtitles(setting);
+  if (!preference.has_value())
+    CLog::LogF(LOGWARNING, "unknown language '{}', using default", setting);
+
+  m_subtitle = preference.value_or(CLanguagePreference{});
+  return preference.has_value();
 }
 
 void CLanguage::SetPack(const LanguageResourcePtr& pack)

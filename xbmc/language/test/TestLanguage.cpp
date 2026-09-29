@@ -16,53 +16,62 @@ using Kind = CLanguagePreference::Kind;
 
 TEST(TestLanguagePreference, ReadsAStatedLanguage)
 {
-  const CLanguagePreference audio{CLanguagePreference::ForAudio("fr")};
+  const CLanguagePreference audio{*CLanguagePreference::ForAudio("fr")};
 
   EXPECT_TRUE(audio.Is(Kind::Language));
   EXPECT_EQ(audio.GetKind(), Kind::Language);
   EXPECT_EQ(audio.GetLanguage(), CLanguageTag::Parse("fr"));
 
-  EXPECT_EQ(CLanguagePreference::ForAudio("fre").GetLanguage(), CLanguageTag::Parse("fr"));
-  EXPECT_EQ(CLanguagePreference::ForAudio("French").GetLanguage(), CLanguageTag::Parse("fr"));
+  EXPECT_EQ(CLanguagePreference::ForAudio("fre")->GetLanguage(), CLanguageTag::Parse("fr"));
+  EXPECT_EQ(CLanguagePreference::ForAudio("French")->GetLanguage(), CLanguageTag::Parse("fr"));
 }
 
 TEST(TestLanguagePreference, ReadsTheChoicesThatNameNoLanguage)
 {
-  EXPECT_TRUE(CLanguagePreference::ForAudio("mediadefault").Is(Kind::MediaDefault));
-  EXPECT_TRUE(CLanguagePreference::ForAudio("original").Is(Kind::Original));
-  EXPECT_TRUE(CLanguagePreference::ForAudio("default").Is(Kind::FollowUI));
+  EXPECT_TRUE(CLanguagePreference::ForAudio("mediadefault")->Is(Kind::MediaDefault));
+  EXPECT_TRUE(CLanguagePreference::ForAudio("original")->Is(Kind::Original));
+  EXPECT_TRUE(CLanguagePreference::ForAudio("default")->Is(Kind::FollowUI));
 
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("none").Is(Kind::None));
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("forced_only").Is(Kind::ForcedOnly));
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("original").Is(Kind::Original));
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("default").Is(Kind::FollowUI));
+  EXPECT_TRUE(CLanguagePreference::ForSubtitles("none")->Is(Kind::None));
+  EXPECT_TRUE(CLanguagePreference::ForSubtitles("forced_only")->Is(Kind::ForcedOnly));
+  EXPECT_TRUE(CLanguagePreference::ForSubtitles("original")->Is(Kind::Original));
+  EXPECT_TRUE(CLanguagePreference::ForSubtitles("default")->Is(Kind::FollowUI));
 
   // The kind is what a caller acting on the choice reads, where Is answers one question about it
-  EXPECT_EQ(CLanguagePreference::ForAudio("default").GetKind(), Kind::FollowUI);
-  EXPECT_EQ(CLanguagePreference::ForAudio("mediadefault").GetKind(), Kind::MediaDefault);
-  EXPECT_EQ(CLanguagePreference::ForSubtitles("none").GetKind(), Kind::None);
-  EXPECT_EQ(CLanguagePreference::ForSubtitles("forced_only").GetKind(), Kind::ForcedOnly);
+  EXPECT_EQ(CLanguagePreference::ForAudio("default")->GetKind(), Kind::FollowUI);
+  EXPECT_EQ(CLanguagePreference::ForAudio("mediadefault")->GetKind(), Kind::MediaDefault);
+  EXPECT_EQ(CLanguagePreference::ForSubtitles("none")->GetKind(), Kind::None);
+  EXPECT_EQ(CLanguagePreference::ForSubtitles("forced_only")->GetKind(), Kind::ForcedOnly);
 
   // A default-constructed preference is the one that states nothing
   EXPECT_EQ(CLanguagePreference{}.GetKind(), Kind::FollowUI);
 
-  EXPECT_TRUE(CLanguagePreference::ForAudio("mediadefault").GetLanguage().IsUndetermined());
-  EXPECT_TRUE(CLanguagePreference::ForSubtitles("none").GetLanguage().IsUndetermined());
+  EXPECT_TRUE(CLanguagePreference::ForAudio("mediadefault")->GetLanguage().IsUndetermined());
+  EXPECT_TRUE(CLanguagePreference::ForSubtitles("none")->GetLanguage().IsUndetermined());
 
   // The choices are not interchangeable, so neither are the values holding them
-  EXPECT_NE(CLanguagePreference::ForAudio("mediadefault"),
-            CLanguagePreference::ForAudio("original"));
-  EXPECT_NE(CLanguagePreference::ForSubtitles("none"), CLanguagePreference::ForSubtitles("fr"));
+  EXPECT_NE(*CLanguagePreference::ForAudio("mediadefault"),
+            *CLanguagePreference::ForAudio("original"));
+  EXPECT_NE(*CLanguagePreference::ForSubtitles("none"), *CLanguagePreference::ForSubtitles("fr"));
 }
 
-TEST(TestLanguagePreference, TreatsTextNamingNothingAsNoPreference)
+TEST(TestLanguagePreference, TextNamingNothingIsNoPreference)
 {
-  const CLanguagePreference audio{CLanguagePreference::ForAudio("not a language")};
+  EXPECT_FALSE(CLanguagePreference::ForAudio("not a language").has_value());
+  EXPECT_FALSE(CLanguagePreference::ForSubtitles("not a language").has_value());
 
-  EXPECT_TRUE(audio.Is(Kind::FollowUI));
-  EXPECT_TRUE(audio.GetLanguage().IsUndetermined());
+  EXPECT_TRUE(CLanguagePreference::ForAudio("")->Is(Kind::FollowUI));
+}
 
-  EXPECT_TRUE(CLanguagePreference::ForAudio("").Is(Kind::FollowUI));
+TEST(TestLanguage, AnUnknownSettingFollowsTheInterfaceAndSaysSo)
+{
+  CLanguage language;
+  language.SetUI(CLanguageTag::Parse("de"));
+
+  EXPECT_FALSE(language.SetAudio("not a language"));
+  EXPECT_EQ(language.Audio(), CLanguageTag::Parse("de"));
+  EXPECT_FALSE(language.SetSubtitle("not a language"));
+  EXPECT_TRUE(language.SetAudio("fr"));
 }
 
 TEST(TestLanguage, AnswersAStatedLanguageWhateverTheFallback)
