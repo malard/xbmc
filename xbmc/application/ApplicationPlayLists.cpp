@@ -457,6 +457,17 @@ bool CApplicationPlayLists::PlayItems(Type type,
   return StartPlaying(type, start, options, true);
 }
 
+bool CApplicationPlayLists::PlayExpanded(Type type,
+                                         const CFileItemList& items,
+                                         int start,
+                                         const std::shared_ptr<CFileItem>& chosen,
+                                         const PlayOptions& options)
+{
+  if (chosen && start < 0)
+    return PlayItem(type, chosen, options);
+  return PlayItems(type, items, start < 0 ? std::nullopt : std::optional<int>(start), options);
+}
+
 bool CApplicationPlayLists::PlayFolder(Type type,
                                        const CFileItemList& items,
                                        const std::shared_ptr<const CFileItem>& start,

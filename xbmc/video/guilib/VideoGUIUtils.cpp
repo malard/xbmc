@@ -342,16 +342,8 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   CFileItemList queuedItems;
   int start = -1;
   VIDEO::UTILS::GetItemsForPlayList(itemToQueue, queuedItems, mode, itemToPlay, &start);
-
-  // the chosen item did not make the list, so it plays on its own
-  if (itemToPlay && start < 0)
-  {
-    CServiceBroker::GetPlayLists()->PlayItem(PLAYLIST::Video, itemToPlay, {.player = player});
-    return;
-  }
-  CServiceBroker::GetPlayLists()->PlayItems(PLAYLIST::Video, queuedItems,
-                                            start < 0 ? std::nullopt : std::optional<int>(start),
-                                            {.player = player});
+  CServiceBroker::GetPlayLists()->PlayExpanded(PLAYLIST::Video, queuedItems, start, itemToPlay,
+                                               {.player = player});
 }
 
 } // unnamed namespace
