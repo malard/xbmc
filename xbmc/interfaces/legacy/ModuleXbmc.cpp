@@ -484,29 +484,23 @@ namespace XBMCAddon
 
     String convertLanguage(const char* language, int format)
     {
-      std::string convertedLanguage;
+      const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language);
+      if (!tag.has_value())
+        return "";
+
       switch (format)
       {
         case KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME:
-          if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
-            convertedLanguage = tag->ToEnglishName();
-          break;
+          return tag->ToEnglishName();
         case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
-          if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
-            convertedLanguage = tag->AsIso6391();
-          break;
+          return tag->AsIso6391();
         case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
-          if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
-            convertedLanguage = tag->AsIso6392B();
-          break;
+          return tag->AsIso6392B();
         case KODI::LANGUAGE::CLanguageTag::ISO_NAME:
-          if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language); tag.has_value())
-            convertedLanguage = tag->ToEnglishLanguageName();
-          break;
+          return tag->ToEnglishLanguageName();
         default:
           return "";
       }
-      return convertedLanguage;
     }
 
     String getUserAgent()
