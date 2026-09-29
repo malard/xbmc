@@ -36,9 +36,6 @@ TEST_F(LanguageTableTest, NamesTheStandardLanguages)
   // Both forms of a language that spells its two differently name the same language
   EXPECT_EQ(Table().NameOf("fre"), Table().NameOf("fra"));
 
-  // Media tagged with the withdrawn spelling still has to be understood
-  EXPECT_EQ(Table().NameOf("iw"), "Hebrew");
-
   // Case and surrounding space are not part of a code or a name
   EXPECT_EQ(Table().NameOf(" EN "), "English");
   EXPECT_EQ(Table().CodeOf(" ENGLISH "), "en");

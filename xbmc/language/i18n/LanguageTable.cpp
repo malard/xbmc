@@ -45,7 +45,6 @@ CLanguageTable& CLanguageTable::GetInstance()
 void CLanguageTable::Seed()
 {
   CIso639_1::ListLanguages(m_names);
-  CIso639_1::ListWithdrawnLanguages(m_names);
   CIso639_2::ListLanguages(m_names);
 
   // ISO 639-1 is enumerated first so that a language having codes in both standards is named by
