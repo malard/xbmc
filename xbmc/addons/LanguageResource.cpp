@@ -44,10 +44,8 @@ CLanguageResource::CLanguageResource(const AddonInfoPtr& addonInfo)
   // still loads; it just cannot be matched against media.
   if (!m_language.IsValid())
   {
-    CLog::Log(LOGWARNING,
-              "CLanguageResource: addon '{}' states a locale of '{}', which names no language "
-              "Kodi recognizes",
-              ID(), m_language.ToString());
+    CLog::Log(LOGWARNING, "CLanguageResource: {}: unrecognized locale '{}'", ID(),
+              m_language.ToString());
   }
 
   // parse <charsets>
