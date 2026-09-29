@@ -628,7 +628,8 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
   // The suffix Kodi's own external subtitle scan reads back, and that scan tokenizes a filename
   // on " .-" - a hyphen separates there, so a tag naming a region cannot survive the round
   // trip: movie.pt-BR.srt would be read as Breton. A bare ISO 639-1 code is what fits.
-  const std::string strSubLang{KODI::LANGUAGE::CLanguageTag::Parse(language).AsIso6391()};
+  const std::string subLang{KODI::LANGUAGE::CLanguageTag::Parse(language).AsIso6391()};
+  const std::string langSuffix{subLang.empty() ? "" : "." + subLang};
 
   // Iterate over all items to transfer
   for (unsigned int i = 0; i < vecFiles.size() && i < (unsigned int) items->Size(); i++)
@@ -639,7 +640,7 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
 
     // construct subtitle path
     std::string strSubExt = URIUtils::GetExtension(strUrl);
-    std::string strSubName = StringUtils::Format("{}.{}{}", strFileName, strSubLang, strSubExt);
+    std::string strSubName = StringUtils::Format("{}{}{}", strFileName, langSuffix, strSubExt);
 
     // Handle URL encoding:
     std::string strDownloadFile = URIUtils::ChangeBasePath(strCurrentFilePath, strSubName, strDownloadPath);
@@ -691,7 +692,7 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
         strUrl = URIUtils::ReplaceExtension(strUrl, ".idx");
         if(CFile::Exists(strUrl))
         {
-          std::string strSubNameIdx = StringUtils::Format("{}.{}.idx", strFileName, strSubLang);
+          std::string strSubNameIdx = StringUtils::Format("{}{}.idx", strFileName, langSuffix);
           // Handle URL encoding:
           strDestFile = URIUtils::ChangeBasePath(strCurrentFilePath, strSubNameIdx, strDestPath);
           CFile::Copy(strUrl, strDestFile);
