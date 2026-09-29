@@ -34,8 +34,7 @@ public:
 
   //! \brief Take the stored inputs for the file that is opening, \p cached already verified
   //! against it.
-  void SetFileInputs(const KODI::VIDEO::GEOMETRY::ContentGeometryLookup& cached,
-                     float declaredAspect);
+  void SetFileInputs(const KODI::VIDEO::GEOMETRY::ContentGeometryLookup& cached);
 
   //! \brief Resolve again against the stream that is playing now.
   void Refresh();

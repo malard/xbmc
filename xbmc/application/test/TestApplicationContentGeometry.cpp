@@ -30,7 +30,7 @@ GeometryOverrides Stated(float raster, std::optional<OsdPlacement> placement, fl
 //! \brief Open a file with nothing known about it, which is what promotes an armed instruction.
 void OpenFile(CApplicationContentGeometry& geometry)
 {
-  geometry.SetFileInputs(ContentGeometryLookup{}, 0.0f);
+  geometry.SetFileInputs(ContentGeometryLookup{});
 }
 
 //! \brief A stored measurement of a scope title.
@@ -214,7 +214,7 @@ TEST(TestApplicationContentGeometry, StoppingAlsoDiscardsAnInstructionThatNeverO
 TEST(TestApplicationContentGeometry, TheMaskOpeningIsTheWidestShapeMeasured)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), 0.0f);
+  geometry.SetFileInputs(MeasuredScope());
 
   EXPECT_NEAR(1920.0f / 800.0f, geometry.GetRenderInputs().maskAspect, 0.001f);
 }
@@ -237,7 +237,7 @@ TEST(TestApplicationContentGeometry, AMixedRatioTitleMasksToItsWidestShapeNotIts
   lookup.state = ContentGeometryState::VALID;
 
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(lookup, 0.0f);
+  geometry.SetFileInputs(lookup);
 
   EXPECT_NEAR(1920.0f / 800.0f, geometry.GetRenderInputs().maskAspect, 0.001f)
       << "the mask opened to the envelope, so the scope sections cannot fill the screen";
@@ -258,7 +258,7 @@ TEST(TestApplicationContentGeometry, AFailedMeasurementOpensNothing)
   failed.record.aspects.clear();
 
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(failed, 0.0f);
+  geometry.SetFileInputs(failed);
 
   EXPECT_FLOAT_EQ(0.0f, geometry.GetRenderInputs().maskAspect);
 }
@@ -266,7 +266,7 @@ TEST(TestApplicationContentGeometry, AFailedMeasurementOpensNothing)
 TEST(TestApplicationContentGeometry, StoppingClosesTheMaskOpening)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), 0.0f);
+  geometry.SetFileInputs(MeasuredScope());
   geometry.Clear();
 
   EXPECT_FLOAT_EQ(0.0f, geometry.GetRenderInputs().maskAspect);
@@ -277,7 +277,7 @@ TEST(TestApplicationContentGeometry, StoppingClosesTheMaskOpening)
 TEST(TestApplicationContentGeometry, TheRenderInputsAgreeWithTheAccessorsTheyReplace)
 {
   CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope(), 0.0f);
+  geometry.SetFileInputs(MeasuredScope());
   geometry.SetOverrides(Stated(2.40f, OsdPlacement::Picture, 2.35f));
 
   const CApplicationContentGeometry::RenderInputs inputs{geometry.GetRenderInputs()};

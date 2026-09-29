@@ -180,15 +180,13 @@ std::pair<EffectiveGeometry, DrawnGeometry> CApplicationContentGeometry::Snapsho
   return {m_current, m_drawn};
 }
 
-void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cached,
-                                                float declaredAspect)
+void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cached)
 {
   {
     std::unique_lock lock(m_section);
 
     m_inputs = {};
     m_inputs.cached = cached;
-    m_inputs.declaredAspect = declaredAspect;
 
     m_overrides = m_pending;
     m_pending = {};
