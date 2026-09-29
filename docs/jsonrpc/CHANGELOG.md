@@ -21,7 +21,10 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   does not hold it. An unknown permission name is an error.
 - `JSONRPC.Introspect` answers in JSON Schema 2020-12, not draft-03.
 - PVR channel `uniqueid` is `channeluid`.
-- `Playlist.Add` and `Playlist.Insert` return `Playlist.AddResult`, not `"OK"`.
+- `Playlist.Add` and `Playlist.Insert` return `Playlist.AddResult`, not `"OK"`. Each `unresolved`
+  entry's `reason` is a failure reason (`no-such-item`, `no-such-path`, `not-a-file`,
+  `not-playable`), not `notFound`, `unavailable` or `invalid`, and a call that adds nothing fails
+  for the reason of its first missing item, else its first malformed one.
 - `currentaudiostream`, `currentvideostream` and `currentsubtitle` are `null`, not `{}`, when
   nothing is selected.
 - `Files.GetDirectory` keeps a folder that matches a library item as a `directory` at its own path;

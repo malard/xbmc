@@ -77,6 +77,13 @@ class TestDeclarations(unittest.TestCase):
                 for reasons in method["reasons"].values() for reason in reasons}
         self.assertEqual(set(self.reasons), used)
 
+    def test_an_unresolved_items_reason_is_one_playlist_add_can_fail_with(self):
+        types = kodi_schema.load_service()["types"]
+        declared = types["Playlist.UnresolvedItem"]["properties"]["reason"]["enum"]
+        reasons = {reason for reasons in self.derived_reasons["Playlist.Add"].values()
+                   for reason in reasons}
+        self.assertEqual(set(declared), reasons)
+
     def test_reason_names_are_kebab_case(self):
         for name in self.reasons:
             with self.subTest(reason=name):

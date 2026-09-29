@@ -476,7 +476,8 @@
     ],
     "reasons": {
       "InvalidParams": [
-        "not-a-file"
+        "not-a-file",
+        "not-playable"
       ],
       "FailedToExecute": [
         "pvr-not-started",
@@ -1754,7 +1755,8 @@
     ],
     "reasons": {
       "InvalidParams": [
-        "not-a-file"
+        "not-a-file",
+        "not-playable"
       ],
       "NotFound": [
         "no-such-item",
@@ -1810,7 +1812,8 @@
     ],
     "reasons": {
       "InvalidParams": [
-        "not-a-file"
+        "not-a-file",
+        "not-playable"
       ],
       "FailedToExecute": [
         "not-applicable"

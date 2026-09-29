@@ -68,24 +68,11 @@ bool IsMediaAccepted(std::string_view media, const CVariant& item)
          (media == "pictures" && requested == "video");
 }
 
-const char* ReasonOf(JSONRPC_STATUS status)
-{
-  switch (status)
-  {
-    case NotFound:
-      return "notFound";
-    case Unavailable:
-      return "unavailable";
-    default:
-      return "invalid";
-  }
-}
-
-CVariant UnresolvedEntry(const CVariant& item, const std::string& reason)
+CVariant UnresolvedEntry(const CVariant& item, const CVariant& diagnosis)
 {
   CVariant entry{CVariant::VariantTypeObject};
   entry["item"] = item;
-  entry["reason"] = reason;
+  entry["reason"] = diagnosis["reason"];
   return entry;
 }
 
@@ -95,11 +82,13 @@ CVariant PlayListTarget(const PublishedPlayList& playList)
 }
 } // namespace
 
-void CPlaylistOperations::ReadItems(std::string_view media,
-                                    const CVariant& itemParam,
-                                    CFileItemList& items,
-                                    CVariant& unresolved)
+JSONRPC_STATUS CPlaylistOperations::ReadItems(std::string_view media,
+                                              const CVariant& itemParam,
+                                              CFileItemList& items,
+                                              CVariant& unresolved,
+                                              CVariant& failure)
 {
+  JSONRPC_STATUS nothingAdded = InvalidParams;
   std::vector<CVariant> requested;
   if (itemParam.isArray())
     requested.assign(itemParam.begin_array(), itemParam.end_array());
@@ -119,23 +108,20 @@ void CPlaylistOperations::ReadItems(std::string_view media,
       FillFileItemList(item, items);
       resolved = items.Size() > before;
     }
-    if (!resolved)
+    if (resolved)
+      continue;
+
+    CVariant diagnosis;
+    const JSONRPC_STATUS diagnosed = DiagnoseUnresolvedItem(asked, diagnosis);
+    unresolved.push_back(UnresolvedEntry(asked, diagnosis));
+    // a reference that has gone outranks a malformed item
+    if (failure.isNull() || (nothingAdded == InvalidParams && diagnosed != InvalidParams))
     {
-      CVariant diagnosis;
-      unresolved.push_back(
-          UnresolvedEntry(asked, ReasonOf(DiagnoseUnresolvedItem(asked, diagnosis))));
+      nothingAdded = diagnosed;
+      failure = diagnosis;
     }
   }
-}
-
-JSONRPC_STATUS CPlaylistOperations::NothingAdded(const CVariant& unresolved, CVariant& result)
-{
-  for (auto entry = unresolved.begin_array(); entry != unresolved.end_array(); ++entry)
-  {
-    if ((*entry)["reason"].asString() != "invalid")
-      return DiagnoseUnresolvedItem((*entry)["item"], result);
-  }
-  return InvalidParams;
+  return nothingAdded;
 }
 
 JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject, CVariant& result)
@@ -237,7 +223,9 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
 
   CFileItemList list;
   CVariant unresolved{CVariant::VariantTypeArray};
-  ReadItems(playList->media, parameterObject["item"], list, unresolved);
+  CVariant failure;
+  JSONRPC_STATUS nothingAdded =
+      ReadItems(playList->media, parameterObject["item"], list, unresolved, failure);
 
   int added = 0;
   if (playList->type)
@@ -257,7 +245,15 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
         // the file resolved but holds no picture, which the item parameter cannot express
         CVariant asked{CVariant::VariantTypeObject};
         asked["file"] = item->GetPath();
-        unresolved.push_back(UnresolvedEntry(asked, "invalid"));
+        CVariant diagnosis;
+        const JSONRPC_STATUS diagnosed =
+            Fail(diagnosis, InvalidParams, Reason::NotPlayable, Target("file", asked["file"]));
+        unresolved.push_back(UnresolvedEntry(asked, diagnosis));
+        if (failure.isNull())
+        {
+          nothingAdded = diagnosed;
+          failure = diagnosis;
+        }
         continue;
       }
       *item->GetPictureInfoTag() = picture;
@@ -267,7 +263,10 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
   }
 
   if (added == 0)
-    return NothingAdded(unresolved, result);
+  {
+    result = failure;
+    return nothingAdded;
+  }
 
   result["added"] = added;
   result["unresolved"] = unresolved;
@@ -284,9 +283,14 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVar
 
   CFileItemList list;
   CVariant unresolved{CVariant::VariantTypeArray};
-  ReadItems(playList->media, parameterObject["item"], list, unresolved);
+  CVariant failure;
+  const JSONRPC_STATUS nothingAdded =
+      ReadItems(playList->media, parameterObject["item"], list, unresolved, failure);
   if (list.IsEmpty())
-    return NothingAdded(unresolved, result);
+  {
+    result = failure;
+    return nothingAdded;
+  }
 
   CServiceBroker::GetPlayLists()->Insert(*playList->type, list,
                                          static_cast<int>(parameterObject["position"].asInteger()));

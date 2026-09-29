@@ -224,14 +224,14 @@ TEST_F(TestUnresolvedItemDiagnosis, EveryDeclaredIdentifierIsDiagnosedAsAMissing
   }
 }
 
-TEST_F(TestUnresolvedItemDiagnosis, AnItemNamingNothingResolvableIsMalformed)
+TEST_F(TestUnresolvedItemDiagnosis, AnItemNamingNothingResolvableIsNotPlayable)
 {
   CVariant item{CVariant::VariantTypeObject};
   item["nosuchid"] = 1;
 
   CVariant result;
   EXPECT_EQ(InvalidParams, CTestFileItemHandler::Diagnose(item, result));
-  EXPECT_FALSE(result.isMember("reason"));
+  EXPECT_EQ("not-playable", result["reason"].asString());
 }
 
 TEST_F(TestUnresolvedItemDiagnosis, AMissingFileOrDirectoryIsNoSuchPath)

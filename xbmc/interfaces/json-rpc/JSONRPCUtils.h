@@ -159,6 +159,7 @@ enum class Reason
   MeasureFailed,
   PartyModeElsewhere,
   TimerExists,
+  NotPlayable,
 };
 
 struct JsonRpcReasonDescription
@@ -221,6 +222,8 @@ inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
     {Reason::PartyModeElsewhere, "party-mode-elsewhere",
      "Party mode is running on the other playlist."},
     {Reason::TimerExists, "timer-exists", "A timer already exists for the broadcast."},
+    {Reason::NotPlayable, "not-playable",
+     "The item cannot go in the playlist, or holds nothing it can play."},
 };
 
 constexpr bool ReasonsAreDescribedInOrder()

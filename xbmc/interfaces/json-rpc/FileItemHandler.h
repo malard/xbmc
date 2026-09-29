@@ -108,7 +108,8 @@ protected:
 
      Bypasses the caches so a cached hit cannot mask storage that has gone away.
 
-     \return NotFound, or InvalidParams when nothing better applies
+     \return NotFound, or InvalidParams as not-a-file or, when nothing better applies,
+     not-playable
      */
   static JSONRPC_STATUS DiagnoseUnresolvedItem(const CVariant& item, CVariant& result);
 

@@ -625,7 +625,7 @@ JSONRPC_STATUS CFileItemHandler::DiagnoseUnresolvedItem(const CVariant& item, CV
       return Fail(result, NotFound, Reason::NoSuchItem, Target(identifier, item[identifier]));
   }
 
-  return InvalidParams;
+  return Fail(result, InvalidParams, Reason::NotPlayable);
 }
 
 void CFileItemHandler::Sort(CFileItemList& items, const CVariant& parameterObject)

@@ -719,6 +719,9 @@
         "InvalidParams": [
           {
             "$ref": "#/components/x-kodi-reasons/not-a-file"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-playable"
           }
         ],
         "FailedToExecute": [
@@ -2938,6 +2941,9 @@
         "InvalidParams": [
           {
             "$ref": "#/components/x-kodi-reasons/not-a-file"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-playable"
           }
         ],
         "NotFound": [
@@ -3027,6 +3033,9 @@
         "InvalidParams": [
           {
             "$ref": "#/components/x-kodi-reasons/not-a-file"
+          },
+          {
+            "$ref": "#/components/x-kodi-reasons/not-playable"
           }
         ],
         "FailedToExecute": [
@@ -16525,11 +16534,12 @@
           },
           "reason": {
             "type": "string",
-            "description": "\"notFound\": the item does not exist. \"unavailable\": it exists but cannot be reached at the moment, so the reference is worth keeping and retrying. \"invalid\": the item cannot go in a playlist of this type, or holds nothing playable.",
+            "description": "Why the item was not added, in the vocabulary of error.data.reason: the reason the call itself fails with when it adds nothing.",
             "enum": [
-              "notFound",
-              "unavailable",
-              "invalid"
+              "no-such-item",
+              "no-such-path",
+              "not-a-file",
+              "not-playable"
             ]
           }
         },
@@ -22626,6 +22636,9 @@
       },
       "timer-exists": {
         "description": "A timer already exists for the broadcast."
+      },
+      "not-playable": {
+        "description": "The item cannot go in the playlist, or holds nothing it can play."
       }
     }
   }

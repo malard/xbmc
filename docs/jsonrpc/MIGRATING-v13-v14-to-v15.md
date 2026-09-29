@@ -84,12 +84,13 @@ Version 15 says what happened:
 
 ```json
 {"result": {"added": 2,
-            "unresolved": [{"item": {"movieid": 4321}, "reason": "notfound"}]}}
+            "unresolved": [{"item": {"movieId": 4321}, "reason": "no-such-item"}]}}
 ```
 
-`reason` is `notfound`, `unavailable` or `invalid`. When *nothing* was added
-the call is an error instead — `NotFound` if anything named something real
-that has gone, `InvalidParams` if every entry was malformed.
+`reason` is one of the failure reasons of section 19. When *nothing* was
+added the call is an error instead — `NotFound` if anything named something
+real that has gone, `InvalidParams` if every entry was malformed — and its
+`error.data` carries the same reason as that item's entry would.
 
 **What to do.** If you check `result == "OK"`, that test now fails against a
 successful call. Read `result.added`, and show `result.unresolved` if you
@@ -623,7 +624,6 @@ answers and notifications, using the table.
 | `musicvideoid` | `musicVideoId` |
 | `musicvideos` | `musicVideos` |
 | `nonlinearstretch` | `nonlinearStretch` |
-| `notfound` | `notFound` |
 | `noupdate` | `noUpdate` |
 | `originaldate` | `originalDate` |
 | `originaltitle` | `originalTitle` |
@@ -751,6 +751,26 @@ is offline.
 **What to do.** Treat -32098 as "gone" for these calls, and read
 `error.data.reason` rather than the code where you need to tell the cases
 apart.
+
+## 19. An unresolved item's reason is a failure reason
+
+Clients of 14 saw `Playlist.AddResult.unresolved[].reason` as `notfound`,
+`unavailable` or `invalid`. It now uses the vocabulary of
+`error.data.reason`:
+
+| Was | Now |
+|---|---|
+| `notfound` | `no-such-item` for a library id, `no-such-path` for a file or directory |
+| `unavailable` | not given: nothing diagnosed it |
+| `invalid` | `not-a-file` for a directory named as a file, `not-playable` otherwise |
+
+```diff
+- {"item": {"movieid": 4321}, "reason": "notfound"}
++ {"item": {"movieId": 4321}, "reason": "no-such-item"}
+```
+
+**What to do.** Match on the new names. A call that adds nothing fails with
+the reason the first missing item gives, so the same code reads both.
 
 ## Finding the rest
 
