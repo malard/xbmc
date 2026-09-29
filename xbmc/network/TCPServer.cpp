@@ -951,19 +951,25 @@ void CTCPServer::CWebSocketClient::PushBuffer(CTCPServer *host, const char *buff
 
 void CTCPServer::CWebSocketClient::Disconnect()
 {
-  std::unique_lock lock(m_critSection);
+  if (m_socket <= 0)
+    return;
 
-  if (m_socket > 0)
+  // A sender blocked on a peer that has stopped reading holds m_critSection, so the close frame is
+  // only sent when nothing is sending; the socket is shut down either way.
+  std::unique_lock lock(m_critSection, std::try_to_lock);
+  if (lock.owns_lock() && m_websocket->GetState() != WebSocketStateClosed &&
+      m_websocket->GetState() != WebSocketStateNotConnected)
   {
-    if (m_websocket->GetState() != WebSocketStateClosed && m_websocket->GetState() != WebSocketStateNotConnected)
-    {
-      const CWebSocketFrame *closeFrame = m_websocket->Close();
-      if (closeFrame)
-        Send(closeFrame->GetFrameData(), (unsigned int)closeFrame->GetFrameLength());
-    }
-
-    // The caller is dropping this connection, so the descriptor goes with it even when the
-    // peer never answers the close frame.
-    CTCPClient::Disconnect();
+    // Already framed, so it bypasses Send(), which would wrap it in a text frame
+    const CWebSocketFrame* closeFrame = m_websocket->Close();
+    if (closeFrame)
+      CTCPClient::Send(closeFrame->GetFrameData(),
+                       static_cast<unsigned int>(closeFrame->GetFrameLength()));
   }
+  if (lock.owns_lock())
+    lock.unlock();
+
+  // The caller is dropping this connection, so the descriptor goes with it even when the peer
+  // never answers the close frame.
+  CTCPClient::Disconnect();
 }
