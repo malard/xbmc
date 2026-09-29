@@ -73,50 +73,50 @@ public class XBMCJsonRPC
                   "{\"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetMovies\", "
                   + "\"params\": { \"filter\": {\"field\": \"playcount\", \"operator\": \"is\", \"value\": \"0\"}, "
                   + "\"limits\": { \"start\" : 0, \"end\": 10}, "
-                  + "\"properties\" : [\"imdbnumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\", \"file\", \"plot\", \"rating\"], "
-                  + "\"sort\": { \"order\": \"descending\", \"method\": \"random\", \"ignorearticle\": true } }, "
+                  + "\"properties\" : [\"imdbNumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\", \"file\", \"plot\", \"rating\"], "
+                  + "\"sort\": { \"order\": \"descending\", \"method\": \"random\", \"ignoreArticle\": true } }, "
                   + "\"id\": \"1\"}";
 
   private String RECOMMENDATIONS_SHOWS_JSON =
-                 "{\"jsonrpc\":\"2.0\",\"method\":\"VideoLibrary.GetTVShows\",\"params\":{\"filter\":{\"and\":[{\"field\":\"playcount\",\"operator\":\"is\",\"value\":\"0\"},{\"field\":\"plot\",\"operator\":\"isnot\",\"value\":\"\"}]},\"limits\":{\"start\":0,\"end\":10},\"properties\":[\"imdbnumber\",\"title\",\"plot\",\"art\",\"studio\", \"year\", \"rating\"],\"sort\":{\"order\":\"descending\",\"method\":\"lastplayed\",\"ignorearticle\":true}},\"id\":\"1\"}";
+                 "{\"jsonrpc\":\"2.0\",\"method\":\"VideoLibrary.GetTVShows\",\"params\":{\"filter\":{\"and\":[{\"field\":\"playcount\",\"operator\":\"is\",\"value\":\"0\"},{\"field\":\"plot\",\"operator\":\"isnot\",\"value\":\"\"}]},\"limits\":{\"start\":0,\"end\":10},\"properties\":[\"imdbNumber\",\"title\",\"plot\",\"art\",\"studio\", \"year\", \"rating\"],\"sort\":{\"order\":\"descending\",\"method\":\"lastplayed\",\"ignoreArticle\":true}},\"id\":\"1\"}";
 
   private String RECOMMENDATIONS_ALBUMS_JSON =
-                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetAlbums\", \"params\": { \"limits\": { \"start\" : 0, \"end\": 3}, \"properties\" : [\"title\", \"displayartist\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"random\", \"ignorearticle\": true } }, \"id\": \"1\"}";
+                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetAlbums\", \"params\": { \"limits\": { \"start\" : 0, \"end\": 3}, \"properties\" : [\"title\", \"displayArtist\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"random\", \"ignoreArticle\": true } }, \"id\": \"1\"}";
 
   private String SEARCH_MOVIES_JSON =
                   "{\"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetMovies\", "
                   + "\"params\": { \"filter\": {%s}, "
                   + "\"limits\": { \"start\" : 0, \"end\": 10}, "
-                  + "\"properties\" : [\"imdbnumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\"], "
-                  + "\"sort\": { \"order\": \"ascending\", \"method\": \"title\", \"ignorearticle\": true } }, "
+                  + "\"properties\" : [\"imdbNumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\"], "
+                  + "\"sort\": { \"order\": \"ascending\", \"method\": \"title\", \"ignoreArticle\": true } }, "
                   + "\"id\": \"%s\"}";
 
   private String SEARCH_SHOWS_JSON =
-           "{\"jsonrpc\":\"2.0\",\"method\":\"VideoLibrary.GetTVShows\",\"params\":{\"filter\":{%s},\"limits\":{\"start\":0,\"end\":10},\"properties\":[\"imdbnumber\",\"title\",\"plot\",\"art\",\"year\"],\"sort\":{\"order\":\"descending\",\"method\":\"lastplayed\",\"ignorearticle\":true}},\"id\":\"%s\"}";
+           "{\"jsonrpc\":\"2.0\",\"method\":\"VideoLibrary.GetTVShows\",\"params\":{\"filter\":{%s},\"limits\":{\"start\":0,\"end\":10},\"properties\":[\"imdbNumber\",\"title\",\"plot\",\"art\",\"year\"],\"sort\":{\"order\":\"descending\",\"method\":\"lastplayed\",\"ignoreArticle\":true}},\"id\":\"%s\"}";
 
   private String SEARCH_ALBUMS_JSON =
-                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetAlbums\", \"params\": {\"filter\":{%s},\"limits\": { \"start\" : 0, \"end\": 10}, \"properties\" : [\"title\", \"displayartist\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"dateadded\", \"ignorearticle\": true } }, \"id\": \"%s\"}";
+                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetAlbums\", \"params\": {\"filter\":{%s},\"limits\": { \"start\" : 0, \"end\": 10}, \"properties\" : [\"title\", \"displayArtist\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"dateadded\", \"ignoreArticle\": true } }, \"id\": \"%s\"}";
 
   private String SEARCH_ARTISTS_JSON =
-                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetArtists\", \"params\": {\"filter\":{%s},\"limits\": { \"start\" : 0, \"end\": 10}, \"properties\" : [\"description\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"dateadded\", \"ignorearticle\": true } }, \"id\": \"%s\"}";
+                 "{\"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetArtists\", \"params\": {\"filter\":{%s},\"limits\": { \"start\" : 0, \"end\": 10}, \"properties\" : [\"description\", \"art\"], \"sort\": { \"order\": \"descending\", \"method\": \"dateadded\", \"ignoreArticle\": true } }, \"id\": \"%s\"}";
 
   private String RETRIEVE_MOVIE_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetMovieDetails\", \"params\": { \"movieid\" : %s, \"properties\" : [\"imdbnumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\", \"file\", \"plot\", \"trailer\", \"rating\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"movie\", \"id\": %s }, \"properties\" : [\"imdbNumber\", \"title\", \"tagline\", \"art\", \"year\", \"runtime\", \"file\", \"plot\", \"trailer\", \"rating\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_EPISODE_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetEpisodeDetails\", \"params\": { \"episodeid\" : %s, \"properties\" : [\"title\", \"tvshowid\", \"showtitle\", \"season\", \"episode\", \"art\", \"file\", \"plot\", \"rating\", \"runtime\", \"firstaired\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"episode\", \"id\": %s }, \"properties\" : [\"title\", \"tvShowId\", \"showTitle\", \"season\", \"episode\", \"art\", \"file\", \"plot\", \"rating\", \"runtime\", \"firstAired\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_TVSHOW_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetTVShowDetails\", \"params\": { \"tvshowid\" : %s, \"properties\" : [\"title\", \"studio\", \"art\", \"plot\", \"year\", \"rating\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"tvshow\", \"id\": %s }, \"properties\" : [\"title\", \"studio\", \"art\", \"plot\", \"year\", \"rating\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_ALBUM_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetAlbumDetails\", \"params\": { \"albumid\" : %s, \"properties\" : [\"title\", \"displayartist\", \"art\",  \"artistid\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"album\", \"id\": %s }, \"properties\" : [\"title\", \"displayArtist\", \"art\",  \"artistId\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_SONG_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetSongDetails\", \"params\": { \"songid\" : %s, \"properties\" : [\"title\", \"displayartist\", \"art\", \"albumid\", \"artistid\", \"file\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"AudioLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"song\", \"id\": %s }, \"properties\" : [\"title\", \"displayArtist\", \"art\", \"albumId\", \"artistId\", \"file\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_MUSICVIDEO_DETAILS =
-          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetMusicVideoDetails\", \"params\": { \"musicvideoid\" : %s, \"properties\" : [\"title\", \"artist\", \"art\", \"file\"] }, \"id\": \"%s\" }";
+          "{ \"jsonrpc\": \"2.0\", \"method\": \"VideoLibrary.GetItemProperties\", \"params\": { \"item\" : { \"kind\": \"musicvideo\", \"id\": %s }, \"properties\" : [\"title\", \"artist\", \"art\", \"file\"] }, \"id\": \"%s\" }";
 
   private String RETRIEVE_FILE_ITEMS =
           "{ \"jsonrpc\": \"2.0\", \"method\": \"Files.GetDirectory\", \"params\": { \"directory\" : \"%s\" }, \"id\": \"%s\" }";
@@ -242,7 +242,7 @@ public class XBMCJsonRPC
         "{\"operator\": \"contains\", \"field\": \"originaltitle\", \"value\": \"" + query + "\"}," +
         "{\"operator\": \"contains\", \"field\": \"set\", \"value\": \"" + query + "\"}," +
         "{\"operator\": \"contains\", \"field\": \"actor\", \"value\": \"" + query + "\"}," +
-        "{\"operator\": \"contains\", \"field\": \"director\", \"value\": \"" + query + "\"}]"));
+        "{\"operator\": \"contains\", \"field\": \"director\", \"value\": \"" + query + "\"}]", REQ_ID_MOVIES));
 
         if (req == null || !req.has("result"))
           return null;
@@ -259,7 +259,7 @@ public class XBMCJsonRPC
           String fanart = extractKeyFromArtMap(movie, "fanart");
 
           mc.addRow(new Object[]{
-            movie.get("movieid"),
+            movie.get("movieId"),
             movie.get("title"),
             movie.get("tagline"),
             poster != null && !poster.isEmpty() ? poster : thumb != null && !thumb.isEmpty() ? thumb : "",
@@ -278,13 +278,13 @@ public class XBMCJsonRPC
         "\"or\": [" +
         "{\"operator\": \"contains\", \"field\": \"title\", \"value\": \"" + query + "\"}," +
         "{\"operator\": \"contains\", \"field\": \"actor\", \"value\": \"" + query + "\"}," +
-        "{\"operator\": \"contains\", \"field\": \"director\", \"value\": \"" + query + "\"}]"));
+        "{\"operator\": \"contains\", \"field\": \"director\", \"value\": \"" + query + "\"}]", REQ_ID_SHOWS));
 
         if (req == null || !req.has("result"))
           return null;
 
         JsonObject results = req.getAsJsonObject("result");
-        JsonArray tvshows = results.getAsJsonArray("tvshows");
+        JsonArray tvshows = results.getAsJsonArray("tvShows");
 
         for (int i = 0; i < tvshows.size(); ++i)
         {
@@ -295,7 +295,7 @@ public class XBMCJsonRPC
           String fanart = extractKeyFromArtMap(tvshow, "fanart");
 
           mc.addRow(new Object[]{
-            tvshow.get("movieid"),
+            tvshow.get("tvShowId"),
             tvshow.get("title"),
             tvshow.get("plot"),
             poster != null && !poster.isEmpty() ? poster : thumb != null && !thumb.isEmpty() ? thumb : "",
@@ -419,7 +419,7 @@ public class XBMCJsonRPC
             }
             mc.addRow(new Object[]
             {
-              movie.get("movieid").getAsString(),
+              movie.get("movieId").getAsString(),
               movie.get("title").getAsString(),
               movie.get("tagline").getAsString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(
@@ -429,7 +429,7 @@ public class XBMCJsonRPC
                 poster != null && !poster.isEmpty() ? poster : thumb != null && !thumb.isEmpty() ? thumb : ""
               )).toString(),
               Intent.ACTION_GET_CONTENT,
-              Uri.parse("videodb://movies/titles/" + movie.get("movieid").getAsString() + "?showinfo=true"),
+              Uri.parse("videodb://movies/titles/" + movie.get("movieId").getAsString() + "?showinfo=true"),
               0,
               0,
               rYear,
@@ -451,9 +451,9 @@ public class XBMCJsonRPC
           if(!resp.has("result"))
             break searchtv;
           JsonObject results = resp.getAsJsonObject("result");
-          if (results == null || !results.has("tvshows"))
+          if (results == null || !results.has("tvShows"))
             break searchtv;
-          JsonArray tvshows = results.get("tvshows").getAsJsonArray();
+          JsonArray tvshows = results.get("tvShows").getAsJsonArray();
 
           for (int i = 0; i < tvshows.size() && totCount < limit; ++i)
           {
@@ -474,7 +474,7 @@ public class XBMCJsonRPC
             }
             mc.addRow(new Object[]
             {
-              tvshow.get("tvshowid").getAsString(),
+              tvshow.get("tvShowId").getAsString(),
               tvshow.get("title").getAsString(),
               tvshow.get("plot").getAsString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(
@@ -484,7 +484,7 @@ public class XBMCJsonRPC
                 poster != null && !poster.isEmpty() ? poster : thumb != null && !thumb.isEmpty() ? thumb : ""
               )).toString(),
               Intent.ACTION_GET_CONTENT,
-              Uri.parse("videodb://tvshows/titles/" + tvshow.get("tvshowid").getAsString() + "?showinfo=true"),
+              Uri.parse("videodb://tvshows/titles/" + tvshow.get("tvShowId").getAsString() + "?showinfo=true"),
               0,
               0,
               rYear,
@@ -518,13 +518,13 @@ public class XBMCJsonRPC
 
             mc.addRow(new Object[]
             {
-              album.get("albumid").getAsString(),
+              album.get("albumId").getAsString(),
               album.get("title").getAsString(),
-              album.get("displayartist").getAsString(),
+              album.get("displayArtist").getAsString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(thumb != null && !thumb.isEmpty() ? thumb : "" )).toString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(thumb != null && !thumb.isEmpty() ? thumb : "" )).toString(),
               Intent.ACTION_GET_CONTENT,
-              Uri.parse("musicdb://albums/" + album.get("albumid").getAsString() + "/"),
+              Uri.parse("musicdb://albums/" + album.get("albumId").getAsString() + "/"),
               0,
               0,
               0,
@@ -556,13 +556,13 @@ public class XBMCJsonRPC
 
             mc.addRow(new Object[]
             {
-              artist.get("artistid").getAsString(),
+              artist.get("artistId").getAsString(),
               artist.get("artist").getAsString(),
               artist.get("description").getAsString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(thumb != null && !thumb.isEmpty() ? thumb : "" )).toString(),
               XBMCFileContentProvider.buildUri(getDownloadUrl(thumb != null && !thumb.isEmpty() ? thumb : "" )).toString(),
               Intent.ACTION_GET_CONTENT,
-              Uri.parse("musicdb://artists/" + artist.get("artistid").getAsString() + "/"),
+              Uri.parse("musicdb://artists/" + artist.get("artistId").getAsString() + "/"),
               0,
               0,
               0,
@@ -605,7 +605,7 @@ public class XBMCJsonRPC
           try
           {
             JsonObject movie = movies.get(i).getAsJsonObject();
-            int id = movie.get("movieid").getAsInt() + 1000000;
+            int id = movie.get("movieId").getAsInt() + 1000000;
 
             String poster = extractKeyFromArtMap(movie, "poster");
             String thumb = extractKeyFromArtMap(movie, "thumb");
@@ -657,7 +657,7 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        JsonArray tvshows = results.get("tvshows").getAsJsonArray();
+        JsonArray tvshows = results.get("tvShows").getAsJsonArray();
 
         int count = 0;
         for (int i = 0; i < tvshows.size() && count < MAX_RECOMMENDATIONS; ++i)
@@ -665,7 +665,7 @@ public class XBMCJsonRPC
           try
           {
             JsonObject tvshow = tvshows.get(i).getAsJsonObject();
-            int id = tvshow.get("tvshowid").getAsInt() + 2000000;
+            int id = tvshow.get("tvShowId").getAsInt() + 2000000;
 
             String poster = extractKeyFromArtMap(tvshow, "poster");
             String thumb = extractKeyFromArtMap(tvshow, "thumb");
@@ -718,7 +718,8 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        JsonArray albums = results.get("albums").getAsJsonArray();
+        JsonArray albums = results.has("albums") ? results.get("albums").getAsJsonArray()
+                                                 : new JsonArray();
 
         int count = 0;
         for (int i = 0; i < albums.size() && count < MAX_RECOMMENDATIONS; ++i)
@@ -726,7 +727,7 @@ public class XBMCJsonRPC
           try
           {
             JsonObject album = albums.get(i).getAsJsonObject();
-            int id = album.get("albumid").getAsInt() + 3000000;
+            int id = album.get("albumId").getAsInt() + 3000000;
 
             String thumb = extractKeyFromArtMap(album, "thumb");
             String fanart = extractKeyFromArtMap(album, "fanart");
@@ -736,7 +737,7 @@ public class XBMCJsonRPC
                     .setSmallIcon(R.drawable.notif_icon)
                     .setId(id).setPriority(MAX_RECOMMENDATIONS - count)
                     .setTitle(album.get("title").getAsString())
-                    .setDescription(album.get("displayartist").getAsString())
+                    .setDescription(album.get("displayArtist").getAsString())
                     .setIntent(buildPendingAlbumIntent(ctx, album));
 
             if (fanart != null && !fanart.isEmpty())
@@ -774,7 +775,7 @@ public class XBMCJsonRPC
     {
       Intent detailsIntent = new Intent(ctx, Splash.class);
       detailsIntent.setAction(Intent.ACTION_VIEW);
-      detailsIntent.setData(Uri.parse("videodb://movies/titles/" + movie.get("movieid").getAsString() + "?showinfo=true"));
+      detailsIntent.setData(Uri.parse("videodb://movies/titles/" + movie.get("movieId").getAsString() + "?showinfo=true"));
       //detailsIntent.putExtra(MovieDetailsActivity.MOVIE, movie);
       //detailsIntent.putExtra(MovieDetailsActivity.NOTIFICATION_ID, id);
 
@@ -792,7 +793,7 @@ public class XBMCJsonRPC
     {
       Intent detailsIntent = new Intent(ctx, Splash.class);
       detailsIntent.setAction(Intent.ACTION_GET_CONTENT);
-      detailsIntent.setData(Uri.parse("videodb://tvshows/titles/" + tvshow.get("tvshowid").getAsString() + "/"));
+      detailsIntent.setData(Uri.parse("videodb://tvshows/titles/" + tvshow.get("tvShowId").getAsString() + "/"));
 
       return PendingIntent.getActivity(ctx, 0, detailsIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     } catch (Exception e)
@@ -808,7 +809,7 @@ public class XBMCJsonRPC
     {
       Intent detailsIntent = new Intent(ctx, Splash.class);
       detailsIntent.setAction(Intent.ACTION_GET_CONTENT);
-      detailsIntent.setData(Uri.parse("musicdb://albums/" + album.get("albumid").getAsString() + "/"));
+      detailsIntent.setData(Uri.parse("musicdb://albums/" + album.get("albumId").getAsString() + "/"));
 
       return PendingIntent.getActivity(ctx, 0, detailsIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     } catch (Exception e)
@@ -839,7 +840,7 @@ public class XBMCJsonRPC
       {
         JsonObject fileO = filesA.get(i).getAsJsonObject();
         Uri uri = Uri.parse(fileO.get("file").getAsString());
-        File file = File.createFile(fileO.get("label").getAsString(), fileO.get("filetype").getAsString(), XBMCFileContentProvider.buildUri(uri.toString()).toString());
+        File file = File.createFile(fileO.get("label").getAsString(), fileO.get("fileType").getAsString(), XBMCFileContentProvider.buildUri(uri.toString()).toString());
         if (fileO.has("id"))
           file.setId(fileO.get("id").getAsInt());
         if (fileO.has("type") && !fileO.get("type").getAsString().equals("unknown"))
@@ -860,7 +861,7 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("movieid").getAsInt());
+      med.setId(details.get("movieId").getAsInt());
       med.setTitle(details.get("title").getAsString());
       med.setDescription(details.get("plot").getAsString());
       // poster
@@ -887,7 +888,7 @@ public class XBMCJsonRPC
         med.setBackgroundImageUrl(getImageUrl(fanart));
       }
 
-      med.setXbmcUrl("videodb://movies/titles/" + details.get("movieid").getAsString() + "?showinfo=true");
+      med.setXbmcUrl("videodb://movies/titles/" + details.get("movieId").getAsString() + "?showinfo=true");
       med.setCategory(Media.MEDIA_TYPE_MOVIE);
 
       med.setYear(details.get("year").getAsString());
@@ -908,7 +909,7 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("tvshowid").getAsInt());
+      med.setId(details.get("tvShowId").getAsInt());
       med.setTitle(details.get("title").getAsString());
       med.setDescription(details.get("plot").getAsString());
 
@@ -935,7 +936,7 @@ public class XBMCJsonRPC
       {
         med.setBackgroundImageUrl(getImageUrl(fanart));
       }
-      med.setXbmcUrl("videodb://tvshows/titles/" + details.get("tvshowid").getAsInt() + "/");
+      med.setXbmcUrl("videodb://tvshows/titles/" + details.get("tvShowId").getAsInt() + "/");
       med.setCategory(Media.MEDIA_TYPE_TVSHOW);
 
       med.setYear(details.get("year").getAsString());
@@ -955,7 +956,7 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("episodeid").getAsInt());
+      med.setId(details.get("episodeId").getAsInt());
       med.setTitle(details.get("title").getAsString());
       med.setDescription(details.get("plot").getAsString());
 
@@ -973,7 +974,7 @@ public class XBMCJsonRPC
         med.setBackgroundImageUrl(getImageUrl(fanart));
       }
 
-      med.setXbmcUrl("videodb://tvshows/titles/" + details.get("tvshowid").getAsInt() + "/" + details.get("episodeid").getAsInt() + "?showinfo=true");
+      med.setXbmcUrl("videodb://tvshows/titles/" + details.get("tvShowId").getAsInt() + "/" + details.get("episodeId").getAsInt() + "?showinfo=true");
 /*
       String url = getDownloadUrl(details.get("file").getAsString());
       if (!url.isEmpty())
@@ -981,12 +982,12 @@ public class XBMCJsonRPC
 */
       med.setCategory(Media.MEDIA_TYPE_TVEPISODE);
 
-      med.setShowTitle(details.get("showtitle").getAsString());
+      med.setShowTitle(details.get("showTitle").getAsString());
       med.setSeason(details.get("season").getAsInt());
       med.setEpisode(details.get("episode").getAsInt());
       med.setRating(convertRating(details.get("rating").getAsDouble()));
       med.setDuration(details.get("runtime").getAsInt() * 1000);
-      med.setFirstaired(details.get("firstaired").getAsString());
+      med.setFirstaired(details.get("firstAired").getAsString());
     }
     catch (Exception e)
     {
@@ -1002,9 +1003,9 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("albumid").getAsInt());
+      med.setId(details.get("albumId").getAsInt());
       med.setTitle(details.get("title").getAsString());
-      med.setDescription(details.get("displayartist").getAsString());
+      med.setDescription(details.get("displayArtist").getAsString());
 
       // thumb
       String thumb = extractKeyFromArtMap(details, "thumb");
@@ -1020,7 +1021,7 @@ public class XBMCJsonRPC
         med.setBackgroundImageUrl(getImageUrl(fanart));
       }
 
-      med.setXbmcUrl("musicdb://albums/" + details.get("albumid").getAsString() + "/");
+      med.setXbmcUrl("musicdb://albums/" + details.get("albumId").getAsString() + "/");
       med.setCategory(Media.MEDIA_TYPE_ALBUM);
     }
     catch (Exception e)
@@ -1037,9 +1038,9 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("songid").getAsInt());
+      med.setId(details.get("songId").getAsInt());
       med.setTitle(details.get("title").getAsString());
-      med.setDescription(details.get("displayartist").getAsString());
+      med.setDescription(details.get("displayArtist").getAsString());
 
       // album thumb
       String thumb = extractKeyFromArtMap(details, "album.thumb");
@@ -1090,10 +1091,10 @@ public class XBMCJsonRPC
         extension = file.substring(file.lastIndexOf("."));
       }
 
-      if (details.has("albumid") && !details.get("albumid").getAsString().isEmpty())
-        med.setXbmcUrl("musicdb://albums/" + details.get("albumid").getAsString() + "/" + details.get("songid").getAsInt() + extension);
+      if (details.has("albumId") && !details.get("albumId").getAsString().isEmpty())
+        med.setXbmcUrl("musicdb://albums/" + details.get("albumId").getAsString() + "/" + details.get("songId").getAsInt() + extension);
       else
-        med.setXbmcUrl("musicdb://songs/" + details.get("songid").getAsInt() + extension);
+        med.setXbmcUrl("musicdb://songs/" + details.get("songId").getAsInt() + extension);
 
 /*
       String url = getDownloadUrl(details.get("file").getAsString());
@@ -1117,7 +1118,7 @@ public class XBMCJsonRPC
 
     try
     {
-      med.setId(details.get("musicvideoid").getAsInt());
+      med.setId(details.get("musicVideoId").getAsInt());
       med.setTitle(details.get("title").getAsString());
       JsonArray ja = details.get("artist").getAsJsonArray();
       if (ja.size() > 0)
@@ -1136,7 +1137,7 @@ public class XBMCJsonRPC
         med.setBackgroundImageUrl(getImageUrl(fanart));
       }
 
-      med.setXbmcUrl("videodb://musicvideos/titles/" + details.get("musicvideoid").getAsInt());
+      med.setXbmcUrl("videodb://musicvideos/titles/" + details.get("musicVideoId").getAsInt());
 
       String url = getDownloadUrl(details.get("file").getAsString());
       if (url != null && !url.isEmpty())
@@ -1185,9 +1186,9 @@ public class XBMCJsonRPC
       try
       {
         JsonObject results = rep.getAsJsonObject("result");
-        if (results.has("tvshows"))
+        if (results.has("tvShows"))
         {
-          tvshows = results.get("tvshows").getAsJsonArray();
+          tvshows = results.get("tvShows").getAsJsonArray();
           if (tvshows.size() > 0)
           {
             ++categories;
@@ -1345,7 +1346,7 @@ public class XBMCJsonRPC
         String mediaType = file.getMediatype();
         if (mediaType.equals("movie"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("moviedetails");
+          JsonObject details = req.getAsJsonObject("result");
           Movie med = createMovieFromJson(details);
           if (med != null)
           {
@@ -1355,7 +1356,7 @@ public class XBMCJsonRPC
         }
         else if (mediaType.equals("episode"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("episodedetails");
+          JsonObject details = req.getAsJsonObject("result");
           TVEpisode med = createTVEpisodeFromJson(details);
           if (med != null)
           {
@@ -1365,28 +1366,28 @@ public class XBMCJsonRPC
         }
         else if (mediaType.equals("tvshow"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("tvshowdetails");
+          JsonObject details = req.getAsJsonObject("result");
           TVShow med = createTVShowFromJson(details);
           medias.add(med);
           nbItems++;
         }
         else if (mediaType.equals("album"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("albumdetails");
+          JsonObject details = req.getAsJsonObject("result");
           Album med = createAlbumFromJson(details);
           medias.add(med);
           nbItems++;
         }
         else if (mediaType.equals("song"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("songdetails");
+          JsonObject details = req.getAsJsonObject("result");
           Song med = createSongFromJson(details);
           medias.add(med);
           nbItems++;
         }
         else if (mediaType.equals("musicvideo"))
         {
-          JsonObject details = req.getAsJsonObject("result").getAsJsonObject("musicvideodetails");
+          JsonObject details = req.getAsJsonObject("result");
           MusicVideo med = createMusicvideoFromJson(details);
           medias.add(med);
           nbItems++;
