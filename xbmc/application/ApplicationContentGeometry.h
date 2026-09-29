@@ -104,9 +104,9 @@ private:
   //! \brief Publish \p geometry, announcing it only when it differs from what is already out.
   void Set(const KODI::VIDEO::GEOMETRY::EffectiveGeometry& geometry);
 
-  //! \brief Take the widest shape the stored measurement found, which the mask opens to and
-  //! the live ratchet starts from. A function of the stored record alone.
-  void TakeMaskAspectLocked();
+  //! \brief The widest ratio the stored measurement holds, which the mask opens to and the
+  //! live ratchet starts from. Zero when nothing was measured.
+  float MaskAspectLocked() const;
 
   //! \brief Set the widen-only floor to the widest shape the stored measurement found.
   void SeedLiveRatchetLocked();
@@ -140,10 +140,6 @@ private:
   //! \brief The floor a live reading must clear to be served, as a display ratio. Seeded from
   //! the stored measurement and raised by a wider reading; zero when nothing is known.
   float m_livePublishedAspect{0.0f};
-
-  //! \brief RenderInputs::maskAspect. Held rather than derived because the render path asks
-  //! for it every frame and the record it comes from does not change while a file is open.
-  float m_maskAspect{0.0f};
 
   //! \brief Where the OSD is laid out, mirrored out of the settings because the layout asks
   //! for it every frame. Refreshed by OnSettingChanged().

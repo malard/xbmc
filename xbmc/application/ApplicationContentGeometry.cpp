@@ -193,7 +193,6 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
     m_overrides = m_pending;
     m_pending = {};
 
-    TakeMaskAspectLocked();
     SeedLiveRatchetLocked();
     m_haveStream = false;
     m_current = AtRestGeometry();
@@ -256,15 +255,12 @@ OsdPlacement CApplicationContentGeometry::OsdPlacementInForce() const
 
 void CApplicationContentGeometry::RefreshOsdPlacement()
 {
-  OsdPlacement placement{OsdPlacement::Raster};
+  const bool picture{CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+                         CSettings::SETTING_VIDEOSCREEN_OSDPLAYING) ==
+                     static_cast<int>(OsdPlacement::Picture)};
 
-  const auto settings = CServiceBroker::GetSettingsComponent();
-  const auto values = settings ? settings->GetSettings() : nullptr;
-  if (values && values->GetInt(CSettings::SETTING_VIDEOSCREEN_OSDPLAYING) ==
-                    static_cast<int>(OsdPlacement::Picture))
-    placement = OsdPlacement::Picture;
-
-  m_osdPlacement.store(placement, std::memory_order_relaxed);
+  m_osdPlacement.store(picture ? OsdPlacement::Picture : OsdPlacement::Raster,
+                       std::memory_order_relaxed);
 }
 
 void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
@@ -277,8 +273,9 @@ void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
     const float reading{rect.Height() > 0 ? static_cast<float>(rect.Width()) * par /
                                                 static_cast<float>(rect.Height())
                                           : 0.0f};
-    const auto advanced = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings();
-    const bool always{advanced && advanced->m_videoContentGeometryLiveRepublishes};
+    const bool always{CServiceBroker::GetSettingsComponent()
+                          ->GetAdvancedSettings()
+                          ->m_videoContentGeometryLiveRepublishes};
     if (always || LiveReadingWidens(reading, m_livePublishedAspect))
       m_livePublishedAspect = reading;
     else
@@ -325,9 +322,6 @@ void CApplicationContentGeometry::RefreshAtRest()
 
 void CApplicationContentGeometry::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  if (!setting)
-    return;
-
   const std::string& id = setting->GetId();
 
   if (id == CSettings::SETTING_VIDEOSCREEN_OSDPLAYING)
@@ -356,10 +350,7 @@ void CApplicationContentGeometry::OnSettingChanged(const std::shared_ptr<const C
 
 void CApplicationContentGeometry::Refresh()
 {
-  auto& components = CServiceBroker::GetAppComponents();
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-  if (!appPlayer)
-    return;
+  const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
 
   VideoStreamInfo stream;
   appPlayer->GetVideoStreamInfo(CURRENT_STREAM, stream);
@@ -403,18 +394,11 @@ void CApplicationContentGeometry::Refresh()
     m_haveStream = true;
   }
 
-  CLog::LogF(LOGDEBUG, "content rect {}x{} at {},{} in a {}x{} frame ({}, {}{}{})",
+  CLog::LogF(LOGDEBUG, "content rect {}x{} at {},{} in a {}x{} frame ({}, {}{}{}{})",
              resolved.displayRect.Width(), resolved.displayRect.Height(), resolved.displayRect.x1,
              resolved.displayRect.y1, resolved.displayFrame.Width(), resolved.displayFrame.Height(),
              resolved.label, GeometrySourceName(resolved.source), resolved.stale ? ", stale" : "",
-             resolved.varies ? ", varies" : "");
-
-  if (resolved.rejected)
-  {
-    CLog::LogF(LOGDEBUG,
-               "a measurement was rejected as matching no real ratio, so the frame is served "
-               "instead");
-  }
+             resolved.varies ? ", varies" : "", resolved.rejected ? ", rejected" : "");
 
   Set(resolved);
 
@@ -432,7 +416,6 @@ void CApplicationContentGeometry::Clear()
     m_pending = {};
 
     m_livePublishedAspect = 0.0f;
-    m_maskAspect = 0.0f;
     m_haveStream = false;
 
     m_drawn = {};
@@ -467,17 +450,17 @@ CApplicationContentGeometry::RenderInputs CApplicationContentGeometry::GetRender
 {
   std::unique_lock lock(m_section);
 
-  return {RenderGeometryOf(m_current), m_maskAspect, m_overrides.maintainAspect};
+  return {RenderGeometryOf(m_current), MaskAspectLocked(), m_overrides.maintainAspect};
 }
 
-void CApplicationContentGeometry::TakeMaskAspectLocked()
+float CApplicationContentGeometry::MaskAspectLocked() const
 {
-  m_maskAspect = m_inputs.cached.HasRecord() ? WidestAspect(m_inputs.cached.record) : 0.0f;
+  return m_inputs.cached.HasRecord() ? WidestAspect(m_inputs.cached.record) : 0.0f;
 }
 
 void CApplicationContentGeometry::SeedLiveRatchetLocked()
 {
-  m_livePublishedAspect = m_maskAspect;
+  m_livePublishedAspect = MaskAspectLocked();
 }
 
 float CApplicationContentGeometry::DetectedAspect() const
