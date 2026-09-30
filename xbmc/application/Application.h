@@ -278,6 +278,10 @@ public:
 private:
   void PrintStartupLog();
   void ResetCurrentItem();
+  void RunIteration();
+#ifdef TARGET_WASM
+  void WasmRunIteration();
+#endif
 
   /*!
    \brief Take note of where the picture has just been drawn, and confine the GUI to it if the
