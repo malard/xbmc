@@ -75,6 +75,7 @@ enum class IOControl
   SET_CACHE = 8, /**< CFileCache */
   SET_RETRY = 16, /**< Enable/disable retry within the protocol handler (if supported) */
   CANCEL_IO = 32, /**< Fail an outstanding read (if supported) */
+  CACHE_SETRATE_KEEPSIZE = 64, /**< As CACHE_SETRATE, but never grows a rate-sized cache */
 };
 
 enum class CURLOptionType

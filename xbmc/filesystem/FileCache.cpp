@@ -949,7 +949,7 @@ int CFileCache::IoControl(IOControl request, void* param)
     return 0;
   }
 
-  if (request == IOControl::CACHE_SETRATE)
+  if (request == IOControl::CACHE_SETRATE || request == IOControl::CACHE_SETRATE_KEEPSIZE)
   {
     m_writeRate = *static_cast<uint32_t*>(param);
 
@@ -965,7 +965,8 @@ int CFileCache::IoControl(IOControl request, void* param)
               "CFileCache::IoControl - setting maxRate to {:.2f} Mbit/s with processWait of {} ms",
               mBits, wait);
 
-    GrowCacheForRate(m_writeRate);
+    if (request == IOControl::CACHE_SETRATE)
+      GrowCacheForRate(m_writeRate);
     return 0;
   }
 
