@@ -1,4 +1,4 @@
-PROJECT_NUMBER = 22.0
+PROJECT_NUMBER = 23.0
 
 ALIASES = "table_start=<table class=\"kodi-table\" width=\"100%\" style=\"border\" bgcolor=\"576f9f\" border=\"0\">" \
           "table_end=</table>" \
