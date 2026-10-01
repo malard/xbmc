@@ -1432,32 +1432,11 @@ void CVideoDatabase::UpdateTables(int iVersion)
 
   if (iVersion < 150)
   {
-    // Builds that carried content geometry before it took this version already have its table
-    // and columns, and their measurements are kept.
-    const auto selects = [this](const std::string& sql)
-    {
-      try
-      {
-        m_pDS->query(sql);
-        m_pDS->close();
-        return true;
-      }
-      catch (...)
-      {
-        return false;
-      }
-    };
+    KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
 
-    if (!selects("SELECT idFile FROM contentgeometry LIMIT 1"))
-      KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
-
-    for (const auto& [column, type] :
-         {std::pair{"DeclaredAspect", "float"}, std::pair{"DeclaredOn", "text"},
-          std::pair{"DetectedWhenDeclared", "float"}})
-    {
-      if (!selects(PrepareSQL("SELECT %s FROM settings LIMIT 1", column)))
-        m_pDS->exec(PrepareSQL("ALTER TABLE settings ADD COLUMN %s %s", column, type));
-    }
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredAspect float");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredOn text");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DetectedWhenDeclared float");
 
     for (const char* table :
          {"movie", "tvshow", "seasons", "episode", "musicvideo", "sets", "genre", "tag"})
