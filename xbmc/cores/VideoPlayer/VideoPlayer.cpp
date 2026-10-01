@@ -21,7 +21,6 @@
 #if defined(HAVE_LIBBLURAY)
 #include "DVDInputStreams/DVDInputStreamBluray.h"
 #endif
-#include "DVDFileInfo.h"
 #include "DVDInputStreams/DVDInputStreamNavigator.h"
 #include "DVDInputStreams/InputStreamPVRBase.h"
 #include "DVDMessage.h"
@@ -4483,8 +4482,6 @@ bool CVideoPlayer::OpenVideoStream(CDVDStreamInfo& hint, bool reset)
   std::shared_ptr<CDVDInputStream::IMenus> pMenus = std::dynamic_pointer_cast<CDVDInputStream::IMenus>(m_pInputStream);
   if(pMenus && pMenus->IsInMenu())
     hint.stills = true;
-
-  hint.liveContentGeometry = CDVDFileInfo::CanExtract(m_item);
 
   if (hint.stereo_mode.empty())
   {

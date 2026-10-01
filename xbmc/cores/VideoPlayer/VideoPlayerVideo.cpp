@@ -238,7 +238,7 @@ void CVideoPlayerVideo::OpenStream(CDVDStreamInfo& hint, std::unique_ptr<CDVDVid
   m_packets.clear();
   m_syncState = IDVDStreamPlayer::SYNC_STARTING;
   m_renderManager.ShowVideo(false);
-  m_liveGeometry.OnStreamOpened(hint);
+  m_liveGeometry.OnStreamOpened();
 }
 
 void CVideoPlayerVideo::CloseStream(bool bWaitForBuffers)

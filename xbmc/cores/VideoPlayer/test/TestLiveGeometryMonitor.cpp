@@ -145,13 +145,7 @@ protected:
         CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY, false));
   }
 
-  //! \brief Open a stream that live detection is permitted on.
-  void OpenStream()
-  {
-    CDVDStreamInfo hint;
-    hint.liveContentGeometry = true;
-    m_monitor->OnStreamOpened(hint);
-  }
+  void OpenStream() { m_monitor->OnStreamOpened(); }
 
   //! \brief The suite's standard frame: a mono 1080p picture letterboxed to its 2.35 body.
   //! Owned by the fixture, because a VideoPicture cannot be copied out.
@@ -261,18 +255,15 @@ TEST_F(TestLiveGeometryMonitor, AHalfSideBySideViewIsReadAtItsOwnPixelAspect)
       << "the view was read at the packing's pixel aspect";
 }
 
-//! Nothing may be read from an item live detection is not permitted on - the policy rides in
-//! on the hint, and the monitor is dormant rather than merely quiet.
-TEST_F(TestLiveGeometryMonitor, AStreamThatDoesNotPermitReadingIsNotRead)
+//! Every rendered stream is read, whatever the item - a Blu-ray playlist included.
+TEST_F(TestLiveGeometryMonitor, EveryOpenedStreamIsRead)
 {
   VideoPicture& picture = LetterboxedMono();
 
-  CDVDStreamInfo hint;
-  hint.liveContentGeometry = false;
-  m_monitor->OnStreamOpened(hint);
+  OpenStream();
 
-  EXPECT_TRUE(Feed(picture).IsEmpty());
-  EXPECT_FALSE(LastPosted().has_value());
+  EXPECT_FALSE(Feed(picture).IsEmpty());
+  EXPECT_TRUE(LastPosted().has_value());
 }
 
 //! Trick play scrubs across the timeline, and the shape must not chase it.

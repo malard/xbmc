@@ -59,9 +59,6 @@ public:
   int codecOptions;
 
   // VIDEO
-  //! \brief The playing item permits live content geometry detection. Not part of Equal().
-  bool liveContentGeometry = false;
-
   int fpsscale; // scale of 1001 and a rate of 60000 will result in 59.94 fps
   int fpsrate;
   bool interlaced;

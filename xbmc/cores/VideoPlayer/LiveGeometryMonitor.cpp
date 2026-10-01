@@ -65,18 +65,17 @@ void CLiveGeometryMonitor::Withdraw()
   m_codedHeight = 0;
 }
 
-void CLiveGeometryMonitor::OnStreamOpened(const CDVDStreamInfo& hint)
+void CLiveGeometryMonitor::OnStreamOpened()
 {
   Withdraw();
 
-  m_allowed = hint.liveContentGeometry;
   m_settingsReadMs = 0;
   m_stereoMode.clear();
   m_unreadableLogged = false;
   m_reducedLogged = false;
   m_reduceTotalMs = 0.0;
   m_reduceCount = 0;
-  SetState(m_allowed ? "waiting for a frame" : "");
+  SetState("waiting for a frame");
 }
 
 void CLiveGeometryMonitor::OnFlush()
@@ -88,9 +87,6 @@ CRectInt CLiveGeometryMonitor::OnPicture(const VideoPicture& picture,
                                          const CDVDStreamInfo& hints,
                                          int speed)
 {
-  if (!m_allowed)
-    return {};
-
   // Every frame is measured; only the rules are re-read on a cadence.
   const int64_t now = CTimeUtils::MonotonicMs();
   if (m_settingsReadMs == 0 || now - m_settingsReadMs >= SETTINGS_REFRESH_MS)

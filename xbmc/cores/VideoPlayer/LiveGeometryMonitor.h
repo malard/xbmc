@@ -51,8 +51,8 @@ class CLiveGeometryMonitor
 public:
   CLiveGeometryMonitor(CDVDMessageQueue& messageParent, CProcessInfo& processInfo);
 
-  //! \brief Forget everything. Whether sampling is permitted rides in on \p hint.
-  void OnStreamOpened(const CDVDStreamInfo& hint);
+  //! \brief Forget everything.
+  void OnStreamOpened();
 
   //! \brief A seek, or a discontinuity treated like one.
   void OnFlush();
@@ -90,8 +90,6 @@ private:
   CProcessInfo& m_processInfo;
 
   KODI::VIDEO::GEOMETRY::CLiveGeometrySelector m_selector;
-
-  bool m_allowed{false};
 
   //! \brief The rules in force, and when they were last re-read.
   KODI::VIDEO::GEOMETRY::LiveGeometrySettings m_settings;
