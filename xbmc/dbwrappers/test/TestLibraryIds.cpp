@@ -225,6 +225,30 @@ TEST(TestLibraryIdsMigration, TheVideoUpgradeKeepsRowsAndStopsIdReuse)
                                                RestateVideo149);
 }
 
+//! A 149 database from a build that already carried content geometry upgrades, and keeps the
+//! measurements it holds.
+TEST(TestLibraryIdsMigration, AVideo149ThatAlreadyCarriesContentGeometryUpgrades)
+{
+  ExpectTheUpgradeStopsIdReuse<CVideoDatabase>(
+      &CAdvancedSettings::m_databaseVideo, "MyVideosGeometry", 149, VIDEO_TABLES,
+      [](CDatabase& db)
+      {
+        ASSERT_TRUE(
+            db.ExecuteQuery("INSERT INTO contentgeometry (idFile, aspects) VALUES (7, '2.39')"));
+      });
+
+  DatabaseSettings settings;
+  settings.type = "sqlite3";
+  settings.host = CSpecialProtocol::TranslatePath("special://temp/");
+  const std::string name{
+      StringUtils::Format("MyVideosGeometry{}", CurrentSchemaVersion<CVideoDatabase>(settings))};
+
+  CVideoDatabase migrated;
+  ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED, migrated.Connect(name, settings, false));
+  EXPECT_EQ(1, migrated.GetSingleValueInt("SELECT count(*) FROM contentgeometry WHERE idFile=7"));
+  migrated.Close();
+}
+
 TEST(TestLibraryIdsMigration, TheMusicUpgradeKeepsRowsAndStopsIdReuse)
 {
   ExpectTheUpgradeStopsIdReuse<CMusicDatabase>(&CAdvancedSettings::m_databaseMusic,
