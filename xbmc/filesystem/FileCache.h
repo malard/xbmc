@@ -90,6 +90,9 @@ public:
     */
     CFileCache(unsigned int flags, std::unique_ptr<IFileCacheSource> source);
 
+    //! Builds an unopened memory cache of the given size and records its forward capacity
+    virtual std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize);
+
   private:
     void ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled);
     //! Cancels a source read left unanswered for longer than a healthy source takes
@@ -97,7 +100,6 @@ public:
     //! Replaces the source with a new connection at the position; false leaves it closed
     bool ReopenSource(int64_t position);
 
-    std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize);
     //! The per-buffer size holding a minute of content at the given rate, within a memory budget
     size_t CacheSizeForRate(uint32_t bytesPerSecond) const;
     //! Grows a default-sized memory cache once the content's rate is known
