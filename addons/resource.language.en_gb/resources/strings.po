@@ -25856,7 +25856,7 @@ msgstr ""
 #. Help text for setting with label #40809 "Detect content aspect ratio"
 #: system/settings/settings.xml
 msgctxt "#40810"
-msgid "Measure the picture area of each video ahead of playback. Discs and streams are skipped."
+msgid "Measure the picture area of each video ahead of playback. DVDs and internet streams are skipped."
 msgstr ""
 
 #. Label for setting "videoscreen.contentgeometryonscan"
