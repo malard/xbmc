@@ -10,12 +10,14 @@
 
 #include "DVDCodecs/Video/DVDVideoCodec.h"
 #include "DVDFileInfo.h"
+#include "DVDInputStreams/DVDInputStream.h"
 #include "DVDStreamInfo.h"
 #include "FileItem.h"
 #include "URL.h"
 #include "VideoDecodeSession.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
+#include "video/VideoFileItemClassify.h"
 #include "video/geometry/ContentBarDetector.h"
 #include "video/geometry/FrameReduction.h"
 #include "video/geometry/FrameSampling.h"
@@ -184,6 +186,24 @@ void GeometrySampleRun::Sample(const std::vector<double>& schedule)
   }
 }
 
+bool CVideoFileGeometry::CanMeasure(const CFileItem& fileItem)
+{
+  if (CDVDFileInfo::CanExtract(fileItem))
+    return true;
+
+  // The extraction policy turns discs away because their menus need a player. A Blu-ray title
+  // opens without one, so it is measured like any other file.
+  const std::string& path = fileItem.GetDynPath();
+  const bool title = URIUtils::IsBlurayPath(path);
+  if (!title && !KODI::VIDEO::IsBDFile(fileItem))
+    return false;
+
+  // Where the disc lives, by the rule CanExtract() applies to a file.
+  const std::string disc = title ? CURL(path).GetHostName() : path;
+  return !URIUtils::IsRemote(disc) || URIUtils::IsOnLAN(disc) ||
+         (!URIUtils::IsFTP(disc) && !URIUtils::IsHTTP(disc));
+}
+
 SampledGeometry CVideoFileGeometry::ExtractContentGeometry(const CFileItem& fileItem,
                                                            const SamplingParams& sampling,
                                                            const CombinerParams& combining,
@@ -191,7 +211,7 @@ SampledGeometry CVideoFileGeometry::ExtractContentGeometry(const CFileItem& file
 {
   SampledGeometry scan;
 
-  if (!CDVDFileInfo::CanExtract(fileItem))
+  if (!CanMeasure(fileItem))
     return scan;
 
   const std::string redactPath = CURL::GetRedacted(fileItem.GetPath());
@@ -204,7 +224,13 @@ SampledGeometry CVideoFileGeometry::ExtractContentGeometry(const CFileItem& file
 
   scan.displayAspect = static_cast<float>(session->hint.aspect);
 
-  const double duration = session->demuxer->GetStreamLength() / 1000.0;
+  // A stream that knows its own running time - a Blu-ray title - is asked, because the demuxer
+  // sees only the transport stream underneath it.
+  CDVDInputStream::IDisplayTime* displayTime = session->inputStream->GetIDisplayTime();
+  const int lengthMs = displayTime && displayTime->GetTotalTime() > 0
+                           ? displayTime->GetTotalTime()
+                           : session->demuxer->GetStreamLength();
+  const double duration = lengthMs / 1000.0;
   const std::vector<double> offsets = SampleOffsets(duration, sampling);
   if (offsets.empty())
   {

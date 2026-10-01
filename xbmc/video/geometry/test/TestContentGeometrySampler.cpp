@@ -11,6 +11,7 @@
 #include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "test/TestUtils.h"
 
+#include <cstdlib>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -113,10 +114,10 @@ TEST(TestContentGeometrySampler, HonoursTheRequestedPointCount)
 }
 
 //! The gate: an internet stream is not something we may open to measure.
-TEST(TestContentGeometrySampler, RefusesItemsThatCannotBeExtracted)
+TEST(TestContentGeometrySampler, RefusesItemsThatCannotBeMeasured)
 {
   const CFileItem stream("http://example.invalid/stream.m3u8", false);
-  ASSERT_FALSE(CDVDFileInfo::CanExtract(stream));
+  ASSERT_FALSE(CVideoFileGeometry::CanMeasure(stream));
 
   const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(stream);
 
@@ -124,6 +125,33 @@ TEST(TestContentGeometrySampler, RefusesItemsThatCannotBeExtracted)
   EXPECT_TRUE(scan.samples.empty());
   EXPECT_FALSE(scan.combined.hasReading);
   EXPECT_FALSE(scan.combined.varies);
+}
+
+//! A Blu-ray title opens without a player, so it is measured like any other file - only the
+//! thumbnail and stream detail extraction policy turns discs away.
+TEST(TestContentGeometrySampler, ABlurayTitleIsMeasurable)
+{
+  const CFileItem title("bluray://smb%3a%2f%2fnas%2fShare%2fFilm%2f/BDMV/PLAYLIST/00000.mpls",
+                        false);
+  const CFileItem disc("smb://nas/Share/Film/BDMV/index.bdmv", false);
+
+  EXPECT_TRUE(CVideoFileGeometry::CanMeasure(title));
+  EXPECT_TRUE(CVideoFileGeometry::CanMeasure(disc));
+}
+
+//! Needs a real Blu-ray, which CI does not have. To run it, set KODI_TEST_BLURAY to a title's
+//! bluray:// playlist path and pass --gtest_also_run_disabled_tests.
+TEST(TestContentGeometrySampler, DISABLED_MeasuresABlurayTitle)
+{
+  const char* path = std::getenv("KODI_TEST_BLURAY");
+  if (!path || !*path)
+    GTEST_SKIP() << "KODI_TEST_BLURAY is not set";
+
+  const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(CFileItem(path, false));
+
+  ASSERT_TRUE(scan.succeeded);
+  EXPECT_TRUE(scan.combined.hasReading);
+  EXPECT_FALSE(scan.samples.empty());
 }
 
 //! Never narrower under uncertainty: a file that cannot be opened reports nothing at all

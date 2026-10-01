@@ -12,7 +12,6 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "XBDateTime.h"
-#include "cores/VideoPlayer/DVDFileInfo.h"
 #include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "cores/VideoSettings.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -41,7 +40,8 @@ CContentGeometryScanner& CContentGeometryScanner::GetInstance()
 
 std::optional<FileIdentity> MeasurableIdentity(const CFileItem& item)
 {
-  if (!CDVDFileInfo::CanExtract(item) || item.IsStack() || URIUtils::IsStack(item.GetDynPath()))
+  if (!CVideoFileGeometry::CanMeasure(item) || item.IsStack() ||
+      URIUtils::IsStack(item.GetDynPath()))
     return std::nullopt;
 
   const FileIdentity identity{GetFileIdentity(item.GetDynPath())};

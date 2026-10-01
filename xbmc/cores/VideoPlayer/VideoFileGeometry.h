@@ -26,6 +26,9 @@ struct ReducedFrame;
 class CVideoFileGeometry
 {
 public:
+  //! \brief Whether ExtractContentGeometry() may open the item.
+  static bool CanMeasure(const CFileItem& fileItem);
+
   //! \brief Sample a file at several points and work out its picture rectangle. Decodes in
   //! software with film grain synthesis off. \p cancelled is asked between positions, and a
   //! scan reporting itself cancelled must not be stored.
