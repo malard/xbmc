@@ -39,6 +39,9 @@ namespace JSONRPC
     static void StopServer(bool bWait);
     static bool IsRunning();
 
+    //! \brief Number of request workers currently running, across every connection
+    static unsigned int GetActiveWorkers();
+
     bool PrepareDownload(const char *path, CVariant &details, std::string &protocol) override;
     int GetCapabilities() override;
 
@@ -76,10 +79,11 @@ namespace JSONRPC
       virtual void Disconnect();
 
       /*!
-       * \brief Hand a received buffer to this connection's own thread, starting it if needed.
+       * \brief Hand a received buffer to this connection's worker, starting one if none is running.
        *
        * The server thread never executes a request itself: a handler may block in a modal
-       * dialog, and every other client would wait behind it.
+       * dialog, and every other client would wait behind it. A worker exits once it has drained
+       * the buffers handed to it, so an idle or half-sent connection holds no thread.
        *
        * \param self shared ownership of this client, kept alive by the worker
        * \param host the server, kept alive by the worker through its own shared_ptr
@@ -88,11 +92,6 @@ namespace JSONRPC
                    CTCPServer* host,
                    const char* buffer,
                    int length);
-
-      /*!
-       * \brief Ask the worker to finish; never joins, as the worker may be blocked in a dialog.
-       */
-      void StopWorker();
 
       virtual bool IsNew() const { return m_new; }
       virtual bool Closing() const { return m_closing; }
@@ -120,9 +119,15 @@ namespace JSONRPC
        */
       void RequestClose() { m_closing = true; }
 
+      //! \brief Set by Disconnect() so that a Send() waiting on a full socket gives up
+      std::atomic<bool> m_disconnecting{false};
+
     private:
       static void RunWorker(std::shared_ptr<CTCPClient> self, std::shared_ptr<CTCPServer> host);
       static void RunRequests(const std::shared_ptr<CTCPClient>& self, CTCPServer* host);
+
+      //! \brief Wait for room to send; false once the connection is being dropped
+      bool WaitUntilWritable();
 
       bool m_new;
       int m_announcementflags;
@@ -133,10 +138,8 @@ namespace JSONRPC
       std::atomic<bool> m_closing{false};
 
       std::mutex m_inboundMutex;
-      std::condition_variable m_inboundEvent;
       std::deque<std::string> m_inbound;
       size_t m_inboundBytes{0};
-      bool m_workerStop{false};
       bool m_workerStarted{false};
     };
 

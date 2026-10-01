@@ -30,6 +30,12 @@
 #include <memory.h>
 #include <netinet/in.h>
 
+#if !defined(TARGET_WINDOWS)
+#include <cerrno>
+
+#include <fcntl.h>
+#endif
+
 using namespace std::chrono_literals;
 
 #if defined(TARGET_WINDOWS) || defined(HAVE_LIBBLUETOOTH)
@@ -62,6 +68,25 @@ using namespace JSONRPC;
 namespace
 {
 constexpr size_t maxBufferLength = 64 * 1024;
+
+bool SetNonBlocking(SOCKET socket)
+{
+#if defined(TARGET_WINDOWS)
+  u_long nonBlocking = 1;
+  return ioctlsocket(socket, FIONBIO, &nonBlocking) == 0;
+#else
+  return fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) | O_NONBLOCK) == 0;
+#endif
+}
+
+bool SendWouldBlock()
+{
+#if defined(TARGET_WINDOWS)
+  return WSAGetLastError() == WSAEWOULDBLOCK;
+#else
+  return errno == EAGAIN || errno == EWOULDBLOCK;
+#endif
+}
 }
 
 std::shared_ptr<CTCPServer> CTCPServer::ServerInstance;
@@ -94,6 +119,15 @@ void CTCPServer::StopServer(bool bWait)
       ServerInstance.reset();
     }
   }
+}
+
+unsigned int CTCPServer::GetActiveWorkers()
+{
+  if (!ServerInstance)
+    return 0;
+
+  std::lock_guard lock(ServerInstance->m_workersMutex);
+  return ServerInstance->m_activeWorkers;
 }
 
 bool CTCPServer::IsRunning()
@@ -142,7 +176,6 @@ void CTCPServer::Process()
         if (m_connections[i]->Closing())
         {
           CLog::Log(LOGINFO, "JSONRPC Server: Disconnection requested");
-          m_connections[i]->StopWorker();
           m_connections[i]->Disconnect();
           m_connections.erase(m_connections.begin() + i);
           continue;
@@ -218,7 +251,6 @@ void CTCPServer::Process()
           if (close)
           {
             CLog::Log(LOGINFO, "JSONRPC Server: Disconnection detected");
-            m_connections[i]->StopWorker();
             m_connections[i]->Disconnect();
             m_connections.erase(m_connections.begin() + i);
           }
@@ -247,6 +279,8 @@ void CTCPServer::Process()
           else
           {
             CLog::Log(LOGINFO, "JSONRPC Server: New connection added");
+            if (!SetNonBlocking(newconnection->m_socket))
+              CLog::Log(LOGWARNING, "JSONRPC Server: Could not make the connection non-blocking");
             m_connections.push_back(std::move(newconnection));
           }
         }
@@ -524,23 +558,23 @@ bool CTCPServer::InitializeTCP()
 
 void CTCPServer::Deinitialize()
 {
-  // unregister first so no Announce callback runs during teardown
-  CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
-
-  std::unique_lock lock(m_connectionsCritSection);
-
-  for (const auto& connection : m_connections)
   {
-    connection->StopWorker();
-    connection->Disconnect();
+    std::unique_lock lock(m_connectionsCritSection);
+
+    for (const auto& connection : m_connections)
+      connection->Disconnect();
+
+    m_connections.clear();
+
+    for (unsigned int i = 0; i < m_servers.size(); i++)
+      closesocket(m_servers[i]);
+
+    m_servers.clear();
   }
 
-  m_connections.clear();
-
-  for (unsigned int i = 0; i < m_servers.size(); i++)
-    closesocket(m_servers[i]);
-
-  m_servers.clear();
+  // Only after the sockets are shut down: an Announce blocked sending to a peer that has stopped
+  // reading would otherwise hold this up for as long as the peer stays connected.
+  CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
 
 #ifdef HAVE_LIBBLUETOOTH
   if (m_sdpd)
@@ -596,17 +630,35 @@ void CTCPServer::CTCPClient::Send(const char *data, unsigned int size)
   while (sent < size)
   {
     const auto written = send(m_socket, data + sent, size - sent, 0);
-    if (written <= 0)
+    if (written > 0)
     {
-      // The server thread can close the socket while a send is in progress. send() then
-      // returns -1, which must not reach the unsigned counter below.
-      CLog::Log(LOGERROR, "JSONRPC Server: Send failed, dropping {} of {} bytes", size - sent,
-                size);
-      return;
+      sent += static_cast<unsigned int>(written);
+      continue;
     }
 
-    sent += static_cast<unsigned int>(written);
+    if (written < 0 && SendWouldBlock() && WaitUntilWritable())
+      continue;
+
+    // -1 must not reach the unsigned counter above
+    CLog::Log(LOGERROR, "JSONRPC Server: Send failed, dropping {} of {} bytes", size - sent, size);
+    return;
   }
+}
+
+bool CTCPServer::CTCPClient::WaitUntilWritable()
+{
+  while (!m_disconnecting)
+  {
+    fd_set writable;
+    FD_ZERO(&writable);
+    FD_SET(m_socket, &writable);
+    timeval timeout = {0, 100000};
+    const int result =
+        select(static_cast<int>(m_socket) + 1, nullptr, &writable, nullptr, &timeout);
+    if (result != 0)
+      return result > 0;
+  }
+  return false;
 }
 
 void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
@@ -629,8 +681,6 @@ void CTCPServer::CTCPClient::Enqueue(const std::shared_ptr<CTCPClient>& self,
       start = true;
     }
   }
-
-  m_inboundEvent.notify_one();
 
   if (start)
   {
@@ -676,20 +726,11 @@ bool CTCPServer::CTCPClient::Backlogged()
   return m_inboundBytes >= maxBufferLength;
 }
 
-void CTCPServer::CTCPClient::StopWorker()
-{
-  {
-    std::unique_lock<std::mutex> lock(m_inboundMutex);
-    m_workerStop = true;
-  }
-
-  m_inboundEvent.notify_one();
-}
-
 void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
                                        std::shared_ptr<CTCPServer> host)
 {
-  // A bare thread entry point: an escaping exception would call std::terminate.
+  // A bare thread entry point: an escaping exception would call std::terminate. The connection
+  // is dropped after one, as m_workerStarted stays set and nothing would serve it again.
   try
   {
     RunRequests(self, host.get());
@@ -697,10 +738,12 @@ void CTCPServer::CTCPClient::RunWorker(std::shared_ptr<CTCPClient> self,
   catch (const std::exception& error)
   {
     CLog::Log(LOGERROR, "JSONRPC Server: Request worker failed: {}", error.what());
+    self->RequestClose();
   }
   catch (...)
   {
     CLog::Log(LOGERROR, "JSONRPC Server: Request worker failed");
+    self->RequestClose();
   }
 
   {
@@ -717,13 +760,14 @@ void CTCPServer::CTCPClient::RunRequests(const std::shared_ptr<CTCPClient>& self
     std::string buffer;
     {
       std::unique_lock<std::mutex> lock(self->m_inboundMutex);
-      self->m_inboundEvent.wait(lock,
-                                [&self] { return !self->m_inbound.empty() || self->m_workerStop; });
 
-      // Drain what has already been accepted before exiting, so a client that sends a command
-      // and closes immediately still gets it executed.
+      // Cleared under the lock Enqueue tests it under, so the next buffer starts a new worker.
+      // A connection that is dropped still has what it already sent executed.
       if (self->m_inbound.empty())
+      {
+        self->m_workerStarted = false;
         return;
+      }
 
       buffer = std::move(self->m_inbound.front());
       self->m_inbound.pop_front();
@@ -815,8 +859,10 @@ void CTCPServer::CTCPClient::Disconnect()
 {
   if (m_socket > 0)
   {
-    // Send() holds m_critSection across a blocking send(), so a peer that has stopped reading
-    // would hold the server thread here. Shutting the socket down first makes that send fail.
+    // Send() holds m_critSection while it waits for a peer that has stopped reading, so it is
+    // told to give up first. The socket is non-blocking because shutdown() alone does not wake a
+    // blocked send() on Windows.
+    m_disconnecting = true;
     shutdown(m_socket, SHUT_RDWR);
 
     std::unique_lock lock(m_critSection);
@@ -950,6 +996,9 @@ void CTCPServer::CWebSocketClient::Disconnect()
 {
   if (m_socket <= 0)
     return;
+
+  // The close frame is not worth waiting for a peer that has stopped reading
+  m_disconnecting = true;
 
   // A sender blocked on a peer that has stopped reading holds m_critSection, so the close frame is
   // only sent when nothing is sending; the socket is shut down either way.
