@@ -37,6 +37,7 @@
 #include "network/dacp/dacp.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtUtils.h"
 #include "utils/EndianSwap.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
@@ -161,11 +162,13 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
   if (ServerInstance != NULL && ServerInstance->m_pPipe != NULL &&
       playing->GetPath() == ServerInstance->m_pPipe->GetName())
   {
-    // UpdateInfo copies the mime type and the art; an empty url clears the previous thumbnail.
+    // UpdateInfo copies the mime type and replaces the whole art map, so an empty url clears the
+    // previous thumbnail and the default icon has to travel with it.
     auto item = std::make_unique<CFileItem>();
     item->SetPath(ServerInstance->m_pPipe->GetName());
     item->SetMimeType("audio/x-xbmc-pcm");
     item->SetArt("thumb", CFile::Exists(coverArtFile) ? coverArtFile : "");
+    KODI::ART::FillInDefaultIcon(*item);
 
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,
                                                JSONRPC::TransferToMessenger(std::move(item)));
