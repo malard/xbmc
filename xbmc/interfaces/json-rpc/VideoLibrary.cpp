@@ -18,6 +18,7 @@
 #include "addons/Scraper.h"
 #include "addons/addoninfo/AddonInfo.h"
 #include "imagefiles/ImageFileURL.h"
+#include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
@@ -360,6 +361,129 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
     return status;
 
   AnnounceChange(ANNOUNCEMENT::VideoLibrary, traits->type, id, names, result);
+  return OK;
+}
+
+namespace
+{
+//! The id of the item of \p kind the library already holds at \p path, -1 for none
+int ExistingItemAt(VideoKind kind, const std::string& path, CVideoDatabase& videodatabase)
+{
+  switch (kind)
+  {
+    case VideoKind::Movie:
+      return videodatabase.GetMovieId(path);
+    case VideoKind::TVShow:
+      return videodatabase.GetTvShowId(path);
+    case VideoKind::Episode:
+      return videodatabase.GetEpisodeId(path);
+    case VideoKind::MusicVideo:
+      return videodatabase.GetMusicVideoId(path);
+    default:
+      return -1;
+  }
+}
+} // unnamed namespace
+
+JSONRPC_STATUS CVideoLibrary::AddItem(const CVariant& parameterObject, CVariant& result)
+{
+  const KindTraits* traits = TraitsNamed(parameterObject["kind"].asString());
+  if (!traits || traits->kind == VideoKind::Set || traits->kind == VideoKind::Season)
+    return InvalidParams;
+
+  CVariant properties;
+  if (const JSONRPC_STATUS status =
+          CheckAgainstType(traits->settable, "properties",
+                           GivenMembers(parameterObject["properties"]), properties, result);
+      status != OK)
+    return status;
+
+  const int tvShowId{static_cast<int>(parameterObject["tvShowId"].asInteger())};
+  if (tvShowId != -1 && traits->kind != VideoKind::Episode)
+    return RefuseForKind("tvShowId", traits->type, result);
+  if (tvShowId == -1 && traits->kind == VideoKind::Episode)
+    return InvalidParams;
+
+  CVideoDatabase videodatabase;
+  if (!videodatabase.Open())
+    return InternalError;
+
+  const bool isShow{traits->kind == VideoKind::TVShow};
+  std::string path{parameterObject["path"].asString()};
+  if (isShow)
+    URIUtils::AddSlashAtEnd(path);
+
+  if (ExistingItemAt(traits->kind, path, videodatabase) >= 0)
+    return Fail(result, FailedToExecute, Reason::AlreadyInLibrary, Target("path", path));
+
+  if (traits->kind == VideoKind::Episode)
+  {
+    CVideoInfoTag show;
+    if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetTvShowInfo("", show, tvShowId),
+                                                result, ItemTarget(VideoKind::TVShow, tvShowId));
+        status != OK)
+      return status;
+  }
+
+  CVideoInfoTag infos;
+  infos.m_strTitle = CUtil::GetTitleFromPath(path, isShow);
+  if (isShow)
+    infos.m_strPath = path;
+  else
+  {
+    infos.m_strFileNameAndPath = path;
+    infos.m_strPath = URIUtils::GetDirectory(path);
+    infos.m_basePath = CFileItem(path, false).GetBaseMoviePath(false);
+    infos.m_parentPathID = videodatabase.AddPath(URIUtils::GetParentPath(infos.m_basePath));
+  }
+
+  const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
+
+  // Announced once below, as an added item
+  videodatabase.SetAnnounceUpdates(false);
+
+  int id{-1};
+  switch (traits->kind)
+  {
+    case VideoKind::Movie:
+      id = videodatabase.SetDetailsForMovie(infos, edit.artwork);
+      break;
+    case VideoKind::TVShow:
+      id = videodatabase.SetDetailsForTvShow({path}, infos, edit.artwork, {});
+      break;
+    case VideoKind::Episode:
+      id = videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvShowId);
+      break;
+    case VideoKind::MusicVideo:
+      id = videodatabase.SetDetailsForMusicVideo(infos, edit.artwork);
+      break;
+    default:
+      break;
+  }
+  if (id <= 0)
+    return InternalError;
+
+  if (!isShow)
+  {
+    const PlaybackUpdate before{0, CDateTime()};
+    StorePlaybackEdit(properties, before, infos, videodatabase);
+  }
+
+  CVariant names{ReadableNames(properties, traits->fields)};
+  if (!names.isArray())
+    names = CVariant(CVariant::VariantTypeArray);
+  names.push_back("title");
+  if (const JSONRPC_STATUS status = ReadItem(traits->kind, id, names, videodatabase, result);
+      status != OK)
+    return status;
+
+  CFileItem added;
+  added.GetVideoInfoTag()->m_iDbId = id;
+  added.GetVideoInfoTag()->SetMediaType(traits->type);
+  CVariant data;
+  data["added"] = true;
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
+                                                     std::make_shared<CFileItem>(added), data);
   return OK;
 }
 

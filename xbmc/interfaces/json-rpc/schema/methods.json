@@ -3782,6 +3782,93 @@
       ]
     }
   },
+  "VideoLibrary.AddItem": {
+    "type": "method",
+    "description": "Adds a movie, tv show, episode or music video at the path given, without a scan or a scraper, and answers with its id and the values in force of the properties named and its title",
+    "transport": "Response",
+    "permission": "UpdateData",
+    "params": [
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "movie",
+            "tvshow",
+            "episode",
+            "musicvideo"
+          ]
+        }
+      },
+      {
+        "name": "path",
+        "required": true,
+        "description": "The item's file, or a tv show's folder",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      {
+        "name": "tvShowId",
+        "description": "The show an episode belongs to, which an episode needs",
+        "schema": {
+          "$ref": "#/$defs/Library.Id"
+        }
+      },
+      {
+        "name": "properties",
+        "description": "Properties of the item's kind, as SetItemProperties takes them; the title defaults to one made from the path",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Video.Details.Movie.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.TVShow.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.Episode.Set"
+            },
+            {
+              "$ref": "#/$defs/Video.Details.MusicVideo.Set"
+            }
+          ]
+        }
+      }
+    ],
+    "returns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Video.Details.Movie"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.TVShow"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.Episode"
+        },
+        {
+          "$ref": "#/$defs/Video.Details.MusicVideo"
+        }
+      ]
+    },
+    "errors": [
+      "InvalidParams",
+      "InternalError",
+      "FailedToExecute",
+      "NotFound"
+    ],
+    "reasons": {
+      "FailedToExecute": [
+        "already-in-library"
+      ],
+      "NotFound": [
+        "no-such-item"
+      ]
+    }
+  },
   "VideoLibrary.GetMovies": {
     "type": "method",
     "description": "Retrieve all movies",

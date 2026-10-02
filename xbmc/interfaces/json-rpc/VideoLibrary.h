@@ -49,6 +49,7 @@ public:
 
   static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS AddItem(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetTags(const CVariant& parameterObject, CVariant& result);

@@ -138,6 +138,9 @@ Methods:
 - `VideoLibrary.GetItemProperties`, `VideoLibrary.SetItemProperties`,
   `AudioLibrary.GetItemProperties`, `AudioLibrary.SetItemProperties`; an album's `albumStatus` can
   be set
+- `VideoLibrary.AddItem`: adds a movie, tv show, episode or music video at a path, with any of the
+  properties `SetItemProperties` takes, without a scan or a scraper (from xbmc/xbmc#20797 by
+  hupfdule)
 - `confirmed` on `Settings.SetSettingValue`
 - `starttime` and `endtime` on `PVR.GetBroadcasts`
 

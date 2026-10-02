@@ -369,6 +369,7 @@ public:
   int GetTvShowId(const std::string& strPath);
   // input value is episode/season number hint - for multiparters
   int GetEpisodeId(const std::string& strFilenameAndPath, int episode = -1, int season = -1);
+  int GetMusicVideoId(const std::string& strFilenameAndPath);
   int GetSeasonId(int idShow, int season) const;
 
   void GetEpisodesByBlurayPath(const std::string& path, std::vector<CVideoInfoTag>& episodes);
@@ -1236,8 +1237,6 @@ public:
 protected:
   int AddNewMovie(CVideoInfoTag& details);
   int AddNewMusicVideo(CVideoInfoTag& details);
-
-  int GetMusicVideoId(const std::string& strFilenameAndPath);
 
   int GetFileId(const CVideoInfoTag& details);
 

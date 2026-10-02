@@ -11,6 +11,7 @@
 #include "GUIInfoManager.h"
 #include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
+#include "Util.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
@@ -575,4 +576,106 @@ TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)
   EXPECT_EQ(last, descending["items"][0]["tvShowId"].asInteger());
   EXPECT_EQ(total, descending["limits"]["total"].asInteger());
   EXPECT_EQ(1, descending["limits"]["end"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, AddingAMovieNeedsNoScan)
+{
+  const std::string path{"/jsonrpc-test/library/Added Film (2003).mkv"};
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.AddItem",
+                       R"({"kind": "movie", "path": ")" + path +
+                           R"(", "properties": {"plot": "Added", "year": 2003}})",
+                       result));
+  const int id{static_cast<int>(result["movieId"].asInteger())};
+  ASSERT_GT(id, 0);
+  EXPECT_EQ(CUtil::GetTitleFromPath(path, false), result["title"].asString());
+  EXPECT_EQ("Added", result["plot"].asString());
+  EXPECT_EQ(2003, result["year"].asInteger());
+
+  CVariant read;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItemProperties",
+                       R"({"item": {"kind": "movie", "id": )" + std::to_string(id) +
+                           R"(}, "properties": ["file", "plot"]})",
+                       read));
+  EXPECT_EQ(path, read["file"].asString());
+  EXPECT_EQ("Added", read["plot"].asString());
+
+  m_videos.DeleteMovie(id);
+}
+
+TEST_F(TestLibraryItemsInDatabase, AnEpisodeIsAddedToTheShowNamed)
+{
+  CVariant show;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.AddItem",
+                       R"({"kind": "tvshow", "path": "/jsonrpc-test/library/Added Show",
+                           "properties": {"title": "Added Show"}})",
+                       show));
+  const int showId{static_cast<int>(show["tvShowId"].asInteger())};
+  ASSERT_GT(showId, 0);
+  m_extraShows.push_back(showId);
+  EXPECT_EQ("Added Show", show["title"].asString());
+
+  CVariant episode;
+  ASSERT_EQ(OK,
+            Invoke("VideoLibrary.AddItem",
+                   R"({"kind": "episode", "path": "/jsonrpc-test/library/Added Show/S01E02.mkv",
+                           "tvShowId": )" +
+                       std::to_string(showId) + R"(, "properties": {"season": 1, "episode": 2}})",
+                   episode));
+  ASSERT_GT(episode["episodeId"].asInteger(), 0);
+
+  CVariant read;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetItemProperties",
+                       R"({"item": {"kind": "episode", "id": )" +
+                           std::to_string(episode["episodeId"].asInteger()) +
+                           R"(}, "properties": ["tvShowId", "season", "episode"]})",
+                       read));
+  EXPECT_EQ(showId, read["tvShowId"].asInteger());
+  EXPECT_EQ(1, read["season"].asInteger());
+  EXPECT_EQ(2, read["episode"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, AMusicVideoIsAddedAndAnnouncedAsAdded)
+{
+  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
+
+  CVariant result;
+  ASSERT_EQ(OK,
+            Invoke("VideoLibrary.AddItem",
+                   R"({"kind": "musicvideo", "path": "/jsonrpc-test/library/Clip.mkv"})", result));
+  const int id{static_cast<int>(result["musicVideoId"].asInteger())};
+  ASSERT_GT(id, 0);
+
+  const std::vector<CVariant> updates{listener.UpdatesTo("musicvideo", id)};
+  ASSERT_EQ(1u, updates.size());
+  EXPECT_TRUE(updates[0]["added"].asBoolean());
+
+  m_videos.DeleteMusicVideo(id);
+}
+
+TEST_F(TestLibraryItemsInDatabase, AnItemAlreadyAtThePathIsNotAddedAgain)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute,
+            Invoke("VideoLibrary.AddItem",
+                   R"({"kind": "movie", "path": "/jsonrpc-test/library/Loner (2002).mkv"})",
+                   result));
+  EXPECT_EQ("already-in-library", result["reason"].asString());
+}
+
+TEST_F(TestLibraryItemsInDatabase, AnEpisodeNeedsAShowThatExists)
+{
+  CVariant result;
+  EXPECT_EQ(NotFound, Invoke("VideoLibrary.AddItem",
+                             R"({"kind": "episode", "path": "/jsonrpc-test/library/Orphan.mkv",
+                                 "tvShowId": 987654})",
+                             result));
+  EXPECT_EQ(InvalidParams,
+            Invoke("VideoLibrary.AddItem",
+                   R"({"kind": "episode", "path": "/jsonrpc-test/library/Orphan.mkv"})", result));
+  EXPECT_EQ(InvalidParams,
+            Invoke("VideoLibrary.AddItem",
+                   R"({"kind": "movie", "path": "/jsonrpc-test/library/Film.mkv", "tvShowId": )" +
+                       std::to_string(m_showId) + "}",
+                   result));
 }

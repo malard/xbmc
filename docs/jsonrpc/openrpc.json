@@ -6024,6 +6024,126 @@
       "x-kodi-transport": "Response"
     },
     {
+      "name": "VideoLibrary.AddItem",
+      "summary": "Adds a movie, tv show, episode or music video at the path given, without a scan or a scraper, and answers with its id and the values in force of the properties named and its title",
+      "tags": [
+        {
+          "name": "VideoLibrary"
+        }
+      ],
+      "paramStructure": "either",
+      "params": [
+        {
+          "name": "kind",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "movie",
+              "tvshow",
+              "episode",
+              "musicvideo"
+            ]
+          }
+        },
+        {
+          "name": "path",
+          "required": true,
+          "description": "The item's file, or a tv show's folder",
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "name": "tvShowId",
+          "description": "The show an episode belongs to, which an episode needs",
+          "schema": {
+            "$ref": "#/components/schemas/Library.Id"
+          }
+        },
+        {
+          "name": "properties",
+          "description": "Properties of the item's kind, as SetItemProperties takes them; the title defaults to one made from the path",
+          "schema": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Video.Details.Movie.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.TVShow.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.Episode.Set"
+              },
+              {
+                "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "result",
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/Video.Details.Movie"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.TVShow"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.Episode"
+            },
+            {
+              "$ref": "#/components/schemas/Video.Details.MusicVideo"
+            }
+          ]
+        }
+      },
+      "errors": [
+        {
+          "$ref": "#/components/errors/ParseError"
+        },
+        {
+          "$ref": "#/components/errors/InvalidRequest"
+        },
+        {
+          "$ref": "#/components/errors/MethodNotFound"
+        },
+        {
+          "$ref": "#/components/errors/InvalidParams"
+        },
+        {
+          "$ref": "#/components/errors/InternalError"
+        },
+        {
+          "$ref": "#/components/errors/FailedToExecute"
+        },
+        {
+          "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
+        }
+      ],
+      "x-kodi-permission": "UpdateData",
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/already-in-library"
+          }
+        ],
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-item"
+          }
+        ]
+      },
+      "x-kodi-transport": "Response"
+    },
+    {
       "name": "VideoLibrary.GetMovies",
       "summary": "Retrieve all movies",
       "tags": [
@@ -21670,6 +21790,9 @@
       },
       "not-in-library": {
         "description": "The library holds nothing under the directory."
+      },
+      "already-in-library": {
+        "description": "The library already holds an item at the path."
       },
       "no-such-addon": {
         "description": "No add-on has the given id, or none that is enabled where the call needs one."
