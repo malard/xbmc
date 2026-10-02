@@ -15,6 +15,7 @@
 #include "URL.h"
 #include "Util.h"
 #include "filesystem/Directory.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
@@ -82,8 +83,7 @@ const char* audio_containers[] = {MUSICDB::GENRES,
                                   MUSICDB::YEARS,
                                   MUSICDB::SINGLES};
 
-const char* video_containers[] = {"library://video/movies/titles.xml/",
-                                  "library://video/tvshows/titles.xml/",
+const char* video_containers[] = {LIBRARY::MOVIE_TITLES, LIBRARY::TVSHOW_TITLES,
                                   VIDEODB::RECENTLY_ADDED_MOVIES, VIDEODB::RECENTLY_ADDED_EPISODES};
 
 /*----------------------------------------------------------------------
@@ -386,9 +386,9 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
         }
       }
     }
-    else if (file_path.StartsWith("library://") || file_path.StartsWith(VIDEODB::ROOT))
+    else if (file_path.StartsWith(LIBRARY::ROOT) || file_path.StartsWith(VIDEODB::ROOT))
     {
-      if (path == "library://video/")
+      if (path == LIBRARY::VIDEO)
       {
         item->SetLabel("Video Library");
         item->SetLabelPreformatted(true);
@@ -571,15 +571,15 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
           break;
         }
         case MediaType::TV_SHOW:
-          UpdateContainer("library://video/tvshows/titles.xml/");
+          UpdateContainer(LIBRARY::TVSHOW_TITLES);
           UpdateContainer(VIDEODB::RECENTLY_ADDED_EPISODES);
           break;
         case MediaType::MOVIE:
-          UpdateContainer("library://video/movies/titles.xml/");
+          UpdateContainer(LIBRARY::MOVIE_TITLES);
           UpdateContainer(VIDEODB::RECENTLY_ADDED_MOVIES);
           break;
         case MediaType::MUSIC_VIDEO:
-          UpdateContainer("library://video/musicvideos/titles.xml/");
+          UpdateContainer(LIBRARY::MUSICVIDEO_TITLES);
           UpdateContainer(VIDEODB::RECENTLY_ADDED_MUSICVIDEOS);
           break;
         default:
@@ -616,7 +616,7 @@ static NPT_String TranslateWMPObjectId(NPT_String id, const Logger& logger)
   else if (id == "15")
   {
     // Xbox 360 asking for videos
-    id = "library://video/";
+    id = LIBRARY::VIDEO;
   }
   else if (id == "16")
   {
@@ -705,7 +705,7 @@ NPT_Result CUPnPServer::OnBrowseMetadata(PLT_ActionReference& action,
     // attempt to determine the parent of this item
     std::string parent;
     if (URIUtils::IsVideoDb((const char*)id) || URIUtils::IsMusicDb((const char*)id) ||
-        StringUtils::StartsWithNoCase((const char*)id, "library://video/"))
+        StringUtils::StartsWithNoCase((const char*)id, LIBRARY::VIDEO))
     {
       if (!URIUtils::GetParentPath((const char*)id, parent))
       {
@@ -726,10 +726,10 @@ NPT_Result CUPnPServer::OnBrowseMetadata(PLT_ActionReference& action,
         parent = MUSICDB::ROOT;
       else if (StringUtils::StartsWithNoCase(
                    child_id, CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
-        parent = "library://video/";
+        parent = LIBRARY::VIDEO;
       else if (StringUtils::StartsWithNoCase(
                    child_id, CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)))
-        parent = "library://video/";
+        parent = LIBRARY::VIDEO;
       else if (CUtil::IsInPlaylistsFolder(child_id, KODI::MEDIA::MediaSection::MUSIC))
         parent = CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC);
       else if (CUtil::IsInPlaylistsFolder(child_id, KODI::MEDIA::MediaSection::VIDEO))
@@ -831,7 +831,7 @@ NPT_Result CUPnPServer::OnBrowseDirectChildren(PLT_ActionReference& action,
       items.Add(item);
 
       // video library
-      item = std::make_shared<CFileItem>("library://video/", true);
+      item = std::make_shared<CFileItem>(LIBRARY::VIDEO, true);
       item->SetLabel("Video Library");
       item->SetLabelPreformatted(true);
       items.Add(item);
@@ -875,7 +875,7 @@ NPT_Result CUPnPServer::OnBrowseDirectChildren(PLT_ActionReference& action,
     database.Open();
     if (database.HasContent(VideoDbContentType::MUSICVIDEOS))
     {
-      CFileItemPtr mvideos(new CFileItem("library://video/musicvideos/", true));
+      CFileItemPtr mvideos(new CFileItem(LIBRARY::MUSICVIDEOS, true));
       mvideos->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20389));
       items.Add(mvideos);
     }
@@ -911,7 +911,7 @@ NPT_Result CUPnPServer::BuildResponse(PLT_ActionReference& action,
   NPT_Reference<CThumbLoader> thumb_loader;
 
   if (URIUtils::IsVideoDb(items.GetPath()) ||
-      StringUtils::StartsWithNoCase(items.GetPath(), "library://video/") ||
+      StringUtils::StartsWithNoCase(items.GetPath(), LIBRARY::VIDEO) ||
       CUtil::IsInPlaylistsFolder(items.GetPath(), KODI::MEDIA::MediaSection::VIDEO))
   {
 

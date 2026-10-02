@@ -16,6 +16,7 @@
 #include "URL.h"
 #include "Util.h"
 #include "filesystem/File.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "filesystem/SourcesDirectory.h"
 #include "filesystem/SpecialProtocol.h"
@@ -122,9 +123,9 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
     return true;
   else if (URIUtils::IsVideoDb(realPath))
     return true;
-  else if (StringUtils::StartsWithNoCase(realPath, "library://video"))
-    return true;
-  else if (StringUtils::StartsWithNoCase(realPath, "library://music"))
+  else if (StringUtils::StartsWithNoCase(realPath, KODI::LIBRARY::VIDEO) ||
+           StringUtils::StartsWithNoCase(realPath, KODI::LIBRARY::VIDEO_FLAT) ||
+           StringUtils::StartsWithNoCase(realPath, KODI::LIBRARY::MUSIC))
     return true;
   else if (CSourcesDirectory::SectionOf(realPath) == MediaSection::VIDEO)
     return true;

@@ -13,6 +13,7 @@
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "filesystem/Directory.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/VideoDatabaseDirectory.h"
@@ -678,7 +679,7 @@ std::vector<CMediaSource>& CGUIViewStateWindowMusicNav::GetSources()
   m_sources.clear();
   CFileItemList items;
 
-  CDirectory::GetDirectory("library://music/", items, "", DIR_FLAG_DEFAULTS);
+  CDirectory::GetDirectory(LIBRARY::MUSIC, items, "", DIR_FLAG_DEFAULTS);
   for (int i=0; i<items.Size(); ++i)
   {
     CFileItemPtr item=items[i];

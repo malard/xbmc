@@ -17,6 +17,7 @@
 #include "Util.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "dialogs/GUIDialogKaiToast.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/PlaylistFileDirectory.h"
 #include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIKeyboardFactory.h"
@@ -192,7 +193,7 @@ bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory
     files->SetIsShareOrDrive(true);
     items.Add(files);
 
-    CFileItemPtr mdb(new CFileItem("library://music/", true));
+    CFileItemPtr mdb(new CFileItem(LIBRARY::MUSIC, true));
     mdb->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(14022));
     mdb->SetLabelPreformatted(true);
     mdb->SetIsShareOrDrive(true);

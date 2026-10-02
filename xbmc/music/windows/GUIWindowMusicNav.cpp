@@ -18,6 +18,7 @@
 #include "Util.h"
 #include "addons/AddonSystemSettings.h"
 #include "dialogs/GUIDialogYesNo.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
@@ -482,7 +483,7 @@ bool CGUIWindowMusicNav::GetDirectory(const std::string &strDirectory, CFileItem
   else if (PLAYLIST::IsPlayList(items))
     items.SetContent(CONTENT::SONGS);
   else if (URIUtils::PathEquals(strDirectory, CUtil::PlaylistsPathOf(MediaSection::MUSIC)) ||
-           URIUtils::PathEquals(strDirectory, "library://music/playlists.xml/"))
+           URIUtils::PathEquals(strDirectory, LIBRARY::MUSIC_PLAYLISTS))
     items.SetContent(CONTENT::PLAYLISTS);
   else if (URIUtils::PathEquals(strDirectory, "plugin://music/"))
     items.SetContent(CONTENT::PLUGINS);

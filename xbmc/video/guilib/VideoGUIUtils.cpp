@@ -16,6 +16,7 @@
 #include "Util.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogBusy.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
 #include "guilib/GUIComponent.h"
@@ -461,7 +462,7 @@ bool IsItemPlayable(const CFileItem& item)
     return true;
 
   // Exclude all music library items
-  if (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), "library://music/"))
+  if (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::MUSIC))
     return false;
 
   // Exclude add-ons
@@ -492,7 +493,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   if (item.IsFolder() &&
-      (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), "library://video/")))
+      (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CVideoDatabaseDirectory::GetDirectoryParentType(item.GetPath());
