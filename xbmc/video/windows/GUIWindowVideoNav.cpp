@@ -30,6 +30,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "music/Song.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "profiles/ProfileManager.h"
@@ -46,6 +47,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoScanner.h"
@@ -724,7 +726,7 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
-  else if (StringUtils::StartsWithNoCase(pItem->GetPath(), "videodb://movies/sets/") &&
+  else if (StringUtils::StartsWithNoCase(pItem->GetPath(), VIDEODB::MOVIE_SETS) &&
            pItem->GetPath().size() > 22 && pItem->IsFolder())
   {
     CGUIDialogYesNo* pDialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogYesNo>(WINDOW_DIALOG_YES_NO);
@@ -952,7 +954,7 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   case CONTEXT_BUTTON_GO_TO_ARTIST:
     {
       std::string strPath;
-      strPath = StringUtils::Format("musicdb://artists/{}/",
+      strPath = StringUtils::Format("{}{}/", MUSICDB::ARTISTS,
                                     item->GetProperty("artist_musicid").asInteger());
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, strPath);
       return true;
@@ -960,7 +962,7 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   case CONTEXT_BUTTON_GO_TO_ALBUM:
     {
       std::string strPath;
-      strPath = StringUtils::Format("musicdb://albums/{}/",
+      strPath = StringUtils::Format("{}{}/", MUSICDB::ALBUMS,
                                     item->GetProperty("album_musicid").asInteger());
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, strPath);
       return true;
@@ -1061,36 +1063,36 @@ std::string CGUIWindowVideoNav::GetStartFolder(const std::string &dir)
 {
   static const auto map = std::map<std::string, std::string>{
       {"files", CSourcesDirectory::PathOf(MediaSection::VIDEO)},
-      {"inprogresstvshows", "videodb://inprogresstvshows/"},
-      {"movieactors", "videodb://movies/actors/"},
-      {"moviecountries", "videodb://movies/countries/"},
-      {"moviedirectors", "videodb://movies/directors/"},
-      {"moviegenres", "videodb://movies/genres/"},
-      {"movies", "videodb://movies/"},
-      {"moviesets", "videodb://movies/sets/"},
-      {"moviestudios", "videodb://movies/studios/"},
-      {"movietags", "videodb://movies/tags/"},
-      {"movietitles", "videodb://movies/titles/"},
-      {"movieyears", "videodb://movies/years/"},
-      {"musicvideoalbums", "videodb://musicvideos/albums/"},
-      {"musicvideoartists", "videodb://musicvideos/artists/"},
-      {"musicvideodirectors", "videodb://musicvideos/directors/"},
-      {"musicvideogenres", "videodb://musicvideos/genres/"},
-      {"musicvideos", "videodb://musicvideos/"},
-      {"musicvideostudios", "videodb://musicvideos/studios/"},
-      {"musicvideotags", "videodb://musicvideos/tags/"},
-      {"musicvideotitles", "videodb://musicvideos/titles/"},
-      {"musicvideoyears", "videodb://musicvideos/years/"},
-      {"recentlyaddedepisodes", "videodb://recentlyaddedepisodes/"},
-      {"recentlyaddedmovies", "videodb://recentlyaddedmovies/"},
-      {"recentlyaddedmusicvideos", "videodb://recentlyaddedmusicvideos/"},
-      {"tvshowactors", "videodb://tvshows/actors/"},
-      {"tvshowgenres", "videodb://tvshows/genres/"},
-      {"tvshows", "videodb://tvshows/"},
-      {"tvshowstudios", "videodb://tvshows/studios/"},
-      {"tvshowtags", "videodb://tvshows/tags/"},
-      {"tvshowtitles", "videodb://tvshows/titles/"},
-      {"tvshowyears", "videodb://tvshows/years/"},
+      {"inprogresstvshows", VIDEODB::INPROGRESS_TVSHOWS},
+      {"movieactors", VIDEODB::MOVIE_ACTORS},
+      {"moviecountries", VIDEODB::MOVIE_COUNTRIES},
+      {"moviedirectors", VIDEODB::MOVIE_DIRECTORS},
+      {"moviegenres", VIDEODB::MOVIE_GENRES},
+      {"movies", VIDEODB::MOVIES},
+      {"moviesets", VIDEODB::MOVIE_SETS},
+      {"moviestudios", VIDEODB::MOVIE_STUDIOS},
+      {"movietags", VIDEODB::MOVIE_TAGS},
+      {"movietitles", VIDEODB::MOVIE_TITLES},
+      {"movieyears", VIDEODB::MOVIE_YEARS},
+      {"musicvideoalbums", VIDEODB::MUSICVIDEO_ALBUMS},
+      {"musicvideoartists", VIDEODB::MUSICVIDEO_ARTISTS},
+      {"musicvideodirectors", VIDEODB::MUSICVIDEO_DIRECTORS},
+      {"musicvideogenres", VIDEODB::MUSICVIDEO_GENRES},
+      {"musicvideos", VIDEODB::MUSICVIDEOS},
+      {"musicvideostudios", VIDEODB::MUSICVIDEO_STUDIOS},
+      {"musicvideotags", VIDEODB::MUSICVIDEO_TAGS},
+      {"musicvideotitles", VIDEODB::MUSICVIDEO_TITLES},
+      {"musicvideoyears", VIDEODB::MUSICVIDEO_YEARS},
+      {"recentlyaddedepisodes", VIDEODB::RECENTLY_ADDED_EPISODES},
+      {"recentlyaddedmovies", VIDEODB::RECENTLY_ADDED_MOVIES},
+      {"recentlyaddedmusicvideos", VIDEODB::RECENTLY_ADDED_MUSICVIDEOS},
+      {"tvshowactors", VIDEODB::TVSHOW_ACTORS},
+      {"tvshowgenres", VIDEODB::TVSHOW_GENRES},
+      {"tvshows", VIDEODB::TVSHOWS},
+      {"tvshowstudios", VIDEODB::TVSHOW_STUDIOS},
+      {"tvshowtags", VIDEODB::TVSHOW_TAGS},
+      {"tvshowtitles", VIDEODB::TVSHOW_TITLES},
+      {"tvshowyears", VIDEODB::TVSHOW_YEARS},
   };
 
   const auto it = map.find(StringUtils::ToLower(dir));

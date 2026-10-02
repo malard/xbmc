@@ -34,6 +34,7 @@
 #include "jobs/JobManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "music/MusicLibraryQueue.h"
 #include "music/dialogs/GUIDialogInfoProviderSettings.h"
@@ -56,6 +57,7 @@
 #include "utils/Variant.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/dialogs/GUIDialogVideoInfo.h"
 #include "video/windows/GUIWindowVideoNav.h"
@@ -269,7 +271,7 @@ bool CGUIWindowMusicNav::ManageInfoProvider(const CFileItemPtr& item)
         if (CGUIDialogYesNo::ShowAndGetInput(CVariant{ 20195 }, msgctxt)) // Change information provider, confirm for all shown
         {
           // Set scraper for all items on current view.
-          std::string strPath = "musicdb://";
+          std::string strPath = MUSICDB::ROOT;
           if (content == ADDON::ContentType::ARTISTS)
             strPath += "artists";
           else
@@ -305,9 +307,9 @@ bool CGUIWindowMusicNav::ManageInfoProvider(const CFileItemPtr& item)
           settings->Save();
           // Clear all item specific settings
           if (content == ADDON::ContentType::ARTISTS)
-            result = m_musicdatabase.SetScraperAll("musicdb://artists/", nullptr);
+            result = m_musicdatabase.SetScraperAll(MUSICDB::ARTISTS, nullptr);
           else
-            result = m_musicdatabase.SetScraperAll("musicdb://albums/", nullptr);
+            result = m_musicdatabase.SetScraperAll(MUSICDB::ALBUMS, nullptr);
         }
       }
     default:
@@ -328,9 +330,9 @@ bool CGUIWindowMusicNav::ManageInfoProvider(const CFileItemPtr& item)
       // Change information provider, selected artist or album
       if (CGUIDialogYesNo::ShowAndGetInput(CVariant{20195}, CVariant{38073}))
       {
-        std::string itempath = StringUtils::Format("musicdb://albums/{}/", id);
+        std::string itempath = StringUtils::Format("{}{}/", MUSICDB::ALBUMS, id);
         if (content == ADDON::ContentType::ARTISTS)
-          itempath = StringUtils::Format("musicdb://artists/{}/", id);
+          itempath = StringUtils::Format("{}{}/", MUSICDB::ARTISTS, id);
         OnItemInfoAll(itempath, true);
       }
     }
@@ -394,7 +396,7 @@ bool CGUIWindowMusicNav::GetDirectory(const std::string &strDirectory, CFileItem
   }
 
   // update our content in the info manager
-  if (StringUtils::StartsWithNoCase(strDirectory, "videodb://") || VIDEO::IsVideoDb(items))
+  if (StringUtils::StartsWithNoCase(strDirectory, VIDEODB::ROOT) || VIDEO::IsVideoDb(items))
   {
     CVideoDatabaseDirectory dir;
     const auto node = dir.GetDirectoryChildType(items.GetPath());
@@ -433,7 +435,7 @@ bool CGUIWindowMusicNav::GetDirectory(const std::string &strDirectory, CFileItem
         break;
     }
   }
-  else if (StringUtils::StartsWithNoCase(strDirectory, "musicdb://") || MUSIC::IsMusicDb(items))
+  else if (StringUtils::StartsWithNoCase(strDirectory, MUSICDB::ROOT) || MUSIC::IsMusicDb(items))
   {
     CMusicDatabaseDirectory dir;
     NodeType node = dir.GetDirectoryChildType(items.GetPath());
@@ -729,12 +731,12 @@ bool CGUIWindowMusicNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
         return CGUIWindowMusicBase::OnContextButton(itemNumber,button);
 
       // music videos - artists
-      if (StringUtils::StartsWithNoCase(item->GetPath(), "videodb://musicvideos/artists/"))
+      if (StringUtils::StartsWithNoCase(item->GetPath(), VIDEODB::MUSICVIDEO_ARTISTS))
       {
         int idArtist = m_musicdatabase.GetArtistByName(item->GetLabel());
         if (idArtist == -1)
           return false;
-        std::string path = StringUtils::Format("musicdb://artists/{}/", idArtist);
+        std::string path = StringUtils::Format("{}{}/", MUSICDB::ARTISTS, idArtist);
         CArtist artist;
         m_musicdatabase.GetArtist(idArtist, artist, false);
         *item = CFileItem(artist);
@@ -746,12 +748,12 @@ bool CGUIWindowMusicNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
       }
 
       // music videos - albums
-      if (StringUtils::StartsWithNoCase(item->GetPath(), "videodb://musicvideos/albums/"))
+      if (StringUtils::StartsWithNoCase(item->GetPath(), VIDEODB::MUSICVIDEO_ALBUMS))
       {
         int idAlbum = m_musicdatabase.GetAlbumByName(item->GetLabel());
         if (idAlbum == -1)
           return false;
-        std::string path = StringUtils::Format("musicdb://albums/{}/", idAlbum);
+        std::string path = StringUtils::Format("{}{}/", MUSICDB::ALBUMS, idAlbum);
         CAlbum album;
         m_musicdatabase.GetAlbum(idAlbum, album, false);
         *item = CFileItem(path,album);
@@ -796,7 +798,7 @@ bool CGUIWindowMusicNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
       CVideoDatabase database;
       database.Open();
       strPath = StringUtils::Format(
-          "videodb://musicvideos/artists/{}/",
+          "{}{}/", VIDEODB::MUSICVIDEO_ARTISTS,
           database.GetMatchingMusicVideo(item->GetMusicInfoTag()->GetArtistString()));
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_NAV,strPath);
       return true;
@@ -944,20 +946,20 @@ void CGUIWindowMusicNav::AddSearchFolder()
 std::string CGUIWindowMusicNav::GetStartFolder(const std::string &dir)
 {
   static const auto map = std::map<std::string, std::string>{
-      {"albums", "musicdb://albums/"},
-      {"artists", "musicdb://artists/"},
-      {"boxsets", "musicdb://boxsets/"},
-      {"compilations", "musicdb://compilations/"},
+      {"albums", MUSICDB::ALBUMS},
+      {"artists", MUSICDB::ARTISTS},
+      {"boxsets", MUSICDB::BOX_SETS},
+      {"compilations", MUSICDB::COMPILATIONS},
       {"files", CSourcesDirectory::PathOf(MediaSection::MUSIC)},
-      {"genres", "musicdb://genres/"},
-      {"recentlyaddedalbums", "musicdb://recentlyaddedalbums/"},
-      {"recentlyplayedalbums", "musicdb://recentlyplayedalbums/"},
-      {"singles", "musicdb://singles/"},
-      {"songs", "musicdb://songs/"},
-      {"top100", "musicdb://top100/"},
-      {"top100albums", "musicdb://top100/albums/"},
-      {"top100songs", "musicdb://top100/songs/"},
-      {"years", "musicdb://years/"},
+      {"genres", MUSICDB::GENRES},
+      {"recentlyaddedalbums", MUSICDB::RECENTLY_ADDED_ALBUMS},
+      {"recentlyplayedalbums", MUSICDB::RECENTLY_PLAYED_ALBUMS},
+      {"singles", MUSICDB::SINGLES},
+      {"songs", MUSICDB::SONGS},
+      {"top100", MUSICDB::TOP100},
+      {"top100albums", MUSICDB::TOP100_ALBUMS},
+      {"top100songs", MUSICDB::TOP100_SONGS},
+      {"years", MUSICDB::YEARS},
   };
 
   const auto it = map.find(StringUtils::ToLower(dir));

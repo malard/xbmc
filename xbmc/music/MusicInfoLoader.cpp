@@ -18,6 +18,7 @@
 #include "filesystem/File.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "music/tags/MusicInfoTag.h"
 #include "music/tags/MusicInfoTagLoaderFactory.h"
@@ -239,7 +240,7 @@ bool CMusicInfoLoader::LoadItemLookup(CFileItem* pItem)
 
           // Build the musicdb:// path so the item references the database entry
           pItem->SetDynPath(pItem->GetPath());
-          pItem->SetPath(StringUtils::Format("musicdb://songs/{}{}", it2->idSong,
+          pItem->SetPath(StringUtils::Format("{}{}{}", MUSICDB::SONGS, it2->idSong,
                                              URIUtils::GetExtension(it2->strFileName)));
         }
       }

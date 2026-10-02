@@ -29,6 +29,7 @@
 #include "jobs/JobManager.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "music/MusicLibraryQueue.h"
 #include "music/MusicThumbLoader.h"
@@ -426,7 +427,7 @@ bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
         if (m_album.idAlbum >= 0)
         {
           // Play album
-          const std::string path = StringUtils::Format("musicdb://albums/{}", m_album.idAlbum);
+          const std::string path = StringUtils::Format("{}{}", MUSICDB::ALBUMS, m_album.idAlbum);
           OnPlayItem(std::make_shared<CFileItem>(path, m_album));
           return true;
         }
@@ -977,14 +978,14 @@ void CGUIDialogMusicInfo::OnSetUserrating() const
 
 void CGUIDialogMusicInfo::ShowForAlbum(int idAlbum)
 {
-  std::string path = StringUtils::Format("musicdb://albums/{}", idAlbum);
+  std::string path = StringUtils::Format("{}{}", MUSICDB::ALBUMS, idAlbum);
   CFileItem item(path, true); // An album, but IsAlbum() not set as didn't use SetAlbum()
   ShowFor(&item);
 }
 
 void CGUIDialogMusicInfo::ShowForArtist(int idArtist)
 {
-  std::string path = StringUtils::Format("musicdb://artists/{}", idArtist);
+  std::string path = StringUtils::Format("{}{}", MUSICDB::ARTISTS, idArtist);
   CFileItem item(path, true);
   ShowFor(&item);
 }
@@ -1001,7 +1002,7 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
     return;
   }
 
-  CFileItem musicitem("musicdb://", true);
+  CFileItem musicitem(MUSICDB::ROOT, true);
 
   // We have a folder album/artist info dialog only shown for db items
   // or for music video with artist/album in music library

@@ -19,12 +19,12 @@
 #include "addons/addoninfo/AddonInfo.h"
 #include "imagefiles/ImageFileURL.h"
 #include "messaging/ApplicationMessenger.h"
-#include "utils/DatabaseUtils.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoLibraryQueue.h"
 #include "video/geometry/ContentGeometryScanner.h"
@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string_view>
 
@@ -45,7 +46,6 @@ using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 using KODI::MEDIA::MediaTypeOf;
 using KODI::MEDIA::NameOf;
-using KODI::MEDIA::PluralNameOf;
 
 constexpr FilterField MOVIE_FILTERS[] = {FilterField::Number("genreId", "genreid"),
                                          FilterField::Text("genre"),
@@ -187,14 +187,14 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   {
     bool listed = false;
     if (kind == VideoKind::Movie)
-      listed = videodatabase.GetRecentlyAddedMoviesNav("videodb://recentlyaddedmovies/", items, 0,
-                                                       details);
+      listed = videodatabase.GetRecentlyAddedMoviesNav(KODI::VIDEODB::RECENTLY_ADDED_MOVIES, items,
+                                                       0, details);
     else if (kind == VideoKind::Episode)
-      listed = videodatabase.GetRecentlyAddedEpisodesNav("videodb://recentlyaddedepisodes/", items,
-                                                         0, details);
+      listed = videodatabase.GetRecentlyAddedEpisodesNav(KODI::VIDEODB::RECENTLY_ADDED_EPISODES,
+                                                         items, 0, details);
     else if (kind == VideoKind::MusicVideo)
-      listed = videodatabase.GetRecentlyAddedMusicVideosNav("videodb://recentlyaddedmusicvideos/",
-                                                            items, 0, details);
+      listed = videodatabase.GetRecentlyAddedMusicVideosNav(
+          KODI::VIDEODB::RECENTLY_ADDED_MUSICVIDEOS, items, 0, details);
     if (!listed)
       return InternalError;
 
@@ -203,7 +203,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
 
   if (listing == Listing::InProgress)
   {
-    if (!videodatabase.GetInProgressTvShowsNav("videodb://inprogresstvshows/", items, details))
+    if (!videodatabase.GetInProgressTvShowsNav(KODI::VIDEODB::INPROGRESS_TVSHOWS, items, details))
       return InternalError;
 
     return HandleItems(traits.id, "items", items, parameterObject, result, true);
@@ -216,10 +216,10 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   {
     const bool listed =
         kind == VideoKind::Set
-            ? videodatabase.GetSetsNav("videodb://movies/sets/", items, VideoDbContentType::MOVIES)
+            ? videodatabase.GetSetsNav(KODI::VIDEODB::MOVIE_SETS, items, VideoDbContentType::MOVIES)
             : videodatabase.GetSeasonsNav(
-                  StringUtils::Format("videodb://tvshows/titles/{}/", tvshowID), items, -1, -1, -1,
-                  -1, tvshowID, false);
+                  StringUtils::Format("{}{}/", KODI::VIDEODB::TVSHOW_TITLES, tvshowID), items, -1,
+                  -1, -1, -1, tvshowID, false);
     if (!listed)
       return InternalError;
 
@@ -235,13 +235,13 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   const int season = static_cast<int>(parameterObject["season"].asInteger());
   std::string path;
   if (kind == VideoKind::Movie)
-    path = "videodb://movies/titles/";
+    path = KODI::VIDEODB::MOVIE_TITLES;
   else if (kind == VideoKind::TVShow)
-    path = "videodb://tvshows/titles/";
+    path = KODI::VIDEODB::TVSHOW_TITLES;
   else if (kind == VideoKind::Episode)
-    path = StringUtils::Format("videodb://tvshows/titles/{}/{}/", tvshowID, season);
+    path = StringUtils::Format("{}{}/{}/", KODI::VIDEODB::TVSHOW_TITLES, tvshowID, season);
   else
-    path = "videodb://musicvideos/titles/";
+    path = KODI::VIDEODB::MUSICVIDEO_TITLES;
 
   CVideoDbUrl videoUrl;
   if (!videoUrl.FromString(path))
@@ -416,8 +416,8 @@ JSONRPC_STATUS CVideoLibrary::ReadItem(
     if (tvshowid <= 0)
       tvshowid = videodatabase.GetTvShowForEpisode(id);
 
-    item->SetPath(
-        StringUtils::Format("videodb://tvshows/titles/{}/{}/{}", tvshowid, infos.m_iSeason, id));
+    item->SetPath(StringUtils::Format("{}{}/{}/{}", KODI::VIDEODB::TVSHOW_TITLES, tvshowid,
+                                      infos.m_iSeason, id));
   }
 
   CVariant answer;
@@ -429,20 +429,40 @@ JSONRPC_STATUS CVideoLibrary::ReadItem(
 
 namespace
 {
-//! The content a genre or tag listing of \p type reads, and the path of its \p node
-std::pair<VideoDbContentType, std::string> FacetListing(MediaType type, std::string_view node)
+enum class Facet
 {
-  if (type != MediaType::MOVIE && type != MediaType::TV_SHOW && type != MediaType::MUSIC_VIDEO)
-    return {VideoDbContentType::UNKNOWN, StringUtils::Format("videodb:///{}/", node)};
-  return {DatabaseUtils::VideoContentTypeFromMediaType(type),
-          StringUtils::Format("videodb://{}/{}/", PluralNameOf(type), node)};
+  GENRES,
+  TAGS,
+};
+
+//! The content a genre or tag listing of \p type reads, and the path of that listing
+std::optional<std::pair<VideoDbContentType, std::string>> FacetListing(MediaType type, Facet facet)
+{
+  const bool genres{facet == Facet::GENRES};
+  switch (type)
+  {
+    case MediaType::MOVIE:
+      return {{VideoDbContentType::MOVIES,
+               genres ? KODI::VIDEODB::MOVIE_GENRES : KODI::VIDEODB::MOVIE_TAGS}};
+    case MediaType::TV_SHOW:
+      return {{VideoDbContentType::TVSHOWS,
+               genres ? KODI::VIDEODB::TVSHOW_GENRES : KODI::VIDEODB::TVSHOW_TAGS}};
+    case MediaType::MUSIC_VIDEO:
+      return {{VideoDbContentType::MUSICVIDEOS,
+               genres ? KODI::VIDEODB::MUSICVIDEO_GENRES : KODI::VIDEODB::MUSICVIDEO_TAGS}};
+    default:
+      return {};
+  }
 }
 } // unnamed namespace
 
 JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)
 {
-  const auto [idContent, strPath] =
-      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), "genres");
+  const auto listing{
+      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), Facet::GENRES)};
+  if (!listing)
+    return InvalidParams;
+  const auto& [idContent, strPath] = *listing;
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -462,8 +482,11 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVarian
 
 JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant& result)
 {
-  const auto [idContent, strPath] =
-      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), "tags");
+  const auto listing{
+      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), Facet::TAGS)};
+  if (!listing)
+    return InvalidParams;
+  const auto& [idContent, strPath] = *listing;
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -637,7 +660,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id,
     // a tvshow has no file row of its own - its playcount is derived from its
     // episodes, so the new values have to be applied to every episode of the show
     CVideoDbUrl videoUrl;
-    if (!videoUrl.FromString(StringUtils::Format("videodb://tvshows/titles/{}/-1/", id)))
+    if (!videoUrl.FromString(StringUtils::Format("{}{}/-1/", KODI::VIDEODB::TVSHOW_TITLES, id)))
       return InternalError;
     videoUrl.AddOption("tvshowid", id);
 

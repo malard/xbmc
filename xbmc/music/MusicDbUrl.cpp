@@ -11,6 +11,7 @@
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
+#include "music/MusicDbPaths.h"
 #include "playlists/SmartPlayList.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -144,7 +145,7 @@ bool CMusicDbUrl::parse()
   if (queryParams.GetYear() != -1)
     AddOption("year", (int)queryParams.GetYear());
 
-  // Decode legacy use of "musicdb://compilations/" path for filtered albums
+  // Decode legacy use of MUSICDB::COMPILATIONS path for filtered albums
   if (m_url.GetFileName() == "compilations/")
     AddOption("compilation", true);
 

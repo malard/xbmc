@@ -13,8 +13,10 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
+#include "music/MusicDbPaths.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "video/VideoDbPaths.h"
 
 #include <optional>
 #include <string>
@@ -37,25 +39,25 @@ std::optional<Destination> DestinationFor(MediaType type)
       return Destination{WINDOW_VIDEO_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)};
     case MediaType::MOVIE:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/titles/"};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MOVIE_TITLES};
     case MediaType::VIDEO_COLLECTION:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/sets/"};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MOVIE_SETS};
     case MediaType::MUSIC_VIDEO:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://musicvideos/titles/"};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MUSICVIDEO_TITLES};
     case MediaType::TV_SHOW:
     case MediaType::SEASON:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/"};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::TVSHOW_TITLES};
     case MediaType::EPISODE:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/"};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::TVSHOW_TITLES};
     case MediaType::MUSIC:
       return Destination{WINDOW_MUSIC_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC)};
     case MediaType::ARTIST:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://artists/"};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::ARTISTS};
     case MediaType::ALBUM:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://albums/"};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::ALBUMS};
     case MediaType::SONG:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://songs/"};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::SONGS};
     case MediaType::NONE:
     case MediaType::VIDEO_VERSION:
       break;

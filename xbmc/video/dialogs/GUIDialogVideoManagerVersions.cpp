@@ -36,10 +36,11 @@
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoManagerTypes.h"
 #include "video/VideoThumbLoader.h"
-#include "video/guilib/VideoGUIUtils.h"
 #include "video/geometry/ContentGeometryScanner.h"
+#include "video/guilib/VideoGUIUtils.h"
 
 #include <algorithm>
 #include <memory>
@@ -50,7 +51,6 @@
 
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
-using KODI::MEDIA::PluralNameOf;
 
 static constexpr unsigned int CONTROL_BUTTON_ADD_VERSION = 22;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_VERSION = 24;
@@ -773,14 +773,10 @@ bool CGUIDialogVideoManagerVersions::GetAllOtherMovies(const std::shared_ptr<CFi
   if (!item || !item->HasVideoInfoTag())
     return false;
 
-  // get video list
-  const std::string videoTitlesDir{StringUtils::Format(
-      "videodb://{}/titles", PluralNameOf(item->GetVideoInfoTag()->GetMediaType()))};
-
   list.Clear();
 
   if (item->GetVideoContentType() == VideoDbContentType::MOVIES)
-    videoDb.GetMoviesNav(videoTitlesDir, list);
+    videoDb.GetMoviesNav(KODI::VIDEODB::MOVIE_TITLES, list);
   else
     return false;
 

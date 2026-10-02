@@ -20,6 +20,7 @@
 #include "music/Album.h"
 #include "music/Artist.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicDbUrl.h"
 #include "music/MusicLibraryQueue.h"
 #include "music/MusicThumbLoader.h"
@@ -138,11 +139,11 @@ struct KindTraits
 };
 
 constexpr KindTraits KINDS[] = {
-    {AudioKind::Artist, MediaType::ARTIST, "artistId", "artists", "musicdb://artists/",
+    {AudioKind::Artist, MediaType::ARTIST, "artistId", "artists", KODI::MUSICDB::ARTISTS,
      "Audio.Fields.Artist", "Audio.Filter.Artists", ARTIST_FILTERS, "Audio.Details.Artist.Set"},
-    {AudioKind::Album, MediaType::ALBUM, "albumId", "albums", "musicdb://albums/",
+    {AudioKind::Album, MediaType::ALBUM, "albumId", "albums", KODI::MUSICDB::ALBUMS,
      "Audio.Fields.Album", "Audio.Filter.Albums", ALBUM_FILTERS, "Audio.Details.Album.Set"},
-    {AudioKind::Song, MediaType::SONG, "songId", "songs", "musicdb://songs/", "Audio.Fields.Song",
+    {AudioKind::Song, MediaType::SONG, "songId", "songs", KODI::MUSICDB::SONGS, "Audio.Fields.Song",
      "Audio.Filter.Songs", SONG_FILTERS, "Audio.Details.Song.Set"},
 };
 
@@ -238,8 +239,9 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
 
       for (const CAlbum& album : albums)
       {
-        const std::string path = StringUtils::Format(added ? "musicdb://recentlyaddedalbums/{}/"
-                                                           : "musicdb://recentlyplayedalbums/{}/",
+        const std::string path = StringUtils::Format("{}{}/",
+                                                     added ? KODI::MUSICDB::RECENTLY_ADDED_ALBUMS
+                                                           : KODI::MUSICDB::RECENTLY_PLAYED_ALBUMS,
                                                      album.idAlbum);
 
         CFileItemPtr item;
@@ -492,7 +494,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
       return status;
 
     CFileItemPtr albumItem;
-    FillAlbumItem(album, StringUtils::Format("musicdb://albums/{}/", id), albumItem);
+    FillAlbumItem(album, StringUtils::Format("{}{}/", KODI::MUSICDB::ALBUMS, id), albumItem);
     items.Add(albumItem);
 
     status = GetAdditionalAlbumDetails(request, items, musicdatabase);
@@ -550,7 +552,7 @@ JSONRPC_STATUS CAudioLibrary::GetRoles(const CVariant& parameterObject, CVariant
     return InternalError;
 
   CFileItemList items;
-  if (!musicdatabase.GetRolesNav("musicdb://songs/", items))
+  if (!musicdatabase.GetRolesNav(KODI::MUSICDB::SONGS, items))
     return InternalError;
 
   /* need to set strTitle in each item*/
@@ -1016,7 +1018,7 @@ bool CAudioLibrary::FillFileItemList(const CVariant& parameterObject, CFileItemL
   }
 
   if (artistID != -1 || albumID != -1 || genreID != -1)
-    success |= musicdatabase.GetSongsNav("musicdb://songs/", resolved, SortDescription(), genreID,
+    success |= musicdatabase.GetSongsNav(KODI::MUSICDB::SONGS, resolved, SortDescription(), genreID,
                                          artistID, albumID);
 
   int songID = static_cast<int>(parameterObject["songId"].asInteger(-1));
@@ -1315,13 +1317,13 @@ bool CAudioLibrary::ResolveInfoProviderView(const std::string& path,
   if (StringUtils::EqualsNoCase(musicUrl.GetType(), "artists"))
   {
     content = ADDON::ContentType::ARTISTS;
-    listing = "musicdb://artists/";
+    listing = KODI::MUSICDB::ARTISTS;
     singleItem = "artistid";
   }
   else if (StringUtils::EqualsNoCase(musicUrl.GetType(), "albums"))
   {
     content = ADDON::ContentType::ALBUMS;
-    listing = "musicdb://albums/";
+    listing = KODI::MUSICDB::ALBUMS;
     singleItem = "albumid";
   }
   else
@@ -1406,8 +1408,8 @@ JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& paramete
       return InvalidParams;
 
     target.scope = InfoProviderTarget::Scope::Default;
-    target.viewPath =
-        target.content == ADDON::ContentType::ARTISTS ? "musicdb://artists/" : "musicdb://albums/";
+    target.viewPath = target.content == ADDON::ContentType::ARTISTS ? KODI::MUSICDB::ARTISTS
+                                                                    : KODI::MUSICDB::ALBUMS;
     return OK;
   }
 

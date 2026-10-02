@@ -18,6 +18,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListTypes.h"
 #include "playlists/SmartFeed.h"
@@ -28,6 +29,7 @@
 #include "utils/Variant.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoInfoTag.h"
 #include "windows/GUIWindowPlayList.h"
 
@@ -116,7 +118,7 @@ std::vector<std::shared_ptr<CFileItem>> Fetch(const std::vector<Match>& matches)
     CMusicDatabase database;
     if (database.Open())
     {
-      database.GetSongsFullByWhere("musicdb://songs/", fetched, SortDescription{},
+      database.GetSongsFullByWhere(MUSICDB::SONGS, fetched, SortDescription{},
                                    CDatabase::Filter("songview.idSong IN (" + songIds + ")"), true);
       for (const auto& item : fetched)
         database.SetPropertiesForFileItem(*item);
@@ -128,7 +130,7 @@ std::vector<std::shared_ptr<CFileItem>> Fetch(const std::vector<Match>& matches)
   {
     CVideoDatabase database;
     if (database.Open())
-      database.GetMusicVideosByWhere("videodb://musicvideos/titles/",
+      database.GetMusicVideosByWhere(VIDEODB::MUSICVIDEO_TITLES,
                                      CDatabase::Filter("idMVideo IN (" + videoIds + ")"), fetched);
     else
       CLog::LogF(LOGERROR, "could not open the video database");

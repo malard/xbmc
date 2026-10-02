@@ -18,6 +18,7 @@
 #include "guilib/GUIEditControl.h"
 #include "guilib/GUIWindowManager.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSourceSettings.h"
@@ -28,6 +29,7 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 
 #include <utility>
 
@@ -107,9 +109,9 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
 
   std::string basePath;
   if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
-    basePath = "musicdb://";
+    basePath = MUSICDB::ROOT;
   else
-    basePath = "videodb://";
+    basePath = VIDEODB::ROOT;
 
   VideoDbContentType type = VideoDbContentType::MOVIES;
   if (m_type == "movies")
@@ -146,12 +148,12 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
              m_type == "albums" ||
              m_type == "artists" ||
              m_type == "mixed")
-      database.GetGenresNav("musicdb://genres/",items);
+      database.GetGenresNav(MUSICDB::GENRES, items);
     if (m_type == "musicvideos" ||
         m_type == "mixed")
     {
       CFileItemList items2;
-      videodatabase.GetGenresNav("videodb://musicvideos/genres/", items2,
+      videodatabase.GetGenresNav(VIDEODB::MUSICVIDEO_GENRES, items2,
                                  VideoDbContentType::MUSICVIDEOS);
       items.Append(items2);
     }
@@ -164,7 +166,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
       m_type == "artists" ||
       m_type == "mixed")
     {
-      database.GetSourcesNav("musicdb://sources/", items);
+      database.GetSourcesNav(MUSICDB::SOURCES, items);
       iLabel = 39030;
     }
   }
@@ -172,7 +174,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   {
     if (m_type == "artists" || m_type == "mixed")
     {
-      database.GetRolesNav("musicdb://songs/", items);
+      database.GetRolesNav(MUSICDB::SONGS, items);
       iLabel = 38033;
     }
   }
@@ -185,7 +187,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
            m_rule.m_field == static_cast<int>(Field::ALBUM_ARTIST))
   {
     if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
-      database.GetArtistsNav("musicdb://artists/", items, SortDescription(),
+      database.GetArtistsNav(MUSICDB::ARTISTS, items, SortDescription(),
                              m_rule.m_field == static_cast<int>(Field::ALBUM_ARTIST), -1);
     if (m_type == "musicvideos" ||
         m_type == "mixed")
@@ -199,7 +201,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   else if (m_rule.m_field == static_cast<int>(Field::ALBUM))
   {
     if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
-      database.GetAlbumsNav("musicdb://albums/", items, SortDescription());
+      database.GetAlbumsNav(MUSICDB::ALBUMS, items, SortDescription());
     if (m_type == "musicvideos" ||
         m_type == "mixed")
     {
@@ -217,7 +219,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   else if (m_rule.m_field == static_cast<int>(Field::YEAR))
   {
     if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
-      database.GetYearsNav("musicdb://years/", items);
+      database.GetYearsNav(MUSICDB::YEARS, items);
     if (PLAYLIST::CSmartPlaylist::IsVideoType(m_type))
     {
       CFileItemList items2;
@@ -228,7 +230,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   }
   else if (m_rule.m_field == static_cast<int>(Field::ORIG_YEAR))
   {
-    database.GetYearsNav("musicdb://originalyears/", items);
+    database.GetYearsNav(MUSICDB::ORIGINAL_YEARS, items);
     iLabel = 38078;
   }
   else if (m_rule.m_field == static_cast<int>(Field::DIRECTOR))
@@ -256,7 +258,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   {
     if (m_type == "songs" || m_type == "mixed")
     {
-      database.GetSongsNav("musicdb://songs/", items, SortDescription(), -1, -1, -1);
+      database.GetSongsNav(MUSICDB::SONGS, items, SortDescription(), -1, -1, -1);
       iLabel = 134;
     }
     if (m_type == "movies")
@@ -344,7 +346,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   }
   else if (m_rule.m_field == static_cast<int>(Field::SET))
   {
-    videodatabase.GetSetsNav("videodb://movies/sets/", items, VideoDbContentType::MOVIES);
+    videodatabase.GetSetsNav(VIDEODB::MOVIE_SETS, items, VideoDbContentType::MOVIES);
     iLabel = 20434;
   }
   else if (m_rule.m_field == static_cast<int>(Field::TAG))

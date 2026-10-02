@@ -57,6 +57,7 @@
 #include "utils/guilib/GUIContentUtils.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoScanner.h"
 #include "video/VideoLibraryQueue.h"
@@ -234,8 +235,8 @@ bool CGUIWindowVideoBase::OnItemInfo(const CFileItem& fileItem)
 
   // Movie set
   if (fileItem.IsFolder() && VIDEO::IsVideoDb(fileItem) &&
-      fileItem.GetPath() != "videodb://movies/sets/" &&
-      StringUtils::StartsWith(fileItem.GetPath(), "videodb://movies/sets/"))
+      fileItem.GetPath() != VIDEODB::MOVIE_SETS &&
+      StringUtils::StartsWith(fileItem.GetPath(), VIDEODB::MOVIE_SETS))
     return ShowInfoAndRefresh(std::make_shared<CFileItem>(fileItem), nullptr);
 
   // Music video. Match visibility test of CMusicInfo::IsVisible
@@ -1217,7 +1218,7 @@ bool CGUIWindowVideoBase::CheckFilterAdvanced(CFileItemList &items) const
 
 bool CGUIWindowVideoBase::CanContainFilter(const std::string &strDirectory) const
 {
-  return URIUtils::IsProtocol(strDirectory, "videodb://");
+  return URIUtils::IsProtocol(strDirectory, VIDEODB::ROOT);
 }
 
 /// \brief Search the current directory for a string got from the virtual keyboard
@@ -1310,8 +1311,8 @@ void CGUIWindowVideoBase::OnSearchItemFound(const CFileItem* pSelItem)
     const std::string selPath = pSelItem->GetPath();
     std::string selPathWithSlash = selPath;
     URIUtils::AddSlashAtEnd(selPathWithSlash);
-    const bool isMovieUrl = selPath.starts_with("videodb://movies/titles/") ||
-                            selPath.starts_with("videodb://movies/sets/");
+    const bool isMovieUrl =
+        selPath.starts_with(VIDEODB::MOVIE_TITLES) || selPath.starts_with(VIDEODB::MOVIE_SETS);
     const bool isVideoDb = VIDEO::IsVideoDb(*pSelItem);
     const std::string parentPath = URIUtils::GetDirectory(selPath);
 

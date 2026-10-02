@@ -51,6 +51,7 @@
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoScanner.h"
@@ -759,14 +760,14 @@ void CGUIDialogVideoInfo::Play(bool resume)
       }
     }
     else if (type == MediaType::TV_SHOW)
-      strPath = StringUtils::Format("videodb://tvshows/titles/{}/", videoTag->m_iDbId);
+      strPath = StringUtils::Format("{}{}/", VIDEODB::TVSHOW_TITLES, videoTag->m_iDbId);
     else // season
-      strPath = StringUtils::Format("videodb://tvshows/titles/{}/{}/", videoTag->m_iIdShow,
+      strPath = StringUtils::Format("{}{}/{}/", VIDEODB::TVSHOW_TITLES, videoTag->m_iIdShow,
                                     videoTag->m_iSeason);
   }
   else if (type == MediaType::VIDEO_COLLECTION)
   {
-    strPath = StringUtils::Format("videodb://movies/sets/{}/?setid={}", videoTag->m_iDbId,
+    strPath = StringUtils::Format("{}{}/?setid={}", VIDEODB::MOVIE_SETS, videoTag->m_iDbId,
                                   videoTag->m_iDbId);
   }
 
@@ -1503,15 +1504,14 @@ bool CGUIDialogVideoInfo::GetMoviesForSet(const CFileItem *setItem, CFileItemLis
     return false;
 
   std::string baseDir =
-      StringUtils::Format("videodb://movies/sets/{}", setItem->GetVideoInfoTag()->m_iDbId);
+      StringUtils::Format("{}{}", VIDEODB::MOVIE_SETS, setItem->GetVideoInfoTag()->m_iDbId);
 
   if (!CDirectory::GetDirectory(baseDir, originalMovies, "", DIR_FLAG_DEFAULTS) ||
       originalMovies.Size() <= 0) // keep a copy of the original members of the set
     return false;
 
   CFileItemList listItems;
-  if (!videodb.GetSortedVideos(MediaType::MOVIE, "videodb://movies", SortDescription(),
-                               listItems) ||
+  if (!videodb.GetSortedVideos(MediaType::MOVIE, VIDEODB::MOVIES, SortDescription(), listItems) ||
       listItems.Size() <= 0)
     return false;
 
@@ -1572,7 +1572,7 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
   // to override the gui-setting "Include sets containing a single movie"
   // and retrieve all moviesets
 
-  std::string baseDir = "videodb://movies/sets/?ignoreSingleMovieSets=false";
+  const std::string baseDir{std::string{VIDEODB::MOVIE_SETS} + "?ignoreSingleMovieSets=false"};
 
   if (!CDirectory::GetDirectory(baseDir, listItems, "", DIR_FLAG_DEFAULTS))
     return false;
@@ -1690,23 +1690,26 @@ bool CGUIDialogVideoInfo::GetItemsForTag(const std::string &strHeading, const st
 
   MediaType mediaType = MediaTypeOf(type);
   std::string idColumn;
+  std::string baseDir;
   switch (mediaType)
   {
     case MediaType::MOVIE:
       idColumn = "idMovie";
+      baseDir = VIDEODB::MOVIE_TITLES;
       break;
     case MediaType::TV_SHOW:
       idColumn = "idShow";
+      baseDir = VIDEODB::TVSHOW_TITLES;
       break;
     case MediaType::MUSIC_VIDEO:
       idColumn = "idMVideo";
+      baseDir = VIDEODB::MUSICVIDEO_TITLES;
       break;
     default:
       mediaType = MediaType::NONE;
       break;
   }
 
-  const std::string baseDir{StringUtils::Format("videodb://{}/titles/", PluralNameOf(mediaType))};
   CVideoDbUrl videoUrl;
   if (!videoUrl.FromString(baseDir))
     return false;
@@ -2088,7 +2091,7 @@ bool CGUIDialogVideoInfo::LinkMovieToTvShow(const std::shared_ptr<CFileItem>& it
   }
   else
   {
-    database.GetTvShowsNav("videodb://tvshows/titles", list);
+    database.GetTvShowsNav(VIDEODB::TVSHOW_TITLES, list);
 
     // remove already linked shows
     std::vector<int> ids;

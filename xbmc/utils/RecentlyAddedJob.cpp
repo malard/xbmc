@@ -16,6 +16,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
 #include "music/MusicDatabase.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicDbUrl.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
@@ -25,6 +26,7 @@
 #include "utils/StringUtils.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
@@ -59,7 +61,8 @@ bool CRecentlyAddedJob::UpdateVideo()
 
   videodatabase.Open();
 
-  if (videodatabase.GetRecentlyAddedMoviesNav("videodb://recentlyaddedmovies/", items, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAddedMoviesNav(KODI::VIDEODB::RECENTLY_ADDED_MOVIES, items,
+                                              NUM_ITEMS))
   {
     for (; i < items.Size(); ++i)
     {
@@ -102,7 +105,8 @@ bool CRecentlyAddedJob::UpdateVideo()
   i = 0;
   CFileItemList  TVShowItems;
 
-  if (videodatabase.GetRecentlyAddedEpisodesNav("videodb://recentlyaddedepisodes/", TVShowItems, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAddedEpisodesNav(KODI::VIDEODB::RECENTLY_ADDED_EPISODES, TVShowItems,
+                                                NUM_ITEMS))
   {
     for (; i < TVShowItems.Size(); ++i)
     {
@@ -163,7 +167,8 @@ bool CRecentlyAddedJob::UpdateVideo()
   i = 0;
   CFileItemList MusicVideoItems;
 
-  if (videodatabase.GetRecentlyAddedMusicVideosNav("videodb://recentlyaddedmusicvideos/", MusicVideoItems, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAddedMusicVideosNav(KODI::VIDEODB::RECENTLY_ADDED_MUSICVIDEOS,
+                                                   MusicVideoItems, NUM_ITEMS))
   {
     for (; i < MusicVideoItems.Size(); ++i)
     {
@@ -218,7 +223,7 @@ bool CRecentlyAddedJob::UpdateMusic()
 
   musicdatabase.Open();
 
-  if (musicdatabase.GetRecentlyAddedAlbumSongs("musicdb://songs/", musicItems, NUM_ITEMS))
+  if (musicdatabase.GetRecentlyAddedAlbumSongs(KODI::MUSICDB::SONGS, musicItems, NUM_ITEMS))
   {
     int idAlbum = -1;
     std::string strAlbumThumb;
@@ -297,7 +302,7 @@ bool CRecentlyAddedJob::UpdateMusic()
         }
       }
 
-      std::string strDBpath = StringUtils::Format("musicdb://albums/{}/", album.idAlbum);
+      std::string strDBpath = StringUtils::Format("{}{}/", KODI::MUSICDB::ALBUMS, album.idAlbum);
 
       home->SetProperty("LatestAlbum." + value + ".Title"   , album.strAlbum);
       home->SetProperty("LatestAlbum." + value + ".Year"    , album.strReleaseDate);
@@ -340,7 +345,7 @@ bool CRecentlyAddedJob::UpdateTotal()
   musicdatabase.Open();
 
   CMusicDbUrl musicUrl;
-  musicUrl.FromString("musicdb://artists/");
+  musicUrl.FromString(KODI::MUSICDB::ARTISTS);
   musicUrl.AddOption("albumartistsonly", !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS));
 
   CFileItemList items;
