@@ -26,6 +26,8 @@
 #include "dialogs/GUIDialogSelect.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
 #include "dialogs/GUIDialogYesNo.h"
+#include "filesystem/AddonsDirectory.h"
+#include "filesystem/AddonsPaths.h"
 #include "filesystem/Directory.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
@@ -1383,7 +1385,7 @@ std::string CGUIWindowVideoBase::GetStartFolder(const std::string &dir)
   if (lower == "$playlists" || lower == "playlists")
     return CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO);
   else if (lower == "plugins" || lower == "addons")
-    return "addons://sources/video/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::VIDEO);
   return CGUIMediaWindow::GetStartFolder(dir);
 }
 

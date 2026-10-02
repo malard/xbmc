@@ -183,13 +183,13 @@ private:
    */
   CMediaSource GetRootAddonTypeSource(KODI::MEDIA::MediaSection section) const;
 
-  /*! \brief Generate the addons source for the given content type
-   \param type the type of addon content desired
+  /*! \brief Generate the addons source for the given section
+   \param section the section whose addon content is desired
    \param label the name of the addons source
    \param thumb image to use as the icon
    \return the given CMediaSource for the addon root directory
    */
-  CMediaSource ComputeRootAddonTypeSource(const std::string& type,
+  CMediaSource ComputeRootAddonTypeSource(KODI::MEDIA::MediaSection section,
                                           const std::string& label,
                                           const std::string& thumb) const;
 

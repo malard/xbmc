@@ -18,6 +18,8 @@
 #include "dialogs/GUIDialogContextMenu.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
+#include "filesystem/AddonsDirectory.h"
+#include "filesystem/AddonsPaths.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "games/GameUtils.h"
 #include "guilib/GUIComponent.h"
@@ -337,7 +339,7 @@ std::string CGUIWindowGames::GetStartFolder(const std::string& dir)
 
   if (StringUtils::EqualsNoCase(dir, "plugins") || StringUtils::EqualsNoCase(dir, "addons"))
   {
-    return "addons://sources/game/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::GAMES);
   }
 
   SetupShares();

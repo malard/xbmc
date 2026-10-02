@@ -15,6 +15,7 @@
 #include "URIUtils.h"
 #include "URL.h"
 #include "Util.h"
+#include "filesystem/AddonsPaths.h"
 #include "filesystem/File.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/MultiPathDirectory.h"
@@ -138,7 +139,7 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://profile/addon_data"))
     return true;
-  else if (StringUtils::StartsWithNoCase(realPath, "addons://sources"))
+  else if (StringUtils::StartsWithNoCase(realPath, KODI::ADDONS::SOURCES))
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "upnp://"))
     return true;

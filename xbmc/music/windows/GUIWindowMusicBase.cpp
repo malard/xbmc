@@ -23,6 +23,8 @@
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
+#include "filesystem/AddonsDirectory.h"
+#include "filesystem/AddonsPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
@@ -933,7 +935,7 @@ std::string CGUIWindowMusicBase::GetStartFolder(const std::string &dir)
 {
   std::string lower(dir); StringUtils::ToLower(lower);
   if (lower == "plugins" || lower == "addons")
-    return "addons://sources/audio/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::MUSIC);
   else if (lower == "$playlists" || lower == "playlists")
     return CUtil::PlaylistsPathOf(MediaSection::MUSIC);
   return CGUIMediaWindow::GetStartFolder(dir);

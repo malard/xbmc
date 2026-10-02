@@ -19,6 +19,7 @@
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogPlayEject.h"
 #ifdef HAVE_LIBBLURAY
+#include "filesystem/AddonsDirectory.h"
 #include "filesystem/BlurayDirectory.h"
 #include "filesystem/BlurayDiscCache.h"
 #endif
@@ -401,31 +402,32 @@ CMediaSource CMediaManager::GetRootAddonTypeSource(MediaSection section) const
   switch (section)
   {
     case MediaSection::PROGRAMS:
-      return ComputeRootAddonTypeSource("executable", localizeStrings.Get(1043),
+      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1043),
                                         "DefaultAddonProgram.png");
     case MediaSection::VIDEO:
-      return ComputeRootAddonTypeSource("video", localizeStrings.Get(1037),
+      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1037),
                                         "DefaultAddonVideo.png");
     case MediaSection::MUSIC:
-      return ComputeRootAddonTypeSource("audio", localizeStrings.Get(1038),
+      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1038),
                                         "DefaultAddonMusic.png");
     case MediaSection::PICTURES:
-      return ComputeRootAddonTypeSource("image", localizeStrings.Get(1039),
+      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1039),
                                         "DefaultAddonPicture.png");
     case MediaSection::GAMES:
-      return ComputeRootAddonTypeSource("game", localizeStrings.Get(35049), "DefaultAddonGame.png");
+      return ComputeRootAddonTypeSource(section, localizeStrings.Get(35049),
+                                        "DefaultAddonGame.png");
     case MediaSection::FILES:
       break;
   }
   return {};
 }
 
-CMediaSource CMediaManager::ComputeRootAddonTypeSource(const std::string& type,
+CMediaSource CMediaManager::ComputeRootAddonTypeSource(MediaSection section,
                                                        const std::string& label,
                                                        const std::string& thumb) const
 {
   CMediaSource source;
-  source.strPath = "addons://sources/" + type + "/";
+  source.strPath = XFILE::CAddonsDirectory::SourcesPathOf(section);
   source.strName = label;
   source.m_strThumbnailImage = thumb;
   source.m_iDriveType = SourceType::VPATH;
