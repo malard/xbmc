@@ -46,6 +46,7 @@
 #include "utils/DiscsUtils.h"
 #include "utils/EpisodeUtils.h"
 #include "utils/FileExtensionProvider.h"
+#include "utils/ItemProperties.h"
 #include "utils/RegExp.h"
 #include "utils/StreamDetails.h"
 #include "utils/StringUtils.h"
@@ -1249,7 +1250,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
     CLog::LogF(LOGDEBUG, "Resolved {} of {} parts of {} to {} ({}s total)", blurays, paths.size(),
                CURL::GetRedacted(originalPath), CURL::GetRedacted(stackPath), totalDuration);
 
-    item->SetProperty("original_listitem_url", originalPath);
+    item->SetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL, originalPath);
     return true;
   }
 
@@ -1545,9 +1546,9 @@ CVideoInfoScanner::~CVideoInfoScanner()
         // The item is reused for every entry, so a version without one must not inherit the
         // playlist of the entry before it
         if (const int playlist{loader->GetBlurayPlaylist()}; playlist > -1)
-          item.SetProperty("bluray_playlist", playlist);
+          item.SetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST, playlist);
         else
-          item.ClearProperty("bluray_playlist");
+          item.ClearProperty(ITEM_PROPERTY::BLURAY_PLAYLIST);
 
         // Keep properties only if advancedsettings.xml says so
         if (!m_advancedSettings->m_bVideoLibraryImportWatchedState)
@@ -2097,7 +2098,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
             : CVideoInfoScannerArt::UseRemoteArtWithLocalScraper::YES};
 
     std::string path{pItem->GetDynPath()};
-    const int playlist{pItem->GetProperty("bluray_playlist").asInteger32(-1)};
+    const int playlist{pItem->GetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
 
     // The versions loop in RetrieveInfoForMovie() reuses one item for every <movie> in the nfo, so
     // the dynpath may still hold the previous version's playlist.
@@ -2400,7 +2401,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
       // A <playlist> nfo element identifies the disc playlist the info belongs to
       if (const int playlist{loader->GetBlurayPlaylist()}; playlist > -1)
-        item.SetProperty("bluray_playlist", playlist);
+        item.SetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST, playlist);
 
       // keep some properties only if advancedsettings.xml says so
       if (!m_advancedSettings->m_bVideoLibraryImportWatchedState)
@@ -2724,7 +2725,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
       // A <playlist> nfo element identifies the disc playlist the info belongs to
       if (const int playlist{loader ? loader->GetBlurayPlaylist() : -1}; playlist > -1)
-        pItem->SetProperty("bluray_playlist", playlist);
+        pItem->SetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST, playlist);
 
       return true;
     }

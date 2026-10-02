@@ -53,6 +53,7 @@
 #include "utils/ArtUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/GroupUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/LabelFormatter.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -68,6 +69,7 @@
 #include "video/VideoLibraryQueue.h"
 #include "video/VideoManagerTypes.h"
 #include "video/VideoThumbLoader.h"
+#include "video/VideoUtils.h"
 
 #include <algorithm>
 #include <chrono>
@@ -5305,15 +5307,9 @@ CVideoInfoTag CVideoDatabase::GetDetailsForTvShow(const dbiplus::sql_record* con
   if (item)
   {
     item->SetDateTime(details.GetPremiered());
-    item->SetProperty("totalseasons", details.m_iSeason);
-    item->SetProperty("totalepisodes", details.m_iEpisode);
-    item->SetProperty("numepisodes", details.m_iEpisode); // will be changed later to reflect watchmode setting
-    item->SetProperty("watchedepisodes", details.GetPlayCount());
-    item->SetProperty("unwatchedepisodes", details.m_iEpisode - details.GetPlayCount());
-    item->SetProperty("inprogressepisodes", inProgressEpisodes);
-    item->SetProperty("watchedepisodepercent",
-                      details.m_iEpisode > 0 ? (details.GetPlayCount() * 100 / details.m_iEpisode)
-                                             : 0);
+    item->SetProperty(ITEM_PROPERTY::TOTAL_SEASONS, details.m_iSeason);
+    VIDEO::UTILS::SetEpisodeCounts(*item, details.m_iEpisode, details.GetPlayCount());
+    item->SetProperty(ITEM_PROPERTY::IN_PROGRESS_EPISODES, inProgressEpisodes);
   }
   details.SetPlayCount((details.m_iEpisode <= details.GetPlayCount()) ? 1 : 0);
 
@@ -6610,7 +6606,7 @@ bool CVideoDatabase::GetPlayCounts(const std::string &strPath, CFileItemList &it
     {
       if (!item || item->IsFolder())
         continue;
-      const bool pluginItem{hasPlugin && item->GetProperty("IsPlayable").asBoolean()};
+      const bool pluginItem{hasPlugin && item->GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean()};
       const CURL itemUrl(item->GetPath());
       bool archiveItem{!pluginItem && URIUtils::IsArchive(itemUrl) &&
                        !itemUrl.GetFileName().empty()};
@@ -6835,11 +6831,11 @@ void CVideoDatabase::UpdateFanart(const CFileItem& item, VideoDbContentType type
 CDateTime CVideoDatabase::SetPlayCount(const CFileItem& item, int count, const CDateTime& date)
 {
   int id{-1};
-  if (item.HasProperty("original_listitem_url") &&
-      URIUtils::IsPlugin(item.GetProperty("original_listitem_url").asString()))
+  if (item.HasProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL) &&
+      URIUtils::IsPlugin(item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
   {
     CFileItem item2(item);
-    item2.SetPath(item.GetProperty("original_listitem_url").asString());
+    item2.SetPath(item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString());
     id = AddFile(item2);
   }
   else
@@ -7501,7 +7497,7 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
         details.SetMediaType(MediaType::ALBUM);
         details.m_artist.emplace_back(idData.front().second);
         details.m_iDbId = idMVideoList.front();
-        items[i]->SetProperty("musicvideomediatype", NameOf(MediaType::ALBUM));
+        items[i]->SetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE, NameOf(MediaType::ALBUM));
         items[i]->SetLabel(idData.front().first);
         items[i]->SetFromVideoInfoTag(details);
 
@@ -7519,7 +7515,8 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
     }
 
     if (!strArtist.empty())
-      items.SetProperty("customtitle",strArtist); // change displayed path from eg /23 to /Artist
+      items.SetProperty(ITEM_PROPERTY::CUSTOM_TITLE,
+                        strArtist); // change displayed path from eg /23 to /Artist
 
     return true;
   }
@@ -7810,7 +7807,7 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
         {
           // Get artist bio from music db later if available
           pItem->GetVideoInfoTag()->m_artist.emplace_back(actor.name);
-          pItem->SetProperty("musicvideomediatype", NameOf(MediaType::ARTIST));
+          pItem->SetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE, NameOf(MediaType::ARTIST));
         }
         items.Add(std::move(pItem));
       }
@@ -7842,7 +7839,7 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
           if (idContent == VideoDbContentType::MUSICVIDEOS)
           {
             pItem->GetVideoInfoTag()->m_artist.emplace_back(pItem->GetLabel());
-            pItem->SetProperty("musicvideomediatype", NameOf(MediaType::ARTIST));
+            pItem->SetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE, NameOf(MediaType::ARTIST));
           }
           items.Add(std::move(pItem));
           m_pDS->next();
@@ -8198,13 +8195,8 @@ bool CVideoDatabase::GetSeasonsByWhere(const std::string& strBaseDir, const Filt
         const int inProgressEpisodes = m_pDS->fv(VIDEODB_ID_SEASON_EPISODES_INPROGRESS).get_asInt();
 
         pItem->GetVideoInfoTag()->m_iEpisode = totalEpisodes;
-        pItem->SetProperty("totalepisodes", totalEpisodes);
-        pItem->SetProperty("numepisodes", totalEpisodes); // will be changed later to reflect watchmode setting
-        pItem->SetProperty("watchedepisodes", watchedEpisodes);
-        pItem->SetProperty("unwatchedepisodes", totalEpisodes - watchedEpisodes);
-        pItem->SetProperty("inprogressepisodes", inProgressEpisodes);
-        pItem->SetProperty("watchedepisodepercent",
-                           totalEpisodes > 0 ? (watchedEpisodes * 100 / totalEpisodes) : 0);
+        VIDEO::UTILS::SetEpisodeCounts(*pItem, totalEpisodes, watchedEpisodes);
+        pItem->SetProperty(ITEM_PROPERTY::IN_PROGRESS_EPISODES, inProgressEpisodes);
         if (iSeason == 0)
           pItem->SetProperty("isspecial", true);
         pItem->GetVideoInfoTag()->SetPlayCount((totalEpisodes == watchedEpisodes) ? 1 : 0);
@@ -8519,8 +8511,8 @@ bool CVideoDatabase::GetMoviesByWhere(const std::string& strBaseDir, const Filte
         else if (assetsNav)
         {
           // Display the name of the movie for a collection of movie assets rather than "Assets"
-          if (!items.HasProperty("customtitle"))
-            items.SetProperty("customtitle", movie.GetTitle());
+          if (!items.HasProperty(ITEM_PROPERTY::CUSTOM_TITLE))
+            items.SetProperty(ITEM_PROPERTY::CUSTOM_TITLE, movie.GetTitle());
 
           if (movie.IsDefaultVideoVersion())
             item->Select(true);
@@ -8553,7 +8545,7 @@ bool CVideoDatabase::GetMoviesByWhere(const std::string& strBaseDir, const Filte
             // the versions and a virtual Extras folder (special assetType -2 value).
             static std::string hybridFolderPath{
                 std::to_string(static_cast<int>(VideoAssetType::VERSIONSANDEXTRASFOLDER)) + "/"};
-            item->SetProperty("IsHybridFolder", true);
+            item->SetProperty(ITEM_PROPERTY::IS_HYBRID_FOLDER, true);
             item->SetFolder(true);
             itemUrl.AppendPath(hybridFolderPath);
           }
@@ -9845,7 +9837,7 @@ bool CVideoDatabase::GetMusicVideosByWhere(const std::string &baseDir, const Fil
     // cleanup
     m_pDS->close();
     if (!strArtist.empty())
-      items.SetProperty("customtitle", strArtist);
+      items.SetProperty(ITEM_PROPERTY::CUSTOM_TITLE, strArtist);
     return true;
   }
   catch (...)

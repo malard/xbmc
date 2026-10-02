@@ -21,6 +21,7 @@
 #include "playlists/SmartPlayList.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -35,7 +36,6 @@
 #define PROPERTY_SORT_ASCENDING     "sort.ascending"
 #define PROPERTY_GROUP_BY           "group.by"
 #define PROPERTY_GROUP_MIXED        "group.mixed"
-constexpr char PROPERTY_WATCHED_MODE[] = "watchedmode";
 
 using namespace KODI;
 using KODI::MEDIA::MediaType;
@@ -56,7 +56,7 @@ namespace XFILE
       return false;
     bool result = GetDirectory(playlist, items);
     if (result)
-      items.SetProperty("library.smartplaylist", true);
+      items.SetProperty(ITEM_PROPERTY::LIBRARY_SMARTPLAYLIST, true);
 
     return result;
   }
@@ -307,7 +307,7 @@ namespace XFILE
     }
 
     if (auto watchedMode = playlist.GetWatchedMode(); watchedMode.has_value())
-      items.SetProperty(PROPERTY_WATCHED_MODE, static_cast<int>(watchedMode.value()));
+      items.SetProperty(ITEM_PROPERTY::WATCHED_MODE, static_cast<int>(watchedMode.value()));
 
     if (playlist.GetType() == "mixed")
       return success || success2;

@@ -33,6 +33,7 @@
 #include "settings/SettingsComponent.h"
 #include "threads/IRunnable.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -317,7 +318,7 @@ std::string GetVideoDbItemPath(const CFileItem& item)
 {
   std::string path = item.GetPath();
   if (!URIUtils::IsVideoDb(path))
-    path = item.GetProperty("original_listitem_url").asString();
+    path = item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
 
   if (URIUtils::IsVideoDb(path))
     return path;
@@ -358,7 +359,7 @@ void PlayItem(const std::shared_ptr<CFileItem>& item,
     {
       // Add item and all its siblings to the playlist and play. Prefer videodb path if available,
       // because it provides more information than just a plain file system path for example.
-      std::string parentPath = item->GetProperty("ParentPath").asString();
+      std::string parentPath = item->GetProperty(ITEM_PROPERTY::PARENT_PATH).asString();
       if (parentPath.empty())
       {
         std::string path = GetVideoDbItemPath(*item);
@@ -375,7 +376,7 @@ void PlayItem(const std::shared_ptr<CFileItem>& item,
       }
 
       const auto parentItem = std::make_shared<CFileItem>(parentPath, true);
-      parentItem->SetProperty("IsVideoFolder", true);
+      parentItem->SetProperty(ITEM_PROPERTY::IS_VIDEO_FOLDER, true);
       parentItem->LoadDetails();
       if (item->GetStartOffset() == STARTOFFSET_RESUME)
         parentItem->SetStartOffset(STARTOFFSET_RESUME);
@@ -507,7 +508,7 @@ bool IsItemPlayable(const CFileItem& item)
   }
 
   if (item.IsPlugin() && IsVideo(item) && !IsEmptyVideoItem(item) &&
-      item.GetProperty("isplayable").asBoolean(false))
+      item.GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean(false))
   {
     return true;
   }
@@ -593,7 +594,7 @@ void NotifyItemPathChanged(const CFileItem& item, const std::string& oldPath, in
   CFileItem oldItem{item};
   oldItem.SetPath(oldPath);
   if (oldFileId > 0 && item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iFileId != oldFileId)
-    oldItem.SetProperty("replaced_file_id", oldFileId);
+    oldItem.SetProperty(ITEM_PROPERTY::REPLACED_FILE_ID, oldFileId);
   CGUIMessage msg{GUI_MSG_NOTIFY_ALL,
                   0,
                   0,

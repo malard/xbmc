@@ -28,6 +28,7 @@
 #include "playlists/PlayList.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -677,12 +678,13 @@ bool CPlayerGUIInfo::GetBool(bool& value,
     {
       if (item)
       {
-        if (item->HasProperty("playlistentry"))
+        if (item->HasProperty(KODI::ITEM_PROPERTY::PLAYLIST_ENTRY))
         {
           const std::optional<PLAYLIST::Type> type =
               PLAYLIST::TypeFromInt(item->GetProperty("playlisttype").asInteger32(-1));
-          value = type && item->GetProperty("playlistentry").asUnsignedInteger() ==
-                              m_playLists->GetPlayingEntry(*type);
+          value =
+              type && item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_ENTRY).asUnsignedInteger() ==
+                          m_playLists->GetPlayingEntry(*type);
           return true;
         }
         else if (item->HasProperty("isplaying"))

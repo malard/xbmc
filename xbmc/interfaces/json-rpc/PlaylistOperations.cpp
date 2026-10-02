@@ -23,6 +23,7 @@
 #include "pictures/PictureInfoTag.h"
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
+#include "utils/ItemProperties.h"
 #include "utils/Variant.h"
 
 #include <algorithm>
@@ -196,8 +197,9 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CV
     {
       auto item = std::make_shared<CFileItem>(*entries[position].item);
       const int displayOrder = source.GetPlayOrderPosition(entries[position].id);
-      item->SetProperty("playlistposition", position);
-      item->SetProperty("playlistdisplayorder", displayOrder < 0 ? position : displayOrder);
+      item->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position);
+      item->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER,
+                        displayOrder < 0 ? position : displayOrder);
       list.Add(std::move(item));
     }
   }
@@ -206,8 +208,8 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CV
     CServiceBroker::GetSlideShowDelegator().GetSlideShowContents(list);
     for (int position = 0; position < list.Size(); ++position)
     {
-      list[position]->SetProperty("playlistposition", position);
-      list[position]->SetProperty("playlistdisplayorder", position);
+      list[position]->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position);
+      list[position]->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER, position);
     }
   }
 

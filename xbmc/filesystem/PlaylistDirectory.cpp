@@ -14,6 +14,7 @@
 #include "URL.h"
 #include "application/ApplicationPlayLists.h"
 #include "playlists/PlayList.h"
+#include "utils/ItemProperties.h"
 
 #include <map>
 #include <vector>
@@ -53,9 +54,9 @@ bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
     if (position == positions.end())
       continue;
     auto row = std::make_shared<CFileItem>(*entries[position->second].item);
-    row->SetProperty("playlistentry", id);
-    row->SetProperty("playlistposition", position->second);
-    row->SetProperty("playlistdisplayorder", displayOrder++);
+    row->SetProperty(ITEM_PROPERTY::PLAYLIST_ENTRY, id);
+    row->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position->second);
+    row->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER, displayOrder++);
     row->SetProperty("playlisttype", static_cast<int>(*type));
     items.Add(std::move(row));
   }

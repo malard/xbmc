@@ -14,6 +14,7 @@
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListFactory.h"
 #include "pvr/PVRItem.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoFileItemClassify.h"
@@ -31,7 +32,7 @@ bool IsPlayList(const CFileItem& item)
 
 bool IsSmartPlayList(const CFileItem& item)
 {
-  if (item.GetProperty("library.smartplaylist").asBoolean(false))
+  if (item.GetProperty(ITEM_PROPERTY::LIBRARY_SMARTPLAYLIST).asBoolean(false))
     return true;
 
   return item.GetURL().HasExtension(".xsp");

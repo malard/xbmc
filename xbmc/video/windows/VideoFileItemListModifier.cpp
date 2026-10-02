@@ -17,9 +17,11 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoFileItemClassify.h"
+#include "video/VideoUtils.h"
 
 #include <memory>
 
@@ -83,19 +85,15 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
       for (int i = 0; i < items.Size(); i++)
       {
         CFileItemPtr item = items[i];
-        watched += static_cast<int>(item->GetProperty("watchedepisodes").asInteger());
-        unwatched += static_cast<int>(item->GetProperty("unwatchedepisodes").asInteger());
-        inprogress += static_cast<int>(item->GetProperty("inprogressepisodes").asInteger());
+        watched +=
+            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES).asInteger());
+        unwatched += static_cast<int>(
+            item->GetProperty(KODI::ITEM_PROPERTY::UNWATCHED_EPISODES).asInteger());
+        inprogress += static_cast<int>(
+            item->GetProperty(KODI::ITEM_PROPERTY::IN_PROGRESS_EPISODES).asInteger());
       }
-      const int totalEpisodes = watched + unwatched;
-      pItem->SetProperty("totalepisodes", totalEpisodes);
-      pItem->SetProperty("numepisodes",
-                         totalEpisodes); // will be changed later to reflect watchmode setting
-      pItem->SetProperty("watchedepisodes", watched);
-      pItem->SetProperty("unwatchedepisodes", unwatched);
-      pItem->SetProperty("inprogressepisodes", inprogress);
-      pItem->SetProperty("watchedepisodepercent",
-                         totalEpisodes > 0 ? watched * 100 / totalEpisodes : 0);
+      KODI::VIDEO::UTILS::SetEpisodeCounts(*pItem, watched + unwatched, watched);
+      pItem->SetProperty(KODI::ITEM_PROPERTY::IN_PROGRESS_EPISODES, inprogress);
 
       // @note: The items list may contain additional items that do not belong to the show.
       // This is the case of the up directory (..) or movies linked to the tvshow.

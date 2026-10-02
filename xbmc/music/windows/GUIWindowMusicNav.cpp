@@ -54,6 +54,7 @@
 #include "storage/MediaManager.h"
 #include "utils/ContentNames.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/LegacyPathTranslation.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
@@ -716,7 +717,7 @@ bool CGUIWindowMusicNav::OnPopupMenu(int iItem)
   if (iItem >= 0 && iItem < m_vecItems->Size())
   {
     const auto item = m_vecItems->Get(iItem);
-    item->SetProperty("CheckAutoPlayNextItem", true);
+    item->SetProperty(ITEM_PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM, true);
   }
 
   return CGUIWindowMusicBase::OnPopupMenu(iItem);

@@ -32,6 +32,7 @@
 #include "settings/lib/Setting.h"
 #include "utils/Base64.h"
 #include "utils/ContentUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/Set.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -39,6 +40,7 @@
 #include "video/VideoDbPaths.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoUtils.h"
 
 #include <algorithm>
 #include <array>
@@ -1200,11 +1202,7 @@ std::shared_ptr<CFileItem> BuildObject(PLT_MediaObject* entry,
     bool watched(false);
     if (type == MediaType::TV_SHOW || type == MediaType::SEASON)
     {
-      pItem->SetProperty("totalepisodes", episodes);
-      pItem->SetProperty("numepisodes", episodes);
-      pItem->SetProperty("watchedepisodes", played);
-      pItem->SetProperty("unwatchedepisodes", episodes - played);
-      pItem->SetProperty("watchedepisodepercent", episodes > 0 ? played * 100 / episodes : 0);
+      VIDEO::UTILS::SetEpisodeCounts(*pItem, episodes, played);
       watched = (episodes && played >= episodes);
       pItem->GetVideoInfoTag()->SetPlayCount(watched ? 1 : 0);
     }
@@ -1261,7 +1259,7 @@ bool GetResource(const PLT_MediaObject* entry, CFileItem& item)
   PLT_MediaItemResource resource;
 
   // store original path so we remember it
-  item.SetProperty("original_listitem_url", item.GetPath());
+  item.SetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL, item.GetPath());
   item.SetProperty("original_listitem_mime", item.GetMimeType());
 
   // get a sorted list based on our preference

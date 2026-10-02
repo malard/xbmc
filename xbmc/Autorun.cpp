@@ -34,6 +34,7 @@
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
 #include "settings/lib/SettingDefinitions.h"
+#include "utils/ItemProperties.h"
 #include "video/VideoFileItemClassify.h"
 
 #include <stdlib.h>
@@ -262,7 +263,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
             }
           }
           if (options.forceSelection)
-            item->SetProperty("force_playlist_selection", true);
+            item->SetProperty(ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION, true);
 
           CServiceBroker::GetPlayLists()->PlayItem(PLAYLIST::Video, item);
           return true;

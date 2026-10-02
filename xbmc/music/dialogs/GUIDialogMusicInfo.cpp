@@ -49,6 +49,7 @@
 #include "utils/Artwork.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/ProgressJob.h"
 #include "utils/StringUtils.h"
@@ -1019,15 +1020,15 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
     }
     musicitem.SetFromMusicInfoTag(*pItem->GetMusicInfoTag());
   }
-  else if (pItem->HasProperty("artist_musicid"))
+  else if (pItem->HasProperty(ITEM_PROPERTY::ARTIST_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty("artist_musicid").asInteger32(),
-                                               MediaType::ARTIST);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(
+        pItem->GetProperty(ITEM_PROPERTY::ARTIST_MUSICID).asInteger32(), MediaType::ARTIST);
   }
-  else if (pItem->HasProperty("album_musicid"))
+  else if (pItem->HasProperty(ITEM_PROPERTY::ALBUM_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty("album_musicid").asInteger32(),
-                                               MediaType::ALBUM);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(
+        pItem->GetProperty(ITEM_PROPERTY::ALBUM_MUSICID).asInteger32(), MediaType::ALBUM);
   }
   else
     return; // nothing to do

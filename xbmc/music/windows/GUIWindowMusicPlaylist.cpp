@@ -17,6 +17,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ContentNames.h"
+#include "utils/ItemProperties.h"
 #include "utils/LabelFormatter.h"
 #include "utils/StringUtils.h"
 
@@ -78,8 +79,8 @@ void CGUIWindowMusicPlayList::OnItemLoaded(CFileItem* pItem)
       // No music info, so show the file name
       std::string str;
       str = CUtil::GetTitleFromPath(pItem->GetPath());
-      str = StringUtils::Format("{:02}. {} ",
-                                pItem->GetProperty("playlistdisplayorder").asInteger(), str);
+      str = StringUtils::Format(
+          "{:02}. {} ", pItem->GetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER).asInteger(), str);
       pItem->SetLabel(str);
     }
   }

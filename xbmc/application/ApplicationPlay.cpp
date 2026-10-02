@@ -25,6 +25,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/DiscsUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/Bookmark.h"
@@ -94,21 +95,21 @@ bool GetEpisodeBookmark(const CFileItem& item, CPlayerOptions& options, CVideoDa
 
 void CApplicationPlay::GetOptionsAndUpdateItem()
 {
-  if (m_item.HasProperty("StartPercent"))
+  if (m_item.HasProperty(ITEM_PROPERTY::START_PERCENT))
   {
-    m_options.startpercent = m_item.GetProperty("StartPercent").asDouble();
+    m_options.startpercent = m_item.GetProperty(ITEM_PROPERTY::START_PERCENT).asDouble();
     m_item.SetStartOffset(0);
   }
   m_options.starttime = CUtil::ConvertMilliSecsToSecs(m_item.GetStartOffset());
 
   if (VIDEO::IsVideo(m_item))
   {
-    if (m_item.HasProperty("savedplayerstate"))
+    if (m_item.HasProperty(ITEM_PROPERTY::SAVED_PLAYER_STATE))
     {
       // savedplayerstate is set in CPowerManager on sleep
       m_options.starttime = CUtil::ConvertMilliSecsToSecs(m_item.GetStartOffset());
-      m_options.state = m_item.GetProperty("savedplayerstate").asString();
-      m_item.ClearProperty("savedplayerstate");
+      m_options.state = m_item.GetProperty(ITEM_PROPERTY::SAVED_PLAYER_STATE).asString();
+      m_item.ClearProperty(ITEM_PROPERTY::SAVED_PLAYER_STATE);
       return;
     }
 
@@ -126,10 +127,11 @@ void CApplicationPlay::GetOptionsAndUpdateItem()
           VIDEO::IsVideoDb(m_item))
         path = videoInfoTagPath;
     }
-    else if (m_item.HasProperty("original_listitem_url") &&
-             URIUtils::IsPlugin(m_item.GetProperty("original_listitem_url").asString()))
+    else if (m_item.HasProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL) &&
+             URIUtils::IsPlugin(
+                 m_item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
     {
-      path = m_item.GetProperty("original_listitem_url").asString();
+      path = m_item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     }
 
     // Note that we need to load the tag from database also if the item already has a tag,
@@ -203,7 +205,8 @@ MenuDecision GetMenuDecisions(const CFileItem& item,
   const bool atStart{options.startpercent == 0.0 && options.starttime == 0.0};
 
   // See if choose (new) playlist has been selected from context menu
-  const bool forceSelectionAlways{item.GetProperty("force_playlist_selection").asBoolean(false)};
+  const bool forceSelectionAlways{
+      item.GetProperty(ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION).asBoolean(false)};
 
   // If we already have a playlist but Choose Playlist has been selected on the context menu
   if (forceSelectionAlways && isBlurayPath)
@@ -261,7 +264,7 @@ bool CApplicationPlay::GetPlaylistIfDisc()
       // Reset any resume state as new playlist chosen
       m_options.starttime = m_options.startpercent = 0.0;
       m_options.state = {};
-      m_item.ClearProperty("force_playlist_selection");
+      m_item.ClearProperty(ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION);
       break;
     }
     case NO_ACTION:

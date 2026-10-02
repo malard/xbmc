@@ -61,6 +61,7 @@
 #include "settings/SettingsComponent.h"
 #include "utils/AspectRatioVocabulary.h"
 #include "utils/FileExtensionProvider.h"
+#include "utils/ItemProperties.h"
 #include "utils/MathUtils.h"
 #include "utils/PlayerUtils.h"
 #include "utils/URIUtils.h"
@@ -661,7 +662,7 @@ void HandleResumeOption(const CVariant& optionResume, CFileItem& item)
   if (optionResume.isBoolean() && optionResume.asBoolean())
     item.SetStartOffset(STARTOFFSET_RESUME);
   else if (optionResume.isDouble())
-    item.SetProperty("StartPercent", optionResume);
+    item.SetProperty(ITEM_PROPERTY::START_PERCENT, optionResume);
   else if (optionResume.isObject())
     item.SetStartOffset(CUtil::ConvertSecsToMilliSecs(ParseTimeInSeconds(optionResume)));
 }

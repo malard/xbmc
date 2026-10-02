@@ -18,6 +18,7 @@
 #include "music/MusicUtils.h"
 #include "music/dialogs/GUIDialogMusicInfo.h"
 #include "tags/MusicInfoTag.h"
+#include "utils/ItemProperties.h"
 #include "utils/Variant.h"
 #include "video/VideoFileItemClassify.h"
 
@@ -36,9 +37,9 @@ bool CMusicInfoBase::IsVisible(const CFileItem& item) const
 {
   return (item.HasMusicInfoTag() && item.GetMusicInfoTag()->GetMediaType() == m_mediaType) ||
          (m_mediaType == MediaType::ARTIST && VIDEO::IsVideoDb(item) &&
-          item.HasProperty("artist_musicid")) ||
+          item.HasProperty(ITEM_PROPERTY::ARTIST_MUSICID)) ||
          (m_mediaType == MediaType::ALBUM && VIDEO::IsVideoDb(item) &&
-          item.HasProperty("album_musicid"));
+          item.HasProperty(ITEM_PROPERTY::ALBUM_MUSICID));
 }
 
 bool CMusicInfoBase::Execute(const std::shared_ptr<CFileItem>& item) const
@@ -94,9 +95,10 @@ namespace
 {
 void Play(const std::shared_ptr<CFileItem>& item, const std::string& player)
 {
-  const ContentUtils::PlayMode mode = item->GetProperty("CheckAutoPlayNextItem").asBoolean()
-                                          ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
-                                          : ContentUtils::PlayMode::PLAY_ONLY_THIS;
+  const ContentUtils::PlayMode mode =
+      item->GetProperty(ITEM_PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM).asBoolean()
+          ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
+          : ContentUtils::PlayMode::PLAY_ONLY_THIS;
   MUSIC_UTILS::PlayItem(item, player, mode);
 }
 

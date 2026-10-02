@@ -26,6 +26,7 @@
 #include "settings/MediaSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 
@@ -542,7 +543,7 @@ private:
         Expand(child, *child);
     }
     else if ((NETWORK::IsInternetStream(*item) && !MUSIC::IsMusicDb(*item)) ||
-             (item->IsPlugin() && item->GetProperty("isplayable").asBoolean()))
+             (item->IsPlugin() && item->GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean()))
     {
       // resolved when it plays
       Add(listed, item);
@@ -838,7 +839,7 @@ bool CApplicationPlayLists::PlayEntry(Type type,
 bool CApplicationPlayLists::OnEntryEnded(const CFileItem& ended)
 {
   // an EPG playlist item keeps the player open for continuous viewing
-  if (ended.GetProperty("epg_playlist_item").asBoolean(false))
+  if (ended.GetProperty(ITEM_PROPERTY::EPG_PLAYLIST_ITEM).asBoolean(false))
     return false;
 
   if (PlayNext(Advance::Automatic) != Step::Played)

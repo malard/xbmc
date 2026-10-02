@@ -57,6 +57,7 @@
 #include "settings/SettingsComponent.h"
 #include "utils/ContentUtils.h"
 #include "utils/FileExtensionProvider.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "windowing/WinSystem.h"
 
@@ -90,7 +91,7 @@ public:
 
   bool HandlePlaycountIncremented() const
   {
-    return m_item.GetProperty("playcount_incremented").asBoolean(false) &&
+    return m_item.GetProperty(ITEM_PROPERTY::PLAYCOUNT_INCREMENTED).asBoolean(false) &&
            m_item.IsPVRRecording() &&
            CServiceBroker::GetPVRManager().Get<PVR::GUI::Recordings>().ProcessDeleteAfterWatch(
                m_item);

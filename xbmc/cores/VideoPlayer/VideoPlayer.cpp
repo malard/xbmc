@@ -59,6 +59,7 @@
 #include "settings/SettingsComponent.h"
 #include "threads/SingleLock.h"
 #include "utils/FontUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/StreamDetails.h"
 #include "utils/StreamUtils.h"
 #include "utils/StringUtils.h"
@@ -6272,7 +6273,7 @@ void CVideoPlayer::UpdateFileItemStreamDetails(CFileItem& item, UpdateStreamDeta
       return;
 
     // For blurays
-    item.SetProperty("update_stream_details", true);
+    item.SetProperty(ITEM_PROPERTY::UPDATE_STREAM_DETAILS, true);
 
     m_updateStreamDetails = false;
   }

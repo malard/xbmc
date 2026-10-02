@@ -28,6 +28,7 @@
 #include "settings/SettingUtils.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -216,7 +217,8 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
   }
 
   // video db items normally have info in the database
-  if (pItem->HasVideoInfoTag() && !pItem->GetProperty("libraryartfilled").asBoolean())
+  if (pItem->HasVideoInfoTag() &&
+      !pItem->GetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean())
   {
     FillLibraryArt(*pItem);
 
@@ -263,7 +265,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
   const bool isLibraryItem = pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->m_iDbId > -1 &&
                              !pItem->GetVideoInfoTag()->m_type.empty();
   const bool libraryArtFilled =
-      pItem->HasVideoInfoTag() && pItem->GetProperty("libraryartfilled").asBoolean();
+      pItem->HasVideoInfoTag() && pItem->GetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean();
   if (!isLibraryItem || !libraryArtFilled)
   {
     KODI::ART::Artwork artwork = pItem->GetArt();
@@ -418,7 +420,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     CMusicDatabase database;
     database.Open();
     if (idAlbum < 0 && !tag.m_strAlbum.empty() &&
-        item.GetProperty("musicvideomediatype") == NameOf(MediaType::ALBUM))
+        item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ALBUM))
     {
       // Musicvideo album - try to match album in music db on artist(s) and album name.
       // Get review if available and save the matching music library album id.
@@ -429,7 +431,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       if (database.GetMatchingMusicVideoAlbum(
           tag.m_strAlbum, strArtist, idAlbum, strReview))
       {
-        item.SetProperty("album_musicid", idAlbum);
+        item.SetProperty(ITEM_PROPERTY::ALBUM_MUSICID, idAlbum);
         item.SetProperty("album_description", strReview);
       }
     }
@@ -439,7 +441,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     database.Close();
   }
   else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
-           item.GetProperty("musicvideomediatype") == NameOf(MediaType::ARTIST))
+           item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ARTIST))
   {
     // Try to match artist in music db on name, get bio if available and fetch artist art
     // Save the matching music library artist id.
@@ -451,7 +453,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     {
       database.GetArtist(idArtist, artist);
       tag.m_strPlot = artist.strBiography;
-      item.SetProperty("artist_musicid", idArtist);
+      item.SetProperty(ITEM_PROPERTY::ARTIST_MUSICID, idArtist);
     }
     if (database.GetArtForItem(idArtist, MediaType::ARTIST, artwork))
       item.SetArt(artwork);
@@ -480,7 +482,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       item.AppendArt(artwork);
     }
     else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
-             item.GetProperty("musicvideomediatype") != NameOf(MediaType::ARTIST))
+             item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MediaType::ARTIST))
     {
       // Fallback to music library for actors without art
       //! @todo Is m_artist set other than musicvideo? Remove this fallback if not.
@@ -525,7 +527,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     }
     m_videoDatabase->Close();
   }
-  item.SetProperty("libraryartfilled", true);
+  item.SetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED, true);
   return !item.GetArt().empty();
 }
 

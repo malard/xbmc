@@ -35,6 +35,7 @@
 #include "utils/Artwork.h"
 #include "utils/FileUtils.h"
 #include "utils/ISerializable.h"
+#include "utils/ItemProperties.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -264,7 +265,7 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (field == "art")
     {
-      fillLibraryArt(!item->GetProperty("libraryartfilled").asBoolean());
+      fillLibraryArt(!item->GetProperty(KODI::ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean());
 
       const KODI::ART::Artwork& artMap = item->GetArt();
       CVariant artObj(CVariant::VariantTypeObject);
@@ -302,12 +303,14 @@ bool CFileItemHandler::GetField(const std::string& field,
     {
       if (item->GetVideoInfoTag()->m_iSeason < 0 && field == "season")
       {
-        result[field] = static_cast<int>(item->GetProperty("totalseasons").asInteger());
+        result[field] =
+            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::TOTAL_SEASONS).asInteger());
         return true;
       }
       if (field == "watchedEpisodes")
       {
-        result[field] = static_cast<int>(item->GetProperty("watchedepisodes").asInteger());
+        result[field] =
+            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES).asInteger());
         return true;
       }
     }
@@ -440,10 +443,10 @@ void CFileItemHandler::HandleFileItem(const char* ID,
         object["file"] = item->GetDynPath();
     }
 
-    if (item->HasProperty("playlistdisplayorder"))
+    if (item->HasProperty(KODI::ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER))
     {
-      object["position"] = item->GetProperty("playlistposition");
-      object["displayOrder"] = item->GetProperty("playlistdisplayorder");
+      object["position"] = item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_POSITION);
+      object["displayOrder"] = item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER);
     }
 
     if (fields.erase("mediaPath") > 0)
