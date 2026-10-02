@@ -1041,7 +1041,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
   if (!object.m_Recorded.program_title.IsEmpty() ||
       object.m_ObjectClass.type == "object.item.videoItem.videoBroadcast")
   {
-    tag.m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
+    tag.SetMediaType(MediaType::EPISODE);
     tag.m_strShowTitle = object.m_Recorded.series_title;
     if (date.IsValid())
       tag.m_firstAired = date;
@@ -1081,13 +1081,13 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
     {
       if (object.m_ObjectClass.type == "object.container.album.videoAlbum.videoBroadcastSeason")
       {
-        tag.m_type = KODI::MEDIA::NameOf(MediaType::SEASON);
+        tag.SetMediaType(MediaType::SEASON);
         tag.m_iSeason = object.m_Recorded.episode_season;
         tag.m_strShowTitle = object.m_Recorded.series_title;
       }
       else
       {
-        tag.m_type = KODI::MEDIA::NameOf(MediaType::TV_SHOW);
+        tag.SetMediaType(MediaType::TV_SHOW);
         tag.m_strShowTitle = object.m_Title;
       }
 
@@ -1098,7 +1098,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
     }
     else if (object.m_ObjectClass.type == "object.item.videoItem.musicVideoClip")
     {
-      tag.m_type = KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO);
+      tag.SetMediaType(MediaType::MUSIC_VIDEO);
 
       if (object.m_People.artists.GetItemCount() > 0)
       {
@@ -1112,7 +1112,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
       tag.m_strAlbum = object.m_Affiliation.album;
     }
     else
-      tag.m_type = KODI::MEDIA::NameOf(MediaType::MOVIE);
+      tag.SetMediaType(MediaType::MOVIE);
 
     tag.m_strTitle = object.m_Title;
     if (date.IsValid())

@@ -63,6 +63,7 @@ using namespace KODI;
 using namespace KODI::VIDEO;
 using namespace XFILE;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeOf;
 using KODI::UTILITY::CDigest;
 
 namespace UPNP
@@ -422,8 +423,8 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
           }
         }
 
-        if (item->GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW ||
-            item->GetVideoInfoTag()->GetMediaType() == MediaType::SEASON)
+        const MediaType type = item->GetVideoInfoTag()->GetMediaType();
+        if (type == MediaType::TV_SHOW || type == MediaType::SEASON)
         {
           // for tvshows and seasons, iEpisode and playCount are
           // invalid
@@ -513,7 +514,7 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
 {
   NPT_String path;
   int item_id;
-  std::string item_type;
+  MediaType item_type{MediaType::NONE};
 
   if (sender != CAnnouncementManager::ANNOUNCEMENT_SENDER)
     return;
@@ -539,47 +540,50 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
     if (!data["item"].isNull())
     {
       item_id = (int)data["item"]["id"].asInteger();
-      item_type = data["item"]["type"].asString();
+      item_type = MediaTypeOf(data["item"]["type"].asString());
     }
     else
     {
       item_id = (int)data["id"].asInteger();
-      item_type = data["type"].asString();
+      item_type = MediaTypeOf(data["type"].asString());
     }
 
     // we always update 'recently added' nodes along with the specific container,
     // as we don't differentiate 'updates' from 'adds' in RPC interface
     if (flag == VideoLibrary)
     {
-      if (item_type == KODI::MEDIA::NameOf(MediaType::EPISODE))
+      switch (item_type)
       {
-        CVideoDatabase db;
-        if (!db.Open())
-          return;
-        int show_id = db.GetTvShowForEpisode(item_id);
-        int season_id = db.GetSeasonForEpisode(item_id);
-        UpdateContainer(StringUtils::Format("videodb://tvshows/titles/{}/", show_id));
-        UpdateContainer(StringUtils::Format("videodb://tvshows/titles/{}/{}/?tvshowid={}", show_id,
-                                            season_id, show_id));
-        UpdateContainer("videodb://recentlyaddedepisodes/");
-      }
-      else if (item_type == KODI::MEDIA::NameOf(MediaType::TV_SHOW))
-      {
-        UpdateContainer("library://video/tvshows/titles.xml/");
-        UpdateContainer("videodb://recentlyaddedepisodes/");
-      }
-      else if (item_type == KODI::MEDIA::NameOf(MediaType::MOVIE))
-      {
-        UpdateContainer("library://video/movies/titles.xml/");
-        UpdateContainer("videodb://recentlyaddedmovies/");
-      }
-      else if (item_type == KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO))
-      {
-        UpdateContainer("library://video/musicvideos/titles.xml/");
-        UpdateContainer("videodb://recentlyaddedmusicvideos/");
+        case MediaType::EPISODE:
+        {
+          CVideoDatabase db;
+          if (!db.Open())
+            return;
+          int show_id = db.GetTvShowForEpisode(item_id);
+          int season_id = db.GetSeasonForEpisode(item_id);
+          UpdateContainer(StringUtils::Format("videodb://tvshows/titles/{}/", show_id));
+          UpdateContainer(StringUtils::Format("videodb://tvshows/titles/{}/{}/?tvshowid={}",
+                                              show_id, season_id, show_id));
+          UpdateContainer("videodb://recentlyaddedepisodes/");
+          break;
+        }
+        case MediaType::TV_SHOW:
+          UpdateContainer("library://video/tvshows/titles.xml/");
+          UpdateContainer("videodb://recentlyaddedepisodes/");
+          break;
+        case MediaType::MOVIE:
+          UpdateContainer("library://video/movies/titles.xml/");
+          UpdateContainer("videodb://recentlyaddedmovies/");
+          break;
+        case MediaType::MUSIC_VIDEO:
+          UpdateContainer("library://video/musicvideos/titles.xml/");
+          UpdateContainer("videodb://recentlyaddedmusicvideos/");
+          break;
+        default:
+          break;
       }
     }
-    else if (flag == AudioLibrary && item_type == KODI::MEDIA::NameOf(MediaType::SONG))
+    else if (flag == AudioLibrary && item_type == MediaType::SONG)
     {
       // we also update the 'songs' container is maybe a performance drop too
       // high? would need to check if slow clients even cache at all anyway

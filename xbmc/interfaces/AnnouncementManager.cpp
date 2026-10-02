@@ -13,6 +13,7 @@
 #include "music/tags/MusicInfoTag.h"
 #include "pvr/channels/PVRChannel.h"
 #include "threads/SingleLock.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -28,6 +29,7 @@
 using namespace ANNOUNCEMENT;
 using namespace KODI;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 const std::string CAnnouncementManager::ANNOUNCEMENT_SENDER = "xbmc";
 
@@ -80,8 +82,7 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
     objItem["type"] = tag.m_type;
   else
     objItem["type"] =
-        KODI::MEDIA::NameOf(CVideoDatabase::VideoContentTypeToString(item.GetVideoContentType()))
-            .data();
+        NameOf(DatabaseUtils::MediaTypeFromVideoContentType(item.GetVideoContentType()));
 
   if (id <= 0)
   {
@@ -130,7 +131,7 @@ void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
-  objItem["type"] = KODI::MEDIA::NameOf(MediaType::SONG).c_str();
+  objItem["type"] = NameOf(MediaType::SONG);
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
   if (id <= 0 && !item.GetPath().empty() && item.GetProperty(LOOKUP_PROPERTY).asBoolean(true))

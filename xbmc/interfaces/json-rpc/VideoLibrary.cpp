@@ -19,6 +19,7 @@
 #include "addons/addoninfo/AddonInfo.h"
 #include "imagefiles/ImageFileURL.h"
 #include "messaging/ApplicationMessenger.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -41,6 +42,10 @@ namespace
 {
 using FilterField = CFileItemHandler::FilterField;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
+using KODI::MEDIA::MediaTypeOf;
+using KODI::MEDIA::NameOf;
+using KODI::MEDIA::PluralNameOf;
 
 constexpr FilterField MOVIE_FILTERS[] = {FilterField::Number("genreId", "genreid"),
                                          FilterField::Text("genre"),
@@ -105,15 +110,14 @@ const KindTraits& TraitsOf(VideoKind kind)
 CVariant ItemTarget(VideoKind kind, int id)
 {
   CVariant item(CVariant::VariantTypeObject);
-  item["kind"] = KODI::MEDIA::NameOf(TraitsOf(kind).type).c_str();
+  item["kind"] = NameOf(TraitsOf(kind).type);
   item["id"] = id;
   return Target("item", item);
 }
 
 const KindTraits* TraitsNamed(std::string_view name)
 {
-  const auto traits = std::ranges::find_if(KINDS, [name](const KindTraits& candidate)
-                                           { return name == KODI::MEDIA::NameOf(candidate.type); });
+  const auto traits = std::ranges::find(KINDS, MediaTypeOf(name), &KindTraits::type);
   return traits == std::end(KINDS) ? nullptr : &*traits;
 }
 
@@ -132,8 +136,7 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
   if (!parameterObject["filter"].isNull())
   {
     if (!traits.filter)
-      return CFileItemHandler::RefuseForKind("filter", KODI::MEDIA::NameOf(traits.type).c_str(),
-                                             errorData);
+      return CFileItemHandler::RefuseForKind("filter", traits.type, errorData);
 
     if (const JSONRPC_STATUS status = CFileItemHandler::CheckAgainstType(
             traits.filter, "filter", parameterObject["filter"], checked["filter"], errorData);
@@ -143,12 +146,10 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 
   if (parameterObject["tvShowId"].asInteger() != -1 && traits.kind != VideoKind::Season &&
       traits.kind != VideoKind::Episode)
-    return CFileItemHandler::RefuseForKind("tvShowId", KODI::MEDIA::NameOf(traits.type).c_str(),
-                                           errorData);
+    return CFileItemHandler::RefuseForKind("tvShowId", traits.type, errorData);
 
   if (parameterObject["season"].asInteger() != -1 && traits.kind != VideoKind::Episode)
-    return CFileItemHandler::RefuseForKind("season", KODI::MEDIA::NameOf(traits.type).c_str(),
-                                           errorData);
+    return CFileItemHandler::RefuseForKind("season", traits.type, errorData);
 
   return OK;
 }
@@ -426,29 +427,22 @@ JSONRPC_STATUS CVideoLibrary::ReadItem(
   return OK;
 }
 
+namespace
+{
+//! The content a genre or tag listing of \p type reads, and the path of its \p node
+std::pair<VideoDbContentType, std::string> FacetListing(MediaType type, std::string_view node)
+{
+  if (type != MediaType::MOVIE && type != MediaType::TV_SHOW && type != MediaType::MUSIC_VIDEO)
+    return {VideoDbContentType::UNKNOWN, StringUtils::Format("videodb:///{}/", node)};
+  return {DatabaseUtils::VideoContentTypeFromMediaType(type),
+          StringUtils::Format("videodb://{}/{}/", PluralNameOf(type), node)};
+}
+} // unnamed namespace
+
 JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)
 {
-  const MediaType media{KODI::MEDIA::MediaTypeFromName(parameterObject["type"].asString())};
-  VideoDbContentType idContent = VideoDbContentType::UNKNOWN;
-
-  std::string strPath = "videodb://";
-  /* select which video content to get genres from*/
-  if (media == MediaType::MOVIE)
-  {
-    idContent = VideoDbContentType::MOVIES;
-    strPath += "movies";
-  }
-  else if (media == MediaType::TV_SHOW)
-  {
-    idContent = VideoDbContentType::TVSHOWS;
-    strPath += "tvshows";
-  }
-  else if (media == MediaType::MUSIC_VIDEO)
-  {
-    idContent = VideoDbContentType::MUSICVIDEOS;
-    strPath += "musicvideos";
-  }
-  strPath += "/genres/";
+  const auto [idContent, strPath] =
+      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), "genres");
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -468,27 +462,8 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVarian
 
 JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant& result)
 {
-  const MediaType media{KODI::MEDIA::MediaTypeFromName(parameterObject["type"].asString())};
-  VideoDbContentType idContent = VideoDbContentType::UNKNOWN;
-
-  std::string strPath = "videodb://";
-  /* select which video content to get tags from*/
-  if (media == MediaType::MOVIE)
-  {
-    idContent = VideoDbContentType::MOVIES;
-    strPath += "movies";
-  }
-  else if (media == MediaType::TV_SHOW)
-  {
-    idContent = VideoDbContentType::TVSHOWS;
-    strPath += "tvshows";
-  }
-  else if (media == MediaType::MUSIC_VIDEO)
-  {
-    idContent = VideoDbContentType::MUSICVIDEOS;
-    strPath += "musicvideos";
-  }
-  strPath += "/tags/";
+  const auto [idContent, strPath] =
+      FacetListing(MediaTypeFromName(parameterObject["type"].asString()), "tags");
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
@@ -513,22 +488,23 @@ const std::map<std::string, MediaType> mediaIDTypes = {
     {"seasonId", MediaType::SEASON},        {"movieId", MediaType::MOVIE},
     {"setId", MediaType::VIDEO_COLLECTION}, {"musicVideoId", MediaType::MUSIC_VIDEO},
 };
+
+//! The type and id of the library item \p item names, or an id of -1
+std::pair<MediaType, int> ArtItemOf(const CVariant& item)
+{
+  for (const auto& [member, type] : mediaIDTypes)
+  {
+    if (item.isMember(member))
+      return {type, item[member].asInteger32()};
+  }
+  return {MediaType::NONE, -1};
 }
+} // unnamed namespace
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  MediaType mediaType = MediaType::NONE;
-  int mediaID = -1;
-  for (const auto& mediaIDType : mediaIDTypes)
-  {
-    if (parameterObject["item"].isMember(mediaIDType.first))
-    {
-      mediaType = mediaIDType.second;
-      mediaID = parameterObject["item"][mediaIDType.first].asInteger32();
-      break;
-    }
-  }
+  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
   if (mediaID == -1)
     return InternalError;
 
@@ -537,8 +513,7 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
     return InternalError;
 
   CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType :
-       videodatabase.GetAvailableArtTypesForItem(mediaID, KODI::MEDIA::NameOf(mediaType)))
+  for (const auto& artType : videodatabase.GetAvailableArtTypesForItem(mediaID, mediaType))
   {
     availablearttypes.append(artType);
   }
@@ -550,17 +525,7 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  MediaType mediaType = MediaType::NONE;
-  int mediaID = -1;
-  for (const auto& mediaIDType : mediaIDTypes)
-  {
-    if (parameterObject["item"].isMember(mediaIDType.first))
-    {
-      mediaType = mediaIDType.second;
-      mediaID = parameterObject["item"][mediaIDType.first].asInteger32();
-      break;
-    }
-  }
+  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
   if (mediaID == -1)
     return InternalError;
 
@@ -572,8 +537,7 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
     return InternalError;
 
   CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry :
-       videodatabase.GetAvailableArtForItem(mediaID, KODI::MEDIA::NameOf(mediaType), artType))
+  for (const auto& artentry : videodatabase.GetAvailableArtForItem(mediaID, mediaType, artType))
   {
     CVariant item = CVariant(CVariant::VariantTypeObject);
     item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
@@ -607,8 +571,7 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(int id,
   if (videodatabase.UpdateDetailsForMovie(id, infos, edit.artwork, edit.updatedDetails) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::MOVIE),
-                                      edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::MOVIE, edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);
@@ -633,8 +596,8 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(int id,
   if (videodatabase.SetDetailsForMovieSet(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(
-          infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION), edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::VIDEO_COLLECTION,
+                                      edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -664,8 +627,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id,
   if (!videodatabase.UpdateDetailsForTvShow(id, infos, edit.artwork, seasonArt))
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::TV_SHOW),
-                                      edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::TV_SHOW, edit.removedArtwork))
     return InternalError;
 
   const bool updatePlaycount = ParameterNotNull(properties, "playCount");
@@ -724,8 +686,7 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(int id,
   if (videodatabase.SetDetailsForSeason(infos, edit.artwork, infos.m_iIdShow, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::SEASON),
-                                      edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::SEASON, edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -754,8 +715,7 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(int id,
   if (videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvshowid, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::EPISODE),
-                                      edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::EPISODE, edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);
@@ -786,8 +746,7 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(int id,
   if (videodatabase.SetDetailsForMusicVideo(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO),
-                                      edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaType::MUSIC_VIDEO, edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);

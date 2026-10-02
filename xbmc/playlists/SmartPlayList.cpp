@@ -43,6 +43,7 @@ using enum CDatabaseQueryRule::FieldType;
 using enum CDatabaseQueryRule::SearchOperator;
 using namespace XFILE;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
 
 namespace KODI::PLAYLIST
 {
@@ -1129,7 +1130,7 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
 std::string CSmartPlaylistRule::GetField(int field, const std::string &type) const
 {
   if (field >= static_cast<int>(Field::UNKNOWN) && field < static_cast<int>(Field::MAX))
-    return DatabaseUtils::GetField(static_cast<Field>(field), KODI::MEDIA::MediaTypeFromName(type),
+    return DatabaseUtils::GetField(static_cast<Field>(field), MediaTypeFromName(type),
                                    DatabaseQueryPart::WHERE);
   return "";
 }

@@ -106,6 +106,9 @@ namespace
 {
 using FilterField = CFileItemHandler::FilterField;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
+using KODI::MEDIA::MediaTypeOf;
+using KODI::MEDIA::NameOf;
 
 constexpr FilterField ARTIST_FILTERS[] = {
     FilterField::Number("genreId", "genreid"),     FilterField::Text("genre"),
@@ -152,15 +155,14 @@ const KindTraits& TraitsOf(AudioKind kind)
 CVariant ItemTarget(AudioKind kind, int id)
 {
   CVariant item(CVariant::VariantTypeObject);
-  item["kind"] = KODI::MEDIA::NameOf(TraitsOf(kind).type).c_str();
+  item["kind"] = NameOf(TraitsOf(kind).type);
   item["id"] = id;
   return Target("item", item);
 }
 
 const KindTraits* TraitsNamed(std::string_view name)
 {
-  const auto traits = std::ranges::find_if(KINDS, [name](const KindTraits& candidate)
-                                           { return name == KODI::MEDIA::NameOf(candidate.type); });
+  const auto traits = std::ranges::find(KINDS, MediaTypeOf(name), &KindTraits::type);
   return traits == std::end(KINDS) ? nullptr : &*traits;
 }
 
@@ -185,16 +187,13 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
   }
 
   if (!parameterObject["albumArtistsOnly"].isNull() && traits.kind != AudioKind::Artist)
-    return CFileItemHandler::RefuseForKind("albumArtistsOnly",
-                                           KODI::MEDIA::NameOf(traits.type).c_str(), errorData);
+    return CFileItemHandler::RefuseForKind("albumArtistsOnly", traits.type, errorData);
 
   if (!parameterObject["includeSingles"].isNull() && traits.kind == AudioKind::Artist)
-    return CFileItemHandler::RefuseForKind("includeSingles",
-                                           KODI::MEDIA::NameOf(traits.type).c_str(), errorData);
+    return CFileItemHandler::RefuseForKind("includeSingles", traits.type, errorData);
 
   if (!parameterObject["singlesOnly"].isNull() && traits.kind != AudioKind::Song)
-    return CFileItemHandler::RefuseForKind("singlesOnly", KODI::MEDIA::NameOf(traits.type).c_str(),
-                                           errorData);
+    return CFileItemHandler::RefuseForKind("singlesOnly", traits.type, errorData);
 
   return OK;
 }
@@ -364,8 +363,7 @@ void CAudioLibrary::FillListArt(CVariant& list,
 
     // Art is looked up by id alone; a song's is found quicker when its album id is known
     CFileItem item;
-    item.GetMusicInfoTag()->SetDatabaseId(entry[idName].asInteger32(),
-                                          KODI::MEDIA::NameOf(mediaType));
+    item.GetMusicInfoTag()->SetDatabaseId(entry[idName].asInteger32(), mediaType);
     if (song)
       item.GetMusicInfoTag()->SetAlbumId(entry.isMember("albumId") ? entry["albumId"].asInteger32()
                                                                    : -1);
@@ -584,21 +582,23 @@ JSONRPC_STATUS JSONRPC::CAudioLibrary::GetSources(const CVariant& parameterObjec
   return OK;
 }
 
+namespace
+{
+//! The type and id of the library item \p item names, or an id of -1
+std::pair<MediaType, int> ArtItemOf(const CVariant& item)
+{
+  if (item.isMember("artistId"))
+    return {MediaType::ARTIST, item["artistId"].asInteger32()};
+  if (item.isMember("albumId"))
+    return {MediaType::ALBUM, item["albumId"].asInteger32()};
+  return {MediaType::NONE, -1};
+}
+} // unnamed namespace
+
 JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  MediaType mediaType = MediaType::NONE;
-  int mediaID = -1;
-  if (parameterObject["item"].isMember("albumId"))
-  {
-    mediaType = MediaType::ALBUM;
-    mediaID = parameterObject["item"]["albumId"].asInteger32();
-  }
-  if (parameterObject["item"].isMember("artistId"))
-  {
-    mediaType = MediaType::ARTIST;
-    mediaID = parameterObject["item"]["artistId"].asInteger32();
-  }
+  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
   if (mediaID == -1)
     return InternalError;
 
@@ -607,8 +607,7 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObje
     return InternalError;
 
   CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType :
-       musicdatabase.GetAvailableArtTypesForItem(mediaID, KODI::MEDIA::NameOf(mediaType)))
+  for (const auto& artType : musicdatabase.GetAvailableArtTypesForItem(mediaID, mediaType))
   {
     availablearttypes.append(artType);
   }
@@ -620,18 +619,7 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 
 JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  MediaType mediaType = MediaType::NONE;
-  int mediaID = -1;
-  if (parameterObject["item"].isMember("albumId"))
-  {
-    mediaType = MediaType::ALBUM;
-    mediaID = parameterObject["item"]["albumId"].asInteger32();
-  }
-  if (parameterObject["item"].isMember("artistId"))
-  {
-    mediaType = MediaType::ARTIST;
-    mediaID = parameterObject["item"]["artistId"].asInteger32();
-  }
+  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
   if (mediaID == -1)
     return InternalError;
 
@@ -643,8 +631,7 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, C
     return InternalError;
 
   CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry :
-       musicdatabase.GetAvailableArtForItem(mediaID, KODI::MEDIA::NameOf(mediaType), artType))
+  for (const auto& artentry : musicdatabase.GetAvailableArtForItem(mediaID, mediaType, artType))
   {
     CVariant item = CVariant(CVariant::VariantTypeObject);
     item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
@@ -692,8 +679,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
   if (ParameterNotNull(properties, "art"))
   {
     // Get current artwork
-    musicdatabase.GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST),
-                                artist.art);
+    musicdatabase.GetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
     std::set<std::string, std::less<>> removedArtwork;
     CVariant art = properties["art"];
@@ -708,8 +694,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
       }
     }
     // Remove null art now, as not done by update
-    if (!musicdatabase.RemoveArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST),
-                                        removedArtwork))
+    if (!musicdatabase.RemoveArtForItem(artist.idArtist, MediaType::ARTIST, removedArtwork))
       return InternalError;
   }
 
@@ -729,8 +714,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
     return InternalError;
 
   if (!artist.art.empty())
-    musicdatabase.SetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST),
-                                artist.art);
+    musicdatabase.SetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
   CJSONRPCUtils::NotifyItemUpdated();
   return OK;
@@ -795,7 +779,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
   if (ParameterNotNull(properties, "art"))
   {
     // Get current artwork
-    musicdatabase.GetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), album.art);
+    musicdatabase.GetArtForItem(album.idAlbum, MediaType::ALBUM, album.art);
 
     std::set<std::string, std::less<>> removedArtwork;
     CVariant art = properties["art"];
@@ -810,8 +794,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
       }
     }
     // Remove null art now, as not done by update
-    if (!musicdatabase.RemoveArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM),
-                                        removedArtwork))
+    if (!musicdatabase.RemoveArtForItem(album.idAlbum, MediaType::ALBUM, removedArtwork))
       return InternalError;
   }
 
@@ -887,7 +870,7 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id,
   {
     // Get current artwork
     KODI::ART::Artwork artwork;
-    musicdatabase.GetArtForItem(song.idSong, KODI::MEDIA::NameOf(MediaType::SONG), artwork);
+    musicdatabase.GetArtForItem(song.idSong, MediaType::SONG, artwork);
 
     std::set<std::string, std::less<>> removedArtwork;
     CVariant art = properties["art"];
@@ -902,9 +885,8 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id,
       }
     }
     //Update artwork, not done in update song
-    musicdatabase.SetArtForItem(song.idSong, KODI::MEDIA::NameOf(MediaType::SONG), artwork);
-    if (!musicdatabase.RemoveArtForItem(song.idSong, KODI::MEDIA::NameOf(MediaType::SONG),
-                                        removedArtwork))
+    musicdatabase.SetArtForItem(song.idSong, MediaType::SONG, artwork);
+    if (!musicdatabase.RemoveArtForItem(song.idSong, MediaType::SONG, removedArtwork))
       return InternalError;
   }
 
@@ -1116,14 +1098,17 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalDetails(const CVariant& parameterObje
     return OK;
 
   CMusicDatabase musicdb;
-  if (KODI::MEDIA::MediaTypeFromName(items.GetContent()) == MediaType::ARTIST)
-    return GetAdditionalArtistDetails(parameterObject, items, musicdb);
-  else if (KODI::MEDIA::MediaTypeFromName(items.GetContent()) == MediaType::ALBUM)
-    return GetAdditionalAlbumDetails(parameterObject, items, musicdb);
-  else if (KODI::MEDIA::MediaTypeFromName(items.GetContent()) == MediaType::SONG)
-    return GetAdditionalSongDetails(parameterObject, items, musicdb);
-
-  return OK;
+  switch (MediaTypeFromName(items.GetContent()))
+  {
+    case MediaType::ARTIST:
+      return GetAdditionalArtistDetails(parameterObject, items, musicdb);
+    case MediaType::ALBUM:
+      return GetAdditionalAlbumDetails(parameterObject, items, musicdb);
+    case MediaType::SONG:
+      return GetAdditionalSongDetails(parameterObject, items, musicdb);
+    default:
+      return OK;
+  }
 }
 
 JSONRPC_STATUS CAudioLibrary::GetAdditionalArtistDetails(const CVariant& parameterObject,

@@ -81,7 +81,7 @@ private:
 std::shared_ptr<CFileItem> MakeMovie()
 {
   CVideoInfoTag movie;
-  movie.m_type = KODI::MEDIA::NameOf(MediaType::MOVIE);
+  movie.SetMediaType(MediaType::MOVIE);
   movie.m_iDbId = 42;
   movie.m_strTitle = "Easter Parade";
   movie.m_strFileNameAndPath = DEFAULT_VERSION;
@@ -110,7 +110,7 @@ std::shared_ptr<CFileItem> MakeSet()
 {
   auto item{std::make_shared<CFileItem>("Easter Parade Collection")};
   item->GetVideoInfoTag()->m_iDbId = 7;
-  item->GetVideoInfoTag()->m_type = KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION);
+  item->GetVideoInfoTag()->SetMediaType(MediaType::VIDEO_COLLECTION);
   item->SetPath(SET_FOLDER);
   item->SetFolder(true);
 

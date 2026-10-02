@@ -271,8 +271,7 @@ void CGUIDialogSongInfo::Update()
   {
     auto item = std::make_shared<CFileItem>(contributor.GetRoleDesc());
     item->SetLabel2(contributor.GetArtist());
-    item->GetMusicInfoTag()->SetDatabaseId(contributor.GetArtistId(),
-                                           KODI::MEDIA::NameOf(MediaType::ARTIST));
+    item->GetMusicInfoTag()->SetDatabaseId(contributor.GetArtistId(), MediaType::ARTIST);
     items.Add(std::move(item));
   }
   CGUIMessage message(GUI_MSG_LABEL_BIND, GetID(), CONTROL_LIST, 0, 0, &items);

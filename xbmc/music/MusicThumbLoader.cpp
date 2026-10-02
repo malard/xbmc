@@ -20,6 +20,7 @@
 
 using namespace MUSIC_INFO;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 CMusicThumbLoader::CMusicThumbLoader() : CThumbLoader()
 {
@@ -162,23 +163,22 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
   bool artfound(false);
   std::vector<ArtForThumbLoader> art;
   CMusicInfoTag &tag = *item.GetMusicInfoTag();
-  if (tag.GetDatabaseId() > -1 &&
-      (tag.GetMediaType() == MediaType::SONG || tag.GetMediaType() == MediaType::ALBUM ||
-       tag.GetMediaType() == MediaType::ARTIST))
+  MediaType mediaType = tag.GetMediaType();
+  if (tag.GetDatabaseId() > -1 && (mediaType == MediaType::SONG || mediaType == MediaType::ALBUM ||
+                                   mediaType == MediaType::ARTIST))
   {
     // Item in music library, fetch the art
     m_musicDatabase->Open();
-    if (tag.GetMediaType() == MediaType::SONG)
+    if (mediaType == MediaType::SONG)
       artfound = m_musicDatabase->GetArtForItem(tag.GetDatabaseId(), tag.GetAlbumId(), -1, false, art);
-    else if (tag.GetMediaType() == MediaType::ALBUM)
+    else if (mediaType == MediaType::ALBUM)
       artfound = m_musicDatabase->GetArtForItem(-1, tag.GetDatabaseId(), -1, false, art);
     else //Artist
       artfound = m_musicDatabase->GetArtForItem(-1, -1, tag.GetDatabaseId(), true, art);
 
     m_musicDatabase->Close();
   }
-  else if (!tag.GetArtist().empty() &&
-           (tag.GetType().empty() || tag.GetMediaType() == MediaType::SONG))
+  else if (!tag.GetArtist().empty() && (tag.GetType().empty() || mediaType == MediaType::SONG))
   {
     /*
     Could be non-library song - has musictag but no ID or type (may have
@@ -193,7 +193,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
     song.SetArtistCredits(tag.GetArtist(), tag.GetMusicBrainzArtistHints(), tag.GetMusicBrainzArtistID());
     if (!song.artistCredits.empty())
     {
-      tag.SetType(KODI::MEDIA::NameOf(MediaType::SONG)); // Makes "Information" context menu visible
+      tag.SetType(MediaType::SONG); // Makes "Information" context menu visible
+      mediaType = MediaType::SONG;
       m_musicDatabase->Open();
       int iOrder = 0;
       // Song artist art
@@ -284,16 +285,16 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
       if (tag.GetType() == artitem.mediaType)
         artname = artitem.artType;
       else if (artitem.prefix.empty())
-        artname = std::string{artitem.mediaType} + "." + artitem.artType;
+        artname = artitem.mediaType + "." + artitem.artType;
       else
       {
-        if (tag.GetMediaType() == MediaType::ALBUM)
+        if (mediaType == MediaType::ALBUM)
           StringUtils::Replace(artitem.prefix, "albumartist", "artist");
         artname = artitem.prefix + "." + artitem.artType;
       }
 
       // Pull out album art for this specific disc e.g. "thumb2", skip art for other discs
-      if (artitem.mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM) && tag.GetDiscNumber() > 0)
+      if (artitem.mediaType == NameOf(MediaType::ALBUM) && tag.GetDiscNumber() > 0)
       {
         // Find any trailing digits
         size_t startnum = artitem.artType.find_last_not_of("0123456789");
@@ -311,8 +312,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
 
       // Add fallback art for "thumb" and "fanart" art types only
       // Set album thumb as the fallback used when song thumb is missing
-      if (tag.GetMediaType() == MediaType::SONG &&
-          artitem.mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM) && artitem.artType == "thumb")
+      if (mediaType == MediaType::SONG && artitem.mediaType == NameOf(MediaType::ALBUM) &&
+          artitem.artType == "thumb")
       {
         item.SetArtFallback(artitem.artType, artname);
       }
@@ -331,7 +332,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
     for (const auto& discart : discartmap)
     {
       std::map<std::string, std::string>::iterator it;
-      if (tag.GetMediaType() == MediaType::ALBUM)
+      if (mediaType == MediaType::ALBUM)
       {
         // Insert or replace album art with specific disc art
         it = artmap.find(discart.first);
@@ -340,7 +341,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
         else
           artmap.insert(discart);
       }
-      else if (tag.GetMediaType() == MediaType::SONG)
+      else if (mediaType == MediaType::SONG)
       {
         // Use disc thumb rather than album as fallback for song thumb
         // (Fallback approach is used to fill missing thumbs).

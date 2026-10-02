@@ -356,8 +356,7 @@ void CMusicInfoScanner::FetchAlbumInfo(const std::string& strDirectory,
       {
         //Add single album (id and path) as item to scan
         CFileItemPtr item(new CFileItem(strDirectory, false));
-        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(),
-                                               KODI::MEDIA::NameOf(MediaType::ALBUM));
+        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaType::ALBUM);
         items.Add(item);
       }
       else
@@ -422,8 +421,7 @@ void CMusicInfoScanner::FetchArtistInfo(const std::string& strDirectory,
       {
         //Add single artist (id and path) as item to scan
         CFileItemPtr item(new CFileItem(strDirectory, false));
-        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(),
-                                               KODI::MEDIA::NameOf(MediaType::ARTIST));
+        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaType::ARTIST);
         items.Add(item);
       }
       else
@@ -2028,8 +2026,7 @@ bool CMusicInfoScanner::AddArtistArtwork(CArtist& artist, const std::string& art
     return false; // No local or scraped possible art to process
 
   if (artist.art.empty())
-    m_musicDatabase.GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST),
-                                  artist.art);
+    m_musicDatabase.GetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
   std::map<std::string, std::string> addedart;
   std::string strArt;
@@ -2066,8 +2063,7 @@ bool CMusicInfoScanner::AddArtistArtwork(CArtist& artist, const std::string& art
       CServiceBroker::GetTextureCache()->BackgroundCacheImage(it.second);
     auto ret = artist.art.insert(it);
     if (ret.second)
-      m_musicDatabase.SetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST),
-                                    it.first, it.second);
+      m_musicDatabase.SetArtForItem(artist.idArtist, MediaType::ARTIST, it.first, it.second);
   }
   return !addedart.empty();
 }
@@ -2091,7 +2087,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
     return false; // No local or scraped possible art to process
 
   if (album.art.empty())
-    m_musicDatabase.GetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), album.art);
+    m_musicDatabase.GetArtForItem(album.idAlbum, MediaType::ALBUM, album.art);
   auto thumb = album.art.find("thumb"); // Find "thumb", may want to replace it
 
   bool replaceThumb = paths.size() > 1;
@@ -2167,8 +2163,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
     // first disc in the set with a thumb
     if (!firstDiscThumb.empty() && !album.art.contains("thumb"))
     {
-      m_musicDatabase.SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), "thumb",
-                                    firstDiscThumb);
+      m_musicDatabase.SetArtForItem(album.idAlbum, MediaType::ALBUM, "thumb", firstDiscThumb);
       // Assign art as folder thumb (in textures db) as well
 
       CFileItem albumItem(album.strPath, true);
@@ -2191,8 +2186,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
 
     auto ret = album.art.insert(it);
     if (ret.second)
-      m_musicDatabase.SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), it.first,
-                                    it.second);
+      m_musicDatabase.SetArtForItem(album.idAlbum, MediaType::ALBUM, it.first, it.second);
   }
   return !addedart.empty();
 }

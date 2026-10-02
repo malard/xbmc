@@ -12,6 +12,7 @@
 #include "VideoInfoTag.h"
 #include "addons/Scraper.h"
 #include "dbwrappers/Database.h"
+#include "media/MediaType.h"
 #include "utils/Artwork.h"
 #include "utils/SortUtils.h"
 #include "utils/UrlOptions.h"
@@ -978,23 +979,6 @@ public:
   */
   unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
-  static KODI::MEDIA::MediaType VideoContentTypeToString(VideoDbContentType type)
-  {
-    switch (type)
-    {
-      case VideoDbContentType::MOVIES:
-        return KODI::MEDIA::MediaType::MOVIE;
-      case VideoDbContentType::TVSHOWS:
-        return KODI::MEDIA::MediaType::TV_SHOW;
-      case VideoDbContentType::EPISODES:
-        return KODI::MEDIA::MediaType::EPISODE;
-      case VideoDbContentType::MUSICVIDEOS:
-        return KODI::MEDIA::MediaType::MUSIC_VIDEO;
-      default:
-        return {};
-    }
-  }
-
   bool SetArtForItem(int mediaId,
                      const std::string& mediaType,
                      const std::string& artType,
@@ -1052,7 +1036,8 @@ public:
   \param mediaType the type of media, which corresponds to the table the item resides in.
   \return the types of art e.g. "thumb", "fanart", etc.
   */
-  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, const std::string& mediaType);
+  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId,
+                                                       KODI::MEDIA::MediaType mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.
@@ -1062,8 +1047,37 @@ public:
   \return list of URLs
   */
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
-                                                             const std::string& mediaType,
+                                                             KODI::MEDIA::MediaType mediaType,
                                                              const std::string& artType);
+
+  //! \brief The art functions above, for an item whose table is a media type.
+  bool SetArtForItem(int mediaId,
+                     KODI::MEDIA::MediaType mediaType,
+                     const std::string& artType,
+                     const std::string& url)
+  {
+    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
+  }
+  bool SetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, const KODI::ART::Artwork& art)
+  {
+    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
+  }
+  bool GetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, KODI::ART::Artwork& art)
+  {
+    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
+  }
+  std::string GetArtForItem(int mediaId,
+                            KODI::MEDIA::MediaType mediaType,
+                            const std::string& artType)
+  {
+    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
+  }
+  bool RemoveArtForItem(int mediaId,
+                        KODI::MEDIA::MediaType mediaType,
+                        const std::set<std::string, std::less<>>& artTypes)
+  {
+    return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);
+  }
 
   int AddTag(const std::string &tag);
   void AddTagToItem(int idItem, int idTag, KODI::MEDIA::MediaType type);

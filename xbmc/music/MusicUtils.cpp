@@ -56,6 +56,7 @@ using namespace KODI::VIDEO;
 using namespace MUSIC_INFO;
 using namespace XFILE;
 using namespace std::chrono_literals;
+using KODI::MEDIA::GetCapitalLocalization;
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
 
@@ -76,7 +77,7 @@ public:
   ~CSetArtJob(void) override = default;
 
   bool HasSongExtraArtChanged(const CFileItemPtr& pSongItem,
-                              const std::string& type,
+                              MediaType type,
                               const int itemID,
                               const CMusicDatabase& db)
   {
@@ -86,10 +87,10 @@ public:
     if (idSong <= 0)
       return false;
     bool result = false;
-    if (type == KODI::MEDIA::NameOf(MediaType::ALBUM))
+    if (type == MediaType::ALBUM)
       // Update art when song is from album
       result = (itemID == pSongItem->GetMusicInfoTag()->GetAlbumId());
-    else if (type == KODI::MEDIA::NameOf(MediaType::ARTIST))
+    else if (type == MediaType::ARTIST)
     {
       // Update art when artist is song or album artist of the song
       if (pSongItem->HasProperty("artistid"))
@@ -126,7 +127,8 @@ public:
     int itemID = pItem->GetMusicInfoTag()->GetDatabaseId();
     if (itemID <= 0)
       return false;
-    std::string type = pItem->GetMusicInfoTag()->GetType();
+    const std::string& type = pItem->GetMusicInfoTag()->GetType();
+    const MediaType mediaType = pItem->GetMusicInfoTag()->GetMediaType();
     CMusicDatabase db;
     if (!db.Open())
       return false;
@@ -135,7 +137,7 @@ public:
     else
       db.RemoveArtForItem(itemID, type, m_artType);
     // Artwork changed so set datemodified field for artist, album or song
-    db.SetItemUpdated(itemID, type);
+    db.SetItemUpdated(itemID, mediaType);
 
     /* Update the art of the songs of the current music playlist.
       Song thumb is often a fallback from the album and fanart is from the artist(s).
@@ -147,7 +149,7 @@ public:
     const auto playLists = CServiceBroker::GetPlayLists();
     for (const auto& entry : playLists->GetPlayList(PLAYLIST::Audio).GetEntries())
     {
-      if (HasSongExtraArtChanged(entry.item, type, itemID, db))
+      if (HasSongExtraArtChanged(entry.item, mediaType, itemID, db))
       {
         CFileItem songitem(*entry.item);
         songitem.ClearArt();
@@ -168,7 +170,7 @@ public:
     if (appPlayer->IsPlayingAudio() && g_application.CurrentFileItem().HasMusicInfoTag())
     {
       CFileItemPtr songitem = std::make_shared<CFileItem>(g_application.CurrentFileItem());
-      if (HasSongExtraArtChanged(songitem, type, itemID, db))
+      if (HasSongExtraArtChanged(songitem, mediaType, itemID, db))
         g_application.UpdateCurrentPlayArt();
     }
 
@@ -264,7 +266,8 @@ void AddAvailableArtTypes(std::vector<std::string>& artTypes,
                           const CMusicInfoTag& tag,
                           CMusicDatabase& db)
 {
-  for (const auto& artType : db.GetAvailableArtTypesForItem(tag.GetDatabaseId(), tag.GetType()))
+  for (const auto& artType :
+       db.GetAvailableArtTypesForItem(tag.GetDatabaseId(), tag.GetMediaType()))
   {
     if (find(artTypes.begin(), artTypes.end(), artType) == artTypes.end())
       artTypes.push_back(artType);
@@ -276,8 +279,8 @@ bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
   const CMusicInfoTag& tag = *musicitem.GetMusicInfoTag();
   if (tag.GetDatabaseId() < 1 || tag.GetType().empty())
     return false;
-  if (tag.GetMediaType() != MediaType::ARTIST && tag.GetMediaType() != MediaType::ALBUM &&
-      tag.GetMediaType() != MediaType::SONG)
+  const MediaType type = tag.GetMediaType();
+  if (type != MediaType::ARTIST && type != MediaType::ALBUM && type != MediaType::SONG)
     return false;
 
   artlist.Clear();
@@ -591,8 +594,7 @@ void ShowToastNotification(const CFileItem& item, int titleId)
 
   if (item.HasMusicInfoTag())
   {
-    localizedMediaType =
-        KODI::MEDIA::GetCapitalLocalization(item.GetMusicInfoTag()->GetMediaType());
+    localizedMediaType = GetCapitalLocalization(item.GetMusicInfoTag()->GetMediaType());
     title = item.GetMusicInfoTag()->GetTitle();
   }
 

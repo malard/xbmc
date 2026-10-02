@@ -38,7 +38,7 @@ CFileItem GetPlayedMovie()
   movie.SetArt("poster", "image://poster.jpg/");
 
   CVideoInfoTag* tag{movie.GetVideoInfoTag()};
-  tag->m_type = KODI::MEDIA::NameOf(MediaType::MOVIE);
+  tag->SetMediaType(MediaType::MOVIE);
   tag->m_strTitle = "Movie";
   tag->m_strTrailer = TRAILER_PATH;
   tag->m_iDbId = 42;

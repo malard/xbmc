@@ -161,8 +161,7 @@ const std::string &CMusicInfoTag::GetType() const
 
 KODI::MEDIA::MediaType CMusicInfoTag::GetMediaType() const
 {
-  const KODI::MEDIA::MediaType type{KODI::MEDIA::MediaTypeFromName(m_type)};
-  return KODI::MEDIA::NameOf(type) == m_type ? type : KODI::MEDIA::MediaType::NONE;
+  return KODI::MEDIA::MediaTypeOf(m_type);
 }
 
 int CMusicInfoTag::GetYear() const
@@ -461,6 +460,11 @@ void CMusicInfoTag::SetDatabaseId(int id, std::string_view type)
 {
   m_iDbId = id;
   m_type = type;
+}
+
+void CMusicInfoTag::SetDatabaseId(int id, KODI::MEDIA::MediaType type)
+{
+  SetDatabaseId(id, KODI::MEDIA::NameOf(type));
 }
 
 void CMusicInfoTag::SetTrackNumber(int iTrack)
@@ -777,6 +781,11 @@ void CMusicInfoTag::SetType(std::string_view mediaType)
   m_type = mediaType;
 }
 
+void CMusicInfoTag::SetType(KODI::MEDIA::MediaType mediaType)
+{
+  m_type = KODI::MEDIA::NameOf(mediaType);
+}
+
 // This is the Musicbrainz release status tag. See https://musicbrainz.org/doc/Release#Status
 
 void CMusicInfoTag::SetAlbumReleaseStatus(std::string_view ReleaseStatus)
@@ -812,7 +821,7 @@ void CMusicInfoTag::SetArtist(const CArtist& artist)
   SetDateAdded(artist.dateAdded);
   SetDateUpdated(artist.dateUpdated);
   SetDateNew(artist.dateNew);
-  SetDatabaseId(artist.idArtist, KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::ARTIST));
+  SetDatabaseId(artist.idArtist, KODI::MEDIA::MediaType::ARTIST);
 
   SetLoaded();
 }
@@ -851,7 +860,7 @@ void CMusicInfoTag::SetAlbum(const CAlbum& album)
   SetDateUpdated(album.dateUpdated);
   SetDateNew(album.dateNew);
   SetPlayCount(album.iTimesPlayed);
-  SetDatabaseId(album.idAlbum, KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::ALBUM));
+  SetDatabaseId(album.idAlbum, KODI::MEDIA::MediaType::ALBUM);
   SetLastPlayed(album.lastPlayed);
   SetTotalDiscs(album.iTotalDiscs);
   SetDuration(album.iAlbumDuration);
@@ -902,7 +911,7 @@ void CMusicInfoTag::SetSong(const CSong& song)
   SetMood(song.strMood);
   SetCompilation(song.bCompilation);
   SetAlbumId(song.idAlbum);
-  SetDatabaseId(song.idSong, KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::SONG));
+  SetDatabaseId(song.idSong, KODI::MEDIA::MediaType::SONG);
   SetBPM(song.iBPM);
   SetBitRate(song.iBitRate);
   SetSampleRate(song.iSampleRate);
@@ -983,10 +992,17 @@ void CMusicInfoTag::Serialize(CVariant& value) const
   value["albumId"] = m_iAlbumId;
   value["compilationArtist"] = m_bCompilation;
   value["compilation"] = m_bCompilation;
-  if (GetMediaType() == KODI::MEDIA::MediaType::ALBUM)
-    value["releaseType"] = AudioType::ToString(m_albumReleaseType);
-  else if (GetMediaType() == KODI::MEDIA::MediaType::SONG)
-    value["albumReleaseType"] = AudioType::ToString(m_albumReleaseType);
+  switch (GetMediaType())
+  {
+    case KODI::MEDIA::MediaType::ALBUM:
+      value["releaseType"] = AudioType::ToString(m_albumReleaseType);
+      break;
+    case KODI::MEDIA::MediaType::SONG:
+      value["albumReleaseType"] = AudioType::ToString(m_albumReleaseType);
+      break;
+    default:
+      break;
+  }
   value["isBoxSet"] = m_bBoxset;
   value["totalDiscs"] = m_iDiscTotal;
   value["discTitle"] = m_strDiscSubtitle;

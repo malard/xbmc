@@ -43,7 +43,7 @@ CVideoInfoTag FileRow()
 CVideoInfoTag PluginDescription()
 {
   CVideoInfoTag details;
-  details.m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
+  details.SetMediaType(MediaType::EPISODE);
   details.m_strTitle = "Extraterrestrial Girl";
   details.m_strShowTitle = "Planetes";
   details.m_iSeason = 1;
@@ -107,7 +107,7 @@ namespace
 CVideoInfoTag Show(int playCount, const char* lastPlayed)
 {
   CVideoInfoTag show;
-  show.m_type = KODI::MEDIA::NameOf(MediaType::TV_SHOW);
+  show.SetMediaType(MediaType::TV_SHOW);
   show.SetPlayCount(playCount);
   show.m_lastPlayed.SetFromDBDateTime(lastPlayed);
   return show;
@@ -116,7 +116,7 @@ CVideoInfoTag Show(int playCount, const char* lastPlayed)
 CVideoInfoTag Episode(int playCount, const char* lastPlayed)
 {
   CVideoInfoTag episode;
-  episode.m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
+  episode.SetMediaType(MediaType::EPISODE);
   episode.SetPlayCount(playCount);
   if (lastPlayed)
     episode.m_lastPlayed.SetFromDBDateTime(lastPlayed);

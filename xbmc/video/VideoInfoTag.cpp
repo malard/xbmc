@@ -1741,8 +1741,12 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
 
 KODI::MEDIA::MediaType CVideoInfoTag::GetMediaType() const
 {
-  const KODI::MEDIA::MediaType type{KODI::MEDIA::MediaTypeFromName(m_type)};
-  return KODI::MEDIA::NameOf(type) == m_type ? type : KODI::MEDIA::MediaType::NONE;
+  return KODI::MEDIA::MediaTypeOf(m_type);
+}
+
+void CVideoInfoTag::SetMediaType(KODI::MEDIA::MediaType type)
+{
+  m_type = KODI::MEDIA::NameOf(type);
 }
 
 bool CVideoInfoTag::HasStreamDetails() const

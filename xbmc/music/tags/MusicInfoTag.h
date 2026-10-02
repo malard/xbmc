@@ -115,6 +115,7 @@ public:
   void SetOriginalDate(std::string_view strOriginalDate);
   void SetReleaseDate(std::string_view strReleaseDate);
   void SetDatabaseId(int id, std::string_view type);
+  void SetDatabaseId(int id, KODI::MEDIA::MediaType type);
   void SetTrackNumber(int iTrack);
   void SetDiscNumber(int iDiscNumber);
   void SetTrackAndDiscNumber(int iTrackAndDisc);
@@ -155,6 +156,7 @@ public:
   void SetReplayGain(const ReplayGain& aGain);
   void SetAlbumReleaseType(AudioType::Type releaseType);
   void SetType(std::string_view mediaType);
+  void SetType(KODI::MEDIA::MediaType mediaType);
   void SetDiscSubtitle(std::string_view strDiscSubtitle);
   void SetTotalDiscs(int iDiscTotal);
   void SetBPM(int iBPM);

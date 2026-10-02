@@ -1150,7 +1150,7 @@ struct EpisodeLabelTestCase
 CFileItem MakeEpisodeItem()
 {
   const auto tag = std::make_unique<CVideoInfoTag>();
-  tag->m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
+  tag->SetMediaType(MediaType::EPISODE);
   return CFileItem(*tag);
 }
 
@@ -1322,7 +1322,7 @@ CFileItem MakeLibraryItem(const std::string& path,
   CFileItem item{MakeItem(path, dynPath)};
   CVideoInfoTag* tag{item.GetVideoInfoTag()};
   tag->m_iDbId = dbId;
-  tag->m_type = KODI::MEDIA::NameOf(type);
+  tag->SetMediaType(type);
   tag->m_iFileId = fileId;
   tag->SetHasVideoVersions(hasVersions);
   return item;

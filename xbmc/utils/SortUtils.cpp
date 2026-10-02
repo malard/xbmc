@@ -21,6 +21,7 @@
 #include <limits>
 
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 std::string ArrayToString(SortAttribute attributes, const CVariant &variant, const std::string &separator = " / ")
 {
@@ -352,7 +353,7 @@ std::string ByEpisodeNumber(SortAttribute attributes, const SortItem &values)
 
   std::string title;
   if (values.contains(Field::MEDIA_TYPE) &&
-      values.at(Field::MEDIA_TYPE).asString() == KODI::MEDIA::NameOf(MediaType::MOVIE))
+      values.at(Field::MEDIA_TYPE).asString() == NameOf(MediaType::MOVIE))
     title = BySortTitle(attributes, values);
   if (title.empty())
     title = ByLabel(attributes, values);
@@ -799,172 +800,175 @@ void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, Fiel
   if (mediaType == MediaType::NONE)
     return;
 
-  if (mediaType == MediaType::ALBUM)
+  switch (mediaType)
   {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::ALBUM || sortMethod == SortBy::TITLE)
-    {
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ARTIST);
-    }
-    else if (sortMethod == SortBy::ALBUM_TYPE)
-    {
-      fields.emplace_back(Field::ALBUM_TYPE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ARTIST);
-    }
-    else if (sortMethod == SortBy::ARTIST)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::YEAR)
-    {
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::GENRE)
-    {
-      fields.emplace_back(Field::GENRE);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
-    else if (sortMethod == SortBy::PLAYCOUNT)
-    {
-      fields.emplace_back(Field::PLAYCOUNT);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::LAST_PLAYED)
-    {
-      fields.emplace_back(Field::LAST_PLAYED);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::RATING)
-    {
-      fields.emplace_back(Field::RATING);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::VOTES)
-    {
-      fields.emplace_back(Field::VOTES);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::USER_RATING)
-    {
-      fields.emplace_back(Field::USER_RATING);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::TOTAL_DISCS)
-    {
-      fields.emplace_back(Field::TOTAL_DISCS);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::ORIG_DATE)
-    {
-      fields.emplace_back(Field::ORIG_DATE);
-      fields.emplace_back(Field::ALBUM);
-    }
-  }
-  else if (mediaType == MediaType::SONG)
-  {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TRACK_NUMBER)
-      fields.emplace_back(Field::TRACK_NUMBER);
-    else if (sortMethod == SortBy::TITLE)
-      fields.emplace_back(Field::TITLE);
-    else if (sortMethod == SortBy::ALBUM)
-    {
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ALBUM_ARTIST);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ARTIST)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::YEAR)
-    {
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::GENRE)
-    {
-      fields.emplace_back(Field::GENRE);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
-    else if (sortMethod == SortBy::PLAYCOUNT)
-    {
-      fields.emplace_back(Field::PLAYCOUNT);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::LAST_PLAYED)
-    {
-      fields.emplace_back(Field::LAST_PLAYED);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::RATING)
-    {
-      fields.emplace_back(Field::RATING);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::VOTES)
-    {
-      fields.emplace_back(Field::VOTES);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::USER_RATING)
-    {
-      fields.emplace_back(Field::USER_RATING);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::FILE)
-    {
-      fields.emplace_back(Field::PATH);
-      fields.emplace_back(Field::FILENAME);
-      fields.emplace_back(Field::START_OFFSET);
-    }
-    else if (sortMethod == SortBy::TIME)
-      fields.emplace_back(Field::TIME);
-    else if (sortMethod == SortBy::ALBUM_TYPE)
-    {
-      fields.emplace_back(Field::ALBUM_TYPE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ORIG_DATE)
-    {
-      fields.emplace_back(Field::ORIG_DATE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::BPM)
-      fields.emplace_back(Field::BPM);
-  }
-  else if (mediaType == MediaType::ARTIST)
-  {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TITLE || sortMethod == SortBy::ARTIST)
-      fields.emplace_back(Field::ARTIST);
-    else if (sortMethod == SortBy::GENRE)
-      fields.emplace_back(Field::GENRE);
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
+    case MediaType::ALBUM:
+      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::ALBUM || sortMethod == SortBy::TITLE)
+      {
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::ARTIST);
+      }
+      else if (sortMethod == SortBy::ALBUM_TYPE)
+      {
+        fields.emplace_back(Field::ALBUM_TYPE);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::ARTIST);
+      }
+      else if (sortMethod == SortBy::ARTIST)
+      {
+        fields.emplace_back(Field::ARTIST);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
+      {
+        fields.emplace_back(Field::ARTIST);
+        fields.emplace_back(Field::YEAR);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::YEAR)
+      {
+        fields.emplace_back(Field::YEAR);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::GENRE)
+      {
+        fields.emplace_back(Field::GENRE);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::DATE_ADDED)
+        fields.emplace_back(Field::DATE_ADDED);
+      else if (sortMethod == SortBy::PLAYCOUNT)
+      {
+        fields.emplace_back(Field::PLAYCOUNT);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::LAST_PLAYED)
+      {
+        fields.emplace_back(Field::LAST_PLAYED);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::RATING)
+      {
+        fields.emplace_back(Field::RATING);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::VOTES)
+      {
+        fields.emplace_back(Field::VOTES);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::USER_RATING)
+      {
+        fields.emplace_back(Field::USER_RATING);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::TOTAL_DISCS)
+      {
+        fields.emplace_back(Field::TOTAL_DISCS);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::ORIG_DATE)
+      {
+        fields.emplace_back(Field::ORIG_DATE);
+        fields.emplace_back(Field::ALBUM);
+      }
+      break;
+    case MediaType::SONG:
+      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TRACK_NUMBER)
+        fields.emplace_back(Field::TRACK_NUMBER);
+      else if (sortMethod == SortBy::TITLE)
+        fields.emplace_back(Field::TITLE);
+      else if (sortMethod == SortBy::ALBUM)
+      {
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::ALBUM_ARTIST);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::ARTIST)
+      {
+        fields.emplace_back(Field::ARTIST);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
+      {
+        fields.emplace_back(Field::ARTIST);
+        fields.emplace_back(Field::YEAR);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::YEAR)
+      {
+        fields.emplace_back(Field::YEAR);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::GENRE)
+      {
+        fields.emplace_back(Field::GENRE);
+        fields.emplace_back(Field::ALBUM);
+      }
+      else if (sortMethod == SortBy::DATE_ADDED)
+        fields.emplace_back(Field::DATE_ADDED);
+      else if (sortMethod == SortBy::PLAYCOUNT)
+      {
+        fields.emplace_back(Field::PLAYCOUNT);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::LAST_PLAYED)
+      {
+        fields.emplace_back(Field::LAST_PLAYED);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::RATING)
+      {
+        fields.emplace_back(Field::RATING);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::VOTES)
+      {
+        fields.emplace_back(Field::VOTES);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::USER_RATING)
+      {
+        fields.emplace_back(Field::USER_RATING);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::FILE)
+      {
+        fields.emplace_back(Field::PATH);
+        fields.emplace_back(Field::FILENAME);
+        fields.emplace_back(Field::START_OFFSET);
+      }
+      else if (sortMethod == SortBy::TIME)
+        fields.emplace_back(Field::TIME);
+      else if (sortMethod == SortBy::ALBUM_TYPE)
+      {
+        fields.emplace_back(Field::ALBUM_TYPE);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::ORIG_DATE)
+      {
+        fields.emplace_back(Field::ORIG_DATE);
+        fields.emplace_back(Field::ALBUM);
+        fields.emplace_back(Field::TRACK_NUMBER);
+      }
+      else if (sortMethod == SortBy::BPM)
+        fields.emplace_back(Field::BPM);
+      break;
+    case MediaType::ARTIST:
+      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TITLE ||
+          sortMethod == SortBy::ARTIST)
+        fields.emplace_back(Field::ARTIST);
+      else if (sortMethod == SortBy::GENRE)
+        fields.emplace_back(Field::GENRE);
+      else if (sortMethod == SortBy::DATE_ADDED)
+        fields.emplace_back(Field::DATE_ADDED);
+      break;
+    default:
+      break;
   }
 
   // Add sort by id to define order when other fields same or sort none

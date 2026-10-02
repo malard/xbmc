@@ -33,12 +33,13 @@
 
 using namespace KODI;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 namespace
 {
 void RetypeAsVersion(CFileItem& item)
 {
   CVideoInfoTag* tag{item.GetVideoInfoTag()};
-  tag->m_type = KODI::MEDIA::NameOf(MediaType::VIDEO_VERSION);
+  tag->SetMediaType(MediaType::VIDEO_VERSION);
   tag->m_iDbId = tag->m_iFileId;
   tag->m_strTitle = tag->GetAssetInfo().GetTitle();
   item.SetTitle(tag->m_strTitle);
@@ -193,7 +194,7 @@ bool ReassignPlaylist(const CFileItem& item,
   // Notify the rest of kodi
   CUtil::DeleteVideoDatabaseDirectoryCache();
   for (const auto& d : displaced)
-    CVideoDatabase::AnnounceUpdate(KODI::MEDIA::NameOf(d.mediaType), d.idMedia);
+    CVideoDatabase::AnnounceUpdate(NameOf(d.mediaType), d.idMedia);
 
   return true;
 }

@@ -80,7 +80,7 @@ public:
 
   //! Refuses \p parameter, which means nothing for the kind the caller named
   static JSONRPC_STATUS RefuseForKind(const char* parameter,
-                                      const std::string& kind,
+                                      KODI::MEDIA::MediaType kind,
                                       CVariant& errorData);
 
 protected:

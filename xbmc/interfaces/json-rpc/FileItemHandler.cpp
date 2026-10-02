@@ -56,6 +56,7 @@ using namespace MUSIC_INFO;
 using namespace JSONRPC;
 using namespace XFILE;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 namespace
 {
@@ -475,16 +476,16 @@ void CFileItemHandler::HandleFileItem(const char* ID,
         {
           const MediaType type = item->GetMusicInfoTag()->GetMediaType();
           if (type == MediaType::ALBUM || type == MediaType::SONG || type == MediaType::ARTIST)
-            object["type"] = KODI::MEDIA::NameOf(type).c_str();
+            object["type"] = NameOf(type);
           else if (!item->IsFolder())
-            object["type"] = KODI::MEDIA::NameOf(MediaType::SONG).c_str();
+            object["type"] = NameOf(MediaType::SONG);
         }
         else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->m_type.empty())
         {
           const MediaType type = item->GetVideoInfoTag()->GetMediaType();
           if (type == MediaType::MOVIE || type == MediaType::TV_SHOW ||
               type == MediaType::EPISODE || type == MediaType::MUSIC_VIDEO)
-            object["type"] = KODI::MEDIA::NameOf(type).c_str();
+            object["type"] = NameOf(type);
         }
         else if (item->HasPictureInfoTag())
           object["type"] = "picture";
@@ -653,7 +654,7 @@ JSONRPC_STATUS CFileItemHandler::CheckAgainstType(const char* type,
 }
 
 JSONRPC_STATUS CFileItemHandler::RefuseForKind(const char* parameter,
-                                               const std::string& kind,
+                                               KODI::MEDIA::MediaType kind,
                                                CVariant& errorData)
 {
   errorData = CVariant(CVariant::VariantTypeObject);
@@ -712,7 +713,7 @@ void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
     return;
 
   CVariant data{CVariant::VariantTypeObject};
-  data["type"] = KODI::MEDIA::NameOf(kind).c_str();
+  data["type"] = NameOf(kind);
   data["id"] = id;
   data["properties"] = CVariant{CVariant::VariantTypeObject};
   for (auto name = names.begin_array(); name != names.end_array(); ++name)

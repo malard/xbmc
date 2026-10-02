@@ -50,6 +50,7 @@
 
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::PluralNameOf;
 
 static constexpr unsigned int CONTROL_BUTTON_ADD_VERSION = 22;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_VERSION = 24;
@@ -176,8 +177,6 @@ void CGUIDialogVideoManagerVersions::SetVideoAsset(const std::shared_ptr<CFileIt
 
 void CGUIDialogVideoManagerVersions::Remove()
 {
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
-
   // default video version is not allowed
   if (m_database.IsDefaultVideoVersion(m_selectedVideoAsset->GetVideoInfoTag()->m_iDbId))
   {
@@ -190,8 +189,6 @@ void CGUIDialogVideoManagerVersions::Remove()
 
 void CGUIDialogVideoManagerVersions::Ungroup()
 {
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
-
   // default video version is not allowed
   if (m_database.IsDefaultVideoVersion(m_selectedVideoAsset->GetVideoInfoTag()->m_iDbId))
   {
@@ -559,8 +556,7 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
                                   m_videoAsset->GetVideoContentType(), m_database);
 
       // New disc video version will not have any art so use the art from the disc
-      m_database.SetArtForItem(idFile, KODI::MEDIA::NameOf(MediaType::VIDEO_VERSION),
-                               item->GetArt());
+      m_database.SetArtForItem(idFile, MediaType::VIDEO_VERSION, item->GetArt());
 
       m_database.CommitTransaction();
 
@@ -779,8 +775,7 @@ bool CGUIDialogVideoManagerVersions::GetAllOtherMovies(const std::shared_ptr<CFi
 
   // get video list
   const std::string videoTitlesDir{StringUtils::Format(
-      "videodb://{}/titles",
-      std::string{KODI::MEDIA::PluralNameOf(item->GetVideoInfoTag()->GetMediaType())})};
+      "videodb://{}/titles", PluralNameOf(item->GetVideoInfoTag()->GetMediaType()))};
 
   list.Clear();
 

@@ -61,7 +61,7 @@ TEST(TestAnnouncementItemData, AnEpisodeCarriesItsShowTitleInCamelCase)
 {
   // No database id, so the details travel with the item rather than being left to a lookup.
   CVideoInfoTag tag;
-  tag.m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
+  tag.SetMediaType(MediaType::EPISODE);
   tag.m_strTitle = "Pilot";
   tag.m_strShowTitle = "The Show";
   tag.m_iSeason = 1;

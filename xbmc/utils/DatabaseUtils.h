@@ -174,6 +174,7 @@ class DatabaseUtils
 {
 public:
   static KODI::MEDIA::MediaType MediaTypeFromVideoContentType(VideoDbContentType videoContentType);
+  static VideoDbContentType VideoContentTypeFromMediaType(KODI::MEDIA::MediaType mediaType);
 
   static std::string GetField(Field field,
                               KODI::MEDIA::MediaType mediaType,

@@ -84,6 +84,7 @@ using namespace MUSIC_INFO;
 using ADDON::AddonPtr;
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 using KODI::MESSAGING::HELPERS::DialogResponse;
 
 #ifdef HAS_OPTICAL_DRIVE
@@ -99,7 +100,7 @@ constexpr size_t MIN_FULL_SEARCH_LENGTH = 3;
 void AnnounceRemove(MediaType content, int id)
 {
   CVariant data;
-  data["type"] = KODI::MEDIA::NameOf(content).c_str();
+  data["type"] = NameOf(content);
   data["id"] = id;
   if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
     data["transaction"] = true;
@@ -109,7 +110,7 @@ void AnnounceRemove(MediaType content, int id)
 void AnnounceUpdate(MediaType content, int id, bool added = false)
 {
   CVariant data;
-  data["type"] = KODI::MEDIA::NameOf(content).c_str();
+  data["type"] = NameOf(content);
   data["id"] = id;
   if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
     data["transaction"] = true;
@@ -898,7 +899,7 @@ bool CMusicDatabase::AddAlbum(CAlbum& album, int idSource)
   }
 
   for (const auto& [type, url] : album.art)
-    SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), type, url);
+    SetArtForItem(album.idAlbum, MediaType::ALBUM, type, url);
 
   // Set album disc total
   m_pDS->exec(
@@ -1056,7 +1057,7 @@ bool CMusicDatabase::UpdateAlbum(CAlbum& album)
   }
 
   if (!album.art.empty())
-    SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), album.art);
+    SetArtForItem(album.idAlbum, MediaType::ALBUM, album.art);
 
   CheckArtistLinksChanged();
 
@@ -1242,7 +1243,7 @@ int CMusicDatabase::AddSong(const int idSong,
                  iBPM, iBitRate, iSampleRate, iChannels, songVideoURL);
     }
     if (!strThumb.empty())
-      SetArtForItem(idNew, KODI::MEDIA::NameOf(MediaType::SONG), "thumb", strThumb);
+      SetArtForItem(idNew, MediaType::SONG, "thumb", strThumb);
 
     // Song genres added, and genre string updated to use the standardised genre names
     AddSongGenres(idNew, genres);
@@ -1875,7 +1876,7 @@ bool CMusicDatabase::UpdateArtist(const CArtist& artist)
 
   // Set current artwork (held in art table)
   if (!artist.art.empty())
-    SetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artist.art);
+    SetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
   return true;
 }
@@ -2368,7 +2369,7 @@ bool CMusicDatabase::AddArtistVideoLinks(const CArtist& artist)
         { // already have a videothumb for this song ?
           strSQL2 = PrepareSQL("SELECT art_id FROM art "
                                "WHERE media_id=%i AND media_type='%s' AND type='videothumb'",
-                               songId, KODI::MEDIA::NameOf(MediaType::SONG).c_str());
+                               songId, NameOf(MediaType::SONG).c_str());
           m_pDS2->query(strSQL2);
           if (!m_pDS2->eof())
           { // update existing thumb
@@ -2383,7 +2384,7 @@ bool CMusicDatabase::AddArtistVideoLinks(const CArtist& artist)
             m_pDS2->close();
             strSQL2 = PrepareSQL("INSERT INTO art(media_id, media_type, type, url) "
                                  "VALUES (%d, '%s', '%s', '%s')",
-                                 songId, KODI::MEDIA::NameOf(MediaType::SONG).c_str(), "videothumb",
+                                 songId, NameOf(MediaType::SONG).c_str(), "videothumb",
                                  videoURL.thumbURL.c_str());
             m_pDS2->exec(strSQL2);
           }
@@ -2526,7 +2527,7 @@ bool CMusicDatabase::GetArtistDiscography(int idArtist, CFileItemList& items)
       {
         auto pItem{std::make_shared<CFileItem>(strAlbum)};
         pItem->SetLabel2(m_pDS->fv("strYear").get_asString());
-        pItem->GetMusicInfoTag()->SetDatabaseId(idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM));
+        pItem->GetMusicInfoTag()->SetDatabaseId(idAlbum, MediaType::ALBUM);
         items.Add(std::move(pItem));
       }
       m_pDS->next();
@@ -3249,8 +3250,7 @@ void CMusicDatabase::GetFileItemFromDataset(const dbiplus::sql_record* const rec
   item->GetMusicInfoTag()->SetAlbumId(record->at(song_idAlbum).get_asInt());
   item->GetMusicInfoTag()->SetTrackAndDiscNumber(record->at(song_iTrack).get_asInt());
   item->GetMusicInfoTag()->SetDuration(record->at(song_iDuration).get_asInt());
-  item->GetMusicInfoTag()->SetDatabaseId(record->at(song_idSong).get_asInt(),
-                                         KODI::MEDIA::NameOf(MediaType::SONG));
+  item->GetMusicInfoTag()->SetDatabaseId(record->at(song_idSong).get_asInt(), MediaType::SONG);
   item->GetMusicInfoTag()->SetOriginalDate(record->at(song_strOrigReleaseDate).get_asString());
   item->GetMusicInfoTag()->SetReleaseDate(record->at(song_strReleaseDate).get_asString());
   item->GetMusicInfoTag()->SetTitle(record->at(song_strTitle).get_asString());
@@ -3619,8 +3619,7 @@ bool CMusicDatabase::SearchArtists(const std::string& search, CFileItemList& art
       // sort label is stored in the title tag
       label = StringUtils::Format("A {}", m_pDS->fv(1).get_asString());
       pItem->GetMusicInfoTag()->SetTitle(label);
-      pItem->GetMusicInfoTag()->SetDatabaseId(m_pDS->fv(0).get_asInt(),
-                                              KODI::MEDIA::NameOf(MediaType::ARTIST));
+      pItem->GetMusicInfoTag()->SetDatabaseId(m_pDS->fv(0).get_asInt(), MediaType::ARTIST);
       artists.Add(std::move(pItem));
       m_pDS->next();
     }
@@ -5772,8 +5771,7 @@ bool CMusicDatabase::GetArtistsByWhere(const std::string& strBaseDir,
         itemUrl.AppendPath(path);
         pItem->SetPath(itemUrl.ToString());
 
-        pItem->GetMusicInfoTag()->SetDatabaseId(artist.idArtist,
-                                                KODI::MEDIA::NameOf(MediaType::ARTIST));
+        pItem->GetMusicInfoTag()->SetDatabaseId(artist.idArtist, MediaType::ARTIST);
         // Set icon now to avoid slow per item processing in FillInDefaultIcon later
         pItem->SetProperty("icon_never_overlay", true);
         pItem->SetArt("icon", "DefaultArtist.png");
@@ -11355,7 +11353,7 @@ bool CMusicDatabase::RemoveSongsFromPath(const std::string& path1,
           songmap.try_emplace(filename, songs);
           songs.clear();
         }
-        song.strThumb = GetArtForItem(song.idSong, KODI::MEDIA::NameOf(MediaType::SONG), "thumb");
+        song.strThumb = GetArtForItem(song.idSong, MediaType::SONG, "thumb");
         songs.emplace_back(song);
         songIds.push_back(PrepareSQL("%i", song.idSong));
         filename = song.strFileName;
@@ -12075,7 +12073,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
               // Note thumb resolution may be lower than original when overwriting
               KODI::ART::Artwork artwork;
               std::string savedArtfile;
-              if (GetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), artwork))
+              if (GetArtForItem(album.idAlbum, MediaType::ALBUM, artwork))
               {
                 for (const auto& [type, url] : artwork)
                 {
@@ -12170,7 +12168,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
           GetOldArtistPath(artist.idArtist, strPath);
           artist.Save(pMain, "artist", strPath);
 
-          if (GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artwork))
+          if (GetArtForItem(artist.idArtist, MediaType::ARTIST, artwork))
           { // append to the XML
             TiXmlElement additionalNode("art");
             for (const auto& [type, url] : artwork)
@@ -12216,7 +12214,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
               if (settings.IsArtwork())
               {
                 std::string savedArtfile;
-                if (GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artwork))
+                if (GetArtForItem(artist.idArtist, MediaType::ARTIST, artwork))
                 {
                   for (const auto& [type, url] : artwork)
                   {
@@ -12892,15 +12890,11 @@ void CMusicDatabase::SetPropertiesForFileItem(CFileItem& item)
   }
 }
 
-void CMusicDatabase::SetItemUpdated(int mediaId, const std::string& mediaType)
+void CMusicDatabase::SetItemUpdated(int mediaId, MediaType mediaType)
 {
   std::string strSQL;
   try
   {
-    if (mediaType != KODI::MEDIA::NameOf(MediaType::ARTIST) &&
-        mediaType != KODI::MEDIA::NameOf(MediaType::ALBUM) &&
-        mediaType != KODI::MEDIA::NameOf(MediaType::SONG))
-      return;
     if (nullptr == m_pDB)
       return;
     if (nullptr == m_pDS)
@@ -12909,12 +12903,20 @@ void CMusicDatabase::SetItemUpdated(int mediaId, const std::string& mediaType)
     // Fire AFTER UPDATE db trigger on artist, album or song table to set datemodified field
     // e.g. when artwork for item is changed from info dialog but not item details.
     // Use SQL UPDATE that does not change record data.
-    if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
-      strSQL = PrepareSQL("UPDATE artist SET strArtist = strArtist WHERE idArtist = %i", mediaId);
-    else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
-      strSQL = PrepareSQL("UPDATE album SET strAlbum = strAlbum WHERE idAlbum = %i", mediaId);
-    else // MediaType::SONG
-      strSQL = PrepareSQL("UPDATE song SET strTitle = strTitle WHERE idSong = %i", mediaId);
+    switch (mediaType)
+    {
+      case MediaType::ARTIST:
+        strSQL = PrepareSQL("UPDATE artist SET strArtist = strArtist WHERE idArtist = %i", mediaId);
+        break;
+      case MediaType::ALBUM:
+        strSQL = PrepareSQL("UPDATE album SET strAlbum = strAlbum WHERE idAlbum = %i", mediaId);
+        break;
+      case MediaType::SONG:
+        strSQL = PrepareSQL("UPDATE song SET strTitle = strTitle WHERE idSong = %i", mediaId);
+        break;
+      default:
+        return;
+    }
     m_pDS->exec(strSQL);
   }
   catch (...)
@@ -12989,14 +12991,14 @@ bool CMusicDatabase::GetArtForItem(
     Filter filter;
     if (songId > 0)
       filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", songId,
-                                    KODI::MEDIA::NameOf(MediaType::SONG).c_str()));
+                                    NameOf(MediaType::SONG).c_str()));
     if (albumId > 0)
       filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", albumId,
-                                    KODI::MEDIA::NameOf(MediaType::ALBUM).c_str()),
+                                    NameOf(MediaType::ALBUM).c_str()),
                          false);
     if (artistId > 0)
       filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", artistId,
-                                    KODI::MEDIA::NameOf(MediaType::ARTIST).c_str()),
+                                    NameOf(MediaType::ARTIST).c_str()),
                          false);
 
     strSQL = "SELECT DISTINCT art_id, media_id, media_type, type, '' as prefix, url, 0 as iorder "
@@ -13016,7 +13018,7 @@ bool CMusicDatabase::GetArtForItem(
             "url, album_artist.iOrder as iorder FROM art "
             "JOIN album_artist ON art.media_id = album_artist.idArtist AND art.media_type ='%s' "
             "WHERE album_artist.idAlbum = %i ",
-            KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), albumId);
+            NameOf(MediaType::ARTIST).c_str(), albumId);
         if (bPrimaryArtist)
           strSQL2 += "AND album_artist.iOrder = 0";
 
@@ -13033,7 +13035,7 @@ bool CMusicDatabase::GetArtForItem(
               "JOIN album_artist ON art.media_id = album_artist.idArtist AND art.media_type ='%s' "
               "JOIN song ON song.idAlbum = album_artist.idAlbum  "
               "WHERE song.idSong = %i ",
-              KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), songId);
+              NameOf(MediaType::ARTIST).c_str(), songId);
           if (bPrimaryArtist)
             strSQL2 += "AND album_artist.iOrder = 0";
 
@@ -13046,7 +13048,7 @@ bool CMusicDatabase::GetArtForItem(
             "url, song_artist.iOrder as iorder FROM art "
             "JOIN song_artist on art.media_id = song_artist.idArtist AND art.media_type = '%s' "
             "WHERE song_artist.idsong = %i AND song_artist.idRole = %i ",
-            KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), songId, ROLE_ARTIST);
+            NameOf(MediaType::ARTIST).c_str(), songId, ROLE_ARTIST);
         if (bPrimaryArtist)
           strSQL2 += "AND song_artist.iOrder = 0";
 
@@ -13061,7 +13063,7 @@ bool CMusicDatabase::GetArtForItem(
                            "url, 0 as iorder FROM art "
                            "JOIN song ON art.media_id = song.idAlbum AND art.media_type ='%s' "
                            "WHERE song.idSong = %i ",
-                           KODI::MEDIA::NameOf(MediaType::ALBUM).c_str(), songId);
+                           NameOf(MediaType::ALBUM).c_str(), songId);
       strSQL = strSQL + " UNION " + strSQL2;
     }
 
@@ -13190,16 +13192,16 @@ bool CMusicDatabase::GetArtTypes(const std::string& mediaType, std::vector<std::
 }
 
 std::vector<std::string> CMusicDatabase::GetAvailableArtTypesForItem(int mediaId,
-                                                                     const std::string& mediaType)
+                                                                     MediaType mediaType)
 {
   CScraperUrl thumbURL;
-  if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
+  if (mediaType == MediaType::ARTIST)
   {
     CArtist artist;
     if (GetArtist(mediaId, artist))
       thumbURL = artist.thumbURL;
   }
-  else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
+  else if (mediaType == MediaType::ALBUM)
   {
     CAlbum album;
     if (GetAlbum(mediaId, album))
@@ -13219,16 +13221,16 @@ std::vector<std::string> CMusicDatabase::GetAvailableArtTypesForItem(int mediaId
 }
 
 std::vector<CScraperUrl::SUrlEntry> CMusicDatabase::GetAvailableArtForItem(
-    int mediaId, const std::string& mediaType, const std::string& artType)
+    int mediaId, MediaType mediaType, const std::string& artType)
 {
   CScraperUrl thumbURL;
-  if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
+  if (mediaType == MediaType::ARTIST)
   {
     CArtist artist;
     if (GetArtist(mediaId, artist))
       thumbURL = artist.thumbURL;
   }
-  else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
+  else if (mediaType == MediaType::ALBUM)
   {
     CAlbum album;
     if (GetAlbum(mediaId, album))

@@ -36,6 +36,8 @@ constexpr char PROPERTY_WATCHED_MODE[] = "watchedmode";
 
 using namespace KODI;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
+using KODI::MEDIA::PluralNameOf;
 
 namespace XFILE
 {
@@ -105,7 +107,7 @@ namespace XFILE
       CVideoDatabase db;
       if (db.Open())
       {
-        MediaType mediaType = KODI::MEDIA::MediaTypeFromName(playlist.GetType());
+        MediaType mediaType = MediaTypeFromName(playlist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
@@ -164,7 +166,7 @@ namespace XFILE
         if (playlist.GetType() == "mixed" || playlist.GetType().empty())
           plist.SetType("songs");
 
-        MediaType mediaType = KODI::MEDIA::MediaTypeFromName(plist.GetType());
+        MediaType mediaType = MediaTypeFromName(plist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
@@ -172,14 +174,10 @@ namespace XFILE
           baseDir = "musicdb://";
           if (!isGrouped)
           {
-            if (mediaType == MediaType::ARTIST)
-              baseDir += "artists";
-            else if (mediaType == MediaType::ALBUM)
-              baseDir += "albums";
-            else if (mediaType == MediaType::SONG)
-              baseDir += "songs";
-            else
+            if (mediaType != MediaType::ARTIST && mediaType != MediaType::ALBUM &&
+                mediaType != MediaType::SONG)
               return false;
+            baseDir += PluralNameOf(mediaType);
           }
           else
             baseDir += group;

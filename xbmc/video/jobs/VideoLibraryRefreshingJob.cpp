@@ -178,7 +178,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
     ART::Artwork movieSetArt;
     if (tag.m_set.HasArt())
       movieSetArt = tag.m_set.GetArt();
-    db.SetArtForItem(dbId, KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION), movieSetArt);
+    db.SetArtForItem(dbId, MediaType::VIDEO_COLLECTION, movieSetArt);
 
     // Refresh (for video info dialog)
     m_item->ClearArt();

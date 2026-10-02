@@ -115,10 +115,10 @@ private:
     const CVariant& item = data.isMember("item") ? data["item"] : data;
     const int64_t id = item["id"].asInteger(-1);
     const std::string kind = item["type"].asString();
-    const auto isNamed = [&kind](MediaType type) { return KODI::MEDIA::NameOf(type) == kind; };
+    const MediaType type = KODI::MEDIA::MediaTypeOf(kind);
     const bool isKind = flag == ANNOUNCEMENT::VideoLibrary
-                            ? std::ranges::any_of(VIDEO_KINDS, isNamed)
-                            : std::ranges::any_of(AUDIO_KINDS, isNamed);
+                            ? std::ranges::find(VIDEO_KINDS, type) != VIDEO_KINDS.end()
+                            : std::ranges::find(AUDIO_KINDS, type) != AUDIO_KINDS.end();
     if (id <= 0 || !isKind)
       return false;
 

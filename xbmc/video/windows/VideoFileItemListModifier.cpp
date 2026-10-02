@@ -126,7 +126,7 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         pItem->GetVideoInfoTag()->m_iDbId = db.GetSeasonId(pItem->GetVideoInfoTag()->m_iIdShow, -1);
         db.Close();
       }
-      pItem->GetVideoInfoTag()->m_type = KODI::MEDIA::NameOf(MediaType::SEASON);
+      pItem->GetVideoInfoTag()->SetMediaType(MediaType::SEASON);
   }
   break;
   case NodeType::MUSICVIDEOS_ALBUM:

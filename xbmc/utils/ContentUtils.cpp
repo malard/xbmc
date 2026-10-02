@@ -17,36 +17,28 @@ using KODI::MEDIA::MediaType;
 
 namespace
 {
-bool HasPreferredArtType(const CFileItem& item)
+bool PrefersPoster(const CFileItem& item)
 {
-  return item.HasVideoInfoTag() &&
-         (item.GetVideoInfoTag()->GetMediaType() == MediaType::MOVIE ||
-          item.GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW ||
-          item.GetVideoInfoTag()->GetMediaType() == MediaType::SEASON ||
-          item.GetVideoInfoTag()->GetMediaType() == MediaType::VIDEO_COLLECTION);
-}
+  if (!item.HasVideoInfoTag())
+    return false;
 
-std::string GetPreferredArtType(MediaType type)
-{
-  if (type == MediaType::MOVIE || type == MediaType::TV_SHOW || type == MediaType::SEASON ||
-      type == MediaType::VIDEO_COLLECTION)
+  switch (item.GetVideoInfoTag()->GetMediaType())
   {
-    return "poster";
+    case MediaType::MOVIE:
+    case MediaType::TV_SHOW:
+    case MediaType::SEASON:
+    case MediaType::VIDEO_COLLECTION:
+      return true;
+    default:
+      return false;
   }
-  return "thumb";
 }
 } // namespace
 
 const std::string ContentUtils::GetPreferredArtImage(const CFileItem& item)
 {
-  if (HasPreferredArtType(item))
-  {
-    auto preferredArtType = GetPreferredArtType(item.GetVideoInfoTag()->GetMediaType());
-    if (item.HasArt(preferredArtType))
-    {
-      return item.GetArt(preferredArtType);
-    }
-  }
+  if (PrefersPoster(item) && item.HasArt("poster"))
+    return item.GetArt("poster");
   return item.GetArt("thumb");
 }
 

@@ -83,6 +83,7 @@ using namespace PLAYLIST;
 using namespace MUSIC_INFO;
 using namespace PVR;
 using namespace GAME;
+using KODI::MEDIA::IsContainer;
 using KODI::MEDIA::MediaType;
 
 CFileItem::CFileItem(const CSong& song)
@@ -2014,7 +2015,7 @@ std::string CFileItem::GetBaseMoviePath(bool bUseFolderNames) const
   }
   else if (bUseFolderNames && !URIUtils::IsInArchive(strMovieName) &&
            (!IsFolder() || (HasVideoInfoTag() && GetVideoInfoTag()->m_iDbId > 0 &&
-                            !KODI::MEDIA::IsContainer(GetVideoInfoTag()->GetMediaType()))))
+                            !IsContainer(GetVideoInfoTag()->GetMediaType()))))
   {
     const std::string name{strMovieName};
     if (!URIUtils::GetParentPath(name, strMovieName))
@@ -2430,14 +2431,20 @@ VideoDbContentType CFileItem::GetVideoContentType() const
   if (HasVideoInfoTag())
   {
     const auto& tag{GetVideoInfoTag()};
-    if (tag->GetMediaType() == MediaType::TV_SHOW)
-      type = TVSHOWS;
-    if (tag->GetMediaType() == MediaType::EPISODE)
-      return EPISODES;
-    if (tag->GetMediaType() == MediaType::MUSIC_VIDEO)
-      return MUSICVIDEOS;
-    if (tag->GetMediaType() == MediaType::ALBUM)
-      return MUSICALBUMS;
+    switch (tag->GetMediaType())
+    {
+      case MediaType::TV_SHOW:
+        type = TVSHOWS;
+        break;
+      case MediaType::EPISODE:
+        return EPISODES;
+      case MediaType::MUSIC_VIDEO:
+        return MUSICVIDEOS;
+      case MediaType::ALBUM:
+        return MUSICALBUMS;
+      default:
+        break;
+    }
     if (tag->m_strFileNameAndPath.starts_with("bluray://removable"))
       // cannot tell if a removable bluray is a movie or a tv show
       return UNKNOWN;

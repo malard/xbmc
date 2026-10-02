@@ -58,6 +58,16 @@ TEST(TestMediaType, ANameIsReadInAnyCase)
   EXPECT_EQ(MediaTypeFromName("TVSHOWS"), MediaType::TV_SHOW);
 }
 
+TEST(TestMediaType, OnlyTheStoredNameIsTheTypeExactly)
+{
+  for (MediaType type{FIRST}; type <= LAST; type = Next(type))
+    EXPECT_EQ(MediaTypeOf(NameOf(type)), type) << NameOf(type);
+  EXPECT_EQ(MediaTypeOf("movies"), MediaType::NONE);
+  EXPECT_EQ(MediaTypeOf("Movie"), MediaType::NONE);
+  EXPECT_EQ(MediaTypeOf("genre"), MediaType::NONE);
+  EXPECT_EQ(MediaTypeOf(""), MediaType::NONE);
+}
+
 TEST(TestMediaType, ContainersHoldOtherItems)
 {
   EXPECT_TRUE(IsContainer(MediaType::ALBUM));

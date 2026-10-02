@@ -37,6 +37,7 @@
 
 using namespace KODI;
 using KODI::MEDIA::MediaType;
+using KODI::MEDIA::PluralNameOf;
 
 static constexpr unsigned int CONTROL_LABEL_TITLE = 2;
 
@@ -221,7 +222,7 @@ void CGUIDialogVideoManager::Refresh()
 
   //! @todo db refactor: should not be versions, but assets
   m_database.GetVideoVersions(itemType, dbId, *m_videoAssetsList, GetVideoAssetType());
-  m_videoAssetsList->SetContent(std::string{KODI::MEDIA::PluralNameOf(mediaType)});
+  m_videoAssetsList->SetContent(PluralNameOf(mediaType));
 
   CVideoThumbLoader loader;
 

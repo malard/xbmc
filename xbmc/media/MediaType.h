@@ -47,6 +47,9 @@ const std::string& PluralNameOf(MediaType type);
 //! \brief The type \p name gives, singular or plural, in any case. NONE for any other text.
 MediaType MediaTypeFromName(std::string_view name);
 
+//! \brief The type whose stored name is exactly \p name. NONE for any other text.
+MediaType MediaTypeOf(std::string_view name);
+
 //! \brief Whether an item of this type holds other items, as an album holds songs.
 bool IsContainer(MediaType type);
 

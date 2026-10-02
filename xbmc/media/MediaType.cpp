@@ -100,6 +100,12 @@ MediaType MediaTypeFromName(std::string_view name)
   return it != MEDIA_TYPES.end() ? it->type : MediaType::NONE;
 }
 
+MediaType MediaTypeOf(std::string_view name)
+{
+  const auto it = std::ranges::find(MEDIA_TYPES, name, &MediaTypeInfo::name);
+  return it != MEDIA_TYPES.end() ? it->type : MediaType::NONE;
+}
+
 bool IsContainer(MediaType type)
 {
   const MediaTypeInfo* info = Find(type);
