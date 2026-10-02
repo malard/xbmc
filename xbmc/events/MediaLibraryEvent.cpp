@@ -16,7 +16,53 @@
 #include "resources/ResourcesComponent.h"
 #include "utils/URIUtils.h"
 
+#include <optional>
+#include <string_view>
+
 using KODI::MEDIA::MediaType;
+
+namespace
+{
+struct Destination
+{
+  int window;
+  std::string_view root;
+  //! An item's path names its file rather than its folder.
+  bool pathIsAFile;
+};
+
+std::optional<Destination> DestinationFor(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::VIDEO:
+      return Destination{WINDOW_VIDEO_NAV, "sources://video/", false};
+    case MediaType::MOVIE:
+      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/titles/", true};
+    case MediaType::VIDEO_COLLECTION:
+      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/sets/", false};
+    case MediaType::MUSIC_VIDEO:
+      return Destination{WINDOW_VIDEO_NAV, "videodb://musicvideos/titles/", true};
+    case MediaType::TV_SHOW:
+    case MediaType::SEASON:
+      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/", false};
+    case MediaType::EPISODE:
+      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/", true};
+    case MediaType::MUSIC:
+      return Destination{WINDOW_MUSIC_NAV, "sources://music/", false};
+    case MediaType::ARTIST:
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://artists/", false};
+    case MediaType::ALBUM:
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://albums/", false};
+    case MediaType::SONG:
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://songs/", true};
+    case MediaType::NONE:
+    case MediaType::VIDEO_VERSION:
+      break;
+  }
+  return {};
+}
+} // namespace
 
 CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
                                        const std::string& mediaPath,
@@ -33,33 +79,9 @@ CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
                                        const CVariant& label,
                                        const CVariant& description,
                                        const std::string& icon,
-                                       EventLevel level /* = EventLevel::Information */)
-  : CUniqueEvent(label, description, icon, level),
-    m_mediaType(mediaType),
-    m_mediaPath(mediaPath)
-{ }
-
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
-                                       const std::string& mediaPath,
-                                       const CVariant& label,
-                                       const CVariant& description,
-                                       const std::string& icon,
                                        const CVariant& details,
                                        EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, icon, details, level),
-    m_mediaType(mediaType),
-    m_mediaPath(mediaPath)
-{ }
-
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
-                                       const std::string& mediaPath,
-                                       const CVariant& label,
-                                       const CVariant& description,
-                                       const std::string& icon,
-                                       const CVariant& details,
-                                       const CVariant& executionLabel,
-                                       EventLevel level /* = EventLevel::Information */)
-  : CUniqueEvent(label, description, icon, details, executionLabel, level),
     m_mediaType(mediaType),
     m_mediaPath(mediaPath)
 { }
@@ -78,67 +100,18 @@ bool CMediaLibraryEvent::Execute() const
   if (!CanExecute())
     return false;
 
-  int windowId = -1;
-  std::string path = m_mediaPath;
-  if (m_mediaType == MediaType::VIDEO || m_mediaType == MediaType::MOVIE ||
-      m_mediaType == MediaType::VIDEO_COLLECTION || m_mediaType == MediaType::TV_SHOW ||
-      m_mediaType == MediaType::SEASON || m_mediaType == MediaType::EPISODE ||
-      m_mediaType == MediaType::MUSIC_VIDEO)
-  {
-    if (path.empty())
-    {
-      if (m_mediaType == MediaType::VIDEO)
-        path = "sources://video/";
-      else if (m_mediaType == MediaType::MOVIE)
-        path = "videodb://movies/titles/";
-      else if (m_mediaType == MediaType::VIDEO_COLLECTION)
-        path = "videodb://movies/sets/";
-      else if (m_mediaType == MediaType::MUSIC_VIDEO)
-        path = "videodb://musicvideos/titles/";
-      else if (m_mediaType == MediaType::TV_SHOW || m_mediaType == MediaType::SEASON ||
-               m_mediaType == MediaType::EPISODE)
-        path = "videodb://tvshows/titles/";
-    }
-    else
-    {
-      //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
-      if (m_mediaType == MediaType::MOVIE || m_mediaType == MediaType::MUSIC_VIDEO ||
-          m_mediaType == MediaType::EPISODE)
-        path = URIUtils::GetDirectory(path);
-    }
-
-    windowId = WINDOW_VIDEO_NAV;
-  }
-  else if (m_mediaType == MediaType::MUSIC || m_mediaType == MediaType::ARTIST ||
-           m_mediaType == MediaType::ALBUM || m_mediaType == MediaType::SONG)
-  {
-    if (path.empty())
-    {
-      if (m_mediaType == MediaType::MUSIC)
-        path = "sources://music/";
-      else if (m_mediaType == MediaType::ARTIST)
-        path = "musicdb://artists/";
-      else if (m_mediaType == MediaType::ALBUM)
-        path = "musicdb://albums/";
-      else if (m_mediaType == MediaType::SONG)
-        path = "musicdb://songs/";
-    }
-    else
-    {
-      //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
-      if (m_mediaType == MediaType::SONG)
-        path = URIUtils::GetDirectory(path);
-    }
-
-    windowId = WINDOW_MUSIC_NAV;
-  }
-
-  if (windowId < 0)
+  const std::optional<Destination> destination{DestinationFor(m_mediaType)};
+  if (!destination)
     return false;
 
-  std::vector<std::string> params;
-  params.push_back(path);
-  params.emplace_back("return");
-  CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(windowId, params);
+  std::string path{m_mediaPath};
+  if (path.empty())
+    path = destination->root;
+  //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
+  else if (destination->pathIsAFile)
+    path = URIUtils::GetDirectory(path);
+
+  CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(destination->window,
+                                                              {path, "return"});
   return true;
 }

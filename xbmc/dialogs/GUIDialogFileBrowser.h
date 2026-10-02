@@ -103,7 +103,6 @@ protected:
   int m_bFlip;
   bool m_addNetworkShareEnabled;
   bool m_flipEnabled;
-  //! The section sources are added to from the browser, if any
   std::optional<KODI::MEDIA::MediaSection> m_addSourceSection;
   bool m_browsingForImages;
   bool m_useFileDirectories;

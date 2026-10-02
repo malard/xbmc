@@ -844,15 +844,11 @@ void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interv
       else
         return;
 
+      const MediaType type{KODI::MEDIA::MediaTypeFromName(m_mediaType)};
       CDatabase::Filter filter;
-      filter.where =
-          DatabaseUtils::GetField(Field::YEAR, KODI::MEDIA::MediaTypeFromName(m_mediaType),
-                                  DatabaseQueryPart::WHERE) +
-          " > 0";
-      GetMinMax(table,
-                DatabaseUtils::GetField(Field::YEAR, KODI::MEDIA::MediaTypeFromName(m_mediaType),
-                                        DatabaseQueryPart::SELECT),
-                min, max, filter);
+      filter.where = DatabaseUtils::GetField(Field::YEAR, type, DatabaseQueryPart::WHERE) + " > 0";
+      GetMinMax(table, DatabaseUtils::GetField(Field::YEAR, type, DatabaseQueryPart::SELECT), min,
+                max, filter);
     }
   }
   else if (filter.field == Field::AIR_DATE)

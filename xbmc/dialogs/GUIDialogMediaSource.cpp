@@ -410,14 +410,6 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
       extraShares.push_back(share1);
     }
   }
-  else if (m_section == MediaSection::GAMES)
-  {
-    // nothing to add
-  }
-  else if (m_section == MediaSection::PROGRAMS)
-  {
-    // nothing to add
-  }
   if (CGUIDialogFileBrowser::ShowAndGetSource(path, allowNetworkShares,
                                               extraShares.empty() ? nullptr : &extraShares))
   {
@@ -535,39 +527,31 @@ void CGUIDialogMediaSource::SetShare(const CMediaSource &share)
 void CGUIDialogMediaSource::SetTypeOfMedia(MediaSection section, bool editNotAdd)
 {
   m_section = section;
-  auto& localizeStrings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
-  std::string heading;
-  if (editNotAdd)
+
+  int heading{};
+  switch (section)
   {
-    if (section == MediaSection::VIDEO)
-      heading = localizeStrings.Get(10053);
-    else if (section == MediaSection::MUSIC)
-      heading = localizeStrings.Get(10054);
-    else if (section == MediaSection::PICTURES)
-      heading = localizeStrings.Get(10055);
-    else if (section == MediaSection::GAMES)
-      heading = localizeStrings.Get(35252); // "Edit game source"
-    else if (section == MediaSection::PROGRAMS)
-      heading = localizeStrings.Get(10056);
-    else
-      heading = localizeStrings.Get(10057);
+    case MediaSection::VIDEO:
+      heading = editNotAdd ? 10053 : 10048;
+      break;
+    case MediaSection::MUSIC:
+      heading = editNotAdd ? 10054 : 10049;
+      break;
+    case MediaSection::PICTURES:
+      heading = editNotAdd ? 10055 : 13006;
+      break;
+    case MediaSection::GAMES:
+      heading = editNotAdd ? 35252 : 35251;
+      break;
+    case MediaSection::PROGRAMS:
+      heading = editNotAdd ? 10056 : 10051;
+      break;
+    case MediaSection::FILES:
+      heading = editNotAdd ? 10057 : 10052;
+      break;
   }
-  else
-  {
-    if (section == MediaSection::VIDEO)
-      heading = localizeStrings.Get(10048);
-    else if (section == MediaSection::MUSIC)
-      heading = localizeStrings.Get(10049);
-    else if (section == MediaSection::PICTURES)
-      heading = localizeStrings.Get(13006);
-    else if (section == MediaSection::GAMES)
-      heading = localizeStrings.Get(35251); // "Add game source"
-    else if (section == MediaSection::PROGRAMS)
-      heading = localizeStrings.Get(10051);
-    else
-      heading = localizeStrings.Get(10052);
-  }
-  SET_CONTROL_LABEL(CONTROL_HEADING, heading);
+  SET_CONTROL_LABEL(CONTROL_HEADING,
+                    CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(heading));
 }
 
 int CGUIDialogMediaSource::GetSelectedItem()
