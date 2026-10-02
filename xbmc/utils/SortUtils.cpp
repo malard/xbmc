@@ -20,6 +20,8 @@
 #include <array>
 #include <limits>
 
+using KODI::MEDIA::MediaType;
+
 std::string ArrayToString(SortAttribute attributes, const CVariant &variant, const std::string &separator = " / ")
 {
   if (variant.isArray())
@@ -350,7 +352,7 @@ std::string ByEpisodeNumber(SortAttribute attributes, const SortItem &values)
 
   std::string title;
   if (values.contains(Field::MEDIA_TYPE) &&
-      values.at(Field::MEDIA_TYPE).asString() == MediaTypeMovie)
+      values.at(Field::MEDIA_TYPE).asString() == KODI::MEDIA::NameOf(MediaType::MOVIE))
     title = BySortTitle(attributes, values);
   if (title.empty())
     title = ByLabel(attributes, values);
@@ -791,15 +793,13 @@ std::map<SortBy, Fields> fillSortingFields()
 std::map<SortBy, SortUtils::SortPreparator> SortUtils::m_preparators = fillPreparators();
 std::map<SortBy, Fields> SortUtils::m_sortingFields = fillSortingFields();
 
-void SortUtils::GetFieldsForSQLSort(const MediaType& mediaType,
-                                    SortBy sortMethod,
-                                    FieldList& fields)
+void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, FieldList& fields)
 {
   fields.clear();
-  if (mediaType == MediaTypeNone)
+  if (mediaType == MediaType::NONE)
     return;
 
-  if (mediaType == MediaTypeAlbum)
+  if (mediaType == MediaType::ALBUM)
   {
     if (sortMethod == SortBy::LABEL || sortMethod == SortBy::ALBUM || sortMethod == SortBy::TITLE)
     {
@@ -871,7 +871,7 @@ void SortUtils::GetFieldsForSQLSort(const MediaType& mediaType,
       fields.emplace_back(Field::ALBUM);
     }
   }
-  else if (mediaType == MediaTypeSong)
+  else if (mediaType == MediaType::SONG)
   {
     if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TRACK_NUMBER)
       fields.emplace_back(Field::TRACK_NUMBER);
@@ -957,7 +957,7 @@ void SortUtils::GetFieldsForSQLSort(const MediaType& mediaType,
     else if (sortMethod == SortBy::BPM)
       fields.emplace_back(Field::BPM);
   }
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == MediaType::ARTIST)
   {
     if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TITLE || sortMethod == SortBy::ARTIST)
       fields.emplace_back(Field::ARTIST);
@@ -1063,7 +1063,7 @@ void SortUtils::Sort(const SortDescription &sortDescription, SortItems& items)
 }
 
 bool SortUtils::SortFromDataset(const SortDescription& sortDescription,
-                                const MediaType& mediaType,
+                                MediaType mediaType,
                                 dbiplus::Dataset& dataset,
                                 DatabaseResults& results)
 {

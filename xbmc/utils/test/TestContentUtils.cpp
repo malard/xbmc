@@ -18,6 +18,8 @@
 
 #include <gtest/gtest.h>
 
+using KODI::MEDIA::MediaType;
+
 namespace
 {
 constexpr const char* MOVIE_PATH{"/movies/Movie (2007)/Movie (2007).bluray.iso"};
@@ -36,7 +38,7 @@ CFileItem GetPlayedMovie()
   movie.SetArt("poster", "image://poster.jpg/");
 
   CVideoInfoTag* tag{movie.GetVideoInfoTag()};
-  tag->m_type = MediaTypeMovie;
+  tag->m_type = KODI::MEDIA::NameOf(MediaType::MOVIE);
   tag->m_strTitle = "Movie";
   tag->m_strTrailer = TRAILER_PATH;
   tag->m_iDbId = 42;
@@ -134,7 +136,7 @@ TEST(TestContentUtils, GeneratePlayableTrailerItemKeepsMovieDetails)
   const CVideoInfoTag* tag{trailer->GetVideoInfoTag()};
 
   EXPECT_EQ(tag->m_strTitle, "Movie (Trailer)");
-  EXPECT_EQ(tag->m_type, MediaTypeMovie);
+  EXPECT_EQ(tag->GetMediaType(), MediaType::MOVIE);
   EXPECT_EQ(trailer->GetArt("poster"), "image://poster.jpg/");
 }
 

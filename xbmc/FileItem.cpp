@@ -83,6 +83,7 @@ using namespace PLAYLIST;
 using namespace MUSIC_INFO;
 using namespace PVR;
 using namespace GAME;
+using KODI::MEDIA::MediaType;
 
 CFileItem::CFileItem(const CSong& song)
 {
@@ -1258,7 +1259,7 @@ bool IsSameLibraryItem(const CFileItem& item, const CFileItem& other)
                       }};
 
   // For a version its db id is a file id
-  if (myTag.m_type == MediaTypeVideoVersion)
+  if (myTag.GetMediaType() == MediaType::VIDEO_VERSION)
   {
     if (myTag.m_iFileId == -1 || otherTag.m_iFileId == -1)
       return myTag.m_iFileId == otherTag.m_iFileId && myTag.m_iDbId == otherTag.m_iDbId;
@@ -1894,7 +1895,8 @@ std::string CFileItem::GetThumbHideIfUnwatched(const CFileItem* item) const
   const std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
       CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
           CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
-  if (setting && item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_type == MediaTypeEpisode &&
+  if (setting && item->HasVideoInfoTag() &&
+      item->GetVideoInfoTag()->GetMediaType() == MediaType::EPISODE &&
       item->GetVideoInfoTag()->GetPlayCount() == 0 &&
       !CSettingUtils::FindIntInList(setting,
                                     CSettings::VIDEOLIBRARY_THUMB_SHOW_UNWATCHED_EPISODE) &&
@@ -2012,7 +2014,7 @@ std::string CFileItem::GetBaseMoviePath(bool bUseFolderNames) const
   }
   else if (bUseFolderNames && !URIUtils::IsInArchive(strMovieName) &&
            (!IsFolder() || (HasVideoInfoTag() && GetVideoInfoTag()->m_iDbId > 0 &&
-                            !CMediaTypes::IsContainer(GetVideoInfoTag()->m_type))))
+                            !KODI::MEDIA::IsContainer(GetVideoInfoTag()->GetMediaType()))))
   {
     const std::string name{strMovieName};
     if (!URIUtils::GetParentPath(name, strMovieName))
@@ -2428,13 +2430,13 @@ VideoDbContentType CFileItem::GetVideoContentType() const
   if (HasVideoInfoTag())
   {
     const auto& tag{GetVideoInfoTag()};
-    if (tag->m_type == MediaTypeTvShow)
+    if (tag->GetMediaType() == MediaType::TV_SHOW)
       type = TVSHOWS;
-    if (tag->m_type == MediaTypeEpisode)
+    if (tag->GetMediaType() == MediaType::EPISODE)
       return EPISODES;
-    if (tag->m_type == MediaTypeMusicVideo)
+    if (tag->GetMediaType() == MediaType::MUSIC_VIDEO)
       return MUSICVIDEOS;
-    if (tag->m_type == MediaTypeAlbum)
+    if (tag->GetMediaType() == MediaType::ALBUM)
       return MUSICALBUMS;
     if (tag->m_strFileNameAndPath.starts_with("bluray://removable"))
       // cannot tell if a removable bluray is a movie or a tv show

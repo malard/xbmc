@@ -57,6 +57,7 @@ using namespace MUSICDATABASEDIRECTORY;
 using namespace KODI;
 using namespace KODI::MESSAGING;
 using KODI::MEDIA::MediaSection;
+using KODI::MEDIA::MediaType;
 
 #define CONTROL_BTN_REFRESH      6
 #define CONTROL_USERRATING       7
@@ -88,7 +89,7 @@ public:
     CMusicDatabase database;
     database.Open();
     // May only have partially populated music item, so fetch all artist or album data from db
-    if (tag.GetType() == MediaTypeArtist)
+    if (tag.GetMediaType() == MediaType::ARTIST)
     {
       int artistId = tag.GetDatabaseId();
       CArtist artist;
@@ -131,7 +132,7 @@ public:
     }
     else
     {
-      // tag.GetType == MediaTypeAlbum
+      // tag.GetType == MediaType::ALBUM
       int albumId = tag.GetDatabaseId();
       CAlbum album;
       if (!database.GetAlbum(albumId, album))
@@ -232,7 +233,7 @@ public:
     CGUIDialogProgress* dlgProgress = GetProgressDialog();
     CMusicDatabase database;
     database.Open();
-    if (tag.GetType() == MediaTypeArtist)
+    if (tag.GetMediaType() == MediaType::ARTIST)
     {
       ADDON::ScraperPtr scraper;
       if (!database.GetScraper(m_artist.idArtist, ADDON::ContentType::ARTISTS, scraper))
@@ -264,7 +265,7 @@ public:
     }
     else
     {
-      // tag.GetType == MediaTypeAlbum
+      // tag.GetType == MediaType::ALBUM
       ADDON::ScraperPtr scraper;
       if (!database.GetScraper(m_album.idAlbum, ADDON::ContentType::ALBUMS, scraper))
         return false;
@@ -707,7 +708,7 @@ CFileItemPtr CGUIDialogMusicInfo::GetCurrentListItem(int offset)
 
 std::string CGUIDialogMusicInfo::GetContent()
 {
-  if (m_item->GetMusicInfoTag()->GetType() == MediaTypeArtist)
+  if (m_item->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST)
     return "artists";
   else
     return "albums";
@@ -722,11 +723,11 @@ void CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(std::vector<CMediaSour
   itemDir = item.GetPath();
   if (item.HasMusicInfoTag())
   {
-    if (item.GetMusicInfoTag()->GetType() == MediaTypeSong)
+    if (item.GetMusicInfoTag()->GetMediaType() == MediaType::SONG)
       itemDir = URIUtils::GetParentPath(item.GetMusicInfoTag()->GetURL());
 
     // For artist add Artist Info Folder path to browser sources
-    if (item.GetMusicInfoTag()->GetType() == MediaTypeArtist)
+    if (item.GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST)
     {
       artistFolder = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_MUSICLIBRARY_ARTISTSFOLDER);
       if (!artistFolder.empty() && artistFolder.compare(itemDir) == 0)
@@ -1011,9 +1012,11 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
       CQueryParams params;
       CDirectoryNode::GetDatabaseInfo(pItem->GetPath(), params);
       if (params.GetArtistId() > 0)
-        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetArtistId(), MediaTypeArtist);
+        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetArtistId(),
+                                                KODI::MEDIA::NameOf(MediaType::ARTIST));
       else if (params.GetAlbumId() > 0)
-        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaTypeAlbum);
+        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(),
+                                                KODI::MEDIA::NameOf(MediaType::ALBUM));
       else
         return; // nothing to do
     }
@@ -1022,12 +1025,12 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
   else if (pItem->HasProperty("artist_musicid"))
   {
     musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty("artist_musicid").asInteger32(),
-                                               MediaTypeArtist);
+                                               KODI::MEDIA::NameOf(MediaType::ARTIST));
   }
   else if (pItem->HasProperty("album_musicid"))
   {
     musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty("album_musicid").asInteger32(),
-                                               MediaTypeAlbum);
+                                               KODI::MEDIA::NameOf(MediaType::ALBUM));
   }
   else
     return; // nothing to do
@@ -1040,8 +1043,8 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
       if (pDlgMusicInfo->SetItem(&musicitem))
       {
         pDlgMusicInfo->Open();
-        if (pItem->GetMusicInfoTag()->GetType() == MediaTypeAlbum &&
-          pDlgMusicInfo->HasUpdatedUserrating())
+        if (pItem->GetMusicInfoTag()->GetMediaType() == MediaType::ALBUM &&
+            pDlgMusicInfo->HasUpdatedUserrating())
         {
           auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
           if (window)

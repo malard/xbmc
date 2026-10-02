@@ -19,7 +19,7 @@ class CStreamDetails;
 class CVideoDatabase;
 class EmbeddedArt;
 
-using ArtCache = std::map<std::pair<MediaType, int>, KODI::ART::Artwork>;
+using ArtCache = std::map<std::pair<std::string, int>, KODI::ART::Artwork>;
 
 class CVideoThumbLoader : public CThumbLoader
 {

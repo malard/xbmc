@@ -50,6 +50,7 @@ using namespace KODI;
 using namespace KODI::MESSAGING;
 using namespace VIDEO;
 using namespace ADDON;
+using KODI::MEDIA::MediaType;
 
 CVideoLibraryRefreshingJob::CVideoLibraryRefreshingJob(std::shared_ptr<CFileItem> item,
                                                        bool forceRefresh,
@@ -177,7 +178,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
     ART::Artwork movieSetArt;
     if (tag.m_set.HasArt())
       movieSetArt = tag.m_set.GetArt();
-    db.SetArtForItem(dbId, MediaTypeVideoCollection, movieSetArt);
+    db.SetArtForItem(dbId, KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION), movieSetArt);
 
     // Refresh (for video info dialog)
     m_item->ClearArt();
@@ -431,7 +432,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
     {
       // for a tvshow we need to handle all paths of it
       std::vector<std::string> tvshowPaths;
-      if (CMediaTypes::IsMediaType(m_item->GetVideoInfoTag()->m_type, MediaTypeTvShow) && m_refreshAll &&
+      if (m_item->GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW && m_refreshAll &&
           db.GetPathsLinkedToTvShow(m_item->GetVideoInfoTag()->m_iDbId, tvshowPaths))
       {
         for (const auto& tvshowPath : tvshowPaths)
@@ -485,7 +486,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
       {
         if (!m_item->IsFolder())
           db.DeleteEpisode(origDbId);
-        else if (m_item->GetVideoInfoTag()->m_type == MediaTypeSeason)
+        else if (m_item->GetVideoInfoTag()->GetMediaType() == MediaType::SEASON)
           db.DeleteSeason(origDbId);
         else if (m_refreshAll)
           db.DeleteTvShow(origDbId);
@@ -536,7 +537,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
         // invalidating the old db ids and m_item is not (yet) updated at this point.
         bool hasInfo = false;
         const CVideoInfoTag* videoTag = m_item->GetVideoInfoTag();
-        if (videoTag && videoTag->m_type == MediaTypeSeason && videoTag->m_iSeason != -1)
+        if (videoTag && videoTag->GetMediaType() == MediaType::SEASON && videoTag->m_iSeason != -1)
           hasInfo = db.GetSeasonInfo(m_item->GetPath(), videoTag->m_iSeason,
                                      *m_item->GetVideoInfoTag(), m_item.get());
         if (!hasInfo)
@@ -549,7 +550,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
     if (hasAdditionalAssets)
     {
       const auto videoTag{m_item->GetVideoInfoTag()};
-      db.UpdateAssetsOwner(videoTag->m_type, origDbId, videoTag->m_iDbId);
+      db.UpdateAssetsOwner(videoTag->GetMediaType(), origDbId, videoTag->m_iDbId);
     }
 
     // we're finally done

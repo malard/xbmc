@@ -13,20 +13,23 @@
 #include "video/Bookmark.h"
 #include "video/VideoInfoTag.h"
 
+using KODI::MEDIA::MediaType;
+
 namespace
 {
 bool HasPreferredArtType(const CFileItem& item)
 {
-  return item.HasVideoInfoTag() && (item.GetVideoInfoTag()->m_type == MediaTypeMovie ||
-                                    item.GetVideoInfoTag()->m_type == MediaTypeTvShow ||
-                                    item.GetVideoInfoTag()->m_type == MediaTypeSeason ||
-                                    item.GetVideoInfoTag()->m_type == MediaTypeVideoCollection);
+  return item.HasVideoInfoTag() &&
+         (item.GetVideoInfoTag()->GetMediaType() == MediaType::MOVIE ||
+          item.GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW ||
+          item.GetVideoInfoTag()->GetMediaType() == MediaType::SEASON ||
+          item.GetVideoInfoTag()->GetMediaType() == MediaType::VIDEO_COLLECTION);
 }
 
-std::string GetPreferredArtType(const MediaType& type)
+std::string GetPreferredArtType(MediaType type)
 {
-  if (type == MediaTypeMovie || type == MediaTypeTvShow || type == MediaTypeSeason ||
-      type == MediaTypeVideoCollection)
+  if (type == MediaType::MOVIE || type == MediaType::TV_SHOW || type == MediaType::SEASON ||
+      type == MediaType::VIDEO_COLLECTION)
   {
     return "poster";
   }
@@ -38,7 +41,7 @@ const std::string ContentUtils::GetPreferredArtImage(const CFileItem& item)
 {
   if (HasPreferredArtType(item))
   {
-    auto preferredArtType = GetPreferredArtType(item.GetVideoInfoTag()->m_type);
+    auto preferredArtType = GetPreferredArtType(item.GetVideoInfoTag()->GetMediaType());
     if (item.HasArt(preferredArtType))
     {
       return item.GetArt(preferredArtType);

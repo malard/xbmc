@@ -154,7 +154,7 @@ private:
   static void FillListArt(CVariant& list,
                           const std::set<std::string, std::less<>>& fields,
                           const char* idName,
-                          const MediaType& mediaType);
+                          KODI::MEDIA::MediaType mediaType);
 
   //! Narrows \p url to the artists in the role the caller's filter names, or to every role
   static void ApplyRoleFilter(const CVariant& parameterObject, CMusicDbUrl& url);

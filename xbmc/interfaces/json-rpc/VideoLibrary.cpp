@@ -40,6 +40,7 @@ using namespace JSONRPC;
 namespace
 {
 using FilterField = CFileItemHandler::FilterField;
+using KODI::MEDIA::MediaType;
 
 constexpr FilterField MOVIE_FILTERS[] = {FilterField::Number("genreId", "genreid"),
                                          FilterField::Text("genre"),
@@ -71,7 +72,7 @@ constexpr std::span<const FilterField> NO_FILTERS;
 struct KindTraits
 {
   VideoKind kind;
-  const char* name; //!< the media type
+  MediaType type; //!< the media type, whose name the kind goes by on the wire
   const char* id;
   const char* fields;
   const char* filter; //!< nullptr for a kind that takes no filter
@@ -81,17 +82,17 @@ struct KindTraits
 };
 
 constexpr KindTraits KINDS[] = {
-    {VideoKind::Movie, MediaTypeMovie, "movieId", "Video.Fields.Movie", "Video.Filter.Movies",
+    {VideoKind::Movie, MediaType::MOVIE, "movieId", "Video.Fields.Movie", "Video.Filter.Movies",
      "movies", MOVIE_FILTERS, "Video.Details.Movie.Set"},
-    {VideoKind::Set, MediaTypeVideoCollection, "setId", "Video.Fields.MovieSet", nullptr, "",
+    {VideoKind::Set, MediaType::VIDEO_COLLECTION, "setId", "Video.Fields.MovieSet", nullptr, "",
      NO_FILTERS, "Video.Details.MovieSet.Set"},
-    {VideoKind::TVShow, MediaTypeTvShow, "tvShowId", "Video.Fields.TVShow", "Video.Filter.TVShows",
-     "tvshows", TVSHOW_FILTERS, "Video.Details.TVShow.Set"},
-    {VideoKind::Season, MediaTypeSeason, "seasonId", "Video.Fields.Season", nullptr, "", NO_FILTERS,
-     "Video.Details.Season.Set"},
-    {VideoKind::Episode, MediaTypeEpisode, "episodeId", "Video.Fields.Episode",
+    {VideoKind::TVShow, MediaType::TV_SHOW, "tvShowId", "Video.Fields.TVShow",
+     "Video.Filter.TVShows", "tvshows", TVSHOW_FILTERS, "Video.Details.TVShow.Set"},
+    {VideoKind::Season, MediaType::SEASON, "seasonId", "Video.Fields.Season", nullptr, "",
+     NO_FILTERS, "Video.Details.Season.Set"},
+    {VideoKind::Episode, MediaType::EPISODE, "episodeId", "Video.Fields.Episode",
      "Video.Filter.Episodes", "episodes", EPISODE_FILTERS, "Video.Details.Episode.Set"},
-    {VideoKind::MusicVideo, MediaTypeMusicVideo, "musicVideoId", "Video.Fields.MusicVideo",
+    {VideoKind::MusicVideo, MediaType::MUSIC_VIDEO, "musicVideoId", "Video.Fields.MusicVideo",
      "Video.Filter.MusicVideos", "musicvideos", MUSICVIDEO_FILTERS, "Video.Details.MusicVideo.Set"},
 };
 
@@ -104,7 +105,7 @@ const KindTraits& TraitsOf(VideoKind kind)
 CVariant ItemTarget(VideoKind kind, int id)
 {
   CVariant item(CVariant::VariantTypeObject);
-  item["kind"] = TraitsOf(kind).name;
+  item["kind"] = KODI::MEDIA::NameOf(TraitsOf(kind).type).c_str();
   item["id"] = id;
   return Target("item", item);
 }
@@ -112,7 +113,7 @@ CVariant ItemTarget(VideoKind kind, int id)
 const KindTraits* TraitsNamed(std::string_view name)
 {
   const auto traits = std::ranges::find_if(KINDS, [name](const KindTraits& candidate)
-                                           { return name == candidate.name; });
+                                           { return name == KODI::MEDIA::NameOf(candidate.type); });
   return traits == std::end(KINDS) ? nullptr : &*traits;
 }
 
@@ -131,7 +132,8 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
   if (!parameterObject["filter"].isNull())
   {
     if (!traits.filter)
-      return CFileItemHandler::RefuseForKind("filter", traits.name, errorData);
+      return CFileItemHandler::RefuseForKind("filter", KODI::MEDIA::NameOf(traits.type).c_str(),
+                                             errorData);
 
     if (const JSONRPC_STATUS status = CFileItemHandler::CheckAgainstType(
             traits.filter, "filter", parameterObject["filter"], checked["filter"], errorData);
@@ -141,10 +143,12 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 
   if (parameterObject["tvShowId"].asInteger() != -1 && traits.kind != VideoKind::Season &&
       traits.kind != VideoKind::Episode)
-    return CFileItemHandler::RefuseForKind("tvShowId", traits.name, errorData);
+    return CFileItemHandler::RefuseForKind("tvShowId", KODI::MEDIA::NameOf(traits.type).c_str(),
+                                           errorData);
 
   if (parameterObject["season"].asInteger() != -1 && traits.kind != VideoKind::Episode)
-    return CFileItemHandler::RefuseForKind("season", traits.name, errorData);
+    return CFileItemHandler::RefuseForKind("season", KODI::MEDIA::NameOf(traits.type).c_str(),
+                                           errorData);
 
   return OK;
 }
@@ -175,7 +179,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   if (!videodatabase.Open())
     return InternalError;
 
-  const int details = RequiresAdditionalDetails(traits.name, parameterObject);
+  const int details = RequiresAdditionalDetails(traits.type, parameterObject);
   CFileItemList items;
 
   if (listing == Listing::RecentlyAdded)
@@ -354,7 +358,7 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
   if (status != OK)
     return status;
 
-  AnnounceChange(ANNOUNCEMENT::VideoLibrary, traits->name, id, names, result);
+  AnnounceChange(ANNOUNCEMENT::VideoLibrary, traits->type, id, names, result);
   return OK;
 }
 
@@ -365,7 +369,7 @@ JSONRPC_STATUS CVideoLibrary::ReadItem(
 
   CVariant request(CVariant::VariantTypeObject);
   request["properties"] = fields;
-  const int details = RequiresAdditionalDetails(traits.name, request);
+  const int details = RequiresAdditionalDetails(traits.type, request);
 
   CVideoInfoTag infos;
   std::shared_ptr<CFileItem> item;
@@ -424,23 +428,22 @@ JSONRPC_STATUS CVideoLibrary::ReadItem(
 
 JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)
 {
-  std::string media = parameterObject["type"].asString();
-  StringUtils::ToLower(media);
+  const MediaType media{KODI::MEDIA::MediaTypeFromName(parameterObject["type"].asString())};
   VideoDbContentType idContent = VideoDbContentType::UNKNOWN;
 
   std::string strPath = "videodb://";
   /* select which video content to get genres from*/
-  if (media == MediaTypeMovie)
+  if (media == MediaType::MOVIE)
   {
     idContent = VideoDbContentType::MOVIES;
     strPath += "movies";
   }
-  else if (media == MediaTypeTvShow)
+  else if (media == MediaType::TV_SHOW)
   {
     idContent = VideoDbContentType::TVSHOWS;
     strPath += "tvshows";
   }
-  else if (media == MediaTypeMusicVideo)
+  else if (media == MediaType::MUSIC_VIDEO)
   {
     idContent = VideoDbContentType::MUSICVIDEOS;
     strPath += "musicvideos";
@@ -465,23 +468,22 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVarian
 
 JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant& result)
 {
-  std::string media = parameterObject["type"].asString();
-  StringUtils::ToLower(media);
+  const MediaType media{KODI::MEDIA::MediaTypeFromName(parameterObject["type"].asString())};
   VideoDbContentType idContent = VideoDbContentType::UNKNOWN;
 
   std::string strPath = "videodb://";
   /* select which video content to get tags from*/
-  if (media == MediaTypeMovie)
+  if (media == MediaType::MOVIE)
   {
     idContent = VideoDbContentType::MOVIES;
     strPath += "movies";
   }
-  else if (media == MediaTypeTvShow)
+  else if (media == MediaType::TV_SHOW)
   {
     idContent = VideoDbContentType::TVSHOWS;
     strPath += "tvshows";
   }
-  else if (media == MediaTypeMusicVideo)
+  else if (media == MediaType::MUSIC_VIDEO)
   {
     idContent = VideoDbContentType::MUSICVIDEOS;
     strPath += "musicvideos";
@@ -506,17 +508,17 @@ JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant&
 
 namespace
 {
-const std::map<std::string, std::string> mediaIDTypes = {
-    {"episodeId", MediaTypeEpisode},     {"tvShowId", MediaTypeTvShow},
-    {"seasonId", MediaTypeSeason},       {"movieId", MediaTypeMovie},
-    {"setId", MediaTypeVideoCollection}, {"musicVideoId", MediaTypeMusicVideo},
+const std::map<std::string, MediaType> mediaIDTypes = {
+    {"episodeId", MediaType::EPISODE},      {"tvShowId", MediaType::TV_SHOW},
+    {"seasonId", MediaType::SEASON},        {"movieId", MediaType::MOVIE},
+    {"setId", MediaType::VIDEO_COLLECTION}, {"musicVideoId", MediaType::MUSIC_VIDEO},
 };
 }
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  std::string mediaType;
+  MediaType mediaType = MediaType::NONE;
   int mediaID = -1;
   for (const auto& mediaIDType : mediaIDTypes)
   {
@@ -535,7 +537,8 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
     return InternalError;
 
   CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType : videodatabase.GetAvailableArtTypesForItem(mediaID, mediaType))
+  for (const auto& artType :
+       videodatabase.GetAvailableArtTypesForItem(mediaID, KODI::MEDIA::NameOf(mediaType)))
   {
     availablearttypes.append(artType);
   }
@@ -547,7 +550,7 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  std::string mediaType;
+  MediaType mediaType = MediaType::NONE;
   int mediaID = -1;
   for (const auto& mediaIDType : mediaIDTypes)
   {
@@ -569,7 +572,8 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
     return InternalError;
 
   CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry : videodatabase.GetAvailableArtForItem(mediaID, mediaType, artType))
+  for (const auto& artentry :
+       videodatabase.GetAvailableArtForItem(mediaID, KODI::MEDIA::NameOf(mediaType), artType))
   {
     CVariant item = CVariant(CVariant::VariantTypeObject);
     item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
@@ -603,7 +607,8 @@ JSONRPC_STATUS CVideoLibrary::SetMovieDetails(int id,
   if (videodatabase.UpdateDetailsForMovie(id, infos, edit.artwork, edit.updatedDetails) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMovie, edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::MOVIE),
+                                      edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);
@@ -628,7 +633,8 @@ JSONRPC_STATUS CVideoLibrary::SetMovieSetDetails(int id,
   if (videodatabase.SetDetailsForMovieSet(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, "set", edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(
+          infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION), edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -653,12 +659,13 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id,
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
-  videodatabase.RemoveTagsFromItem(id, MediaTypeTvShow);
+  videodatabase.RemoveTagsFromItem(id, MediaType::TV_SHOW);
 
   if (!videodatabase.UpdateDetailsForTvShow(id, infos, edit.artwork, seasonArt))
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeTvShow, edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::TV_SHOW),
+                                      edit.removedArtwork))
     return InternalError;
 
   const bool updatePlaycount = ParameterNotNull(properties, "playCount");
@@ -717,7 +724,8 @@ JSONRPC_STATUS CVideoLibrary::SetSeasonDetails(int id,
   if (videodatabase.SetDetailsForSeason(infos, edit.artwork, infos.m_iIdShow, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeSeason, edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::SEASON),
+                                      edit.removedArtwork))
     return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
@@ -746,7 +754,8 @@ JSONRPC_STATUS CVideoLibrary::SetEpisodeDetails(int id,
   if (videodatabase.SetDetailsForEpisode(infos, edit.artwork, tvshowid, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeEpisode, edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::EPISODE),
+                                      edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);
@@ -772,12 +781,13 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(int id,
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
-  videodatabase.RemoveTagsFromItem(id, MediaTypeMusicVideo);
+  videodatabase.RemoveTagsFromItem(id, MediaType::MUSIC_VIDEO);
 
   if (videodatabase.SetDetailsForMusicVideo(infos, edit.artwork, id) <= 0)
     return InternalError;
 
-  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, MediaTypeMusicVideo, edit.removedArtwork))
+  if (!videodatabase.RemoveArtForItem(infos.m_iDbId, KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO),
+                                      edit.removedArtwork))
     return InternalError;
 
   StorePlaybackEdit(properties, before, infos, videodatabase);
@@ -1187,11 +1197,10 @@ bool CVideoLibrary::FillFileItemList(const CVariant& parameterObject, CFileItemL
   return success;
 }
 
-int CVideoLibrary::RequiresAdditionalDetails(const MediaType& mediaType,
-                                             const CVariant& parameterObject)
+int CVideoLibrary::RequiresAdditionalDetails(MediaType mediaType, const CVariant& parameterObject)
 {
-  if (mediaType != MediaTypeMovie && mediaType != MediaTypeTvShow &&
-      mediaType != MediaTypeEpisode && mediaType != MediaTypeMusicVideo)
+  if (mediaType != MediaType::MOVIE && mediaType != MediaType::TV_SHOW &&
+      mediaType != MediaType::EPISODE && mediaType != MediaType::MUSIC_VIDEO)
     return VideoDbDetailsNone;
 
   return GetDetailsFromJsonParameters(parameterObject);

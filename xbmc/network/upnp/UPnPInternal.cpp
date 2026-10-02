@@ -51,6 +51,7 @@
 using namespace KODI;
 using namespace MUSIC_INFO;
 using namespace XFILE;
+using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -387,7 +388,7 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
 
   if (tag.m_iDbId != -1)
   {
-    if (tag.m_type == MediaTypeMusicVideo)
+    if (tag.GetMediaType() == MediaType::MUSIC_VIDEO)
     {
       object.m_ObjectClass.type = "object.item.videoItem.musicVideoClip";
       object.m_Creator =
@@ -403,7 +404,7 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
       object.m_ReferenceID =
           EncodeObjectId(StringUtils::Format("videodb://musicvideos/titles/{}", tag.m_iDbId));
     }
-    else if (tag.m_type == MediaTypeMovie)
+    else if (tag.GetMediaType() == MediaType::MOVIE)
     {
       object.m_ObjectClass.type = "object.item.videoItem.movie";
       object.m_Title = tag.m_strTitle.c_str();
@@ -415,7 +416,7 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
     {
       object.m_Recorded.series_title = tag.m_strShowTitle.c_str();
 
-      if (tag.m_type == MediaTypeTvShow)
+      if (tag.GetMediaType() == MediaType::TV_SHOW)
       {
         object.m_ObjectClass.type = "object.container.album.videoAlbum.videoBroadcastShow";
         object.m_Title = tag.m_strTitle.c_str();
@@ -428,7 +429,7 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
         object.m_ReferenceID =
             EncodeObjectId(StringUtils::Format("videodb://tvshows/titles/{}", tag.m_iDbId));
       }
-      else if (tag.m_type == MediaTypeSeason)
+      else if (tag.GetMediaType() == MediaType::SEASON)
       {
         object.m_ObjectClass.type = "object.container.album.videoAlbum.videoBroadcastSeason";
         object.m_Title = tag.m_strTitle.c_str();
@@ -1040,7 +1041,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
   if (!object.m_Recorded.program_title.IsEmpty() ||
       object.m_ObjectClass.type == "object.item.videoItem.videoBroadcast")
   {
-    tag.m_type = MediaTypeEpisode;
+    tag.m_type = KODI::MEDIA::NameOf(MediaType::EPISODE);
     tag.m_strShowTitle = object.m_Recorded.series_title;
     if (date.IsValid())
       tag.m_firstAired = date;
@@ -1080,13 +1081,13 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
     {
       if (object.m_ObjectClass.type == "object.container.album.videoAlbum.videoBroadcastSeason")
       {
-        tag.m_type = MediaTypeSeason;
+        tag.m_type = KODI::MEDIA::NameOf(MediaType::SEASON);
         tag.m_iSeason = object.m_Recorded.episode_season;
         tag.m_strShowTitle = object.m_Recorded.series_title;
       }
       else
       {
-        tag.m_type = MediaTypeTvShow;
+        tag.m_type = KODI::MEDIA::NameOf(MediaType::TV_SHOW);
         tag.m_strShowTitle = object.m_Title;
       }
 
@@ -1097,7 +1098,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
     }
     else if (object.m_ObjectClass.type == "object.item.videoItem.musicVideoClip")
     {
-      tag.m_type = MediaTypeMusicVideo;
+      tag.m_type = KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO);
 
       if (object.m_People.artists.GetItemCount() > 0)
       {
@@ -1111,7 +1112,7 @@ int PopulateTagFromObject(CVideoInfoTag& tag,
       tag.m_strAlbum = object.m_Affiliation.album;
     }
     else
-      tag.m_type = MediaTypeMovie;
+      tag.m_type = KODI::MEDIA::NameOf(MediaType::MOVIE);
 
     tag.m_strTitle = object.m_Title;
     if (date.IsValid())
@@ -1298,9 +1299,9 @@ std::shared_ptr<CFileItem> BuildObject(PLT_MediaObject* entry,
   {
     int episodes = pItem->GetVideoInfoTag()->m_iEpisode;
     int played = pItem->GetVideoInfoTag()->GetPlayCount();
-    const std::string& type = pItem->GetVideoInfoTag()->m_type;
+    const MediaType type = pItem->GetVideoInfoTag()->GetMediaType();
     bool watched(false);
-    if (type == MediaTypeTvShow || type == MediaTypeSeason)
+    if (type == MediaType::TV_SHOW || type == MediaType::SEASON)
     {
       pItem->SetProperty("totalepisodes", episodes);
       pItem->SetProperty("numepisodes", episodes);
@@ -1310,7 +1311,7 @@ std::shared_ptr<CFileItem> BuildObject(PLT_MediaObject* entry,
       watched = (episodes && played >= episodes);
       pItem->GetVideoInfoTag()->SetPlayCount(watched ? 1 : 0);
     }
-    else if (type == MediaTypeEpisode || type == MediaTypeMovie)
+    else if (type == MediaType::EPISODE || type == MediaType::MOVIE)
       watched = (played > 0);
     pItem->SetOverlayImage(watched ? CGUIListItem::ICON_OVERLAY_WATCHED
                                    : CGUIListItem::ICON_OVERLAY_UNWATCHED);

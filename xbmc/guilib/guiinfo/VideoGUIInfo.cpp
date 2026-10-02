@@ -52,6 +52,7 @@
 using namespace KODI::GUILIB;
 using namespace KODI::GUILIB::GUIINFO;
 using namespace KODI;
+using KODI::MEDIA::MediaType;
 
 CVideoGUIInfo::CVideoGUIInfo()
   : m_appPlayer(CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()),
@@ -364,7 +365,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         return true;
       case VIDEOPLAYER_EPISODENAME:
       case LISTITEM_EPISODENAME:
-        if (tag->m_type == MediaTypeEpisode)
+        if (tag->GetMediaType() == MediaType::EPISODE)
         {
           value = tag->m_strTitle;
           return true;
@@ -478,12 +479,13 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
             CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
                 CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
-        if (tag->m_type != MediaTypeTvShow && tag->m_type != MediaTypeVideoCollection &&
-            tag->GetPlayCount() == 0 && setting &&
-            ((tag->m_type == MediaTypeMovie &&
+        if (tag->GetMediaType() != MediaType::TV_SHOW &&
+            tag->GetMediaType() != MediaType::VIDEO_COLLECTION && tag->GetPlayCount() == 0 &&
+            setting &&
+            ((tag->GetMediaType() == MediaType::MOVIE &&
               !CSettingUtils::FindIntInList(setting,
                                             CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_MOVIES)) ||
-             (tag->m_type == MediaTypeEpisode &&
+             (tag->GetMediaType() == MediaType::EPISODE &&
               !CSettingUtils::FindIntInList(
                   setting, CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_TVSHOWEPISODES))))
         {
@@ -985,7 +987,7 @@ bool CVideoGUIInfo::GetBool(bool& value,
       // LISTITEM_*
       /////////////////////////////////////////////////////////////////////////////////////////////
       case LISTITEM_IS_COLLECTION:
-        value = tag->m_type == MediaTypeVideoCollection;
+        value = tag->GetMediaType() == MediaType::VIDEO_COLLECTION;
         return true;
       case LISTITEM_ISVIDEOEXTRA:
         value = (tag->GetAssetInfo().GetType() == VideoAssetType::EXTRA);
@@ -994,7 +996,7 @@ bool CVideoGUIInfo::GetBool(bool& value,
         value = tag->HasVideoExtras();
         return true;
       case LISTITEM_ISDEFAULTVIDEOVERSION_NAME:
-        value = tag->m_type == MediaTypeMovie &&
+        value = tag->GetMediaType() == MediaType::MOVIE &&
                 tag->GetAssetInfo().GetId() == VIDEO_VERSION_ID_DEFAULT;
         return true;
       default:
@@ -1015,11 +1017,11 @@ bool CVideoGUIInfo::GetBool(bool& value,
       std::string strContent = "files";
       if (tag)
       {
-        if (tag->m_type == MediaTypeMovie)
+        if (tag->GetMediaType() == MediaType::MOVIE)
           strContent = "movies";
-        else if (tag->m_type == MediaTypeEpisode)
+        else if (tag->GetMediaType() == MediaType::EPISODE)
           strContent = "episodes";
-        else if (tag->m_type == MediaTypeMusicVideo)
+        else if (tag->GetMediaType() == MediaType::MUSIC_VIDEO)
           strContent = "musicvideos";
       }
       value = StringUtils::EqualsNoCase(info.GetData3(), strContent);

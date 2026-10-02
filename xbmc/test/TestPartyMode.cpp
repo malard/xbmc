@@ -25,7 +25,7 @@ namespace
 std::shared_ptr<CFileItem> Song(int id)
 {
   auto item = std::make_shared<CFileItem>("/music/" + std::to_string(id) + ".flac", false);
-  item->GetMusicInfoTag()->SetDatabaseId(id, "song");
+  item->GetMusicInfoTag()->SetDatabaseId(id, KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::SONG));
   return item;
 }
 

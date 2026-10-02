@@ -11,6 +11,7 @@
 #include "JSONRPC.h"
 #include "JSONUtils.h"
 #include "interfaces/IAnnouncer.h"
+#include "media/MediaType.h"
 
 #include <memory>
 #include <optional>
@@ -160,7 +161,7 @@ protected:
 
   //! Announces the \p names of the item of \p kind with \p id changed, to the values in \p item
   static void AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
-                             const std::string& kind,
+                             KODI::MEDIA::MediaType kind,
                              int id,
                              const CVariant& names,
                              const CVariant& item);

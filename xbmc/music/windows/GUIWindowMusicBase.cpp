@@ -87,6 +87,7 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
 
 using namespace std::chrono_literals;
 using KODI::MEDIA::MediaSection;
+using KODI::MEDIA::MediaType;
 
 #define CONTROL_BTNVIEWASICONS  2
 #define CONTROL_BTNSORTBY       3
@@ -306,7 +307,7 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
   }
 
   if (VIDEO::IsVideo(*item) && item->HasVideoInfoTag() &&
-      item->GetVideoInfoTag()->m_type == MediaTypeMusicVideo)
+      item->GetVideoInfoTag()->GetMediaType() == MediaType::MUSIC_VIDEO)
   { // Music video on a mixed current playlist or navigation by music > music video > artist > video
     CGUIDialogVideoInfo::ShowFor(*item);
     return;
@@ -319,9 +320,9 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
   }
 
   // Match visibility test of CMusicInfo::IsVisible
-  if (item->HasMusicInfoTag() && (item->GetMusicInfoTag()->GetType() == MediaTypeSong ||
-    item->GetMusicInfoTag()->GetType() == MediaTypeAlbum ||
-    item->GetMusicInfoTag()->GetType() == MediaTypeArtist))
+  if (item->HasMusicInfoTag() && (item->GetMusicInfoTag()->GetMediaType() == MediaType::SONG ||
+                                  item->GetMusicInfoTag()->GetMediaType() == MediaType::ALBUM ||
+                                  item->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST))
     CGUIDialogMusicInfo::ShowFor(item.get());
 }
 
@@ -755,9 +756,9 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     }
     if (artfound)
     {
-      std::string dirType = MediaTypeArtist;
+      std::string dirType = KODI::MEDIA::NameOf(MediaType::ARTIST);
       if (params.GetAlbumId() > 0)
-        dirType = MediaTypeAlbum;
+        dirType = KODI::MEDIA::NameOf(MediaType::ALBUM);
       KODI::ART::Artwork artmap;
       for (auto artitem : art)
       {
@@ -765,10 +766,10 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
         if (dirType == artitem.mediaType)
           artname = artitem.artType;
         else if (artitem.prefix.empty())
-          artname = artitem.mediaType + "." + artitem.artType;
+          artname = std::string{artitem.mediaType} + "." + artitem.artType;
         else
         {
-          if (dirType == MediaTypeAlbum)
+          if (dirType == KODI::MEDIA::NameOf(MediaType::ALBUM))
             StringUtils::Replace(artitem.prefix, "albumartist", "artist");
           artname = artitem.prefix + "." + artitem.artType;
         }

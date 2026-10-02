@@ -62,6 +62,7 @@ using namespace ANNOUNCEMENT;
 using namespace KODI;
 using namespace KODI::VIDEO;
 using namespace XFILE;
+using KODI::MEDIA::MediaType;
 using KODI::UTILITY::CDigest;
 
 namespace UPNP
@@ -364,7 +365,7 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
         }
 
         // all items apart from songs (artists, albums, etc) are folders
-        if (!item->HasMusicInfoTag() || item->GetMusicInfoTag()->GetType() != MediaTypeSong)
+        if (!item->HasMusicInfoTag() || item->GetMusicInfoTag()->GetMediaType() != MediaType::SONG)
         {
           item->SetFolder(true);
         }
@@ -421,8 +422,8 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
           }
         }
 
-        if (item->GetVideoInfoTag()->m_type == MediaTypeTvShow ||
-            item->GetVideoInfoTag()->m_type == MediaTypeSeason)
+        if (item->GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW ||
+            item->GetVideoInfoTag()->GetMediaType() == MediaType::SEASON)
         {
           // for tvshows and seasons, iEpisode and playCount are
           // invalid
@@ -550,7 +551,7 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
     // as we don't differentiate 'updates' from 'adds' in RPC interface
     if (flag == VideoLibrary)
     {
-      if (item_type == MediaTypeEpisode)
+      if (item_type == KODI::MEDIA::NameOf(MediaType::EPISODE))
       {
         CVideoDatabase db;
         if (!db.Open())
@@ -562,23 +563,23 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
                                             season_id, show_id));
         UpdateContainer("videodb://recentlyaddedepisodes/");
       }
-      else if (item_type == MediaTypeTvShow)
+      else if (item_type == KODI::MEDIA::NameOf(MediaType::TV_SHOW))
       {
         UpdateContainer("library://video/tvshows/titles.xml/");
         UpdateContainer("videodb://recentlyaddedepisodes/");
       }
-      else if (item_type == MediaTypeMovie)
+      else if (item_type == KODI::MEDIA::NameOf(MediaType::MOVIE))
       {
         UpdateContainer("library://video/movies/titles.xml/");
         UpdateContainer("videodb://recentlyaddedmovies/");
       }
-      else if (item_type == MediaTypeMusicVideo)
+      else if (item_type == KODI::MEDIA::NameOf(MediaType::MUSIC_VIDEO))
       {
         UpdateContainer("library://video/musicvideos/titles.xml/");
         UpdateContainer("videodb://recentlyaddedmusicvideos/");
       }
     }
-    else if (flag == AudioLibrary && item_type == MediaTypeSong)
+    else if (flag == AudioLibrary && item_type == KODI::MEDIA::NameOf(MediaType::SONG))
     {
       // we also update the 'songs' container is maybe a performance drop too
       // high? would need to check if slow clients even cache at all anyway

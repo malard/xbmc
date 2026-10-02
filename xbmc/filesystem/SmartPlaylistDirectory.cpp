@@ -35,6 +35,7 @@
 constexpr char PROPERTY_WATCHED_MODE[] = "watchedmode";
 
 using namespace KODI;
+using KODI::MEDIA::MediaType;
 
 namespace XFILE
 {
@@ -104,14 +105,14 @@ namespace XFILE
       CVideoDatabase db;
       if (db.Open())
       {
-        MediaType mediaType = CMediaTypes::FromString(playlist.GetType());
+        MediaType mediaType = KODI::MEDIA::MediaTypeFromName(playlist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
         {
-          if (mediaType == MediaTypeTvShow || mediaType == MediaTypeEpisode)
+          if (mediaType == MediaType::TV_SHOW || mediaType == MediaType::EPISODE)
             baseDir = "videodb://tvshows/";
-          else if (mediaType == MediaTypeMovie)
+          else if (mediaType == MediaType::MOVIE)
             baseDir = "videodb://movies/";
           else
             return false;
@@ -122,7 +123,7 @@ namespace XFILE
             baseDir += group;
           URIUtils::AddSlashAtEnd(baseDir);
 
-          if (mediaType == MediaTypeEpisode)
+          if (mediaType == MediaType::EPISODE)
             baseDir += "-1/-1/";
         }
 
@@ -149,7 +150,7 @@ namespace XFILE
 
         // if we retrieve a list of episodes and we didn't receive
         // a pre-defined base path, we need to fix it
-        if (strBaseDir.empty() && mediaType == MediaTypeEpisode && !isGrouped)
+        if (strBaseDir.empty() && mediaType == MediaType::EPISODE && !isGrouped)
           videoUrl.AppendPath("-1/-1/");
         items.SetProperty(PROPERTY_PATH_DB, videoUrl.ToString());
       }
@@ -163,7 +164,7 @@ namespace XFILE
         if (playlist.GetType() == "mixed" || playlist.GetType().empty())
           plist.SetType("songs");
 
-        MediaType mediaType = CMediaTypes::FromString(plist.GetType());
+        MediaType mediaType = KODI::MEDIA::MediaTypeFromName(plist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
@@ -171,11 +172,11 @@ namespace XFILE
           baseDir = "musicdb://";
           if (!isGrouped)
           {
-            if (mediaType == MediaTypeArtist)
+            if (mediaType == MediaType::ARTIST)
               baseDir += "artists";
-            else if (mediaType == MediaTypeAlbum)
+            else if (mediaType == MediaType::ALBUM)
               baseDir += "albums";
-            else if (mediaType == MediaTypeSong)
+            else if (mediaType == MediaType::SONG)
               baseDir += "songs";
             else
               return false;

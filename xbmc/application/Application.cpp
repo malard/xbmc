@@ -1256,7 +1256,7 @@ bool CApplication::OnAction(const CAction &action)
       {
         db.SetVideoUserRating(playing->GetVideoInfoTag()->m_iDbId,
                               playing->GetVideoInfoTag()->m_iUserRating,
-                              playing->GetVideoInfoTag()->m_type);
+                              playing->GetVideoInfoTag()->GetMediaType());
         db.Close();
       }
       CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);

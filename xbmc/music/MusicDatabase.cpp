@@ -83,6 +83,7 @@ using namespace MUSIC_INFO;
 
 using ADDON::AddonPtr;
 using KODI::MEDIA::MediaSection;
+using KODI::MEDIA::MediaType;
 using KODI::MESSAGING::HELPERS::DialogResponse;
 
 #ifdef HAS_OPTICAL_DRIVE
@@ -95,20 +96,20 @@ namespace
 constexpr unsigned int RECENTLY_PLAYED_LIMIT = 25;
 constexpr size_t MIN_FULL_SEARCH_LENGTH = 3;
 
-void AnnounceRemove(const std::string& content, int id)
+void AnnounceRemove(MediaType content, int id)
 {
   CVariant data;
-  data["type"] = content;
+  data["type"] = KODI::MEDIA::NameOf(content).c_str();
   data["id"] = id;
   if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
     data["transaction"] = true;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnRemove", data);
 }
 
-void AnnounceUpdate(const std::string& content, int id, bool added = false)
+void AnnounceUpdate(MediaType content, int id, bool added = false)
 {
   CVariant data;
-  data["type"] = content;
+  data["type"] = KODI::MEDIA::NameOf(content).c_str();
   data["id"] = id;
   if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
     data["transaction"] = true;
@@ -897,7 +898,7 @@ bool CMusicDatabase::AddAlbum(CAlbum& album, int idSource)
   }
 
   for (const auto& [type, url] : album.art)
-    SetArtForItem(album.idAlbum, MediaTypeAlbum, type, url);
+    SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), type, url);
 
   // Set album disc total
   m_pDS->exec(
@@ -1055,7 +1056,7 @@ bool CMusicDatabase::UpdateAlbum(CAlbum& album)
   }
 
   if (!album.art.empty())
-    SetArtForItem(album.idAlbum, MediaTypeAlbum, album.art);
+    SetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), album.art);
 
   CheckArtistLinksChanged();
 
@@ -1241,13 +1242,13 @@ int CMusicDatabase::AddSong(const int idSong,
                  iBPM, iBitRate, iSampleRate, iChannels, songVideoURL);
     }
     if (!strThumb.empty())
-      SetArtForItem(idNew, MediaTypeSong, "thumb", strThumb);
+      SetArtForItem(idNew, KODI::MEDIA::NameOf(MediaType::SONG), "thumb", strThumb);
 
     // Song genres added, and genre string updated to use the standardised genre names
     AddSongGenres(idNew, genres);
 
     if (m_announceUpdates)
-      AnnounceUpdate(MediaTypeSong, idNew, true);
+      AnnounceUpdate(MediaType::SONG, idNew, true);
   }
   catch (...)
   {
@@ -1456,7 +1457,7 @@ int CMusicDatabase::UpdateSong(int idSong,
   bool status = ExecuteQuery(strSQL);
 
   if (status && m_announceUpdates)
-    AnnounceUpdate(MediaTypeSong, idSong);
+    AnnounceUpdate(MediaType::SONG, idSong);
   return idSong;
 }
 
@@ -1651,7 +1652,7 @@ int CMusicDatabase::UpdateAlbum(int idAlbum,
 
   bool status = ExecuteQuery(strSQL);
   if (status && m_announceUpdates)
-    AnnounceUpdate(MediaTypeAlbum, idAlbum);
+    AnnounceUpdate(MediaType::ALBUM, idAlbum);
   return idAlbum;
 }
 
@@ -1874,7 +1875,7 @@ bool CMusicDatabase::UpdateArtist(const CArtist& artist)
 
   // Set current artwork (held in art table)
   if (!artist.art.empty())
-    SetArtForItem(artist.idArtist, MediaTypeArtist, artist.art);
+    SetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artist.art);
 
   return true;
 }
@@ -2105,7 +2106,7 @@ int CMusicDatabase::UpdateArtist(int idArtist,
 
   bool status = ExecuteQuery(strSQL);
   if (status && m_announceUpdates)
-    AnnounceUpdate(MediaTypeArtist, idArtist);
+    AnnounceUpdate(MediaType::ARTIST, idArtist);
   return idArtist;
 }
 
@@ -2135,7 +2136,7 @@ bool CMusicDatabase::UpdateArtistScrapedMBID(int idArtist,
   if (status)
   {
     if (m_announceUpdates)
-      AnnounceUpdate(MediaTypeArtist, idArtist);
+      AnnounceUpdate(MediaType::ARTIST, idArtist);
     return true;
   }
   return false;
@@ -2367,7 +2368,7 @@ bool CMusicDatabase::AddArtistVideoLinks(const CArtist& artist)
         { // already have a videothumb for this song ?
           strSQL2 = PrepareSQL("SELECT art_id FROM art "
                                "WHERE media_id=%i AND media_type='%s' AND type='videothumb'",
-                               songId, MediaTypeSong);
+                               songId, KODI::MEDIA::NameOf(MediaType::SONG).c_str());
           m_pDS2->query(strSQL2);
           if (!m_pDS2->eof())
           { // update existing thumb
@@ -2382,7 +2383,8 @@ bool CMusicDatabase::AddArtistVideoLinks(const CArtist& artist)
             m_pDS2->close();
             strSQL2 = PrepareSQL("INSERT INTO art(media_id, media_type, type, url) "
                                  "VALUES (%d, '%s', '%s', '%s')",
-                                 songId, MediaTypeSong, "videothumb", videoURL.thumbURL.c_str());
+                                 songId, KODI::MEDIA::NameOf(MediaType::SONG).c_str(), "videothumb",
+                                 videoURL.thumbURL.c_str());
             m_pDS2->exec(strSQL2);
           }
           m_pDS2->close();
@@ -2524,7 +2526,7 @@ bool CMusicDatabase::GetArtistDiscography(int idArtist, CFileItemList& items)
       {
         auto pItem{std::make_shared<CFileItem>(strAlbum)};
         pItem->SetLabel2(m_pDS->fv("strYear").get_asString());
-        pItem->GetMusicInfoTag()->SetDatabaseId(idAlbum, MediaTypeAlbum);
+        pItem->GetMusicInfoTag()->SetDatabaseId(idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM));
         items.Add(std::move(pItem));
       }
       m_pDS->next();
@@ -3247,7 +3249,8 @@ void CMusicDatabase::GetFileItemFromDataset(const dbiplus::sql_record* const rec
   item->GetMusicInfoTag()->SetAlbumId(record->at(song_idAlbum).get_asInt());
   item->GetMusicInfoTag()->SetTrackAndDiscNumber(record->at(song_iTrack).get_asInt());
   item->GetMusicInfoTag()->SetDuration(record->at(song_iDuration).get_asInt());
-  item->GetMusicInfoTag()->SetDatabaseId(record->at(song_idSong).get_asInt(), MediaTypeSong);
+  item->GetMusicInfoTag()->SetDatabaseId(record->at(song_idSong).get_asInt(),
+                                         KODI::MEDIA::NameOf(MediaType::SONG));
   item->GetMusicInfoTag()->SetOriginalDate(record->at(song_strOrigReleaseDate).get_asString());
   item->GetMusicInfoTag()->SetReleaseDate(record->at(song_strReleaseDate).get_asString());
   item->GetMusicInfoTag()->SetTitle(record->at(song_strTitle).get_asString());
@@ -3616,7 +3619,8 @@ bool CMusicDatabase::SearchArtists(const std::string& search, CFileItemList& art
       // sort label is stored in the title tag
       label = StringUtils::Format("A {}", m_pDS->fv(1).get_asString());
       pItem->GetMusicInfoTag()->SetTitle(label);
-      pItem->GetMusicInfoTag()->SetDatabaseId(m_pDS->fv(0).get_asInt(), MediaTypeArtist);
+      pItem->GetMusicInfoTag()->SetDatabaseId(m_pDS->fv(0).get_asInt(),
+                                              KODI::MEDIA::NameOf(MediaType::ARTIST));
       artists.Add(std::move(pItem));
       m_pDS->next();
     }
@@ -5707,7 +5711,7 @@ bool CMusicDatabase::GetArtistsByWhere(const std::string& strBaseDir,
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     // Set Orderby and add any extra fields needed for sort e.g. "artistname" scalar query
-    GetOrderFilter(MediaTypeArtist, sorting, extFilter);
+    GetOrderFilter(MediaType::ARTIST, sorting, extFilter);
 
     strSQLExtra.clear();
     if (!BuildSQL(strSQLExtra, extFilter, strSQLExtra))
@@ -5744,7 +5748,7 @@ bool CMusicDatabase::GetArtistsByWhere(const std::string& strBaseDir,
     results.reserve(iRowsFound);
     // Populate results field vector from dataset
     FieldList fields;
-    if (!DatabaseUtils::GetDatabaseResults(MediaTypeArtist, fields, *m_pDS, results))
+    if (!DatabaseUtils::GetDatabaseResults(MediaType::ARTIST, fields, *m_pDS, results))
       return false;
     // Store item list sort order
     items.SetSortMethod(sortDescription.sortBy);
@@ -5768,7 +5772,8 @@ bool CMusicDatabase::GetArtistsByWhere(const std::string& strBaseDir,
         itemUrl.AppendPath(path);
         pItem->SetPath(itemUrl.ToString());
 
-        pItem->GetMusicInfoTag()->SetDatabaseId(artist.idArtist, MediaTypeArtist);
+        pItem->GetMusicInfoTag()->SetDatabaseId(artist.idArtist,
+                                                KODI::MEDIA::NameOf(MediaType::ARTIST));
         // Set icon now to avoid slow per item processing in FillInDefaultIcon later
         pItem->SetProperty("icon_never_overlay", true);
         pItem->SetArt("icon", "DefaultArtist.png");
@@ -5934,7 +5939,7 @@ bool CMusicDatabase::GetAlbumsByWhere(const std::string& baseDir,
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     // Set Orderby and add any extra fields needed for sort e.g. "artistname" scalar query
-    GetOrderFilter(MediaTypeAlbum, sorting, extFilter);
+    GetOrderFilter(MediaType::ALBUM, sorting, extFilter);
     // Modify order to use correct calculated year field
     if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
             CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
@@ -5977,7 +5982,7 @@ bool CMusicDatabase::GetAlbumsByWhere(const std::string& baseDir,
     results.reserve(iRowsFound);
     // Populate results field vector from dataset
     FieldList fields;
-    if (!DatabaseUtils::GetDatabaseResults(MediaTypeAlbum, fields, *m_pDS, results))
+    if (!DatabaseUtils::GetDatabaseResults(MediaType::ALBUM, fields, *m_pDS, results))
       return false;
     // Store item list sort order
     items.SetSortMethod(sorting.sortBy);
@@ -6158,7 +6163,7 @@ bool CMusicDatabase::GetDiscsByWhere(CMusicDbUrl& musicUrl,
     // Need guaranteed ordering for dataset processing to group by disc title
     // so apply sort later to fileitems list rather than dataset
     sorting.sortBy = SortBy::NONE;
-    if (!SortUtils::SortFromDataset(sorting, MediaTypeAlbum, *m_pDS, results))
+    if (!SortUtils::SortFromDataset(sorting, MediaType::ALBUM, *m_pDS, results))
       return false;
 
     // Get data from returned rows, note possibly multiple albums although usually only one
@@ -6323,7 +6328,7 @@ bool CMusicDatabase::GetSongsFullByWhere(const std::string& baseDir,
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     // Set Orderby and add any extra fields needed for sort e.g. "artistname" scalar query
-    GetOrderFilter(MediaTypeSong, sorting, extFilter);
+    GetOrderFilter(MediaType::SONG, sorting, extFilter);
     // Modify order to use correct calculated year field
     if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
             CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
@@ -6410,7 +6415,7 @@ bool CMusicDatabase::GetSongsFullByWhere(const std::string& baseDir,
     results.reserve(iRowsFound);
     // Populate results field vector from dataset
     FieldList fields;
-    if (!DatabaseUtils::GetDatabaseResults(MediaTypeSong, fields, *m_pDS, results))
+    if (!DatabaseUtils::GetDatabaseResults(MediaType::SONG, fields, *m_pDS, results))
       return false;
     // Store item list sort order
     items.SetSortMethod(sorting.sortBy);
@@ -6656,7 +6661,7 @@ bool CMusicDatabase::GetArtistsByWhereJSON(const std::set<std::string, std::less
     }
 
     // Get order by (and any scalar query artist fields)
-    int iAddedFields = GetOrderFilter(MediaTypeArtist, sortDescription, extFilter);
+    int iAddedFields = GetOrderFilter(MediaType::ARTIST, sortDescription, extFilter);
     // Replace artistview field names in order by artist table field names
     StringUtils::Replace(extFilter.order, "artistview", "artist");
     StringUtils::Replace(extFilter.fields, "artistview", "artist");
@@ -7371,7 +7376,7 @@ bool CMusicDatabase::GetAlbumsByWhereJSON(const std::set<std::string, std::less<
     resultcount = static_cast<size_t>(total);
 
     // Get order by (and any scalar query artist fields
-    int iAddedFields = GetOrderFilter(MediaTypeAlbum, sortDescription, extFilter);
+    int iAddedFields = GetOrderFilter(MediaType::ALBUM, sortDescription, extFilter);
 
     // Grab calculated artist/title sort fields that may have been added to filter
     // These need to be added to the end of the album table field list
@@ -7814,7 +7819,7 @@ bool CMusicDatabase::GetSongsByWhereJSON(
     total = GetSingleValueInt("SELECT COUNT(1) FROM song " + strSQLExtra, *m_pDS);
     resultcount = static_cast<size_t>(total);
 
-    int iAddedFields = GetOrderFilter(MediaTypeSong, sortDescription, extFilter);
+    int iAddedFields = GetOrderFilter(MediaType::SONG, sortDescription, extFilter);
     // Replace songview field names in order by with song, album path table field names
     // Field names in album same as song:
     //   idAlbum, strArtistDisp, strArtistSort, strGenres, iYear, bCompilation
@@ -11350,7 +11355,7 @@ bool CMusicDatabase::RemoveSongsFromPath(const std::string& path1,
           songmap.try_emplace(filename, songs);
           songs.clear();
         }
-        song.strThumb = GetArtForItem(song.idSong, MediaTypeSong, "thumb");
+        song.strThumb = GetArtForItem(song.idSong, KODI::MEDIA::NameOf(MediaType::SONG), "thumb");
         songs.emplace_back(song);
         songIds.push_back(PrepareSQL("%i", song.idSong));
         filename = song.strFileName;
@@ -11362,7 +11367,7 @@ bool CMusicDatabase::RemoveSongsFromPath(const std::string& path1,
 
       //! @todo move this below the m_pDS->exec block, once UPnP doesn't rely on this anymore
       for (const auto& id : songIds)
-        AnnounceRemove(MediaTypeSong, atoi(id.c_str()));
+        AnnounceRemove(MediaType::SONG, atoi(id.c_str()));
 
       // Delete all songs, and anything linked to them via triggers
       std::string strIDs = StringUtils::Join(songIds, ",");
@@ -12070,7 +12075,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
               // Note thumb resolution may be lower than original when overwriting
               KODI::ART::Artwork artwork;
               std::string savedArtfile;
-              if (GetArtForItem(album.idAlbum, MediaTypeAlbum, artwork))
+              if (GetArtForItem(album.idAlbum, KODI::MEDIA::NameOf(MediaType::ALBUM), artwork))
               {
                 for (const auto& [type, url] : artwork)
                 {
@@ -12165,7 +12170,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
           GetOldArtistPath(artist.idArtist, strPath);
           artist.Save(pMain, "artist", strPath);
 
-          if (GetArtForItem(artist.idArtist, MediaTypeArtist, artwork))
+          if (GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artwork))
           { // append to the XML
             TiXmlElement additionalNode("art");
             for (const auto& [type, url] : artwork)
@@ -12211,7 +12216,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
               if (settings.IsArtwork())
               {
                 std::string savedArtfile;
-                if (GetArtForItem(artist.idArtist, MediaTypeArtist, artwork))
+                if (GetArtForItem(artist.idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), artwork))
                 {
                   for (const auto& [type, url] : artwork)
                   {
@@ -12892,7 +12897,9 @@ void CMusicDatabase::SetItemUpdated(int mediaId, const std::string& mediaType)
   std::string strSQL;
   try
   {
-    if (mediaType != MediaTypeArtist && mediaType != MediaTypeAlbum && mediaType != MediaTypeSong)
+    if (mediaType != KODI::MEDIA::NameOf(MediaType::ARTIST) &&
+        mediaType != KODI::MEDIA::NameOf(MediaType::ALBUM) &&
+        mediaType != KODI::MEDIA::NameOf(MediaType::SONG))
       return;
     if (nullptr == m_pDB)
       return;
@@ -12902,11 +12909,11 @@ void CMusicDatabase::SetItemUpdated(int mediaId, const std::string& mediaType)
     // Fire AFTER UPDATE db trigger on artist, album or song table to set datemodified field
     // e.g. when artwork for item is changed from info dialog but not item details.
     // Use SQL UPDATE that does not change record data.
-    if (mediaType == MediaTypeArtist)
+    if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
       strSQL = PrepareSQL("UPDATE artist SET strArtist = strArtist WHERE idArtist = %i", mediaId);
-    else if (mediaType == MediaTypeAlbum)
+    else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
       strSQL = PrepareSQL("UPDATE album SET strAlbum = strAlbum WHERE idAlbum = %i", mediaId);
-    else // MediaTypeSong
+    else // MediaType::SONG
       strSQL = PrepareSQL("UPDATE song SET strTitle = strTitle WHERE idSong = %i", mediaId);
     m_pDS->exec(strSQL);
   }
@@ -12981,13 +12988,16 @@ bool CMusicDatabase::GetArtForItem(
 
     Filter filter;
     if (songId > 0)
-      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", songId, MediaTypeSong));
+      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", songId,
+                                    KODI::MEDIA::NameOf(MediaType::SONG).c_str()));
     if (albumId > 0)
-      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", albumId, MediaTypeAlbum),
+      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", albumId,
+                                    KODI::MEDIA::NameOf(MediaType::ALBUM).c_str()),
                          false);
     if (artistId > 0)
-      filter.AppendWhere(
-          PrepareSQL("media_id = %i AND media_type ='%s'", artistId, MediaTypeArtist), false);
+      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", artistId,
+                                    KODI::MEDIA::NameOf(MediaType::ARTIST).c_str()),
+                         false);
 
     strSQL = "SELECT DISTINCT art_id, media_id, media_type, type, '' as prefix, url, 0 as iorder "
              "FROM art";
@@ -13006,7 +13016,7 @@ bool CMusicDatabase::GetArtForItem(
             "url, album_artist.iOrder as iorder FROM art "
             "JOIN album_artist ON art.media_id = album_artist.idArtist AND art.media_type ='%s' "
             "WHERE album_artist.idAlbum = %i ",
-            MediaTypeArtist, albumId);
+            KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), albumId);
         if (bPrimaryArtist)
           strSQL2 += "AND album_artist.iOrder = 0";
 
@@ -13023,7 +13033,7 @@ bool CMusicDatabase::GetArtForItem(
               "JOIN album_artist ON art.media_id = album_artist.idArtist AND art.media_type ='%s' "
               "JOIN song ON song.idAlbum = album_artist.idAlbum  "
               "WHERE song.idSong = %i ",
-              MediaTypeArtist, songId);
+              KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), songId);
           if (bPrimaryArtist)
             strSQL2 += "AND album_artist.iOrder = 0";
 
@@ -13036,7 +13046,7 @@ bool CMusicDatabase::GetArtForItem(
             "url, song_artist.iOrder as iorder FROM art "
             "JOIN song_artist on art.media_id = song_artist.idArtist AND art.media_type = '%s' "
             "WHERE song_artist.idsong = %i AND song_artist.idRole = %i ",
-            MediaTypeArtist, songId, ROLE_ARTIST);
+            KODI::MEDIA::NameOf(MediaType::ARTIST).c_str(), songId, ROLE_ARTIST);
         if (bPrimaryArtist)
           strSQL2 += "AND song_artist.iOrder = 0";
 
@@ -13051,7 +13061,7 @@ bool CMusicDatabase::GetArtForItem(
                            "url, 0 as iorder FROM art "
                            "JOIN song ON art.media_id = song.idAlbum AND art.media_type ='%s' "
                            "WHERE song.idSong = %i ",
-                           MediaTypeAlbum, songId);
+                           KODI::MEDIA::NameOf(MediaType::ALBUM).c_str(), songId);
       strSQL = strSQL + " UNION " + strSQL2;
     }
 
@@ -13124,7 +13134,7 @@ std::string CMusicDatabase::GetArtForItem(int mediaId,
 }
 
 bool CMusicDatabase::RemoveArtForItem(int mediaId,
-                                      const MediaType& mediaType,
+                                      const std::string& mediaType,
                                       const std::string& artType)
 {
   return ExecuteQuery(PrepareSQL("DELETE FROM art "
@@ -13133,7 +13143,7 @@ bool CMusicDatabase::RemoveArtForItem(int mediaId,
 }
 
 bool CMusicDatabase::RemoveArtForItem(int mediaId,
-                                      const MediaType& mediaType,
+                                      const std::string& mediaType,
                                       const std::set<std::string, std::less<>>& artTypes)
 {
   bool result = true;
@@ -13143,7 +13153,7 @@ bool CMusicDatabase::RemoveArtForItem(int mediaId,
   return result;
 }
 
-bool CMusicDatabase::GetArtTypes(const MediaType& mediaType, std::vector<std::string>& artTypes)
+bool CMusicDatabase::GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes)
 {
   try
   {
@@ -13180,16 +13190,16 @@ bool CMusicDatabase::GetArtTypes(const MediaType& mediaType, std::vector<std::st
 }
 
 std::vector<std::string> CMusicDatabase::GetAvailableArtTypesForItem(int mediaId,
-                                                                     const MediaType& mediaType)
+                                                                     const std::string& mediaType)
 {
   CScraperUrl thumbURL;
-  if (mediaType == MediaTypeArtist)
+  if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
   {
     CArtist artist;
     if (GetArtist(mediaId, artist))
       thumbURL = artist.thumbURL;
   }
-  else if (mediaType == MediaTypeAlbum)
+  else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
   {
     CAlbum album;
     if (GetAlbum(mediaId, album))
@@ -13209,16 +13219,16 @@ std::vector<std::string> CMusicDatabase::GetAvailableArtTypesForItem(int mediaId
 }
 
 std::vector<CScraperUrl::SUrlEntry> CMusicDatabase::GetAvailableArtForItem(
-    int mediaId, const MediaType& mediaType, const std::string& artType)
+    int mediaId, const std::string& mediaType, const std::string& artType)
 {
   CScraperUrl thumbURL;
-  if (mediaType == MediaTypeArtist)
+  if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
   {
     CArtist artist;
     if (GetArtist(mediaId, artist))
       thumbURL = artist.thumbURL;
   }
-  else if (mediaType == MediaTypeAlbum)
+  else if (mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM))
   {
     CAlbum album;
     if (GetAlbum(mediaId, album))
@@ -13236,7 +13246,7 @@ std::vector<CScraperUrl::SUrlEntry> CMusicDatabase::GetAvailableArtForItem(
   return result;
 }
 
-int CMusicDatabase::GetOrderFilter(const std::string& type,
+int CMusicDatabase::GetOrderFilter(MediaType type,
                                    const SortDescription& sorting,
                                    Filter& filter) const
 {
@@ -13269,9 +13279,9 @@ int CMusicDatabase::GetOrderFilter(const std::string& type,
 
   // Get the right tableview as if we are using strArtistSort the column name is ambiguous
   std::string table;
-  if (StringUtils::StartsWithNoCase(type, "album"))
+  if (type == MediaType::ALBUM)
     table = "albumview.";
-  else if (StringUtils::StartsWithNoCase(type, "song"))
+  else if (type == MediaType::SONG)
     table = "songview.";
 
   // Convert field names into order by statement elements

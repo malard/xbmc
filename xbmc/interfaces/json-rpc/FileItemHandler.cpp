@@ -55,6 +55,7 @@
 using namespace MUSIC_INFO;
 using namespace JSONRPC;
 using namespace XFILE;
+using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -472,18 +473,18 @@ void CFileItemHandler::HandleFileItem(const char* ID,
           object["type"] = "recording";
         else if (item->HasMusicInfoTag())
         {
-          std::string type = item->GetMusicInfoTag()->GetType();
-          if (type == MediaTypeAlbum || type == MediaTypeSong || type == MediaTypeArtist)
-            object["type"] = type;
+          const MediaType type = item->GetMusicInfoTag()->GetMediaType();
+          if (type == MediaType::ALBUM || type == MediaType::SONG || type == MediaType::ARTIST)
+            object["type"] = KODI::MEDIA::NameOf(type).c_str();
           else if (!item->IsFolder())
-            object["type"] = MediaTypeSong;
+            object["type"] = KODI::MEDIA::NameOf(MediaType::SONG).c_str();
         }
         else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->m_type.empty())
         {
-          std::string type = item->GetVideoInfoTag()->m_type;
-          if (type == MediaTypeMovie || type == MediaTypeTvShow || type == MediaTypeEpisode ||
-              type == MediaTypeMusicVideo)
-            object["type"] = type;
+          const MediaType type = item->GetVideoInfoTag()->GetMediaType();
+          if (type == MediaType::MOVIE || type == MediaType::TV_SHOW ||
+              type == MediaType::EPISODE || type == MediaType::MUSIC_VIDEO)
+            object["type"] = KODI::MEDIA::NameOf(type).c_str();
         }
         else if (item->HasPictureInfoTag())
           object["type"] = "picture";
@@ -702,7 +703,7 @@ CVariant CFileItemHandler::ReadableNames(const CVariant& values, const char* fie
 }
 
 void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
-                                      const std::string& kind,
+                                      MediaType kind,
                                       int id,
                                       const CVariant& names,
                                       const CVariant& item)
@@ -711,7 +712,7 @@ void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
     return;
 
   CVariant data{CVariant::VariantTypeObject};
-  data["type"] = kind;
+  data["type"] = KODI::MEDIA::NameOf(kind).c_str();
   data["id"] = id;
   data["properties"] = CVariant{CVariant::VariantTypeObject};
   for (auto name = names.begin_array(); name != names.end_array(); ++name)

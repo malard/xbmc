@@ -36,6 +36,7 @@
 #include <string>
 
 using namespace KODI;
+using KODI::MEDIA::MediaType;
 
 static constexpr unsigned int CONTROL_LABEL_TITLE = 2;
 
@@ -213,14 +214,14 @@ void CGUIDialogVideoManager::Refresh()
   Clear();
 
   const int dbId{m_videoAsset->GetVideoInfoTag()->m_iDbId};
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->m_type};
+  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
   const VideoDbContentType itemType{m_videoAsset->GetVideoContentType()};
   const int selectedId =
       m_selectedVideoAsset != nullptr ? m_selectedVideoAsset->GetVideoInfoTag()->m_iDbId : -1;
 
   //! @todo db refactor: should not be versions, but assets
   m_database.GetVideoVersions(itemType, dbId, *m_videoAssetsList, GetVideoAssetType());
-  m_videoAssetsList->SetContent(CMediaTypes::ToPlural(mediaType));
+  m_videoAssetsList->SetContent(std::string{KODI::MEDIA::PluralNameOf(mediaType)});
 
   CVideoThumbLoader loader;
 
@@ -238,7 +239,8 @@ void CGUIDialogVideoManager::Refresh()
 
 void CGUIDialogVideoManager::SetVideoAsset(const std::shared_ptr<CFileItem>& item)
 {
-  if (!item || !item->HasVideoInfoTag() || item->GetVideoInfoTag()->m_type != MediaTypeMovie)
+  if (!item || !item->HasVideoInfoTag() ||
+      item->GetVideoInfoTag()->GetMediaType() != MediaType::MOVIE)
   {
     CLog::LogF(LOGERROR, "Unexpected video item!");
     return;

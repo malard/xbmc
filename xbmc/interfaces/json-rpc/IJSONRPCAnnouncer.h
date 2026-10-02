@@ -102,11 +102,11 @@ private:
                                  std::string& method,
                                  CVariant& data)
   {
-    static constexpr std::array<std::string_view, 6> VIDEO_KINDS{
-        MediaTypeMovie,  MediaTypeVideoCollection, MediaTypeTvShow,
-        MediaTypeSeason, MediaTypeEpisode,         MediaTypeMusicVideo};
-    static constexpr std::array<std::string_view, 3> AUDIO_KINDS{MediaTypeArtist, MediaTypeAlbum,
-                                                                 MediaTypeSong};
+    using KODI::MEDIA::MediaType;
+    static constexpr std::array VIDEO_KINDS{MediaType::MOVIE,   MediaType::VIDEO_COLLECTION,
+                                            MediaType::TV_SHOW, MediaType::SEASON,
+                                            MediaType::EPISODE, MediaType::MUSIC_VIDEO};
+    static constexpr std::array AUDIO_KINDS{MediaType::ARTIST, MediaType::ALBUM, MediaType::SONG};
 
     if ((flag != ANNOUNCEMENT::VideoLibrary && flag != ANNOUNCEMENT::AudioLibrary) ||
         (method != "OnUpdate" && method != "OnRemove"))
@@ -115,9 +115,10 @@ private:
     const CVariant& item = data.isMember("item") ? data["item"] : data;
     const int64_t id = item["id"].asInteger(-1);
     const std::string kind = item["type"].asString();
+    const auto isNamed = [&kind](MediaType type) { return KODI::MEDIA::NameOf(type) == kind; };
     const bool isKind = flag == ANNOUNCEMENT::VideoLibrary
-                            ? std::ranges::find(VIDEO_KINDS, kind) != VIDEO_KINDS.end()
-                            : std::ranges::find(AUDIO_KINDS, kind) != AUDIO_KINDS.end();
+                            ? std::ranges::any_of(VIDEO_KINDS, isNamed)
+                            : std::ranges::any_of(AUDIO_KINDS, isNamed);
     if (id <= 0 || !isKind)
       return false;
 

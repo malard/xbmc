@@ -28,6 +28,8 @@
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
+using KODI::MEDIA::MediaType;
+
 #if defined(TARGET_DARWIN_TVOS)
 #include "platform/darwin/tvos/TVOSTopShelf.h"
 #endif
@@ -125,7 +127,8 @@ bool CRecentlyAddedJob::UpdateVideo()
 
       std::string seasonThumb;
       if (item->GetVideoInfoTag()->m_iIdSeason > 0)
-        seasonThumb = videodatabase.GetArtForItem(item->GetVideoInfoTag()->m_iIdSeason, MediaTypeSeason, "thumb");
+        seasonThumb = videodatabase.GetArtForItem(item->GetVideoInfoTag()->m_iIdSeason,
+                                                  KODI::MEDIA::NameOf(MediaType::SEASON), "thumb");
 
       home->SetProperty("LatestEpisode." + value + ".Thumb"         , item->GetArt("thumb"));
       home->SetProperty("LatestEpisode." + value + ".ShowThumb"     , item->GetArt("tvshow.thumb"));
@@ -286,9 +289,11 @@ bool CRecentlyAddedJob::UpdateMusic()
       {
         for (const auto& artitem : art)
         {
-          if (artitem.mediaType == MediaTypeAlbum && artitem.artType == "thumb")
+          if (artitem.mediaType == KODI::MEDIA::NameOf(MediaType::ALBUM) &&
+              artitem.artType == "thumb")
             strThumb = artitem.url;
-          else if (artitem.mediaType == MediaTypeArtist && artitem.artType == "fanart")
+          else if (artitem.mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST) &&
+                   artitem.artType == "fanart")
             strFanart = artitem.url;
         }
       }

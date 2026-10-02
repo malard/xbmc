@@ -661,7 +661,9 @@ public:
   int GetDiscsCount(const std::string& baseDir, const Filter& filter = Filter());
   int GetSongsCount(const Filter& filter = Filter());
   bool GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription& sorting) override;
-  int GetOrderFilter(const std::string& type, const SortDescription& sorting, Filter& filter) const;
+  int GetOrderFilter(KODI::MEDIA::MediaType type,
+                     const SortDescription& sorting,
+                     Filter& filter) const;
 
   /////////////////////////////////////////////////
   // Party Mode
@@ -819,7 +821,7 @@ public:
   \return true if art is removed, false if no art is found.
   \sa RemoveArtForItem
   */
-  bool RemoveArtForItem(int mediaId, const MediaType& mediaType, const std::string& artType);
+  bool RemoveArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
 
   /*! \brief Remove art for a database item.
   Removes multiple pieces of art for a database item.
@@ -830,7 +832,7 @@ public:
   \sa RemoveArtForItem
   */
   bool RemoveArtForItem(int mediaId,
-                        const MediaType& mediaType,
+                        const std::string& mediaType,
                         const std::set<std::string, std::less<>>& artTypes);
 
   /*! \brief Fetch the distinct types of art held in the database for a type of media.
@@ -838,7 +840,7 @@ public:
   \param artTypes [out] the types of art e.g. "thumb", "fanart", etc.
   \return true if art is found, false if no art is found.
   */
-  bool GetArtTypes(const MediaType& mediaType, std::vector<std::string>& artTypes);
+  bool GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes);
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -846,7 +848,7 @@ public:
   \param mediaType the type of media, which corresponds to the table the item resides in (artist/album).
   \return the types of art e.g. "thumb", "fanart", etc.
   */
-  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, const MediaType& mediaType);
+  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, const std::string& mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.
@@ -856,7 +858,7 @@ public:
   \return list of URLs
   */
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
-                                                             const MediaType& mediaType,
+                                                             const std::string& mediaType,
                                                              const std::string& artType);
 
   /////////////////////////////////////////////////

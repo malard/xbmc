@@ -20,33 +20,33 @@ namespace CONTEXTMENU
 
 struct CMusicInfoBase : CStaticContextMenuAction
 {
-  explicit CMusicInfoBase(MediaType mediaType);
+  explicit CMusicInfoBase(KODI::MEDIA::MediaType mediaType);
   bool IsVisible(const CFileItem& item) const override;
   bool Execute(const std::shared_ptr<CFileItem>& item) const override;
 
 private:
-  const MediaType m_mediaType;
+  const KODI::MEDIA::MediaType m_mediaType;
 };
 
 struct CMusicInfo : CMusicInfoBase
 {
-  CMusicInfo() : CMusicInfoBase(MediaTypeMusic) {}
+  CMusicInfo() : CMusicInfoBase(KODI::MEDIA::MediaType::MUSIC) {}
   bool IsVisible(const CFileItem& item) const override;
 };
 
 struct CAlbumInfo : CMusicInfoBase
 {
-  CAlbumInfo() : CMusicInfoBase(MediaTypeAlbum) {}
+  CAlbumInfo() : CMusicInfoBase(KODI::MEDIA::MediaType::ALBUM) {}
 };
 
 struct CArtistInfo : CMusicInfoBase
 {
-  CArtistInfo() : CMusicInfoBase(MediaTypeArtist) {}
+  CArtistInfo() : CMusicInfoBase(KODI::MEDIA::MediaType::ARTIST) {}
 };
 
 struct CSongInfo : CMusicInfoBase
 {
-  CSongInfo() : CMusicInfoBase(MediaTypeSong) {}
+  CSongInfo() : CMusicInfoBase(KODI::MEDIA::MediaType::SONG) {}
 };
 
 struct CMusicBrowse : CStaticContextMenuAction

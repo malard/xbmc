@@ -36,6 +36,7 @@
 #include <string>
 
 using KODI::MEDIA::MediaSection;
+using KODI::MEDIA::MediaType;
 
 static constexpr unsigned int CONTROL_BUTTON_ADD_EXTRAS = 23;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_EXTRA = 28;
@@ -111,7 +112,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 {
   // @todo: combine with versions add file logic, structured similarly and sharing most logic.
 
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->m_type};
+  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
 
   // prompt to choose a video file
   std::vector<CMediaSource> sources{
@@ -173,7 +174,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
       }
 
       std::string videoTitle;
-      if (newAsset.m_mediaType == MediaTypeMovie)
+      if (newAsset.m_mediaType == MediaType::MOVIE)
       {
         videoTitle = m_database.GetMovieTitle(newAsset.m_idMedia);
       }

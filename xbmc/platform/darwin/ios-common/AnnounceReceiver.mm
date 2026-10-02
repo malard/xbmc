@@ -14,6 +14,7 @@
 #include "application/Application.h"
 #include "application/ApplicationPlayLists.h"
 #include "filesystem/SpecialProtocol.h"
+#include "media/MediaType.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayList.h"
@@ -109,7 +110,7 @@ void AnnounceBridge(ANNOUNCEMENT::AnnouncementFlag flag,
     // we need to get title, track, album and artist from the db
     if (item_id >= 0)
     {
-      if (item_type == MediaTypeSong)
+      if (item_type == KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::SONG))
       {
         CMusicDatabase db;
         if (db.Open())

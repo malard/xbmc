@@ -171,7 +171,8 @@ private:
                                              CVideoDatabase& videodatabase,
                                              CVariant& result);
 
-  static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant& parameterObject);
+  static int RequiresAdditionalDetails(KODI::MEDIA::MediaType mediaType,
+                                       const CVariant& parameterObject);
   static JSONRPC_STATUS HandleItems(const char* idProperty,
                                     const char* resultName,
                                     CFileItemList& items,

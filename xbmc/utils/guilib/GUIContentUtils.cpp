@@ -18,16 +18,17 @@
 #include "video/dialogs/GUIDialogVideoInfo.h"
 
 using namespace KODI::UTILS::GUILIB;
+using KODI::MEDIA::MediaType;
 
 bool CGUIContentUtils::HasInfoForItem(const CFileItem& item)
 {
   if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
   {
-    auto mediaType = item.GetVideoInfoTag()->m_type;
-    return (mediaType == MediaTypeMovie || mediaType == MediaTypeTvShow ||
-            mediaType == MediaTypeSeason || mediaType == MediaTypeEpisode ||
-            mediaType == MediaTypeVideo || mediaType == MediaTypeVideoCollection ||
-            mediaType == MediaTypeMusicVideo);
+    const MediaType mediaType = item.GetVideoInfoTag()->GetMediaType();
+    return (mediaType == MediaType::MOVIE || mediaType == MediaType::TV_SHOW ||
+            mediaType == MediaType::SEASON || mediaType == MediaType::EPISODE ||
+            mediaType == MediaType::VIDEO || mediaType == MediaType::VIDEO_COLLECTION ||
+            mediaType == MediaType::MUSIC_VIDEO);
   }
 
   return (item.HasMusicInfoTag() || item.HasAddonInfo() ||

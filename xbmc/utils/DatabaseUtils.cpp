@@ -18,39 +18,41 @@
 
 #include <sstream>
 
+using KODI::MEDIA::MediaType;
+
 MediaType DatabaseUtils::MediaTypeFromVideoContentType(VideoDbContentType videoContentType)
 {
   switch (videoContentType)
   {
     using enum VideoDbContentType;
     case MOVIES:
-      return MediaTypeMovie;
+      return MediaType::MOVIE;
 
     case MOVIE_SETS:
-      return MediaTypeVideoCollection;
+      return MediaType::VIDEO_COLLECTION;
 
     case TVSHOWS:
-      return MediaTypeTvShow;
+      return MediaType::TV_SHOW;
 
     case EPISODES:
-      return MediaTypeEpisode;
+      return MediaType::EPISODE;
 
     case MUSICVIDEOS:
-      return MediaTypeMusicVideo;
+      return MediaType::MUSIC_VIDEO;
 
     default:
       break;
   }
 
-  return MediaTypeNone;
+  return MediaType::NONE;
 }
 
-std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, DatabaseQueryPart queryPart)
+std::string DatabaseUtils::GetField(Field field, MediaType mediaType, DatabaseQueryPart queryPart)
 {
-  if (field == Field::NONE || mediaType == MediaTypeNone)
+  if (field == Field::NONE || mediaType == MediaType::NONE)
     return "";
 
-  if (mediaType == MediaTypeAlbum)
+  if (mediaType == MediaType::ALBUM)
   {
     if (field == Field::ID)
       return "albumview.idAlbum";
@@ -101,7 +103,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     else if (field == Field::ALBUM_DURATION)
       return "albumview.iAlbumDuration";
   }
-  else if (mediaType == MediaTypeSong)
+  else if (mediaType == MediaType::SONG)
   {
     if (field == Field::ID)
       return "songview.idSong";
@@ -161,7 +163,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     else if (field == Field::NUMBER_OF_CHANNELS)
       return "songview.iChannels";
   }
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == MediaType::ARTIST)
   {
     if (field == Field::ID)
       return "artistview.idArtist";
@@ -200,7 +202,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     else if (field == Field::DATE_MODIFIED)
       return "artistview.dateModified";
   }
-  else if (mediaType == MediaTypeMusicVideo)
+  else if (mediaType == MediaType::MUSIC_VIDEO)
   {
     std::string result;
     if (field == Field::ID)
@@ -241,7 +243,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     if (!result.empty())
       return result;
   }
-  else if (mediaType == MediaTypeMovie)
+  else if (mediaType == MediaType::MOVIE)
   {
     std::string result;
     if (field == Field::ID)
@@ -312,7 +314,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     if (!result.empty())
       return result;
   }
-  else if (mediaType == MediaTypeTvShow)
+  else if (mediaType == MediaType::TV_SHOW)
   {
     std::string result;
     if (field == Field::ID)
@@ -368,7 +370,7 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
     if (!result.empty())
       return result;
   }
-  else if (mediaType == MediaTypeEpisode)
+  else if (mediaType == MediaType::EPISODE)
   {
     std::string result;
     if (field == Field::ID)
@@ -430,43 +432,47 @@ std::string DatabaseUtils::GetField(Field field, const MediaType &mediaType, Dat
   return "";
 }
 
-int DatabaseUtils::GetField(Field field, const MediaType &mediaType)
+int DatabaseUtils::GetField(Field field, MediaType mediaType)
 {
-  if (field == Field::NONE || mediaType == MediaTypeNone)
+  if (field == Field::NONE || mediaType == MediaType::NONE)
     return -1;
 
   return GetField(field, mediaType, false);
 }
 
-int DatabaseUtils::GetFieldIndex(Field field, const MediaType &mediaType)
+int DatabaseUtils::GetFieldIndex(Field field, MediaType mediaType)
 {
-  if (field == Field::NONE || mediaType == MediaTypeNone)
+  if (field == Field::NONE || mediaType == MediaType::NONE)
     return -1;
 
   return GetField(field, mediaType, true);
 }
 
-bool DatabaseUtils::GetSelectFields(const Fields &fields, const MediaType &mediaType, FieldList &selectFields)
+bool DatabaseUtils::GetSelectFields(const Fields& fields,
+                                    MediaType mediaType,
+                                    FieldList& selectFields)
 {
-  if (mediaType == MediaTypeNone || fields.empty())
+  if (mediaType == MediaType::NONE || fields.empty())
     return false;
 
   Fields sortFields = fields;
 
   // add necessary fields to create the label
-  if (mediaType == MediaTypeSong || mediaType == MediaTypeVideo || mediaType == MediaTypeVideoCollection ||
-      mediaType == MediaTypeMusicVideo || mediaType == MediaTypeMovie || mediaType == MediaTypeTvShow || mediaType == MediaTypeEpisode)
+  if (mediaType == MediaType::SONG || mediaType == MediaType::VIDEO ||
+      mediaType == MediaType::VIDEO_COLLECTION || mediaType == MediaType::MUSIC_VIDEO ||
+      mediaType == MediaType::MOVIE || mediaType == MediaType::TV_SHOW ||
+      mediaType == MediaType::EPISODE)
     sortFields.insert(Field::TITLE);
-  if (mediaType == MediaTypeEpisode)
+  if (mediaType == MediaType::EPISODE)
   {
     sortFields.insert(Field::SEASON);
     sortFields.insert(Field::EPISODE_NUMBER);
   }
-  else if (mediaType == MediaTypeAlbum)
+  else if (mediaType == MediaType::ALBUM)
     sortFields.insert(Field::ALBUM);
-  else if (mediaType == MediaTypeSong)
+  else if (mediaType == MediaType::SONG)
     sortFields.insert(Field::TRACK_NUMBER);
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == MediaType::ARTIST)
     sortFields.insert(Field::ARTIST);
 
   selectFields.clear();
@@ -538,7 +544,7 @@ bool DatabaseUtils::GetFieldValue(const dbiplus::field_value &fieldValue, CVaria
   return false;
 }
 
-bool DatabaseUtils::GetDatabaseResults(const MediaType& mediaType,
+bool DatabaseUtils::GetDatabaseResults(MediaType mediaType,
                                        const FieldList& fields,
                                        dbiplus::Dataset& dataset,
                                        DatabaseResults& results)
@@ -591,8 +597,8 @@ bool DatabaseUtils::GetDatabaseResults(const MediaType& mediaType,
                   resultSet.record_header[fieldIndex].name);
 
       if (value.first == Field::YEAR &&
-          (mediaType == MediaTypeTvShow || mediaType == MediaTypeEpisode ||
-           mediaType == MediaTypeMovie))
+          (mediaType == MediaType::TV_SHOW || mediaType == MediaType::EPISODE ||
+           mediaType == MediaType::MOVIE))
       {
         CDateTime dateTime;
         dateTime.SetFromDBDate(value.second.asString());
@@ -606,11 +612,11 @@ bool DatabaseUtils::GetDatabaseResults(const MediaType& mediaType,
       result.insert(value);
     }
 
-    result[Field::MEDIA_TYPE] = mediaType;
-    if (mediaType == MediaTypeMovie || mediaType == MediaTypeVideoCollection ||
-        mediaType == MediaTypeTvShow || mediaType == MediaTypeMusicVideo)
+    result[Field::MEDIA_TYPE] = KODI::MEDIA::NameOf(mediaType).c_str();
+    if (mediaType == MediaType::MOVIE || mediaType == MediaType::VIDEO_COLLECTION ||
+        mediaType == MediaType::TV_SHOW || mediaType == MediaType::MUSIC_VIDEO)
       result[Field::LABEL] = result.at(Field::TITLE).asString();
-    else if (mediaType == MediaTypeEpisode)
+    else if (mediaType == MediaType::EPISODE)
     {
       std::ostringstream label;
       label << (result.at(Field::SEASON).asInteger() * 100 +
@@ -619,9 +625,9 @@ bool DatabaseUtils::GetDatabaseResults(const MediaType& mediaType,
       label << result.at(Field::TITLE).asString();
       result[Field::LABEL] = label.str();
     }
-    else if (mediaType == MediaTypeAlbum)
+    else if (mediaType == MediaType::ALBUM)
       result[Field::LABEL] = result.at(Field::ALBUM).asString();
-    else if (mediaType == MediaTypeSong)
+    else if (mediaType == MediaType::SONG)
     {
       std::ostringstream label;
       label << result.at(Field::TRACK_NUMBER).asInteger();
@@ -629,7 +635,7 @@ bool DatabaseUtils::GetDatabaseResults(const MediaType& mediaType,
       label << result.at(Field::TITLE).asString();
       result[Field::LABEL] = label.str();
     }
-    else if (mediaType == MediaTypeArtist)
+    else if (mediaType == MediaType::ARTIST)
       result[Field::LABEL] = result.at(Field::ARTIST).asString();
 
     results.push_back(result);
@@ -677,14 +683,14 @@ size_t DatabaseUtils::GetLimitCount(int end, int start)
   return 0;
 }
 
-int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asIndex)
+int DatabaseUtils::GetField(Field field, MediaType mediaType, bool asIndex)
 {
-  if (field == Field::NONE || mediaType == MediaTypeNone)
+  if (field == Field::NONE || mediaType == MediaType::NONE)
     return -1;
 
   int index = -1;
 
-  if (mediaType == MediaTypeAlbum)
+  if (mediaType == MediaType::ALBUM)
   {
     if (field == Field::ID)
       return CMusicDatabase::album_idAlbum;
@@ -733,7 +739,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
     else if (field == Field::ALBUM_DURATION)
       return CMusicDatabase::album_iAlbumDuration;
   }
-  else if (mediaType == MediaTypeSong)
+  else if (mediaType == MediaType::SONG)
   {
     if (field == Field::ID)
       return CMusicDatabase::song_idSong;
@@ -788,7 +794,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
     else if (field == Field::NUMBER_OF_CHANNELS)
       return CMusicDatabase::song_iChannels;
   }
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == MediaType::ARTIST)
   {
     if (field == Field::ID)
       return CMusicDatabase::artist_idArtist;
@@ -827,7 +833,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
     else if (field == Field::DATE_MODIFIED)
       return CMusicDatabase::artist_dateModified;
   }
-  else if (mediaType == MediaTypeMusicVideo)
+  else if (mediaType == MediaType::MUSIC_VIDEO)
   {
     if (field == Field::ID)
       return 0;
@@ -874,7 +880,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
       index += 2;
     }
   }
-  else if (mediaType == MediaTypeMovie)
+  else if (mediaType == MediaType::MOVIE)
   {
     if (field == Field::ID)
       return 0;
@@ -939,7 +945,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
       index += 2;
     }
   }
-  else if (mediaType == MediaTypeTvShow)
+  else if (mediaType == MediaType::TV_SHOW)
   {
     // clang-format off
     if (field == Field::ID) return 0;
@@ -973,7 +979,7 @@ int DatabaseUtils::GetField(Field field, const MediaType &mediaType, bool asInde
       index += 1;
     }
   }
-  else if (mediaType == MediaTypeEpisode)
+  else if (mediaType == MediaType::EPISODE)
   {
     if (field == Field::ID)
       return 0;

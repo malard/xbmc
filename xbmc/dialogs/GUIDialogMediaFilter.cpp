@@ -50,6 +50,7 @@ using namespace KODI;
 #define CHECK_LABEL_YES           107
 
 using enum CDatabaseQueryRule::SearchOperator;
+using KODI::MEDIA::MediaType;
 
 // clang-format off
 static const CGUIDialogMediaFilter::Filter filterList[] = {
@@ -813,19 +814,20 @@ void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interv
       if (m_mediaType == "movies")
       {
         table = "movie_view";
-        year = DatabaseUtils::GetField(Field::YEAR, MediaTypeMovie, DatabaseQueryPart::WHERE);
+        year = DatabaseUtils::GetField(Field::YEAR, MediaType::MOVIE, DatabaseQueryPart::WHERE);
       }
       else if (m_mediaType == "tvshows")
       {
         table = "tvshow_view";
         year = StringUtils::Format(
             "strftime(\"%%Y\", {})",
-            DatabaseUtils::GetField(Field::YEAR, MediaTypeTvShow, DatabaseQueryPart::WHERE));
+            DatabaseUtils::GetField(Field::YEAR, MediaType::TV_SHOW, DatabaseQueryPart::WHERE));
       }
       else if (m_mediaType == "musicvideos")
       {
         table = "musicvideo_view";
-        year = DatabaseUtils::GetField(Field::YEAR, MediaTypeMusicVideo, DatabaseQueryPart::WHERE);
+        year =
+            DatabaseUtils::GetField(Field::YEAR, MediaType::MUSIC_VIDEO, DatabaseQueryPart::WHERE);
       }
 
       CDatabase::Filter min_max_filter;
@@ -843,11 +845,12 @@ void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interv
         return;
 
       CDatabase::Filter filter;
-      filter.where = DatabaseUtils::GetField(Field::YEAR, CMediaTypes::FromString(m_mediaType),
-                                             DatabaseQueryPart::WHERE) +
-                     " > 0";
+      filter.where =
+          DatabaseUtils::GetField(Field::YEAR, KODI::MEDIA::MediaTypeFromName(m_mediaType),
+                                  DatabaseQueryPart::WHERE) +
+          " > 0";
       GetMinMax(table,
-                DatabaseUtils::GetField(Field::YEAR, CMediaTypes::FromString(m_mediaType),
+                DatabaseUtils::GetField(Field::YEAR, KODI::MEDIA::MediaTypeFromName(m_mediaType),
                                         DatabaseQueryPart::SELECT),
                 min, max, filter);
     }
@@ -861,7 +864,7 @@ void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interv
     if (m_mediaType == "episodes")
     {
       const std::string name = DatabaseUtils::GetField(
-          Field::AIR_DATE, CMediaTypes::FromString(m_mediaType), DatabaseQueryPart::SELECT);
+          Field::AIR_DATE, KODI::MEDIA::MediaTypeFromName(m_mediaType), DatabaseQueryPart::SELECT);
       const std::string field = StringUtils::Format("CAST(strftime(\"%%s\", {}) AS INTEGER)", name);
 
       GetMinMax("episode_view", field, min, max);

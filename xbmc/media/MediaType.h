@@ -8,74 +8,58 @@
 
 #pragma once
 
-#include <map>
 #include <string>
 #include <string_view>
 
-using MediaType = std::string;
-using MediaType_view = std::string_view;
-
-#define MediaTypeNone             ""
-#define MediaTypeMusic            "music"
-#define MediaTypeArtist           "artist"
-#define MediaTypeAlbum            "album"
-#define MediaTypeSong             "song"
-#define MediaTypeVideo            "video"
-#define MediaTypeVideoCollection  "set"
-#define MediaTypeMusicVideo       "musicvideo"
-#define MediaTypeMovie            "movie"
-#define MediaTypeTvShow           "tvshow"
-#define MediaTypeSeason           "season"
-#define MediaTypeEpisode          "episode"
-#define MediaTypeVideoVersion "videoversion"
-
-constexpr const char* MediaTypeVideoCollections = "sets";
-constexpr const char* MediaTypeMusicVideos = "musicvideos";
-constexpr const char* MediaTypeMovies = "movies";
-constexpr const char* MediaTypeTvShows = "tvshows";
-constexpr const char* MediaTypeSeasons = "seasons";
-constexpr const char* MediaTypeEpisodes = "episodes";
-
-class CMediaTypes
+namespace KODI::MEDIA
 {
-public:
-  static bool IsValidMediaType(const MediaType &mediaType);
-  static bool IsMediaType(const std::string &strMediaType, const MediaType &mediaType);
-  static MediaType FromString(const std::string &strMediaType);
-  static MediaType ToPlural(const MediaType &mediaType);
 
-  static bool IsContainer(const MediaType &mediaType);
-
-  static std::string GetLocalization(const MediaType &mediaType);
-  static std::string GetPluralLocalization(const MediaType &mediaType);
-  static std::string GetCapitalLocalization(const MediaType &mediaType);
-  static std::string GetCapitalPluralLocalization(const MediaType &mediaType);
-
-  struct MediaTypeInfo
-  {
-    MediaTypeInfo(const MediaType &mediaType, const std::string &plural, bool container,
-                  int localizationSingular, int localizationPlural,
-                  int localizationSingularCapital, int localizationPluralCapital)
-      : mediaType(mediaType),
-        plural(plural),
-        container(container),
-        localizationSingular(localizationSingular),
-        localizationPlural(localizationPlural),
-        localizationSingularCapital(localizationSingularCapital),
-        localizationPluralCapital(localizationPluralCapital)
-    { }
-
-    MediaType mediaType;
-    std::string plural;
-    bool container;
-    int localizationSingular;
-    int localizationPlural;
-    int localizationSingularCapital;
-    int localizationPluralCapital;
-  };
-
-private:
-  static std::map<std::string, MediaTypeInfo>::const_iterator findMediaType(const std::string &mediaType);
-
-  static std::map<std::string, MediaTypeInfo> m_mediaTypes;
+//! \brief What a library item is.
+enum class MediaType
+{
+  NONE,
+  MUSIC,
+  ARTIST,
+  ALBUM,
+  SONG,
+  VIDEO,
+  VIDEO_COLLECTION,
+  MUSIC_VIDEO,
+  MOVIE,
+  TV_SHOW,
+  SEASON,
+  EPISODE,
+  VIDEO_VERSION,
 };
+
+//! \brief The name a type is stored and exposed under, e.g. "movie". Empty for NONE.
+const std::string& NameOf(MediaType type);
+
+//! \brief Formats as its name, for fmt.
+inline const std::string& format_as(MediaType type)
+{
+  return NameOf(type);
+}
+
+//! \brief The plural name, e.g. "movies", and "sets" for a video collection. Empty for NONE.
+const std::string& PluralNameOf(MediaType type);
+
+//! \brief The type \p name gives, singular or plural, in any case. NONE for any other text.
+MediaType MediaTypeFromName(std::string_view name);
+
+//! \brief Whether an item of this type holds other items, as an album holds songs.
+bool IsContainer(MediaType type);
+
+//! \brief The localized name, e.g. "movie". Empty for NONE.
+std::string GetLocalization(MediaType type);
+
+//! \brief The localized plural name, e.g. "movies". Empty for NONE.
+std::string GetPluralLocalization(MediaType type);
+
+//! \brief The localized name as a heading, e.g. "Movie". Empty for NONE.
+std::string GetCapitalLocalization(MediaType type);
+
+//! \brief The localized plural name as a heading, e.g. "Movies". Empty for NONE.
+std::string GetCapitalPluralLocalization(MediaType type);
+
+} // namespace KODI::MEDIA

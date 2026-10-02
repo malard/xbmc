@@ -35,6 +35,7 @@
 using namespace KODI;
 using namespace MUSIC_INFO;
 using namespace XFILE;
+using KODI::MEDIA::MediaType;
 
 // HACK until we make this threadable - specify 1 thread only for now
 CMusicInfoLoader::CMusicInfoLoader() : CBackgroundInfoLoader()
@@ -89,8 +90,7 @@ bool CMusicInfoLoader::LoadAdditionalTagInfo(CFileItem* pItem)
   // For songs in library set the (primary) song artist and album properties
   // Use song Id (not path) as called for items from either library or file view,
   // but could also be listitem with tag loaded by a script
-  if (pItem->HasMusicInfoTag() &&
-      pItem->GetMusicInfoTag()->GetType() == MediaTypeSong &&
+  if (pItem->HasMusicInfoTag() && pItem->GetMusicInfoTag()->GetMediaType() == MediaType::SONG &&
       pItem->GetMusicInfoTag()->GetDatabaseId() > 0)
   {
     CMusicDatabase database;

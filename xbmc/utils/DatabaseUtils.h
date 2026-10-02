@@ -173,15 +173,19 @@ using DatabaseResults = std::vector<DatabaseResult>;
 class DatabaseUtils
 {
 public:
-  static MediaType MediaTypeFromVideoContentType(VideoDbContentType videoContentType);
+  static KODI::MEDIA::MediaType MediaTypeFromVideoContentType(VideoDbContentType videoContentType);
 
-  static std::string GetField(Field field, const MediaType &mediaType, DatabaseQueryPart queryPart);
-  static int GetField(Field field, const MediaType &mediaType);
-  static int GetFieldIndex(Field field, const MediaType &mediaType);
-  static bool GetSelectFields(const Fields &fields, const MediaType &mediaType, FieldList &selectFields);
+  static std::string GetField(Field field,
+                              KODI::MEDIA::MediaType mediaType,
+                              DatabaseQueryPart queryPart);
+  static int GetField(Field field, KODI::MEDIA::MediaType mediaType);
+  static int GetFieldIndex(Field field, KODI::MEDIA::MediaType mediaType);
+  static bool GetSelectFields(const Fields& fields,
+                              KODI::MEDIA::MediaType mediaType,
+                              FieldList& selectFields);
 
   static bool GetFieldValue(const dbiplus::field_value &fieldValue, CVariant &variantValue);
-  static bool GetDatabaseResults(const MediaType& mediaType,
+  static bool GetDatabaseResults(KODI::MEDIA::MediaType mediaType,
                                  const FieldList& fields,
                                  dbiplus::Dataset& dataset,
                                  DatabaseResults& results);
@@ -191,5 +195,5 @@ public:
   static size_t GetLimitCount(int end, int start);
 
 private:
-  static int GetField(Field field, const MediaType &mediaType, bool asIndex);
+  static int GetField(Field field, KODI::MEDIA::MediaType mediaType, bool asIndex);
 };

@@ -35,6 +35,7 @@
 #include "video/tags/VideoTagExtractionHelper.h"
 
 using namespace XFILE;
+using KODI::MEDIA::MediaType;
 
 namespace KODI::VIDEO
 {
@@ -147,7 +148,8 @@ void CVideoItemArtworkHandler::PersistArt(const std::string& art)
 
   const bool isAssetArt{VIDEO::IsVideoAssetFile(*m_item)};
   const int mediaId = isAssetArt ? tag->m_iFileId : tag->m_iDbId;
-  const MediaType mediaType = isAssetArt ? MediaTypeVideoVersion : tag->m_type;
+  const std::string& mediaType =
+      isAssetArt ? KODI::MEDIA::NameOf(MediaType::VIDEO_VERSION) : tag->m_type;
 
   videodb.SetArtForItem(mediaId, mediaType, m_artType, art);
 
@@ -199,7 +201,7 @@ std::string CVideoItemArtworkArtistHandler::GetCurrentArt() const
   std::string currentArt;
   const int idArtist = musicdb.GetArtistByName(m_item->GetLabel());
   if (idArtist >= 0)
-    currentArt = musicdb.GetArtForItem(idArtist, MediaTypeArtist, "thumb");
+    currentArt = musicdb.GetArtForItem(idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), "thumb");
 
   if (currentArt.empty())
   {
@@ -278,7 +280,7 @@ void CVideoItemArtworkArtistHandler::PersistArt(const std::string& art)
 
   const int idArtist = musicdb.GetArtistByName(m_item->GetLabel());
   if (idArtist >= 0)
-    musicdb.SetArtForItem(idArtist, MediaTypeArtist, m_artType, art);
+    musicdb.SetArtForItem(idArtist, KODI::MEDIA::NameOf(MediaType::ARTIST), m_artType, art);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -553,15 +555,15 @@ std::unique_ptr<IVideoItemArtworkHandler> IVideoItemArtworkHandlerFactory::Creat
 {
   std::unique_ptr<IVideoItemArtworkHandler> artHandler;
 
-  if (artType == "fanart" && mediaType != MediaTypeVideoCollection)
+  if (artType == "fanart" && mediaType != KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION))
     artHandler = std::make_unique<CVideoItemArtworkFanartHandler>(item, artType);
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == KODI::MEDIA::NameOf(MediaType::ARTIST))
     artHandler = std::make_unique<CVideoItemArtworkArtistHandler>(item, artType);
   else if (mediaType == "actor")
     artHandler = std::make_unique<CVideoItemArtworkActorHandler>(item, artType);
-  else if (mediaType == MediaTypeSeason)
+  else if (mediaType == KODI::MEDIA::NameOf(MediaType::SEASON))
     artHandler = std::make_unique<CVideoItemArtworkSeasonHandler>(item, artType);
-  else if (mediaType == MediaTypeVideoCollection)
+  else if (mediaType == KODI::MEDIA::NameOf(MediaType::VIDEO_COLLECTION))
     artHandler = std::make_unique<CVideoItemArtworkMovieSetHandler>(item, artType);
   else
     artHandler = std::make_unique<CVideoItemArtworkHandler>(item, artType);
