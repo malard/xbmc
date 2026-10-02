@@ -112,7 +112,7 @@ static const auto temperatureInfo = std::array{TemperatureInfo{CTemperature::Uni
                                                TemperatureInfo{CTemperature::UnitDelisle, "de"},
                                                TemperatureInfo{CTemperature::UnitNewton, "n"}};
 
-#define TEMP_UNIT_STRINGS         20027
+#define TEMP_UNIT_STRINGS 20027
 
 struct SpeedInfo
 {
@@ -135,9 +135,9 @@ static const auto speedInfo = std::array{
     SpeedInfo{CSpeed::UnitFurlongPerFortnight, "fpf"},
 };
 
-#define SPEED_UNIT_STRINGS        20200
+#define SPEED_UNIT_STRINGS 20200
 
-#define SETTING_REGIONAL_DEFAULT  "regional"
+#define SETTING_REGIONAL_DEFAULT "regional"
 
 static std::string ToTimeFormat(bool use24HourClock, bool singleHour, bool meridiem)
 {
@@ -186,11 +186,11 @@ CLangInfo::CRegion::CRegion()
 
 void CLangInfo::CRegion::SetDefaults()
 {
-  m_strName="N/A";
+  m_strName = "N/A";
 
-  m_strDateFormatShort="DD/MM/YYYY";
-  m_strDateFormatLong="DDDD, D MMMM YYYY";
-  m_strTimeFormat="HH:mm:ss";
+  m_strDateFormatShort = "DD/MM/YYYY";
+  m_strDateFormatLong = "DDDD, D MMMM YYYY";
+  m_strTimeFormat = "HH:mm:ss";
   m_tempUnit = CTemperature::UnitCelsius;
   m_speedUnit = CSpeed::UnitKilometresPerHour;
 }
@@ -225,14 +225,15 @@ void CLangInfo::CRegion::SetGlobalLocale(CLangInfo& langInfo)
   {
     std::locale lcl = std::locale(strLocale.c_str());
     strLocale = lcl.name();
-    current_locale = current_locale.combine< std::collate<wchar_t> >(lcl);
-    current_locale = current_locale.combine< std::ctype<wchar_t> >(lcl);
-    current_locale = current_locale.combine< std::time_get<wchar_t> >(lcl);
-    current_locale = current_locale.combine< std::time_put<wchar_t> >(lcl);
+    current_locale = current_locale.combine<std::collate<wchar_t>>(lcl);
+    current_locale = current_locale.combine<std::ctype<wchar_t>>(lcl);
+    current_locale = current_locale.combine<std::time_get<wchar_t>>(lcl);
+    current_locale = current_locale.combine<std::time_put<wchar_t>>(lcl);
 
-    assert(std::use_facet< std::numpunct<char> >(current_locale).decimal_point() == '.');
-
-  } catch(...) {
+    assert(std::use_facet<std::numpunct<char>>(current_locale).decimal_point() == '.');
+  }
+  catch (...)
+  {
     current_locale = std::locale::classic();
     strLocale = "C";
   }
@@ -304,7 +305,7 @@ CLangInfo::~CLangInfo() = default;
 
 void CLangInfo::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  const std::string &settingId = setting->GetId();
+  const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOCALE_COUNTRY)
     SetCurrentRegion(std::static_pointer_cast<const CSettingString>(setting)->GetValue());
   else if (settingId == CSettings::SETTING_LOCALE_SHORTDATEFORMAT)
@@ -401,7 +402,8 @@ bool CLangInfo::Load(const std::string& langInfoPath)
         {
           region.m_cThousandsSep = pThousandsSep->FirstChild()->Value()[0];
           if (pThousandsSep->Attribute("groupingformat"))
-            region.m_strGrouping = StringUtils::BinaryStringToString(pThousandsSep->Attribute("groupingformat"));
+            region.m_strGrouping =
+                StringUtils::BinaryStringToString(pThousandsSep->Attribute("groupingformat"));
           else
             region.m_strGrouping = DEFAULT_DIGIT_GROUPING;
         }
@@ -426,7 +428,8 @@ bool CLangInfo::Load(const std::string& langInfoPath)
       pRegion = pRegion->NextSiblingElement("region");
     }
 
-    const std::string& strName = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_LOCALE_COUNTRY);
+    const std::string& strName = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
+        CSettings::SETTING_LOCALE_COUNTRY);
     SetCurrentRegion(strName);
   }
 
@@ -599,13 +602,13 @@ void CLangInfo::GetRegionNames(std::vector<std::string>& array) const
 // If the region is not found the first available region is set.
 void CLangInfo::SetCurrentRegion(const std::string& strName)
 {
-  ITMAPREGIONS it=m_regions.find(strName);
-  if (it!=m_regions.end())
-    m_currentRegion=&it->second;
+  ITMAPREGIONS it = m_regions.find(strName);
+  if (it != m_regions.end())
+    m_currentRegion = &it->second;
   else if (!m_regions.empty())
-    m_currentRegion=&m_regions.begin()->second;
+    m_currentRegion = &m_regions.begin()->second;
   else
-    m_currentRegion=&m_defaultRegion;
+    m_currentRegion = &m_defaultRegion;
 
   m_currentRegion->SetGlobalLocale(*this);
 
@@ -776,7 +779,8 @@ void CLangInfo::SettingOptionsShortDateFormatsFiller(const SettingConstPtr& sett
                                                      const CLangInfo& langInfo)
 {
   bool match = false;
-  const std::string& shortDateFormatSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& shortDateFormatSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   CDateTime now = CDateTime::GetCurrentDateTime();
 
@@ -813,7 +817,8 @@ void CLangInfo::SettingOptionsLongDateFormatsFiller(const SettingConstPtr& setti
                                                     const CLangInfo& langInfo)
 {
   bool match = false;
-  const std::string& longDateFormatSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& longDateFormatSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   CDateTime now = CDateTime::GetCurrentDateTime();
 
@@ -850,7 +855,8 @@ void CLangInfo::SettingOptionsTimeFormatsFiller(const SettingConstPtr& setting,
                                                 const CLangInfo& langInfo)
 {
   bool match = false;
-  const std::string& timeFormatSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& timeFormatSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   CDateTime now = CDateTime::GetCurrentDateTime();
   bool use24hourFormat = langInfo.Use24HourClock();
@@ -898,7 +904,8 @@ void CLangInfo::SettingOptionsTimeFormatsFiller(const SettingConstPtr& setting,
     }
 
     std::string timeFormatSingle12Meridiem = ToTimeFormat(false, true, true);
-    list.emplace_back(ToSettingTimeFormat(now, timeFormatSingle12Meridiem), timeFormatSingle12Meridiem);
+    list.emplace_back(ToSettingTimeFormat(now, timeFormatSingle12Meridiem),
+                      timeFormatSingle12Meridiem);
     if (timeFormatSetting == timeFormatSingle12Meridiem)
     {
       current = timeFormatSingle12Meridiem;
@@ -906,7 +913,8 @@ void CLangInfo::SettingOptionsTimeFormatsFiller(const SettingConstPtr& setting,
     }
 
     std::string timeFormatDouble12Meridiem = ToTimeFormat(false, false, true);
-    list.emplace_back(ToSettingTimeFormat(now, timeFormatDouble12Meridiem), timeFormatDouble12Meridiem);
+    list.emplace_back(ToSettingTimeFormat(now, timeFormatDouble12Meridiem),
+                      timeFormatDouble12Meridiem);
     if (timeFormatSetting == timeFormatDouble12Meridiem)
     {
       current = timeFormatDouble12Meridiem;
@@ -925,7 +933,8 @@ void CLangInfo::SettingOptions24HourClockFormatsFiller(const SettingConstPtr& se
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   bool match = false;
-  const std::string& clock24HourFormatSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& clock24HourFormatSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   // determine the 24-hour clock format of the regional setting
   int regionalClock24HourFormatLabel =
@@ -964,7 +973,8 @@ void CLangInfo::SettingOptionsTemperatureUnitsFiller(const SettingConstPtr& sett
                                                      const CLangInfo& langInfo)
 {
   bool match = false;
-  const std::string& temperatureUnitSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& temperatureUnitSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   list.emplace_back(
       StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20035),
@@ -997,7 +1007,8 @@ void CLangInfo::SettingOptionsSpeedUnitsFiller(const SettingConstPtr& setting,
                                                const CLangInfo& langInfo)
 {
   bool match = false;
-  const std::string& speedUnitSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
+  const std::string& speedUnitSetting =
+      std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
   list.emplace_back(
       StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20035),
