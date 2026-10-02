@@ -11,13 +11,11 @@
 #include "DatabaseTypes.h"
 #include "SortFileItem.h"
 #include "dbwrappers/dataset.h"
-#include "music/MusicDbPaths.h"
 #include "utils/LegacyPathTranslation.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
-#include "video/VideoDbPaths.h"
 #include "view/ViewState.h"
 
 #include <utility>
@@ -73,9 +71,9 @@ void CViewDatabase::UpdateTables(int version)
       {
         std::string originalPath = m_pDS->fv(1).get_asString();
         std::string path = originalPath;
-        if (StringUtils::StartsWithNoCase(path, KODI::MUSICDB::ROOT))
+        if (URIUtils::IsMusicDb(path))
           path = CLegacyPathTranslation::TranslateMusicDbPath(path);
-        else if (StringUtils::StartsWithNoCase(path, KODI::VIDEODB::ROOT))
+        else if (URIUtils::IsVideoDb(path))
           path = CLegacyPathTranslation::TranslateVideoDbPath(path);
 
         if (!StringUtils::EqualsNoCase(path, originalPath))

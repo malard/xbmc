@@ -15,6 +15,7 @@
 #include "network/httprequesthandler/HTTPRequestHandlerUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/JSONVariantWriter.h"
+#include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 
@@ -143,7 +144,7 @@ bool CHTTPJsonRpcHandler::CHTTPTransportLayer::PrepareDownload(const char *path,
   std::string url;
   std::string strPath = path;
   if (StringUtils::StartsWith(strPath, "image://") ||
-    (StringUtils::StartsWith(strPath, "special://") && StringUtils::EndsWith(strPath, ".tbn")))
+      (URIUtils::IsSpecial(strPath) && StringUtils::EndsWith(strPath, ".tbn")))
     url = "image/";
   else
     url = "vfs/";

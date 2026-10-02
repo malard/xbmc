@@ -81,8 +81,8 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
     }
     else if (URIUtils::IsProtocol(pItem->GetPath(), "addons"))
       strIcon = "DefaultHardDisk.png";
-    else if (   pItem->IsPath("special://musicplaylists/")
-             || pItem->IsPath("special://videoplaylists/"))
+    else if (pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC)) ||
+             pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
       strIcon = "DefaultPlaylist.png";
     else if (VIDEO::IsVideoDb(*pItem) || MUSIC::IsMusicDb(*pItem) || pItem->IsPlugin() ||
              pItem->IsPath("musicsearch://"))

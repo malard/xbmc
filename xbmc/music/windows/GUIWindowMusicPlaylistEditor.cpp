@@ -28,6 +28,7 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -279,7 +280,7 @@ bool CGUIWindowMusicPlaylistEditor::Update(const std::string &strDirectory, bool
   if (!CGUIMediaWindow::Update(strDirectory, updateFilterPath))
     return false;
 
-  m_vecItems->SetContent("files");
+  m_vecItems->SetContent(CONTENT::FILES);
   m_thumbLoader.Load(*m_vecItems);
 
   // update our playlist control
@@ -353,7 +354,8 @@ void CGUIWindowMusicPlaylistEditor::OnLoadPlaylist()
   // Prompt user for file to load from music playlists folder
   std::string playlist;
   if (CGUIDialogFileBrowser::ShowAndGetFile(
-          "special://musicplaylists/", ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
+          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC),
+          ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(656), playlist))
     LoadPlaylist(playlist);
 }

@@ -23,7 +23,6 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIKeyboardFactory.h"
 #include "imagefiles/ImageFileURL.h"
-#include "music/MusicDbPaths.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSourceSettings.h"
@@ -36,7 +35,6 @@
 
 #if defined(TARGET_WINDOWS)
 #include "utils/CharsetConverter.h"
-#include "video/VideoDbPaths.h"
 
 #include "platform/win32/WIN32Util.h"
 #endif
@@ -120,9 +118,9 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
 
   if (StringUtils::StartsWithNoCase(realPath, "virtualpath://upnproot/"))
     return true;
-  else if (StringUtils::StartsWithNoCase(realPath, KODI::MUSICDB::ROOT))
+  else if (URIUtils::IsMusicDb(realPath))
     return true;
-  else if (StringUtils::StartsWithNoCase(realPath, KODI::VIDEODB::ROOT))
+  else if (URIUtils::IsVideoDb(realPath))
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "library://video"))
     return true;

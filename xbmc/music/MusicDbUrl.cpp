@@ -145,7 +145,7 @@ bool CMusicDbUrl::parse()
   if (queryParams.GetYear() != -1)
     AddOption("year", (int)queryParams.GetYear());
 
-  // Decode legacy use of MUSICDB::COMPILATIONS path for filtered albums
+  // Compilations had a node of their own until 2019, and favourites and skins may still name it
   if (m_url.GetFileName() == "compilations/")
     AddOption("compilation", true);
 

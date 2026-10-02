@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
+#include "Util.h"
 #include "filesystem/Directory.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
@@ -23,6 +24,7 @@
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/SortUtils.h"
 #include "utils/log.h"
@@ -412,7 +414,7 @@ CGUIViewStateMusicSmartPlaylist::CGUIViewStateMusicSmartPlaylist(const CFileItem
     sortAttribute = static_cast<SortAttribute>(sortAttribute | SortAttributeUseArtistSortName);
   const CViewState *viewState = CViewStateSettings::GetInstance().Get("musicnavsongs");
 
-  if (items.GetContent() == "songs" || items.GetContent() == "mixed")
+  if (items.GetContent() == CONTENT::SONGS || items.GetContent() == CONTENT::MIXED)
   {
     std::string strTrack = settings->GetString(CSettings::SETTING_MUSICFILES_TRACKFORMAT);
     AddSortMethod(SortBy::TRACK_NUMBER, 554,
@@ -455,7 +457,7 @@ CGUIViewStateMusicSmartPlaylist::CGUIViewStateMusicSmartPlaylist(const CFileItem
 
     SetViewAsControl(CViewStateSettings::GetInstance().Get("musicnavsongs")->m_viewMode);
   }
-  else if (items.GetContent() == "albums")
+  else if (items.GetContent() == CONTENT::ALBUMS)
   {
     std::string strAlbum = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_strMusicLibraryAlbumFormat;
     if (strAlbum.empty())
@@ -586,7 +588,7 @@ CGUIViewStateWindowMusicNav::CGUIViewStateWindowMusicNav(const CFileItemList& it
 
     SetSortOrder(SortOrder::NONE);
   }
-  else if (items.GetPath() == "special://musicplaylists/")
+  else if (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC))
   { // playlists list sorts by label only, ignoring folders
     AddSortMethod(SortBy::LABEL, SortAttributeIgnoreFolders, 551,
                   LABEL_MASKS("%F", "%D", "%L", "")); // Filename, Duration | Foldername, empty

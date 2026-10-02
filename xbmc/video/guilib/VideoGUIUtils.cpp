@@ -479,7 +479,8 @@ bool IsItemPlayable(const CFileItem& item)
     if (StringUtils::StartsWithNoCase(item.GetMimeType(), "video/"))
       return true;
 
-    if (StringUtils::StartsWithNoCase(item.GetPath(), "special://videoplaylists/") ||
+    if (StringUtils::StartsWithNoCase(item.GetPath(),
+                                      CUtil::PlaylistsPathOf(MediaSection::VIDEO)) ||
         StringUtils::StartsWithNoCase(item.GetPath(), "special://profile/playlists/video/") ||
         StringUtils::StartsWithNoCase(item.GetPath(), "special://profile/playlists/mixed/"))
       return true;

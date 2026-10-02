@@ -23,10 +23,10 @@
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
-#include "music/MusicDbPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "utils/ContentNames.h"
 #include "video/VideoFileItemClassify.h"
 #ifdef HAS_CDDA_RIPPER
 #include "cdrip/CDDARipper.h"
@@ -195,8 +195,8 @@ bool CGUIWindowMusicBase::OnMessage(CGUIMessage& message)
       }
       else if (iControl == CONTROL_BTNPLAYLISTS)
       {
-        if (!m_vecItems->IsPath("special://musicplaylists/"))
-          Update("special://musicplaylists/");
+        if (!m_vecItems->IsPath(CUtil::PlaylistsPathOf(MediaSection::MUSIC)))
+          Update(CUtil::PlaylistsPathOf(MediaSection::MUSIC));
       }
       else if (iControl == CONTROL_BTNSCAN)
       {
@@ -224,7 +224,7 @@ bool CGUIWindowMusicBase::OnMessage(CGUIMessage& message)
         {
           // is delete allowed?
           // must be at the playlists directory
-          if (m_vecItems->IsPath("special://musicplaylists/"))
+          if (m_vecItems->IsPath(CUtil::PlaylistsPathOf(MediaSection::MUSIC)))
             OnDeleteItem(iItem);
 
           else
@@ -279,9 +279,9 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
 void CGUIWindowMusicBase::OnItemInfoAll(const std::string& strPath, bool refresh)
 {
   ADDON::ContentType content{ADDON::ContentType::NONE};
-  if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), "albums"))
+  if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), CONTENT::ALBUMS))
     content = ADDON::ContentType::ALBUMS;
-  else if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), "artists"))
+  else if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), CONTENT::ARTISTS))
     content = ADDON::ContentType::ARTISTS;
   else
     return;
@@ -742,10 +742,8 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
   {
     // We want to expand disc images when browsing in file view but not on library, smartplaylist
     // or node menu music windows
-    if (!items.GetPath().empty() &&
-        !StringUtils::StartsWithNoCase(items.GetPath(), MUSICDB::ROOT) &&
-        !StringUtils::StartsWithNoCase(items.GetPath(), "special://") &&
-        !StringUtils::StartsWithNoCase(items.GetPath(), "library://"))
+    if (!items.GetPath().empty() && !URIUtils::IsMusicDb(items.GetPath()) &&
+        !URIUtils::IsSpecial(items.GetPath()) && !URIUtils::IsLibraryFolder(items.GetPath()))
       CDirectory::FilterFileDirectories(items, ".iso", true);
 
     CMusicThumbLoader loader;
@@ -792,7 +790,8 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     int iWindow = GetID();
     // Add "New Playlist" items when in the playlists folder, except on playlist editor screen
     if ((iWindow != WINDOW_MUSIC_PLAYLIST_EDITOR) &&
-        (items.GetPath() == "special://musicplaylists/") && !items.Contains("newplaylist://"))
+        (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC)) &&
+        !items.Contains("newplaylist://"))
     {
       const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
@@ -934,7 +933,7 @@ std::string CGUIWindowMusicBase::GetStartFolder(const std::string &dir)
   if (lower == "plugins" || lower == "addons")
     return "addons://sources/audio/";
   else if (lower == "$playlists" || lower == "playlists")
-    return "special://musicplaylists/";
+    return CUtil::PlaylistsPathOf(MediaSection::MUSIC);
   return CGUIMediaWindow::GetStartFolder(dir);
 }
 

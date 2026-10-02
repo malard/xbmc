@@ -16,6 +16,7 @@
 #include "music/tags/MusicInfoTag.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/LabelFormatter.h"
 #include "utils/StringUtils.h"
 
@@ -93,7 +94,7 @@ bool CGUIWindowMusicPlayList::Update(const std::string& strDirectory,
     return false;
 
   if (m_vecItems->GetContent().empty())
-    m_vecItems->SetContent("songs");
+    m_vecItems->SetContent(CONTENT::SONGS);
 
   StartLoadingItems();
   return true;

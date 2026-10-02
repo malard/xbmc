@@ -10,6 +10,7 @@
 
 #include "MediaSource.h" // Definition of std::vector<CMediaSource>
 #include "language/LanguageTag.h"
+#include "media/MediaSection.h"
 #include "utils/Digest.h"
 #include "utils/RegExp.h"
 
@@ -165,6 +166,14 @@ public:
   static void DeleteVideoDatabaseDirectoryCache();
   static std::string MusicPlaylistsLocation();
   static std::string VideoPlaylistsLocation();
+
+  //! \brief The path listing the playlists of \p section: special://musicplaylists/ or
+  //! special://videoplaylists/. Empty for a section without playlists of its own.
+  static std::string PlaylistsPathOf(KODI::MEDIA::MediaSection section);
+
+  //! \brief Whether \p path lists the playlists of \p section, as its special:// path or the
+  //! location that path resolves to.
+  static bool IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection section);
 
   static void GetSkinThemes(std::vector<std::string>& vecTheme);
   static void GetRecursiveListing(const std::string& strPath, CFileItemList& items, const std::string& strMask, unsigned int flags = 0 /* DIR_FLAG_DEFAULTS */);

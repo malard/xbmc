@@ -1386,6 +1386,31 @@ std::string CUtil::VideoPlaylistsLocation()
   return XFILE::CMultiPathDirectory::ConstructMultiPath(vec);
 }
 
+std::string CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection section)
+{
+  switch (section)
+  {
+    case KODI::MEDIA::MediaSection::MUSIC:
+      return "special://musicplaylists/";
+    case KODI::MEDIA::MediaSection::VIDEO:
+      return "special://videoplaylists/";
+    default:
+      return {};
+  }
+}
+
+bool CUtil::IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection section)
+{
+  const std::string playlists{PlaylistsPathOf(section)};
+  if (playlists.empty())
+    return false;
+  if (URIUtils::PathEquals(path, playlists))
+    return true;
+  return URIUtils::PathEquals(path, section == KODI::MEDIA::MediaSection::MUSIC
+                                        ? MusicPlaylistsLocation()
+                                        : VideoPlaylistsLocation());
+}
+
 void CUtil::DeleteMusicDatabaseDirectoryCache()
 {
   CUtil::DeleteDirectoryCache("mdb-");

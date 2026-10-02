@@ -12,6 +12,7 @@
 #include "FileItemList.h"
 #include "GUIPassword.h"
 #include "ServiceBroker.h"
+#include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
@@ -788,7 +789,8 @@ bool IsItemPlayable(const CFileItem& item)
     if (StringUtils::StartsWithNoCase(item.GetMimeType(), "audio/"))
       return true;
 
-    if (StringUtils::StartsWithNoCase(item.GetPath(), "special://musicplaylists/") ||
+    if (StringUtils::StartsWithNoCase(item.GetPath(),
+                                      CUtil::PlaylistsPathOf(MediaSection::MUSIC)) ||
         StringUtils::StartsWithNoCase(item.GetPath(), "special://profile/playlists/music/"))
       return true;
 

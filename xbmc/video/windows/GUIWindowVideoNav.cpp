@@ -42,6 +42,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -409,8 +410,8 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     // The content is already set for videodb paths, set content for the other paths.
     if (!isVideoDb)
     {
-      if (URIUtils::PathEquals(items.GetPath(), "special://videoplaylists/"))
-        items.SetContent("playlists");
+      if (URIUtils::PathEquals(items.GetPath(), CUtil::PlaylistsPathOf(MediaSection::VIDEO)))
+        items.SetContent(CONTENT::PLAYLISTS);
       else if (!items.IsVirtualDirectoryRoot())
       { // load info from the database
         std::string label;
@@ -562,7 +563,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     CVideoDbUrl videoUrl;
     if (videoUrl.FromString(items.GetPath()))
     {
-      if (items.GetContent() == "tags" && !items.Contains("newtag://" + videoUrl.GetType()))
+      if (items.GetContent() == CONTENT::TAGS && !items.Contains("newtag://" + videoUrl.GetType()))
       {
         const auto newTag{std::make_shared<CFileItem>("newtag://" + videoUrl.GetType(), false)};
         newTag->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20462));
@@ -604,7 +605,7 @@ void CGUIWindowVideoNav::UpdateButtons()
   std::string strLabel;
 
   // "Playlists"
-  if (m_vecItems->IsPath("special://videoplaylists/"))
+  if (m_vecItems->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)))
     strLabel = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
   // "{Playlist Name}"
   else if (PLAYLIST::IsPlayList(*m_vecItems))
@@ -721,7 +722,8 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
 
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
-    if (!pItem->IsPath("newsmartplaylist://video") && !pItem->IsPath("special://videoplaylists/") &&
+    if (!pItem->IsPath("newsmartplaylist://video") &&
+        !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) &&
         !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
@@ -755,8 +757,7 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
       m_database.DeleteSet(params.GetSetId());
     }
   }
-  else if (m_vecItems->IsPath(CUtil::VideoPlaylistsLocation()) ||
-           m_vecItems->IsPath("special://videoplaylists/"))
+  else if (CUtil::IsPlaylistsPath(m_vecItems->GetPath(), MediaSection::VIDEO))
   {
     pItem->SetFolder(false);
     CFileUtils::DeleteItemWithConfirm(pItem);
@@ -816,8 +817,7 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   else
   {
     // are we in the playlists location?
-    bool inPlaylists = m_vecItems->IsPath(CUtil::VideoPlaylistsLocation()) ||
-                       m_vecItems->IsPath("special://videoplaylists/");
+    const bool inPlaylists{CUtil::IsPlaylistsPath(m_vecItems->GetPath(), MediaSection::VIDEO)};
 
     if (item->HasVideoInfoTag() && item->HasProperty("artist_musicid"))
       buttons.Add(CONTEXT_BUTTON_GO_TO_ARTIST, 20396);
@@ -1117,7 +1117,7 @@ bool CGUIWindowVideoNav::ApplyWatchedFilter(CFileItemList &items)
     filterWatched = true;
   if (!VIDEO::IsVideoDb(items))
     filterWatched = true;
-  if (items.GetContent() == "tvshows" &&
+  if (items.GetContent() == CONTENT::TVSHOWS &&
       (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder()))
     node = NodeType::TITLE_TVSHOWS; // so that the check below works
 

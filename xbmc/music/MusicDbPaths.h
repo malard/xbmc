@@ -28,7 +28,7 @@ inline constexpr char TOP100_ALBUMS[] = "musicdb://top100/albums/";
 inline constexpr char TOP100_SONGS[] = "musicdb://top100/songs/";
 inline constexpr char RECENTLY_ADDED_ALBUMS[] = "musicdb://recentlyaddedalbums/";
 inline constexpr char RECENTLY_PLAYED_ALBUMS[] = "musicdb://recentlyplayedalbums/";
-inline constexpr char COMPILATIONS[] = "musicdb://compilations/";
+inline constexpr char COMPILATIONS[] = "musicdb://albums/?compilation=true";
 inline constexpr char ROLES[] = "musicdb://roles/";
 inline constexpr char SOURCES[] = "musicdb://sources/";
 inline constexpr char DISCS[] = "musicdb://discs/";

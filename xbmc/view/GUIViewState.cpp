@@ -14,6 +14,7 @@
 #include "GUIPassword.h"
 #include "ServiceBroker.h"
 #include "URL.h"
+#include "Util.h"
 #include "ViewDatabase.h"
 #include "addons/Addon.h"
 #include "addons/AddonManager.h"
@@ -39,6 +40,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
+#include "utils/ContentNames.h"
 #include "utils/URIUtils.h"
 #include "video/GUIViewStateVideo.h"
 #include "video/VideoUtils.h"
@@ -78,17 +80,16 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
 
   if (PLAYLIST::IsSmartPlayList(items) || url.IsProtocol("upnp") || items.IsLibraryFolder())
   {
-    if (items.GetContent() == "songs" ||
-        items.GetContent() == "albums" ||
-        items.GetContent() == "mixed")
+    if (items.GetContent() == CONTENT::SONGS || items.GetContent() == CONTENT::ALBUMS ||
+        items.GetContent() == CONTENT::MIXED)
       return new CGUIViewStateMusicSmartPlaylist(items);
-    else if (items.GetContent() == "musicvideos")
+    else if (items.GetContent() == CONTENT::MUSICVIDEOS)
       return new CGUIViewStateVideoMusicVideos(items);
-    else if (items.GetContent() == "tvshows")
+    else if (items.GetContent() == CONTENT::TVSHOWS)
       return new CGUIViewStateVideoTVShows(items);
-    else if (items.GetContent() == "episodes")
+    else if (items.GetContent() == CONTENT::EPISODES)
       return new CGUIViewStateVideoEpisodes(items);
-    else if (items.GetContent() == "movies")
+    else if (items.GetContent() == CONTENT::MOVIES)
       return new CGUIViewStateVideoMovies(items);
   }
 
@@ -107,7 +108,7 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
       return new CGUIViewStateMusicPlaylist(items);
   }
 
-  if (items.GetPath() == "special://musicplaylists/")
+  if (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC))
     return new CGUIViewStateWindowMusicNav(items);
 
   if (url.IsProtocol("androidapp"))
