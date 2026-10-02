@@ -28,6 +28,7 @@
 #include "settings/SettingUtils.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -250,7 +251,8 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
 
 bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
 {
-  if (pItem->IsShareOrDrive() || pItem->IsParentFolder() || pItem->GetPath() == "add")
+  if (pItem->IsShareOrDrive() || pItem->IsParentFolder() ||
+      pItem->GetPath() == PLACEHOLDER::ADD_SOURCE)
     return false;
 
   if (pItem->HasVideoInfoTag() && HasOnlyLibraryArt(*pItem->GetVideoInfoTag()))

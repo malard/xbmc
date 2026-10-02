@@ -21,6 +21,7 @@
 #include "settings/MediaSourceSettings.h"
 #include "storage/MediaManager.h"
 #include "utils/FileUtils.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/VideoFileItemClassify.h"
@@ -85,7 +86,7 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
              pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
       strIcon = "DefaultPlaylist.png";
     else if (VIDEO::IsVideoDb(*pItem) || MUSIC::IsMusicDb(*pItem) || pItem->IsPlugin() ||
-             pItem->IsPath("musicsearch://"))
+             pItem->IsPath(PLACEHOLDER::MUSIC_SEARCH))
       strIcon = "DefaultFolder.png";
     else if (NETWORK::IsRemote(*pItem))
       strIcon = "DefaultNetwork.png";

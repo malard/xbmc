@@ -44,6 +44,7 @@
 #include "utils/Artwork.h"
 #include "utils/ContentNames.h"
 #include "utils/FileUtils.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -563,9 +564,11 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     CVideoDbUrl videoUrl;
     if (videoUrl.FromString(items.GetPath()))
     {
-      if (items.GetContent() == CONTENT::TAGS && !items.Contains("newtag://" + videoUrl.GetType()))
+      if (items.GetContent() == CONTENT::TAGS &&
+          !items.Contains(PLACEHOLDER::NEW_TAG + videoUrl.GetType()))
       {
-        const auto newTag{std::make_shared<CFileItem>("newtag://" + videoUrl.GetType(), false)};
+        const auto newTag{
+            std::make_shared<CFileItem>(PLACEHOLDER::NEW_TAG + videoUrl.GetType(), false)};
         newTag->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20462));
         newTag->SetLabelPreformatted(true);
         newTag->SetSpecialSort(SortSpecial::TOP);
@@ -722,7 +725,7 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
 
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
-    if (!pItem->IsPath("newsmartplaylist://video") &&
+    if (!pItem->IsPath(std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
         !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) &&
         !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
@@ -795,7 +798,7 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
-    if (!item->IsDVD() && item->GetPath() != "add" && !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
@@ -1000,7 +1003,7 @@ bool CGUIWindowVideoNav::OnAddMediaSource()
 bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 {
   CFileItemPtr item = m_vecItems->Get(iItem);
-  if (StringUtils::StartsWithNoCase(item->GetPath(), "newtag://"))
+  if (StringUtils::StartsWithNoCase(item->GetPath(), PLACEHOLDER::NEW_TAG))
   {
     // dont allow update while scanning
     if (CVideoLibraryQueue::GetInstance().IsScanningLibrary())

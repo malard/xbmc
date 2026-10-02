@@ -53,6 +53,7 @@
 #include "utils/ContentNames.h"
 #include "utils/FileUtils.h"
 #include "utils/LegacyPathTranslation.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -346,7 +347,7 @@ bool CGUIWindowMusicNav::OnClick(int iItem, const std::string &player /* = "" */
   if (iItem < 0 || iItem >= m_vecItems->Size()) return false;
 
   CFileItemPtr item = m_vecItems->Get(iItem);
-  if (StringUtils::StartsWith(item->GetPath(), "musicsearch://"))
+  if (StringUtils::StartsWith(item->GetPath(), PLACEHOLDER::MUSIC_SEARCH))
   {
     if (m_searchWithEdit)
       OnSearchUpdate();
@@ -602,8 +603,9 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
       }
 #endif
       // Scan button for music sources except  ".." and "Add music source" items
-      if (!item->IsPath("add") && !item->IsParentFolder() &&
-        (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
+      if (!item->IsPath(PLACEHOLDER::ADD_SOURCE) && !item->IsParentFolder() &&
+          (profileManager->GetCurrentProfile().canWriteDatabases() ||
+           g_passwordManager.bMasterUser))
       {
         buttons.Add(CONTEXT_BUTTON_SCAN, 13352);
       }
@@ -618,7 +620,8 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
       if (m_vecItems->GetContent() == CONTENT::FILES && // Other content not scanned to library
           !inPlaylists &&
           !NETWORK::IsInternetStream(*m_vecItems) && // Not playlists locations or streams
-          !item->IsPath("add") && !item->IsParentFolder() && // Not ".." and "Add items
+          !item->IsPath(PLACEHOLDER::ADD_SOURCE) &&
+          !item->IsParentFolder() && // Not ".." and "Add items
           item->IsFolder() && // Folders only, but playlists can be folders too
           !URIUtils::IsLibraryContent(item->GetPath()) && // database folder or .xsp files
           !URIUtils::IsSpecial(item->GetPath()) && !item->IsPlugin() && !item->IsScript() &&
@@ -636,7 +639,7 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
       if (!item->IsParentFolder() && !dir.IsAllItem(item->GetPath()))
       {
         if (item->IsFolder() && !VIDEO::IsVideoDb(*item) && !item->IsPlugin() &&
-            !StringUtils::StartsWithNoCase(item->GetPath(), "musicsearch://"))
+            !StringUtils::StartsWithNoCase(item->GetPath(), PLACEHOLDER::MUSIC_SEARCH))
         {
           if (item->IsAlbum())
             // enable query all albums button only in album view
@@ -880,7 +883,7 @@ void CGUIWindowMusicNav::OnSearchUpdate()
   std::string search(CURL::Encode(GetProperty("search").asString()));
   if (!search.empty())
   {
-    std::string path = "musicsearch://" + search + "/";
+    std::string path = PLACEHOLDER::MUSIC_SEARCH + search + "/";
     m_history.ClearSearchHistory();
     Update(path);
   }
@@ -918,7 +921,7 @@ void CGUIWindowMusicNav::AddSearchFolder()
     for (std::vector<CMediaSource>::iterator it = sources.begin(); it != sources.end(); ++it)
     {
       CMediaSource& share = *it;
-      if (share.strPath == "musicsearch://")
+      if (share.strPath == PLACEHOLDER::MUSIC_SEARCH)
       {
         haveSearchSource = true;
         if (!needSearchSource)
@@ -934,7 +937,7 @@ void CGUIWindowMusicNav::AddSearchFolder()
       CMediaSource share;
       share.strName =
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(137); // Search
-      share.strPath = "musicsearch://";
+      share.strPath = PLACEHOLDER::MUSIC_SEARCH;
       share.m_iDriveType = SourceType::LOCAL;
       sources.push_back(share);
     }

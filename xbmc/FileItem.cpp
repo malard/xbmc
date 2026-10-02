@@ -60,6 +60,7 @@
 #include "utils/EpisodeUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/Mime.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/RegExp.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -86,6 +87,20 @@ using namespace PVR;
 using namespace GAME;
 using KODI::MEDIA::IsContainer;
 using KODI::MEDIA::MediaType;
+
+namespace
+{
+//! Whether \p item has no location of its own to look for local art in
+bool HasNoLocalArtLocation(const CFileItem& item)
+{
+  const std::string& path{item.GetPath()};
+  return path.empty() || PLACEHOLDER::IsNewPlaylist(path) || item.IsShareOrDrive() ||
+         NETWORK::IsInternetStream(item) || URIUtils::IsUPnP(path) ||
+         (URIUtils::IsFTP(path) &&
+          !CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bFTPThumbs) ||
+         item.IsPlugin() || item.IsAddonsPath() || item.IsLibraryFolder() || item.IsParentFolder();
+}
+} // namespace
 
 CFileItem::CFileItem(const CSong& song)
 {
@@ -761,8 +776,8 @@ void CFileItem::ToSortable(SortItem &sortable, const Fields &fields) const
 
 bool CFileItem::Exists(bool bUseCache /* = true */) const
 {
-  if (m_strPath.empty() || IsPath("add") || NETWORK::IsInternetStream(*this) || IsParentFolder() ||
-      IsVirtualDirectoryRoot() || IsPlugin() || IsPVR())
+  if (m_strPath.empty() || IsPath(PLACEHOLDER::ADD_SOURCE) || NETWORK::IsInternetStream(*this) ||
+      IsParentFolder() || IsVirtualDirectoryRoot() || IsPlugin() || IsPVR())
     return true;
 
   if (VIDEO::IsVideoDb(*this) && HasVideoInfoTag())
@@ -1813,13 +1828,7 @@ bool CFileItem::LoadTracksFromCueDocument(CFileItemList& scannedItems)
 
 std::string CFileItem::GetUserMusicThumb(bool alwaysCheckRemote /* = false */, bool fallbackToFolder /* = false */) const
 {
-  if (m_strPath.empty() || StringUtils::StartsWithNoCase(m_strPath, "newsmartplaylist://") ||
-      StringUtils::StartsWithNoCase(m_strPath, "newplaylist://") || m_bIsShareOrDrive ||
-      NETWORK::IsInternetStream(*this) || URIUtils::IsUPnP(m_strPath) ||
-      (URIUtils::IsFTP(m_strPath) &&
-       !CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bFTPThumbs) ||
-      IsPlugin() || IsAddonsPath() || IsLibraryFolder() || IsParentFolder() ||
-      MUSIC::IsMusicDb(*this))
+  if (HasNoLocalArtLocation(*this) || MUSIC::IsMusicDb(*this))
     return "";
 
   // we first check for <filename>.tbn or <foldername>.tbn
@@ -1883,13 +1892,7 @@ std::string CFileItem::GetUserMusicThumb(bool alwaysCheckRemote /* = false */, b
 
 bool CFileItem::SkipLocalArt() const
 {
-  return (m_strPath.empty() || StringUtils::StartsWithNoCase(m_strPath, "newsmartplaylist://") ||
-          StringUtils::StartsWithNoCase(m_strPath, "newplaylist://") || m_bIsShareOrDrive ||
-          NETWORK::IsInternetStream(*this) || URIUtils::IsUPnP(m_strPath) ||
-          (URIUtils::IsFTP(m_strPath) &&
-           !CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bFTPThumbs) ||
-          IsPlugin() || IsAddonsPath() || IsLibraryFolder() || IsParentFolder() || IsLiveTV() ||
-          IsPVRRecording() || IsDVD());
+  return HasNoLocalArtLocation(*this) || IsLiveTV() || IsPVRRecording() || IsDVD();
 }
 
 std::string CFileItem::GetThumbHideIfUnwatched(const CFileItem* item) const
