@@ -121,6 +121,22 @@ bool IsReachable(const CFileItem& item)
   return XFILE::CFile::Exists(path, false);
 }
 
+//! \brief The stream \p selection names among \p count: "previous" and "next" step from
+//! \p current and wrap, an integer is taken as given, and anything else is -1. Nullopt for
+//! other text.
+std::optional<int> SelectStream(const CVariant& selection, int current, int count)
+{
+  if (!selection.isString())
+    return selection.isInteger() ? static_cast<int>(selection.asInteger()) : -1;
+
+  const std::string& action = selection.asString();
+  if (action == "previous")
+    return current > 0 ? current - 1 : count - 1;
+  if (action == "next")
+    return current + 1 < count ? current + 1 : 0;
+  return std::nullopt;
+}
+
 void OverlayCurrentSongTag(CFileItem& item)
 {
   const MUSIC_INFO::CMusicInfoTag* current{
@@ -1470,32 +1486,15 @@ JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject
                              const auto appPlayer = AppPlayer();
                              if (appPlayer->HasPlayer())
                              {
-                               int index = -1;
-                               if (parameterObject["stream"].isString())
-                               {
-                                 std::string action = parameterObject["stream"].asString();
-                                 if (action.compare("previous") == 0)
-                                 {
-                                   index = appPlayer->GetAudioStream() - 1;
-                                   if (index < 0)
-                                     index = appPlayer->GetAudioStreamCount() - 1;
-                                 }
-                                 else if (action.compare("next") == 0)
-                                 {
-                                   index = appPlayer->GetAudioStream() + 1;
-                                   if (index >= appPlayer->GetAudioStreamCount())
-                                     index = 0;
-                                 }
-                                 else
-                                   return InvalidParams;
-                               }
-                               else if (parameterObject["stream"].isInteger())
-                                 index = static_cast<int>(parameterObject["stream"].asInteger());
-
-                               if (index < 0 || appPlayer->GetAudioStreamCount() <= index)
+                               const int count = appPlayer->GetAudioStreamCount();
+                               const std::optional<int> index = SelectStream(
+                                   parameterObject["stream"], appPlayer->GetAudioStream(), count);
+                               if (!index)
+                                 return InvalidParams;
+                               if (*index < 0 || count <= *index)
                                  return Fail(result, InvalidParams, Reason::NoSuchStream);
 
-                               appPlayer->SetAudioStream(index);
+                               appPlayer->SetAudioStream(*index);
                              }
                              else
                                return Fail(result, FailedToExecute, Reason::NothingPlaying);
@@ -1543,42 +1542,23 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, C
                              const auto appPlayer = AppPlayer();
                              if (appPlayer->HasPlayer())
                              {
-                               int index = -1;
-                               if (parameterObject["subtitle"].isString())
+                               const CVariant& subtitle = parameterObject["subtitle"];
+                               if (subtitle.isString() &&
+                                   (subtitle.asString() == "off" || subtitle.asString() == "on"))
                                {
-                                 std::string action = parameterObject["subtitle"].asString();
-                                 if (action.compare("previous") == 0)
-                                 {
-                                   index = appPlayer->GetSubtitle() - 1;
-                                   if (index < 0)
-                                     index = appPlayer->GetSubtitleCount() - 1;
-                                 }
-                                 else if (action.compare("next") == 0)
-                                 {
-                                   index = appPlayer->GetSubtitle() + 1;
-                                   if (index >= appPlayer->GetSubtitleCount())
-                                     index = 0;
-                                 }
-                                 else if (action.compare("off") == 0)
-                                 {
-                                   appPlayer->SetSubtitleVisible(false);
-                                   return ACK;
-                                 }
-                                 else if (action.compare("on") == 0)
-                                 {
-                                   appPlayer->SetSubtitleVisible(true);
-                                   return ACK;
-                                 }
-                                 else
-                                   return InvalidParams;
+                                 appPlayer->SetSubtitleVisible(subtitle.asString() == "on");
+                                 return ACK;
                                }
-                               else if (parameterObject["subtitle"].isInteger())
-                                 index = static_cast<int>(parameterObject["subtitle"].asInteger());
 
-                               if (index < 0 || appPlayer->GetSubtitleCount() <= index)
+                               const int count = appPlayer->GetSubtitleCount();
+                               const std::optional<int> index =
+                                   SelectStream(subtitle, appPlayer->GetSubtitle(), count);
+                               if (!index)
+                                 return InvalidParams;
+                               if (*index < 0 || count <= *index)
                                  return Fail(result, InvalidParams, Reason::NoSuchStream);
 
-                               appPlayer->SetSubtitle(index);
+                               appPlayer->SetSubtitle(*index);
 
                                // Check if we need to enable subtitles to be displayed
                                if (parameterObject["enable"].asBoolean() &&
@@ -1614,32 +1594,15 @@ JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant& parameterObject
                              int streamCount = appPlayer->GetVideoStreamCount();
                              if (streamCount > 0)
                              {
-                               int index = appPlayer->GetVideoStream();
-                               if (parameterObject["stream"].isString())
-                               {
-                                 std::string action = parameterObject["stream"].asString();
-                                 if (action.compare("previous") == 0)
-                                 {
-                                   index--;
-                                   if (index < 0)
-                                     index = streamCount - 1;
-                                 }
-                                 else if (action.compare("next") == 0)
-                                 {
-                                   index++;
-                                   if (index >= streamCount)
-                                     index = 0;
-                                 }
-                                 else
-                                   return InvalidParams;
-                               }
-                               else if (parameterObject["stream"].isInteger())
-                                 index = static_cast<int>(parameterObject["stream"].asInteger());
-
-                               if (index < 0 || streamCount <= index)
+                               const std::optional<int> index =
+                                   SelectStream(parameterObject["stream"],
+                                                appPlayer->GetVideoStream(), streamCount);
+                               if (!index)
+                                 return InvalidParams;
+                               if (*index < 0 || streamCount <= *index)
                                  return Fail(result, InvalidParams, Reason::NoSuchStream);
 
-                               appPlayer->SetVideoStream(index);
+                               appPlayer->SetVideoStream(*index);
                              }
                              else
                                return Fail(result, FailedToExecute, Reason::NotApplicable);
