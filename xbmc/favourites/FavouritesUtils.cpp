@@ -70,11 +70,17 @@ bool ChooseAndSetNewThumbnail(CFileItem& item)
           prefilledItems, sources,
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(1030),
           thumb)) // Browse for image
-  {
-    item.SetArt("thumb", thumb);
-    return true;
-  }
+    return SetChosenThumbnail(item, thumb);
   return false;
+}
+
+bool SetChosenThumbnail(CFileItem& item, const std::string& choice)
+{
+  if (choice == KODI::IMAGE_CHOICE::CURRENT)
+    return false;
+
+  item.SetArt("thumb", choice == KODI::IMAGE_CHOICE::NONE ? "" : choice);
+  return true;
 }
 
 bool MoveItem(CFileItemList& items, const std::shared_ptr<CFileItem>& item, int amount)
