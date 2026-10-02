@@ -46,6 +46,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
@@ -543,7 +544,7 @@ void CGUIDialogMusicInfo::SetDiscography(CMusicDatabase& database) const
     // Load all the album art and related artist(s) art (could be other collaborating artists)
     loader.LoadItem(item.get());
     if (item->GetMusicInfoTag()->GetDatabaseId() == -1)
-      item->SetArt("thumb", "DefaultAlbumCover.png");
+      item->SetArt(ART_TYPE::THUMB, "DefaultAlbumCover.png");
   }
 }
 
@@ -797,8 +798,8 @@ void CGUIDialogMusicInfo::OnGetArt()
     // Add item for current artwork
     // For album it could be a fallback from artist
     CFileItemPtr item(new CFileItem(IMAGE_CHOICE::CURRENT, false));
-    item->SetArt("thumb", m_item->GetArt(type));
-    item->SetArt("icon", "DefaultPicture.png");
+    item->SetArt(ART_TYPE::THUMB, m_item->GetArt(type));
+    item->SetArt(ART_TYPE::ICON, "DefaultPicture.png");
     item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13512));
     items.Add(item);
   }
@@ -816,8 +817,8 @@ void CGUIDialogMusicInfo::OnGetArt()
   for (unsigned int i = 0; i < remotethumbs.size(); ++i)
   {
     CFileItemPtr item(new CFileItem(IMAGE_CHOICE::RemoteOf(i), false));
-    item->SetArt("thumb", remotethumbs[i]);
-    item->SetArt("icon", "DefaultPicture.png");
+    item->SetArt(ART_TYPE::THUMB, remotethumbs[i]);
+    item->SetArt(ART_TYPE::ICON, "DefaultPicture.png");
     item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13513));
 
     items.Add(item);
@@ -870,7 +871,7 @@ void CGUIDialogMusicInfo::OnGetArt()
   if (!localArt.empty() && CFileUtils::Exists(localArt))
   {
     CFileItemPtr item(new CFileItem("Local Art: " + localArt, false));
-    item->SetArt("thumb", localArt);
+    item->SetArt(ART_TYPE::THUMB, localArt);
     item->SetLabel(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13514)); // "Local art"
     items.Add(item);
@@ -882,9 +883,9 @@ void CGUIDialogMusicInfo::OnGetArt()
     // allow the user to delete it by selecting "no art".
     CFileItemPtr item(new CFileItem(IMAGE_CHOICE::NONE, false));
     if (m_bArtistInfo)
-      item->SetArt("icon", "DefaultArtist.png");
+      item->SetArt(ART_TYPE::ICON, "DefaultArtist.png");
     else
-      item->SetArt("icon", "DefaultAlbumCover.png");
+      item->SetArt(ART_TYPE::ICON, "DefaultAlbumCover.png");
     item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13515));
     items.Add(item);
   }
@@ -898,7 +899,7 @@ void CGUIDialogMusicInfo::OnGetArt()
     // Skip images from remote sources, recache done by refresh (could be slow)
     if (IMAGE_CHOICE::RemoteIndexOf(item->GetPath()))
       continue;
-    std::string thumb(item->GetArt("thumb"));
+    std::string thumb(item->GetArt(ART_TYPE::THUMB));
     if (thumb.empty())
       continue;
     CURL url(IMAGE_FILES::CImageFileURL(thumb).GetTargetFile());
@@ -929,7 +930,7 @@ void CGUIDialogMusicInfo::OnGetArt()
     if (const auto index = IMAGE_CHOICE::RemoteIndexOf(result))
       newArt = remotethumbs[*index];
     else if (result == IMAGE_CHOICE::THUMB)
-      newArt = m_item->GetArt("thumb");
+      newArt = m_item->GetArt(ART_TYPE::THUMB);
     else if (StringUtils::StartsWith(result, "Local Art: "))
       newArt = localArt;
     else if (CFileUtils::Exists(result))
@@ -947,7 +948,7 @@ void CGUIDialogMusicInfo::OnGetArt()
     {
       if (artitem->GetProperty("artType") == type)
       {
-        artitem->SetArt("thumb", newArt);
+        artitem->SetArt(ART_TYPE::THUMB, newArt);
         break;
       }
     }

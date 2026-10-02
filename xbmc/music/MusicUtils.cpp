@@ -41,6 +41,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "threads/IRunnable.h"
+#include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
 #include "utils/FileUtils.h"
 #include "utils/ItemProperties.h"
@@ -319,7 +320,7 @@ bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
     artitem->SetProperty("arttype", type);
     // Set current art as art item thumb
     if (musicitem.HasArt(type))
-      artitem->SetArt("thumb", musicitem.GetArt(type));
+      artitem->SetArt(ART_TYPE::THUMB, musicitem.GetArt(type));
     artlist.Add(artitem);
   }
 

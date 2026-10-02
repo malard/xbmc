@@ -61,6 +61,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/ArtTypes.h"
 #include "utils/FileUtils.h"
 #include "utils/ItemProperties.h"
 #include "utils/LabelFormatter.h"
@@ -941,7 +942,7 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(showLabel);
     CFileItemPtr pItem(new CFileItem(strLabel));
     pItem->SetPath(PLACEHOLDER::ADD_SOURCE);
-    pItem->SetArt("icon", "DefaultAddSource.png");
+    pItem->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
     pItem->SetLabel(strLabel);
     pItem->SetLabelPreformatted(true);
     pItem->SetFolder(true);

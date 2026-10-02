@@ -41,6 +41,7 @@
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
 #include "utils/ContentNames.h"
 #include "utils/FileUtils.h"
@@ -498,13 +499,13 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         if (m_database.GetArtForItem(details.m_iDbId, details.m_type, art) && !art.empty())
         {
           items.AppendArt(art, details.m_type);
-          items.SetArtFallback("fanart", "tvshow.fanart");
+          items.SetArtFallback(ART_TYPE::FANART, "tvshow.fanart");
           if (node == NodeType::SEASONS)
           { // set an art fallback for "thumb"
             if (items.HasArt("tvshow.poster"))
-              items.SetArtFallback("thumb", "tvshow.poster");
+              items.SetArtFallback(ART_TYPE::THUMB, "tvshow.poster");
             else if (items.HasArt("tvshow.banner"))
-              items.SetArtFallback("thumb", "tvshow.banner");
+              items.SetArtFallback(ART_TYPE::THUMB, "tvshow.banner");
           }
         }
 
@@ -539,9 +540,9 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
             items.AppendArt(seasonArt, NameOf(MediaType::SEASON));
             // set an art fallback for "thumb"
             if (items.HasArt("season.poster"))
-              items.SetArtFallback("thumb", "season.poster");
+              items.SetArtFallback(ART_TYPE::THUMB, "season.poster");
             else if (items.HasArt("season.banner"))
-              items.SetArtFallback("thumb", "season.banner");
+              items.SetArtFallback(ART_TYPE::THUMB, "season.banner");
           }
         }
       }
@@ -554,9 +555,9 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
               !setArt.empty())
           {
             items.AppendArt(setArt, NameOf(MediaType::VIDEO_COLLECTION));
-            items.SetArtFallback("fanart", "set.fanart");
+            items.SetArtFallback(ART_TYPE::FANART, "set.fanart");
             if (items.HasArt("set.poster"))
-              items.SetArtFallback("thumb", "set.poster");
+              items.SetArtFallback(ART_TYPE::THUMB, "set.poster");
           }
         }
       }

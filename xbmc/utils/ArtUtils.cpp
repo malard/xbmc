@@ -21,6 +21,7 @@
 #include "playlists/PlayListFileItemClassify.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
@@ -70,7 +71,7 @@ void FillInDefaultIcon(CFileItem& item)
   //   for .. folders the default picture for parent folder
   //   for other folders the defaultFolder.png
 
-  if (item.GetArt("icon").empty())
+  if (item.GetArt(ART_TYPE::ICON).empty())
   {
     if (!item.IsFolder())
     {
@@ -82,83 +83,83 @@ void FillInDefaultIcon(CFileItem& item)
       if (item.IsPVRChannel())
       {
         if (URIUtils::IsPVRRadioChannel(item.GetPath()))
-          item.SetArt("icon", "DefaultMusicSongs.png");
+          item.SetArt(ART_TYPE::ICON, "DefaultMusicSongs.png");
         else
-          item.SetArt("icon", "DefaultTVShows.png");
+          item.SetArt(ART_TYPE::ICON, "DefaultTVShows.png");
       }
       else if (item.IsLiveTV())
       {
         // Live TV Channel
-        item.SetArt("icon", "DefaultTVShows.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultTVShows.png");
       }
       else if (URIUtils::IsArchive(item.GetPath()))
       { // archive
-        item.SetArt("icon", "DefaultFile.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultFile.png");
       }
       else if (item.IsUsablePVRRecording())
       {
         // PVR recording
-        item.SetArt("icon", "DefaultVideo.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsDeletedPVRRecording())
       {
         // PVR deleted recording
-        item.SetArt("icon", "DefaultVideoDeleted.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultVideoDeleted.png");
       }
       else if (item.IsPVRProvider())
       {
-        item.SetArt("icon", "DefaultPVRProvider.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultPVRProvider.png");
       }
       else if (PLAYLIST::IsPlayList(item) || PLAYLIST::IsSmartPlayList(item))
       {
-        item.SetArt("icon", "DefaultPlaylist.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultPlaylist.png");
       }
       else if (MUSIC::IsAudio(item))
       {
         // audio
-        item.SetArt("icon", "DefaultAudio.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultAudio.png");
       }
       else if (VIDEO::IsVideo(item))
       {
         // video
-        item.SetArt("icon", "DefaultVideo.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsPVRTimer())
       {
-        item.SetArt("icon", "DefaultVideo.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsPicture())
       {
         // picture
-        item.SetArt("icon", "DefaultPicture.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultPicture.png");
       }
       else if (item.IsPythonScript())
       {
-        item.SetArt("icon", "DefaultScript.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultScript.png");
       }
       else if (item.IsFavourite())
       {
-        item.SetArt("icon", "DefaultFavourites.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultFavourites.png");
       }
       else
       {
         // default icon for unknown file type
-        item.SetArt("icon", "DefaultFile.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultFile.png");
       }
     }
     else
     {
       if (PLAYLIST::IsPlayList(item) || PLAYLIST::IsSmartPlayList(item))
       {
-        item.SetArt("icon", "DefaultPlaylist.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultPlaylist.png");
       }
       else if (item.IsParentFolder())
       {
-        item.SetArt("icon", "DefaultFolderBack.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultFolderBack.png");
       }
       else
       {
-        item.SetArt("icon", "DefaultFolder.png");
+        item.SetArt(ART_TYPE::ICON, "DefaultFolder.png");
       }
     }
   }

@@ -37,6 +37,7 @@
 #include "network/dacp/dacp.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/ArtUtils.h"
 #include "utils/EndianSwap.h"
 #include "utils/StringUtils.h"
@@ -167,7 +168,7 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
     auto item = std::make_unique<CFileItem>();
     item->SetPath(ServerInstance->m_pPipe->GetName());
     item->SetMimeType("audio/x-xbmc-pcm");
-    item->SetArt("thumb", CFile::Exists(coverArtFile) ? coverArtFile : "");
+    item->SetArt(KODI::ART_TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
     KODI::ART::FillInDefaultIcon(*item);
 
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,

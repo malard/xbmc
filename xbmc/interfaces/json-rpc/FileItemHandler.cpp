@@ -32,6 +32,7 @@
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
 #include "pvr/timers/PVRTimers.h"
+#include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
 #include "utils/FileUtils.h"
 #include "utils/ISerializable.h"
@@ -281,21 +282,24 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (field == "thumbnail")
     {
-      if (thumbLoader && !item->HasArt("thumb") && !fetchedArt && IsLibraryItem(*item))
+      if (thumbLoader && !item->HasArt(KODI::ART_TYPE::THUMB) && !fetchedArt &&
+          IsLibraryItem(*item))
         fillLibraryArt(true);
-      else if (item->HasPictureInfoTag() && !item->HasArt("thumb"))
-        item->SetArt("thumb", IMAGE_FILES::URLFromFile(item->GetPath()));
+      else if (item->HasPictureInfoTag() && !item->HasArt(KODI::ART_TYPE::THUMB))
+        item->SetArt(KODI::ART_TYPE::THUMB, IMAGE_FILES::URLFromFile(item->GetPath()));
 
-      result["thumbnail"] =
-          item->HasArt("thumb") ? IMAGE_FILES::URLFromFile(item->GetArt("thumb")) : "";
+      result["thumbnail"] = item->HasArt(KODI::ART_TYPE::THUMB)
+                                ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART_TYPE::THUMB))
+                                : "";
       return true;
     }
 
     if (field == "fanart")
     {
-      fillLibraryArt(!item->HasArt("fanart"));
-      result["fanart"] =
-          item->HasArt("fanart") ? IMAGE_FILES::URLFromFile(item->GetArt("fanart")) : "";
+      fillLibraryArt(!item->HasArt(KODI::ART_TYPE::FANART));
+      result["fanart"] = item->HasArt(KODI::ART_TYPE::FANART)
+                             ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART_TYPE::FANART))
+                             : "";
       return true;
     }
 

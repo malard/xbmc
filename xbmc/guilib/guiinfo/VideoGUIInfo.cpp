@@ -33,6 +33,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/StreamDetails.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -145,7 +146,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
     CLog::Log(LOGDEBUG, "CVideoGUIInfo::InitCurrentItem({})", CURL::GetRedacted(item->GetPath()));
 
     // Find a thumb for this file.
-    if (!item->HasArt("thumb"))
+    if (!item->HasArt(ART_TYPE::THUMB))
     {
       CVideoThumbLoader loader;
       loader.LoadItem(item);
@@ -163,7 +164,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 
         CVideoThumbLoader loader;
         if (loader.FillThumb(thumbItem))
-          item->SetArt("thumb", thumbItem.GetArt("thumb"));
+          item->SetArt(ART_TYPE::THUMB, thumbItem.GetArt(ART_TYPE::THUMB));
       }
     }
     return true;
@@ -746,7 +747,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         if (fallback)
           *fallback = "DefaultVideoCover.png";
 
-        value = item->HasArt("thumb") ? item->GetArt("thumb") : "DefaultVideoCover.png";
+        value =
+            item->HasArt(ART_TYPE::THUMB) ? item->GetArt(ART_TYPE::THUMB) : "DefaultVideoCover.png";
         return true;
       }
       break;
@@ -839,7 +841,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
       GUIINFO::LookUpOnce(*m_playLists, PLAYLIST::Video, *found, m_lookedUp,
                           [](CFileItem& item)
                           {
-                            if (!item.HasArt("thumb"))
+                            if (!item.HasArt(ART_TYPE::THUMB))
                             {
                               CVideoThumbLoader loader;
                               loader.LoadItem(&item);
@@ -853,7 +855,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
   }
   else if (info.GetInfo() == VIDEOPLAYER_COVER)
   {
-    value = playlistItem->GetArt("thumb");
+    value = playlistItem->GetArt(ART_TYPE::THUMB);
     return true;
   }
   else if (info.GetInfo() == VIDEOPLAYER_ART)

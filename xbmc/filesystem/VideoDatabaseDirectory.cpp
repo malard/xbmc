@@ -19,6 +19,7 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Crc32.h"
 #include "utils/ItemProperties.h"
 #include "utils/LegacyPathTranslation.h"
@@ -109,11 +110,12 @@ bool CVideoDatabaseDirectory::GetDirectory(const CURL& url, CFileItemList &items
   for (int i=0;i<items.Size();++i)
   {
     CFileItemPtr item = items[i];
-    if (item->IsFolder() && !item->HasArt("icon") && !item->HasArt("thumb"))
+    if (item->IsFolder() && !item->HasArt(KODI::ART_TYPE::ICON) &&
+        !item->HasArt(KODI::ART_TYPE::THUMB))
     {
       std::string strImage = GetIcon(item->GetPath());
       if (!strImage.empty() && CServiceBroker::GetGUI()->GetTextureManager().HasTexture(strImage))
-        item->SetArt("icon", strImage);
+        item->SetArt(KODI::ART_TYPE::ICON, strImage);
     }
     if (item->HasVideoInfoTag())
     {

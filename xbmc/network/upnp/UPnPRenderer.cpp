@@ -30,6 +30,7 @@
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
+#include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -463,7 +464,7 @@ NPT_Result CUPnPRenderer::GetMetadata(NPT_String& meta)
     PLT_AlbumArtInfo art;
     art.uri = NPT_HttpUrl(ip, m_URLDescription.GetPort(), "/thumb", query.ToString()).ToString();
     // Set DLNA profileID by extension, defaulting to JPEG.
-    if (URIUtils::HasExtension(item.GetArt("thumb"), ".png"))
+    if (URIUtils::HasExtension(item.GetArt(ART_TYPE::THUMB), ".png"))
     {
       art.dlna_profile = "PNG_TN";
     }

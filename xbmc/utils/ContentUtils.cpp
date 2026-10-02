@@ -9,6 +9,7 @@
 #include "ContentUtils.h"
 
 #include "FileItem.h"
+#include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "video/Bookmark.h"
 #include "video/VideoInfoTag.h"
@@ -37,9 +38,9 @@ bool PrefersPoster(const CFileItem& item)
 
 const std::string ContentUtils::GetPreferredArtImage(const CFileItem& item)
 {
-  if (PrefersPoster(item) && item.HasArt("poster"))
-    return item.GetArt("poster");
-  return item.GetArt("thumb");
+  if (PrefersPoster(item) && item.HasArt(KODI::ART_TYPE::POSTER))
+    return item.GetArt(KODI::ART_TYPE::POSTER);
+  return item.GetArt(KODI::ART_TYPE::THUMB);
 }
 
 std::unique_ptr<CFileItem> ContentUtils::GeneratePlayableTrailerItem(const CFileItem& item,

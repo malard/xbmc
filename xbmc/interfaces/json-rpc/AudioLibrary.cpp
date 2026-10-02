@@ -29,6 +29,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
@@ -373,11 +374,13 @@ void CAudioLibrary::FillListArt(CVariant& list,
     thumbLoader.FillLibraryArt(item);
 
     if (fetchThumb)
-      entry["thumbnail"] =
-          item.HasArt("thumb") ? IMAGE_FILES::URLFromFile(item.GetArt("thumb")) : "";
+      entry["thumbnail"] = item.HasArt(KODI::ART_TYPE::THUMB)
+                               ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART_TYPE::THUMB))
+                               : "";
     if (fetchFanart)
-      entry["fanart"] =
-          item.HasArt("fanart") ? IMAGE_FILES::URLFromFile(item.GetArt("fanart")) : "";
+      entry["fanart"] = item.HasArt(KODI::ART_TYPE::FANART)
+                            ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART_TYPE::FANART))
+                            : "";
     if (fetchArt)
     {
       CVariant artObj(CVariant::VariantTypeObject);

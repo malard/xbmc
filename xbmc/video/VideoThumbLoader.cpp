@@ -28,6 +28,7 @@
 #include "settings/SettingUtils.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
@@ -309,7 +310,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
   if (!pItem->IsFolder() && VIDEO::IsVideo(*pItem))
   {
     const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    if (!pItem->HasArt("thumb"))
+    if (!pItem->HasArt(ART_TYPE::THUMB))
     {
       std::string thumbURL = GetEmbeddedThumbURL(*pItem);
       if (CDVDFileInfo::CanExtract(*pItem) &&
@@ -317,7 +318,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
           settings->GetInt(CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL) !=
               CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_NONE)
       {
-        pItem->SetArt("thumb", thumbURL);
+        pItem->SetArt(ART_TYPE::THUMB, thumbURL);
 
         if (pItem->HasVideoInfoTag())
         {
@@ -505,7 +506,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
         if (!artmap.empty())
         {
           item.AppendArt(artmap, NameOf(MediaType::TV_SHOW));
-          item.SetArtFallback("fanart", "tvshow.fanart");
+          item.SetArtFallback(ART_TYPE::FANART, "tvshow.fanart");
           item.SetArtFallback("tvshow.thumb", "tvshow.poster");
         }
       }
@@ -533,7 +534,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
 
 bool CVideoThumbLoader::FillThumb(CFileItem &item)
 {
-  if (item.HasArt("thumb"))
+  if (item.HasArt(ART_TYPE::THUMB))
     return true;
   std::string thumb = GetCachedImage(item, "thumb");
   if (thumb.empty())
@@ -543,7 +544,7 @@ bool CVideoThumbLoader::FillThumb(CFileItem &item)
       SetCachedImage(item, "thumb", thumb);
   }
   if (!thumb.empty())
-    item.SetArt("thumb", thumb);
+    item.SetArt(ART_TYPE::THUMB, thumb);
   else
   {
     // If nothing was found, try embedded art

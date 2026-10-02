@@ -28,6 +28,7 @@
 #include "playlists/PlayList.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -318,11 +319,11 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
       value = item->GetArt(info.GetData3());
       return true;
     case PLAYER_ICON:
-      value = item->GetArt("thumb");
+      value = item->GetArt(KODI::ART_TYPE::THUMB);
       if (value.empty())
-        value = item->GetArt("icon");
+        value = item->GetArt(KODI::ART_TYPE::ICON);
       if (fallback)
-        *fallback = item->GetArt("icon");
+        *fallback = item->GetArt(KODI::ART_TYPE::ICON);
       return true;
     case PLAYER_EDITLIST:
     case PLAYER_CUTS:

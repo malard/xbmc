@@ -41,6 +41,7 @@
 #include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Random.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -1399,12 +1400,12 @@ std::string CGUIWindowSlideShow::GetPicturePath(CFileItem *item)
   std::string picturePath = item->GetDynPath();
   if (isVideo)
   {
-    picturePath = item->GetArt("thumb");
+    picturePath = item->GetArt(ART_TYPE::THUMB);
     if (picturePath.empty() && !item->HasProperty("nothumb"))
     {
       CPictureThumbLoader thumbLoader;
       thumbLoader.LoadItem(item);
-      picturePath = item->GetArt("thumb");
+      picturePath = item->GetArt(ART_TYPE::THUMB);
       if (picturePath.empty())
         item->SetProperty("nothumb", true);
     }

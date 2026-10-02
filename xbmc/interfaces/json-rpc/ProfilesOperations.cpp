@@ -15,6 +15,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "profiles/ProfileManager.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Digest.h"
 #include "utils/Variant.h"
 
@@ -32,7 +33,7 @@ JSONRPC_STATUS CProfilesOperations::GetProfiles(const CVariant& parameterObject,
   {
     const CProfile* profile = profileManager->GetProfile(i);
     CFileItemPtr item(new CFileItem(profile->getName()));
-    item->SetArt("thumb", profile->getThumb());
+    item->SetArt(KODI::ART_TYPE::THUMB, profile->getThumb());
     listItems.Add(item);
   }
 
