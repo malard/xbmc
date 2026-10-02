@@ -17,7 +17,6 @@
 #include "GUILargeTextureManager.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "HDRStatus.h"
 #include "SectionLoader.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
@@ -1051,8 +1050,6 @@ void ShowRatingChanged(const std::shared_ptr<CFileItem>& playing)
 
 bool CApplication::OnAction(const CAction &action)
 {
-  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
-  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   // special case for switching between GUI & fullscreen mode.
   if (action.GetID() == ACTION_SHOW_GUI)
   { // Switch to fullscreen mode if we can
@@ -1072,7 +1069,7 @@ bool CApplication::OnAction(const CAction &action)
 
   if (action.GetID() == ACTION_TOGGLE_FULLSCREEN)
   {
-    winSystem->GetGfxContext().ToggleFullScreen();
+    CServiceBroker::GetWinSystem()->GetGfxContext().ToggleFullScreen();
     appPlayer->TriggerUpdateResolution();
     return true;
   }
@@ -1126,64 +1123,8 @@ bool CApplication::OnAction(const CAction &action)
     CScreenShot::TakeScreenshot();
     return true;
   }
-  // Display HDR : toggle HDR on/off
-  if (action.GetID() == ACTION_HDR_TOGGLE)
-  {
-    // Only enables manual HDR toggle if no video is playing or auto HDR switch is disabled
-    if (appPlayer->IsPlayingVideo() && winSystem->IsHDRDisplaySettingEnabled())
-      return true;
-
-    HDR_STATUS hdrStatus = winSystem->ToggleHDR();
-
-    if (hdrStatus == HDR_STATUS::HDR_OFF)
-    {
-      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, localizeStrings.Get(34220),
-                                            localizeStrings.Get(34221));
-    }
-    else if (hdrStatus == HDR_STATUS::HDR_ON)
-    {
-      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, localizeStrings.Get(34220),
-                                            localizeStrings.Get(34222));
-    }
+  if (appPlayer->OnVideoDisplayAction(action))
     return true;
-  }
-  // Tone Mapping : switch to next tone map method
-  if (action.GetID() == ACTION_CYCLE_TONEMAP_METHOD)
-  {
-    // Only enables tone mapping switch if display is not HDR capable or HDR is not enabled
-    if (winSystem->IsHDRDisplaySettingEnabled())
-      return true;
-
-    if (appPlayer->IsPlayingVideo())
-    {
-      CVideoSettings vs = appPlayer->GetVideoSettings();
-      vs.m_ToneMapMethod = static_cast<ETONEMAPMETHOD>(static_cast<int>(vs.m_ToneMapMethod) + 1);
-      if (vs.m_ToneMapMethod >= VS_TONEMAPMETHOD_MAX)
-        vs.m_ToneMapMethod =
-            static_cast<ETONEMAPMETHOD>(static_cast<int>(VS_TONEMAPMETHOD_OFF) + 1);
-
-      appPlayer->SetVideoSettings(vs);
-
-      int code = 0;
-      switch (vs.m_ToneMapMethod)
-      {
-        case VS_TONEMAPMETHOD_REINHARD:
-          code = 36555;
-          break;
-        case VS_TONEMAPMETHOD_ACES:
-          code = 36557;
-          break;
-        case VS_TONEMAPMETHOD_HABLE:
-          code = 36558;
-          break;
-        default:
-          throw std::logic_error("Tonemapping method not found. Did you forget to add a mapping?");
-      }
-      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, localizeStrings.Get(34224),
-                                            localizeStrings.Get(code), 1000, false, 500);
-    }
-    return true;
-  }
   // built in functions : execute the built-in
   if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
   {
