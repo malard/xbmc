@@ -145,7 +145,6 @@
 #include "utils/CPUInfo.h"
 #include "utils/CharsetConverter.h"
 #include "utils/FileExtensionProvider.h"
-#include "utils/PlayerUtils.h"
 #include "utils/RegExp.h"
 #include "utils/Screenshot.h"
 #include "utils/StringUtils.h"
@@ -220,7 +219,6 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
 
 using namespace std::chrono_literals;
 
-#define MAX_FFWD_SPEED 5
 
 namespace
 {
@@ -1309,107 +1307,12 @@ bool CApplication::OnAction(const CAction &action)
   if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
     return true;
 
-  if (appPlayer->IsPlaying())
-  {
-    // forward channel switches to the player - he knows what to do
-    if (action.GetID() == ACTION_CHANNEL_UP || action.GetID() == ACTION_CHANNEL_DOWN)
-    {
-      appPlayer->OnAction(action);
-      return true;
-    }
+  // play unpauses as a pause does, through the whole chain again
+  if (action.GetID() == ACTION_PLAYER_PLAY && appPlayer->IsPlaying() && appPlayer->IsPaused())
+    return OnAction(CAction(ACTION_PAUSE));
 
-    // pause : toggle pause action
-    if (action.GetID() == ACTION_PAUSE)
-    {
-      appPlayer->Pause();
-      // go back to normal play speed on unpause
-      if (!appPlayer->IsPaused() && appPlayer->GetPlaySpeed() != 1)
-        appPlayer->SetPlaySpeed(1);
-
-      CGUIComponent *gui = CServiceBroker::GetGUI();
-      if (gui)
-        gui->GetAudioManager().Enable(appPlayer->IsPaused());
-      return true;
-    }
-    // play: unpause or set playspeed back to normal
-    if (action.GetID() == ACTION_PLAYER_PLAY)
-    {
-      // if currently paused - unpause
-      if (appPlayer->IsPaused())
-        return OnAction(CAction(ACTION_PAUSE));
-      // if we do a FF/RW then go back to normal speed
-      if (appPlayer->GetPlaySpeed() != 1)
-        appPlayer->SetPlaySpeed(1);
-      return true;
-    }
-    if (!appPlayer->IsPaused())
-    {
-      if (action.GetID() == ACTION_PLAYER_FORWARD || action.GetID() == ACTION_PLAYER_REWIND)
-      {
-        float playSpeed = appPlayer->GetPlaySpeed();
-
-        if (action.GetID() == ACTION_PLAYER_REWIND && (playSpeed == 1)) // Enables Rewinding
-          playSpeed *= -2;
-        else if (action.GetID() == ACTION_PLAYER_REWIND && playSpeed > 1) //goes down a notch if you're FFing
-          playSpeed /= 2;
-        else if (action.GetID() == ACTION_PLAYER_FORWARD && playSpeed < 1) //goes up a notch if you're RWing
-          playSpeed /= 2;
-        else
-          playSpeed *= 2;
-
-        if (action.GetID() == ACTION_PLAYER_FORWARD && playSpeed == -1) //sets iSpeed back to 1 if -1 (didn't plan for a -1)
-          playSpeed = 1;
-        if (playSpeed > 32 || playSpeed < -32)
-          playSpeed = 1;
-
-        appPlayer->SetPlaySpeed(playSpeed);
-        return true;
-      }
-      else if ((action.GetAmount() || appPlayer->GetPlaySpeed() != 1) &&
-               (action.GetID() == ACTION_ANALOG_REWIND || action.GetID() == ACTION_ANALOG_FORWARD))
-      {
-        // calculate the speed based on the amount the button is held down
-        int iPower = (int)(action.GetAmount() * MAX_FFWD_SPEED + 0.5f);
-        // amount can be negative, for example rewind and forward share the same axis
-        iPower = std::abs(iPower);
-        // returns 0 -> MAX_FFWD_SPEED
-        int iSpeed = 1 << iPower;
-        if (iSpeed != 1 && action.GetID() == ACTION_ANALOG_REWIND)
-          iSpeed = -iSpeed;
-        appPlayer->SetPlaySpeed(static_cast<float>(iSpeed));
-        if (iSpeed == 1)
-          CLog::Log(LOGDEBUG,"Resetting playspeed");
-        return true;
-      }
-      else if (action.GetID() == ACTION_PLAYER_INCREASE_TEMPO)
-      {
-        CPlayerUtils::AdvanceTempoStep(appPlayer, TempoStepChange::INCREASE);
-        return true;
-      }
-      else if (action.GetID() == ACTION_PLAYER_DECREASE_TEMPO)
-      {
-        CPlayerUtils::AdvanceTempoStep(appPlayer, TempoStepChange::DECREASE);
-        return true;
-      }
-    }
-    // allow play to unpause
-    else
-    {
-      if (action.GetID() == ACTION_PLAYER_PLAY)
-      {
-        // unpause, and set the playspeed back to normal
-        appPlayer->Pause();
-
-        CGUIComponent *gui = CServiceBroker::GetGUI();
-        if (gui)
-          gui->GetAudioManager().Enable(appPlayer->IsPaused());
-
-        appPlayer->SetPlaySpeed(1);
-        return true;
-      }
-    }
-  }
-
+  if (appPlayer->OnPlaybackAction(action))
+    return true;
 
   if (action.GetID() == ACTION_SWITCH_PLAYER)
   {
