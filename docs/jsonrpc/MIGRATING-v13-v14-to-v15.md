@@ -852,6 +852,7 @@ its reason in `error.data.reason`.
 | `Addons.SetAddonEnabled` | Kodi refuses the change, as for a required add-on | -32602 `InvalidParams` | -32097 `Unavailable`, `change-declined` |
 | `Player.SetPartymode` | party mode runs on the other playlist | -32602 `InvalidParams` | -32100 `FailedToExecute`, `party-mode-elsewhere` |
 | `PVR.AddTimer` | the broadcast already has a timer | -32602 `InvalidParams` | -32100 `FailedToExecute`, `timer-exists` |
+| `PVR.GetProperties` | PVR is off | -32100 `FailedToExecute` | no error: `available`, `recording` and `scanning` are `false` |
 
 `Files.GetDirectory` still answers `Unavailable` (`unreachable`) when no
 directory above the one asked for can be listed either, as when its share

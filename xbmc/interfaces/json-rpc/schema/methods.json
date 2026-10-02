@@ -6042,14 +6042,9 @@
       "$ref": "#/$defs/PVR.Property.Value"
     },
     "errors": [
-      "InvalidParams",
-      "FailedToExecute"
+      "InvalidParams"
     ],
-    "reasons": {
-      "FailedToExecute": [
-        "pvr-not-started"
-      ]
-    }
+    "reasons": {}
   },
   "PVR.GetChannelGroups": {
     "type": "method",

@@ -9551,20 +9551,11 @@
           "$ref": "#/components/errors/InvalidParams"
         },
         {
-          "$ref": "#/components/errors/FailedToExecute"
-        },
-        {
           "$ref": "#/components/errors/BadPermission"
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {
-        "FailedToExecute": [
-          {
-            "$ref": "#/components/x-kodi-reasons/pvr-not-started"
-          }
-        ]
-      },
+      "x-kodi-reasons": {},
       "x-kodi-transport": "Response"
     },
     {
