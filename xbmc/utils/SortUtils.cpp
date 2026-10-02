@@ -794,186 +794,86 @@ std::map<SortBy, Fields> fillSortingFields()
 std::map<SortBy, SortUtils::SortPreparator> SortUtils::m_preparators = fillPreparators();
 std::map<SortBy, Fields> SortUtils::m_sortingFields = fillSortingFields();
 
+namespace
+{
+using SqlSortFields = std::map<SortBy, FieldList>;
+
+const SqlSortFields ALBUM_SORT_FIELDS{
+    {SortBy::LABEL, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::ALBUM, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::TITLE, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::ALBUM_TYPE, {Field::ALBUM_TYPE, Field::ALBUM, Field::ARTIST}},
+    {SortBy::ARTIST, {Field::ARTIST, Field::ALBUM}},
+    {SortBy::ARTIST_THEN_YEAR, {Field::ARTIST, Field::YEAR, Field::ALBUM}},
+    {SortBy::YEAR, {Field::YEAR, Field::ALBUM}},
+    {SortBy::GENRE, {Field::GENRE, Field::ALBUM}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+    {SortBy::PLAYCOUNT, {Field::PLAYCOUNT, Field::ALBUM}},
+    {SortBy::LAST_PLAYED, {Field::LAST_PLAYED, Field::ALBUM}},
+    {SortBy::RATING, {Field::RATING, Field::ALBUM}},
+    {SortBy::VOTES, {Field::VOTES, Field::ALBUM}},
+    {SortBy::USER_RATING, {Field::USER_RATING, Field::ALBUM}},
+    {SortBy::TOTAL_DISCS, {Field::TOTAL_DISCS, Field::ALBUM}},
+    {SortBy::ORIG_DATE, {Field::ORIG_DATE, Field::ALBUM}},
+};
+
+const SqlSortFields SONG_SORT_FIELDS{
+    {SortBy::LABEL, {Field::TRACK_NUMBER}},
+    {SortBy::TRACK_NUMBER, {Field::TRACK_NUMBER}},
+    {SortBy::TITLE, {Field::TITLE}},
+    {SortBy::ALBUM, {Field::ALBUM, Field::ALBUM_ARTIST, Field::TRACK_NUMBER}},
+    {SortBy::ARTIST, {Field::ARTIST, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::ARTIST_THEN_YEAR, {Field::ARTIST, Field::YEAR, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::YEAR, {Field::YEAR, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::GENRE, {Field::GENRE, Field::ALBUM}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+    {SortBy::PLAYCOUNT, {Field::PLAYCOUNT, Field::TRACK_NUMBER}},
+    {SortBy::LAST_PLAYED, {Field::LAST_PLAYED, Field::TRACK_NUMBER}},
+    {SortBy::RATING, {Field::RATING, Field::TRACK_NUMBER}},
+    {SortBy::VOTES, {Field::VOTES, Field::TRACK_NUMBER}},
+    {SortBy::USER_RATING, {Field::USER_RATING, Field::TRACK_NUMBER}},
+    {SortBy::FILE, {Field::PATH, Field::FILENAME, Field::START_OFFSET}},
+    {SortBy::TIME, {Field::TIME}},
+    {SortBy::ALBUM_TYPE, {Field::ALBUM_TYPE, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::ORIG_DATE, {Field::ORIG_DATE, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::BPM, {Field::BPM}},
+};
+
+const SqlSortFields ARTIST_SORT_FIELDS{
+    {SortBy::LABEL, {Field::ARTIST}},          {SortBy::TITLE, {Field::ARTIST}},
+    {SortBy::ARTIST, {Field::ARTIST}},         {SortBy::GENRE, {Field::GENRE}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+};
+
+const SqlSortFields& SqlSortFieldsOf(MediaType mediaType)
+{
+  static const SqlSortFields none;
+  switch (mediaType)
+  {
+    case MediaType::ALBUM:
+      return ALBUM_SORT_FIELDS;
+    case MediaType::SONG:
+      return SONG_SORT_FIELDS;
+    case MediaType::ARTIST:
+      return ARTIST_SORT_FIELDS;
+    default:
+      return none;
+  }
+}
+} // namespace
+
 void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, FieldList& fields)
 {
   fields.clear();
   if (mediaType == MediaType::NONE)
     return;
 
-  switch (mediaType)
-  {
-    case MediaType::ALBUM:
-      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::ALBUM || sortMethod == SortBy::TITLE)
-      {
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::ARTIST);
-      }
-      else if (sortMethod == SortBy::ALBUM_TYPE)
-      {
-        fields.emplace_back(Field::ALBUM_TYPE);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::ARTIST);
-      }
-      else if (sortMethod == SortBy::ARTIST)
-      {
-        fields.emplace_back(Field::ARTIST);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-      {
-        fields.emplace_back(Field::ARTIST);
-        fields.emplace_back(Field::YEAR);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::YEAR)
-      {
-        fields.emplace_back(Field::YEAR);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::GENRE)
-      {
-        fields.emplace_back(Field::GENRE);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::DATE_ADDED)
-        fields.emplace_back(Field::DATE_ADDED);
-      else if (sortMethod == SortBy::PLAYCOUNT)
-      {
-        fields.emplace_back(Field::PLAYCOUNT);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::LAST_PLAYED)
-      {
-        fields.emplace_back(Field::LAST_PLAYED);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::RATING)
-      {
-        fields.emplace_back(Field::RATING);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::VOTES)
-      {
-        fields.emplace_back(Field::VOTES);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::USER_RATING)
-      {
-        fields.emplace_back(Field::USER_RATING);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::TOTAL_DISCS)
-      {
-        fields.emplace_back(Field::TOTAL_DISCS);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::ORIG_DATE)
-      {
-        fields.emplace_back(Field::ORIG_DATE);
-        fields.emplace_back(Field::ALBUM);
-      }
-      break;
-    case MediaType::SONG:
-      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TRACK_NUMBER)
-        fields.emplace_back(Field::TRACK_NUMBER);
-      else if (sortMethod == SortBy::TITLE)
-        fields.emplace_back(Field::TITLE);
-      else if (sortMethod == SortBy::ALBUM)
-      {
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::ALBUM_ARTIST);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::ARTIST)
-      {
-        fields.emplace_back(Field::ARTIST);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-      {
-        fields.emplace_back(Field::ARTIST);
-        fields.emplace_back(Field::YEAR);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::YEAR)
-      {
-        fields.emplace_back(Field::YEAR);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::GENRE)
-      {
-        fields.emplace_back(Field::GENRE);
-        fields.emplace_back(Field::ALBUM);
-      }
-      else if (sortMethod == SortBy::DATE_ADDED)
-        fields.emplace_back(Field::DATE_ADDED);
-      else if (sortMethod == SortBy::PLAYCOUNT)
-      {
-        fields.emplace_back(Field::PLAYCOUNT);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::LAST_PLAYED)
-      {
-        fields.emplace_back(Field::LAST_PLAYED);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::RATING)
-      {
-        fields.emplace_back(Field::RATING);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::VOTES)
-      {
-        fields.emplace_back(Field::VOTES);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::USER_RATING)
-      {
-        fields.emplace_back(Field::USER_RATING);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::FILE)
-      {
-        fields.emplace_back(Field::PATH);
-        fields.emplace_back(Field::FILENAME);
-        fields.emplace_back(Field::START_OFFSET);
-      }
-      else if (sortMethod == SortBy::TIME)
-        fields.emplace_back(Field::TIME);
-      else if (sortMethod == SortBy::ALBUM_TYPE)
-      {
-        fields.emplace_back(Field::ALBUM_TYPE);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::ORIG_DATE)
-      {
-        fields.emplace_back(Field::ORIG_DATE);
-        fields.emplace_back(Field::ALBUM);
-        fields.emplace_back(Field::TRACK_NUMBER);
-      }
-      else if (sortMethod == SortBy::BPM)
-        fields.emplace_back(Field::BPM);
-      break;
-    case MediaType::ARTIST:
-      if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TITLE ||
-          sortMethod == SortBy::ARTIST)
-        fields.emplace_back(Field::ARTIST);
-      else if (sortMethod == SortBy::GENRE)
-        fields.emplace_back(Field::GENRE);
-      else if (sortMethod == SortBy::DATE_ADDED)
-        fields.emplace_back(Field::DATE_ADDED);
-      break;
-    default:
-      break;
-  }
+  const SqlSortFields& sortFields{SqlSortFieldsOf(mediaType)};
+  if (const auto it = sortFields.find(sortMethod); it != sortFields.end())
+    fields = it->second;
 
   // Add sort by id to define order when other fields same or sort none
   fields.emplace_back(Field::ID);
-  return;
 }
 
 void SortUtils::Sort(SortBy sortBy, SortOrder sortOrder, SortAttribute attributes, DatabaseResults& items, int limitEnd /* = -1 */, int limitStart /* = 0 */)
