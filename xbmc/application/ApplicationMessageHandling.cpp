@@ -101,6 +101,22 @@ private:
   const CFileItem m_item;
 };
 
+//! Whether pause message \p msg changes anything in the state \p player is in
+bool PauseMessageApplies(uint32_t msg, const CApplicationPlayer& player)
+{
+  switch (msg)
+  {
+    case TMSG_MEDIA_PAUSE:
+      return player.HasPlayer();
+    case TMSG_MEDIA_UNPAUSE:
+      return player.IsPausedPlayback();
+    case TMSG_MEDIA_PAUSE_IF_PLAYING:
+      return player.IsPlaying() && !player.IsPaused();
+    default:
+      return false;
+  }
+}
+
 } // unnamed namespace
 
 CApplicationMessageHandling::CApplicationMessageHandling(CApplication& app)
@@ -121,6 +137,8 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
   }
 
   const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
+  const auto appPower = m_app.GetComponent<CApplicationPowerHandling>();
+  const auto appVolume = m_app.GetComponent<CApplicationVolumeHandling>();
 
   switch (msg)
   {
@@ -134,7 +152,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       break;
 
     case TMSG_SHUTDOWN:
-      m_app.GetComponent<CApplicationPowerHandling>()->HandleShutdownMessage();
+      appPower->HandleShutdownMessage();
       break;
 
     case TMSG_RENDERER_FLUSH:
@@ -162,25 +180,25 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       break;
 
     case TMSG_INHIBITIDLESHUTDOWN:
-      m_app.GetComponent<CApplicationPowerHandling>()->InhibitIdleShutdown(pMsg->param1 != 0);
+      appPower->InhibitIdleShutdown(pMsg->param1 != 0);
       break;
 
     case TMSG_INHIBITSCREENSAVER:
-      m_app.GetComponent<CApplicationPowerHandling>()->InhibitScreenSaver(pMsg->param1 != 0);
+      appPower->InhibitScreenSaver(pMsg->param1 != 0);
       break;
 
     case TMSG_ACTIVATESCREENSAVER:
-      m_app.GetComponent<CApplicationPowerHandling>()->ActivateScreenSaver();
+      appPower->ActivateScreenSaver();
       break;
 
     case TMSG_RESETSCREENSAVER:
-      m_app.GetComponent<CApplicationPowerHandling>()->m_bResetScreenSaver = true;
+      appPower->m_bResetScreenSaver = true;
       break;
 
     case TMSG_VOLUME_SHOW:
     {
       CAction action(pMsg->param1);
-      m_app.GetComponent<CApplicationVolumeHandling>()->ShowVolumeBar(&action);
+      appVolume->ShowVolumeBar(&action);
     }
     break;
 
@@ -189,12 +207,12 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       // We might come from a refresh rate switch destroying the native window; use the context resolution
       *static_cast<bool*>(pMsg->lpVoid) =
           m_app.InitWindow(CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution());
-      m_app.GetComponent<CApplicationPowerHandling>()->SetRenderGUI(true);
+      appPower->SetRenderGUI(true);
       break;
 
     case TMSG_DISPLAY_DESTROY:
       *static_cast<bool*>(pMsg->lpVoid) = CServiceBroker::GetWinSystem()->DestroyWindow();
-      m_app.GetComponent<CApplicationPowerHandling>()->SetRenderGUI(false);
+      appPower->SetRenderGUI(false);
       break;
 
     case TMSG_RESUMEAPP:
@@ -310,7 +328,6 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
         CServiceBroker::GetGUI()->GetWindowManager().PreviousWindow();
 
-      const auto appPower = m_app.GetComponent<CApplicationPowerHandling>();
       appPower->ResetScreenSaver();
       appPower->WakeUpScreenSaverAndDPMS();
 
@@ -378,7 +395,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
         {
           CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
               CSettings::SETTING_SCREENSAVER_MODE, "screensaver.xbmc.builtin.dim");
-          m_app.GetComponent<CApplicationPowerHandling>()->ActivateScreenSaver();
+          appPower->ActivateScreenSaver();
         }
         else
           CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SLIDESHOW);
@@ -420,17 +437,12 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     break;
 
     case TMSG_SET_VOLUME:
-    {
-      const auto volumedB{static_cast<float>(pMsg->param3)};
-      m_app.GetComponent<CApplicationVolumeHandling>()->SetVolume(volumedB);
-    }
-    break;
+      appVolume->SetVolume(static_cast<float>(pMsg->param3));
+      break;
 
     case TMSG_SET_MUTE:
-    {
-      m_app.GetComponent<CApplicationVolumeHandling>()->SetMute(pMsg->param3 == 1 ? true : false);
-    }
-    break;
+      appVolume->SetMute(pMsg->param3 == 1);
+      break;
 
     case TMSG_PROCESS_DELETE_AFTER_WATCH:
     {
@@ -460,7 +472,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       else
         m_app.LeavePlaybackWindow();
 
-      m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
+      appPower->WakeScreen();
 
       if (appPlayer->IsPlaying())
         m_app.StopPlaying();
@@ -468,25 +480,11 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     }
 
     case TMSG_MEDIA_PAUSE:
-      if (appPlayer->HasPlayer())
-      {
-        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
-        appPlayer->Pause();
-      }
-      break;
-
     case TMSG_MEDIA_UNPAUSE:
-      if (appPlayer->IsPausedPlayback())
-      {
-        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
-        appPlayer->Pause();
-      }
-      break;
-
     case TMSG_MEDIA_PAUSE_IF_PLAYING:
-      if (appPlayer->IsPlaying() && !appPlayer->IsPaused())
+      if (PauseMessageApplies(msg, *appPlayer))
       {
-        m_app.GetComponent<CApplicationPowerHandling>()->WakeScreen();
+        appPower->WakeScreen();
         appPlayer->Pause();
       }
       break;
@@ -504,6 +502,8 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
 
 bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 {
+  const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
+
   switch (message.GetMessage())
   {
     case GUI_MSG_NOTIFY_ALL:
@@ -549,8 +549,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_STARTED:
     {
-      m_app.m_ServiceManager->GetPlatform().OnPlayingVideoChanged(
-          m_app.GetComponent<CApplicationPlayer>()->IsPlayingVideo());
+      m_app.m_ServiceManager->GetPlatform().OnPlayingVideoChanged(appPlayer->IsPlayingVideo());
       // what started has already been recorded and published
       const std::shared_ptr<CFileItem> started =
           m_app.GetComponent<CPlaybackAnnouncer>()->GetStartedItem();
@@ -570,7 +569,6 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 #endif
 
       // we don't want a busy dialog when switching channels
-      const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
       if (!m_app.CurrentFileItem().IsLiveTV() ||
           (!appPlayer->IsPlayingVideo() && !appPlayer->IsPlayingAudio()))
         CGUIDialogBusy::WaitOnEvent(m_app.m_playerEvent);
@@ -666,7 +664,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYLISTPLAYER_STOPPED:
       // a stop announces the current item, so it is reset once the stop has been handled
-      if (m_app.GetComponent<CApplicationPlayer>()->IsPlaying())
+      if (appPlayer->IsPlaying())
         m_app.StopPlaying();
       else
         m_app.ResetCurrentItem();
