@@ -17,6 +17,7 @@
 #include "Util.h"
 #include "filesystem/File.h"
 #include "filesystem/MultiPathDirectory.h"
+#include "filesystem/SourcesDirectory.h"
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/StackDirectory.h"
 #include "guilib/GUIComponent.h"
@@ -124,7 +125,7 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "library://music"))
     return true;
-  else if (StringUtils::StartsWithNoCase(realPath, "sources://video"))
+  else if (CSourcesDirectory::SectionOf(realPath) == MediaSection::VIDEO)
     return true;
   else if (StringUtils::StartsWithNoCase(realPath, "special://musicplaylists"))
     return true;

@@ -18,6 +18,7 @@
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
+#include "filesystem/SourcesDirectory.h"
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
@@ -722,14 +723,16 @@ NPT_Result CUPnPServer::OnBrowseMetadata(PLT_ActionReference& action,
         parent = "musicdb://";
       else if (StringUtils::StartsWithNoCase(child_id, "special://videoplaylists/"))
         parent = "library://video/";
-      else if (StringUtils::StartsWithNoCase(child_id, "sources://video/"))
+      else if (StringUtils::StartsWithNoCase(
+                   child_id, CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)))
         parent = "library://video/";
       else if (StringUtils::StartsWithNoCase(child_id, "special://profile/playlists/music/"))
         parent = "special://musicplaylists/";
       else if (StringUtils::StartsWithNoCase(child_id, "special://profile/playlists/video/"))
         parent = "special://videoplaylists/";
       else
-        parent = "sources://video/"; // this can only match video sources
+        parent = CSourcesDirectory::PathOf(
+            KODI::MEDIA::MediaSection::VIDEO); // this can only match video sources
     }
 
     if (IsVideoDb(*item))

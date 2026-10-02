@@ -17,6 +17,7 @@
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "filesystem/Directory.h"
+#include "filesystem/SourcesDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/VideoDatabaseDirectory/QueryParams.h"
@@ -610,7 +611,7 @@ void CGUIWindowVideoNav::UpdateButtons()
     std::string strDummy;
     URIUtils::Split(m_vecItems->GetPath(), strDummy, strLabel);
   }
-  else if (m_vecItems->IsPath("sources://video/"))
+  else if (m_vecItems->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)))
     strLabel = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(744);
   // everything else is from a videodb:// path
   else if (VIDEO::IsVideoDb(*m_vecItems))
@@ -719,7 +720,8 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
     if (!pItem->IsPath("newsmartplaylist://video") && !pItem->IsPath("special://videoplaylists/") &&
-        !pItem->IsPath("sources://video/") && !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
+        !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
+        !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
   else if (StringUtils::StartsWithNoCase(pItem->GetPath(), "videodb://movies/sets/") &&
@@ -786,7 +788,7 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // nothing to do here
   }
-  else if (m_vecItems->IsPath("sources://video/"))
+  else if (m_vecItems->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)))
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
@@ -1058,7 +1060,7 @@ bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 std::string CGUIWindowVideoNav::GetStartFolder(const std::string &dir)
 {
   static const auto map = std::map<std::string, std::string>{
-      {"files", "sources://video/"},
+      {"files", CSourcesDirectory::PathOf(MediaSection::VIDEO)},
       {"inprogresstvshows", "videodb://inprogresstvshows/"},
       {"movieactors", "videodb://movies/actors/"},
       {"moviecountries", "videodb://movies/countries/"},

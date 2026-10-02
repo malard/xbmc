@@ -5,6 +5,7 @@ set(SOURCES TestAudioBookFileDirectory.cpp
             TestFile.cpp
             TestFileCache.cpp
             TestFileFactory.cpp
+            TestSourcesDirectory.cpp
             TestCurlHttpClient.cpp
             TestZipFile.cpp
             TestZipManager.cpp)

@@ -9,6 +9,7 @@
 #include "MediaLibraryEvent.h"
 
 #include "ServiceBroker.h"
+#include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
@@ -16,7 +17,7 @@
 #include "resources/ResourcesComponent.h"
 
 #include <optional>
-#include <string_view>
+#include <string>
 
 using KODI::MEDIA::MediaType;
 
@@ -25,7 +26,7 @@ namespace
 struct Destination
 {
   int window;
-  std::string_view root;
+  std::string root;
 };
 
 std::optional<Destination> DestinationFor(MediaType type)
@@ -33,7 +34,8 @@ std::optional<Destination> DestinationFor(MediaType type)
   switch (type)
   {
     case MediaType::VIDEO:
-      return Destination{WINDOW_VIDEO_NAV, "sources://video/"};
+      return Destination{WINDOW_VIDEO_NAV,
+                         XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)};
     case MediaType::MOVIE:
       return Destination{WINDOW_VIDEO_NAV, "videodb://movies/titles/"};
     case MediaType::VIDEO_COLLECTION:
@@ -46,7 +48,8 @@ std::optional<Destination> DestinationFor(MediaType type)
     case MediaType::EPISODE:
       return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/"};
     case MediaType::MUSIC:
-      return Destination{WINDOW_MUSIC_NAV, "sources://music/"};
+      return Destination{WINDOW_MUSIC_NAV,
+                         XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC)};
     case MediaType::ARTIST:
       return Destination{WINDOW_MUSIC_NAV, "musicdb://artists/"};
     case MediaType::ALBUM:
