@@ -151,7 +151,6 @@ public:
   BLURAY_TITLE_INFO* GetTitleFile(const std::string& name);
 
   void ProcessEvent();
-  //! \brief Opened to read a title without playing it, there is no player to tell.
   void NotifyPlayer(void* data, int event);
 
   void SaveCurrentState(const CStreamDetails& details) override;
