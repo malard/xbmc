@@ -23,6 +23,7 @@
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
+#include "filesystem/PlaylistDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIKeyboardFactory.h"
 #include "guilib/GUIWindowManager.h"
@@ -165,7 +166,7 @@ public:
     if (clearcache)
     {
       // Clear the music playlist from cache
-      CFileItemList items("playlistmusic://");
+      CFileItemList items(XFILE::CPlaylistDirectory::PathOf(PLAYLIST::Audio));
       items.RemoveDiscCache(WINDOW_MUSIC_PLAYLIST);
     }
 

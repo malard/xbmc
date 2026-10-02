@@ -26,14 +26,29 @@ CPlaylistDirectory::CPlaylistDirectory() = default;
 
 CPlaylistDirectory::~CPlaylistDirectory() = default;
 
-bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList &items)
+namespace
 {
-  std::optional<PLAYLIST::Type> type;
-  if (url.IsProtocol("playlistmusic"))
-    type = PLAYLIST::Audio;
-  else if (url.IsProtocol("playlistvideo"))
-    type = PLAYLIST::Video;
+constexpr char MUSIC_PROTOCOL[] = "playlistmusic";
+constexpr char VIDEO_PROTOCOL[] = "playlistvideo";
+} // namespace
 
+std::string CPlaylistDirectory::PathOf(PLAYLIST::Type type)
+{
+  return std::string{type == PLAYLIST::Audio ? MUSIC_PROTOCOL : VIDEO_PROTOCOL} + "://";
+}
+
+std::optional<PLAYLIST::Type> CPlaylistDirectory::TypeOf(const CURL& url)
+{
+  if (url.IsProtocol(MUSIC_PROTOCOL))
+    return PLAYLIST::Audio;
+  if (url.IsProtocol(VIDEO_PROTOCOL))
+    return PLAYLIST::Video;
+  return std::nullopt;
+}
+
+bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList& items)
+{
+  const std::optional<PLAYLIST::Type> type{TypeOf(url)};
   if (!type)
     return false;
 

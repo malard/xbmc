@@ -14,6 +14,7 @@
 #include "VideoDatabase.h"
 #include "filesystem/Directory.h"
 #include "filesystem/LibraryPaths.h"
+#include "filesystem/PlaylistDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/VideoDatabaseDirectory/QueryParams.h"
@@ -28,6 +29,7 @@
 #include "utils/FileExtensionProvider.h"
 #include "utils/SortUtils.h"
 #include "video/VideoFileItemClassify.h"
+#include "view/ViewStateNames.h"
 #include "view/ViewStateSettings.h"
 
 using namespace KODI;
@@ -113,7 +115,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                 "%c")); // Title, Actor's appearances (Relevance) | Label, Actor's appearances (Relevance)
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavactors");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_ACTORS);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -124,7 +127,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%T", "%R", "%L", "")); // Title, Rating | Label, empty
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavyears");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_YEARS);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -135,7 +139,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%L", "", "%L", "")); // Label, empty | Label, empty
         SetSortMethod(SortBy::SEASON);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavseasons");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_SEASONS);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -163,7 +168,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%T", "%r", "%T", "%r")); // Title, Userrating | Title, Userrating
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavtvshows");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TVSHOWS);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -177,7 +183,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%T", "%R", "%L", "")); // Title, Rating | Label, empty
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavgenres");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_GENRES);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -198,7 +205,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
 
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavgenres");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_GENRES);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -210,7 +218,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%T", "", "%T", "")); // Title, empty | Title, empty
         SetSortMethod(SortBy::LABEL);
 
-        const CViewState* viewState = CViewStateSettings::GetInstance().Get("videonavgenres");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_GENRES);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
       }
@@ -260,7 +269,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         AddSortMethod(SortBy::LABEL, sortAttributes, 551,
                       LABEL_MASKS("%T", "%R")); // Title, Rating | empty, empty
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavepisodes");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EPISODES);
         SetSortMethod(viewState->m_sortDescription);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
@@ -273,7 +283,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
             LABEL_MASKS("%Z - %H. %T", "%R")); // TvShow - Order. Title, Rating | empty, empty
         SetSortMethod(SortBy::NONE);
 
-        SetViewAsControl(CViewStateSettings::GetInstance().Get("videonavepisodes")->m_viewMode);
+        SetViewAsControl(
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EPISODES)->m_viewMode);
         SetSortOrder(SortOrder::NONE);
 
         break;
@@ -311,7 +322,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         AddSortMethod(SortBy::PLAYCOUNT, 567,
                       LABEL_MASKS("%T", "%V", "%T", "%V")); // Title, Playcount | Title, Playcount
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavtitles");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TITLES);
         if (params.GetSetId() > -1)
         {
           SetSortMethod(SortBy::YEAR);
@@ -355,7 +367,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         AddSortMethod(SortBy::TRACK_NUMBER, 554,
                       LABEL_MASKS(strTrack, "%N")); // Userdefined, Track Number | empty, empty
 
-        const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavmusicvideos");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_MUSICVIDEOS);
         SetSortMethod(viewState->m_sortDescription);
         SetViewAsControl(viewState->m_viewMode);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
@@ -366,7 +379,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         AddSortMethod(SortBy::NONE, 552, LABEL_MASKS("%T", "%R")); // Title, Rating | empty, empty
         SetSortMethod(SortBy::NONE);
 
-        SetViewAsControl(CViewStateSettings::GetInstance().Get("videonavtitles")->m_viewMode);
+        SetViewAsControl(
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TITLES)->m_viewMode);
 
         SetSortOrder(SortOrder::NONE);
       }
@@ -377,7 +391,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
                       LABEL_MASKS("%A - %T", "%Y")); // Artist - Title, Year | empty, empty
         SetSortMethod(SortBy::NONE);
 
-        SetViewAsControl(CViewStateSettings::GetInstance().Get("videonavmusicvideos")->m_viewMode);
+        SetViewAsControl(
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_MUSICVIDEOS)->m_viewMode);
 
         SetSortOrder(SortOrder::NONE);
       }
@@ -422,7 +437,8 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         AddSortMethod(SortBy::PLAYCOUNT, SortAttributeForceConsiderFolders, 567,
                       LABEL_MASKS("%L", "%V", "%L", "")); // Label, Playcount | Label, empty
 
-        const CViewState* viewState = CViewStateSettings::GetInstance().Get("videonavextras");
+        const CViewState* viewState =
+            CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EXTRAS);
         SetSortMethod(viewState->m_sortDescription);
         SetSortOrder(viewState->m_sortDescription.sortOrder);
         SetViewAsControl(viewState->m_viewMode);
@@ -444,7 +460,7 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
     AddSortMethod(SortBy::FILE, 561,
                   LABEL_MASKS("%L", "%I", "%L", "")); // Label, Size | Label, empty
 
-    const CViewState *viewState = CViewStateSettings::GetInstance().Get("videofiles");
+    const CViewState* viewState = CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_FILES);
     SetSortMethod(viewState->m_sortDescription);
     SetViewAsControl(viewState->m_viewMode);
     SetSortOrder(viewState->m_sortDescription.sortOrder);
@@ -463,49 +479,49 @@ void CGUIViewStateWindowVideoNav::SaveViewState()
     {
       case NodeType::ACTOR:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavactors"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_ACTORS));
         break;
       case NodeType::YEAR:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavyears"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_YEARS));
         break;
       case NodeType::GENRE:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavgenres"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_GENRES));
         break;
       case NodeType::TITLE_MOVIES:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
                      params.GetSetId() > -1
                          ? NULL
-                         : CViewStateSettings::GetInstance().Get("videonavtitles"));
+                         : CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TITLES));
         break;
       case NodeType::EPISODES:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavepisodes"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EPISODES));
         break;
       case NodeType::TITLE_TVSHOWS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavtvshows"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TVSHOWS));
         break;
       case NodeType::SEASONS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavseasons"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_SEASONS));
         break;
       case NodeType::TITLE_MUSICVIDEOS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavmusicvideos"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_MUSICVIDEOS));
         break;
       case NodeType::MOVIE_ASSETS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavassets"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_ASSETS));
         break;
       case NodeType::MOVIE_ASSETS_VERSIONS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavversions"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_VERSIONS));
         break;
       case NodeType::MOVIE_ASSETS_EXTRAS:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
-                     CViewStateSettings::GetInstance().Get("videonavextras"));
+                     CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EXTRAS));
         break;
       default:
         SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV);
@@ -514,7 +530,8 @@ void CGUIViewStateWindowVideoNav::SaveViewState()
   }
   else
   {
-    SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV, CViewStateSettings::GetInstance().Get("videofiles"));
+    SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
+                 CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_FILES));
   }
 }
 
@@ -582,7 +599,7 @@ std::vector<CMediaSource>& CGUIViewStateWindowVideoPlaylist::GetSources()
   m_sources.clear();
   //  Playlist share
   CMediaSource share;
-  share.strPath= "playlistvideo://";
+  share.strPath = XFILE::CPlaylistDirectory::PathOf(PLAYLIST::Video);
   share.m_iDriveType = SourceType::LOCAL;
   m_sources.push_back(share);
 
@@ -614,7 +631,7 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
   AddSortMethod(SortBy::PLAYCOUNT, 567,
                 LABEL_MASKS("%T", "%V", "%T", "%V")); // Title, Playcount | Title, Playcount
 
-  const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavtitles");
+  const CViewState* viewState = CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TITLES);
   if (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%T", "%R", "%T", "%R"));  // Title, Rating | Title, Rating
   else
@@ -630,7 +647,8 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
 
 void CGUIViewStateVideoMovies::SaveViewState()
 {
-  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV, CViewStateSettings::GetInstance().Get("videonavtitles"));
+  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
+               CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TITLES));
 }
 
 CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList& items) : CGUIViewStateWindowVideo(items)
@@ -663,7 +681,8 @@ CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList
   AddSortMethod(SortBy::TRACK_NUMBER, 554,
                 LABEL_MASKS(strTrack, "%N")); // Userdefined, Track Number | empty, empty
 
-  const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavmusicvideos");
+  const CViewState* viewState =
+      CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_MUSICVIDEOS);
   if (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%A - %T", "%Y"));  // Artist - Title, Year | empty, empty
   else
@@ -679,7 +698,8 @@ CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList
 
 void CGUIViewStateVideoMusicVideos::SaveViewState()
 {
-  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV, CViewStateSettings::GetInstance().Get("videonavmusicvideos"));
+  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
+               CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_MUSICVIDEOS));
 }
 
 CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items) : CGUIViewStateWindowVideo(items)
@@ -702,7 +722,8 @@ CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items)
   AddSortMethod(SortBy::USER_RATING, sortAttributes, 38018,
                 LABEL_MASKS("%T", "%r", "%T", "%r")); // Title, Userrating | Title, Userrating
 
-  const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavtvshows");
+  const CViewState* viewState =
+      CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TVSHOWS);
   if (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%T", "%M", "%T", "%M"));  // Title, #Episodes | Title, #Episodes
   else
@@ -718,7 +739,8 @@ CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items)
 
 void CGUIViewStateVideoTVShows::SaveViewState()
 {
-  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV, CViewStateSettings::GetInstance().Get("videonavtvshows"));
+  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
+               CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_TVSHOWS));
 }
 
 CGUIViewStateVideoEpisodes::CGUIViewStateVideoEpisodes(const CFileItemList& items) : CGUIViewStateWindowVideo(items)
@@ -745,7 +767,8 @@ CGUIViewStateVideoEpisodes::CGUIViewStateVideoEpisodes(const CFileItemList& item
                     ? SortAttributeIgnoreArticle
                     : SortAttributeNone);
 
-  const CViewState *viewState = CViewStateSettings::GetInstance().Get("videonavepisodes");
+  const CViewState* viewState =
+      CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EPISODES);
   if (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%Z - %H. %T", "%R"));  // TvShow - Order. Title, Rating | empty, empty
   else
@@ -761,7 +784,8 @@ CGUIViewStateVideoEpisodes::CGUIViewStateVideoEpisodes(const CFileItemList& item
 
 void CGUIViewStateVideoEpisodes::SaveViewState()
 {
-  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV, CViewStateSettings::GetInstance().Get("videonavepisodes"));
+  SaveViewToDb(m_items.GetPath(), WINDOW_VIDEO_NAV,
+               CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_NAV_EPISODES));
 }
 
 CGUIViewStateVideoPlaylist::CGUIViewStateVideoPlaylist(const CFileItemList& items)
@@ -783,7 +807,7 @@ CGUIViewStateVideoPlaylist::CGUIViewStateVideoPlaylist(const CFileItemList& item
 
   SetSortMethod(SortBy::PLAYLIST_ORDER);
 
-  const CViewState* viewState = CViewStateSettings::GetInstance().Get("videofiles");
+  const CViewState* viewState = CViewStateSettings::GetInstance().Get(VIEW_STATE::VIDEO_FILES);
   SetViewAsControl(viewState->m_viewMode);
   SetSortOrder(viewState->m_sortDescription.sortOrder);
 

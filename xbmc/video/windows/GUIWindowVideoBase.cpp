@@ -30,6 +30,7 @@
 #include "filesystem/AddonsPaths.h"
 #include "filesystem/Directory.h"
 #include "filesystem/MultiPathDirectory.h"
+#include "filesystem/PlaylistDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/VideoDatabaseDirectory/QueryParams.h"
@@ -1167,7 +1168,7 @@ bool CGUIWindowVideoBase::StackingAvailable(const CFileItemList &items)
   CURL url(items.GetPath());
   return !(items.IsPlugin() || items.IsAddonsPath() || items.IsRSS() ||
            NETWORK::IsInternetStream(items) || VIDEO::IsVideoDb(items) ||
-           url.IsProtocol("playlistvideo"));
+           XFILE::CPlaylistDirectory::TypeOf(url) == PLAYLIST::Video);
 }
 
 void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)

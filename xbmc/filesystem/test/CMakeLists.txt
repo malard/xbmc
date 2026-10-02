@@ -7,6 +7,7 @@ set(SOURCES TestAddonsPaths.cpp
             TestFileCache.cpp
             TestFileFactory.cpp
             TestLibraryPaths.cpp
+            TestPlaylistDirectory.cpp
             TestSourcesDirectory.cpp
             TestCurlHttpClient.cpp
             TestZipFile.cpp

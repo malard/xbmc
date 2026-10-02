@@ -16,6 +16,7 @@
 #include "Util.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
+#include "filesystem/PlaylistDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIKeyboardFactory.h"
 #include "guilib/GUIWindowManager.h"
@@ -52,10 +53,6 @@ constexpr int CONTROL_BTNNEXT = 24;
 constexpr int CONTROL_BTNPREVIOUS = 25;
 constexpr int CONTROL_BTNREPEAT = 26;
 
-const char* DirectoryPath(PLAYLIST::Type type)
-{
-  return type == PLAYLIST::Audio ? "playlistmusic://" : "playlistvideo://";
-}
 } // namespace
 
 int GetPlayListWindowId(PLAYLIST::Type type)
@@ -120,7 +117,7 @@ bool CGUIWindowPlayList<Base>::OnMessage(CGUIMessage& message)
 
     case GUI_MSG_WINDOW_INIT:
     {
-      this->m_vecItems->SetPath(DirectoryPath(m_type));
+      this->m_vecItems->SetPath(XFILE::CPlaylistDirectory::PathOf(m_type));
 
       if (!Base::OnMessage(message))
         return false;
