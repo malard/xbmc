@@ -35,6 +35,8 @@
 #include "dialogs/GUIDialogMediaFilter.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
+#include "filesystem/Directory.h"
+#include "filesystem/File.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "filesystem/PluginDirectory.h"
@@ -834,6 +836,22 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
 
   if (!GetDirectory(pathNoFilter, *m_vecItems))
   {
+    // A path naming a file opens the folder holding it, with the file selected
+    if (XFILE::CFile::Exists(path) && !XFILE::CDirectory::Exists(path))
+    {
+      const std::string folder{URIUtils::GetDirectory(path)};
+      if (!folder.empty() && !URIUtils::PathEquals(folder, path))
+      {
+        const CFileItem file{path, false};
+        std::string selected;
+        GetDirectoryHistoryString(&file, selected);
+        m_history.SetSelectedItem(selected, folder);
+        if (URIUtils::PathEquals(path, m_startDirectory))
+          m_startDirectory = folder;
+        return Update(folder, updateFilterPath);
+      }
+    }
+
     CLog::Log(LOGERROR, "CGUIMediaWindow::GetDirectory({}) failed", CURL(path).GetRedacted());
 
     if (URIUtils::PathEquals(path, GetRootPath()))

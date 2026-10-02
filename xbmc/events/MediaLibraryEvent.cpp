@@ -14,7 +14,6 @@
 #include "guilib/WindowIDs.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/URIUtils.h"
 
 #include <optional>
 #include <string_view>
@@ -27,8 +26,6 @@ struct Destination
 {
   int window;
   std::string_view root;
-  //! An item's path names its file rather than its folder.
-  bool pathIsAFile;
 };
 
 std::optional<Destination> DestinationFor(MediaType type)
@@ -36,26 +33,26 @@ std::optional<Destination> DestinationFor(MediaType type)
   switch (type)
   {
     case MediaType::VIDEO:
-      return Destination{WINDOW_VIDEO_NAV, "sources://video/", false};
+      return Destination{WINDOW_VIDEO_NAV, "sources://video/"};
     case MediaType::MOVIE:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/titles/", true};
+      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/titles/"};
     case MediaType::VIDEO_COLLECTION:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/sets/", false};
+      return Destination{WINDOW_VIDEO_NAV, "videodb://movies/sets/"};
     case MediaType::MUSIC_VIDEO:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://musicvideos/titles/", true};
+      return Destination{WINDOW_VIDEO_NAV, "videodb://musicvideos/titles/"};
     case MediaType::TV_SHOW:
     case MediaType::SEASON:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/", false};
+      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/"};
     case MediaType::EPISODE:
-      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/", true};
+      return Destination{WINDOW_VIDEO_NAV, "videodb://tvshows/titles/"};
     case MediaType::MUSIC:
-      return Destination{WINDOW_MUSIC_NAV, "sources://music/", false};
+      return Destination{WINDOW_MUSIC_NAV, "sources://music/"};
     case MediaType::ARTIST:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://artists/", false};
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://artists/"};
     case MediaType::ALBUM:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://albums/", false};
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://albums/"};
     case MediaType::SONG:
-      return Destination{WINDOW_MUSIC_NAV, "musicdb://songs/", true};
+      return Destination{WINDOW_MUSIC_NAV, "musicdb://songs/"};
     case MediaType::NONE:
     case MediaType::VIDEO_VERSION:
       break;
@@ -104,13 +101,7 @@ bool CMediaLibraryEvent::Execute() const
   if (!destination)
     return false;
 
-  std::string path{m_mediaPath};
-  if (path.empty())
-    path = destination->root;
-  //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
-  else if (destination->pathIsAFile)
-    path = URIUtils::GetDirectory(path);
-
+  const std::string path{m_mediaPath.empty() ? std::string{destination->root} : m_mediaPath};
   CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(destination->window,
                                                               {path, "return"});
   return true;

@@ -45,55 +45,55 @@ using namespace MUSIC_INFO;
 using namespace JSONRPC;
 using namespace XFILE;
 
+namespace
+{
+//! A property the music library keeps, and how it is read
+struct LibraryProperty
+{
+  std::string_view name;
+  std::string (CMusicDatabase::*read)() const;
+};
+
+constexpr LibraryProperty LIBRARY_PROPERTIES[] = {
+    {"libraryLastUpdated", &CMusicDatabase::GetLibraryLastUpdated},
+    {"libraryLastCleaned", &CMusicDatabase::GetLibraryLastCleaned},
+    {"artistLinksUpdated", &CMusicDatabase::GetArtistLinksUpdated},
+    {"songsLastAdded", &CMusicDatabase::GetSongsLastAdded},
+    {"albumsLastAdded", &CMusicDatabase::GetAlbumsLastAdded},
+    {"artistsLastAdded", &CMusicDatabase::GetArtistsLastAdded},
+    {"genresLastAdded", &CMusicDatabase::GetGenresLastAdded},
+    {"songsModified", &CMusicDatabase::GetSongsLastModified},
+    {"albumsModified", &CMusicDatabase::GetAlbumsLastModified},
+    {"artistsModified", &CMusicDatabase::GetArtistsLastModified},
+};
+
+const LibraryProperty* LibraryPropertyNamed(std::string_view name)
+{
+  const auto it = std::ranges::find(LIBRARY_PROPERTIES, name, &LibraryProperty::name);
+  return it != std::end(LIBRARY_PROPERTIES) ? &*it : nullptr;
+}
+} // unnamed namespace
+
 JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
-  CVariant properties = CVariant(CVariant::VariantTypeObject);
-  CMusicDatabase musicdatabase;
-  // Make db connection once if one or more properties needs db access
-  for (CVariant::const_iterator_array it = parameterObject["properties"].begin_array();
-       it != parameterObject["properties"].end_array(); ++it)
-  {
-    std::string propertyName = it->asString();
-    if (propertyName == "libraryLastUpdated" || propertyName == "libraryLastCleaned" ||
-        propertyName == "artistLinksUpdated" || propertyName == "songsLastAdded" ||
-        propertyName == "albumsLastAdded" || propertyName == "artistsLastAdded" ||
-        propertyName == "songsModified" || propertyName == "albumsModified" ||
-        propertyName == "artistsModified")
-    {
-      if (!musicdatabase.Open())
-        return InternalError;
-      else
-        break;
-    }
-  }
+  const CVariant& names{parameterObject["properties"]};
 
-  for (CVariant::const_iterator_array it = parameterObject["properties"].begin_array();
-       it != parameterObject["properties"].end_array(); ++it)
+  // Make db connection once if one or more properties needs db access
+  CMusicDatabase musicdatabase;
+  if (std::any_of(names.begin_array(), names.end_array(), [](const CVariant& name)
+                  { return LibraryPropertyNamed(name.asString()) != nullptr; }) &&
+      !musicdatabase.Open())
+    return InternalError;
+
+  CVariant properties = CVariant(CVariant::VariantTypeObject);
+  for (CVariant::const_iterator_array it = names.begin_array(); it != names.end_array(); ++it)
   {
-    std::string propertyName = it->asString();
+    const std::string propertyName = it->asString();
     CVariant property;
     if (propertyName == "missingArtistId")
       property = static_cast<int>(BLANKARTIST_ID);
-    else if (propertyName == "libraryLastUpdated")
-      property = musicdatabase.GetLibraryLastUpdated();
-    else if (propertyName == "libraryLastCleaned")
-      property = musicdatabase.GetLibraryLastCleaned();
-    else if (propertyName == "artistLinksUpdated")
-      property = musicdatabase.GetArtistLinksUpdated();
-    else if (propertyName == "songsLastAdded")
-      property = musicdatabase.GetSongsLastAdded();
-    else if (propertyName == "albumsLastAdded")
-      property = musicdatabase.GetAlbumsLastAdded();
-    else if (propertyName == "artistsLastAdded")
-      property = musicdatabase.GetArtistsLastAdded();
-    else if (propertyName == "genresLastAdded")
-      property = musicdatabase.GetGenresLastAdded();
-    else if (propertyName == "songsModified")
-      property = musicdatabase.GetSongsLastModified();
-    else if (propertyName == "albumsModified")
-      property = musicdatabase.GetAlbumsLastModified();
-    else if (propertyName == "artistsModified")
-      property = musicdatabase.GetArtistsLastModified();
+    else if (const LibraryProperty* library = LibraryPropertyNamed(propertyName); library)
+      property = (musicdatabase.*library->read)();
 
     properties[propertyName] = property;
   }
