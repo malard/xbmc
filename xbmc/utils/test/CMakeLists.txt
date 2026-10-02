@@ -30,6 +30,7 @@ set(SOURCES TestAlarmClock.cpp
             TestJSONVariantParser.cpp
             TestJSONVariantWriter.cpp
             TestLabelFormatter.cpp
+            TestLegacyPathTranslation.cpp
             Testlog.cpp
             TestMap.cpp
             TestMathUtils.cpp
