@@ -115,7 +115,8 @@ void CJobManager::CancelJobs()
       queue.clear();
     }
 
-    // cancel any callbacks on jobs still processing
+    // These stay under the lock: the job is owned by its worker, which may complete and
+    // free it the moment the lock is released.
     std::ranges::for_each(m_processing,
                           [](CWorkItem& wi)
                           {

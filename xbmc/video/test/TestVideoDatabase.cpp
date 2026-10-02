@@ -363,6 +363,24 @@ TEST_F(TestVideoDatabase, AddPathReusesRowAcrossZipAndArchiveProtocols)
   EXPECT_LT(m_db.GetPathId(archive), 0);
 }
 
+TEST_F(TestVideoDatabase, AMovieIsFoundByItsDirectorsName)
+{
+  CVideoInfoTag directed{Tag("/videos/directed.mkv")};
+  directed.SetDirector({"Jane Director"});
+  const int idMovie{m_db.SetDetailsForMovie(directed, KODI::ART::Artwork{})};
+  ASSERT_GT(idMovie, 0);
+  ASSERT_GT(AddMovie("/videos/undirected.mkv"), 0);
+
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  url.AddOption("director", "Jane Director");
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items));
+  ASSERT_EQ(1, items.Size());
+  EXPECT_EQ(idMovie, items[0]->GetVideoInfoTag()->m_iDbId);
+}
+
 TEST_F(TestVideoDatabase, GetPlayCountsListingInsideArchiveAcrossZipAndArchiveProtocols)
 {
   MarkPlayed(ArchivePath("zip", "/tv/season.zip", "e01.mkv"), 1);
@@ -437,22 +455,4 @@ TEST_F(TestVideoDatabase, GetItemsForPathReturnsArchivedMoviesWithCollapsedPaths
   EXPECT_EQ(archived, archivedItems[0]->GetPath());
   EXPECT_EQ(0, archivedItems[0]->GetVideoInfoTag()->GetPlayCount());
   EXPECT_EQ(1200.0, archivedItems[0]->GetVideoInfoTag()->GetResumePoint().timeInSeconds);
-}
-
-TEST_F(TestVideoDatabase, AMovieIsFoundByItsDirectorsName)
-{
-  CVideoInfoTag directed{Tag("/videos/directed.mkv")};
-  directed.SetDirector({"Jane Director"});
-  const int idMovie{m_db.SetDetailsForMovie(directed, KODI::ART::Artwork{})};
-  ASSERT_GT(idMovie, 0);
-  ASSERT_GT(AddMovie("/videos/undirected.mkv"), 0);
-
-  CVideoDbUrl url;
-  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
-  url.AddOption("director", "Jane Director");
-
-  CFileItemList items;
-  ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items));
-  ASSERT_EQ(1, items.Size());
-  EXPECT_EQ(idMovie, items[0]->GetVideoInfoTag()->m_iDbId);
 }
