@@ -43,6 +43,8 @@
 
 #include <optional>
 
+using KODI::MEDIA::MediaSection;
+
 namespace KODI
 {
 
@@ -162,7 +164,7 @@ std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(
 
 bool CAsyncGetItemsForPlaylist::IsUnlocked(CFileItem& source)
 {
-  return source.IsPVR() || g_passwordManager.IsItemUnlocked(&source, "video");
+  return source.IsPVR() || g_passwordManager.IsItemUnlocked(&source, MediaSection::VIDEO);
 }
 
 void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,

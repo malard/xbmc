@@ -32,6 +32,8 @@ constexpr const char* XML_SOURCES = "sources";
 constexpr const char* XML_SOURCE = "source";
 } // unnamed namespace
 
+using KODI::MEDIA::MediaSection;
+
 CMediaSourceSettings::CMediaSourceSettings()
 {
   Clear();
@@ -145,61 +147,76 @@ void CMediaSourceSettings::Clear()
   m_gameSources.clear();
 }
 
-std::vector<CMediaSource>* CMediaSourceSettings::GetSources(std::string_view type)
+std::vector<CMediaSource>& CMediaSourceSettings::GetSources(MediaSection section)
 {
-  if (type == "programs" || type == "myprograms")
-    return &m_programSources;
-  else if (type == "files")
-    return &m_fileSources;
-  else if (type == "music")
-    return &m_musicSources;
-  else if (type == "video" || type == "videos")
-    return &m_videoSources;
-  else if (type == "pictures")
-    return &m_pictureSources;
-  else if (type == "games")
-    return &m_gameSources;
-
-  return nullptr;
+  switch (section)
+  {
+    case MediaSection::VIDEO:
+      return m_videoSources;
+    case MediaSection::MUSIC:
+      return m_musicSources;
+    case MediaSection::PICTURES:
+      return m_pictureSources;
+    case MediaSection::FILES:
+      return m_fileSources;
+    case MediaSection::PROGRAMS:
+      return m_programSources;
+    case MediaSection::GAMES:
+      return m_gameSources;
+  }
+  return m_fileSources;
 }
 
-const std::string& CMediaSourceSettings::GetDefaultSource(std::string_view type) const
+const std::string& CMediaSourceSettings::GetDefaultSource(MediaSection section) const
 {
-  if (type == "programs" || type == "myprograms")
-    return m_defaultProgramSource;
-  else if (type == "files")
-    return m_defaultFileSource;
-  else if (type == "music")
-    return m_defaultMusicSource;
-  else if (type == "pictures")
-    return m_defaultPictureSource;
-
+  switch (section)
+  {
+    case MediaSection::MUSIC:
+      return m_defaultMusicSource;
+    case MediaSection::PICTURES:
+      return m_defaultPictureSource;
+    case MediaSection::FILES:
+      return m_defaultFileSource;
+    case MediaSection::PROGRAMS:
+      return m_defaultProgramSource;
+    case MediaSection::VIDEO:
+    case MediaSection::GAMES:
+      break;
+  }
   return StringUtils::Empty;
 }
 
-void CMediaSourceSettings::SetDefaultSource(std::string_view type, std::string_view source)
+void CMediaSourceSettings::SetDefaultSource(MediaSection section, std::string_view source)
 {
-  if (type == "programs" || type == "myprograms")
-    m_defaultProgramSource = source;
-  else if (type == "files")
-    m_defaultFileSource = source;
-  else if (type == "music")
-    m_defaultMusicSource = source;
-  else if (type == "pictures")
-    m_defaultPictureSource = source;
+  switch (section)
+  {
+    case MediaSection::MUSIC:
+      m_defaultMusicSource = source;
+      break;
+    case MediaSection::PICTURES:
+      m_defaultPictureSource = source;
+      break;
+    case MediaSection::FILES:
+      m_defaultFileSource = source;
+      break;
+    case MediaSection::PROGRAMS:
+      m_defaultProgramSource = source;
+      break;
+    case MediaSection::VIDEO:
+    case MediaSection::GAMES:
+      break;
+  }
 }
 
 // NOTE: This function does NOT save the sources.xml file - you need to call SaveSources() separately.
-bool CMediaSourceSettings::UpdateSource(std::string_view strType,
+bool CMediaSourceSettings::UpdateSource(MediaSection section,
                                         std::string_view strOldName,
                                         std::string_view strUpdateChild,
                                         const std::string& strUpdateValue)
 {
-  std::vector<CMediaSource>* pShares = GetSources(strType);
-  if (!pShares)
-    return false;
+  std::vector<CMediaSource>& shares = GetSources(section);
 
-  for (auto& share : *pShares)
+  for (auto& share : shares)
   {
     if (share.strName == strOldName)
     {
@@ -235,23 +252,21 @@ bool CMediaSourceSettings::UpdateSource(std::string_view strType,
   return false;
 }
 
-bool CMediaSourceSettings::DeleteSource(std::string_view strType,
+bool CMediaSourceSettings::DeleteSource(MediaSection section,
                                         std::string_view strName,
                                         std::string_view strPath,
                                         bool virtualSource /* = false */)
 {
-  std::vector<CMediaSource>* pShares = GetSources(strType);
-  if (!pShares)
-    return false;
+  std::vector<CMediaSource>& shares = GetSources(section);
 
   bool found = false;
 
-  for (auto it = pShares->begin(); it != pShares->end(); ++it)
+  for (auto it = shares.begin(); it != shares.end(); ++it)
   {
     if (it->strName == strName && it->strPath == strPath)
     {
       CLog::Log(LOGDEBUG, "CMediaSourceSettings: found share, removing!");
-      pShares->erase(it);
+      shares.erase(it);
       found = true;
       break;
     }
@@ -263,11 +278,9 @@ bool CMediaSourceSettings::DeleteSource(std::string_view strType,
   return Save();
 }
 
-bool CMediaSourceSettings::AddShare(std::string_view type, const CMediaSource& share)
+bool CMediaSourceSettings::AddShare(MediaSection section, const CMediaSource& share)
 {
-  std::vector<CMediaSource>* pShares = GetSources(type);
-  if (!pShares)
-    return false;
+  std::vector<CMediaSource>& shares = GetSources(section);
 
   // translate dir and add to our current shares
   std::string strPath1 = share.strPath;
@@ -292,7 +305,7 @@ bool CMediaSourceSettings::AddShare(std::string_view type, const CMediaSource& s
       return false;
     }
   }
-  pShares->push_back(shareToAdd);
+  shares.push_back(shareToAdd);
 
   if (!share.m_ignore)
     return Save();
@@ -300,17 +313,15 @@ bool CMediaSourceSettings::AddShare(std::string_view type, const CMediaSource& s
   return true;
 }
 
-bool CMediaSourceSettings::UpdateShare(std::string_view type,
+bool CMediaSourceSettings::UpdateShare(MediaSection section,
                                        std::string_view oldName,
                                        const CMediaSource& share)
 {
-  std::vector<CMediaSource>* pShares = GetSources(type);
-  if (!pShares)
-    return false;
+  std::vector<CMediaSource>& shares = GetSources(section);
 
   // update our current share list
   const CMediaSource* pShare = nullptr;
-  for (auto& currshare : *pShares)
+  for (auto& currshare : shares)
   {
     if (currshare.strName == oldName)
     {

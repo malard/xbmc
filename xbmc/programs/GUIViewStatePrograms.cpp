@@ -24,6 +24,7 @@
 #endif
 
 using namespace XFILE;
+using KODI::MEDIA::MediaSection;
 
 CGUIViewStateWindowPrograms::CGUIViewStateWindowPrograms(const CFileItemList& items) : CGUIViewState(items)
 {
@@ -47,9 +48,9 @@ void CGUIViewStateWindowPrograms::SaveViewState()
   SaveViewToDb(m_items.GetPath(), WINDOW_PROGRAMS, CViewStateSettings::GetInstance().Get("programs"));
 }
 
-std::string CGUIViewStateWindowPrograms::GetLockType()
+std::optional<KODI::MEDIA::MediaSection> CGUIViewStateWindowPrograms::GetLockType()
 {
-  return "programs";
+  return KODI::MEDIA::MediaSection::PROGRAMS;
 }
 
 std::string CGUIViewStateWindowPrograms::GetExtensions()
@@ -72,9 +73,9 @@ std::vector<CMediaSource>& CGUIViewStateWindowPrograms::GetSources()
   }
 #endif
 
-  std::vector<CMediaSource>* programSources =
-      CMediaSourceSettings::GetInstance().GetSources("programs");
-  AddOrReplace(*programSources, CGUIViewState::GetSources());
-  return *programSources;
+  std::vector<CMediaSource>& programSources =
+      CMediaSourceSettings::GetInstance().GetSources(MediaSection::PROGRAMS);
+  AddOrReplace(programSources, CGUIViewState::GetSources());
+  return programSources;
 }
 

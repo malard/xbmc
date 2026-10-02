@@ -56,6 +56,7 @@ using namespace KODI::VIDEO;
 using namespace MUSIC_INFO;
 using namespace XFILE;
 using namespace std::chrono_literals;
+using KODI::MEDIA::MediaSection;
 
 namespace MUSIC_UTILS
 {
@@ -541,7 +542,7 @@ std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(
 
 bool CAsyncGetItemsForPlaylist::IsUnlocked(CFileItem& source)
 {
-  return g_passwordManager.IsItemUnlocked(&source, "music");
+  return g_passwordManager.IsItemUnlocked(&source, MediaSection::MUSIC);
 }
 
 void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,

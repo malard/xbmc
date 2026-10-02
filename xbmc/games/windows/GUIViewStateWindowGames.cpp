@@ -22,6 +22,7 @@
 
 using namespace KODI;
 using namespace GAME;
+using KODI::MEDIA::MediaSection;
 
 CGUIViewStateWindowGames::CGUIViewStateWindowGames(const CFileItemList& items)
   : CGUIViewState(items)
@@ -53,9 +54,9 @@ CGUIViewStateWindowGames::CGUIViewStateWindowGames(const CFileItemList& items)
   LoadViewState(items.GetPath(), WINDOW_GAMES);
 }
 
-std::string CGUIViewStateWindowGames::GetLockType()
+std::optional<KODI::MEDIA::MediaSection> CGUIViewStateWindowGames::GetLockType()
 {
-  return "games";
+  return KODI::MEDIA::MediaSection::GAMES;
 }
 
 std::string CGUIViewStateWindowGames::GetExtensions()
@@ -70,16 +71,7 @@ std::string CGUIViewStateWindowGames::GetExtensions()
 
 std::vector<CMediaSource>& CGUIViewStateWindowGames::GetSources()
 {
-  std::vector<CMediaSource>* pGameSources = CMediaSourceSettings::GetInstance().GetSources("games");
-
-  // Guard against source type not existing
-  if (pGameSources == nullptr)
-  {
-    static std::vector<CMediaSource> empty;
-    return empty;
-  }
-
-  return *pGameSources;
+  return CMediaSourceSettings::GetInstance().GetSources(MediaSection::GAMES);
 }
 
 void CGUIViewStateWindowGames::SaveViewState()

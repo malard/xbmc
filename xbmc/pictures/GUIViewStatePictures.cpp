@@ -21,6 +21,7 @@
 
 using namespace XFILE;
 using namespace ADDON;
+using KODI::MEDIA::MediaSection;
 
 CGUIViewStateWindowPictures::CGUIViewStateWindowPictures(const CFileItemList& items) : CGUIViewState(items)
 {
@@ -60,9 +61,9 @@ void CGUIViewStateWindowPictures::SaveViewState()
   SaveViewToDb(m_items.GetPath(), WINDOW_PICTURES, CViewStateSettings::GetInstance().Get("pictures"));
 }
 
-std::string CGUIViewStateWindowPictures::GetLockType()
+std::optional<KODI::MEDIA::MediaSection> CGUIViewStateWindowPictures::GetLockType()
 {
-  return "pictures";
+  return KODI::MEDIA::MediaSection::PICTURES;
 }
 
 std::string CGUIViewStateWindowPictures::GetExtensions()
@@ -76,16 +77,6 @@ std::string CGUIViewStateWindowPictures::GetExtensions()
 
 std::vector<CMediaSource>& CGUIViewStateWindowPictures::GetSources()
 {
-  std::vector<CMediaSource>* pictureSources =
-      CMediaSourceSettings::GetInstance().GetSources("pictures");
-
-  // Guard against source type not existing
-  if (pictureSources == nullptr)
-  {
-    static std::vector<CMediaSource> empty;
-    return empty;
-  }
-
-  return *pictureSources;
+  return CMediaSourceSettings::GetInstance().GetSources(MediaSection::PICTURES);
 }
 

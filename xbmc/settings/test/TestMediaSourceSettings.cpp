@@ -15,6 +15,8 @@
 
 #include <gtest/gtest.h>
 
+using KODI::MEDIA::MediaSection;
+
 namespace
 {
 class TestMediaSourceSettingsDevicePath : public testing::Test, protected CMediaSourceSettings
@@ -26,26 +28,26 @@ TEST_F(TestMediaSourceSettingsDevicePath, UpdateSourcePath)
 {
   CMediaSource source;
   source.FromNameAndPaths("Disc", {"D:\\"});
-  auto* sources = GetSources("video");
-  sources->push_back(source);
+  auto& sources = GetSources(MediaSection::VIDEO);
+  sources.push_back(source);
 
-  ASSERT_TRUE(UpdateSource("video", "Disc", "path", "E:\\"));
+  ASSERT_TRUE(UpdateSource(MediaSection::VIDEO, "Disc", "path", "E:\\"));
 #ifdef TARGET_WINDOWS
-  EXPECT_EQ(sources->front().strDevicePath, "E:");
+  EXPECT_EQ(sources.front().strDevicePath, "E:");
 #else
-  EXPECT_TRUE(sources->front().strDevicePath.empty());
+  EXPECT_TRUE(sources.front().strDevicePath.empty());
 #endif
 
-  ASSERT_TRUE(UpdateSource("video", "Disc", "path", "smb://server/share/"));
-  EXPECT_TRUE(sources->front().strDevicePath.empty());
-  EXPECT_EQ(sources->front().m_iDriveType, SourceType::REMOTE);
+  ASSERT_TRUE(UpdateSource(MediaSection::VIDEO, "Disc", "path", "smb://server/share/"));
+  EXPECT_TRUE(sources.front().strDevicePath.empty());
+  EXPECT_EQ(sources.front().m_iDriveType, SourceType::REMOTE);
 }
 
 TEST_F(TestMediaSourceSettingsDevicePath, ReloadDriveSource)
 {
   CMediaSource source;
   source.FromNameAndPaths("Disc", {"E:\\"});
-  GetSources("video")->push_back(source);
+  GetSources(MediaSection::VIDEO).push_back(source);
 
   XFILE::CFile* file = XBMC_CREATETEMPFILE(".xml");
   ASSERT_NE(file, nullptr);
@@ -57,12 +59,12 @@ TEST_F(TestMediaSourceSettingsDevicePath, ReloadDriveSource)
   EXPECT_TRUE(Load(xmlfile));
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
 
-  const auto* sources = GetSources("video");
-  ASSERT_EQ(sources->size(), 1);
+  const auto& sources = GetSources(MediaSection::VIDEO);
+  ASSERT_EQ(sources.size(), 1);
 #ifdef TARGET_WINDOWS
-  EXPECT_EQ(sources->front().strDevicePath, "E:");
+  EXPECT_EQ(sources.front().strDevicePath, "E:");
 #else
-  EXPECT_TRUE(sources->front().strDevicePath.empty());
+  EXPECT_TRUE(sources.front().strDevicePath.empty());
 #endif
 }
 
@@ -71,12 +73,12 @@ TEST(TestMediaSourceSettings, LoadString)
   CMediaSourceSettings& ms = CMediaSourceSettings::GetInstance();
   EXPECT_TRUE(ms.Load(XBMC_REF_FILE_PATH("/xbmc/settings/test/test-MediaSources.xml")));
 
-  EXPECT_EQ(ms.GetSources("programs")->size(), 0);
-  EXPECT_EQ(ms.GetSources("files")->size(), 0);
-  EXPECT_EQ(ms.GetSources("music")->size(), 2);
-  EXPECT_EQ(ms.GetSources("video")->size(), 4);
-  EXPECT_EQ(ms.GetSources("pictures")->size(), 1);
-  EXPECT_EQ(ms.GetSources("games")->size(), 0);
+  EXPECT_EQ(ms.GetSources(MediaSection::PROGRAMS).size(), 0);
+  EXPECT_EQ(ms.GetSources(MediaSection::FILES).size(), 0);
+  EXPECT_EQ(ms.GetSources(MediaSection::MUSIC).size(), 2);
+  EXPECT_EQ(ms.GetSources(MediaSection::VIDEO).size(), 4);
+  EXPECT_EQ(ms.GetSources(MediaSection::PICTURES).size(), 1);
+  EXPECT_EQ(ms.GetSources(MediaSection::GAMES).size(), 0);
 }
 
 TEST(TestMediaSourceSettings, SaveString)
@@ -84,12 +86,12 @@ TEST(TestMediaSourceSettings, SaveString)
   CMediaSourceSettings& ms = CMediaSourceSettings::GetInstance();
   EXPECT_TRUE(ms.Load(XBMC_REF_FILE_PATH("/xbmc/settings/test/test-MediaSources.xml")));
 
-  int refprograms = ms.GetSources("programs")->size();
-  int reffiles = ms.GetSources("files")->size();
-  int refmusic = ms.GetSources("music")->size();
-  int refvideo = ms.GetSources("video")->size();
-  int refpictures = ms.GetSources("pictures")->size();
-  int refgames = ms.GetSources("games")->size();
+  int refprograms = ms.GetSources(MediaSection::PROGRAMS).size();
+  int reffiles = ms.GetSources(MediaSection::FILES).size();
+  int refmusic = ms.GetSources(MediaSection::MUSIC).size();
+  int refvideo = ms.GetSources(MediaSection::VIDEO).size();
+  int refpictures = ms.GetSources(MediaSection::PICTURES).size();
+  int refgames = ms.GetSources(MediaSection::GAMES).size();
 
   XFILE::CFile* file;
   file = XBMC_CREATETEMPFILE(".xml");
@@ -99,22 +101,22 @@ TEST(TestMediaSourceSettings, SaveString)
   EXPECT_TRUE(ms.Save(xmlfile));
   ms.Clear();
   EXPECT_TRUE(ms.Load(xmlfile));
-  auto progsources = ms.GetSources("programs");
-  auto progsources2 = ms.GetSources("myprograms");
-  EXPECT_TRUE(progsources == progsources2);
-  EXPECT_EQ(progsources->size(), refprograms);
-  auto filessources = ms.GetSources("files");
-  EXPECT_EQ(filessources->size(), reffiles);
-  auto musicsources = ms.GetSources("music");
-  EXPECT_EQ(musicsources->size(), refmusic);
-  auto videosources = ms.GetSources("video");
-  auto videosources2 = ms.GetSources("videos");
-  EXPECT_TRUE(videosources == videosources2);
-  EXPECT_EQ(videosources->size(), refvideo);
-  auto picturessources = ms.GetSources("pictures");
-  EXPECT_EQ(picturessources->size(), refpictures);
-  auto gamessources = ms.GetSources("games");
-  EXPECT_EQ(gamessources->size(), refgames);
+  const auto& progsources = ms.GetSources(MediaSection::PROGRAMS);
+  const auto& progsources2 = ms.GetSources(MediaSection::PROGRAMS);
+  EXPECT_EQ(&progsources, &progsources2);
+  EXPECT_EQ(progsources.size(), refprograms);
+  const auto& filessources = ms.GetSources(MediaSection::FILES);
+  EXPECT_EQ(filessources.size(), reffiles);
+  const auto& musicsources = ms.GetSources(MediaSection::MUSIC);
+  EXPECT_EQ(musicsources.size(), refmusic);
+  const auto& videosources = ms.GetSources(MediaSection::VIDEO);
+  const auto& videosources2 = ms.GetSources(MediaSection::VIDEO);
+  EXPECT_EQ(&videosources, &videosources2);
+  EXPECT_EQ(videosources.size(), refvideo);
+  const auto& picturessources = ms.GetSources(MediaSection::PICTURES);
+  EXPECT_EQ(picturessources.size(), refpictures);
+  const auto& gamessources = ms.GetSources(MediaSection::GAMES);
+  EXPECT_EQ(gamessources.size(), refgames);
 
   EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
 }

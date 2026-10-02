@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "media/MediaSection.h"
 #include "pictures/PictureScalingAlgorithm.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
@@ -249,6 +250,11 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     std::string m_videoCleanDateTimeRegExp;
     std::string m_videoFilenameAttributePairsRegExp;
     std::vector<std::string> m_videoCleanStringRegExps;
+    //! \brief The patterns a listing of \p section leaves out: none for a section without its
+    //! own.
+    const std::vector<std::string>& GetExcludeFromListingRegExps(
+        KODI::MEDIA::MediaSection section) const;
+
     std::vector<std::string> m_videoExcludeFromListingRegExps;
     std::vector<std::string> m_allExcludeFromScanRegExps;
     std::vector<std::string> m_moviesExcludeFromScanRegExps;

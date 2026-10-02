@@ -9,6 +9,7 @@
 #pragma once
 
 #include "MediaSource.h"
+#include "media/MediaSection.h"
 #include "utils/LabelFormatter.h"
 #include "utils/SortUtils.h"
 
@@ -54,7 +55,8 @@ public:
   virtual std::optional<KODI::PLAYLIST::Type> GetPlayListType() const;
   virtual bool AutoPlayNextItem();
 
-  virtual std::string GetLockType();
+  //! The section whose source locks apply in this view, if any
+  virtual std::optional<KODI::MEDIA::MediaSection> GetLockType();
   virtual std::string GetExtensions();
   virtual std::vector<CMediaSource>& GetSources();
 

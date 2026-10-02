@@ -18,7 +18,7 @@ protected:
   std::vector<CMediaSource>& GetSources() override;
   std::optional<KODI::PLAYLIST::Type> GetPlayListType() const override;
   bool AutoPlayNextItem() override;
-  std::string GetLockType() override;
+  std::optional<KODI::MEDIA::MediaSection> GetLockType() override;
   std::string GetExtensions() override;
 };
 
@@ -66,9 +66,6 @@ public:
 protected:
   void SaveViewState() override;
   std::vector<CMediaSource>& GetSources() override;
-
-private:
-  void AddOnlineShares();
 };
 
 class CGUIViewStateWindowMusicPlaylist : public CGUIViewStateWindowMusic

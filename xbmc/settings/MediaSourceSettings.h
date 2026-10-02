@@ -9,6 +9,7 @@
 #pragma once
 
 #include "MediaSource.h"
+#include "media/MediaSection.h"
 #include "settings/lib/ISettingsHandler.h"
 
 #include <string>
@@ -37,20 +38,22 @@ public:
   bool Save(const std::string &file) const;
   void Clear();
 
-  std::vector<CMediaSource>* GetSources(std::string_view type);
-  const std::string& GetDefaultSource(std::string_view type) const;
-  void SetDefaultSource(std::string_view type, std::string_view source);
+  std::vector<CMediaSource>& GetSources(KODI::MEDIA::MediaSection section);
+  const std::string& GetDefaultSource(KODI::MEDIA::MediaSection section) const;
+  void SetDefaultSource(KODI::MEDIA::MediaSection section, std::string_view source);
 
-  bool UpdateSource(std::string_view strType,
+  bool UpdateSource(KODI::MEDIA::MediaSection section,
                     std::string_view strOldName,
                     std::string_view strUpdateChild,
                     const std::string& strUpdateValue);
-  bool DeleteSource(std::string_view strType,
+  bool DeleteSource(KODI::MEDIA::MediaSection section,
                     std::string_view strName,
                     std::string_view strPath,
                     bool virtualSource = false);
-  bool AddShare(std::string_view type, const CMediaSource& share);
-  bool UpdateShare(std::string_view type, std::string_view oldName, const CMediaSource& share);
+  bool AddShare(KODI::MEDIA::MediaSection section, const CMediaSource& share);
+  bool UpdateShare(KODI::MEDIA::MediaSection section,
+                   std::string_view oldName,
+                   const CMediaSource& share);
 
 protected:
   CMediaSourceSettings();

@@ -58,6 +58,7 @@ using namespace XFILE;
 using namespace VIDEODATABASEDIRECTORY;
 using namespace KODI;
 using namespace KODI::MESSAGING;
+using KODI::MEDIA::MediaSection;
 
 #define CONTROL_BTNVIEWASICONS     2
 #define CONTROL_BTNSORTBY          3
@@ -121,8 +122,9 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
       m_rootDir.AllowNonLocalSources(false);
 
       SetProperty("flattened", CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN));
-      if (message.GetNumStringParams() && StringUtils::EqualsNoCase(message.GetStringParam(0), "Files") &&
-          CMediaSourceSettings::GetInstance().GetSources("video")->empty())
+      if (message.GetNumStringParams() &&
+          StringUtils::EqualsNoCase(message.GetStringParam(0), "Files") &&
+          CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO).empty())
       {
         message.SetStringParam("");
       }
@@ -408,7 +410,8 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         std::string label;
         if (items.GetLabel().empty() &&
             m_rootDir.IsSource(items.GetPath(),
-                               CMediaSourceSettings::GetInstance().GetSources("video"), &label))
+                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO),
+                               &label))
           items.SetLabel(label);
         if (!items.IsSourcesPath() && !items.IsLibraryFolder())
           LoadVideoInfo(items, m_database);
@@ -783,7 +786,7 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   else if (m_vecItems->IsPath("sources://video/"))
   {
     // get the usual shares
-    CGUIDialogContextMenu::GetContextButtons("video", item, buttons);
+    CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
     if (!item->IsDVD() && item->GetPath() != "add" && !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
@@ -907,7 +910,7 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   CFileItemPtr item;
   if (itemNumber >= 0 && itemNumber < m_vecItems->Size())
     item = m_vecItems->Get(itemNumber);
-  if (CGUIDialogContextMenu::OnContextButton("video", item, button))
+  if (CGUIDialogContextMenu::OnContextButton(MediaSection::VIDEO, item, button))
   {
     if (button == CONTEXT_BUTTON_REMOVE_SOURCE && !item->IsLiveTV() 
         &&!item->IsRSS() && !URIUtils::IsUPnP(item->GetPath()))
@@ -987,7 +990,7 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
 
 bool CGUIWindowVideoNav::OnAddMediaSource()
 {
-  return CGUIDialogMediaSource::ShowAndAddMediaSource("video");
+  return CGUIDialogMediaSource::ShowAndAddMediaSource(MediaSection::VIDEO);
 }
 
 bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
