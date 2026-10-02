@@ -730,9 +730,9 @@ NPT_Result CUPnPServer::OnBrowseMetadata(PLT_ActionReference& action,
       else if (StringUtils::StartsWithNoCase(
                    child_id, CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)))
         parent = "library://video/";
-      else if (StringUtils::StartsWithNoCase(child_id, "special://profile/playlists/music/"))
+      else if (CUtil::IsInPlaylistsFolder(child_id, KODI::MEDIA::MediaSection::MUSIC))
         parent = CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC);
-      else if (StringUtils::StartsWithNoCase(child_id, "special://profile/playlists/video/"))
+      else if (CUtil::IsInPlaylistsFolder(child_id, KODI::MEDIA::MediaSection::VIDEO))
         parent = CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO);
       else
         parent = CSourcesDirectory::PathOf(
@@ -912,13 +912,13 @@ NPT_Result CUPnPServer::BuildResponse(PLT_ActionReference& action,
 
   if (URIUtils::IsVideoDb(items.GetPath()) ||
       StringUtils::StartsWithNoCase(items.GetPath(), "library://video/") ||
-      StringUtils::StartsWithNoCase(items.GetPath(), "special://profile/playlists/video/"))
+      CUtil::IsInPlaylistsFolder(items.GetPath(), KODI::MEDIA::MediaSection::VIDEO))
   {
 
     thumb_loader = NPT_Reference<CThumbLoader>(new CVideoThumbLoader());
   }
   else if (URIUtils::IsMusicDb(items.GetPath()) ||
-           StringUtils::StartsWithNoCase(items.GetPath(), "special://profile/playlists/music/"))
+           CUtil::IsInPlaylistsFolder(items.GetPath(), KODI::MEDIA::MediaSection::MUSIC))
   {
 
     thumb_loader = NPT_Reference<CThumbLoader>(new CMusicThumbLoader());

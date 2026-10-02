@@ -175,6 +175,10 @@ public:
   //! location that path resolves to.
   static bool IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection section);
 
+  //! \brief Whether \p path lies in the playlists folder of \p section, under its special:// path or
+  //! the folders that path resolves to, wherever the user keeps playlists.
+  static bool IsInPlaylistsFolder(const std::string& path, KODI::MEDIA::MediaSection section);
+
   static void GetSkinThemes(std::vector<std::string>& vecTheme);
   static void GetRecursiveListing(const std::string& strPath, CFileItemList& items, const std::string& strMask, unsigned int flags = 0 /* DIR_FLAG_DEFAULTS */);
   static void GetRecursiveDirsListing(const std::string& strPath, CFileItemList& items, unsigned int flags = 0 /* DIR_FLAG_DEFAULTS */);

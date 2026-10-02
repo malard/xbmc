@@ -393,11 +393,11 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
     strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(744);
 
   // Music Playlists
-  else if (StringUtils::StartsWith(path, "special://musicplaylists"))
+  else if (URIUtils::PathHasParent(path, PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC)))
     strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
 
   // Video Playlists
-  else if (StringUtils::StartsWith(path, "special://videoplaylists"))
+  else if (URIUtils::PathHasParent(path, PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
     strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
 
   else if (URIUtils::HasParentInHostname(url) && strFilename.empty())
@@ -1356,9 +1356,11 @@ std::string CUtil::TranslateSpecialSource(const std::string &strSpecial)
     else if (StringUtils::StartsWithNoCase(strSpecial, "$screenshots"))
       return URIUtils::AddFileToFolder("special://screenshots/", strSpecial.substr(12));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$musicplaylists"))
-      return URIUtils::AddFileToFolder("special://musicplaylists/", strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC),
+                                       strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$videoplaylists"))
-      return URIUtils::AddFileToFolder("special://videoplaylists/", strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO),
+                                       strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$cdrips"))
       return URIUtils::AddFileToFolder("special://cdrips/", strSpecial.substr(7));
     // this one will be removed post 2.0
@@ -1368,22 +1370,29 @@ std::string CUtil::TranslateSpecialSource(const std::string &strSpecial)
   return strSpecial;
 }
 
+namespace
+{
+//! The folders holding the playlists of \p section: its own, and the mixed one
+std::vector<std::string> PlaylistsFoldersOf(KODI::MEDIA::MediaSection section)
+{
+  const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
+      CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
+  return {URIUtils::AddFileToFolder(path, section == KODI::MEDIA::MediaSection::MUSIC ? "music"
+                                                                                      : "video"),
+          URIUtils::AddFileToFolder(path, "mixed")};
+}
+} // namespace
+
 std::string CUtil::MusicPlaylistsLocation()
 {
-  const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
-  std::vector<std::string> vec;
-  vec.push_back(URIUtils::AddFileToFolder(path, "music"));
-  vec.push_back(URIUtils::AddFileToFolder(path, "mixed"));
-  return XFILE::CMultiPathDirectory::ConstructMultiPath(vec);
+  return XFILE::CMultiPathDirectory::ConstructMultiPath(
+      PlaylistsFoldersOf(KODI::MEDIA::MediaSection::MUSIC));
 }
 
 std::string CUtil::VideoPlaylistsLocation()
 {
-  const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
-  std::vector<std::string> vec;
-  vec.push_back(URIUtils::AddFileToFolder(path, "video"));
-  vec.push_back(URIUtils::AddFileToFolder(path, "mixed"));
-  return XFILE::CMultiPathDirectory::ConstructMultiPath(vec);
+  return XFILE::CMultiPathDirectory::ConstructMultiPath(
+      PlaylistsFoldersOf(KODI::MEDIA::MediaSection::VIDEO));
 }
 
 std::string CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection section)
@@ -1409,6 +1418,17 @@ bool CUtil::IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection s
   return URIUtils::PathEquals(path, section == KODI::MEDIA::MediaSection::MUSIC
                                         ? MusicPlaylistsLocation()
                                         : VideoPlaylistsLocation());
+}
+
+bool CUtil::IsInPlaylistsFolder(const std::string& path, KODI::MEDIA::MediaSection section)
+{
+  const std::string playlists{PlaylistsPathOf(section)};
+  if (playlists.empty())
+    return false;
+  if (URIUtils::PathHasParent(path, playlists))
+    return true;
+  return std::ranges::any_of(PlaylistsFoldersOf(section), [&path](const std::string& folder)
+                             { return URIUtils::PathHasParent(path, folder); });
 }
 
 void CUtil::DeleteMusicDatabaseDirectoryCache()

@@ -479,18 +479,7 @@ bool IsItemPlayable(const CFileItem& item)
     if (StringUtils::StartsWithNoCase(item.GetMimeType(), "video/"))
       return true;
 
-    if (StringUtils::StartsWithNoCase(item.GetPath(),
-                                      CUtil::PlaylistsPathOf(MediaSection::VIDEO)) ||
-        StringUtils::StartsWithNoCase(item.GetPath(), "special://profile/playlists/video/") ||
-        StringUtils::StartsWithNoCase(item.GetPath(), "special://profile/playlists/mixed/"))
-      return true;
-
-    // Has user changed default playlists location and the list is located there?
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    std::string path = settings->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
-    StringUtils::TrimRight(path, "/");
-    if (StringUtils::StartsWith(item.GetPath(), StringUtils::Format("{}/video/", path)) ||
-        StringUtils::StartsWith(item.GetPath(), StringUtils::Format("{}/mixed/", path)))
+    if (CUtil::IsInPlaylistsFolder(item.GetPath(), MediaSection::VIDEO))
       return true;
 
     if (!item.IsFolder() && !item.HasVideoInfoTag())
