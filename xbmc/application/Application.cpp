@@ -70,7 +70,6 @@
 #include "filesystem/File.h"
 #include "music/MusicFileItemClassify.h"
 #include "network/DNSNameCache.h"
-#include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "video/VideoFileItemClassify.h"
 #ifdef HAS_FILESYSTEM_NFS
@@ -145,7 +144,6 @@
 #include "utils/AspectRatioVocabulary.h"
 #include "utils/CPUInfo.h"
 #include "utils/CharsetConverter.h"
-#include "utils/ContentUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/PlayerUtils.h"
 #include "utils/RegExp.h"
@@ -176,9 +174,6 @@
 #endif
 #if defined(TARGET_POSIX) && defined(HAS_FILESYSTEM_SMB)
 #include "platform/posix/filesystem/SMBFile.h"
-#endif
-#ifndef TARGET_POSIX
-#include "platform/win32/threads/Win32Exception.h"
 #endif
 
 #include <algorithm>
