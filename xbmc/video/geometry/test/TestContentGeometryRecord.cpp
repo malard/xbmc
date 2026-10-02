@@ -135,5 +135,3 @@ TEST(TestContentGeometryLookup, MissingCarriesNoRecord)
   EXPECT_FALSE(ContentGeometryLookup{}.HasRecord());
   EXPECT_EQ(ContentGeometryState::MISSING, ContentGeometryLookup{}.state);
 }
-
-
