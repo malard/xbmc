@@ -21,6 +21,7 @@
 #include "playlists/SmartPlayList.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/ItemProperties.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
@@ -103,9 +104,8 @@ namespace XFILE
       }
     }
 
-    if (playlist.GetType() == "movies" ||
-        playlist.GetType() == "tvshows" ||
-        playlist.GetType() == "episodes")
+    if (playlist.GetType() == CONTENT::MOVIES || playlist.GetType() == CONTENT::TVSHOWS ||
+        playlist.GetType() == CONTENT::EPISODES)
     {
       CVideoDatabase db;
       if (db.Open())
@@ -166,8 +166,8 @@ namespace XFILE
       if (db.Open())
       {
         PLAYLIST::CSmartPlaylist plist(playlist);
-        if (playlist.GetType() == "mixed" || playlist.GetType().empty())
-          plist.SetType("songs");
+        if (playlist.GetType() == CONTENT::MIXED || playlist.GetType().empty())
+          plist.SetType(CONTENT::SONGS);
 
         MediaType mediaType = MediaTypeFromName(plist.GetType());
 
@@ -213,14 +213,14 @@ namespace XFILE
       }
     }
 
-    if (playlist.GetType() == "musicvideos" || playlist.GetType() == "mixed")
+    if (playlist.GetType() == CONTENT::MUSICVIDEOS || playlist.GetType() == CONTENT::MIXED)
     {
       CVideoDatabase db;
       if (db.Open())
       {
         PLAYLIST::CSmartPlaylist mvidPlaylist(playlist);
-        if (playlist.GetType() == "mixed")
-          mvidPlaylist.SetType("musicvideos");
+        if (playlist.GetType() == CONTENT::MIXED)
+          mvidPlaylist.SetType(CONTENT::MUSICVIDEOS);
 
         std::string baseDir = strBaseDir;
         if (baseDir.empty())
@@ -292,7 +292,7 @@ namespace XFILE
     if (items.Size() > 1 && !group.empty())
     {
       if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
-          playlist.GetType() == "musicvideos")
+          playlist.GetType() == CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
                    CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
                        CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
@@ -309,9 +309,9 @@ namespace XFILE
     if (auto watchedMode = playlist.GetWatchedMode(); watchedMode.has_value())
       items.SetProperty(ITEM_PROPERTY::WATCHED_MODE, static_cast<int>(watchedMode.value()));
 
-    if (playlist.GetType() == "mixed")
+    if (playlist.GetType() == CONTENT::MIXED)
       return success || success2;
-    else if (playlist.GetType() == "musicvideos")
+    else if (playlist.GetType() == CONTENT::MUSICVIDEOS)
       return success2;
     else
       return success;

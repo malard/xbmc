@@ -26,6 +26,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/ContentNames.h"
 #include "utils/LabelFormatter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -115,19 +116,19 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     basePath = VIDEODB::ROOT;
 
   VideoDbContentType type = VideoDbContentType::MOVIES;
-  if (m_type == "movies")
+  if (m_type == CONTENT::MOVIES)
     basePath += "movies/";
-  else if (m_type == "tvshows")
+  else if (m_type == CONTENT::TVSHOWS)
   {
     type = VideoDbContentType::TVSHOWS;
     basePath += "tvshows/";
   }
-  else if (m_type == "musicvideos")
+  else if (m_type == CONTENT::MUSICVIDEOS)
   {
     type = VideoDbContentType::MUSICVIDEOS;
     basePath += "musicvideos/";
   }
-  else if (m_type == "episodes")
+  else if (m_type == CONTENT::EPISODES)
   {
     if (m_rule.m_field == static_cast<int>(Field::GENRE) ||
         m_rule.m_field == static_cast<int>(Field::YEAR) ||
@@ -141,17 +142,12 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   int iLabel = 0;
   if (m_rule.m_field == static_cast<int>(Field::GENRE))
   {
-    if (m_type == "tvshows" ||
-        m_type == "episodes" ||
-        m_type == "movies")
+    if (m_type == CONTENT::TVSHOWS || m_type == CONTENT::EPISODES || m_type == CONTENT::MOVIES)
       videodatabase.GetGenresNav(basePath + "genres/", items, type);
-    else if (m_type == "songs" ||
-             m_type == "albums" ||
-             m_type == "artists" ||
-             m_type == "mixed")
+    else if (m_type == CONTENT::SONGS || m_type == CONTENT::ALBUMS || m_type == CONTENT::ARTISTS ||
+             m_type == CONTENT::MIXED)
       database.GetGenresNav(MUSICDB::GENRES, items);
-    if (m_type == "musicvideos" ||
-        m_type == "mixed")
+    if (m_type == CONTENT::MUSICVIDEOS || m_type == CONTENT::MIXED)
     {
       CFileItemList items2;
       videodatabase.GetGenresNav(VIDEODB::MUSICVIDEO_GENRES, items2,
@@ -162,10 +158,8 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   }
   else if (m_rule.m_field == static_cast<int>(Field::SOURCE))
   {
-    if (m_type == "songs" ||
-      m_type == "albums" ||
-      m_type == "artists" ||
-      m_type == "mixed")
+    if (m_type == CONTENT::SONGS || m_type == CONTENT::ALBUMS || m_type == CONTENT::ARTISTS ||
+        m_type == CONTENT::MIXED)
     {
       database.GetSourcesNav(MUSICDB::SOURCES, items);
       iLabel = 39030;
@@ -173,7 +167,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   }
   else if (m_rule.m_field == static_cast<int>(Field::ROLE))
   {
-    if (m_type == "artists" || m_type == "mixed")
+    if (m_type == CONTENT::ARTISTS || m_type == CONTENT::MIXED)
     {
       database.GetRolesNav(MUSICDB::SONGS, items);
       iLabel = 38033;
@@ -190,8 +184,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
       database.GetArtistsNav(MUSICDB::ARTISTS, items, SortDescription(),
                              m_rule.m_field == static_cast<int>(Field::ALBUM_ARTIST), -1);
-    if (m_type == "musicvideos" ||
-        m_type == "mixed")
+    if (m_type == CONTENT::MUSICVIDEOS || m_type == CONTENT::MIXED)
     {
       CFileItemList items2;
       videodatabase.GetMusicVideoArtistsByName("", items2);
@@ -203,8 +196,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   {
     if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
       database.GetAlbumsNav(MUSICDB::ALBUMS, items, SortDescription());
-    if (m_type == "musicvideos" ||
-        m_type == "mixed")
+    if (m_type == CONTENT::MUSICVIDEOS || m_type == CONTENT::MIXED)
     {
       CFileItemList items2;
       videodatabase.GetMusicVideoAlbumsByName("", items2);
@@ -250,24 +242,24 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     iLabel = 20417;
   }
   else if (m_rule.m_field == static_cast<int>(Field::TVSHOW_TITLE) ||
-           (m_type == "tvshows" && m_rule.m_field == static_cast<int>(Field::TITLE)))
+           (m_type == CONTENT::TVSHOWS && m_rule.m_field == static_cast<int>(Field::TITLE)))
   {
     videodatabase.GetTvShowsNav(basePath + "titles/", items);
     iLabel = 20343;
   }
   else if (m_rule.m_field == static_cast<int>(Field::TITLE))
   {
-    if (m_type == "songs" || m_type == "mixed")
+    if (m_type == CONTENT::SONGS || m_type == CONTENT::MIXED)
     {
       database.GetSongsNav(MUSICDB::SONGS, items, SortDescription(), -1, -1, -1);
       iLabel = 134;
     }
-    if (m_type == "movies")
+    if (m_type == CONTENT::MOVIES)
     {
       videodatabase.GetMoviesNav(basePath + "titles/", items);
       iLabel = 20342;
     }
-    if (m_type == "episodes")
+    if (m_type == CONTENT::EPISODES)
     {
       videodatabase.GetEpisodesNav(basePath + "titles/-1/-1/", items);
       // we need to replace the db label (<season>x<episode> <title>) with the title only
@@ -276,7 +268,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
         format.FormatLabel(items[i].get());
       iLabel = 20360;
     }
-    if (m_type == "musicvideos" || m_type == "mixed")
+    if (m_type == CONTENT::MUSICVIDEOS || m_type == CONTENT::MIXED)
     {
       videodatabase.GetMusicVideosNav(basePath + "titles/", items);
       iLabel = 20389;
@@ -325,7 +317,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   else if (m_rule.m_field == static_cast<int>(Field::PATH))
   {
     std::vector<CMediaSource> sources;
-    if (m_type == "songs" || m_type == "mixed")
+    if (m_type == CONTENT::SONGS || m_type == CONTENT::MIXED)
       sources = CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC);
     if (PLAYLIST::CSmartPlaylist::IsVideoType(m_type))
     {
@@ -355,12 +347,11 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   else if (m_rule.m_field == static_cast<int>(Field::TAG))
   {
     VideoDbContentType type = VideoDbContentType::MOVIES;
-    if (m_type == "tvshows" ||
-        m_type == "episodes")
+    if (m_type == CONTENT::TVSHOWS || m_type == CONTENT::EPISODES)
       type = VideoDbContentType::TVSHOWS;
-    else if (m_type == "musicvideos")
+    else if (m_type == CONTENT::MUSICVIDEOS)
       type = VideoDbContentType::MUSICVIDEOS;
-    else if (m_type != "movies")
+    else if (m_type != CONTENT::MOVIES)
       return;
 
     videodatabase.GetTagsNav(basePath + "tags/", items, type);
