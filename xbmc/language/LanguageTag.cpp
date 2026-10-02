@@ -423,6 +423,16 @@ bool CLanguageTag::Matches(const CLanguageTag& other) const
   return m_valid && other.m_valid && Language() == other.Language();
 }
 
+bool CLanguageTag::IsWithin(const CLanguageTag& macrolanguage) const
+{
+  if (!m_valid || !macrolanguage.m_valid)
+    return false;
+
+  const auto subTag{
+      CSubTagRegistryManager::GetInstance().GetLanguageSubTags().Lookup(std::string{Language()})};
+  return subTag && subTag->m_macroLanguage == macrolanguage.Language();
+}
+
 std::string CLanguageTag::ToEnglishName() const
 {
   return EnglishNameOf(m_tag);

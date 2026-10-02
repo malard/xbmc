@@ -298,16 +298,11 @@ static bool IsForeign(const std::vector<KODI::LANGUAGE::CLanguageTag>& languages
 
   const KODI::LANGUAGE::CLanguageTag& interfaceLanguage{
       KODI::LANGUAGE::CLanguage::GetInstance().UI()};
-  const KODI::LANGUAGE::CLanguageTag norwegian{KODI::LANGUAGE::CLanguageTag::Parse("no")};
-  const KODI::LANGUAGE::CLanguageTag bokmal{KODI::LANGUAGE::CLanguageTag::Parse("nb")};
 
   for (const KODI::LANGUAGE::CLanguageTag& language : languages)
   {
-    if (language.IsEnglish() || language.Matches(interfaceLanguage))
-      return false;
-
-    //! @todo Norwegian is the macrolanguage Bokmal belongs to; Matches does not consider that
-    if (language.Matches(norwegian) && interfaceLanguage.Matches(bokmal))
+    if (language.IsEnglish() || language.Matches(interfaceLanguage) ||
+        interfaceLanguage.IsWithin(language))
       return false;
   }
   return true;

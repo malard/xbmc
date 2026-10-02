@@ -227,6 +227,14 @@ public:
   bool Matches(const CLanguageTag& other) const;
 
   /*!
+   * \brief Whether the language of this tag is one the language of \p macrolanguage groups, as
+   *        Norwegian groups Norwegian Bokmal: nb is within no.
+   * \param[in] macrolanguage The tag naming the macrolanguage.
+   * \return true when the subtag registry gives the language of \p macrolanguage as this one's.
+   */
+  bool IsWithin(const CLanguageTag& macrolanguage) const;
+
+  /*!
    * \brief The English name of the language, as shown to a user.
    * \note Text that is shaped like a tag but names no registered language is described by its own
    *       subtags, so a name is not proof that the language is a real one.

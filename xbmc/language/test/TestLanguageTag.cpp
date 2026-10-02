@@ -297,6 +297,18 @@ TEST(TestLanguageTag, TreatsAbsentAndUndeterminedAlike)
   EXPECT_FALSE(CLanguageTag::Parse("not a language").IsUndetermined());
 }
 
+TEST(TestLanguageTag, ALanguageIsWithinItsMacrolanguage)
+{
+  EXPECT_TRUE(CLanguageTag::Parse("nb").IsWithin(CLanguageTag::Parse("no")));
+  EXPECT_TRUE(CLanguageTag::Parse("nb-NO").IsWithin(CLanguageTag::Parse("nor")));
+  EXPECT_TRUE(CLanguageTag::Parse("yue").IsWithin(CLanguageTag::Parse("zh")));
+
+  EXPECT_FALSE(CLanguageTag::Parse("no").IsWithin(CLanguageTag::Parse("nb")));
+  EXPECT_FALSE(CLanguageTag::Parse("nb").IsWithin(CLanguageTag::Parse("nb")));
+  EXPECT_FALSE(CLanguageTag::Parse("en-GB").IsWithin(CLanguageTag::Parse("en")));
+  EXPECT_FALSE(CLanguageTag::Parse("not a language").IsWithin(CLanguageTag::Parse("no")));
+}
+
 TEST(TestLanguageTag, MatchesTheSameLanguageInAnyNotation)
 {
   EXPECT_TRUE(CLanguageTag::Parse("en").Matches(CLanguageTag::Parse("eng")));

@@ -181,12 +181,14 @@
 #include "platform/win32/threads/Win32Exception.h"
 #endif
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #ifdef TARGET_WASM
 #include <emscripten.h>
@@ -1022,6 +1024,37 @@ void CApplication::Render()
   CTimeUtils::UpdateFrameTime(hasRendered);
 }
 
+namespace
+{
+constexpr int HIGHEST_RATING{10};
+
+//! The rating one step from \p current in the direction \p action asks, if that step is allowed
+std::optional<int> SteppedRating(const CAction& action, int current, int lowest)
+{
+  if (action.GetID() == ACTION_INCREASE_RATING && current < HIGHEST_RATING)
+    return current + 1;
+  if (action.GetID() == ACTION_DECREASE_RATING && current > lowest)
+    return current - 1;
+  return {};
+}
+
+//! The rating the user picks for a song, or nothing when they pick none
+std::optional<int> ChosenSongRating(int current)
+{
+  const int chosen{MUSIC_UTILS::ShowSelectRatingDialog(current)};
+  if (chosen < 0)
+    return {};
+  return std::min(chosen, HIGHEST_RATING);
+}
+
+void ShowRatingChanged(const std::shared_ptr<CFileItem>& playing)
+{
+  CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*playing);
+  CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
+  CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+}
+} // namespace
+
 bool CApplication::OnAction(const CAction &action)
 {
   // special case for switching between GUI & fullscreen mode.
@@ -1184,83 +1217,33 @@ bool CApplication::OnAction(const CAction &action)
   }
 
   const std::shared_ptr<CFileItem> playing = CurrentFileItemPtr();
+  const bool steps{action.GetID() == ACTION_INCREASE_RATING ||
+                   action.GetID() == ACTION_DECREASE_RATING};
 
-  if (action.GetID() == ACTION_SET_RATING && appPlayer->IsPlayingAudio())
+  if (appPlayer->IsPlayingAudio() && (steps || action.GetID() == ACTION_SET_RATING))
   {
-    int userrating =
-        MUSIC_UTILS::ShowSelectRatingDialog(playing->GetMusicInfoTag()->GetUserrating());
-    if (userrating < 0) // Nothing selected, so user rating unchanged
-      return true;
-    userrating = std::min(userrating, 10);
-    if (userrating != playing->GetMusicInfoTag()->GetUserrating())
+    const int current{playing->GetMusicInfoTag()->GetUserrating()};
+    const std::optional<int> rating{steps ? SteppedRating(action, current, 0)
+                                          : ChosenSongRating(current)};
+    if (rating && *rating != current)
     {
-      playing->GetMusicInfoTag()->SetUserrating(userrating);
-      CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*playing);
-
-      MUSIC_UTILS::UpdateSongRatingJob(playing, userrating);
-
-      CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
-      CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+      playing->GetMusicInfoTag()->SetUserrating(*rating);
+      MUSIC_UTILS::UpdateSongRatingJob(playing, *rating);
+      ShowRatingChanged(playing);
     }
     return true;
   }
 
-  else if ((action.GetID() == ACTION_INCREASE_RATING || action.GetID() == ACTION_DECREASE_RATING) &&
-           appPlayer->IsPlayingAudio())
+  if (appPlayer->IsPlayingVideo() && steps)
   {
-    int userrating = playing->GetMusicInfoTag()->GetUserrating();
-    bool needsUpdate(false);
-    if (userrating > 0 && action.GetID() == ACTION_DECREASE_RATING)
+    CVideoInfoTag& tag{*playing->GetVideoInfoTag()};
+    if (const std::optional<int> rating{SteppedRating(action, tag.m_iUserRating, 1)}; rating)
     {
-      playing->GetMusicInfoTag()->SetUserrating(userrating - 1);
-      needsUpdate = true;
-    }
-    else if (userrating < 10 && action.GetID() == ACTION_INCREASE_RATING)
-    {
-      playing->GetMusicInfoTag()->SetUserrating(userrating + 1);
-      needsUpdate = true;
-    }
-    if (needsUpdate)
-    {
-      CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*playing);
-
-      MUSIC_UTILS::UpdateSongRatingJob(playing, playing->GetMusicInfoTag()->GetUserrating());
-
-      CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
-      CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
-    }
-
-    return true;
-  }
-  else if ((action.GetID() == ACTION_INCREASE_RATING || action.GetID() == ACTION_DECREASE_RATING) &&
-           appPlayer->IsPlayingVideo())
-  {
-    int rating = playing->GetVideoInfoTag()->m_iUserRating;
-    bool needsUpdate(false);
-    if (rating > 1 && action.GetID() == ACTION_DECREASE_RATING)
-    {
-      playing->GetVideoInfoTag()->m_iUserRating = rating - 1;
-      needsUpdate = true;
-    }
-    else if (rating < 10 && action.GetID() == ACTION_INCREASE_RATING)
-    {
-      playing->GetVideoInfoTag()->m_iUserRating = rating + 1;
-      needsUpdate = true;
-    }
-    if (needsUpdate)
-    {
-      CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*playing);
-
+      tag.m_iUserRating = *rating;
       CVideoDatabase db;
       if (db.Open())
-      {
-        db.SetVideoUserRating(playing->GetVideoInfoTag()->m_iDbId,
-                              playing->GetVideoInfoTag()->m_iUserRating,
-                              playing->GetVideoInfoTag()->GetMediaType());
-        db.Close();
-      }
-      CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
-      CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+        db.SetVideoUserRating(tag.m_iDbId, tag.m_iUserRating, tag.GetMediaType());
+      ShowRatingChanged(playing);
     }
     return true;
   }
@@ -1863,8 +1846,6 @@ bool CApplication::Cleanup()
 
     CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Clear();
     KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Reset();
-    // The pack is an add-on, and holding one past the add-on manager leaves its release to the
-    // order the process tears its statics down in
     KODI::LANGUAGE::CLanguage::GetInstance().SetPack(nullptr);
     g_charsetConverter.clear();
     g_directoryCache.Clear();
