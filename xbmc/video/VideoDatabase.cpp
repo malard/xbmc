@@ -430,6 +430,40 @@ bool CVideoDatabase::GetSubPaths(const std::string& basepath,
   return false;
 }
 
+MediaType CVideoDatabase::MediaTypeOfContent(VideoDbContentType content)
+{
+  switch (content)
+  {
+    case VideoDbContentType::MOVIES:
+      return MediaType::MOVIE;
+    case VideoDbContentType::TVSHOWS:
+      return MediaType::TV_SHOW;
+    case VideoDbContentType::EPISODES:
+      return MediaType::EPISODE;
+    case VideoDbContentType::MUSICVIDEOS:
+      return MediaType::MUSIC_VIDEO;
+    default:
+      return MediaType::NONE;
+  }
+}
+
+std::string_view CVideoDatabase::IdColumnOf(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::MOVIE:
+      return "idMovie";
+    case MediaType::TV_SHOW:
+      return "idShow";
+    case MediaType::EPISODE:
+      return "idEpisode";
+    case MediaType::MUSIC_VIDEO:
+      return "idMVideo";
+    default:
+      return {};
+  }
+}
+
 std::string CVideoDatabase::ToStoredPath(const std::string& directory)
 {
   std::string path{CUtil::ValidatePath(directory)};
@@ -4753,17 +4787,12 @@ void CVideoDatabase::DeleteTag(int idTag, VideoDbContentType mediaType)
     if (m_pDB == nullptr || m_pDS == nullptr)
       return;
 
-    std::string type;
-    if (mediaType == VideoDbContentType::MOVIES)
-      type = NameOf(MediaType::MOVIE);
-    else if (mediaType == VideoDbContentType::TVSHOWS)
-      type = NameOf(MediaType::TV_SHOW);
-    else if (mediaType == VideoDbContentType::MUSICVIDEOS)
-      type = NameOf(MediaType::MUSIC_VIDEO);
-    else
+    if (mediaType != VideoDbContentType::MOVIES && mediaType != VideoDbContentType::TVSHOWS &&
+        mediaType != VideoDbContentType::MUSICVIDEOS)
       return;
 
-    std::string strSQL = PrepareSQL("DELETE FROM tag_link WHERE tag_id = %i AND media_type = '%s'", idTag, type.c_str());
+    std::string strSQL = PrepareSQL("DELETE FROM tag_link WHERE tag_id = %i AND media_type = '%s'",
+                                    idTag, NameOf(MediaTypeOfContent(mediaType)).c_str());
     m_pDS->exec(strSQL);
   }
   catch (...)
@@ -7099,22 +7128,18 @@ bool CVideoDatabase::GetNavCommon(const std::string& strBaseDir,
         !g_passwordManager.bMasterUser)
     {
       std::string view;
-      std::string view_id;
-      std::string media_type;
+      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
+      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
       std::string extraField;
       std::string extraJoin;
       if (idContent == VideoDbContentType::MOVIES)
       {
         view = NameOf(MediaType::MOVIE);
-        view_id    = "idMovie";
-        media_type = NameOf(MediaType::MOVIE);
         extraField = "files.playCount";
       }
       else if (idContent == VideoDbContentType::TVSHOWS) //this will not get tvshows with 0 episodes
       {
         view = NameOf(MediaType::EPISODE);
-        view_id    = "idShow";
-        media_type = NameOf(MediaType::TV_SHOW);
         // in order to make use of FieldPlaycount in smart playlists we need an extra join
         if (StringUtils::EqualsNoCase(type, "tag"))
           extraJoin  = PrepareSQL("JOIN tvshow_view ON tvshow_view.idShow = tag_link.media_id AND tag_link.media_type='tvshow'");
@@ -7122,8 +7147,6 @@ bool CVideoDatabase::GetNavCommon(const std::string& strBaseDir,
       else if (idContent == VideoDbContentType::MUSICVIDEOS)
       {
         view = NameOf(MediaType::MUSIC_VIDEO);
-        view_id    = "idMVideo";
-        media_type = NameOf(MediaType::MUSIC_VIDEO);
         extraField = "files.playCount";
       }
       else
@@ -7140,26 +7163,22 @@ bool CVideoDatabase::GetNavCommon(const std::string& strBaseDir,
     }
     else
     {
-      std::string view, view_id, media_type, extraField, extraJoin;
+      std::string view, extraField, extraJoin;
+      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
+      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
       if (idContent == VideoDbContentType::MOVIES)
       {
         view = NameOf(MediaType::MOVIE);
-        view_id    = "idMovie";
-        media_type = NameOf(MediaType::MOVIE);
         extraField = "count(1), count(files.playCount)";
         extraJoin  = PrepareSQL("JOIN files ON files.idFile = %s_view.idFile", view.c_str());
       }
       else if (idContent == VideoDbContentType::TVSHOWS)
       {
         view = NameOf(MediaType::TV_SHOW);
-        view_id    = "idShow";
-        media_type = NameOf(MediaType::TV_SHOW);
       }
       else if (idContent == VideoDbContentType::MUSICVIDEOS)
       {
         view = NameOf(MediaType::MUSIC_VIDEO);
-        view_id    = "idMVideo";
-        media_type = NameOf(MediaType::MUSIC_VIDEO);
         extraField = "count(1), count(files.playCount)";
         extraJoin  = PrepareSQL("JOIN files ON files.idFile = %s_view.idFile", view.c_str());
       }
@@ -7599,31 +7618,25 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
         !g_passwordManager.bMasterUser)
     {
       std::string view;
-      std::string view_id;
-      std::string media_type;
+      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
+      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
       std::string extraField;
       std::string extraJoin;
       std::string group;
       if (idContent == VideoDbContentType::MOVIES)
       {
         view = NameOf(MediaType::MOVIE);
-        view_id    = "idMovie";
-        media_type = NameOf(MediaType::MOVIE);
         extraField = "files.playCount";
       }
       else if (idContent == VideoDbContentType::TVSHOWS)
       {
         view = NameOf(MediaType::EPISODE);
-        view_id    = "idShow";
-        media_type = NameOf(MediaType::TV_SHOW);
         extraField = "count(DISTINCT idShow)";
         group = "actor.actor_id";
       }
       else if (idContent == VideoDbContentType::EPISODES)
       {
         view = NameOf(MediaType::EPISODE);
-        view_id    = "idEpisode";
-        media_type = NameOf(MediaType::EPISODE);
         extraField = "files.playCount";
       }
       else if (idContent == VideoDbContentType::MUSICVIDEOS)
@@ -7634,8 +7647,6 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
           // only set this to true if getting artists and show all performers is false
           bMainArtistOnly = false;
         view = NameOf(MediaType::MUSIC_VIDEO);
-        view_id    = "idMVideo";
-        media_type = NameOf(MediaType::MUSIC_VIDEO);
         extraField = "count(1), count(files.playCount)";
         if (bMainArtistOnly)
           extraJoin =
@@ -7658,30 +7669,24 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
     else
     {
       std::string view;
-      std::string view_id;
-      std::string media_type;
+      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
+      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
       std::string extraField;
       std::string extraJoin;
       if (idContent == VideoDbContentType::MOVIES)
       {
         view = NameOf(MediaType::MOVIE);
-        view_id    = "idMovie";
-        media_type = NameOf(MediaType::MOVIE);
         extraField = "count(1), count(files.playCount)";
         extraJoin  = PrepareSQL(" JOIN files ON files.idFile=%s_view.idFile", view.c_str());
       }
       else if (idContent == VideoDbContentType::TVSHOWS)
       {
         view = NameOf(MediaType::TV_SHOW);
-        view_id    = "idShow";
-        media_type = NameOf(MediaType::TV_SHOW);
         extraField = "count(idShow)";
       }
       else if (idContent == VideoDbContentType::EPISODES)
       {
         view = NameOf(MediaType::EPISODE);
-        view_id    = "idEpisode";
-        media_type = NameOf(MediaType::EPISODE);
         extraField = "count(1), count(files.playCount)";
         extraJoin  = PrepareSQL("JOIN files ON files.idFile = %s_view.idFile", view.c_str());
       }
@@ -7693,8 +7698,6 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
           // only set this to true if getting artists and show all performers is false
           bMainArtistOnly = false;
         view = NameOf(MediaType::MUSIC_VIDEO);
-        view_id    = "idMVideo";
-        media_type = NameOf(MediaType::MUSIC_VIDEO);
         extraField = "count(1), count(files.playCount)";
         extraJoin  = PrepareSQL("JOIN files ON files.idFile = %s_view.idFile", view.c_str());
         if (bMainArtistOnly)
@@ -9012,14 +9015,11 @@ bool CVideoDatabase::HasContent(VideoDbContentType type)
     if (nullptr == m_pDS)
       return false;
 
-    std::string sql;
-    if (type == VideoDbContentType::MOVIES)
-      sql = "select count(1) from movie";
-    else if (type == VideoDbContentType::TVSHOWS)
-      sql = "select count(1) from tvshow";
-    else if (type == VideoDbContentType::MUSICVIDEOS)
-      sql = "select count(1) from musicvideo";
-    m_pDS->query( sql );
+    const MediaType mediaType{MediaTypeOfContent(type)};
+    if (mediaType == MediaType::NONE)
+      return false;
+
+    m_pDS->query("select count(1) from " + NameOf(mediaType));
 
     if (!m_pDS->eof())
       result = (m_pDS->fv(0).get_asInt() > 0);
@@ -12436,28 +12436,9 @@ bool CVideoDatabase::SetSingleValue(VideoDbContentType type,
     if (nullptr == m_pDB || nullptr == m_pDS)
       return false;
 
-    std::string strTable;
-    std::string strField;
-    if (type == VideoDbContentType::MOVIES)
-    {
-      strTable = "movie";
-      strField = "idMovie";
-    }
-    else if (type == VideoDbContentType::TVSHOWS)
-    {
-      strTable = "tvshow";
-      strField = "idShow";
-    }
-    else if (type == VideoDbContentType::EPISODES)
-    {
-      strTable = "episode";
-      strField = "idEpisode";
-    }
-    else if (type == VideoDbContentType::MUSICVIDEOS)
-    {
-      strTable = "musicvideo";
-      strField = "idMVideo";
-    }
+    const MediaType mediaType{MediaTypeOfContent(type)};
+    const std::string strTable{mediaType == MediaType::NONE ? "" : NameOf(mediaType)};
+    const std::string strField{IdColumnOf(mediaType)};
 
     if (strTable.empty())
       return false;

@@ -736,6 +736,16 @@ public:
    */
   static std::string ToStoredPath(const std::string& directory);
 
+  /*! \brief The media type of the items of \p content.
+   \return NONE for content that does not hold one media type
+   */
+  static KODI::MEDIA::MediaType MediaTypeOfContent(VideoDbContentType content);
+
+  /*! \brief The id column of the table holding \p type, which NameOf(type) names.
+   \return empty for a type without a table of its own
+   */
+  static std::string_view IdColumnOf(KODI::MEDIA::MediaType type);
+
   /*! \brief Resolve the path ids a library clean should cover.
    \param directory a directory to restrict the clean to, empty for the whole library.
                     Normalised with ToStoredPath before matching.

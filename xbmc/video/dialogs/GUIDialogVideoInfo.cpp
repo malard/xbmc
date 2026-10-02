@@ -1691,26 +1691,24 @@ bool CGUIDialogVideoInfo::GetItemsForTag(const std::string &strHeading, const st
     return false;
 
   MediaType mediaType = MediaTypeOf(type);
-  std::string idColumn;
   std::string baseDir;
   switch (mediaType)
   {
     case MediaType::MOVIE:
-      idColumn = "idMovie";
       baseDir = VIDEODB::MOVIE_TITLES;
       break;
     case MediaType::TV_SHOW:
-      idColumn = "idShow";
       baseDir = VIDEODB::TVSHOW_TITLES;
       break;
     case MediaType::MUSIC_VIDEO:
-      idColumn = "idMVideo";
       baseDir = VIDEODB::MUSICVIDEO_TITLES;
       break;
     default:
       mediaType = MediaType::NONE;
       break;
   }
+
+  const std::string idColumn{CVideoDatabase::IdColumnOf(mediaType)};
 
   CVideoDbUrl videoUrl;
   if (!videoUrl.FromString(baseDir))
