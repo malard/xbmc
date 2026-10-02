@@ -742,6 +742,7 @@ void CGUIWindowMusicBase::OnRetrieveMusicInfo(CFileItemList& items)
 
 bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileItemList &items)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   items.ClearArt();
   bool bResult = CGUIMediaWindow::GetDirectory(strDirectory, items);
   if (bResult)
@@ -802,15 +803,14 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
       const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
       CFileItemPtr newPlaylist(new CFileItem(profileManager->GetUserDataItem("PartyMode.xsp"),false));
-      newPlaylist->SetLabel(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16035));
+      newPlaylist->SetLabel(localizeStrings.Get(16035));
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetArt(ART_TYPE::ICON, "DefaultPartyMode.png");
       newPlaylist->SetFolder(true);
       items.Add(newPlaylist);
 
       newPlaylist = std::make_shared<CFileItem>(PLACEHOLDER::NEW_PLAYLIST, false);
-      newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(525));
+      newPlaylist->SetLabel(localizeStrings.Get(525));
       newPlaylist->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);
@@ -819,8 +819,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
 
       newPlaylist = std::make_shared<CFileItem>(
           std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "music", false);
-      newPlaylist->SetLabel(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21437));
+      newPlaylist->SetLabel(localizeStrings.Get(21437));
       newPlaylist->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);

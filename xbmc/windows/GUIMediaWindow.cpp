@@ -1044,6 +1044,7 @@ void CGUIMediaWindow::OnCacheFileItems(CFileItemList &items)
  */
 bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
 {
+  auto& addonMgr{CServiceBroker::GetAddonMgr()};
   if (iItem < 0 || iItem >= m_vecItems->Size())
     return true;
 
@@ -1090,12 +1091,11 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     // execute the script
     CURL url(pItem->GetPath());
     AddonPtr addon;
-    if (CServiceBroker::GetAddonMgr().GetAddon(url.GetHostName(), addon, AddonType::SCRIPT,
-                                               OnlyEnabled::CHOICE_YES))
+    if (addonMgr.GetAddon(url.GetHostName(), addon, AddonType::SCRIPT, OnlyEnabled::CHOICE_YES))
     {
       if (!CScriptInvocationManager::GetInstance().Stop(addon->LibPath()))
       {
-        CServiceBroker::GetAddonMgr().UpdateLastUsed(addon->ID());
+        addonMgr.UpdateLastUsed(addon->ID());
         CScriptInvocationManager::GetInstance().ExecuteAsync(addon->LibPath(), addon);
       }
       return true;
@@ -1195,7 +1195,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     {
       CURL url(m_vecItems->GetPath());
       AddonPtr addon;
-      if (CServiceBroker::GetAddonMgr().GetAddon(url.GetHostName(), addon, OnlyEnabled::CHOICE_YES))
+      if (addonMgr.GetAddon(url.GetHostName(), addon, OnlyEnabled::CHOICE_YES))
       {
         const auto plugin = std::dynamic_pointer_cast<CPluginSource>(addon);
         if (plugin && plugin->Provides(CPluginSource::Content::AUDIO))

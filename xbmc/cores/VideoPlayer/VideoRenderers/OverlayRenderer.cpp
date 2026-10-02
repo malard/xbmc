@@ -741,6 +741,7 @@ void CRenderer::LoadSettings()
 
 void CRenderer::UpdateSubtitleStyleAndPosition(SubtitleResolution& resolution)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
   if (!m_overlayStyle || m_isSettingsChanged)
   {
     m_isSettingsChanged = false;
@@ -748,7 +749,7 @@ void CRenderer::UpdateSubtitleStyleAndPosition(SubtitleResolution& resolution)
     CreateSubtitlesStyle();
   }
 
-  RESOLUTION_INFO resInfo = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+  RESOLUTION_INFO resInfo = winSystem->GetGfxContext().GetResInfo();
   resolution.pixelRatio = resInfo.fPixelRatio;
   resolution.overscanTop = resInfo.Overscan.top;
 
@@ -771,8 +772,8 @@ void CRenderer::UpdateSubtitleStyleAndPosition(SubtitleResolution& resolution)
       // m_subtitlePosition has been changed
       // and has been requested to save the value to resInfo
       resInfo.iSubtitles = m_subtitlePosition + m_subtitleVerticalMargin;
-      CServiceBroker::GetWinSystem()->GetGfxContext().SetResInfo(
-          CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution(), resInfo);
+      winSystem->GetGfxContext().SetResInfo(winSystem->GetGfxContext().GetVideoResolution(),
+                                            resInfo);
       m_subtitlePosResInfo = m_subtitlePosition + m_subtitleVerticalMargin;
     }
     else

@@ -67,6 +67,7 @@ CApplicationSkinHandling::CApplicationSkinHandling(IMsgTargetCallback* msgCb,
 
 bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
 {
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   std::shared_ptr<ADDON::CSkinInfo> skin;
   {
     ADDON::AddonPtr addon;
@@ -94,15 +95,14 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     if (bPreviousPlayingState)
       appPlayer->Pause();
     appPlayer->FlushRenderer();
-    if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+    if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
     {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_HOME);
+      windowManager.ActivateWindow(WINDOW_HOME);
       previousRenderingState = RENDERING_STATE::VIDEO;
     }
-    else if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() ==
-             WINDOW_FULLSCREEN_GAME)
+    else if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_GAME)
     {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_HOME);
+      windowManager.ActivateWindow(WINDOW_HOME);
       previousRenderingState = RENDERING_STATE::GAME;
     }
   }
@@ -110,11 +110,11 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   std::unique_lock lock(CServiceBroker::GetWinSystem()->GetGfxContext());
 
   // store current active window with its focused control
-  int currentWindowID = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+  int currentWindowID = windowManager.GetActiveWindow();
   int currentFocusedControlID = -1;
   if (currentWindowID != WINDOW_INVALID)
   {
-    CGUIWindow* pWindow = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(currentWindowID);
+    CGUIWindow* pWindow = windowManager.GetWindow(currentWindowID);
     if (pWindow)
       currentFocusedControlID = pWindow->GetFocusedControlID();
   }
@@ -126,7 +126,7 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     // the screensaver may have just been woken up as part of UnloadSkin(), which navigates back
     // to whatever window was active before the screensaver kicked in; restore that window
     // instead of blindly reactivating the (now defunct) screensaver window
-    currentWindowID = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+    currentWindowID = windowManager.GetActiveWindow();
     currentFocusedControlID = -1;
   }
 
@@ -180,25 +180,23 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   CLog::Log(LOGINFO, "  initialize new skin...");
   // The playlists record what the player reports, then it is published, before the application
   // acts on it.
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(CServiceBroker::GetPlayLists().get());
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
+  windowManager.AddMsgTarget(CServiceBroker::GetPlayLists().get());
+  windowManager.AddMsgTarget(
       CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>().get());
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(m_msgCb);
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&g_fontManager);
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetTextureCallbackManager());
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetStereoscopicsManager());
-  CServiceBroker::GetGUI()->GetWindowManager().SetCallback(*m_wCb);
+  windowManager.AddMsgTarget(m_msgCb);
+  windowManager.AddMsgTarget(&g_fontManager);
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetTextureCallbackManager());
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetStereoscopicsManager());
+  windowManager.SetCallback(*m_wCb);
 
   //! @todo should be done by GUIComponents
-  CServiceBroker::GetGUI()->GetWindowManager().Initialize();
+  windowManager.Initialize();
   CServiceBroker::GetGUI()->GetAudioManager().Enable(true);
   CServiceBroker::GetGUI()->GetAudioManager().Load();
   CServiceBroker::GetTextureCache()->Initialize();
 
   if (skin->HasSkinFile("DialogFullScreenInfo.xml"))
-    CServiceBroker::GetGUI()->GetWindowManager().Add(new CGUIDialogFullScreenInfo);
+    windowManager.Add(new CGUIDialogFullScreenInfo);
 
   CLog::Log(LOGINFO, "  skin loaded...");
 
@@ -208,10 +206,10 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   // restore active window
   if (currentWindowID != WINDOW_INVALID)
   {
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(currentWindowID);
+    windowManager.ActivateWindow(currentWindowID);
     if (currentFocusedControlID != -1)
     {
-      CGUIWindow* pWindow = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(currentWindowID);
+      CGUIWindow* pWindow = windowManager.GetWindow(currentWindowID);
       if (pWindow && pWindow->HasSaveLastControl())
       {
         CGUIMessage msg(GUI_MSG_SETFOCUS, currentWindowID, currentFocusedControlID, 0);
@@ -229,10 +227,10 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     switch (previousRenderingState)
     {
       case RENDERING_STATE::VIDEO:
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
+        windowManager.ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
         break;
       case RENDERING_STATE::GAME:
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_FULLSCREEN_GAME);
+        windowManager.ActivateWindow(WINDOW_FULLSCREEN_GAME);
         break;
       default:
         break;

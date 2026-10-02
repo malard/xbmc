@@ -67,6 +67,7 @@ namespace XFILE
                                              const std::string& strBaseDir /* = "" */,
                                              bool filter /* = false */)
   {
+    const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
     bool success = false, success2 = false;
     std::vector<std::string> virtualFolders;
 
@@ -76,10 +77,10 @@ namespace XFILE
     sorting.sortBy = playlist.GetOrder();
     sorting.sortOrder = playlist.GetOrderAscending() ? SortOrder::ASCENDING : SortOrder::DESCENDING;
     sorting.sortAttributes = playlist.GetOrderAttributes();
-    if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
+    if (settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
       sorting.sortAttributes = (SortAttribute)(sorting.sortAttributes | SortAttributeIgnoreArticle);
-    if (playlist.IsMusicType() && CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                                      CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
+    if (playlist.IsMusicType() &&
+        settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     items.SetSortIgnoreFolders((sorting.sortAttributes & SortAttributeIgnoreFolders) ==
@@ -294,14 +295,12 @@ namespace XFILE
       if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
           playlist.GetType() == CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
-                   CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
       else
         items.Sort(SortBy::LABEL, SortOrder::ASCENDING,
-                   CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
     }

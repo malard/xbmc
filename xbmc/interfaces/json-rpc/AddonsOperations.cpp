@@ -45,6 +45,7 @@ JSONRPC_STATUS FindAddon(const CVariant& parameterObject,
 
 JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVariant& result)
 {
+  auto& addonMgr{CServiceBroker::GetAddonMgr()};
   std::vector<AddonType> addonTypes;
   AddonType addonType = CAddonInfo::TranslateType(parameterObject["type"].asString());
   CPluginSource::Content content = CPluginSource::Translate(parameterObject["content"].asString());
@@ -94,28 +95,28 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
       if (!enabled.isBoolean()) //All
       {
         if (!installed.isBoolean() || installed.asBoolean())
-          CServiceBroker::GetAddonMgr().GetInstalledAddons(typeAddons);
+          addonMgr.GetInstalledAddons(typeAddons);
         if (!installed.isBoolean() || (installed.isBoolean() && !installed.asBoolean()))
-          CServiceBroker::GetAddonMgr().GetInstallableAddons(typeAddons);
+          addonMgr.GetInstallableAddons(typeAddons);
       }
       else if (enabled.asBoolean() && (!installed.isBoolean() || installed.asBoolean())) //Enabled
-        CServiceBroker::GetAddonMgr().GetAddons(typeAddons);
+        addonMgr.GetAddons(typeAddons);
       else if (!installed.isBoolean() || installed.asBoolean())
-        CServiceBroker::GetAddonMgr().GetDisabledAddons(typeAddons);
+        addonMgr.GetDisabledAddons(typeAddons);
     }
     else
     {
       if (!enabled.isBoolean()) //All
       {
         if (!installed.isBoolean() || installed.asBoolean())
-          CServiceBroker::GetAddonMgr().GetInstalledAddons(typeAddons, typeIt);
+          addonMgr.GetInstalledAddons(typeAddons, typeIt);
         if (!installed.isBoolean() || (installed.isBoolean() && !installed.asBoolean()))
-          CServiceBroker::GetAddonMgr().GetInstallableAddons(typeAddons, typeIt);
+          addonMgr.GetInstallableAddons(typeAddons, typeIt);
       }
       else if (enabled.asBoolean() && (!installed.isBoolean() || installed.asBoolean())) //Enabled
-        CServiceBroker::GetAddonMgr().GetAddons(typeAddons, typeIt);
+        addonMgr.GetAddons(typeAddons, typeIt);
       else if (!installed.isBoolean() || installed.asBoolean())
-        CServiceBroker::GetAddonMgr().GetDisabledAddons(typeAddons, typeIt);
+        addonMgr.GetDisabledAddons(typeAddons, typeIt);
     }
 
     addons.insert(addons.end(), typeAddons.begin(), typeAddons.end());
@@ -162,6 +163,7 @@ JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObjec
 
 JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObject, CVariant& result)
 {
+  auto& addonMgr{CServiceBroker::GetAddonMgr()};
   AddonPtr addon;
   if (const JSONRPC_STATUS status =
           FindAddon(parameterObject, result, OnlyEnabled::CHOICE_NO, addon);
@@ -177,16 +179,15 @@ JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObjec
   // we need to toggle the current disabled state of the addon
   else if (parameterObject["enabled"].isString())
   {
-    disabled = !CServiceBroker::GetAddonMgr().IsAddonDisabled(id);
+    disabled = !addonMgr.IsAddonDisabled(id);
   }
   else
   {
     return InvalidParams;
   }
 
-  bool success = disabled
-                     ? CServiceBroker::GetAddonMgr().DisableAddon(id, AddonDisabledReason::USER)
-                     : CServiceBroker::GetAddonMgr().EnableAddon(id);
+  bool success =
+      disabled ? addonMgr.DisableAddon(id, AddonDisabledReason::USER) : addonMgr.EnableAddon(id);
 
   if (!success)
     return Fail(result, Unavailable, Reason::ChangeDeclined,

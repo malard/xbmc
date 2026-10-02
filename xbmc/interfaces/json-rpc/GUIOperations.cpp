@@ -293,17 +293,16 @@ CVariant CGUIOperations::GetScreenAlignmentState()
 
 JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string& property, CVariant& result)
 {
+  auto& infoManager{CServiceBroker::GetGUI()->GetInfoManager()};
   if (property == "currentWindow")
   {
-    result["label"] = CServiceBroker::GetGUI()->GetInfoManager().GetLabel(
-        CServiceBroker::GetGUI()->GetInfoManager().TranslateString("System.CurrentWindow"),
-        INFO::DEFAULT_CONTEXT);
+    result["label"] = infoManager.GetLabel(infoManager.TranslateString("System.CurrentWindow"),
+                                           INFO::DEFAULT_CONTEXT);
     result["id"] = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog();
   }
   else if (property == "currentControl")
-    result["label"] = CServiceBroker::GetGUI()->GetInfoManager().GetLabel(
-        CServiceBroker::GetGUI()->GetInfoManager().TranslateString("System.CurrentControl"),
-        INFO::DEFAULT_CONTEXT);
+    result["label"] = infoManager.GetLabel(infoManager.TranslateString("System.CurrentControl"),
+                                           INFO::DEFAULT_CONTEXT);
   else if (property == "skin")
   {
     std::string skinId = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(

@@ -127,6 +127,8 @@ CApplicationMessageHandling::CApplicationMessageHandling(CApplication& app)
 
 void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage* pMsg)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   uint32_t msg = pMsg->dwMessage;
   if (msg == TMSG_SYSTEM_POWERDOWN)
   {
@@ -206,12 +208,12 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     case TMSG_DISPLAY_SETUP:
       // We might come from a refresh rate switch destroying the native window; use the context resolution
       *static_cast<bool*>(pMsg->lpVoid) =
-          m_app.InitWindow(CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution());
+          m_app.InitWindow(winSystem->GetGfxContext().GetVideoResolution());
       appPower->SetRenderGUI(true);
       break;
 
     case TMSG_DISPLAY_DESTROY:
-      *static_cast<bool*>(pMsg->lpVoid) = CServiceBroker::GetWinSystem()->DestroyWindow();
+      *static_cast<bool*>(pMsg->lpVoid) = winSystem->DestroyWindow();
       appPower->SetRenderGUI(false);
       break;
 
@@ -266,26 +268,26 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       newEvent.resize.height = pMsg->param2;
       newEvent.resize.scale = 1.0;
       this->OnEvent(newEvent);
-      CServiceBroker::GetGUI()->GetWindowManager().MarkDirty();
+      windowManager.MarkDirty();
     }
     break;
 
     case TMSG_SETVIDEORESOLUTION:
-      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(
-          static_cast<RESOLUTION>(pMsg->param1), pMsg->param2 == 1);
+      winSystem->GetGfxContext().SetVideoResolution(static_cast<RESOLUTION>(pMsg->param1),
+                                                    pMsg->param2 == 1);
       break;
 
     case TMSG_TOGGLEFULLSCREEN:
-      CServiceBroker::GetWinSystem()->GetGfxContext().ToggleFullScreen();
+      winSystem->GetGfxContext().ToggleFullScreen();
       appPlayer->TriggerUpdateResolution();
       break;
 
     case TMSG_MOVETOSCREEN:
-      CServiceBroker::GetWinSystem()->MoveToScreen(pMsg->param1);
+      winSystem->MoveToScreen(pMsg->param1);
       break;
 
     case TMSG_MINIMIZE:
-      CServiceBroker::GetWinSystem()->Minimize();
+      winSystem->Minimize();
       break;
 
     case TMSG_EXECUTE_OS:
@@ -325,14 +327,14 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       if (appPlayer->IsPlayingVideo())
         m_app.StopPlaying();
 
-      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
-        CServiceBroker::GetGUI()->GetWindowManager().PreviousWindow();
+      if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+        windowManager.PreviousWindow();
 
       appPower->ResetScreenSaver();
       appPower->WakeUpScreenSaverAndDPMS();
 
-      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SLIDESHOW);
+      if (windowManager.GetActiveWindow() != WINDOW_SLIDESHOW)
+        windowManager.ActivateWindow(WINDOW_SLIDESHOW);
       if (URIUtils::IsZIP(pMsg->strParam) || URIUtils::IsRAR(pMsg->strParam)) // actually a cbz/cbr
       {
         CFileItemList items;
@@ -389,7 +391,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
         slideShow.StartSlideShow(); //Start the slideshow!
       }
 
-      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
+      if (windowManager.GetActiveWindow() != WINDOW_SLIDESHOW)
       {
         if (items.IsEmpty())
         {
@@ -398,7 +400,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
           appPower->ActivateScreenSaver();
         }
         else
-          CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SLIDESHOW);
+          windowManager.ActivateWindow(WINDOW_SLIDESHOW);
       }
     }
     break;
@@ -502,6 +504,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
 
 bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 {
+  auto& pvrManager{CServiceBroker::GetPVRManager()};
   const auto appPlayer = m_app.GetComponent<CApplicationPlayer>();
 
   switch (message.GetMessage())
@@ -555,7 +558,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
           m_app.GetComponent<CPlaybackAnnouncer>()->GetStartedItem();
       m_app.ResetPlayerEvent();
 
-      CServiceBroker::GetPVRManager().OnPlaybackStarted(m_app.CurrentFileItem());
+      pvrManager.OnPlaybackStarted(m_app.CurrentFileItem());
 
       if (!started)
         return true;
@@ -606,7 +609,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_STOPPED:
     {
-      CServiceBroker::GetPVRManager().OnPlaybackStopped(m_app.CurrentFileItem());
+      pvrManager.OnPlaybackStopped(m_app.CurrentFileItem());
       CServiceBroker::GetFavouritesService().OnPlaybackStopped(m_app.CurrentFileItem());
 
       const CPlaycountIncrementedHandler playCountIncrementedHandler{m_app.CurrentFileItem()};
@@ -625,7 +628,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_ENDED:
     {
-      CServiceBroker::GetPVRManager().OnPlaybackEnded(m_app.CurrentFileItem());
+      pvrManager.OnPlaybackEnded(m_app.CurrentFileItem());
       CServiceBroker::GetFavouritesService().OnPlaybackEnded(m_app.CurrentFileItem());
 
       m_app.m_playerEvent.Set();

@@ -140,6 +140,7 @@ JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject
 
 JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
+  const auto playLists{CServiceBroker::GetPlayLists()};
   const PublishedPlayList* playList = FindPublished(parameterObject);
 
   for (auto it = parameterObject["properties"].begin_array();
@@ -153,7 +154,7 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObjec
     else if (property == "size")
     {
       if (playList && playList->type)
-        result[property] = CServiceBroker::GetPlayLists()->GetPlayList(*playList->type).Size();
+        result[property] = playLists->GetPlayList(*playList->type).Size();
       else if (playList)
         result[property] = std::max(CServiceBroker::GetSlideShowDelegator().NumSlides(), 0);
       else
@@ -162,7 +163,7 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObjec
     else if (property == "shuffled")
     {
       if (playList && playList->type)
-        result[property] = CServiceBroker::GetPlayLists()->IsShuffled(*playList->type);
+        result[property] = playLists->IsShuffled(*playList->type);
       else
         result[property] = playList && CServiceBroker::GetSlideShowDelegator().IsShuffled();
     }
@@ -170,8 +171,7 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObjec
     {
       result[property] =
           std::string{playList && playList->type
-                          ? CApplicationPlayLists::RepeatName(
-                                CServiceBroker::GetPlayLists()->GetRepeat(*playList->type))
+                          ? CApplicationPlayLists::RepeatName(playLists->GetRepeat(*playList->type))
                           : CApplicationPlayLists::RepeatName(CApplicationPlayLists::Repeat::Off)};
     }
     else

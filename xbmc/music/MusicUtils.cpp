@@ -281,6 +281,7 @@ void AddAvailableArtTypes(std::vector<std::string>& artTypes,
 
 bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   const CMusicInfoTag& tag = *musicitem.GetMusicInfoTag();
   if (tag.GetDatabaseId() < 1 || tag.GetType().empty())
     return false;
@@ -307,13 +308,13 @@ bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
     CFileItemPtr artitem(new CFileItem(type, false));
     // Localise the names of common types of art
     if (type == "banner")
-      artitem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20020));
+      artitem->SetLabel(localizeStrings.Get(20020));
     else if (type == "fanart")
-      artitem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20445));
+      artitem->SetLabel(localizeStrings.Get(20445));
     else if (type == "poster")
-      artitem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20021));
+      artitem->SetLabel(localizeStrings.Get(20021));
     else if (type == "thumb")
-      artitem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21371));
+      artitem->SetLabel(localizeStrings.Get(21371));
     else
       artitem->SetLabel(type);
     // Set art type as art item property

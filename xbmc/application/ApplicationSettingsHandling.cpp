@@ -138,6 +138,7 @@ void CApplicationSettingsHandling::UnregisterSettings()
 
 void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
   if (!setting)
     return;
 
@@ -158,9 +159,9 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
 
   if (settingId == CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN)
   {
-    if (CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenRoot())
-      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(
-          CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution(), true);
+    if (winSystem->GetGfxContext().IsFullScreenRoot())
+      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(),
+                                                    true);
   }
   else if (settingId == CSettings::SETTING_AUDIOOUTPUT_PASSTHROUGH)
   {
@@ -237,6 +238,7 @@ void CApplicationSettingsHandling::ApplyRasterSettings()
 
 void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const CSetting>& setting)
 {
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   if (!setting)
     return;
 
@@ -247,7 +249,7 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
 
   const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOOKANDFEEL_SKINSETTINGS)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SKIN_SETTINGS);
+    windowManager.ActivateWindow(WINDOW_SKIN_SETTINGS);
   else if (settingId == CSettings::SETTING_AUDIOCDS_SETTINGS)
   {
     ADDON::AddonPtr addon;
@@ -258,22 +260,22 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
       CGUIDialogAddonSettings::ShowForAddon(addon);
   }
   else if (settingId == CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SCREEN_CALIBRATION);
+    windowManager.ActivateWindow(WINDOW_SCREEN_CALIBRATION);
   else if (settingId == CSettings::SETTING_VIDEOSCREEN_SCREENALIGNMENT ||
            settingId == CSettings::SETTING_VIDEOSCREEN_CALIBRATIONALIGNMENT)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SCREEN_ALIGNMENT);
+    windowManager.ActivateWindow(WINDOW_SCREEN_ALIGNMENT);
   else if (settingId == CSettings::SETTING_SOURCE_VIDEOS)
   {
     std::vector<std::string> params{KODI::LIBRARY::VIDEO_FILES, "return"};
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_NAV, params);
+    windowManager.ActivateWindow(WINDOW_VIDEO_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_MUSIC)
   {
     std::vector<std::string> params{KODI::LIBRARY::MUSIC_FILES, "return"};
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, params);
+    windowManager.ActivateWindow(WINDOW_MUSIC_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_PICTURES)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_PICTURES);
+    windowManager.ActivateWindow(WINDOW_PICTURES);
 }
 
 bool CApplicationSettingsHandling::OnSettingUpdate(const std::shared_ptr<CSetting>& setting,

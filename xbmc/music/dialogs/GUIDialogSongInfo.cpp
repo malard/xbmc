@@ -341,6 +341,7 @@ std::string CGUIDialogSongInfo::GetContent()
 */
 void CGUIDialogSongInfo::OnGetArt()
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   std::string type = MUSIC_UTILS::ShowSelectArtTypeDialog(m_artTypeList);
   if (type.empty())
     return; // Cancelled
@@ -363,8 +364,7 @@ void CGUIDialogSongInfo::OnGetArt()
     CFileItemPtr item(new CFileItem(IMAGE_CHOICE::CURRENT, false));
     item->SetArt(ART_TYPE::THUMB, m_song->GetArt(type));
     item->SetArt(ART_TYPE::ICON, "DefaultPicture.png");
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
-        13512)); //! @todo: label fallback art so user knows?
+    item->SetLabel(localizeStrings.Get(13512)); //! @todo: label fallback art so user knows?
     items.Add(item);
   }
   else if (m_song->HasArt(ART_TYPE::THUMB))
@@ -375,7 +375,7 @@ void CGUIDialogSongInfo::OnGetArt()
       CFileItemPtr item(new CFileItem(IMAGE_CHOICE::THUMB, false));
       item->SetArt(ART_TYPE::THUMB, m_song->GetArt(ART_TYPE::THUMB));
       item->SetArt(ART_TYPE::ICON, "DefaultAlbumCover.png");
-      item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21371));
+      item->SetLabel(localizeStrings.Get(21371));
       items.Add(item);
     }
   }
@@ -393,7 +393,7 @@ void CGUIDialogSongInfo::OnGetArt()
     {
       CFileItemPtr item(new CFileItem(IMAGE_CHOICE::LOCAL, false));
       item->SetArt(ART_TYPE::THUMB, localThumb);
-      item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20017));
+      item->SetLabel(localizeStrings.Get(20017));
       items.Add(item);
     }
   }
@@ -413,7 +413,7 @@ void CGUIDialogSongInfo::OnGetArt()
     // allow the user to delete it by selecting "no art".
     CFileItemPtr item(new CFileItem(IMAGE_CHOICE::NONE, false));
     item->SetArt(ART_TYPE::THUMB, "DefaultAlbumCover.png");
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13515));
+    item->SetLabel(localizeStrings.Get(13515));
     items.Add(item);
   }
 
@@ -433,9 +433,7 @@ void CGUIDialogSongInfo::OnGetArt()
   else  // Add parent folder of song
     CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_song);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(
-          items, sources, CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13511),
-          result) &&
+  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
       result != IMAGE_CHOICE::CURRENT)
   {
     // User didn't choose the one they have, or the fallback image.

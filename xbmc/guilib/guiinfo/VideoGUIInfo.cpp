@@ -178,6 +178,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
                              const CGUIInfo& info,
                              std::string* fallback) const
 {
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
   if (GUIINFO::IsPlayListEntryInfo(info, VIDEOPLAYER_OFFSET_POSITION_FIRST,
                                    VIDEOPLAYER_OFFSET_POSITION_LAST))
     return GetPlaylistInfo(value, info);
@@ -374,15 +375,11 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         break;
       case VIDEOPLAYER_STUDIO:
       case LISTITEM_STUDIO:
-        value = StringUtils::Join(
-            tag->m_studio,
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_studio, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_COUNTRY:
       case LISTITEM_COUNTRY:
-        value = StringUtils::Join(
-            tag->m_country,
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_country, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_MPAA:
       case LISTITEM_MPAA:
@@ -406,9 +403,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         return true;
       case VIDEOPLAYER_ARTIST:
       case LISTITEM_ARTIST:
-        value = StringUtils::Join(
-            tag->m_artist,
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_artist, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_ALBUM:
       case LISTITEM_ALBUM:
@@ -484,9 +479,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         value = tag->m_strStatus;
         return true;
       case LISTITEM_TAG:
-        value = StringUtils::Join(
-            tag->m_tags,
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_tags, advancedSettings->m_videoItemSeparator);
         return true;
       case LISTITEM_SET:
         value = tag->m_set.GetTitle();

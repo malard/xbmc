@@ -1051,6 +1051,7 @@ JSONRPC_STATUS CPlayerOperations::Rotate(const CVariant& parameterObject, CVaria
 
 JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant& result)
 {
+  auto& pvrManager{CServiceBroker::GetPVRManager()};
   CVariant options = parameterObject["options"];
   CVariant optionShuffled = options["shuffled"];
   CVariant optionRepeat = options["repeat"];
@@ -1127,12 +1128,11 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
   }
   else if (parameterObject["item"].isMember("broadcastId"))
   {
-    if (!CServiceBroker::GetPVRManager().IsStarted())
+    if (!pvrManager.IsStarted())
       return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
-    const std::shared_ptr<CPVREpgInfoTag> epgTag =
-        CServiceBroker::GetPVRManager().EpgContainer().GetTagByDatabaseId(
-            static_cast<unsigned int>(parameterObject["item"]["broadcastId"].asInteger()));
+    const std::shared_ptr<CPVREpgInfoTag> epgTag = pvrManager.EpgContainer().GetTagByDatabaseId(
+        static_cast<unsigned int>(parameterObject["item"]["broadcastId"].asInteger()));
 
     if (!epgTag)
       return Fail(result, NotFound, Reason::NoSuchItem,
@@ -1140,7 +1140,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
     if (!epgTag->IsPlayable())
       return InvalidParams;
 
-    if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayEpgTag(CFileItem(epgTag)))
+    if (!pvrManager.Get<PVR::GUI::Playback>().PlayEpgTag(CFileItem(epgTag)))
       return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
@@ -1148,9 +1148,9 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
   else if (parameterObject["item"].isMember("channelId"))
   {
     const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer =
-        CServiceBroker::GetPVRManager().ChannelGroups();
+        pvrManager.ChannelGroups();
     // the containers exist before PVR has loaded them, and are not safe to search until then
-    if (!CServiceBroker::GetPVRManager().IsStarted() || !channelGroupContainer)
+    if (!pvrManager.IsStarted() || !channelGroupContainer)
       return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<const CPVRChannel> channel = channelGroupContainer->GetChannelById(
@@ -1160,21 +1160,19 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
                   Target("channelId", parameterObject["item"]["channelId"]));
 
     const std::shared_ptr<CPVRChannelGroupMember> groupMember =
-        CServiceBroker::GetPVRManager().Get<PVR::GUI::Channels>().GetChannelGroupMember(channel);
+        pvrManager.Get<PVR::GUI::Channels>().GetChannelGroupMember(channel);
     if (!groupMember)
       return InvalidParams;
 
-    if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(
-            CFileItem(groupMember)))
+    if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(CFileItem(groupMember)))
       return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
   }
   else if (parameterObject["item"].isMember("recordingId"))
   {
-    const std::shared_ptr<const CPVRRecordings> recordingsContainer =
-        CServiceBroker::GetPVRManager().Recordings();
-    if (!CServiceBroker::GetPVRManager().IsStarted() || !recordingsContainer)
+    const std::shared_ptr<const CPVRRecordings> recordingsContainer = pvrManager.Recordings();
+    if (!pvrManager.IsStarted() || !recordingsContainer)
       return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     const std::shared_ptr<CPVRRecording> recording = recordingsContainer->GetById(
@@ -1185,7 +1183,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     CFileItem recItem{recording};
     HandleResumeOption(optionResume, recItem);
-    if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
+    if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(recItem))
       return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
@@ -1219,16 +1217,15 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
       }
       else if (list.Size() == 1 && URIUtils::IsPVRChannel(list[0]->GetPath()))
       {
-        if (!CServiceBroker::GetPVRManager().IsStarted())
+        if (!pvrManager.IsStarted())
           return Fail(result, FailedToExecute, Reason::PvrNotStarted);
-        if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
+        if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
           return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
       {
-        const std::shared_ptr<const CPVRRecordings> recordingsContainer{
-            CServiceBroker::GetPVRManager().Recordings()};
-        if (!CServiceBroker::GetPVRManager().IsStarted() || !recordingsContainer)
+        const std::shared_ptr<const CPVRRecordings> recordingsContainer{pvrManager.Recordings()};
+        if (!pvrManager.IsStarted() || !recordingsContainer)
           return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
         std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
@@ -1241,7 +1238,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
         CFileItem recItem{recording};
         HandleResumeOption(optionResume, recItem);
-        if (!CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(recItem))
+        if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(recItem))
           return Fail(result, FailedToExecute, Reason::PlaybackRefused);
       }
       else
@@ -1361,6 +1358,7 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
 
 JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant& result)
 {
+  const auto appMessenger{CServiceBroker::GetAppMessenger()};
   return ForEachOnList(
       parameterObject, result,
       [&](PlayerType player) -> JSONRPC_STATUS
@@ -1384,26 +1382,24 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant
                 return InvalidParams;
 
               if (elsewhere)
-                CServiceBroker::GetAppMessenger()->SendMsg(
-                    strTo == "next" ? TMSG_PLAYLISTPLAYER_NEXT : TMSG_PLAYLISTPLAYER_PREV,
-                    static_cast<int>(*named), -1, nullptr);
+                appMessenger->SendMsg(strTo == "next" ? TMSG_PLAYLISTPLAYER_NEXT
+                                                      : TMSG_PLAYLISTPLAYER_PREV,
+                                      static_cast<int>(*named), -1, nullptr);
               else
-                CServiceBroker::GetAppMessenger()->SendMsg(
-                    TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                    TransferToMessenger(std::make_unique<CAction>(
-                        strTo == "next" ? ACTION_NEXT_ITEM : ACTION_PREV_ITEM)));
+                appMessenger->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+                                      TransferToMessenger(std::make_unique<CAction>(
+                                          strTo == "next" ? ACTION_NEXT_ITEM : ACTION_PREV_ITEM)));
             }
             else if (to.isInteger())
             {
               if (IsPVRChannel() && !elsewhere)
-                CServiceBroker::GetAppMessenger()->SendMsg(
+                appMessenger->SendMsg(
                     TMSG_GUI_ACTION, WINDOW_INVALID, -1,
                     TransferToMessenger(std::make_unique<CAction>(
                         ACTION_CHANNEL_SWITCH, static_cast<float>(to.asInteger()))));
               else
-                CServiceBroker::GetAppMessenger()->SendMsg(
-                    TMSG_PLAYLISTPLAYER_PLAY, static_cast<int>(to.asInteger()),
-                    named ? static_cast<int>(*named) : -1, nullptr);
+                appMessenger->SendMsg(TMSG_PLAYLISTPLAYER_PLAY, static_cast<int>(to.asInteger()),
+                                      named ? static_cast<int>(*named) : -1, nullptr);
             }
             else
               return InvalidParams;

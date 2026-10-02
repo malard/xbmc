@@ -506,6 +506,8 @@ void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
 
 void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdate)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
   RESOLUTION lastRes = m_Resolution;
 
   // If the user asked us to guess, go with desktop
@@ -515,19 +517,19 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
   }
 
   // If we are switching to the same resolution and same window/full-screen, no need to do anything
-  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
+  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == advancedSettings->m_fullScreen)
   {
     return;
   }
 
   if (res >= RES_DESKTOP)
   {
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen = true;
+    advancedSettings->m_fullScreen = true;
     m_bFullScreenRoot = true;
   }
   else
   {
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen = false;
+    advancedSettings->m_fullScreen = false;
     m_bFullScreenRoot = false;
   }
 
@@ -542,19 +544,19 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
   RESOLUTION_INFO info_org  = CDisplaySettings::GetInstance().GetResolutionInfo(res);
 
   bool switched = false;
-  if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
+  if (advancedSettings->m_fullScreen)
   {
 #if defined (TARGET_DARWIN) || defined (TARGET_WINDOWS)
     bool blankOtherDisplays = CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOSCREEN_BLANKDISPLAYS);
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(true,  info_org, blankOtherDisplays);
+    switched = winSystem->SetFullScreen(true, info_org, blankOtherDisplays);
 #else
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(true,  info_org, false);
+    switched = winSystem->SetFullScreen(true, info_org, false);
 #endif
   }
   else if (lastRes >= RES_DESKTOP )
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(false, info_org, false);
+    switched = winSystem->SetFullScreen(false, info_org, false);
   else
-    switched = CServiceBroker::GetWinSystem()->ResizeWindow(info_org.iWidth, info_org.iHeight, -1, -1);
+    switched = winSystem->ResizeWindow(info_org.iWidth, info_org.iHeight, -1, -1);
 
   if (switched)
   {

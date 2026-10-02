@@ -329,14 +329,14 @@ bool CVideoDatabaseDirectory::GetLabel(const std::string& strDirectory, std::str
 
 std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
 {
+  const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
   std::string path = CLegacyPathTranslation::TranslateVideoDbPath(strDirectory);
   switch (GetDirectoryChildType(path))
   {
     case NodeType::TITLE_MOVIES:
       if (URIUtils::PathEquals(path, KODI::VIDEODB::MOVIE_TITLES))
       {
-        if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMovies.png";
         return "DefaultMovieTitle.png";
       }
@@ -344,8 +344,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
     case NodeType::TITLE_TVSHOWS:
       if (URIUtils::PathEquals(path, KODI::VIDEODB::TVSHOW_TITLES))
       {
-        if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultTVShows.png";
         return "DefaultTVShowTitle.png";
       }
@@ -353,8 +352,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
     case NodeType::TITLE_MUSICVIDEOS:
       if (URIUtils::PathEquals(path, KODI::VIDEODB::MUSICVIDEO_TITLES))
       {
-        if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMusicVideos.png";
         return "DefaultMusicVideoTitle.png";
       }

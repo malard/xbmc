@@ -81,6 +81,7 @@ bool CVideoLibraryRefreshingJob::Equals(const CJob* job) const
 
 bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (m_item == nullptr)
     return false;
 
@@ -300,8 +301,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
     // if we don't have an url or need to refresh anyway do the web search
     if (!hasDetails && (needsRefresh || !scraperUrl.HasUrls()))
     {
-      SetTitle(StringUtils::Format(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(197), scraper->Name()));
+      SetTitle(StringUtils::Format(localizeStrings.Get(197), scraper->Name()));
       SetText(itemTitle);
       SetProgress(0);
 
@@ -363,7 +363,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
               // ask the user to input a title to use
               if (!CGUIKeyboardFactory::ShowAndGetInput(
                       itemTitle,
-                      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+                      localizeStrings.Get(
                           scraper->Content() == ADDON::ContentType::TVSHOWS ? 20357 : 16009),
                       false))
                 return false;
@@ -399,8 +399,8 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
         // ask the user to input a title to use
         if (!CGUIKeyboardFactory::ShowAndGetInput(
                 itemTitle,
-                CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
-                    scraper->Content() == ADDON::ContentType::TVSHOWS ? 20357 : 16009),
+                localizeStrings.Get(scraper->Content() == ADDON::ContentType::TVSHOWS ? 20357
+                                                                                      : 16009),
                 false))
           return false;
 
@@ -468,7 +468,7 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
       headingLabel = 20394;
 
     // prepare the progress dialog for downloading all the necessary information
-    SetTitle(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(headingLabel));
+    SetTitle(localizeStrings.Get(headingLabel));
     SetText(itemTitle);
     SetProgress(0);
 

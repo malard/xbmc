@@ -11896,6 +11896,7 @@ std::string CMusicDatabase::GetItemById(const std::string& itemType, int id) con
 void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                                  CGUIDialogProgress* progressDialog /*= nullptr*/)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (!settings.IsItemExported(ELIBEXPORT_ALBUMARTISTS) &&
       !settings.IsItemExported(ELIBEXPORT_SONGARTISTS) &&
       !settings.IsItemExported(ELIBEXPORT_OTHERARTISTS) &&
@@ -12063,10 +12064,9 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                 if (!xmlDoc.SaveFile(nfoFile))
                 {
                   CLog::LogF(LOGERROR, "Album nfo export failed! ('{}')", nfoFile);
-                  CGUIDialogKaiToast::QueueNotification(
-                      CGUIDialogKaiToast::Error,
-                      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20302),
-                      CURL::GetRedacted(nfoFile));
+                  CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                                                        localizeStrings.Get(20302),
+                                                        CURL::GetRedacted(nfoFile));
                   iFailCount++;
                 }
               }
@@ -12207,10 +12207,9 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                   if (!xmlDoc.SaveFile(nfoFile))
                   {
                     CLog::LogF(LOGERROR, "Artist nfo export failed! ('{}')", nfoFile);
-                    CGUIDialogKaiToast::QueueNotification(
-                        CGUIDialogKaiToast::Error,
-                        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20302),
-                        CURL::GetRedacted(nfoFile));
+                    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                                                          localizeStrings.Get(20302),
+                                                          CURL::GetRedacted(nfoFile));
                     iFailCount++;
                   }
                 }
@@ -12275,9 +12274,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
 
   if (iFailCount > 0 && progressDialog)
     HELPERS::ShowOKDialogLines(
-        CVariant{20196},
-        CVariant{StringUtils::Format(
-            CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(15011), iFailCount)});
+        CVariant{20196}, CVariant{StringUtils::Format(localizeStrings.Get(15011), iFailCount)});
 }
 
 bool CMusicDatabase::ExportSongHistory(TiXmlNode* pNode, CGUIDialogProgress* progressDialog)

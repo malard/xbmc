@@ -620,6 +620,7 @@ void CGUIDialogVideoInfo::OnSearch(std::string& strSearch)
 
 void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items) const
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CVideoDatabase db;
   if (!db.Open())
     return;
@@ -633,9 +634,8 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(
-      movies, "[" + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20338) + "] ",
-      items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20338) + "] ",
+                                                 items);
 
   db.GetTvShowsByActor(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -645,9 +645,8 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(
-      movies, "[" + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20364) + "] ",
-      items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20364) + "] ",
+                                                 items);
 
   db.GetEpisodesByActor(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -655,9 +654,8 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
     std::string label = movies[i]->GetVideoInfoTag()->m_strTitle + " (" +  movies[i]->GetVideoInfoTag()->m_strShowTitle + ")";
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(
-      movies, "[" + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20359) + "] ",
-      items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20359) + "] ",
+                                                 items);
 
   db.GetMusicVideosByArtist(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -667,9 +665,8 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(
-      movies, "[" + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20391) + "] ",
-      items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20391) + "] ",
+                                                 items);
   db.Close();
 
   // Search for music albums by artist with name matching search string
@@ -684,10 +681,8 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       // Set type so that video thumbloader handles album art
       movies[i]->GetVideoInfoTag()->SetMediaType(MediaType::ALBUM);
     }
-    CGUIWindowVideoBase::AppendAndClearSearchItems(
-        movies,
-        "[" + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(36918) + "] ",
-        items);
+    CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(36918) + "] ",
+                                                   items);
   }
   music_database.Close();
 }
@@ -743,6 +738,7 @@ void CGUIDialogVideoInfo::ClearCastList()
 
 void CGUIDialogVideoInfo::Play(bool resume)
 {
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   std::string strPath;
 
   const CVideoInfoTag* videoTag = m_movieItem->GetVideoInfoTag();
@@ -753,12 +749,12 @@ void CGUIDialogVideoInfo::Play(bool resume)
     {
       strPath = m_movieItem->GetPath();
       Close();
-      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VIDEO_NAV)
+      if (windowManager.GetActiveWindow() == WINDOW_VIDEO_NAV)
       {
         CGUIMessage message(GUI_MSG_NOTIFY_ALL, CServiceBroker::GetGUI()->
                             GetWindowManager().GetActiveWindow(), 0, GUI_MSG_UPDATE, 0);
         message.SetStringParam(strPath);
-        CServiceBroker::GetGUI()->GetWindowManager().SendMessage(message);
+        windowManager.SendMessage(message);
         return;
       }
     }
@@ -777,7 +773,7 @@ void CGUIDialogVideoInfo::Play(bool resume)
   if (!strPath.empty())
   {
     Close();
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_NAV, strPath);
+    windowManager.ActivateWindow(WINDOW_VIDEO_NAV, strPath);
     return;
   }
 
@@ -1562,6 +1558,7 @@ bool CGUIDialogVideoInfo::GetMoviesForSet(const CFileItem *setItem, CFileItemLis
 bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
                                          std::shared_ptr<CFileItem>& selectedSet)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (movieItem == nullptr || !movieItem->HasVideoInfoTag())
     return false;
 
@@ -1606,14 +1603,12 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
       }
     }
     // add clear item
-    std::string strClear = StringUtils::Format(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20467), currentSetLabel);
+    std::string strClear = StringUtils::Format(localizeStrings.Get(20467), currentSetLabel);
     CFileItemPtr clearItem(new CFileItem(strClear));
     clearItem->GetVideoInfoTag()->m_iDbId = -1; // -1 will be used to clear set
     listItems.AddFront(clearItem, 0);
     // add keep current set item
-    std::string strKeep = StringUtils::Format(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20469), currentSetLabel);
+    std::string strKeep = StringUtils::Format(localizeStrings.Get(20469), currentSetLabel);
     CFileItemPtr keepItem(new CFileItem(strKeep));
     keepItem->GetVideoInfoTag()->m_iDbId = currentSetId;
     listItems.AddFront(keepItem, 1);
@@ -1624,8 +1619,7 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
     return false;
 
   dialog->Reset();
-  dialog->SetHeading(
-      CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20466)});
+  dialog->SetHeading(CVariant{localizeStrings.Get(20466)});
   dialog->SetItems(listItems);
   if (currentSetId >= 0)
   {
@@ -1644,10 +1638,8 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
   if (dialog->IsButtonPressed())
   { // creating new set
     std::string newSetTitle;
-    if (!CGUIKeyboardFactory::ShowAndGetInput(
-            newSetTitle,
-            CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20468)},
-            false))
+    if (!CGUIKeyboardFactory::ShowAndGetInput(newSetTitle, CVariant{localizeStrings.Get(20468)},
+                                              false))
       return false;
     int idSet = videodb.AddSet(newSetTitle);
     KODI::ART::Artwork movieArt;
@@ -1893,6 +1885,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
                                                  const std::string& mediaType,
                                                  const std::string& artType)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (item == nullptr || !item->HasVideoInfoTag() || mediaType.empty() || artType.empty())
     return false;
 
@@ -1908,7 +1901,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
   {
     const auto itemCurrent = std::make_shared<CFileItem>(IMAGE_CHOICE::CURRENT, false);
     itemCurrent->SetArt(ART_TYPE::THUMB, currentArt);
-    itemCurrent->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13512));
+    itemCurrent->SetLabel(localizeStrings.Get(13512));
     items.Add(itemCurrent);
   }
 
@@ -1917,7 +1910,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
   {
     const auto itemEmbedded = std::make_shared<CFileItem>(IMAGE_CHOICE::EMBEDDED, false);
     itemEmbedded->SetArt(ART_TYPE::THUMB, embeddedArt);
-    itemEmbedded->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13519));
+    itemEmbedded->SetLabel(localizeStrings.Get(13519));
     items.Add(itemEmbedded);
   }
 
@@ -1927,7 +1920,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
     const auto itemRemote = std::make_shared<CFileItem>(IMAGE_CHOICE::RemoteOf(i), false);
     itemRemote->SetArt(ART_TYPE::THUMB, remoteArt[i]);
     itemRemote->SetArt(ART_TYPE::ICON, "DefaultPicture.png");
-    itemRemote->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13513));
+    itemRemote->SetLabel(localizeStrings.Get(13513));
     items.Add(itemRemote);
 
     //! @todo Do we need to clear the cached image of remoteArt[i]?
@@ -1937,13 +1930,13 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
   if (!localArt.empty())
   {
     const auto itemLocal = std::make_shared<CFileItem>(IMAGE_CHOICE::LOCAL, false);
-    itemLocal->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13514));
+    itemLocal->SetLabel(localizeStrings.Get(13514));
     itemLocal->SetArt(ART_TYPE::THUMB, localArt);
     items.Add(itemLocal);
   }
 
   const auto itemNone = std::make_shared<CFileItem>(IMAGE_CHOICE::NONE, false);
-  itemNone->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13515));
+  itemNone->SetLabel(localizeStrings.Get(13515));
   itemNone->SetArt(ART_TYPE::ICON, artHandler->GetDefaultIcon());
   items.Add(itemNone);
 
@@ -1955,9 +1948,8 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
 
   bool flip = false;
   if (!CGUIDialogFileBrowser::ShowAndGetImage(
-          items, sources,
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13511) /* Choose art */,
-          result, artHandler->SupportsFlippedArt() ? &flip : nullptr, 39123 /* Artwork */))
+          items, sources, localizeStrings.Get(13511) /* Choose art */, result,
+          artHandler->SupportsFlippedArt() ? &flip : nullptr, 39123 /* Artwork */))
     return false; // user cancelled
 
   if (result == IMAGE_CHOICE::CURRENT)

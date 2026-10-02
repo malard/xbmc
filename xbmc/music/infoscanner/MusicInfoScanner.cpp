@@ -1320,6 +1320,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
     bool bAllowSelection,
     CGUIDialogProgress* pDialog /* = NULL */)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (!scraper)
     return InfoRet::INFO_ERROR;
 
@@ -1339,18 +1340,14 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
       if (pDialog && bAllowSelection)
       {
         std::string strTempAlbum(album.strAlbum);
-        if (!CGUIKeyboardFactory::ShowAndGetInput(
-                strTempAlbum,
-                CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16011)},
-                false))
+        if (!CGUIKeyboardFactory::ShowAndGetInput(strTempAlbum,
+                                                  CVariant{localizeStrings.Get(16011)}, false))
           albumDownloadStatus = InfoRet::CANCELLED;
         else
         {
           std::string strTempArtist(album.GetAlbumArtistString());
-          if (!CGUIKeyboardFactory::ShowAndGetInput(
-                  strTempArtist,
-                  CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16025)},
-                  false))
+          if (!CGUIKeyboardFactory::ShowAndGetInput(strTempArtist,
+                                                    CVariant{localizeStrings.Get(16025)}, false))
             albumDownloadStatus = InfoRet::CANCELLED;
           else
           {
@@ -1366,9 +1363,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
         if (eventLog)
           eventLog->Add(EventPtr(new CMediaLibraryEvent(
               MediaType::ALBUM, album.strPath, 24146,
-              StringUtils::Format(
-                  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24147),
-                  MediaType::ALBUM, album.strAlbum),
+              StringUtils::Format(localizeStrings.Get(24147), MediaType::ALBUM, album.strAlbum),
               CScraperUrl::GetThumbUrl(album.thumbURL.GetFirstUrlByType()),
               CURL::GetRedacted(album.strPath), EventLevel::Warning)));
       }

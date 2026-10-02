@@ -118,6 +118,7 @@ bool CFileItemHandler::GetField(const std::string& field,
                                 std::optional<std::shared_ptr<PVR::CPVRTimerInfoTag>>& epgTimer,
                                 CThumbLoader* thumbLoader /* = nullptr */)
 {
+  auto& pvrManager{CServiceBroker::GetPVRManager()};
   if (result.isMember(field) && !result[field].empty())
     return true;
 
@@ -148,8 +149,7 @@ bool CFileItemHandler::GetField(const std::string& field,
       }
       else if (field == "isRecording")
       {
-        result[field] = CServiceBroker::GetPVRManager().Timers()->IsRecordingOnChannel(
-            *item->GetPVRChannelInfoTag());
+        result[field] = pvrManager.Timers()->IsRecordingOnChannel(*item->GetPVRChannelInfoTag());
         return true;
       }
       else if (field == "broadcastNow" || field == "broadcastNext")
@@ -173,8 +173,7 @@ bool CFileItemHandler::GetField(const std::string& field,
       {
         if (!epgTimer.has_value())
         {
-          epgTimer =
-              CServiceBroker::GetPVRManager().Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
+          epgTimer = pvrManager.Timers()->GetTimerForEpgTag(item->GetEPGInfoTag());
         }
 
         const std::shared_ptr<PVR::CPVRTimerInfoTag>& timer{*epgTimer};
@@ -190,8 +189,7 @@ bool CFileItemHandler::GetField(const std::string& field,
       {
         if (!epgRecording.has_value())
         {
-          epgRecording = CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(
-              item->GetEPGInfoTag());
+          epgRecording = pvrManager.Recordings()->GetRecordingForEpgTag(item->GetEPGInfoTag());
         }
 
         const std::shared_ptr<PVR::CPVRRecording>& recording{*epgRecording};

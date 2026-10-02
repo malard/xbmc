@@ -442,8 +442,7 @@ CGUIViewStateMusicSmartPlaylist::CGUIViewStateMusicSmartPlaylist(const CFileItem
                   LABEL_MASKS("%T - %A", "%a")); // Title - Artist, DateAdded | empty, empty
     AddSortMethod(SortBy::PLAYCOUNT, 567,
                   LABEL_MASKS("%T - %A", "%V")); // Title - Artist, PlayCount
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
       AddSortMethod(SortBy::ORIG_DATE, 38079,
                     LABEL_MASKS("%T - %A", "%e")); // Title - Artist, original date, empty, empty
     AddSortMethod(SortBy::BPM, 38080,
@@ -482,8 +481,7 @@ CGUIViewStateMusicSmartPlaylist::CGUIViewStateMusicSmartPlaylist(const CFileItem
     // year
     AddSortMethod(SortBy::YEAR, 562, LABEL_MASKS("%F", "", strAlbum, "%Y"));
     // original release date
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-            CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
       AddSortMethod(
           SortBy::ORIG_DATE, 38079,
           LABEL_MASKS("%F", "", strAlbum, "%e")); // Filename, empty | Userdefined, Original date

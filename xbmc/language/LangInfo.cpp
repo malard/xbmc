@@ -435,18 +435,15 @@ bool CLangInfo::Load(const std::string& langInfoPath)
 
 bool CLangInfo::UseLocaleCollation()
 {
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
   if (m_localeCollation == LocaleCollation::UNCHECKED)
   {
     // Determine collation to use. When using MySQL/MariaDB or a platform that does not support
     // locale language collation then use accent folding internal equivalent of utf8_general_ci
     m_localeCollation = LocaleCollation::UNAVAILABLE;
-    if (!StringUtils::EqualsNoCase(
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_databaseMusic.type,
-            "mysql") &&
-        !StringUtils::EqualsNoCase(
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_databaseVideo.type,
-            "mysql") &&
-        CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_useLocaleCollation)
+    if (!StringUtils::EqualsNoCase(advancedSettings->m_databaseMusic.type, "mysql") &&
+        !StringUtils::EqualsNoCase(advancedSettings->m_databaseVideo.type, "mysql") &&
+        advancedSettings->m_useLocaleCollation)
     {
       // Check that locale collation facet is implemented on the platform
       const std::collate<wchar_t>& coll = std::use_facet<std::collate<wchar_t>>(m_systemLocale);
@@ -926,6 +923,7 @@ void CLangInfo::SettingOptions24HourClockFormatsFiller(const SettingConstPtr& se
                                                        std::string& current,
                                                        const CLangInfo& langInfo)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   bool match = false;
   const std::string& clock24HourFormatSetting = std::static_pointer_cast<const CSettingString>(setting)->GetValue();
 
@@ -933,27 +931,23 @@ void CLangInfo::SettingOptions24HourClockFormatsFiller(const SettingConstPtr& se
   int regionalClock24HourFormatLabel =
       DetermineUse24HourClockFromTimeFormat(langInfo.m_currentRegion->m_strTimeFormat) ? 12384
                                                                                        : 12383;
-  list.emplace_back(
-      StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20035),
-                          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
-                              regionalClock24HourFormatLabel)),
-      SETTING_REGIONAL_DEFAULT);
+  list.emplace_back(StringUtils::Format(localizeStrings.Get(20035),
+                                        localizeStrings.Get(regionalClock24HourFormatLabel)),
+                    SETTING_REGIONAL_DEFAULT);
   if (clock24HourFormatSetting == SETTING_REGIONAL_DEFAULT)
   {
     match = true;
     current = SETTING_REGIONAL_DEFAULT;
   }
 
-  list.emplace_back(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(12383),
-                    TIME_FORMAT_12HOURS);
+  list.emplace_back(localizeStrings.Get(12383), TIME_FORMAT_12HOURS);
   if (clock24HourFormatSetting == TIME_FORMAT_12HOURS)
   {
     current = TIME_FORMAT_12HOURS;
     match = true;
   }
 
-  list.emplace_back(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(12384),
-                    TIME_FORMAT_24HOURS);
+  list.emplace_back(localizeStrings.Get(12384), TIME_FORMAT_24HOURS);
   if (clock24HourFormatSetting == TIME_FORMAT_24HOURS)
   {
     current = TIME_FORMAT_24HOURS;

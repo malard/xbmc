@@ -155,6 +155,8 @@ bool CPVRGUIActionsPlayback::PlayEpgTag(
 
 bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
+  auto& pvrManager{CServiceBroker::GetPVRManager()};
   if (item.IsFolder())
     return false;
 
@@ -162,16 +164,12 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
   const std::shared_ptr<const CPVRChannel> channel(CPVRItem(item).GetChannel());
   if (channel)
   {
-    bool bSwitchToFullscreen =
-        CServiceBroker::GetPVRManager().PlaybackState()->IsPlayingChannel(channel);
+    bool bSwitchToFullscreen = pvrManager.PlaybackState()->IsPlayingChannel(channel);
 
     if (!bSwitchToFullscreen)
     {
-      recording =
-          CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
-      bSwitchToFullscreen =
-          recording &&
-          CServiceBroker::GetPVRManager().PlaybackState()->IsPlayingRecording(recording);
+      recording = pvrManager.Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
+      bSwitchToFullscreen = recording && pvrManager.PlaybackState()->IsPlayingRecording(recording);
     }
 
     if (bSwitchToFullscreen)
@@ -183,15 +181,14 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
     }
   }
 
-  ParentalCheckResult result =
-      channel ? CServiceBroker::GetPVRManager().Get<PVR::GUI::Parental>().CheckParentalLock(channel)
-              : ParentalCheckResult::FAILED;
+  ParentalCheckResult result = channel
+                                   ? pvrManager.Get<PVR::GUI::Parental>().CheckParentalLock(channel)
+                                   : ParentalCheckResult::FAILED;
   if (result == ParentalCheckResult::SUCCESS)
   {
     // switch to channel or if recording present, ask whether to switch or play recording...
     if (!recording)
-      recording =
-          CServiceBroker::GetPVRManager().Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
+      recording = pvrManager.Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
 
     if (recording)
     {
@@ -230,30 +227,25 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
         break;
     }
     const std::shared_ptr<CPVRChannelGroupMember> groupMember =
-        CServiceBroker::GetPVRManager().Get<PVR::GUI::Channels>().GetChannelGroupMember(item);
+        pvrManager.Get<PVR::GUI::Channels>().GetChannelGroupMember(item);
     if (!groupMember)
       return false;
 
     auto itemToPlay{std::make_unique<CFileItem>(groupMember)};
-    CServiceBroker::GetPVRManager().PlaybackState()->StartPlayback(
-        itemToPlay, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
+    pvrManager.PlaybackState()->StartPlayback(itemToPlay,
+                                              ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
     CheckAndSwitchToFullscreen(bFullscreen);
     return true;
   }
   else if (result == ParentalCheckResult::FAILED)
   {
     const std::string channelName =
-        channel
-            ? channel->ChannelName()
-            : CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(19029); // Channel
-    const std::string msg =
-        StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(19035),
-                            channelName); // CHANNELNAME could not be played.
+        channel ? channel->ChannelName() : localizeStrings.Get(19029); // Channel
+    const std::string msg = StringUtils::Format(localizeStrings.Get(19035),
+                                                channelName); // CHANNELNAME could not be played.
 
-    CGUIDialogKaiToast::QueueNotification(
-        CGUIDialogKaiToast::Error,
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(19166),
-        msg); // PVR information
+    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, localizeStrings.Get(19166),
+                                          msg); // PVR information
   }
 
   return false;

@@ -183,25 +183,26 @@ bool CGUIWindowMusicPlaylistEditor::OnMessage(CGUIMessage& message)
 
 bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory, CFileItemList &items)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   items.Clear();
   if (strDirectory.empty())
   { // root listing - list files:// and musicdb://
     CFileItemPtr files(
         new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
-    files->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(744));
+    files->SetLabel(localizeStrings.Get(744));
     files->SetLabelPreformatted(true);
     files->SetIsShareOrDrive(true);
     items.Add(files);
 
     CFileItemPtr mdb(new CFileItem(LIBRARY::MUSIC, true));
-    mdb->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(14022));
+    mdb->SetLabel(localizeStrings.Get(14022));
     mdb->SetLabelPreformatted(true);
     mdb->SetIsShareOrDrive(true);
     items.SetPath("");
     items.Add(mdb);
 
     CFileItemPtr vdb(new CFileItem(VIDEODB::MUSICVIDEOS, true));
-    vdb->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20389));
+    vdb->SetLabel(localizeStrings.Get(20389));
     vdb->SetLabelPreformatted(true);
     vdb->SetIsShareOrDrive(true);
     items.SetPath("");

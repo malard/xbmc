@@ -160,6 +160,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
                        bool bRoot,
                        const PlayDiscOptions& options)
 {
+  const auto playLists{CServiceBroker::GetPlayLists()};
   if (!pDir)
   {
     CLog::Log(LOGDEBUG, "CAutorun::{}: cannot run disc. is it properly mounted?", __FUNCTION__);
@@ -231,7 +232,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (!options.startFromBeginning && !item->GetVideoInfoTag()->m_strFileNameAndPath.empty())
             item->SetStartOffset(STARTOFFSET_RESUME);
 
-          CServiceBroker::GetPlayLists()->PlayItem(PLAYLIST::Video, item);
+          playLists->PlayItem(PLAYLIST::Video, item);
           return true;
         }
 
@@ -265,7 +266,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (options.forceSelection)
             item->SetProperty(ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION, true);
 
-          CServiceBroker::GetPlayLists()->PlayItem(PLAYLIST::Video, item);
+          playLists->PlayItem(PLAYLIST::Video, item);
           return true;
         }
 
@@ -370,8 +371,8 @@ bool CAutorun::RunDisc(IDirectory* pDir,
             if (hdVideoPlayer != "VideoPlayer")
             {
               CLog::Log(LOGINFO, "HD DVD: External singlefile playback initiated: {}", hddvdname);
-              CServiceBroker::GetPlayLists()->PlayItem(
-                  PLAYLIST::Video, std::make_shared<CFileItem>(item), {.player = hdVideoPlayer});
+              playLists->PlayItem(PLAYLIST::Video, std::make_shared<CFileItem>(item),
+                                  {.player = hdVideoPlayer});
               return true;
             } else
               CLog::Log(LOGINFO,"HD DVD: No external player found. Fallback to internal one.");
@@ -379,7 +380,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
 
           //  internal *.evo playback.
           CLog::Log(LOGINFO,"HD DVD: Internal multifile playback initiated.");
-          CServiceBroker::GetPlayLists()->PlayItems(PLAYLIST::Video, items, 0, {.inOrder = true});
+          playLists->PlayItems(PLAYLIST::Video, items, 0, {.inOrder = true});
           return true;
         }
 
@@ -398,7 +399,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           if (items.Size())
           {
             items.Sort(SortBy::LABEL, SortOrder::ASCENDING);
-            CServiceBroker::GetPlayLists()->PlayItems(PLAYLIST::Video, items, 0);
+            playLists->PlayItems(PLAYLIST::Video, items, 0);
             return true;
           }
         }
@@ -447,7 +448,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
         if (!g_passwordManager.IsMasterLockUnlocked(true))
           return false;
       }
-      CServiceBroker::GetPlayLists()->PlayItems(PLAYLIST::Video, itemlist, 0);
+      playLists->PlayItems(PLAYLIST::Video, itemlist, 0);
     }
   }
 

@@ -138,6 +138,7 @@ CDebugRenderer::CRenderer::CRenderer() : OVERLAY::CRenderer()
 
 void CDebugRenderer::CRenderer::Render(int idx, float depth)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
   std::vector<SElement>& list = m_buffers[idx];
   for (std::vector<SElement>::iterator it = list.begin(); it != list.end(); ++it)
   {
@@ -179,7 +180,7 @@ void CDebugRenderer::CRenderer::Render(int idx, float depth)
       }
 
       // Set position of subtitles based on video calibration settings
-      RESOLUTION_INFO resInfo = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+      RESOLUTION_INFO resInfo = winSystem->GetGfxContext().GetResInfo();
       // Keep track of subtitle position value change,
       // can be changed by GUI Calibration or by window mode/resolution change or
       // by user manual change (e.g. keyboard shortcut)
@@ -190,8 +191,8 @@ void CDebugRenderer::CRenderer::Render(int idx, float depth)
           // m_subtitlePosition has been changed
           // and has been requested to save the value to resInfo
           resInfo.iSubtitles = m_subtitlePosition + m_subtitleVerticalMargin;
-          CServiceBroker::GetWinSystem()->GetGfxContext().SetResInfo(
-              CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution(), resInfo);
+          winSystem->GetGfxContext().SetResInfo(winSystem->GetGfxContext().GetVideoResolution(),
+                                                resInfo);
           m_subtitlePosResInfo = m_subtitlePosition + m_subtitleVerticalMargin;
         }
         else
