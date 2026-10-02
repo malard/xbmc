@@ -180,20 +180,7 @@ void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,
   {
     LABEL_MASKS labelMasks;
     state->GetSortMethodLabelMasks(labelMasks);
-
-    const CLabelFormatter fileFormatter(labelMasks.m_strLabelFile, labelMasks.m_strLabel2File);
-    const CLabelFormatter folderFormatter(labelMasks.m_strLabelFolder,
-                                          labelMasks.m_strLabel2Folder);
-    for (const auto& i : items)
-    {
-      if (i->IsLabelPreformatted())
-        continue;
-
-      if (i->IsFolder())
-        folderFormatter.FormatLabels(i.get());
-      else
-        fileFormatter.FormatLabels(i.get());
-    }
+    CLabelFormatter::FormatItemLabels(items, labelMasks);
 
     SortDescription sortDesc;
     if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == viewStateWindowId)
