@@ -7985,9 +7985,14 @@
       ]
     },
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-setting"
+      ]
+    }
   },
   "Settings.SetSkinSettingValue": {
     "type": "method",
@@ -8016,9 +8021,14 @@
     ],
     "returns": "boolean",
     "errors": [
-      "InvalidParams"
+      "InvalidParams",
+      "NotFound"
     ],
-    "reasons": {}
+    "reasons": {
+      "NotFound": [
+        "no-such-setting"
+      ]
+    }
   },
   "Settings.GetSkinSettings": {
     "type": "method",

@@ -54,6 +54,18 @@ bool IsMissing(const std::string& directory)
   }
   return false;
 }
+
+//! Check the file the "file" parameter names is within a source and exists, failing
+//! \p result as the call should when not.
+JSONRPC_STATUS CheckFile(const CVariant& parameterObject, CVariant& result)
+{
+  const CVariant& file = parameterObject["file"];
+  if (!CFileUtils::RemoteAccessAllowed(file.asString()))
+    return Fail(result, AccessDenied, Reason::OutsideSources, Target("file", file));
+  if (!CFileUtils::Exists(file.asString()))
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", file));
+  return OK;
+}
 } // namespace
 
 JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
@@ -208,13 +220,9 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
 JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
-  std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::RemoteAccessAllowed(file))
-    return Fail(result, AccessDenied, Reason::OutsideSources,
-                Target("file", parameterObject["file"]));
-
-  if (!CFileUtils::Exists(file))
-    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", parameterObject["file"]));
+  const std::string file = parameterObject["file"].asString();
+  if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
+    return status;
 
   std::string path = URIUtils::GetDirectory(file);
 
@@ -266,13 +274,9 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
   if (media.compare("video") != 0)
     return InvalidParams;
 
-  std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::RemoteAccessAllowed(file))
-    return Fail(result, AccessDenied, Reason::OutsideSources,
-                Target("file", parameterObject["file"]));
-
-  if (!CFileUtils::Exists(file))
-    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", parameterObject["file"]));
+  const std::string file = parameterObject["file"].asString();
+  if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
+    return status;
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())

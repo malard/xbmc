@@ -13175,10 +13175,19 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-setting"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13231,10 +13240,19 @@
         },
         {
           "$ref": "#/components/errors/BadPermission"
+        },
+        {
+          "$ref": "#/components/errors/NotFound"
         }
       ],
       "x-kodi-permission": "WriteSetting",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "NotFound": [
+          {
+            "$ref": "#/components/x-kodi-reasons/no-such-setting"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {

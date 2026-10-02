@@ -35,6 +35,46 @@
 
 using namespace JSONRPC;
 
+namespace
+{
+//! Find the setting the "setting" parameter names, failing \p result as the call should when
+//! there is none.
+JSONRPC_STATUS FindSetting(const CVariant& parameterObject, CVariant& result, SettingPtr& setting)
+{
+  const CVariant& id = parameterObject["setting"];
+  setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(id.asString());
+  if (!setting)
+    return Fail(result, NotFound, Reason::NoSuchSetting, Target("setting", id));
+  return OK;
+}
+
+//! As FindSetting, failing as well when the setting is disabled.
+JSONRPC_STATUS FindEnabledSetting(const CVariant& parameterObject,
+                                  CVariant& result,
+                                  SettingPtr& setting)
+{
+  if (const JSONRPC_STATUS status = FindSetting(parameterObject, result, setting); status != OK)
+    return status;
+  if (!setting->IsEnabled())
+    return Fail(result, Unavailable, Reason::SettingDisabled,
+                Target("setting", parameterObject["setting"]));
+  return OK;
+}
+
+//! Find the skin setting the "setting" parameter names, failing \p result as the call should
+//! when the skin has none.
+JSONRPC_STATUS FindSkinSetting(const CVariant& parameterObject,
+                               CVariant& result,
+                               ADDON::CSkinSettingPtr& setting)
+{
+  const CVariant& id = parameterObject["setting"];
+  setting = CSkinSettings::GetInstance().GetSetting(id.asString());
+  if (!setting)
+    return Fail(result, NotFound, Reason::NoSuchSetting, Target("setting", id));
+  return OK;
+}
+} // namespace
+
 JSONRPC_STATUS CSettingsOperations::GetLevel(const CVariant& parameterObject, CVariant& result)
 {
   result["level"] = SettingLevelToString(CViewStateSettings::GetInstance().GetSettingLevel());
@@ -241,12 +281,10 @@ JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant& parameterObject,
 JSONRPC_STATUS CSettingsOperations::GetSettingValue(const CVariant& parameterObject,
                                                     CVariant& result)
 {
-  std::string settingId = parameterObject["setting"].asString();
-
-  SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == nullptr)
-    return Fail(result, NotFound, Reason::NoSuchSetting,
-                Target("setting", parameterObject["setting"]));
+  const std::string settingId = parameterObject["setting"].asString();
+  SettingPtr setting;
+  if (const JSONRPC_STATUS status = FindSetting(parameterObject, result, setting); status != OK)
+    return status;
 
   CVariant value;
   switch (setting->GetType())
@@ -315,16 +353,13 @@ bool IsListedOption(const std::shared_ptr<CSettingString>& setting, const std::s
 JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObject,
                                                     CVariant& result)
 {
-  std::string settingId = parameterObject["setting"].asString();
+  const std::string settingId = parameterObject["setting"].asString();
   CVariant value = parameterObject["value"];
 
-  SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == nullptr)
-    return Fail(result, NotFound, Reason::NoSuchSetting,
-                Target("setting", parameterObject["setting"]));
-  if (!setting->IsEnabled())
-    return Fail(result, Unavailable, Reason::SettingDisabled,
-                Target("setting", parameterObject["setting"]));
+  SettingPtr setting;
+  if (const JSONRPC_STATUS status = FindEnabledSetting(parameterObject, result, setting);
+      status != OK)
+    return status;
 
   // engaged for the rest of the call: a display mode change is kept without the prompt
   std::optional<CDisplaySettings::CConfirmedChange> confirmed;
@@ -414,15 +449,10 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant& parameterObj
 JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant& parameterObject,
                                                       CVariant& result)
 {
-  std::string settingId = parameterObject["setting"].asString();
-
-  SettingPtr setting = CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(settingId);
-  if (setting == nullptr)
-    return Fail(result, NotFound, Reason::NoSuchSetting,
-                Target("setting", parameterObject["setting"]));
-  if (!setting->IsEnabled())
-    return Fail(result, Unavailable, Reason::SettingDisabled,
-                Target("setting", parameterObject["setting"]));
+  SettingPtr setting;
+  if (const JSONRPC_STATUS status = FindEnabledSetting(parameterObject, result, setting);
+      status != OK)
+    return status;
 
   switch (setting->GetType())
   {
@@ -822,11 +852,9 @@ JSONRPC_STATUS CSettingsOperations::GetSkinSettings(const CVariant& parameterObj
 JSONRPC_STATUS CSettingsOperations::GetSkinSettingValue(const CVariant& parameterObject,
                                                         CVariant& result)
 {
-  const std::string settingId = parameterObject["setting"].asString();
-  ADDON::CSkinSettingPtr setting = CSkinSettings::GetInstance().GetSetting(settingId);
-
-  if (setting == nullptr)
-    return InvalidParams;
+  ADDON::CSkinSettingPtr setting;
+  if (const JSONRPC_STATUS status = FindSkinSetting(parameterObject, result, setting); status != OK)
+    return status;
 
   CVariant value;
   if (setting->GetType() == "string")
@@ -843,11 +871,9 @@ JSONRPC_STATUS CSettingsOperations::GetSkinSettingValue(const CVariant& paramete
 JSONRPC_STATUS CSettingsOperations::SetSkinSettingValue(const CVariant& parameterObject,
                                                         CVariant& result)
 {
-  const std::string settingId = parameterObject["setting"].asString();
-  ADDON::CSkinSettingPtr setting = CSkinSettings::GetInstance().GetSetting(settingId);
-
-  if (setting == nullptr)
-    return InvalidParams;
+  ADDON::CSkinSettingPtr setting;
+  if (const JSONRPC_STATUS status = FindSkinSetting(parameterObject, result, setting); status != OK)
+    return status;
 
   CVariant value = parameterObject["value"];
   if (setting->GetType() == "string")

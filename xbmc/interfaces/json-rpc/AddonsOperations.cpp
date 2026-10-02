@@ -25,6 +25,24 @@
 using namespace JSONRPC;
 using namespace ADDON;
 
+namespace
+{
+//! Find the add-on the "addonId" parameter names, failing \p result as the call should when
+//! there is none or it is of no type the API addresses.
+JSONRPC_STATUS FindAddon(const CVariant& parameterObject,
+                         CVariant& result,
+                         OnlyEnabled onlyEnabled,
+                         AddonPtr& addon)
+{
+  const CVariant& id = parameterObject["addonId"];
+  if (!CServiceBroker::GetAddonMgr().GetAddon(id.asString(), addon, onlyEnabled) || !addon)
+    return Fail(result, NotFound, Reason::NoSuchAddon, Target("addonId", id));
+  if (addon->Type() <= AddonType::UNKNOWN || addon->Type() >= AddonType::MAX_TYPES)
+    return InvalidParams;
+  return OK;
+}
+} // namespace
+
 JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVariant& result)
 {
   std::vector<AddonType> addonTypes;
@@ -131,13 +149,11 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
 
 JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
-  if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_NO) || !addon)
-    return Fail(result, NotFound, Reason::NoSuchAddon,
-                Target("addonId", parameterObject["addonId"]));
-  if (addon->Type() <= AddonType::UNKNOWN || addon->Type() >= AddonType::MAX_TYPES)
-    return InvalidParams;
+  if (const JSONRPC_STATUS status =
+          FindAddon(parameterObject, result, OnlyEnabled::CHOICE_NO, addon);
+      status != OK)
+    return status;
 
   FillDetails(addon, parameterObject["properties"], result["addon"], false);
 
@@ -146,14 +162,13 @@ JSONRPC_STATUS CAddonsOperations::GetAddonDetails(const CVariant& parameterObjec
 
 JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
-  if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_NO) || !addon)
-    return Fail(result, NotFound, Reason::NoSuchAddon,
-                Target("addonId", parameterObject["addonId"]));
-  if (addon->Type() <= AddonType::UNKNOWN || addon->Type() >= AddonType::MAX_TYPES)
-    return InvalidParams;
+  if (const JSONRPC_STATUS status =
+          FindAddon(parameterObject, result, OnlyEnabled::CHOICE_NO, addon);
+      status != OK)
+    return status;
 
+  const std::string& id = addon->ID();
   bool disabled = false;
   if (parameterObject["enabled"].isBoolean())
   {
@@ -181,13 +196,11 @@ JSONRPC_STATUS CAddonsOperations::SetAddonEnabled(const CVariant& parameterObjec
 
 JSONRPC_STATUS CAddonsOperations::ExecuteAddon(const CVariant& parameterObject, CVariant& result)
 {
-  std::string id = parameterObject["addonId"].asString();
   AddonPtr addon;
-  if (!CServiceBroker::GetAddonMgr().GetAddon(id, addon, OnlyEnabled::CHOICE_YES) || !addon)
-    return Fail(result, NotFound, Reason::NoSuchAddon,
-                Target("addonId", parameterObject["addonId"]));
-  if (addon->Type() < AddonType::VISUALIZATION || addon->Type() >= AddonType::MAX_TYPES)
-    return InvalidParams;
+  if (const JSONRPC_STATUS status =
+          FindAddon(parameterObject, result, OnlyEnabled::CHOICE_YES, addon);
+      status != OK)
+    return status;
 
   const ParsedExecuteAddon parsed = ParseExecuteAddonParams(parameterObject);
 
