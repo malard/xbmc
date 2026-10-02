@@ -241,8 +241,8 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
   {
     const std::string channelName =
         channel ? channel->ChannelName() : localizeStrings.Get(19029); // Channel
-    const std::string msg = StringUtils::Format(localizeStrings.Get(19035),
-                                                channelName); // CHANNELNAME could not be played.
+    // CHANNELNAME could not be played.
+    const std::string msg = StringUtils::Format(localizeStrings.Get(19035), channelName);
 
     CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, localizeStrings.Get(19166),
                                           msg); // PVR information
