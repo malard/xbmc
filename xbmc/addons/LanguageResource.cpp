@@ -10,6 +10,7 @@
 #include "ServiceBroker.h"
 #include "addons/addoninfo/AddonType.h"
 #include "guilib/GUIComponent.h"
+#include "language/Language.h"
 #include "language/LanguageLoader.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "settings/Settings.h"
@@ -58,12 +59,11 @@ CLanguageResource::CLanguageResource(const AddonInfoPtr& addonInfo)
       const std::string token = addonExtensions.GetValue("token").asString();
       if (!token.empty())
       {
-        std::string separators = addonExtensions.GetValue("token@separators").asString();
-        if (separators.empty())
-          separators = " ._";
-
-        for (auto separator : separators)
-          m_sortTokens.insert(token + separator);
+        const std::string separators = addonExtensions.GetValue("token@separators").asString();
+        KODI::LANGUAGE::CLanguage::AddSortToken(
+            m_sortTokens, token,
+            separators.empty() ? KODI::LANGUAGE::CLanguage::DEFAULT_SORT_TOKEN_SEPARATORS
+                               : std::string_view{separators});
       }
     }
   }

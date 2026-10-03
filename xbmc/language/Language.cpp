@@ -96,6 +96,18 @@ std::optional<CLanguagePreference> CLanguagePreference::ForSubtitles(const std::
   return Parse(setting);
 }
 
+void CLanguage::AddSortToken(Tokens& tokens, const std::string& word, std::string_view separators)
+{
+  if (separators.empty())
+  {
+    tokens.insert(word);
+    return;
+  }
+
+  for (const char separator : separators)
+    tokens.insert(word + separator);
+}
+
 CLanguage& CLanguage::GetInstance()
 {
   static CLanguage language;

@@ -43,9 +43,6 @@ using namespace ADDON;
 namespace
 {
 
-//! What may follow a sort token where its <token> states no separators
-constexpr std::string_view DEFAULT_SORT_TOKEN_SEPARATORS{" ._"};
-
 /*!
  * \brief Take the languages declared in a <languagecodes> block into the language table.
  * \param[in] element The block, or nullptr when the file has none.
@@ -92,20 +89,11 @@ void LoadSortTokens(const TiXmlNode* element, KODI::LANGUAGE::CLanguage::Tokens&
     if (token->FirstChild() == nullptr)
       continue;
 
-    const std::string word = token->FirstChild()->ValueStr();
-    const std::string_view separators = token->Attribute("separators")
-                                            ? token->Attribute("separators")
-                                            : DEFAULT_SORT_TOKEN_SEPARATORS;
-
-    if (separators.empty())
-    {
-      tokens.insert(word);
-    }
-    else
-    {
-      for (const char separator : separators)
-        tokens.insert(word + separator);
-    }
+    const char* separators = token->Attribute("separators");
+    KODI::LANGUAGE::CLanguage::AddSortToken(
+        tokens, token->FirstChild()->ValueStr(),
+        separators != nullptr ? std::string_view{separators}
+                              : KODI::LANGUAGE::CLanguage::DEFAULT_SORT_TOKEN_SEPARATORS);
   }
 }
 
