@@ -458,6 +458,24 @@ TEST(TestApplicationPlayLists, ClearingThePlayingPlayListLeavesThePlaybackToItsS
   EXPECT_FALSE(playLists.GetPlayingType());
 }
 
+// The cleared playlist is still the playing one, but has no current entry to look at.
+TEST(TestApplicationPlayLists, ASingleItemPlaysAfterThePlayingPlayListIsCleared)
+{
+  CTestPlayLists playLists;
+  FillVideo(playLists);
+  playLists.SetPlayingType(PLAYLIST::Video);
+  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
+  playLists.OnMessage(started);
+  playLists.EditPlayList(PLAYLIST::Video).Clear();
+
+  KODI::MESSAGING::ThreadMessage message{TMSG_MEDIA_PLAY_ITEM, 0, 0,
+                                         new CFileItem("/video/other.mkv", false)};
+  CPlayListsMessageHandler(playLists).OnApplicationMessage(&message);
+
+  ASSERT_FALSE(playLists.m_opened.empty());
+  EXPECT_EQ("/video/other.mkv", playLists.m_opened.back());
+}
+
 TEST(TestApplicationPlayLists, ThePlayingEntryIsOnlyThePlayingPlayLists)
 {
   CTestPlayLists playLists;
