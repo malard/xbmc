@@ -12,8 +12,10 @@
 #include "media/MediaSection.h"
 #include "settings/lib/ISettingsHandler.h"
 
+#include <array>
 #include <string>
 #include <string_view>
+#include <vector>
 
 class CProfileManager;
 
@@ -62,27 +64,24 @@ protected:
   ~CMediaSourceSettings() override;
 
 private:
-  bool GetSource(const std::string& category,
+  struct SectionSources
+  {
+    std::vector<CMediaSource> sources;
+    std::string defaultSource;
+  };
+
+  bool GetSource(KODI::MEDIA::MediaSection section,
                  const tinyxml2::XMLNode* source,
                  CMediaSource& share) const;
   void GetSources(const tinyxml2::XMLNode* rootElement,
-                  const std::string& tagName,
-                  std::vector<CMediaSource>& items,
-                  std::string& defaultString) const;
+                  KODI::MEDIA::MediaSection section,
+                  SectionSources& sources) const;
   bool SetSources(tinyxml2::XMLNode* rootNode,
-                  const char* section,
-                  const std::vector<CMediaSource>& shares,
-                  const std::string& defaultPath) const;
+                  KODI::MEDIA::MediaSection section,
+                  const SectionSources& sources) const;
 
-  std::vector<CMediaSource> m_programSources;
-  std::vector<CMediaSource> m_pictureSources;
-  std::vector<CMediaSource> m_fileSources;
-  std::vector<CMediaSource> m_musicSources;
-  std::vector<CMediaSource> m_videoSources;
-  std::vector<CMediaSource> m_gameSources;
+  SectionSources& At(KODI::MEDIA::MediaSection section);
+  const SectionSources& At(KODI::MEDIA::MediaSection section) const;
 
-  std::string m_defaultProgramSource;
-  std::string m_defaultMusicSource;
-  std::string m_defaultPictureSource;
-  std::string m_defaultFileSource;
+  std::array<SectionSources, KODI::MEDIA::MEDIA_SECTIONS.size()> m_sections;
 };

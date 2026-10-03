@@ -13,6 +13,9 @@
 #include "utils/XBMCTinyXML2.h"
 #include "utils/XMLUtils.h"
 
+#include <string>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 using KODI::MEDIA::MediaSection;
@@ -22,7 +25,65 @@ namespace
 class TestMediaSourceSettingsDevicePath : public testing::Test, protected CMediaSourceSettings
 {
 };
+
+class TestMediaSourceSettingsSections : public testing::Test, protected CMediaSourceSettings
+{
+};
 } // namespace
+
+TEST_F(TestMediaSourceSettingsSections, VideoAndGamesHaveNoDefaultSource)
+{
+  for (const MediaSection section : KODI::MEDIA::MEDIA_SECTIONS)
+    SetDefaultSource(section, "smb://server/share/");
+
+  EXPECT_EQ(GetDefaultSource(MediaSection::VIDEO), "");
+  EXPECT_EQ(GetDefaultSource(MediaSection::GAMES), "");
+  EXPECT_EQ(GetDefaultSource(MediaSection::MUSIC), "smb://server/share/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::PICTURES), "smb://server/share/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::FILES), "smb://server/share/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::PROGRAMS), "smb://server/share/");
+}
+
+TEST_F(TestMediaSourceSettingsSections, ClearForgetsTheDefaultSources)
+{
+  SetDefaultSource(MediaSection::MUSIC, "smb://server/music/");
+  Clear();
+
+  EXPECT_EQ(GetDefaultSource(MediaSection::MUSIC), "");
+}
+
+TEST_F(TestMediaSourceSettingsSections, SavesEverySectionAndReloadsItsDefault)
+{
+  SetDefaultSource(MediaSection::MUSIC, "smb://server/music/");
+  SetDefaultSource(MediaSection::PICTURES, "smb://server/pictures/");
+  SetDefaultSource(MediaSection::FILES, "smb://server/files/");
+  SetDefaultSource(MediaSection::PROGRAMS, "smb://server/programs/");
+
+  XFILE::CFile* file = XBMC_CREATETEMPFILE(".xml");
+  ASSERT_NE(file, nullptr);
+  const std::string xmlfile = XBMC_TEMPFILEPATH(file);
+  file->Close();
+
+  ASSERT_TRUE(Save(xmlfile));
+
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.LoadFile(xmlfile));
+  std::vector<std::string> sections;
+  for (const tinyxml2::XMLElement* element = doc.RootElement()->FirstChildElement(); element;
+       element = element->NextSiblingElement())
+    sections.emplace_back(element->Value());
+  EXPECT_EQ(sections,
+            std::vector<std::string>({"programs", "video", "music", "pictures", "files", "games"}));
+
+  Clear();
+  EXPECT_TRUE(Load(xmlfile));
+  EXPECT_TRUE(XBMC_DELETETEMPFILE(file));
+
+  EXPECT_EQ(GetDefaultSource(MediaSection::MUSIC), "smb://server/music/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::PICTURES), "smb://server/pictures/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::FILES), "smb://server/files/");
+  EXPECT_EQ(GetDefaultSource(MediaSection::PROGRAMS), "smb://server/programs/");
+}
 
 TEST_F(TestMediaSourceSettingsDevicePath, UpdateSourcePath)
 {

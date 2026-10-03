@@ -22,17 +22,28 @@
 #include "utils/XMLUtils.h"
 #include "utils/log.h"
 
+#include <array>
 #include <cstdlib>
 #include <cstring>
+
+using KODI::MEDIA::MediaSection;
 
 namespace
 {
 constexpr const char* SOURCES_FILE = "sources.xml";
 constexpr const char* XML_SOURCES = "sources";
 constexpr const char* XML_SOURCE = "source";
-} // unnamed namespace
 
-using KODI::MEDIA::MediaSection;
+//! The order sources.xml is written in
+constexpr std::array<MediaSection, KODI::MEDIA::MEDIA_SECTIONS.size()> SAVE_ORDER{
+    MediaSection::PROGRAMS, MediaSection::VIDEO, MediaSection::MUSIC,
+    MediaSection::PICTURES, MediaSection::FILES, MediaSection::GAMES};
+
+bool HasDefaultSource(MediaSection section)
+{
+  return section != MediaSection::VIDEO && section != MediaSection::GAMES;
+}
+} // unnamed namespace
 
 CMediaSourceSettings::CMediaSourceSettings()
 {
@@ -98,14 +109,8 @@ bool CMediaSourceSettings::Load(const std::string& file)
   if (!rootElement || !StringUtils::EqualsNoCase(rootElement->Value(), XML_SOURCES))
     CLog::Log(LOGERROR, "CMediaSourceSettings: sources.xml file does not contain <sources>");
 
-  // parse sources
-  std::string dummy;
-  GetSources(rootElement, "video", m_videoSources, dummy);
-  GetSources(rootElement, "programs", m_programSources, m_defaultProgramSource);
-  GetSources(rootElement, "pictures", m_pictureSources, m_defaultPictureSource);
-  GetSources(rootElement, "files", m_fileSources, m_defaultFileSource);
-  GetSources(rootElement, "music", m_musicSources, m_defaultMusicSource);
-  GetSources(rootElement, "games", m_gameSources, dummy);
+  for (const MediaSection section : KODI::MEDIA::MEDIA_SECTIONS)
+    GetSources(rootElement, section, At(section));
 
   return true;
 }
@@ -124,13 +129,8 @@ bool CMediaSourceSettings::Save(const std::string& file) const
   if (!rootNode)
     return false;
 
-  // ok, now run through and save each sources section
-  SetSources(rootNode, "programs", m_programSources, m_defaultProgramSource);
-  SetSources(rootNode, "video", m_videoSources, "");
-  SetSources(rootNode, "music", m_musicSources, m_defaultMusicSource);
-  SetSources(rootNode, "pictures", m_pictureSources, m_defaultPictureSource);
-  SetSources(rootNode, "files", m_fileSources, m_defaultFileSource);
-  SetSources(rootNode, "games", m_gameSources, "");
+  for (const MediaSection section : SAVE_ORDER)
+    SetSources(rootNode, section, At(section));
 
   CWakeOnAccess::GetInstance().QueueMACDiscoveryForAllRemotes();
 
@@ -139,73 +139,33 @@ bool CMediaSourceSettings::Save(const std::string& file) const
 
 void CMediaSourceSettings::Clear()
 {
-  m_programSources.clear();
-  m_pictureSources.clear();
-  m_fileSources.clear();
-  m_musicSources.clear();
-  m_videoSources.clear();
-  m_gameSources.clear();
+  m_sections = {};
+}
+
+CMediaSourceSettings::SectionSources& CMediaSourceSettings::At(MediaSection section)
+{
+  return m_sections[static_cast<std::size_t>(section)];
+}
+
+const CMediaSourceSettings::SectionSources& CMediaSourceSettings::At(MediaSection section) const
+{
+  return m_sections[static_cast<std::size_t>(section)];
 }
 
 std::vector<CMediaSource>& CMediaSourceSettings::GetSources(MediaSection section)
 {
-  switch (section)
-  {
-    case MediaSection::VIDEO:
-      return m_videoSources;
-    case MediaSection::MUSIC:
-      return m_musicSources;
-    case MediaSection::PICTURES:
-      return m_pictureSources;
-    case MediaSection::FILES:
-      return m_fileSources;
-    case MediaSection::PROGRAMS:
-      return m_programSources;
-    case MediaSection::GAMES:
-      return m_gameSources;
-  }
-  return m_fileSources;
+  return At(section).sources;
 }
 
 const std::string& CMediaSourceSettings::GetDefaultSource(MediaSection section) const
 {
-  switch (section)
-  {
-    case MediaSection::MUSIC:
-      return m_defaultMusicSource;
-    case MediaSection::PICTURES:
-      return m_defaultPictureSource;
-    case MediaSection::FILES:
-      return m_defaultFileSource;
-    case MediaSection::PROGRAMS:
-      return m_defaultProgramSource;
-    case MediaSection::VIDEO:
-    case MediaSection::GAMES:
-      break;
-  }
-  return StringUtils::Empty;
+  return At(section).defaultSource;
 }
 
 void CMediaSourceSettings::SetDefaultSource(MediaSection section, std::string_view source)
 {
-  switch (section)
-  {
-    case MediaSection::MUSIC:
-      m_defaultMusicSource = source;
-      break;
-    case MediaSection::PICTURES:
-      m_defaultPictureSource = source;
-      break;
-    case MediaSection::FILES:
-      m_defaultFileSource = source;
-      break;
-    case MediaSection::PROGRAMS:
-      m_defaultProgramSource = source;
-      break;
-    case MediaSection::VIDEO:
-    case MediaSection::GAMES:
-      break;
-  }
+  if (HasDefaultSource(section))
+    At(section).defaultSource = source;
 }
 
 // NOTE: This function does NOT save the sources.xml file - you need to call SaveSources() separately.
@@ -342,7 +302,7 @@ bool CMediaSourceSettings::UpdateShare(MediaSection section,
   return Save();
 }
 
-bool CMediaSourceSettings::GetSource(const std::string& category,
+bool CMediaSourceSettings::GetSource(MediaSection section,
                                      const tinyxml2::XMLNode* source,
                                      CMediaSource& share) const
 {
@@ -394,7 +354,7 @@ bool CMediaSourceSettings::GetSource(const std::string& category,
 
   std::vector<std::string> verifiedPaths;
   // disallowed for files, or there's only a single path in the vector
-  if (StringUtils::EqualsNoCase(category, "files") || vecPaths.size() == 1)
+  if (section == MediaSection::FILES || vecPaths.size() == 1)
   {
     verifiedPaths.push_back(vecPaths[0]);
   }
@@ -407,8 +367,7 @@ bool CMediaSourceSettings::GetSource(const std::string& category,
       bool isInvalid = false;
 
       // for my programs
-      if (StringUtils::EqualsNoCase(category, "programs") ||
-          StringUtils::EqualsNoCase(category, "myprograms"))
+      if (section == MediaSection::PROGRAMS)
       {
         // only allow HD and plugins
         if (url.IsLocal() || url.IsProtocol("plugin"))
@@ -464,14 +423,12 @@ bool CMediaSourceSettings::GetSource(const std::string& category,
 }
 
 void CMediaSourceSettings::GetSources(const tinyxml2::XMLNode* rootElement,
-                                      const std::string& tagName,
-                                      std::vector<CMediaSource>& items,
-                                      std::string& defaultString) const
+                                      MediaSection section,
+                                      SectionSources& sources) const
 {
+  sources = {};
 
-  defaultString = "";
-  items.clear();
-
+  const std::string tagName{KODI::MEDIA::NameOf(section)};
   const tinyxml2::XMLElement* childElement = rootElement->FirstChildElement(tagName.c_str());
   if (!childElement)
   {
@@ -488,22 +445,22 @@ void CMediaSourceSettings::GetSources(const tinyxml2::XMLNode* rootElement,
         value == "bookmark") // "bookmark" left in for backwards compatibility
     {
       CMediaSource share;
-      if (GetSource(tagName, child, share))
-        items.push_back(share);
+      if (GetSource(section, child, share))
+        sources.sources.push_back(share);
       else
         CLog::Log(LOGERROR,
                   "CMediaSourceSettings:    Missing or invalid <name> and/or <path> in source");
     }
-    else if (value == "default")
+    else if (value == "default" && HasDefaultSource(section))
     {
       const tinyxml2::XMLNode* valueNode = child->FirstChild();
       if (valueNode)
       {
         const char* text = child->FirstChild()->Value();
         if (strcmp(text, "\0") != 0)
-          defaultString = text;
+          sources.defaultSource = text;
         CLog::Log(LOGDEBUG, "CMediaSourceSettings:    Setting <default> source to : {}",
-                  defaultString);
+                  sources.defaultSource);
       }
     }
 
@@ -512,19 +469,19 @@ void CMediaSourceSettings::GetSources(const tinyxml2::XMLNode* rootElement,
 }
 
 bool CMediaSourceSettings::SetSources(tinyxml2::XMLNode* root,
-                                      const char* section,
-                                      const std::vector<CMediaSource>& shares,
-                                      const std::string& defaultPath) const
+                                      MediaSection section,
+                                      const SectionSources& sources) const
 {
   tinyxml2::XMLDocument* doc = root->GetDocument();
-  tinyxml2::XMLElement* newElement = doc->NewElement(section);
+  tinyxml2::XMLElement* newElement =
+      doc->NewElement(std::string{KODI::MEDIA::NameOf(section)}.c_str());
   tinyxml2::XMLNode* sectionNode = root->InsertEndChild(newElement);
 
   if (!sectionNode)
     return false;
 
-  XMLUtils::SetPath(sectionNode, "default", defaultPath);
-  for (const auto& share : shares)
+  XMLUtils::SetPath(sectionNode, "default", sources.defaultSource);
+  for (const auto& share : sources.sources)
   {
     if (share.m_ignore)
       continue;
