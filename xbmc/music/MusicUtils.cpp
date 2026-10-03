@@ -308,7 +308,7 @@ bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
   {
     CFileItemPtr artitem(new CFileItem(type, false));
     // Localise the names of common types of art
-    if (type == "banner")
+    if (type == ART::TYPE::BANNER)
       artitem->SetLabel(localizeStrings.Get(20020));
     else if (type == "fanart")
       artitem->SetLabel(localizeStrings.Get(20445));

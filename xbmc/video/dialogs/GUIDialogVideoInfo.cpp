@@ -920,7 +920,7 @@ bool CArtTypeChooser::ChooseArtType()
 
     // maps art types to resource ids
     static constexpr auto name2idMap = make_map<std::string_view, int>({
-        {"banner", 20020},
+        {ART::TYPE::BANNER, 20020},
         {"fanart", 20445},
         {"poster", 20021},
         {"thumb", 21371},

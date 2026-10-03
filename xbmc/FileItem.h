@@ -237,7 +237,6 @@ public:
    * \brief The position the item's directory listing gave it, which sorting by playlist order
    * restores. Set by CDirectory::GetDirectory().
    */
-  int GetPlayListOrder() const { return m_playListOrder; }
   void SetPlayListOrder(int order) { m_playListOrder = order; }
   int GetDepth() const { return m_depth; }
   void SetDepth(int depth) { m_depth = depth; }

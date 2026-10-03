@@ -17311,26 +17311,6 @@
           "limits"
         ]
       },
-      "PVR.Fields.Client": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Item.Fields.Base"
-          }
-        ],
-        "items": {
-          "type": "string",
-          "enum": [
-            "addonId",
-            "supportsTv",
-            "supportsRadio",
-            "supportsEpg",
-            "supportsRecordings",
-            "supportsTimers",
-            "supportsChannelGroups",
-            "supportsChannelScan"
-          ]
-        }
-      },
       "PVR.Details.Client": {
         "allOf": [
           {

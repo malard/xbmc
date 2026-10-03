@@ -29,7 +29,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
-#include "playlists/PlayList.h"
+#include "playlists/PlayListTypes.h"
 #include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"

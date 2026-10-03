@@ -23,6 +23,7 @@
 #include "jobs/JobQueue.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/ArtUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/ItemProperties.h"
@@ -245,7 +246,8 @@ ArtPriority PriorityOfArtType(std::string_view artType)
   if (artType.starts_with("fanart"))
     return ArtPriority::BACKGROUND;
 
-  if (artType == "poster" || artType == "thumb" || artType == "banner" || artType == "keyart")
+  if (artType == "poster" || artType == "thumb" || artType == ART::TYPE::BANNER ||
+      artType == "keyart")
     return ArtPriority::LIST;
 
   return ArtPriority::DETAIL;

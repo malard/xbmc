@@ -58,6 +58,17 @@ protected:
       m_ids.emplace_back(m_playList.Add(Item(name)));
   }
 
+  // The same four entries, as though read from sourcePath, with their new ids.
+  void AssignFrom(const std::string& sourcePath)
+  {
+    CFileItemList items;
+    for (const char* name : {"a", "b", "c", "d"})
+      items.Add(Item(name));
+    m_playList.Assign(items, sourcePath);
+    for (int i = 0; i < 4; ++i)
+      m_ids[i] = m_playList.GetEntryId(i);
+  }
+
   std::string NameOf(EntryId entry) const
   {
     const auto item = m_playList.GetItem(entry);
@@ -139,7 +150,7 @@ TEST_F(TestPlayList, ItsItemsAreAppendedInListOrder)
 
 TEST_F(TestPlayList, TheSourcePathGoesWithTheEntries)
 {
-  m_playList.SetSourcePath("/media/list.m3u");
+  AssignFrom("/media/list.m3u");
   EXPECT_EQ("/media/list.m3u", m_playList.GetSourcePath());
 
   m_playList.Clear();
@@ -558,8 +569,8 @@ TEST_F(TestPlayList, ReplacingAnItemTouchesOnlyItsEntry)
 
 TEST_F(TestPlayList, RearrangingTheSameItemsKeepsTheEntries)
 {
+  AssignFrom("/media/");
   m_playList.SetCurrent(m_ids[1]);
-  m_playList.SetSourcePath("/media/");
 
   CFileItemList sorted;
   for (const char* name : {"d", "c", "b", "a"})
@@ -574,8 +585,8 @@ TEST_F(TestPlayList, RearrangingTheSameItemsKeepsTheEntries)
 
 TEST_F(TestPlayList, ReplacingWithOtherItemsKeepsTheCurrentFileCurrent)
 {
+  AssignFrom("/media/");
   m_playList.SetCurrent(m_ids[1]);
-  m_playList.SetSourcePath("/media/");
 
   CFileItemList other;
   other.Add(Item("e"));

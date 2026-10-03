@@ -17,7 +17,6 @@
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/DirectoryFactory.h"
 #include "filesystem/DiscDirectoryHelper.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/DiscSettings.h"

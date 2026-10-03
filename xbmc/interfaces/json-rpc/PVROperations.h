@@ -43,10 +43,7 @@ public:
                                                     CVariant& result);
   static JSONRPC_STATUS GetBroadcastDetails(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetBroadcastIsPlayable(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetPlayableBroadcasts(ITransportLayer* transport,
-                                              IClient* client,
-                                              const CVariant& parameterObject,
-                                              CVariant& result);
+  static JSONRPC_STATUS GetPlayableBroadcasts(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetTimers(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetTimerDetails(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetRecordings(const CVariant& parameterObject, CVariant& result);
