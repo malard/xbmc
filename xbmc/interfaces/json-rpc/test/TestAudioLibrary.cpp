@@ -7,47 +7,29 @@
  */
 
 #include "DatabaseManager.h"
-#include "GUIInfoManager.h"
 #include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
-#include "interfaces/AnnouncementManager.h"
+#include "guilib/test/TestGUIStubs.h"
 #include "interfaces/json-rpc/AudioLibrary.h"
 #include "music/MusicDatabase.h"
 #include "utils/Variant.h"
 
 #include <array>
-#include <memory>
 #include <string>
 
 #include <gtest/gtest.h>
 
 namespace
 {
-class TestGUI : public CGUIComponent
-{
-public:
-  TestGUI() : CGUIComponent(false)
-  {
-    m_pWindowManager = std::make_unique<CGUIWindowManager>();
-    m_guiInfoManager = std::make_unique<CGUIInfoManager>();
-    CServiceBroker::RegisterGUI(this);
-  }
+using KODI::GUILIB::TEST::CTestGUIComponent;
 
-  ~TestGUI() override { m_pWindowManager.reset(); }
-};
-
-class TestAudioLibrary : public testing::TestWithParam<bool>
+class TestAudioLibrary : public JSONRPC::ShippedServiceDescriptionTestBase,
+                         public testing::WithParamInterface<bool>
 {
 protected:
   void SetUp() override
   {
-    JSONRPC::CJSONServiceDescription::Cleanup();
-    JSONRPC::AddShippedServiceDescription();
-    m_previousAnnouncements = CServiceBroker::GetAnnouncementManager();
-    CServiceBroker::RegisterAnnouncementManager(
-        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
+    ShippedServiceDescriptionTestBase::SetUp();
     if (!CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
     {
       ASSERT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
@@ -76,17 +58,16 @@ protected:
                             : m_db.PrepareSQL("UPDATE versiontagscan SET lastscanned = '%s'",
                                               m_lastScanned.c_str())));
     m_db.Close();
-    CServiceBroker::RegisterAnnouncementManager(m_previousAnnouncements);
-    JSONRPC::CJSONServiceDescription::Cleanup();
+    ShippedServiceDescriptionTestBase::TearDown();
   }
 
-  TestGUI m_gui;
+  CTestGUIComponent m_gui{CTestGUIComponent::InfoManager::WITH};
+  JSONRPC::CScopedAnnouncementManager m_announcements;
   CMusicDatabase m_db;
   int m_artistId{-1};
   int m_albumId{-1};
   std::string m_lastScanned;
   bool m_lastScannedIsNull{true};
-  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previousAnnouncements;
 };
 } // namespace
 

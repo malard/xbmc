@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "GUIInfoManager.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -66,14 +67,30 @@ private:
   CTestRenderSystem m_renderSystem;
 };
 
-//! \brief A GUI holding nothing but an empty window manager, registered with the service broker
+//! \brief A GUI holding an empty window manager, and an info manager when asked for, registered
+//! with the service broker
 class CTestGUIComponent : public CGUIComponent
 {
 public:
-  CTestGUIComponent() : CGUIComponent(false)
+  enum class InfoManager
+  {
+    WITHOUT,
+    WITH,
+  };
+
+  explicit CTestGUIComponent(InfoManager infoManager = InfoManager::WITHOUT) : CGUIComponent(false)
   {
     m_pWindowManager = std::make_unique<CGUIWindowManager>();
+    if (infoManager == InfoManager::WITH)
+      m_guiInfoManager = std::make_unique<CGUIInfoManager>();
     CServiceBroker::RegisterGUI(this);
+  }
+
+  ~CTestGUIComponent() override
+  {
+    // CGUIWindowManager::DeInitialize locks the gfx context, which only a window system has
+    if (!CServiceBroker::GetWinSystem())
+      m_pWindowManager.reset();
   }
 };
 } // namespace KODI::GUILIB::TEST
