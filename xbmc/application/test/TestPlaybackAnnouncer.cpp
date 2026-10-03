@@ -119,11 +119,10 @@ TEST_F(TestPlaybackAnnouncer, WhatStartedIsACopyOfWhatThePlayerReports)
   const auto reported = std::make_shared<CFileItem>("/video/film.mkv", false);
   Send(GUI_MSG_PLAYBACK_STARTED, reported);
 
-  const auto item = m_announcer.GetStartedItem();
+  const auto item = m_playLists->GetCurrentItem();
   ASSERT_NE(nullptr, item);
   EXPECT_NE(reported, item);
   EXPECT_EQ("/video/film.mkv", item->GetPath());
-  EXPECT_EQ(m_playLists->GetCurrentItem(), item) << "one record, not a copy";
 }
 
 TEST_F(TestPlaybackAnnouncer, WhatStartedIsPublishedWithWhatItClaimsAndForgottenOnStop)
@@ -146,14 +145,12 @@ TEST_F(TestPlaybackAnnouncer, WhatStartedIsPublishedWithWhatItClaimsAndForgotten
   EXPECT_FALSE(stop->data["end"].asBoolean());
   ASSERT_NE(nullptr, stop->item);
   EXPECT_EQ("/music/one.flac", stop->item->GetPath());
-  EXPECT_EQ(nullptr, m_announcer.GetStartedItem());
 }
 
 TEST_F(TestPlaybackAnnouncer, NothingIsPublishedWhenThePlayerReportsNoItem)
 {
   Send(GUI_MSG_PLAYBACK_STARTED);
   EXPECT_EQ(nullptr, Find("OnPlay"));
-  EXPECT_EQ(nullptr, m_announcer.GetStartedItem());
 }
 
 TEST_F(TestPlaybackAnnouncer, AListChangeNamesItsPlayList)

@@ -12,7 +12,6 @@
 #include "application/IApplicationComponent.h"
 #include "guilib/IMsgTargetCallback.h"
 #include "interfaces/IAnnouncer.h"
-#include "threads/CriticalSection.h"
 
 #include <functional>
 #include <memory>
@@ -70,12 +69,6 @@ public:
   bool OnMessage(CGUIMessage& message) override;
 
   /*!
-   * \return What the player last started, as published; nullptr if it reported no item or has
-   * stopped since.
-   */
-  std::shared_ptr<CFileItem> GetStartedItem() const;
-
-  /*!
    * \param item The entry being described, or nullptr for what plays.
    * \param claimed Answer what the entry claims rather than what the player renders, as when it
    * starts: the playlist it is on and whether Audio follows it; a channel by whether it is radio.
@@ -129,6 +122,4 @@ private:
 
   std::shared_ptr<CApplicationPlayLists> m_playLists;
   Sink m_sink;
-  mutable CCriticalSection m_critSection;
-  std::shared_ptr<CFileItem> m_started;
 };

@@ -22,7 +22,6 @@
 #include "utils/Variant.h"
 #include "video/VideoFileItemClassify.h"
 
-#include <mutex>
 #include <utility>
 
 using namespace KODI;
@@ -126,8 +125,6 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
       CVariant data(CVariant::VariantTypeObject);
       data["end"] = message.GetMessage() == GUI_MSG_PLAYBACK_ENDED;
       m_sink(ANNOUNCEMENT::Player, "OnStop", item, data);
-      std::unique_lock lock(m_critSection);
-      m_started.reset();
       break;
     }
     default:
@@ -138,21 +135,11 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
 
 void CPlaybackAnnouncer::OnStarted(const std::shared_ptr<CFileItem>& started)
 {
-  {
-    std::unique_lock lock(m_critSection);
-    m_started = started;
-  }
   if (!started)
     return;
   CVariant data = Speed(1);
   data["player"]["players"] = GetPlayers(started.get(), true);
   m_sink(ANNOUNCEMENT::Player, "OnPlay", started, data);
-}
-
-std::shared_ptr<CFileItem> CPlaybackAnnouncer::GetStartedItem() const
-{
-  std::unique_lock lock(m_critSection);
-  return m_started;
 }
 
 CVariant CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) const
