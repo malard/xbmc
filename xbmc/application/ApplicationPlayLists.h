@@ -451,6 +451,9 @@ public:
    */
   void CycleRepeat(KODI::PLAYLIST::Type type, Persist persist);
 
+  //! Put back each playlist's saved shuffle and repeat, once the settings have loaded them.
+  void RestoreSavedPlayOrder();
+
   /*!
    * \brief Replace a playlist's contents with what a feed places, and play it. One feed plays at a
    * time, so the other playlist's is dropped.
@@ -556,7 +559,7 @@ private:
    */
   bool ReportRepeat(KODI::PLAYLIST::Type type);
   void ReportPlayListsChanged() const;
-  //! Put back the saved shuffle and repeat, as when a feed goes.
+  //! Put back the playlist's saved shuffle and repeat, as when a feed goes.
   void RestoreSavedPlayOrder(KODI::PLAYLIST::Type type);
 
   /*!
