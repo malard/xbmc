@@ -556,6 +556,7 @@ footer { border-top: 1px solid var(--rule); background: var(--surface); padding:
     <ul class="prose">
       <li>Its properties are read and written through <code>GetProperties</code> and <code>SetProperties</code>; changes arrive as that item's <code>OnPropertiesChanged</code>. This replaces the per-kind <code>Get*Details</code> and <code>Set*Details</code> families and <code>VideoLibrary.OnUpdate</code>.</li>
       <li>Each library has one query taking the kind, filter, sort, limits and properties. "Keep the original ones as wrappers with preset values": <code>GetMovies</code>, <code>GetRecentlyAddedMovies</code> and the rest stay, each a preset over the query.</li>
+      <li>An item is created through the library's one <code>AddItem</code>, taking the kind, where the item is, and the properties <code>SetProperties</code> takes, so it is created complete in one call. There is no per-kind <code>Add*</code> family.</li>
     </ul>
   </section>
 
