@@ -205,9 +205,16 @@ Holds CApplicationPlayLists::GetHolds(Type type, EntryId entry) const
 
 bool CApplicationPlayLists::IsPlayingAsAudio() const
 {
-  if (const std::optional<Type> type = GetPlayingType(); type)
-    return GetHolds(*type, GetPlayList(*type).GetCurrent()) == Holds::Audio;
+  if (const std::optional<Holds> holds = GetPlayingHolds(); holds)
+    return *holds == Holds::Audio;
   return m_playback->IsPlayingAudio();
+}
+
+std::optional<Holds> CApplicationPlayLists::GetPlayingHolds() const
+{
+  if (const std::optional<Type> type = GetPlayingType(); type)
+    return GetHolds(*type, GetPlayList(*type).GetCurrent());
+  return std::nullopt;
 }
 
 bool CApplicationPlayLists::IsStartingAsAudio(const CFileItem& item) const

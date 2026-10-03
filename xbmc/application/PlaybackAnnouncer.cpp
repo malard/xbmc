@@ -157,11 +157,10 @@ CVariant CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) con
     audio = true;
     video = !item->GetPVRChannelInfoTag()->IsRadio();
   }
-  else if (const std::optional<Type> type = m_playLists->GetPlayingType(); type)
+  else if (const std::optional<Holds> holds = m_playLists->GetPlayingHolds(); holds)
   {
-    const Holds holds = m_playLists->GetHolds(*type, m_playLists->GetPlayList(*type).GetCurrent());
-    video = holds != Holds::Audio;
-    audio = holds != Holds::Video;
+    video = *holds != Holds::Audio;
+    audio = *holds != Holds::Video;
   }
   else
   {

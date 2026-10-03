@@ -285,11 +285,8 @@ std::pair<bool, bool> PlayingVideoAndAudio()
   using KODI::PLAYLIST::Holds;
   const auto& components = CServiceBroker::GetAppComponents();
   const auto playLists = CServiceBroker::GetPlayLists();
-  if (const std::optional<KODI::PLAYLIST::Type> type = playLists->GetPlayingType(); type)
-  {
-    const Holds holds = playLists->GetHolds(*type, playLists->GetPlayingEntry(*type));
-    return {holds != Holds::Audio, holds != Holds::Video || playLists->IsAudioFollowingVideo()};
-  }
+  if (const std::optional<Holds> holds = playLists->GetPlayingHolds(); holds)
+    return {*holds != Holds::Audio, *holds != Holds::Video || playLists->IsAudioFollowingVideo()};
 
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   return {appPlayer->HasVideo(), appPlayer->HasAudio()};

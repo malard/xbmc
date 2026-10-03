@@ -174,6 +174,9 @@ public:
    */
   bool IsPlayingAsAudio() const;
 
+  //! What the playing playlist's current entry holds, or nothing when no playlist is playing.
+  std::optional<KODI::PLAYLIST::Holds> GetPlayingHolds() const;
+
   /*!
    * \return Whether an item starting now plays as audio: what the playing entry holds or, when
    * no playlist is playing, what PLAYLIST::TypeFor() says of it.
