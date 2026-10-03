@@ -1,4 +1,5 @@
-set(SOURCES TestVideoCodecPictureFormat.cpp
+set(SOURCES TestRadioRDSCountries.cpp
+            TestVideoCodecPictureFormat.cpp
             TestVideoPlayer.cpp)
 
 core_add_test_library(videoplayer_test)
