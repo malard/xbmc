@@ -3659,20 +3659,8 @@ void CVideoPlayer::HandleMessages()
     {
       const LiveGeometryUpdate update =
           std::static_pointer_cast<CDVDMsgType<LiveGeometryUpdate>>(pMsg)->m_value;
-      m_outboundEvents->Submit(
-          [update]()
-          {
-            const auto geometry =
-                CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
-            if (update.clear)
-            {
-              geometry->ClearLive();
-            }
-            else
-            {
-              geometry->SetLive(update.rect, update.varies);
-            }
-          });
+      IPlayerCallback* cb = &m_callback;
+      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update); });
     }
     else if (pMsg->IsType(CDVDMsg::PLAYER_ABORT))
     {

@@ -18,6 +18,7 @@
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationStackHelper.h"
 #include "application/PlaybackAnnouncer.h"
+#include "cores/VideoPlayer/LiveGeometryMonitor.h"
 #ifdef HAVE_LIBBLURAY
 #include "filesystem/BlurayDirectory.h"
 #endif
@@ -549,6 +550,16 @@ void CApplicationPlayerCallback::OnVideoStreamChanged(int index, const VideoStre
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
       CPlaybackAnnouncer::PlayerProperty::CurrentVideoStream,
       INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnContentGeometryChanged(const LiveGeometryUpdate& update)
+{
+  const auto geometry =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
+  if (update.clear)
+    geometry->ClearLive();
+  else
+    geometry->SetLive(update.rect, update.varies);
 }
 
 void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
