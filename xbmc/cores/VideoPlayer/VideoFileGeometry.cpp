@@ -198,10 +198,7 @@ bool CVideoFileGeometry::CanMeasure(const CFileItem& fileItem)
   if (!title && !KODI::VIDEO::IsBDFile(fileItem))
     return false;
 
-  // Where the disc lives, by the rule CanExtract() applies to a file.
-  const std::string disc = title ? CURL(path).GetHostName() : path;
-  return !URIUtils::IsRemote(disc) || URIUtils::IsOnLAN(disc) ||
-         (!URIUtils::IsFTP(disc) && !URIUtils::IsHTTP(disc));
+  return CDVDFileInfo::IsExtractableLocation(title ? CURL(path).GetHostName() : path);
 }
 
 SampledGeometry CVideoFileGeometry::ExtractContentGeometry(const CFileItem& fileItem,
