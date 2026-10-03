@@ -399,6 +399,27 @@ TEST_F(TestLibraryItemsInDatabase, AnItemThatDoesNotExistIsNotFound)
                              R"({"item": {"kind": "song", "id": 987654}})", result));
 }
 
+TEST_F(TestLibraryItemsInDatabase, AnItemsArtChoicesAreAskedForByItsKindAndId)
+{
+  const std::string movie{R"({"item": {"kind": "movie", "id": )" + std::to_string(m_movieId) +
+                          "}}"};
+  const std::string album{R"({"item": {"kind": "album", "id": )" + std::to_string(m_albumId) +
+                          "}}"};
+  CVariant result;
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetAvailableArtTypes", movie, result));
+  EXPECT_TRUE(result["availableArtTypes"].isArray());
+  ASSERT_EQ(OK, Invoke("VideoLibrary.GetAvailableArt", movie, result));
+  EXPECT_TRUE(result["availableArt"].isArray());
+  ASSERT_EQ(OK, Invoke("AudioLibrary.GetAvailableArtTypes", album, result));
+  EXPECT_TRUE(result["availableArtTypes"].isArray());
+  ASSERT_EQ(OK, Invoke("AudioLibrary.GetAvailableArt", album, result));
+  EXPECT_TRUE(result["availableArt"].isArray());
+
+  EXPECT_EQ(InvalidParams,
+            Invoke("VideoLibrary.GetAvailableArtTypes",
+                   R"({"item": {"movieId": )" + std::to_string(m_movieId) + "}}", result));
+}
+
 TEST_F(TestLibraryItemsInDatabase, SettingChangesOnlyWhatIsNamedAndAnswersItsValue)
 {
   const std::string item{R"({"kind": "movie", "id": )" + std::to_string(m_movieId) + "}"};
