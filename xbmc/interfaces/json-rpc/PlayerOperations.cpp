@@ -1162,66 +1162,62 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     return PlayRecording(recording, optionResume, result);
   }
-  else
+
+  CFileItemList list;
+  if (!FillFileItemList(parameterObject["item"], list) || list.IsEmpty())
+    return DiagnoseUnresolvedItem(parameterObject["item"], result);
+
+  bool slideshow = true;
+  for (int index = 0; index < list.Size(); index++)
   {
-    CFileItemList list;
-    if (FillFileItemList(parameterObject["item"], list) && list.Size() > 0)
+    if (!list[index]->IsPicture())
     {
-      bool slideshow = true;
-      for (int index = 0; index < list.Size(); index++)
-      {
-        if (!list[index]->IsPicture())
-        {
-          slideshow = false;
-          break;
-        }
-      }
-
-      if (slideshow)
-      {
-        //! @todo: This should be a delegator method instead of going via GUI!
-        //! look into triggering stop from Reset() itself!
-        SendSlideshowAction(ACTION_STOP);
-        CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
-        slideShow.Reset();
-        for (int index = 0; index < list.Size(); index++)
-          slideShow.Add(list[index].get());
-
-        return StartSlideshow("", false, optionShuffled.isBoolean() && optionShuffled.asBoolean());
-      }
-      else if (list.Size() == 1 && URIUtils::IsPVRChannel(list[0]->GetPath()))
-      {
-        if (!pvrManager.IsStarted())
-          return Fail(result, FailedToExecute, Reason::PvrNotStarted);
-        if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
-          return Fail(result, FailedToExecute, Reason::PlaybackRefused);
-      }
-      else if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
-      {
-        const std::shared_ptr<const CPVRRecordings> recordingsContainer{pvrManager.Recordings()};
-        if (!pvrManager.IsStarted() || !recordingsContainer)
-          return Fail(result, FailedToExecute, Reason::PvrNotStarted);
-
-        std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
-        if (!recording)
-          recording = recordingsContainer->GetByPath(list[0]->GetPath());
-
-        if (!recording)
-          return Fail(result, NotFound, Reason::NoSuchPath,
-                      Target("file", parameterObject["item"]["file"]));
-
-        return PlayRecording(recording, optionResume, result);
-      }
-      else
-        return PlayFileItemList(list, options, result);
-
-      return ACK;
+      slideshow = false;
+      break;
     }
-    else
-      return DiagnoseUnresolvedItem(parameterObject["item"], result);
   }
 
-  return InvalidParams;
+  if (slideshow)
+  {
+    //! @todo: This should be a delegator method instead of going via GUI!
+    //! look into triggering stop from Reset() itself!
+    SendSlideshowAction(ACTION_STOP);
+    CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
+    slideShow.Reset();
+    for (int index = 0; index < list.Size(); index++)
+      slideShow.Add(list[index].get());
+
+    return StartSlideshow("", false, optionShuffled.isBoolean() && optionShuffled.asBoolean());
+  }
+
+  if (list.Size() == 1 && URIUtils::IsPVRChannel(list[0]->GetPath()))
+  {
+    if (!pvrManager.IsStarted())
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
+    if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(*list[0]))
+      return Fail(result, FailedToExecute, Reason::PlaybackRefused);
+
+    return ACK;
+  }
+
+  if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
+  {
+    const std::shared_ptr<const CPVRRecordings> recordingsContainer{pvrManager.Recordings()};
+    if (!pvrManager.IsStarted() || !recordingsContainer)
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
+
+    std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
+    if (!recording)
+      recording = recordingsContainer->GetByPath(list[0]->GetPath());
+
+    if (!recording)
+      return Fail(result, NotFound, Reason::NoSuchPath,
+                  Target("file", parameterObject["item"]["file"]));
+
+    return PlayRecording(recording, optionResume, result);
+  }
+
+  return PlayFileItemList(list, options, result);
 }
 
 JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
