@@ -48,14 +48,9 @@ std::optional<std::string> CIso639::Alpha2ToAlpha3B(std::string_view code)
   if (code.length() != ALPHA2_CODE_LENGTH)
     return std::nullopt;
 
-  const auto it = std::ranges::lower_bound(LanguageCodes, code, {}, &ISO639::iso639_1);
-  if (it != LanguageCodes.end() && it->iso639_1 == code)
-    return std::string{it->iso639_2b};
-
-  const auto deprecated =
-      std::ranges::lower_bound(DeprecatedLanguageCodes, code, {}, &ISO639::iso639_1);
-  if (deprecated != DeprecatedLanguageCodes.end() && deprecated->iso639_1 == code)
-    return std::string{deprecated->iso639_2b};
+  const auto it = std::ranges::lower_bound(TableISO639_1, code, {}, &ISO639_1::alpha2);
+  if (it != TableISO639_1.end() && it->alpha2 == code)
+    return std::string{it->alpha3B};
 
   return std::nullopt;
 }
@@ -68,9 +63,8 @@ std::optional<std::string> CIso639::Alpha3ToAlpha2(std::string_view code)
   // The table is keyed by the bibliographic form, so a terminological code is mapped over first
   const std::string bCode{TCodeToBCode(code).value_or(std::string{code})};
 
-  const auto it = std::ranges::lower_bound(LanguageCodesByIso639_2b, bCode, {}, &ISO639::iso639_2b);
-  if (it != LanguageCodesByIso639_2b.end() && it->iso639_2b == bCode && !it->iso639_1.empty())
-    return std::string{it->iso639_1};
+  if (const auto alpha2 = Alpha2OfAlpha3B(bCode))
+    return std::string{*alpha2};
 
   return std::nullopt;
 }

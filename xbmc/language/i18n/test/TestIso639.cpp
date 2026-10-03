@@ -9,6 +9,7 @@
 #include "language/i18n/Iso639.h"
 
 #include <string>
+#include <string_view>
 
 #include <gtest/gtest.h>
 
@@ -36,6 +37,30 @@ TEST(TestIso639, NamesTheAlpha3CodeOfAWithdrawnAlpha2One)
 {
   // Media tagged with a spelling ISO 639-1 has withdrawn still has to be understood
   EXPECT_EQ(CIso639::Alpha2ToAlpha3B("iw"), "heb");
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("in"), "ind");
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("ji"), "yid");
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("jw"), "jav");
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("mo"), "rum");
+}
+
+// bh and sh were withdrawn with no alpha-2 code to replace them, so they still answer for their
+// languages in both directions
+TEST(TestIso639, ConvertsAWithdrawnAlpha2CodeWithoutAReplacementBothWays)
+{
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("bh"), "bih");
+  EXPECT_EQ(CIso639::Alpha2ToAlpha3B("sh"), "hbs");
+
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("bih"), "bh");
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("hbs"), "sh");
+}
+
+TEST(TestIso639, NamesTheCurrentAlpha2CodeOfALanguageNotAWithdrawnOne)
+{
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("heb"), "he");
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("ind"), "id");
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("yid"), "yi");
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("jav"), "jv");
+  EXPECT_EQ(CIso639::Alpha3ToAlpha2("rum"), "ro");
 }
 
 TEST(TestIso639, NamesTheAlpha2CodeOfAnAlpha3One)
@@ -58,7 +83,11 @@ TEST(TestIso639, AnswersNothingForACodeOutsideTheStandard)
   EXPECT_FALSE(CIso639::Alpha3ToAlpha2("").has_value());
 
   // ISO 639-2 codes many more languages than ISO 639-1 does, and most have no alpha-2 counterpart
-  EXPECT_FALSE(CIso639::Alpha3ToAlpha2("und").has_value());
+  for (const std::string_view code : {"und", "zxx", "mis", "mul"})
+  {
+    EXPECT_FALSE(CIso639::Alpha3ToAlpha2(code).has_value()) << code;
+    EXPECT_FALSE(CIso639::Alpha2ToAlpha3B(code).has_value()) << code;
+  }
 }
 
 TEST(TestIso639, MapsTheTwoFormsOfAnIso6392Code)
