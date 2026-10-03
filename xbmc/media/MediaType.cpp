@@ -28,26 +28,23 @@ struct MediaTypeInfo
   std::string_view name;
   std::string_view plural;
   bool container;
-  int localizationSingular;
-  int localizationPlural;
   int localizationSingularCapital;
-  int localizationPluralCapital;
 };
 
 // clang-format off
 constexpr std::array<MediaTypeInfo, 12> MEDIA_TYPES{{
-    {MediaType::MUSIC,            "music",        "music",              true,  36914, 36915,   249,   249},
-    {MediaType::ARTIST,           "artist",       CONTENT::ARTISTS,     true,  36916, 36917,   557,   133},
-    {MediaType::ALBUM,            "album",        CONTENT::ALBUMS,      true,  36918, 36919,   558,   132},
-    {MediaType::SONG,             "song",         CONTENT::SONGS,       false, 36920, 36921,   179,   134},
-    {MediaType::VIDEO,            "video",        "videos",             true,  36912, 36913,   291,     3},
-    {MediaType::VIDEO_COLLECTION, "set",          CONTENT::SETS,        true,  36910, 36911, 20141, 20434},
-    {MediaType::MUSIC_VIDEO,      "musicvideo",   CONTENT::MUSICVIDEOS, false, 36908, 36909, 20391, 20389},
-    {MediaType::MOVIE,            "movie",        CONTENT::MOVIES,      false, 36900, 36901, 20338, 20342},
-    {MediaType::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902, 36903, 36902, 36903},
-    {MediaType::SEASON,           "season",       CONTENT::SEASONS,     true,  36904, 36905, 20373, 33054},
-    {MediaType::EPISODE,          "episode",      CONTENT::EPISODES,    false, 36906, 36907, 20359, 20360},
-    {MediaType::VIDEO_VERSION,    "videoversion", "videoversions",      false, 40010, 40011, 40012, 40013},
+    {MediaType::MUSIC,            "music",        "music",              true,    249},
+    {MediaType::ARTIST,           "artist",       CONTENT::ARTISTS,     true,    557},
+    {MediaType::ALBUM,            "album",        CONTENT::ALBUMS,      true,    558},
+    {MediaType::SONG,             "song",         CONTENT::SONGS,       false,   179},
+    {MediaType::VIDEO,            "video",        "videos",             true,    291},
+    {MediaType::VIDEO_COLLECTION, "set",          CONTENT::SETS,        true,  20141},
+    {MediaType::MUSIC_VIDEO,      "musicvideo",   CONTENT::MUSICVIDEOS, false, 20391},
+    {MediaType::MOVIE,            "movie",        CONTENT::MOVIES,      false, 20338},
+    {MediaType::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902},
+    {MediaType::SEASON,           "season",       CONTENT::SEASONS,     true,  20373},
+    {MediaType::EPISODE,          "episode",      CONTENT::EPISODES,    false, 20359},
+    {MediaType::VIDEO_VERSION,    "videoversion", "videoversions",      false, 40012},
 }};
 // clang-format on
 
@@ -71,13 +68,6 @@ const std::string& Text(MediaType type)
   return texts[static_cast<size_t>(type)];
 }
 
-std::string Localize(MediaType type, int MediaTypeInfo::* id)
-{
-  const MediaTypeInfo* info = Find(type);
-  if (!info || info->*id <= 0)
-    return {};
-  return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(info->*id);
-}
 } // namespace
 
 const std::string& NameOf(MediaType type)
@@ -113,24 +103,13 @@ bool IsContainer(MediaType type)
   return info && info->container;
 }
 
-std::string GetLocalization(MediaType type)
-{
-  return Localize(type, &MediaTypeInfo::localizationSingular);
-}
-
-std::string GetPluralLocalization(MediaType type)
-{
-  return Localize(type, &MediaTypeInfo::localizationPlural);
-}
-
 std::string GetCapitalLocalization(MediaType type)
 {
-  return Localize(type, &MediaTypeInfo::localizationSingularCapital);
-}
-
-std::string GetCapitalPluralLocalization(MediaType type)
-{
-  return Localize(type, &MediaTypeInfo::localizationPluralCapital);
+  const MediaTypeInfo* info = Find(type);
+  if (!info)
+    return {};
+  return CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+      info->localizationSingularCapital);
 }
 
 } // namespace KODI::MEDIA
