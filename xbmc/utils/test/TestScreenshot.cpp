@@ -6,14 +6,15 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "ServiceBroker.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
 #include "settings/Settings.h"
-#include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "utils/Screenshot.h"
 #include "utils/URIUtils.h"
+
+#include <optional>
 
 #include <gtest/gtest.h>
 
@@ -28,14 +29,12 @@ protected:
   {
     m_dir = URIUtils::AddFileToFolder(CSpecialProtocol::TranslatePath("special://temp/"), "shots");
     ASSERT_TRUE(XFILE::CDirectory::Create(m_dir));
-    CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
-        CSettings::SETTING_DEBUG_SCREENSHOTPATH, m_dir);
+    m_screenshotPath.emplace(CSettings::SETTING_DEBUG_SCREENSHOTPATH, m_dir);
   }
 
   void TearDown() override
   {
-    CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
-        CSettings::SETTING_DEBUG_SCREENSHOTPATH, "");
+    m_screenshotPath.reset();
     XFILE::CDirectory::RemoveRecursive(m_dir);
   }
 
@@ -52,6 +51,7 @@ protected:
   }
 
   std::string m_dir;
+  std::optional<CScopedSetting> m_screenshotPath;
 };
 
 TEST_F(TestScreenshotDeletion, ClearsEveryScreenshotAndSaysHowMany)

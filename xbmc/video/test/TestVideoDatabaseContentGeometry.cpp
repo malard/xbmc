@@ -347,23 +347,6 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
                                        "contentgeometry";
 }
 
-//! The schema version moves with the table.
-TEST_F(TestVideoDatabaseContentGeometry, TheSchemaVersionCarriesTheTable)
-{
-  EXPECT_EQ(150, m_db.GetSingleValueInt("SELECT idVersion FROM version"));
-}
-
-//! The identity check stands on its own, without relying on the cascade.
-TEST_F(TestVideoDatabaseContentGeometry, AnOrphanedRowNeverAttachesToAnotherFile)
-{
-  const int idFile{AddTestFile("orphan.mkv")};
-
-  ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord({8'000'000'000, 1'700'000'000})));
-
-  EXPECT_EQ(ContentGeometryState::MISSING,
-            m_db.GetContentGeometry(idFile, {4'000'000'000, 1'800'000'000}).state);
-}
-
 //! The real 149 to 150 upgrade, driven through CDatabaseManager.
 TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
 {

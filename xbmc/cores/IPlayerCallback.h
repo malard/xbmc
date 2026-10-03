@@ -15,6 +15,7 @@
 class CFileItem;
 class CBookmark;
 struct AudioStreamInfo;
+struct LiveGeometryUpdate;
 struct SubtitleStreamInfo;
 struct VideoStreamInfo;
 
@@ -39,6 +40,7 @@ public:
   virtual void OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info) {}
   virtual void OnAudioStreamChanged(int index, const AudioStreamInfo& info) {}
   virtual void OnVideoStreamChanged(int index, const VideoStreamInfo& info) {}
+  virtual void OnContentGeometryChanged(const LiveGeometryUpdate& update) {}
   virtual void RequestVideoSettings(const CFileItem& fileItem) {}
   virtual void StoreVideoSettings(const CFileItem& fileItem, const CVideoSettings& vs) {}
 };

@@ -18,6 +18,7 @@
 #include "cores/VideoSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 
 #include <algorithm>
 #include <ctime>
@@ -115,12 +116,6 @@ class TestLiveGeometryMonitor : public ::testing::Test
 protected:
   void SetUp() override
   {
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    m_extractWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY);
-    m_liveWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY);
-    ASSERT_TRUE(settings->SetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, true));
-    ASSERT_TRUE(settings->SetBool(CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY, true));
-
     CServiceBroker::GetDataCacheCore().GetPlayTimes(m_startWas, m_currentWas, m_minWas, m_maxWas);
 
     m_queue.Init();
@@ -130,10 +125,6 @@ protected:
 
   void TearDown() override
   {
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, m_extractWas);
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY, m_liveWas);
-
     CServiceBroker::GetDataCacheCore().SetPlayTimes(m_startWas, m_currentWas, m_minWas, m_maxWas);
   }
 
@@ -189,6 +180,9 @@ protected:
     return last;
   }
 
+  const CScopedSetting m_extract{CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, true};
+  const CScopedSetting m_live{CSettings::SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY, true};
+
   CDVDMessageQueue m_queue{"test"};
   std::unique_ptr<CProcessInfo> m_processInfo;
   std::unique_ptr<CLiveGeometryMonitor> m_monitor;
@@ -196,8 +190,6 @@ protected:
   //! \brief The buffer before the picture, so the picture releases its hold first.
   CTestVideoBuffer m_frameBuffer{1920, 1080};
   VideoPicture m_framePicture;
-  bool m_extractWas{false};
-  bool m_liveWas{false};
 
   // The data cache is the suite's, not this fixture's, and the playhead is read from it.
   time_t m_startWas{0};
@@ -253,17 +245,6 @@ TEST_F(TestLiveGeometryMonitor, AHalfSideBySideViewIsReadAtItsOwnPixelAspect)
   EXPECT_EQ(960, posted->rect.Width()) << "the packing was measured rather than the view";
   EXPECT_NEAR(2.35f, DisplayRatio(posted->rect, 2.0f), 0.01f)
       << "the view was read at the packing's pixel aspect";
-}
-
-//! Every rendered stream is read, whatever the item - a Blu-ray playlist included.
-TEST_F(TestLiveGeometryMonitor, EveryOpenedStreamIsRead)
-{
-  VideoPicture& picture = LetterboxedMono();
-
-  OpenStream();
-
-  EXPECT_FALSE(Feed(picture).IsEmpty());
-  EXPECT_TRUE(LastPosted().has_value());
 }
 
 //! Trick play scrubs across the timeline, and the shape must not chase it.

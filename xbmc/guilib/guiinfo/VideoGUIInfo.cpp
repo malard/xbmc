@@ -34,6 +34,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
+#include "utils/AspectRatioVocabulary.h"
 #include "utils/StreamDetails.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -536,7 +537,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
             CStreamDetails::VideoAspectToAspectDescription(tag->m_streamDetails.GetVideoAspect());
         return true;
       case LISTITEM_VIDEO_ASPECT_NAME:
-        value = CStreamDetails::VideoAspectToAspectName(tag->m_streamDetails.GetVideoAspect());
+        value = KODI::UTILS::CAspectRatioVocabulary::Name(tag->m_streamDetails.GetVideoAspect());
         return true;
       case LISTITEM_CONTENT_ASPECT:
       case LISTITEM_CONTENT_ASPECT_NAME:
@@ -707,8 +708,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
           CServiceBroker::GetDataCacheCore().GetVideoDAR());
       return true;
     case VIDEOPLAYER_VIDEO_ASPECT_NAME:
-      value =
-          CStreamDetails::VideoAspectToAspectName(CServiceBroker::GetDataCacheCore().GetVideoDAR());
+      value = KODI::UTILS::CAspectRatioVocabulary::Name(
+          CServiceBroker::GetDataCacheCore().GetVideoDAR());
       return true;
     case VIDEOPLAYER_CONTENT_ASPECT:
     case VIDEOPLAYER_CONTENT_ASPECT_NAME:

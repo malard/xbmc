@@ -200,7 +200,7 @@ void CAudioSinkAE::Hold()
 {
   std::unique_lock lock(m_critSection);
   if (m_pAudioStream)
-    m_pAudioStream->Hold();
+    m_pAudioStream->Pause(true);
   m_playingPts = DVD_NOPTS_VALUE;
 }
 

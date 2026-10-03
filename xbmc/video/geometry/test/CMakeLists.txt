@@ -1,7 +1,6 @@
 set(SOURCES TestContentBarDetector.cpp
             TestContentGeometryCombiner.cpp
             TestContentGeometryRecord.cpp
-            TestContentGeometrySampler.cpp
             TestContentGeometryScanner.cpp
             TestEffectiveGeometry.cpp
             TestFrameReduction.cpp

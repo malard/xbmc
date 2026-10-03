@@ -121,15 +121,11 @@ public:
 
   /**
    * Pauses the stream playback
+   * @param keepOutput keep the output alive, as while a downstream device acquires a new
+   * format; with audiooutput.silencefiller it keeps repeating the last frame of passthrough
+   * audio
    */
-  virtual void Pause() = 0;
-
-  /**
-   * Pauses the stream while a downstream device acquires a new format. Unlike Pause, the
-   * output stays alive and, with audiooutput.silencefiller, keeps repeating the last frame
-   * of passthrough audio. Ended by Resume.
-   */
-  virtual void Hold() = 0;
+  virtual void Pause(bool keepOutput = false) = 0;
 
   /**
    * Resumes the stream after pausing

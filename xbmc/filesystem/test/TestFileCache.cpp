@@ -355,7 +355,7 @@ public:
   using TestFileCache::TestFileCache;
 
 protected:
-  std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize) override
+  std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize) const override
   {
     if (m_created++ == 0)
       return TestFileCache::CreateMemoryCache(cacheSize);
@@ -363,7 +363,7 @@ protected:
   }
 
 private:
-  int m_created{0};
+  mutable int m_created{0};
 };
 
 struct SeekResult

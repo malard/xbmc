@@ -90,10 +90,16 @@ public:
     */
     CFileCache(unsigned int flags, std::unique_ptr<IFileCacheSource> source);
 
-    //! Builds an unopened memory cache of the given size and records its forward capacity
-    virtual std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize);
+    //! Builds an unopened memory cache of the given size per buffer
+    virtual std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize) const;
 
   private:
+    //! Opens the source and applies the controls the cache relies on
+    bool OpenSource(const CURL& url);
+    //! Double-buffers a cache for a multi-stream reader
+    std::unique_ptr<CCacheStrategy> ForStreams(std::unique_ptr<CCacheStrategy> cache) const;
+    //! Makes the memory cache current and records the forward capacity of its size per buffer
+    void SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize);
     void ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled);
     //! Cancels a source read left unanswered for longer than a healthy source takes
     void CancelStalledSourceRead();

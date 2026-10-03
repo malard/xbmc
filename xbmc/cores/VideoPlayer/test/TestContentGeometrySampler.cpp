@@ -44,7 +44,8 @@ constexpr int BAR = 40;
 CFileItem LetterboxedClip()
 {
   return CFileItem(
-      XBMC_REF_FILE_PATH("xbmc/video/geometry/test/testdata/letterbox_320x240_bars40.mp4"), false);
+      XBMC_REF_FILE_PATH("xbmc/cores/VideoPlayer/test/testdata/letterbox_320x240_bars40.mp4"),
+      false);
 }
 
 } // namespace
@@ -158,8 +159,8 @@ TEST(TestContentGeometrySampler, DISABLED_MeasuresABlurayTitle)
 //! rather than a narrow rectangle.
 TEST(TestContentGeometrySampler, MissingFileYieldsNoReading)
 {
-  const CFileItem missing(XBMC_REF_FILE_PATH("xbmc/video/geometry/test/testdata/nonexistent.mp4"),
-                          false);
+  const CFileItem missing(
+      XBMC_REF_FILE_PATH("xbmc/cores/VideoPlayer/test/testdata/nonexistent.mp4"), false);
 
   const SampledGeometry scan = CVideoFileGeometry::ExtractContentGeometry(missing);
 

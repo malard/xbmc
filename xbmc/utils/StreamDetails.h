@@ -226,9 +226,6 @@ public:
    */
   static StreamFlags StreamFlagFromName(std::string_view name);
 
-  //! \brief What that ratio is called, empty when it has no name.
-  static std::string VideoAspectToAspectName(float fAspect);
-
   bool HasItems(void) const { return !m_vecItems.empty(); }
   int GetStreamCount(CStreamDetail::StreamType type) const;
   int GetVideoStreamCount(void) const;

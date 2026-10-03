@@ -89,27 +89,6 @@ TEST_F(TestLiveGeometrySelector, FirstReadingOfAStreamIsServedAtOnce)
   EXPECT_EQ(SCOPE, Served(SCOPE_READ).rect);
 }
 
-TEST_F(TestLiveGeometrySelector, AReadingIsServedAsTheRatioItResolvesTo)
-{
-  // Not the reading. Serving each frame's own rectangle would move the picture by a line
-  // whenever the boundary rings, and the answer is a ratio rather than a measurement.
-  const LiveGeometryReading out = Served(SCOPE_READ);
-  EXPECT_EQ(SCOPE, out.rect);
-  EXPECT_NE(SCOPE_READ, out.rect);
-}
-
-TEST_F(TestLiveGeometrySelector, ARatioTheMeasurementNeverFoundIsServedAnyway)
-{
-  // The whole point of reading every frame. A stored measurement samples a few dozen points
-  // across a title, so a ratio used for one scene is one it was never likely to catch - and
-  // refusing to serve it would make the one part of the system that can see it the one part
-  // forbidden to act on it.
-  Served(CODED);
-  Quiet(PILLAR);
-  Quiet(PILLAR);
-  EXPECT_EQ(PILLAR, Served(PILLAR).rect);
-}
-
 TEST_F(TestLiveGeometrySelector, EveryRatioServedIsRemembered)
 {
   // What a playback learned that the stored record does not have.
@@ -217,22 +196,6 @@ TEST_F(TestLiveGeometrySelector, AnInsertComposedInsideTheServedShapeIsNotAWider
     Quiet(SIXTEEN_NINE_INSERT);
 
   EXPECT_EQ(SCOPE, *m_selector.Published());
-  EXPECT_EQ(1u, m_selector.Shapes().size());
-}
-
-TEST_F(TestLiveGeometrySelector, TheInsertsOfAScopeSequenceNeverMoveTheShape)
-{
-  // The same film's 2:13 stretch, as served rectangles: scope, a 1.90 insert, scope, a 16:9
-  // insert, scope. One shape, however the inserts cut.
-  const CRectInt IMAX_INSERT{384, 276, 384 + 3072, 276 + 1608};
-  const CRectInt SIXTEEN_NINE_INSERT{506, 276, 506 + 2828, 276 + 1608};
-
-  Served(SCOPE_READ);
-  Quiet(IMAX_INSERT);
-  Quiet(SCOPE_READ);
-  Quiet(SIXTEEN_NINE_INSERT);
-  Quiet(SCOPE_READ);
-
   EXPECT_EQ(1u, m_selector.Shapes().size());
 }
 

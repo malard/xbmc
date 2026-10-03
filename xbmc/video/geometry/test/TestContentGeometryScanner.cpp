@@ -9,7 +9,7 @@
 #include "ServiceBroker.h"
 #include "jobs/JobManager.h"
 #include "settings/Settings.h"
-#include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "video/geometry/ContentGeometryScanner.h"
 
 #include <memory>
@@ -27,12 +27,6 @@ class TestContentGeometryScanner : public ::testing::Test
 protected:
   void SetUp() override
   {
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    m_extractWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY);
-    m_libraryWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN);
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, true);
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN, true);
-
     m_jobManagerWas = CServiceBroker::GetJobManager();
     CServiceBroker::RegisterJobManager(std::make_shared<CJobManager>());
     CServiceBroker::GetJobManager()->PauseJobs();
@@ -47,18 +41,14 @@ protected:
     CServiceBroker::UnregisterJobManager();
     if (m_jobManagerWas)
       CServiceBroker::RegisterJobManager(m_jobManagerWas);
-
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, m_extractWas);
-    settings->SetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN, m_libraryWas);
   }
 
   void EndSweep() { m_scanner.OnJobComplete(0, true, nullptr); }
 
+  const CScopedSetting m_extract{CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY, true};
+  const CScopedSetting m_library{CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN, true};
   CContentGeometryScanner& m_scanner{CContentGeometryScanner::GetInstance()};
   std::shared_ptr<CJobManager> m_jobManagerWas;
-  bool m_extractWas{false};
-  bool m_libraryWas{false};
 };
 
 } // namespace

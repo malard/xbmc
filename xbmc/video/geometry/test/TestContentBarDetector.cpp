@@ -46,37 +46,45 @@ CSyntheticFrame Letterboxed(unsigned int width,
 
 // --- baseline -------------------------------------------------------------------------
 
-TEST(TestContentBarDetector, CleanBarsEightBitLimited)
+TEST(TestContentBarDetector, CleanBars)
 {
-  const CSyntheticFrame frame = Letterboxed(640, 360, 60);
-  const DetectionResult result = DetectContentRect(frame.Ref());
+  struct BarCase
+  {
+    unsigned int bitDepth;
+    ColorRange range;
+    ChromaSubsampling subsampling;
+    //! Also expect a confident, non-degenerate reading
+    bool confident;
+  };
 
-  ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_FALSE(result.degenerate);
-  EXPECT_GT(result.confidence, 0.9f);
-}
+  // clang-format off
+  const BarCase cases[] = {
+      {8,  ColorRange::Limited, ChromaSubsampling::YUV420, true},
+      // The headline failure this detector exists to avoid: an 8-bit constant meeting a 10-bit
+      // plane. Studio black is 64 here, so any threshold derived without the bit depth reports
+      // the full frame - confidently, and with no error.
+      {10, ColorRange::Limited, ChromaSubsampling::YUV420, true},
+      {12, ColorRange::Limited, ChromaSubsampling::YUV420, false},
+      {8,  ColorRange::Full,    ChromaSubsampling::YUV420, false},
+      {10, ColorRange::Limited, ChromaSubsampling::YUV422, false},
+      {10, ColorRange::Limited, ChromaSubsampling::YUV444, false},
+  };
+  // clang-format on
 
-/*!
- * The headline failure this detector exists to avoid: an 8-bit constant meeting a 10-bit
- * plane. Studio black is 64 here, so any threshold derived without the bit depth reports
- * the full frame - confidently, and with no error.
- */
-TEST(TestContentBarDetector, CleanBarsTenBitLimited)
-{
-  const CSyntheticFrame frame = Letterboxed(640, 360, 60, 10);
-  const DetectionResult result = DetectContentRect(frame.Ref());
+  for (const BarCase& c : cases)
+  {
+    SCOPED_TRACE(testing::Message() << c.bitDepth << " bit, range " << static_cast<int>(c.range)
+                                    << ", subsampling " << static_cast<int>(c.subsampling));
+    const CSyntheticFrame frame = Letterboxed(640, 360, 60, c.bitDepth, c.range, c.subsampling);
+    const DetectionResult result = DetectContentRect(frame.Ref());
 
-  ExpectRect(result.rect, 0, 60, 640, 300);
-  EXPECT_FALSE(result.degenerate);
-  EXPECT_GT(result.confidence, 0.9f);
-}
-
-TEST(TestContentBarDetector, CleanBarsTwelveBitLimited)
-{
-  const CSyntheticFrame frame = Letterboxed(640, 360, 60, 12);
-  const DetectionResult result = DetectContentRect(frame.Ref());
-
-  ExpectRect(result.rect, 0, 60, 640, 300);
+    ExpectRect(result.rect, 0, 60, 640, 300);
+    if (c.confident)
+    {
+      EXPECT_FALSE(result.degenerate);
+      EXPECT_GT(result.confidence, 0.9f);
+    }
+  }
 }
 
 // --- robust flatness ------------------------------------------------------------------
@@ -165,14 +173,6 @@ TEST(TestContentBarDetector, HeavilyGrainedBarsAreReportedWideNotNarrow)
 }
 
 // --- threshold derivation -------------------------------------------------------------
-
-TEST(TestContentBarDetector, FullRangeBlackAtZero)
-{
-  const CSyntheticFrame frame = Letterboxed(640, 360, 60, 8, ColorRange::Full);
-  const DetectionResult result = DetectContentRect(frame.Ref());
-
-  ExpectRect(result.rect, 0, 60, 640, 300);
-}
 
 /*!
  * Content whose black really is 0 but whose flag says limited range. The limited threshold
@@ -472,20 +472,6 @@ TEST(TestContentBarDetector, OneMarginalBarLineDoesNotZeroSeparation)
 }
 
 // --- subsampling ----------------------------------------------------------------------
-
-TEST(TestContentBarDetector, Subsampling422)
-{
-  const CSyntheticFrame frame =
-      Letterboxed(640, 360, 60, 10, ColorRange::Limited, ChromaSubsampling::YUV422);
-  ExpectRect(DetectContentRect(frame.Ref()).rect, 0, 60, 640, 300);
-}
-
-TEST(TestContentBarDetector, Subsampling444)
-{
-  const CSyntheticFrame frame =
-      Letterboxed(640, 360, 60, 10, ColorRange::Limited, ChromaSubsampling::YUV444);
-  ExpectRect(DetectContentRect(frame.Ref()).rect, 0, 60, 640, 300);
-}
 
 /*!
  * On 4:2:0 the chroma line straddling the boundary carries picture chroma, so the last

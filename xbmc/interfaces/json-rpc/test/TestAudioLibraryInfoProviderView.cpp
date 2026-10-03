@@ -49,89 +49,58 @@ bool HasNoOption(const std::string& viewPath, const std::string& key)
 
 } // namespace
 
-// The id that names one item in the listing is what the view scope drops. On an albums listing
-// that is albumid: a path naming a single album is not a view of one album.
-TEST(TestAudioLibraryInfoProviderView, AnAlbumsListingDropsAlbumid)
+TEST(TestAudioLibraryInfoProviderView, AListingDropsTheItemItNamesAndKeepsItsFilters)
 {
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
+  struct ViewCase
+  {
+    std::string path;
+    ADDON::ContentType content;
+    //! Empty to leave the listing unchecked
+    std::string listing;
+    //! Empty for no option that must be gone
+    std::string dropped;
+    //! Empty for no option that must remain
+    std::string keptKey;
+    std::string keptValue;
+  };
 
-  ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView("musicdb://albums/?albumid=3", content,
-                                                            viewPath));
+  const ViewCase cases[] = {
+      // The id that names one item in the listing is what the view scope drops. On an albums
+      // listing that is albumid: a path naming a single album is not a view of one album.
+      {"musicdb://albums/?albumid=3", ADDON::ContentType::ALBUMS, "musicdb://albums/", "albumid"},
+      {"musicdb://artists/?artistid=5", ADDON::ContentType::ARTISTS, "musicdb://artists/",
+       "artistid"},
+      // artistid on an albums listing is a filter, not the name of a single album, and
+      // CMusicDatabase::GetFilter applies it. Dropping it turns "this artist's albums" into every
+      // album in the library, which is what SetScraperAll would then rewrite.
+      {"musicdb://albums/?artistid=5", ADDON::ContentType::ALBUMS, "musicdb://albums/", "",
+       "artistid", "5"},
+      {"musicdb://artists/?albumid=3", ADDON::ContentType::ARTISTS, "", "", "albumid", "3"},
+      // The same filter spelled as a path segment has to survive too - this is the form the GUI
+      // navigates with. An artist's node lists that artist's albums, so the listing is albums and
+      // the artist is the filter on it.
+      {"musicdb://artists/5/", ADDON::ContentType::ALBUMS, "musicdb://albums/", "", "artistid",
+       "5"},
+      {"musicdb://genres/7/albums/", ADDON::ContentType::ALBUMS, "musicdb://albums/", "", "genreid",
+       "7"},
+  };
 
-  EXPECT_EQ(ADDON::ContentType::ALBUMS, content);
-  EXPECT_EQ("musicdb://albums/", ListingOf(viewPath));
-  EXPECT_TRUE(HasNoOption(viewPath, "albumid")) << viewPath;
-}
+  for (const ViewCase& c : cases)
+  {
+    SCOPED_TRACE(c.path);
+    ADDON::ContentType content{ADDON::ContentType::NONE};
+    std::string viewPath;
 
-TEST(TestAudioLibraryInfoProviderView, AnArtistsListingDropsArtistid)
-{
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
+    ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView(c.path, content, viewPath));
 
-  ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView("musicdb://artists/?artistid=5",
-                                                            content, viewPath));
-
-  EXPECT_EQ(ADDON::ContentType::ARTISTS, content);
-  EXPECT_EQ("musicdb://artists/", ListingOf(viewPath));
-  EXPECT_TRUE(HasNoOption(viewPath, "artistid")) << viewPath;
-}
-
-// artistid on an albums listing is a filter, not the name of a single album, and
-// CMusicDatabase::GetFilter applies it. Dropping it turns "this artist's albums" into every
-// album in the library, which is what SetScraperAll would then rewrite.
-TEST(TestAudioLibraryInfoProviderView, AnAlbumsListingKeepsArtistid)
-{
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
-
-  ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView("musicdb://albums/?artistid=5", content,
-                                                            viewPath));
-
-  EXPECT_EQ(ADDON::ContentType::ALBUMS, content);
-  EXPECT_EQ("musicdb://albums/", ListingOf(viewPath));
-  EXPECT_TRUE(HasOption(viewPath, "artistid", "5")) << viewPath;
-}
-
-TEST(TestAudioLibraryInfoProviderView, AnArtistsListingKeepsAlbumid)
-{
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
-
-  ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView("musicdb://artists/?albumid=3", content,
-                                                            viewPath));
-
-  EXPECT_EQ(ADDON::ContentType::ARTISTS, content);
-  EXPECT_TRUE(HasOption(viewPath, "albumid", "3")) << viewPath;
-}
-
-// The same filter spelled as a path segment has to survive too - this is the form the GUI
-// navigates with. An artist's node lists that artist's albums, so the listing is albums and the
-// artist is the filter on it.
-TEST(TestAudioLibraryInfoProviderView, AnAlbumsListingUnderAnArtistKeepsThatArtist)
-{
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
-
-  ASSERT_TRUE(
-      TestableAudioLibrary::ResolveInfoProviderView("musicdb://artists/5/", content, viewPath));
-
-  EXPECT_EQ(ADDON::ContentType::ALBUMS, content);
-  EXPECT_EQ("musicdb://albums/", ListingOf(viewPath));
-  EXPECT_TRUE(HasOption(viewPath, "artistid", "5")) << viewPath;
-}
-
-TEST(TestAudioLibraryInfoProviderView, AnAlbumsListingUnderAGenreKeepsThatGenre)
-{
-  ADDON::ContentType content{ADDON::ContentType::NONE};
-  std::string viewPath;
-
-  ASSERT_TRUE(TestableAudioLibrary::ResolveInfoProviderView("musicdb://genres/7/albums/", content,
-                                                            viewPath));
-
-  EXPECT_EQ(ADDON::ContentType::ALBUMS, content);
-  EXPECT_EQ("musicdb://albums/", ListingOf(viewPath));
-  EXPECT_TRUE(HasOption(viewPath, "genreid", "7")) << viewPath;
+    EXPECT_EQ(c.content, content);
+    if (!c.listing.empty())
+      EXPECT_EQ(c.listing, ListingOf(viewPath));
+    if (!c.dropped.empty())
+      EXPECT_TRUE(HasNoOption(viewPath, c.dropped)) << viewPath;
+    if (!c.keptKey.empty())
+      EXPECT_TRUE(HasOption(viewPath, c.keptKey, c.keptValue)) << viewPath;
+  }
 }
 
 // Only artists and albums carry an information provider.

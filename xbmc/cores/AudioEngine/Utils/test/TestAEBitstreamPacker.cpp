@@ -13,76 +13,57 @@
 
 #include <gtest/gtest.h>
 
-TEST(TestAEBitstreamPacker, TrueHDOutputRate192kAt48k)
+TEST(TestAEBitstreamPacker, OutputRate)
 {
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_TRUEHD;
-  info.m_sampleRate = 48000;
-  EXPECT_EQ(192000u, CAEBitstreamPacker::GetOutputRate(info));
+  struct RateCase
+  {
+    CAEStreamInfo::DataType type;
+    unsigned int sampleRate;
+    unsigned int expected;
+  };
+
+  // clang-format off
+  const RateCase cases[] = {
+      {CAEStreamInfo::STREAM_TYPE_TRUEHD,   48000, 192000},
+      {CAEStreamInfo::STREAM_TYPE_TRUEHD,   96000, 192000},
+      {CAEStreamInfo::STREAM_TYPE_TRUEHD,   44100, 176400},
+      {CAEStreamInfo::STREAM_TYPE_DTSHD_MA, 48000, 192000},
+      {CAEStreamInfo::STREAM_TYPE_EAC3,     48000, 192000},
+  };
+  // clang-format on
+
+  for (const RateCase& c : cases)
+  {
+    SCOPED_TRACE(testing::Message() << "type " << c.type << " at " << c.sampleRate);
+    CAEStreamInfo info;
+    info.m_type = c.type;
+    info.m_sampleRate = c.sampleRate;
+    EXPECT_EQ(c.expected, CAEBitstreamPacker::GetOutputRate(info));
+  }
 }
 
-TEST(TestAEBitstreamPacker, TrueHDOutputRate192kAt96k)
+TEST(TestAEBitstreamPacker, OutputChannels)
 {
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_TRUEHD;
-  info.m_sampleRate = 96000;
-  EXPECT_EQ(192000u, CAEBitstreamPacker::GetOutputRate(info));
-}
+  struct ChannelCase
+  {
+    CAEStreamInfo::DataType type;
+    unsigned int expected;
+  };
 
-TEST(TestAEBitstreamPacker, TrueHDOutputRate176kAt44k)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_TRUEHD;
-  info.m_sampleRate = 44100;
-  EXPECT_EQ(176400u, CAEBitstreamPacker::GetOutputRate(info));
-}
+  const ChannelCase cases[] = {
+      {CAEStreamInfo::STREAM_TYPE_TRUEHD, 8},
+      {CAEStreamInfo::STREAM_TYPE_DTSHD_MA, 8},
+      {CAEStreamInfo::STREAM_TYPE_AC3, 2},
+      {CAEStreamInfo::STREAM_TYPE_DTS_512, 2},
+  };
 
-TEST(TestAEBitstreamPacker, TrueHDOutputChannels8)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_TRUEHD;
-  CAEChannelInfo channels = CAEBitstreamPacker::GetOutputChannelMap(info);
-  EXPECT_EQ(8u, channels.Count());
-}
-
-TEST(TestAEBitstreamPacker, DTSHDMAOutputRate192k)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_DTSHD_MA;
-  info.m_sampleRate = 48000;
-  EXPECT_EQ(192000u, CAEBitstreamPacker::GetOutputRate(info));
-}
-
-TEST(TestAEBitstreamPacker, DTSHDMAOutputChannels8)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_DTSHD_MA;
-  CAEChannelInfo channels = CAEBitstreamPacker::GetOutputChannelMap(info);
-  EXPECT_EQ(8u, channels.Count());
-}
-
-TEST(TestAEBitstreamPacker, AC3OutputChannels2)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_AC3;
-  CAEChannelInfo channels = CAEBitstreamPacker::GetOutputChannelMap(info);
-  EXPECT_EQ(2u, channels.Count());
-}
-
-TEST(TestAEBitstreamPacker, EAC3OutputRate192kAt48k)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_EAC3;
-  info.m_sampleRate = 48000;
-  EXPECT_EQ(192000u, CAEBitstreamPacker::GetOutputRate(info));
-}
-
-TEST(TestAEBitstreamPacker, DTS512OutputChannels2)
-{
-  CAEStreamInfo info;
-  info.m_type = CAEStreamInfo::STREAM_TYPE_DTS_512;
-  CAEChannelInfo channels = CAEBitstreamPacker::GetOutputChannelMap(info);
-  EXPECT_EQ(2u, channels.Count());
+  for (const ChannelCase& c : cases)
+  {
+    SCOPED_TRACE(testing::Message() << "type " << c.type);
+    CAEStreamInfo info;
+    info.m_type = c.type;
+    EXPECT_EQ(c.expected, CAEBitstreamPacker::GetOutputChannelMap(info).Count());
+  }
 }
 
 namespace
