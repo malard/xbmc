@@ -100,9 +100,9 @@ CRectInt CLiveGeometrySelector::Fit(float displayRatio) const
   // taken back through the pixel aspect.
   const CRect fitted = FitAspect(displayRatio / m_par, CRect{m_coded});
 
-  return CRectInt{static_cast<int>(std::lround(fitted.x1)), static_cast<int>(std::lround(fitted.y1)),
-                  static_cast<int>(std::lround(fitted.x2)),
-                  static_cast<int>(std::lround(fitted.y2))};
+  return CRectInt{
+      static_cast<int>(std::lround(fitted.x1)), static_cast<int>(std::lround(fitted.y1)),
+      static_cast<int>(std::lround(fitted.x2)), static_cast<int>(std::lround(fitted.y2))};
 }
 
 LiveGeometryReading CLiveGeometrySelector::Publish(const CRectInt& rect)
