@@ -8,15 +8,11 @@
 
 #pragma once
 
-#include "utils/StringUtils.h"
-
-#include <algorithm>
 #include <cassert>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <ranges>
 #include <string>
 #include <string_view>
 
@@ -33,10 +29,12 @@ inline constexpr std::size_t LONG_CODE_LENGTH{4};
 std::string LongCodeToString(uint32_t code);
 
 /*!
- * \brief The correspondence between the two ISO 639 code spaces.
+ * \brief The correspondence between ISO 639 codes.
  *
  * ISO 639-1 and ISO 639-2 assign their codes independently, so neither can be derived from the
- * other and only a table records which alpha-2 code belongs with which alpha-3 one.
+ * other and only a table records which alpha-2 code belongs with which alpha-3 one. ISO 639-2
+ * also spells about twenty languages two ways, bibliographic (B) and terminological (T), and a
+ * table records those pairs too.
  */
 class CIso639
 {
@@ -59,6 +57,20 @@ public:
    *         language ISO 639-1 gives no code to.
    */
   static std::optional<std::string> Alpha3ToAlpha2(std::string_view code);
+
+  /*!
+   * \brief The ISO 639-2/B code of a language given by its ISO 639-2/T code.
+   * \param[in] tCode The terminological code.
+   * \return The bibliographic code, or nullopt where the language has no separate one.
+   */
+  static std::optional<std::string> TCodeToBCode(std::string_view tCode);
+
+  /*!
+   * \brief The ISO 639-2/T code of a language given by its ISO 639-2/B code.
+   * \param[in] bCode The bibliographic code.
+   * \return The terminological code, or nullopt where the language has no separate one.
+   */
+  static std::optional<std::string> BCodeToTCode(std::string_view bCode);
 };
 
 } // namespace KODI::LANGUAGE::I18N
@@ -87,32 +99,4 @@ struct LCENTRY
   uint32_t code;
   std::string_view name;
 };
-
-/*!
- * \brief Returns an array of ISO 639 codes sorted by code
- * \param codes array to sort
- * \return sorted array
- */
-template<std::ranges::random_access_range T>
-constexpr auto CreateIso639ByCode(T codes)
-{
-  std::ranges::sort(codes, {}, &LCENTRY::code);
-  return codes;
-}
-
-/*!
- * \brief Returns an array of ISO 639 codes sorted by name (case-insensitive)
- * \param codes array to sort
- * \return sorted array
- */
-template<std::ranges::random_access_range T>
-constexpr auto CreateIso639ByName(T codes)
-{
-  //! @todo create the array with lower-cased names to avoid case-insensitive comparison later.
-  std::ranges::sort(
-      codes, [](std::string_view a, std::string_view b)
-      { return StringUtils::CompareNoCase(a, b, 0) < 0; }, &LCENTRY::name);
-  return codes;
-}
-
 } // namespace

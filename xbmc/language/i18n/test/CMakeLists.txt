@@ -4,7 +4,6 @@ set(SOURCES TestBcp47.cpp
             TestBcp47Parser.cpp
             TestIso3166_1.cpp
             TestIso639.cpp
-            TestIso639_2.cpp
             TestLanguageTable.cpp
             TestI18nUtils.cpp
             TestListFormatter.cpp)

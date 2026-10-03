@@ -193,6 +193,21 @@ TEST(TestLanguage, WithoutAPackTheSortTokensAreOnlyTheDeclaredOnes)
   EXPECT_EQ(language.SortTokens(), CLanguage::Tokens{"le "});
 }
 
+TEST(TestLanguage, ASortWordIsHeldOncePerSeparator)
+{
+  CLanguage::Tokens tokens;
+  CLanguage::AddSortToken(tokens, "the", CLanguage::DEFAULT_SORT_TOKEN_SEPARATORS);
+  EXPECT_EQ(tokens, (CLanguage::Tokens{"the ", "the.", "the_"}));
+
+  tokens.clear();
+  CLanguage::AddSortToken(tokens, "l", "'");
+  EXPECT_EQ(tokens, CLanguage::Tokens{"l'"});
+
+  tokens.clear();
+  CLanguage::AddSortToken(tokens, "the", "");
+  EXPECT_EQ(tokens, CLanguage::Tokens{"the"});
+}
+
 TEST(TestLanguage, WithoutAPackTheInterfaceIsInTheBuiltInLanguage)
 {
   CLanguage language;

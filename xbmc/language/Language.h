@@ -103,6 +103,17 @@ public:
   //! The leading words a sort steps over, each held with the separator that follows it
   using Tokens = std::set<std::string, std::less<>>;
 
+  //! What may follow a sort token where its declaration states no separators
+  static constexpr std::string_view DEFAULT_SORT_TOKEN_SEPARATORS{" ._"};
+
+  /*!
+   * \brief Add a sort word to a set of tokens, once per separator that may follow it.
+   * \param[in,out] tokens The set to add to.
+   * \param[in] word The word.
+   * \param[in] separators The characters that may follow the word, or empty for the word alone.
+   */
+  static void AddSortToken(Tokens& tokens, const std::string& word, std::string_view separators);
+
   static CLanguage& GetInstance();
 
   CLanguage() = default;

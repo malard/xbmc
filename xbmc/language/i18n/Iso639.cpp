@@ -8,7 +8,7 @@
 
 #include "language/i18n/Iso639.h"
 
-#include "language/i18n/Iso639_2.h"
+#include "language/i18n/Iso639_2_Table.h"
 #include "language/i18n/IsoCodes.h"
 #include "language/i18n/TableLanguageCodes.h"
 
@@ -66,11 +66,35 @@ std::optional<std::string> CIso639::Alpha3ToAlpha2(std::string_view code)
     return std::nullopt;
 
   // The table is keyed by the bibliographic form, so a terminological code is mapped over first
-  const std::string bCode{CIso639_2::TCodeToBCode(code).value_or(std::string{code})};
+  const std::string bCode{TCodeToBCode(code).value_or(std::string{code})};
 
   const auto it = std::ranges::lower_bound(LanguageCodesByIso639_2b, bCode, {}, &ISO639::iso639_2b);
   if (it != LanguageCodesByIso639_2b.end() && it->iso639_2b == bCode && !it->iso639_1.empty())
     return std::string{it->iso639_1};
+
+  return std::nullopt;
+}
+
+std::optional<std::string> CIso639::TCodeToBCode(std::string_view tCode)
+{
+  const uint32_t longCode = StringToLongCode(tCode);
+
+  auto it =
+      std::ranges::lower_bound(ISO639_2_TB_Mappings, longCode, {}, &ISO639_2_TB::terminological);
+  if (it != ISO639_2_TB_Mappings.end() && it->terminological == longCode)
+    return LongCodeToString(it->bibliographic);
+
+  return std::nullopt;
+}
+
+std::optional<std::string> CIso639::BCodeToTCode(std::string_view bCode)
+{
+  const uint32_t longCode = StringToLongCode(bCode);
+
+  auto it =
+      std::ranges::lower_bound(ISO639_2_TB_MappingsByB, longCode, {}, &ISO639_2_TB::bibliographic);
+  if (it != ISO639_2_TB_MappingsByB.end() && longCode == it->bibliographic)
+    return LongCodeToString(it->terminological);
 
   return std::nullopt;
 }

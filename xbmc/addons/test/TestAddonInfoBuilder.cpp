@@ -11,6 +11,8 @@
 #include "addons/addoninfo/AddonInfo.h"
 #include "addons/addoninfo/AddonInfoBuilder.h"
 #include "addons/addoninfo/AddonType.h"
+#include "language/Language.h"
+#include "language/LanguageTag.h"
 #include "utils/XBMCTinyXML2.h"
 
 #include <set>
@@ -292,4 +294,37 @@ TEST_F(TestAddonInfoBuilder, ATranslationInNoLanguageIsIgnored)
 
   EXPECT_EQ("", addon->Summary());
   EXPECT_EQ("Deutsch", addon->Description());
+}
+
+TEST_F(TestAddonInfoBuilder, EnglishIsTheFallbackHoweverItsKeyIsSpelled)
+{
+  using KODI::LANGUAGE::CLanguage;
+  using KODI::LANGUAGE::CLanguageTag;
+
+  const CLanguageTag previous{CLanguage::GetInstance().UI()};
+  CLanguage::GetInstance().SetUI(CLanguageTag::Parse("fr"));
+
+  for (const std::string english : {"en_GB", "en-GB", "en_gb"})
+  {
+    const std::string xml = R"xml(
+<addon id="plugin.test" name="Test" version="1.0.0" provider-name="Team Kodi">
+  <extension point="xbmc.python.pluginsource" library="default.py"/>
+  <extension point="kodi.addon.metadata">
+    <summary lang="de_DE">Deutsch</summary>
+    <summary lang=")xml" + english +
+                            R"xml(">English</summary>
+    <platform>all</platform>
+  </extension>
+</addon>
+)xml";
+
+    CXBMCTinyXML2 doc;
+    EXPECT_TRUE(doc.Parse(xml));
+    const AddonInfoPtr addon{CAddonInfoBuilder::Generate(doc.RootElement(), RepositoryDirInfo{})};
+    EXPECT_NE(nullptr, addon);
+    if (addon)
+      EXPECT_EQ("English", addon->Summary()) << english;
+  }
+
+  CLanguage::GetInstance().SetUI(previous);
 }

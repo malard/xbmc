@@ -7,11 +7,8 @@
  */
 
 #include "language/i18n/Iso639.h"
-#include "language/i18n/Iso639_1.h"
 
-#include <map>
 #include <string>
-#include <string_view>
 
 #include <gtest/gtest.h>
 
@@ -64,17 +61,12 @@ TEST(TestIso639, AnswersNothingForACodeOutsideTheStandard)
   EXPECT_FALSE(CIso639::Alpha3ToAlpha2("und").has_value());
 }
 
-TEST(TestIso639, ListsOnlyTheIso6391CodesInUse)
+TEST(TestIso639, MapsTheTwoFormsOfAnIso6392Code)
 {
-  std::map<std::string, std::string> langMap;
-  CIso639_1::ListLanguages(langMap);
+  EXPECT_EQ(CIso639::TCodeToBCode("bod"), "tib");
+  EXPECT_EQ(CIso639::BCodeToTCode("tib"), "bod");
 
-  ASSERT_TRUE(langMap.contains("aa"));
-  EXPECT_EQ(langMap.at("aa"), "Afar");
-  ASSERT_TRUE(langMap.contains("zu"));
-  EXPECT_EQ(langMap.at("zu"), "Zulu");
-
-  // the codes ISO 639-1 has withdrawn
-  for (const std::string_view code : {"bh", "in", "iw", "ji", "jw", "mo", "sh"})
-    EXPECT_FALSE(langMap.contains(std::string{code})) << code;
+  // A language spelling both forms alike has no other form to map to
+  EXPECT_FALSE(CIso639::TCodeToBCode("zha").has_value());
+  EXPECT_FALSE(CIso639::BCodeToTCode("zha").has_value());
 }

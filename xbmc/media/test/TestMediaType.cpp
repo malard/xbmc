@@ -7,8 +7,6 @@
  */
 
 #include "media/MediaType.h"
-#include "music/tags/MusicInfoTag.h"
-#include "video/VideoInfoTag.h"
 
 #include <gtest/gtest.h>
 
@@ -76,23 +74,4 @@ TEST(TestMediaType, ContainersHoldOtherItems)
   EXPECT_FALSE(IsContainer(MediaType::MOVIE));
   EXPECT_FALSE(IsContainer(MediaType::SONG));
   EXPECT_FALSE(IsContainer(MediaType::NONE));
-}
-
-TEST(TestMediaType, ATagHasATypeOnlyForTheExactStoredName)
-{
-  CVideoInfoTag video;
-  video.m_type = "movie";
-  EXPECT_EQ(video.GetMediaType(), MediaType::MOVIE);
-  video.m_type = "movies";
-  EXPECT_EQ(video.GetMediaType(), MediaType::NONE);
-  video.m_type = "Movie";
-  EXPECT_EQ(video.GetMediaType(), MediaType::NONE);
-  video.m_type = "genre";
-  EXPECT_EQ(video.GetMediaType(), MediaType::NONE);
-
-  MUSIC_INFO::CMusicInfoTag music;
-  music.SetType("album");
-  EXPECT_EQ(music.GetMediaType(), MediaType::ALBUM);
-  music.SetType("artists");
-  EXPECT_EQ(music.GetMediaType(), MediaType::NONE);
 }

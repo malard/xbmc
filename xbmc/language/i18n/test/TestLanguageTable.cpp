@@ -9,6 +9,10 @@
 #include "language/LanguageTag.h"
 #include "language/i18n/LanguageTable.h"
 
+#include <map>
+#include <string>
+#include <string_view>
+
 #include <gtest/gtest.h>
 
 using KODI::LANGUAGE::CLanguageTag;
@@ -190,4 +194,19 @@ TEST_F(LanguageTableTest, ListsTheLanguagesByTheirAlpha2CodeAndTheDeclaredOnesAs
 
   EXPECT_EQ(languages["es-419"], "Spanish - Latin America");
   EXPECT_EQ(languages["en"], "My English");
+}
+
+TEST_F(LanguageTableTest, ListsOnlyTheIso6391CodesInUse)
+{
+  std::map<std::string, std::string> languages;
+  Table().List(languages);
+
+  ASSERT_TRUE(languages.contains("aa"));
+  EXPECT_EQ(languages.at("aa"), "Afar");
+  ASSERT_TRUE(languages.contains("zu"));
+  EXPECT_EQ(languages.at("zu"), "Zulu");
+
+  // the codes ISO 639-1 has withdrawn
+  for (const std::string_view code : {"bh", "in", "iw", "ji", "jw", "mo", "sh"})
+    EXPECT_FALSE(languages.contains(std::string{code})) << code;
 }

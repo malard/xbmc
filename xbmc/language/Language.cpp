@@ -96,6 +96,18 @@ std::optional<CLanguagePreference> CLanguagePreference::ForSubtitles(const std::
   return Parse(setting);
 }
 
+void CLanguage::AddSortToken(Tokens& tokens, const std::string& word, std::string_view separators)
+{
+  if (separators.empty())
+  {
+    tokens.insert(word);
+    return;
+  }
+
+  for (const char separator : separators)
+    tokens.insert(word + separator);
+}
+
 CLanguage& CLanguage::GetInstance()
 {
   static CLanguage language;
@@ -185,23 +197,8 @@ std::string KODI::LANGUAGE::DescribeLanguage(CLanguageTag::Notation notation,
 {
   const CLanguageTag& ui{language.UI()};
 
-  std::string named;
-  switch (notation)
-  {
-    case CLanguageTag::ENGLISH_NAME:
-      // The name the pack declares for itself, which is the one a user has seen named
-      named = language.PackName();
-      break;
-    case CLanguageTag::ISO_NAME:
-      named = ui.ToEnglishLanguageName();
-      break;
-    case CLanguageTag::ISO_639_1:
-      named = ui.AsIso6391();
-      break;
-    case CLanguageTag::ISO_639_2:
-      named = ui.AsIso6392B();
-      break;
-  }
+  // The English name is the one the pack declares for itself, which is the one a user has seen
+  std::string named{notation == CLanguageTag::ENGLISH_NAME ? language.PackName() : ui.In(notation)};
 
   // Some languages have no code in the requested ISO 639 notation - Asturian, for one, has no
   // ISO 639-1 code - and there is then nothing to join a place to
