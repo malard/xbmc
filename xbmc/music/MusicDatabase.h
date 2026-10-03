@@ -420,12 +420,6 @@ public:
   bool UpdateArtistScrapedMBID(int idArtist, const std::string& strMusicBrainzArtistID);
   bool GetTranslateBlankArtist() const { return m_translateBlankArtist; }
   void SetTranslateBlankArtist(bool translate) { m_translateBlankArtist = translate; }
-  /*!
-   \brief Whether this connection's writes announce the items they update
-
-   A caller that announces what it changed itself turns this off, so a change is announced once.
-   */
-  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
   bool HasArtistBeenScraped(int idArtist) const;
   bool ClearArtistLastScrapedTime(int idArtist);
   int AddArtistDiscography(int idArtist, const CDiscoAlbum& discoAlbum);
@@ -1037,7 +1031,6 @@ private:
   std::map<std::string, int, std::less<>> m_genreCache;
   std::map<std::string, int, std::less<>> m_pathCache;
   bool m_translateBlankArtist{true};
-  bool m_announceUpdates{true};
 
   // Fields should be ordered as they
   // appear in the songview

@@ -477,14 +477,7 @@ public:
    * \brief Announce that a library item has changed, so that widgets and other listeners reload it
    * \param[in] content The item's media type
    */
-  static void AnnounceUpdate(const std::string& content, int id);
-
-  /*!
-   \brief Whether this connection's writes announce the items they update
-
-   A caller that announces what it changed itself turns this off, so a change is announced once.
-   */
-  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
+  static void AnnounceUpdate(KODI::MEDIA::MediaType content, int id);
 
   void SetTrailerForMovie(int idMovie, const std::string& trailer);
 
@@ -1007,7 +1000,7 @@ public:
   bool GetArtForItem(int mediaId, const std::string& mediaType, KODI::ART::Artwork& art);
   std::string GetArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
 
-  void UpdateArtForItem(int mediaId, const std::string& mediaType) const;
+  void UpdateArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType) const;
 
   /*!
    * \brief Retrieve all art for the given video asset, with optional fallback to the art of the
@@ -1490,9 +1483,7 @@ private:
                                   std::string& deletedFileIDs,
                                   bool silent);
 
-  static void AnnounceRemove(const std::string& content, int id, bool scanning = false);
+  static void AnnounceRemove(KODI::MEDIA::MediaType content, int id, bool scanning = false);
 
   static CDateTime GetDateAdded(const std::string& filename, CDateTime dateAdded = CDateTime());
-
-  bool m_announceUpdates{true};
 };

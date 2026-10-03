@@ -3765,7 +3765,7 @@ void CVideoDatabase::DeleteResumeBookMark(const CFileItem& item)
 
     if (content != MediaType::NONE && m_announceUpdates)
     {
-      AnnounceUpdate(NameOf(content), item.GetVideoInfoTag()->m_iDbId);
+      AnnounceUpdate(content, item.GetVideoInfoTag()->m_iDbId);
     }
 
   }
@@ -4301,7 +4301,7 @@ bool CVideoDatabase::DeleteMovie(int idMovie,
     }
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
-    AnnounceRemove(NameOf(MediaType::MOVIE), idMovie);
+    AnnounceRemove(MediaType::MOVIE, idMovie);
 
     if (!inTransaction)
       CommitTransaction();
@@ -4370,7 +4370,7 @@ void CVideoDatabase::DeleteTvShow(int idTvShow, bool bKeepId /* = false */)
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
     if (!bKeepId)
-      AnnounceRemove(NameOf(MediaType::TV_SHOW), idTvShow);
+      AnnounceRemove(MediaType::TV_SHOW, idTvShow);
 
     CommitTransaction();
 
@@ -4429,7 +4429,7 @@ void CVideoDatabase::DeleteEpisode(int idEpisode, bool bKeepId /* = false */)
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
     if (!bKeepId)
-      AnnounceRemove(NameOf(MediaType::EPISODE), idEpisode);
+      AnnounceRemove(MediaType::EPISODE, idEpisode);
 
     int idFile = GetDbId(PrepareSQL("SELECT idFile FROM episode WHERE idEpisode=%i", idEpisode));
     DeleteStreamDetails(idFile);
@@ -4487,7 +4487,7 @@ void CVideoDatabase::DeleteMusicVideo(int idMVideo, bool bKeepId /* = false */)
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
     if (!bKeepId)
-      AnnounceRemove(NameOf(MediaType::MUSIC_VIDEO), idMVideo);
+      AnnounceRemove(MediaType::MUSIC_VIDEO, idMVideo);
 
     CommitTransaction();
 
@@ -5761,7 +5761,7 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
   }
 }
 
-void CVideoDatabase::UpdateArtForItem(int mediaId, const std::string& mediaType) const
+void CVideoDatabase::UpdateArtForItem(int mediaId, MediaType mediaType) const
 {
   if (m_announceUpdates)
     AnnounceUpdate(mediaType, mediaId);
@@ -6779,11 +6779,11 @@ void CVideoDatabase::UpdateFanart(const CFileItem& item, VideoDbContentType type
     return;
 
   std::string exec;
-  std::string mediaType;
+  MediaType mediaType{MediaType::NONE};
 
   if (type == VideoDbContentType::TVSHOWS)
   {
-    mediaType = NameOf(MediaType::TV_SHOW);
+    mediaType = MediaType::TV_SHOW;
 
     exec = PrepareSQL("UPDATE tvshow set c%02d='%s' WHERE idShow=%i", VIDEODB_ID_TV_FANART,
                       item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), mediaId);
@@ -6809,7 +6809,7 @@ void CVideoDatabase::UpdateFanart(const CFileItem& item, VideoDbContentType type
       if (mediaId < 0)
         return;
     }
-    mediaType = NameOf(MediaType::MOVIE);
+    mediaType = MediaType::MOVIE;
 
     exec = PrepareSQL("UPDATE movie set c%02d='%s' WHERE idMovie=%i", VIDEODB_ID_FANART,
                       item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), mediaId);
@@ -6915,26 +6915,26 @@ void CVideoDatabase::UpdateMovieTitle(int idMovie,
       return;
     if (nullptr == m_pDS)
       return;
-    std::string content;
+    MediaType content{MediaType::NONE};
     if (iType == VideoDbContentType::MOVIES)
     {
       CLog::Log(LOGINFO, "Changing Movie:id:{} New Title:{}", idMovie, strNewMovieTitle);
-      content = NameOf(MediaType::MOVIE);
+      content = MediaType::MOVIE;
     }
     else if (iType == VideoDbContentType::EPISODES)
     {
       CLog::Log(LOGINFO, "Changing Episode:id:{} New Title:{}", idMovie, strNewMovieTitle);
-      content = NameOf(MediaType::EPISODE);
+      content = MediaType::EPISODE;
     }
     else if (iType == VideoDbContentType::TVSHOWS)
     {
       CLog::Log(LOGINFO, "Changing TvShow:id:{} New Title:{}", idMovie, strNewMovieTitle);
-      content = NameOf(MediaType::TV_SHOW);
+      content = MediaType::TV_SHOW;
     }
     else if (iType == VideoDbContentType::MUSICVIDEOS)
     {
       CLog::Log(LOGINFO, "Changing MusicVideo:id:{} New Title:{}", idMovie, strNewMovieTitle);
-      content = NameOf(MediaType::MUSIC_VIDEO);
+      content = MediaType::MUSIC_VIDEO;
     }
     else if (iType == VideoDbContentType::MOVIE_SETS)
     {
@@ -6944,7 +6944,7 @@ void CVideoDatabase::UpdateMovieTitle(int idMovie,
       m_pDS->exec(strSQL);
     }
 
-    if (!content.empty())
+    if (content != MediaType::NONE)
     {
       SetSingleValue(iType, idMovie, Field::TITLE, strNewMovieTitle);
       if (m_announceUpdates)
@@ -6968,9 +6968,8 @@ bool CVideoDatabase::UpdateVideoSortTitle(int idDb,
     if (iType != VideoDbContentType::MOVIES && iType != VideoDbContentType::TVSHOWS)
       return false;
 
-    std::string content = NameOf(MediaType::MOVIE);
-    if (iType == VideoDbContentType::TVSHOWS)
-      content = NameOf(MediaType::TV_SHOW);
+    const MediaType content{iType == VideoDbContentType::TVSHOWS ? MediaType::TV_SHOW
+                                                                 : MediaType::MOVIE};
 
     if (SetSingleValue(iType, idDb, Field::SORT_TITLE, strNewSortTitle))
     {
@@ -10920,19 +10919,19 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
       CLog::Log(LOGINFO, "Cleaning videodatabase done. Operation took {} ms", duration.count());
 
       for (const auto& i : movieIDs)
-        AnnounceRemove(NameOf(MediaType::MOVIE), i, true);
+        AnnounceRemove(MediaType::MOVIE, i, true);
 
       for (const auto& i : episodeIDs)
-        AnnounceRemove(NameOf(MediaType::EPISODE), i, true);
+        AnnounceRemove(MediaType::EPISODE, i, true);
 
       for (const auto& i : tvshowIDs)
-        AnnounceRemove(NameOf(MediaType::TV_SHOW), i, true);
+        AnnounceRemove(MediaType::TV_SHOW, i, true);
 
       for (const auto& i : musicVideoIDs)
-        AnnounceRemove(NameOf(MediaType::MUSIC_VIDEO), i, true);
+        AnnounceRemove(MediaType::MUSIC_VIDEO, i, true);
 
       for (const auto& i : videoVersionIDs)
-        AnnounceRemove(NameOf(MediaType::VIDEO_VERSION), i, true);
+        AnnounceRemove(MediaType::VIDEO_VERSION, i, true);
     }
   }
   catch (...)
@@ -12475,20 +12474,20 @@ std::string CVideoDatabase::GetSafeFile(const std::string &dir, const std::strin
   return URIUtils::AddFileToFolder(dir, CUtil::MakeLegalFileName(std::move(safeThumb)));
 }
 
-void CVideoDatabase::AnnounceRemove(const std::string& content, int id, bool scanning /* = false */)
+void CVideoDatabase::AnnounceRemove(MediaType content, int id, bool scanning /* = false */)
 {
   CVariant data;
-  data["type"] = content;
+  data["type"] = NameOf(content);
   data["id"] = id;
   if (scanning)
     data["transaction"] = true;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnRemove", data);
 }
 
-void CVideoDatabase::AnnounceUpdate(const std::string& content, int id)
+void CVideoDatabase::AnnounceUpdate(MediaType content, int id)
 {
   CVariant data;
-  data["type"] = content;
+  data["type"] = NameOf(content);
   data["id"] = id;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate", data);
 }
