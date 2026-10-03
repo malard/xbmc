@@ -7,6 +7,7 @@ set(SOURCES TestGUIControlFactory.cpp
             TestGUILabel.cpp
             TestGUIListItemLayout.cpp
             TestGUITextLayout.cpp
+            TestLookedUpItems.cpp
             TestGUIWindowOnAction.cpp
             TestSkinMapManager.cpp
 )

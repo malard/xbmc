@@ -15,44 +15,47 @@
 #include "messaging/ApplicationMessenger.h"
 #include "profiles/ProfileManager.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/Digest.h"
 #include "utils/Variant.h"
 
 using namespace JSONRPC;
 using KODI::UTILITY::CDigest;
 
-JSONRPC_STATUS CProfilesOperations::GetProfiles(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CProfilesOperations::GetProfiles(const CVariant& parameterObject, CVariant& result)
 {
-  const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
+  const std::shared_ptr<CProfileManager> profileManager =
+      CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
   CFileItemList listItems;
 
   for (unsigned int i = 0; i < profileManager->GetNumberOfProfiles(); ++i)
   {
-    const CProfile *profile = profileManager->GetProfile(i);
+    const CProfile* profile = profileManager->GetProfile(i);
     CFileItemPtr item(new CFileItem(profile->getName()));
-    item->SetArt("thumb", profile->getThumb());
+    item->SetArt(KODI::ART::TYPE::THUMB, profile->getThumb());
     listItems.Add(item);
   }
 
   HandleFileItemList("profileid", false, "profiles", listItems, parameterObject, result);
 
-  for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array(); propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
+  for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array();
+       propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
   {
-    if (propertyiter->isString() &&
-        propertyiter->asString() == "lockmode")
+    if (propertyiter->isString() && propertyiter->asString() == "lockMode")
     {
-      for (CVariant::iterator_array profileiter = result["profiles"].begin_array(); profileiter != result["profiles"].end_array(); ++profileiter)
+      for (CVariant::iterator_array profileiter = result["profiles"].begin_array();
+           profileiter != result["profiles"].end_array(); ++profileiter)
       {
         std::string profilename = (*profileiter)["label"].asString();
         int index = profileManager->GetProfileIndex(profilename);
-        const CProfile *profile = profileManager->GetProfile(index);
+        const CProfile* profile = profileManager->GetProfile(index);
         LockMode locktype = LockMode::UNKNOWN;
         if (index == 0)
           locktype = profileManager->GetMasterProfile().getLockMode();
         else
           locktype = profile->getLockMode();
-        (*profileiter)["lockmode"] = static_cast<int>(locktype);
+        (*profileiter)["lockMode"] = static_cast<int>(locktype);
       }
       break;
     }
@@ -60,19 +63,22 @@ JSONRPC_STATUS CProfilesOperations::GetProfiles(const std::string &method, ITran
   return OK;
 }
 
-JSONRPC_STATUS CProfilesOperations::GetCurrentProfile(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CProfilesOperations::GetCurrentProfile(const CVariant& parameterObject,
+                                                      CVariant& result)
 {
-  const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
+  const std::shared_ptr<CProfileManager> profileManager =
+      CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
   const CProfile& currentProfile = profileManager->GetCurrentProfile();
   CVariant profileVariant = CVariant(CVariant::VariantTypeObject);
   profileVariant["label"] = currentProfile.getName();
-  for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array(); propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
+  for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array();
+       propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
   {
     if (propertyiter->isString())
     {
-      if (propertyiter->asString() == "lockmode")
-        profileVariant["lockmode"] = static_cast<int>(currentProfile.getLockMode());
+      if (propertyiter->asString() == "lockMode")
+        profileVariant["lockMode"] = static_cast<int>(currentProfile.getLockMode());
       else if (propertyiter->asString() == "thumbnail")
         profileVariant["thumbnail"] = currentProfile.getThumb();
     }
@@ -83,9 +89,10 @@ JSONRPC_STATUS CProfilesOperations::GetCurrentProfile(const std::string &method,
   return OK;
 }
 
-JSONRPC_STATUS CProfilesOperations::LoadProfile(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CProfilesOperations::LoadProfile(const CVariant& parameterObject, CVariant& result)
 {
-  const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
+  const std::shared_ptr<CProfileManager> profileManager =
+      CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
   std::string profilename = parameterObject["profile"].asString();
   int index = profileManager->GetProfileIndex(profilename);
@@ -94,8 +101,8 @@ JSONRPC_STATUS CProfilesOperations::LoadProfile(const std::string &method, ITran
     return InvalidParams;
 
   // get the profile
-  const CProfile *profile = profileManager->GetProfile(index);
-  if (profile == NULL)
+  const CProfile* profile = profileManager->GetProfile(index);
+  if (profile == nullptr)
     return InvalidParams;
 
   bool bPrompt = parameterObject["prompt"].asBoolean();
@@ -108,9 +115,9 @@ JSONRPC_STATUS CProfilesOperations::LoadProfile(const std::string &method, ITran
   if (profile->getLockMode() == LockMode::EVERYONE ||
       (bPrompt && g_passwordManager.IsProfileLockUnlocked(index, bCanceled, bPrompt)))
     bLoadProfile = true;
-  else if (!bCanceled)  // Password needed and user provided it
+  else if (!bCanceled) // Password needed and user provided it
   {
-    const CVariant &passwordObject = parameterObject["password"];
+    const CVariant& passwordObject = parameterObject["password"];
     const std::string& strToVerify = profile->getLockCode();
     std::string password = passwordObject["value"].asString();
 

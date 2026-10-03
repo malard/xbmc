@@ -13,11 +13,12 @@
 #include "Util.h"
 #include "games/GameTypes.h"
 #include "games/tags/GameInfoTag.h"
+#include "language/LanguageTag.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
-#include "utils/LangCodeExpander.h"
+#include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -258,7 +259,7 @@ namespace XBMCAddon
       else if (lowerKey == "specialsort")
         setSpecialSortRaw(value);
       else if (lowerKey == "fanart_image")
-        item->SetArt("fanart", value);
+        item->SetArt(KODI::ART::TYPE::FANART, value);
       else
         addPropertyRaw(lowerKey, value);
     }
@@ -299,7 +300,7 @@ namespace XBMCAddon
         value = StringUtils::Format("{:f}", GetVideoInfoTag()->GetResumePoint().timeInSeconds);
       }
       else if (lowerKey == "fanart_image")
-        value = item->GetArt("fanart");
+        value = item->GetArt(KODI::ART::TYPE::FANART);
       else
         value = item->GetProperty(lowerKey).asString();
 
@@ -864,7 +865,7 @@ namespace XBMCAddon
           else if (key == "stereomode")
             video->m_strStereoMode = value;
           else if (key == "language")
-            video->m_strLanguage = CLangCodeExpander::AsISO6392B(value);
+            video->m_language = KODI::LANGUAGE::CLanguageTag::Parse(value);
         }
         xbmc::InfoTagVideo::addStreamRaw(infoTag, video);
       }
@@ -879,7 +880,7 @@ namespace XBMCAddon
           if (key == "codec")
             audio->m_strCodec = value;
           else if (key == "language")
-            audio->m_strLanguage = CLangCodeExpander::AsISO6392B(value);
+            audio->m_language = KODI::LANGUAGE::CLanguageTag::Parse(value);
           else if (key == "channels")
             audio->m_iChannels = strtol(value.c_str(), nullptr, 10);
         }
@@ -894,7 +895,7 @@ namespace XBMCAddon
           const String& value = it.second;
 
           if (key == "language")
-            subtitle->m_strLanguage = CLangCodeExpander::AsISO6392B(value);
+            subtitle->m_language = KODI::LANGUAGE::CLanguageTag::Parse(value);
         }
         xbmc::InfoTagVideo::addStreamRaw(infoTag, subtitle);
       }

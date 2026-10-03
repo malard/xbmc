@@ -17,6 +17,7 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "VideoDatabase.h"
+#include "VideoDatabaseDDL.h"
 #include "dbwrappers/dataset.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "language/i18n/TableLanguageCodes.h"
@@ -1135,11 +1136,9 @@ void CVideoDatabase::UpdateTables(int iVersion)
         // ISO 639-2/B that do not have an ISO 639-1 equivalent are left alone, as they are either
         // identical to the desired ISO 639-2/T code or unrecognized values that must have come
         // from AS.xml or a language addon. There is no easy way to tell which situation applies.
-        const auto it = std::ranges::lower_bound(LanguageCodesByIso639_2b, iso6392Lower, {},
-                                                 &ISO639::iso639_2b);
-        if (it != LanguageCodesByIso639_2b.end() && it->iso639_2b == iso6392Lower)
+        if (const auto alpha2 = KODI::LANGUAGE::I18N::Alpha2OfAlpha3B(iso6392Lower))
         {
-          const auto to = std::string{it->iso639_1};
+          const auto to = std::string{*alpha2};
           m_pDS->exec(PrepareSQL("UPDATE movie SET originalLanguage='" + to +
                                  "' WHERE originalLanguage='" + from + "'"));
           m_pDS->exec(PrepareSQL("UPDATE tvshow SET originalLanguage='" + to +
@@ -1428,9 +1427,22 @@ void CVideoDatabase::UpdateTables(int iVersion)
 
   if (iVersion < 149)
     m_pDS->exec("ALTER TABLE streamdetails ADD iFlags INTEGER DEFAULT 0");
+
+  if (iVersion < 150)
+  {
+    KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
+
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredAspect float");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredOn text");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DetectedWhenDeclared float");
+
+    for (const char* table :
+         {"movie", "tvshow", "seasons", "episode", "musicvideo", "sets", "genre", "tag"})
+      AddAutoIncrement(table);
+  }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 149;
+  return 150;
 }

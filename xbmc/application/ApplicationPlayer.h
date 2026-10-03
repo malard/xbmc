@@ -12,7 +12,6 @@
 #include "application/IApplicationComponent.h"
 #include "cores/IPlayer.h"
 #include "cores/MenuType.h"
-#include "playlists/PlayListTypes.h"
 #include "threads/CriticalSection.h"
 #include "threads/SystemClock.h"
 
@@ -94,7 +93,6 @@ public:
   int64_t GetChapterPos(int chapterIdx = -1) const;
   float GetPercentage() const;
   std::string GetPlayerState();
-  KODI::PLAYLIST::Id GetPreferredPlaylist() const;
   int GetSubtitleDelay() const;
   int GetSubtitle();
   void GetSubtitleCapabilities(std::vector<IPlayerSubtitleCaps>& caps) const;
@@ -139,6 +137,13 @@ public:
   bool IsStreaming() const;
   void LoadPage(int p, int sp, unsigned char* buffer);
   bool OnAction(const CAction &action);
+
+  /*!
+   \brief Handle the pause, play, speed, tempo and channel actions for what is playing.
+   \return true if \p action was one of them and has been handled
+   */
+  bool OnPlaybackAction(const CAction& action);
+
   void OnNothingToQueueNotify();
   void Pause();
   bool QueueNextFile(const CFileItem &file);
@@ -152,6 +157,7 @@ public:
   void SetAVDelay(float fValue = 0.0f);
   void SetBookmarks(const std::vector<std::chrono::milliseconds>& bookmarks);
   void SetDynamicRangeCompression(long drc);
+  void NotifyAudioChainReady();
   void SetMute(bool bOnOff);
   bool SetPlayerState(const std::string& state);
   void SetSubtitle(int iStream);
@@ -218,11 +224,11 @@ private:
 
   // cache player state
   XbmcThreads::EndTime<> m_audioStreamUpdate;
-  int m_iAudioStream;
+  int m_iAudioStream{-1};
   XbmcThreads::EndTime<> m_videoStreamUpdate;
-  int m_iVideoStream;
+  int m_iVideoStream{-1};
   XbmcThreads::EndTime<> m_subtitleStreamUpdate;
-  int m_iSubtitleStream;
+  int m_iSubtitleStream{-1};
 
   struct SNextItem
   {

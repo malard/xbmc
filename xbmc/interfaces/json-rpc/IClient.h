@@ -10,12 +10,12 @@
 
 namespace JSONRPC
 {
-  class IClient
-  {
-  public:
-    virtual ~IClient() = default;
-    virtual int GetPermissionFlags() = 0;
-    virtual int GetAnnouncementFlags() = 0;
-    virtual bool SetAnnouncementFlags(int flags) = 0;
-  };
-}
+class IClient
+{
+public:
+  virtual ~IClient() = default;
+  virtual int GetPermissionFlags() = 0;
+  virtual int GetAnnouncementFlags() = 0;
+  virtual bool SetAnnouncementFlags(int flags) = 0;
+};
+} // namespace JSONRPC

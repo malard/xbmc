@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "media/MediaType.h"
 #include "utils/SortUtils.h"
 #include "utils/Variant.h"
 
@@ -120,4 +121,26 @@ TEST(TestSortUtils, GetFieldsForSorting)
   it = fields.find(Field::TRACK_NUMBER);
   EXPECT_EQ(Field::TRACK_NUMBER, *it);
   EXPECT_EQ(5U, fields.size());
+}
+
+TEST(TestSortUtils, GetFieldsForSQLSort)
+{
+  using KODI::MEDIA::MediaType;
+  FieldList fields;
+
+  SortUtils::GetFieldsForSQLSort(MediaType::ALBUM, SortBy::ARTIST_THEN_YEAR, fields);
+  EXPECT_EQ(fields, (FieldList{Field::ARTIST, Field::YEAR, Field::ALBUM, Field::ID}));
+
+  SortUtils::GetFieldsForSQLSort(MediaType::SONG, SortBy::FILE, fields);
+  EXPECT_EQ(fields, (FieldList{Field::PATH, Field::FILENAME, Field::START_OFFSET, Field::ID}));
+
+  SortUtils::GetFieldsForSQLSort(MediaType::ARTIST, SortBy::TITLE, fields);
+  EXPECT_EQ(fields, (FieldList{Field::ARTIST, Field::ID}));
+
+  // A sort with no fields of its own still orders by id
+  SortUtils::GetFieldsForSQLSort(MediaType::ARTIST, SortBy::BPM, fields);
+  EXPECT_EQ(fields, (FieldList{Field::ID}));
+
+  SortUtils::GetFieldsForSQLSort(MediaType::NONE, SortBy::TITLE, fields);
+  EXPECT_TRUE(fields.empty());
 }

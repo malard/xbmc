@@ -21,12 +21,13 @@
 #include "filesystem/BlurayCallback.h"
 #include "filesystem/Directory.h"
 #include "filesystem/DirectoryFactory.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #if defined(HAS_UDFREAD)
 #include "filesystem/UDFContext.h"
 #endif
+#include "language/LanguageTag.h"
 #include "utils/EpisodeUtils.h"
-#include "utils/LanguageTag.h"
+#include "utils/ItemProperties.h"
 #include "utils/RegExp.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -270,7 +271,7 @@ std::shared_ptr<CFileItem> GetFileItem(const CURL& url,
   const auto item{std::make_shared<CFileItem>(path.Get(), false)};
   const int duration{static_cast<int>(title.duration.count() / 1000)};
   item->GetVideoInfoTag()->SetDuration(duration);
-  item->SetProperty("bluray_playlist", title.playlist);
+  item->SetProperty(KODI::ITEM::PROPERTY::BLURAY_PLAYLIST, title.playlist);
 
   // Stream details are deferred when the playlist is only a candidate
   // as parsing the m2ts is expensive
@@ -463,7 +464,7 @@ void CBlurayDirectory::ProcessPlaylist(PlaylistMap& playlists,
   titleInfo.languages =
       fmt::format("{}", fmt::join(titleInfo.audioStreams |
                                       std::views::transform([](const auto& stream)
-                                                            { return stream.language.AsBcp47(); }),
+                                                            { return stream.language.ToString(); }),
                                   ","));
 
   // Saved as a whole, so a field added to PlaylistInformation reaches the playlist map without
@@ -504,7 +505,7 @@ bool CBlurayDirectory::GetPlaylistsInformation(const CURL& url,
 
     for (const auto& title : allTitles)
     {
-      const int playlist{title->GetProperty("bluray_playlist").asInteger32(-1)};
+      const int playlist{title->GetProperty(KODI::ITEM::PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
       PlaylistInformation titleInfo;
       if (playlist == -1 || !GetPlaylistInfoFromDisc(url, realPath, playlist, StreamDetails::DEFER,
                                                      titleInfo, clipCache))
@@ -519,7 +520,7 @@ bool CBlurayDirectory::GetPlaylistsInformation(const CURL& url,
                  title->GetVideoInfoTag()->GetDuration(), titleInfo.languages,
                  fmt::join(titleInfo.pgStreams |
                                std::views::transform([](const auto& stream)
-                                                     { return stream.language.AsBcp47(); }),
+                                                     { return stream.language.ToString(); }),
                            ","),
                  fmt::join(titleInfo.clips, ","));
     }
@@ -973,7 +974,7 @@ bool CBlurayDirectory::EnsureBlurayOpen()
     return false;
   }
 
-  const std::string menuLang{g_langInfo.GetDVDMenuLanguage().AsIso6392T()};
+  const std::string menuLang{KODI::LANGUAGE::CLanguage::GetInstance().UI().AsIso6392T()};
   bd_set_player_setting_str(m_bd, BLURAY_PLAYER_SETTING_MENU_LANG, menuLang.c_str());
 
   if (!bd_open_files(m_bd, &m_realPath, CBlurayCallback::dir_open, CBlurayCallback::file_open))

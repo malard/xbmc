@@ -18,6 +18,7 @@
 #include "dialogs/GUIDialogContextMenu.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
+#include "filesystem/AddonsDirectory.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "games/GameUtils.h"
 #include "guilib/GUIComponent.h"
@@ -38,6 +39,7 @@
 
 using namespace KODI;
 using namespace GAME;
+using KODI::MEDIA::MediaSection;
 
 #define CONTROL_BTNVIEWASICONS 2
 #define CONTROL_BTNSORTBY 3
@@ -53,13 +55,13 @@ bool CGUIWindowGames::OnMessage(CGUIMessage& message)
   {
     case GUI_MSG_WINDOW_INIT:
     {
-      m_rootDir.AllowNonLocalSources(true); //! @todo
+      m_rootDir.AllowNonLocalSources(true);
 
       // Is this the first time the window is opened?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
-        message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource("games"));
+        message.SetStringParam(
+            CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::GAMES));
 
-      //! @todo
       m_dlgProgress = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(
           WINDOW_DIALOG_PROGRESS);
 
@@ -167,7 +169,7 @@ void CGUIWindowGames::GetContextButtons(int itemNumber, CContextButtons& buttons
     if (m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->IsSourcesPath())
     {
       // Context buttons for a sources path, like "Add Source", "Remove Source", etc.
-      CGUIDialogContextMenu::GetContextButtons("games", item, buttons);
+      CGUIDialogContextMenu::GetContextButtons(MediaSection::GAMES, item, buttons);
     }
     else
     {
@@ -203,7 +205,7 @@ bool CGUIWindowGames::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   {
     if (m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->IsSourcesPath())
     {
-      if (CGUIDialogContextMenu::OnContextButton("games", item, button))
+      if (CGUIDialogContextMenu::OnContextButton(MediaSection::GAMES, item, button))
       {
         Update(m_vecItems->GetPath());
         return true;
@@ -235,7 +237,7 @@ bool CGUIWindowGames::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
 
 bool CGUIWindowGames::OnAddMediaSource()
 {
-  return CGUIDialogMediaSource::ShowAndAddMediaSource("games");
+  return CGUIDialogMediaSource::ShowAndAddMediaSource(MediaSection::GAMES);
 }
 
 bool CGUIWindowGames::GetDirectory(const std::string& strDirectory, CFileItemList& items)
@@ -297,7 +299,8 @@ bool CGUIWindowGames::GetDirectory(const std::string& strDirectory, CFileItemLis
   if (items.GetLabel().empty())
   {
     std::string source;
-    if (m_rootDir.IsSource(items.GetPath(), CMediaSourceSettings::GetInstance().GetSources("games"),
+    if (m_rootDir.IsSource(items.GetPath(),
+                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::GAMES),
                            &source))
       label = std::move(source);
   }
@@ -335,7 +338,7 @@ std::string CGUIWindowGames::GetStartFolder(const std::string& dir)
 
   if (StringUtils::EqualsNoCase(dir, "plugins") || StringUtils::EqualsNoCase(dir, "addons"))
   {
-    return "addons://sources/game/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::GAMES);
   }
 
   SetupShares();
@@ -348,7 +351,7 @@ std::string CGUIWindowGames::GetStartFolder(const std::string& dir)
     if (iIndex < static_cast<int>(shares.size()) && shares[iIndex].GetLockInfo().IsLocked())
     {
       CFileItem item(shares[iIndex]);
-      if (!g_passwordManager.IsItemUnlocked(&item, "games"))
+      if (!g_passwordManager.IsItemUnlocked(&item, MediaSection::GAMES))
         return "";
     }
     if (bIsSourceName)
@@ -370,16 +373,6 @@ void CGUIWindowGames::OnItemInfo(int itemNumber)
       CGUIDialogAddonInfo::ShowForItem(item);
   }
 
-  //! @todo
-  /*
-  CGUIDialogGameInfo* gameInfo =
-  CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogGameInfo>(WINDOW_DIALOG_PICTURE_INFO);
-  if (gameInfo)
-  {
-    gameInfo->SetGame(item);
-    gameInfo->Open();
-  }
-  */
 }
 
 bool CGUIWindowGames::PlayGame(const CFileItem& item)
@@ -395,12 +388,10 @@ bool CGUIWindowGames::PlayGame(const CFileItem& item)
     itemCopy.GetGameInfoTag();
   }
 
-  PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
-  if (PLAYLIST::IsPlayList(item))
-    playlistId = PLAYLIST::Id::TYPE_GAME;
-
-  CServiceBroker::GetAppMessenger()->PostMsg(
-      TMSG_APPLICATION_PLAY_MEDIA, static_cast<int>(playlistId), -1, new CFileItem(itemCopy), "");
+  // a playlist of games plays on the Video playlist; anything else lets the item choose
+  const int playlist = PLAYLIST::IsPlayList(item) ? static_cast<int>(PLAYLIST::Video) : -1;
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_APPLICATION_PLAY_MEDIA, playlist, -1,
+                                             new CFileItem(itemCopy), "");
   return true;
 }
 

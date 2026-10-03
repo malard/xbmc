@@ -17,6 +17,7 @@
 #include "UPnPInternal.h"
 #include "URL.h"
 #include "application/Application.h"
+#include "application/ApplicationPlayLists.h"
 #include "filesystem/SpecialProtocol.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -28,10 +29,11 @@
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayListTypes.h"
+#include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
-#include "video/VideoFileItemClassify.h"
 
 #include <inttypes.h>
 #include <mutex>
@@ -54,8 +56,7 @@ CUPnPRenderer::CUPnPRenderer(const char* friendly_name,
                              unsigned int port /*= 0*/)
   : PLT_MediaRenderer(friendly_name, show_ip, uuid, port)
 {
-  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player |
-                                                                   ANNOUNCEMENT::Application);
+  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player);
 }
 
 /*----------------------------------------------------------------------
@@ -249,6 +250,24 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   NPT_AutoLock lock(m_state);
   PLT_Service *avt, *rct;
 
+  if (flag == ANNOUNCEMENT::Player && message == "OnPropertiesChanged")
+  {
+    const CVariant& properties = data["properties"];
+    if (!(properties.isMember("volume") || properties.isMember("muted")) ||
+        NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:RenderingControl:1", rct)))
+      return;
+
+    if (properties.isMember("volume"))
+    {
+      const int64_t volume = properties["volume"].asInteger();
+      rct->SetStateVariable("Volume", std::to_string(volume).c_str());
+      rct->SetStateVariable("VolumeDb", std::to_string(256 * (volume * 60 - 60) / 100).c_str());
+    }
+    if (properties.isMember("muted"))
+      rct->SetStateVariable("Mute", properties["muted"].asBoolean() ? "1" : "0");
+    return;
+  }
+
   if (flag == ANNOUNCEMENT::Player)
   {
     if (NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:AVTransport:1", avt)))
@@ -289,21 +308,6 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     {
       Reset(avt);
     }
-  }
-  else if (flag == ANNOUNCEMENT::Application && message == "OnVolumeChanged")
-  {
-    if (NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:RenderingControl:1", rct)))
-      return;
-
-    std::string buffer;
-
-    buffer = std::to_string(data["volume"].asInteger());
-    rct->SetStateVariable("Volume", buffer.c_str());
-
-    buffer = std::to_string(256 * (data["volume"].asInteger() * 60 - 60) / 100);
-    rct->SetStateVariable("VolumeDb", buffer.c_str());
-
-    rct->SetStateVariable("Mute", data["muted"].asBoolean() ? "1" : "0");
   }
 }
 
@@ -430,7 +434,7 @@ NPT_Result CUPnPRenderer::SetupIcons()
 NPT_Result CUPnPRenderer::GetMetadata(NPT_String& meta)
 {
   NPT_Result res = NPT_FAILURE;
-  CFileItem item(g_application.CurrentFileItem());
+  CFileItem item(*g_application.CurrentFileItemPtr());
   NPT_String file_path, tmp;
 
   // we pass an empty CThumbLoader reference, as it can't be used
@@ -460,7 +464,7 @@ NPT_Result CUPnPRenderer::GetMetadata(NPT_String& meta)
     PLT_AlbumArtInfo art;
     art.uri = NPT_HttpUrl(ip, m_URLDescription.GetPort(), "/thumb", query.ToString()).ToString();
     // Set DLNA profileID by extension, defaulting to JPEG.
-    if (URIUtils::HasExtension(item.GetArt("thumb"), ".png"))
+    if (URIUtils::HasExtension(item.GetArt(ART::TYPE::THUMB), ".png"))
     {
       art.dlna_profile = "PNG_TN";
     }
@@ -627,36 +631,23 @@ NPT_Result CUPnPRenderer::OnSetNextAVTransportURI(PLT_ActionReference& action)
     return NPT_FAILURE;
   }
 
-  //! @todo get rid of window checks (go via SlideshowDelegator)
-  if (GetTransportState() == "PLAYING" &&
-      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
+  bool showingPicture;
   {
-
-    PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_MUSIC;
-    if (VIDEO::IsVideo(*item))
-      playlistId = PLAYLIST::Id::TYPE_VIDEO;
-
-    // note: auto-deleted when the message is consumed
-    auto playlist = new CFileItemList();
-    playlist->AddFront(item, 0);
-    CServiceBroker::GetAppMessenger()->PostMsg(
-        TMSG_PLAYLISTPLAYER_ADD, static_cast<int>(playlistId), -1, static_cast<void*>(playlist));
-
-    service->SetStateVariable("NextAVTransportURI", uri);
-    service->SetStateVariable("NextAVTransportURIMetaData", meta);
-
-    NPT_CHECK_SEVERE(action->SetArgumentsOutFromStateVariable());
-
-    return NPT_SUCCESS;
+    NPT_AutoLock lock(m_state);
+    showingPicture = m_showingPicture;
   }
-  else if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_SLIDESHOW)
-  {
+  // a picture is shown by the slideshow, which plays nothing next
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const std::optional<PLAYLIST::Type> playing = playLists->GetPlayingType();
+  if (GetTransportState() != "PLAYING" || !playing || showingPicture || item->IsPicture())
     return NPT_FAILURE;
-  }
-  else
-  {
-    return NPT_FAILURE;
-  }
+
+  playLists->Queue(*playing, item, CApplicationPlayLists::Placement::Next);
+
+  service->SetStateVariable("NextAVTransportURI", uri);
+  service->SetStateVariable("NextAVTransportURIMetaData", meta);
+  NPT_CHECK_SEVERE(action->SetArgumentsOutFromStateVariable());
+  return NPT_SUCCESS;
 }
 
 /*----------------------------------------------------------------------
@@ -690,11 +681,13 @@ NPT_Result CUPnPRenderer::PlayMedia(const NPT_String& uri,
     item->SetProperty("no-ext-subs-scan", true);
     CFileItemList* l = new CFileItemList; //don't delete,
     l->Add(std::make_shared<CFileItem>(*item));
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1, static_cast<void*>(l));
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
+                                               static_cast<void*>(l));
   }
 
   // just return success because the play actions are asynchronous
   NPT_AutoLock lock(m_state);
+  m_showingPicture = item->IsPicture();
   service->SetStateVariable("TransportState", "PLAYING");
   service->SetStateVariable("TransportStatus", "OK");
   service->SetStateVariable("AVTransportURI", uri);

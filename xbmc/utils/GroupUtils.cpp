@@ -13,6 +13,7 @@
 #include "filesystem/MultiPathDirectory.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
+#include "video/VideoDbPaths.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
@@ -23,6 +24,7 @@
 using namespace KODI;
 
 using SetMap = std::map<int, std::set<CFileItemPtr> >;
+using KODI::MEDIA::MediaType;
 
 bool GroupUtils::Group(GroupBy groupBy, const std::string &baseDir, const CFileItemList &items, CFileItemList &groupedItems, GroupAttribute groupAttributes /* = GroupAttributeNone */)
 {
@@ -75,9 +77,9 @@ bool GroupUtils::Group(GroupBy groupBy, const std::string &baseDir, const CFileI
       CFileItemPtr pItem(
           new CFileItem((*set->second.begin())->GetVideoInfoTag()->m_set.GetTitle()));
       pItem->GetVideoInfoTag()->m_iDbId = set->first;
-      pItem->GetVideoInfoTag()->m_type = MediaTypeVideoCollection;
+      pItem->GetVideoInfoTag()->SetMediaType(MediaType::VIDEO_COLLECTION);
 
-      std::string basePath = StringUtils::Format("videodb://movies/sets/{}/", set->first);
+      std::string basePath = StringUtils::Format("{}{}/", VIDEO::DB_PATH::MOVIE_SETS, set->first);
       CVideoDbUrl videoUrl;
       if (!videoUrl.FromString(basePath))
         pItem->SetPath(basePath);

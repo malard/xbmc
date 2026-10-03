@@ -12,9 +12,11 @@
 #include "VideoInfoTag.h"
 #include "addons/Scraper.h"
 #include "dbwrappers/Database.h"
+#include "media/MediaType.h"
 #include "utils/Artwork.h"
 #include "utils/SortUtils.h"
 #include "utils/UrlOptions.h"
+#include "video/geometry/ContentGeometryRecord.h"
 
 #include <array>
 #include <functional>
@@ -151,6 +153,14 @@ using EpisodeFileMap = std::multimap<std::string, EpisodeInformation, std::less<
 using EpisodeFileMapEntry = EpisodeFileMap::value_type;
 
 static constexpr const char* MULTIPLE_EPISODES{"multiple_episodes"};
+
+//! \brief One file the content geometry sweep may have to measure, and what it already holds.
+struct ContentGeometryCandidate
+{
+  int idFile{-1};
+  std::string path;
+  std::optional<KODI::VIDEO::GEOMETRY::ContentGeometryRecord> stored;
+};
 
 class CVideoDatabase : public CDatabase
 {
@@ -297,15 +307,64 @@ public:
                      CFileItem* item = nullptr,
                      int getDetails = VideoDbDetailsAll);
   bool GetSeasonInfo(const std::string& path, int season, CVideoInfoTag& details, CFileItem* item);
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item);
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails = true);
+  bool GetSeasonInfo(int idSeason,
+                     CVideoInfoTag& details,
+                     CFileItem* item = nullptr,
+                     bool allDetails = true);
   bool GetEpisodeBasicInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode  = -1);
   bool GetEpisodeInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode = -1, int getDetails = VideoDbDetailsAll);
   bool GetMusicVideoInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idMVideo = -1, int getDetails = VideoDbDetailsAll);
   bool GetSetInfo(int idSet, CVideoInfoTag& details, CFileItem* item = nullptr);
   bool GetFileInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idFile = -1);
 
+  //! The path is ignored when idMovie is given.
+  GetResult TryGetMovieInfo(const std::string& strFilenameAndPath,
+                            CVideoInfoTag& details,
+                            int idMovie = -1,
+                            int idVersion = -1,
+                            int idFile = -1,
+                            int getDetails = VideoDbDetailsAll);
+
+  //! The path is ignored when idTvShow is given.
+  GetResult TryGetTvShowInfo(const std::string& strPath,
+                             CVideoInfoTag& details,
+                             int idTvShow = -1,
+                             CFileItem* item = nullptr,
+                             int getDetails = VideoDbDetailsAll);
+
+  //! allDetails fills from the season view rather than the season row.
+  GetResult TryGetSeasonInfo(int idSeason,
+                             CVideoInfoTag& details,
+                             CFileItem* item = nullptr,
+                             bool allDetails = true);
+
+  //! The path is ignored when idEpisode is given.
+  GetResult TryGetEpisodeInfo(const std::string& strFilenameAndPath,
+                              CVideoInfoTag& details,
+                              int idEpisode = -1,
+                              int getDetails = VideoDbDetailsAll);
+
+  //! The path is ignored when idMVideo is given.
+  GetResult TryGetMusicVideoInfo(const std::string& strFilenameAndPath,
+                                 CVideoInfoTag& details,
+                                 int idMVideo = -1,
+                                 int getDetails = VideoDbDetailsAll);
+
+  GetResult TryGetSetInfo(int idSet, CVideoInfoTag& details, CFileItem* item = nullptr);
+
+  //! The path is ignored when idFile is given. Adds to details rather than replacing them.
+  GetResult TryGetFileInfo(const std::string& strFilenameAndPath,
+                           CVideoInfoTag& details,
+                           int idFile = -1);
+
   int GetPathId(const std::string& strPath);
+
+  /*! \brief Get the id of this fileitem
+   Works for both videodb:// items and normal fileitems
+   \param item CFileItem to grab the fileid of
+   \return id of the file, -1 if it is not in the db.
+   */
+  int GetFileId(const CFileItem& item);
   /*! \brief Get the id of a path, also accepting the zip:// or archive:// equivalent of an
    *         archive path (AddPath() stores these interchangeably).
    */
@@ -313,6 +372,7 @@ public:
   int GetTvShowId(const std::string& strPath);
   // input value is episode/season number hint - for multiparters
   int GetEpisodeId(const std::string& strFilenameAndPath, int episode = -1, int season = -1);
+  int GetMusicVideoId(const std::string& strFilenameAndPath);
   int GetSeasonId(int idShow, int season) const;
 
   void GetEpisodesByBlurayPath(const std::string& path, std::vector<CVideoInfoTag>& episodes);
@@ -417,7 +477,7 @@ public:
    * \brief Announce that a library item has changed, so that widgets and other listeners reload it
    * \param[in] content The item's media type
    */
-  static void AnnounceUpdate(const std::string& content, int id);
+  static void AnnounceUpdate(KODI::MEDIA::MediaType content, int id);
 
   void SetTrailerForMovie(int idMovie, const std::string& trailer);
 
@@ -478,38 +538,38 @@ public:
    */
   bool GetVideoSettings(const std::string &filePath, CVideoSettings &settings);
 
-  /*! \brief Set video settings for the specified file path
-   \param fileItem to set the settings for
+  /*! \brief Set video settings for the specified item
+   \param item to set the settings for
    \sa GetVideoSettings
    */
   void SetVideoSettings(const CFileItem &item, const CVideoSettings &settings);
 
-  /*! \brief Set video settings for the specified file path
-   \param fileId to set the settings for
+  /*! \brief Set video settings for the specified file id
+   \param idFile to set the settings for
    \sa GetVideoSettings
    */
   void SetVideoSettings(int idFile, const CVideoSettings &settings);
 
-  /**
-   * Erases video settings for file item
-   * @param fileitem
+  /*!
+   * \brief Erases video settings for file item
+   * \param item the item to erase the settings of
    */
   void EraseVideoSettings(const CFileItem &item);
 
-  /**
-   * Erases all video settings
+  /*!
+   * \brief Erases all video settings
    */
   void EraseAllVideoSettings();
 
-  /**
-   * Erases video settings for files starting with path
-   * @param path pattern
+  /*!
+   * \brief Erases video settings for files starting with path
+   * \param path pattern
    */
   void EraseAllVideoSettings(const std::string& path);
 
-  /**
-   * Erases all entries for files starting with path, including the files and path entries
-   * @param path pattern
+  /*!
+   * \brief Erases all entries for files starting with path, including the files and path entries
+   * \param path pattern
    */
   void EraseAllForPath(const std::string& path);
 
@@ -553,8 +613,43 @@ public:
    */
   bool GetFileMetadataForPath(const std::string& strPath,
                               std::map<std::string, CVideoInfoTag>& metadata);
+  /*! \brief The details of the library item of \p type with \p id.
+   \param item when given, filled as the library lists a set, show or season
+   \param idVersion, idFile for a movie, the version to read, as TryGetMovieInfo takes them
+   */
+  GetResult TryGetDetailsByTypeAndId(KODI::MEDIA::MediaType type,
+                                     int id,
+                                     CVideoInfoTag& details,
+                                     CFileItem* item = nullptr,
+                                     int getDetails = VideoDbDetailsAll,
+                                     int idVersion = -1,
+                                     int idFile = -1);
   bool GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id);
   CVideoInfoTag GetDetailsByTypeAndId(VideoDbContentType type, int id);
+
+  /*! \name Content geometry
+   * The measured picture rectangle of a file. Detection results only; a declared ratio
+   * lives in the settings table.
+   */
+  ///@{
+
+  //! \brief Store the content geometry of a file, replacing any previous one.
+  bool SetContentGeometry(int idFile, const KODI::VIDEO::GEOMETRY::ContentGeometryRecord& geometry);
+
+  //! \brief Look up the content geometry of a file, checking it still describes that file.
+  //! MISSING both when there is none and when what is stored was measured from other content.
+  KODI::VIDEO::GEOMETRY::ContentGeometryLookup GetContentGeometry(
+      int idFile, const KODI::VIDEO::GEOMETRY::FileIdentity& identity);
+
+  //! \brief What is stored for a file, including a record that found nothing, without checking
+  //! it still describes the file. Anything acting on the rectangle uses GetContentGeometry().
+  std::optional<KODI::VIDEO::GEOMETRY::ContentGeometryRecord> GetStoredContentGeometry(int idFile);
+
+  //! \brief Every file in the library with whatever content geometry is stored for it,
+  //! unfiltered.
+  std::vector<ContentGeometryCandidate> GetContentGeometryCandidates();
+
+  ///@}
 
   // scraper settings
   struct StringHash
@@ -648,6 +743,11 @@ public:
    \return the same directory with platform separators and a trailing separator
    */
   static std::string ToStoredPath(const std::string& directory);
+
+  /*! \brief The id column of the table holding \p type, which NameOf(type) names.
+   \return empty for a type without a table of its own
+   */
+  static std::string_view IdColumnOf(KODI::MEDIA::MediaType type);
 
   /*! \brief Resolve the path ids a library clean should cover.
    \param directory a directory to restrict the clean to, empty for the whole library.
@@ -867,7 +967,11 @@ public:
   bool GetMusicVideosByWhere(const std::string &baseDir, const Filter &filter, CFileItemList& items, bool checkLocks = true, const SortDescription &sortDescription = SortDescription(), int getDetails = VideoDbDetailsNone);
 
   // retrieve sorted and limited items
-  bool GetSortedVideos(const MediaType &mediaType, const std::string& strBaseDir, const SortDescription &sortDescription, CFileItemList& items, const Filter &filter = Filter());
+  bool GetSortedVideos(KODI::MEDIA::MediaType mediaType,
+                       const std::string& strBaseDir,
+                       const SortDescription& sortDescription,
+                       CFileItemList& items,
+                       const Filter& filter = Filter());
 
   // retrieve a list of items
   bool GetItems(const std::string &strBaseDir, CFileItemList &items, const Filter &filter = Filter(), const SortDescription &sortDescription = SortDescription());
@@ -883,37 +987,12 @@ public:
   // partymode
   /*! \brief Gets music video IDs in random order that match the where clause
   \param strWhere the SQL where clause to apply in the query
-  \param songIDs a vector of <2, id> pairs suited to party mode use
+  \param musicVideoIDs [out] the matching music video ids
   \return count of music video IDs found.
   */
-  unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<std::pair<int, int> > &songIDs);
+  unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
-  static MediaType VideoContentTypeToString(VideoDbContentType type)
-  {
-    switch (type)
-    {
-      case VideoDbContentType::MOVIES:
-        return MediaTypeMovie;
-      case VideoDbContentType::TVSHOWS:
-        return MediaTypeTvShow;
-      case VideoDbContentType::EPISODES:
-        return MediaTypeEpisode;
-      case VideoDbContentType::MUSICVIDEOS:
-        return MediaTypeMusicVideo;
-      default:
-        return {};
-    }
-  }
-
-  bool SetArtForItem(int mediaId,
-                     const MediaType& mediaType,
-                     const std::string& artType,
-                     const std::string& url);
-  bool SetArtForItem(int mediaId, const MediaType& mediaType, const KODI::ART::Artwork& art);
-  bool GetArtForItem(int mediaId, const MediaType& mediaType, KODI::ART::Artwork& art);
-  std::string GetArtForItem(int mediaId, const MediaType &mediaType, const std::string &artType);
-
-  void UpdateArtForItem(int mediaId, const MediaType& mediaType) const;
+  void UpdateArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType) const;
 
   /*!
    * \brief Retrieve all art for the given video asset, with optional fallback to the art of the
@@ -922,14 +1001,9 @@ public:
    * \param fallback optionally request fallback to the art of the parent/owner for each art type
      that is not defined for the asset
    * \param art collection of the retrieved art
-   * \return 
+   * \return true on success, false on a database error
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
-  bool HasArtForItem(int mediaId, const MediaType &mediaType);
-  bool RemoveArtForItem(int mediaId, const MediaType &mediaType, const std::string &artType);
-  bool RemoveArtForItem(int mediaId,
-                        const MediaType& mediaType,
-                        const std::set<std::string, std::less<>>& artTypes);
   /*!
    * \brief Retrieve season information of a TV show.
    * \param[in] showId ID of the show
@@ -954,7 +1028,6 @@ public:
   std::string GetTvShowNamedSeasonById(int tvshowId, int seasonId) const;
 
   bool GetTvShowSeasonArt(int mediaId, KODI::ART::SeasonsArtwork& seasonArt);
-  bool GetArtTypes(const MediaType &mediaType, std::vector<std::string> &artTypes);
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -962,7 +1035,8 @@ public:
   \param mediaType the type of media, which corresponds to the table the item resides in.
   \return the types of art e.g. "thumb", "fanart", etc.
   */
-  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, const MediaType& mediaType);
+  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId,
+                                                       KODI::MEDIA::MediaType mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.
@@ -971,13 +1045,14 @@ public:
   \param artType e.g. "thumb", "fanart", etc.
   \return list of URLs
   */
-  std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(
-    int mediaId, const MediaType& mediaType, const std::string& artType);
+  std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
+                                                             KODI::MEDIA::MediaType mediaType,
+                                                             const std::string& artType);
 
   int AddTag(const std::string &tag);
-  void AddTagToItem(int idItem, int idTag, const std::string &type);
-  void RemoveTagFromItem(int idItem, int idTag, const std::string &type);
-  void RemoveTagsFromItem(int idItem, const std::string &type);
+  void AddTagToItem(int idItem, int idTag, KODI::MEDIA::MediaType type);
+  void RemoveTagFromItem(int idItem, int idTag, KODI::MEDIA::MediaType type);
+  void RemoveTagsFromItem(int idItem, KODI::MEDIA::MediaType type);
 
   bool GetFilter(CDbUrl &videoUrl, Filter &filter, SortDescription &sorting) override;
 
@@ -995,7 +1070,7 @@ public:
              const bool updateOverview = true);
   void ClearMovieSet(int idMovie);
   void SetMovieSet(int idMovie, int idSet);
-  bool SetVideoUserRating(int dbId, int rating, const MediaType& mediaType);
+  bool SetVideoUserRating(int dbId, int rating, KODI::MEDIA::MediaType mediaType);
   bool GetUseAllExternalAudioForVideo(const std::string& videoPath);
 
   std::string GetSetByNameLike(const std::string& nameLike) const;
@@ -1012,13 +1087,13 @@ public:
   /*!
    * \brief Remove a video from the library and transfer all of its assets to another video of the
    * same type.
-   * \param itemType[in] Type of the video being converted
-   * \param dbIdSource[in] id of the video being converted
-   * \param dbIdTarget[in] id that the video will be attached to
-   * \param idVideoVersion[in] new versiontype of the default version of the video
-   *                           special value -1: keep the current versiontype of the video.
-   * \param assetType[in] new asset type of the default version of the video.
-   * \param cascadeAction[in] action to take on the assets of the video being converted
+   * \param[in] itemType Type of the video being converted
+   * \param[in] dbIdSource id of the video being converted
+   * \param[in] dbIdTarget id that the video will be attached to
+   * \param[in] idVideoVersion new versiontype of the default version of the video
+   *            special value -1: keep the current versiontype of the video.
+   * \param[in] assetType new asset type of the default version of the video.
+   * \param[in] cascadeAction action to take on the assets of the video being converted
    *        (used to preserve streamdetails for bluray playlists)
    * \return true for success, false otherwise
    */
@@ -1031,10 +1106,11 @@ public:
 
   /*!
    * \brief Adds or updates a version of an existing movie to the database
-   * \param itemType type of the video being converted
-   * \param dbIdSource id of the video being converted
-   * \param idVideoVersion new versiontype of the default version of the video
-   * \param assetType new asset type of the default version of the video
+   * \param itemType type of the video the version belongs to
+   * \param dbIdSource id of the video the version belongs to
+   * \param idFile file id of the version
+   * \param idVideoVersion versiontype of the version
+   * \param assetType asset type of the version
    * \return true if success, false otherwise
    */
   bool AddOrUpdateVideoVersion(VideoDbContentType itemType,
@@ -1078,14 +1154,14 @@ public:
    * \return true when the id exists and matches the provided content and asset type, false otherwise.
    */
   bool IsValidVideoAssetType(int typeId, VideoDbContentType idContent, VideoAssetType asset);
-  bool SetVideoVersionDefaultArt(int dbId, int idFrom, const MediaType& mediaType);
+  bool SetVideoVersionDefaultArt(int dbId, int idFrom, KODI::MEDIA::MediaType mediaType);
   void UpdateVideoVersionTypeTable();
   bool GetVideoVersionsNav(const std::string& strBaseDir,
                            CFileItemList& items,
                            VideoDbContentType idContent = VideoDbContentType::UNKNOWN,
                            const Filter& filter = Filter());
   VideoAssetInfo GetVideoVersionInfo(const std::string& filenameAndPath);
-  bool UpdateAssetsOwner(const std::string& mediaType, int dbIdSource, int dbIdTarget);
+  bool UpdateAssetsOwner(KODI::MEDIA::MediaType mediaType, int dbIdSource, int dbIdTarget);
 
   int GetMovieId(const std::string& strFilenameAndPath);
   std::string GetMovieTitle(int idMovie);
@@ -1105,9 +1181,9 @@ public:
   std::string GetFileBasePathById(int idFile);
 
   /*!
-   * @brief Check the passed in list of images if used in this database. Used to clean the image cache.
-   * @param imagesToCheck
-   * @return a list of the passed in images used by this database.
+   * \brief Check the passed in list of images if used in this database. Used to clean the image cache.
+   * \param imagesToCheck the image URLs to check
+   * \return a list of the passed in images used by this database.
    */
   std::vector<std::string> GetUsedImages(const std::vector<std::string>& imagesToCheck);
 
@@ -1121,14 +1197,6 @@ protected:
   int AddNewMovie(CVideoInfoTag& details);
   int AddNewMusicVideo(CVideoInfoTag& details);
 
-  int GetMusicVideoId(const std::string& strFilenameAndPath);
-
-  /*! \brief Get the id of this fileitem
-   Works for both videodb:// items and normal fileitems
-   \param item CFileItem to grab the fileid of
-   \return id of the file, -1 if it is not in the db.
-   */
-  int GetFileId(const CFileItem &item);
   int GetFileId(const CVideoInfoTag& details);
 
   /*! \brief Get the id of the file of this item and store it in the item
@@ -1153,13 +1221,16 @@ protected:
   int GetDiscStackFileId(const std::string& stackPath);
 
   int AddToTable(const std::string& table, const std::string& firstField, const std::string& secondField, const std::string& value);
-  int UpdateRatings(int mediaId, const char *mediaType, const RatingMap& values, const std::string& defaultRating);
+  int UpdateRatings(int mediaId,
+                    KODI::MEDIA::MediaType mediaType,
+                    const RatingMap& values,
+                    const std::string& defaultRating);
   int AddRatings(int mediaId,
-                 const char* mediaType,
+                 KODI::MEDIA::MediaType mediaType,
                  const RatingMap& values,
                  std::string_view defaultRating);
-  int UpdateUniqueIDs(int mediaId, const char *mediaType, const CVideoInfoTag& details);
-  int AddUniqueIDs(int mediaId, const char *mediaType, const CVideoInfoTag& details);
+  int UpdateUniqueIDs(int mediaId, KODI::MEDIA::MediaType mediaType, const CVideoInfoTag& details);
+  int AddUniqueIDs(int mediaId, KODI::MEDIA::MediaType mediaType, const CVideoInfoTag& details);
   int AddActor(const std::string& strActor, const std::string& thumbURL, const std::string &thumb = "");
 
   int AddTvShow();
@@ -1180,24 +1251,40 @@ protected:
   int GetMatchingTvShow(const CVideoInfoTag& show) const;
 
   // link functions - these two do all the work
-  void AddLinkToActor(int mediaId, const char *mediaType, int actorId, const std::string &role, int order);
+  void AddLinkToActor(int mediaId,
+                      KODI::MEDIA::MediaType mediaType,
+                      int actorId,
+                      const std::string& role,
+                      int order);
   void AddToLinkTable(int mediaId,
-                      const std::string& mediaType,
+                      KODI::MEDIA::MediaType mediaType,
                       const std::string& table,
                       int valueId,
                       const char* foreignKey = nullptr);
   void RemoveFromLinkTable(int mediaId,
-                           const std::string& mediaType,
+                           KODI::MEDIA::MediaType mediaType,
                            const std::string& table,
                            int valueId,
                            const char* foreignKey = nullptr);
 
-  void AddLinksToItem(int mediaId, const std::string& mediaType, const std::string& field, const std::vector<std::string>& values);
-  void UpdateLinksToItem(int mediaId, const std::string& mediaType, const std::string& field, const std::vector<std::string>& values);
-  void AddActorLinksToItem(int mediaId, const std::string& mediaType, const std::string& field, const std::vector<std::string>& values);
-  void UpdateActorLinksToItem(int mediaId, const std::string& mediaType, const std::string& field, const std::vector<std::string>& values);
+  void AddLinksToItem(int mediaId,
+                      KODI::MEDIA::MediaType mediaType,
+                      const std::string& field,
+                      const std::vector<std::string>& values);
+  void UpdateLinksToItem(int mediaId,
+                         KODI::MEDIA::MediaType mediaType,
+                         const std::string& field,
+                         const std::vector<std::string>& values);
+  void AddActorLinksToItem(int mediaId,
+                           KODI::MEDIA::MediaType mediaType,
+                           const std::string& field,
+                           const std::vector<std::string>& values);
+  void UpdateActorLinksToItem(int mediaId,
+                              KODI::MEDIA::MediaType mediaType,
+                              const std::string& field,
+                              const std::vector<std::string>& values);
 
-  void AddCast(int mediaId, const char *mediaType, const std::vector<SActorInfo> &cast);
+  void AddCast(int mediaId, KODI::MEDIA::MediaType mediaType, const std::vector<SActorInfo>& cast);
 
   CVideoInfoTag GetDetailsForMovie(dbiplus::Dataset& pDS, int getDetails = VideoDbDetailsNone);
   CVideoInfoTag GetDetailsForMovie(const dbiplus::sql_record* const record, int getDetails = VideoDbDetailsNone);
@@ -1227,10 +1314,10 @@ protected:
                     VideoDbContentType idContent = VideoDbContentType::UNKNOWN,
                     const Filter& filter = Filter(),
                     bool countOnly = false);
-  void GetCast(int media_id, const std::string &media_type, std::vector<SActorInfo> &cast);
-  void GetTags(int media_id, const std::string &media_type, std::vector<std::string> &tags);
-  void GetRatings(int media_id, const std::string &media_type, RatingMap &ratings);
-  void GetUniqueIDs(int media_id, const std::string &media_type, CVideoInfoTag& details);
+  void GetCast(int media_id, KODI::MEDIA::MediaType media_type, std::vector<SActorInfo>& cast);
+  void GetTags(int media_id, KODI::MEDIA::MediaType media_type, std::vector<std::string>& tags);
+  void GetRatings(int media_id, KODI::MEDIA::MediaType media_type, RatingMap& ratings);
+  void GetUniqueIDs(int media_id, KODI::MEDIA::MediaType media_type, CVideoInfoTag& details);
 
   template<typename T>
   void GetDetailsFromDB(const dbiplus::sql_record* const record,
@@ -1281,14 +1368,14 @@ private:
 
   void AppendIdLinkFilter(const char* field,
                           const char* table,
-                          const MediaType& mediaType,
+                          KODI::MEDIA::MediaType mediaType,
                           const char* view,
                           const char* viewKey,
                           const CUrlOptions::UrlOptions& options,
                           Filter& filter) const;
   void AppendLinkFilter(const char* field,
                         const char* table,
-                        const MediaType& mediaType,
+                        KODI::MEDIA::MediaType mediaType,
                         const char* view,
                         const char* viewKey,
                         const CUrlOptions::UrlOptions& options,
@@ -1297,6 +1384,7 @@ private:
   /*! \brief Determine whether the path is using lookup using folders
    \param path the path to check
    \param shows whether this path is from a tvshow (defaults to false)
+   \return true if items under the path are looked up by folder name
    */
   bool LookupByFolders(const std::string &path, bool shows = false);
 
@@ -1307,8 +1395,8 @@ private:
    */
   int GetPlayCount(int iFileId);
 
-  /*! \brief Get the last played time of a filename and path
-   \param iFileId file id to get the playcount for
+  /*! \brief Get the last played time of a file id
+   \param iFileId file id to get the last played time for
    \return the last played time of the item, or an invalid CDateTime on error
    \sa UpdateLastPlayed
    */
@@ -1320,8 +1408,6 @@ private:
    \return true if a stream was added, false otherwise
    */
   static bool AddStreamDetailFromRow(dbiplus::Dataset& ds, CStreamDetails& details);
-
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails, CFileItem* item);
 
   int GetMinSchemaVersion() const override { return 75; }
   int GetSchemaVersion() const override;
@@ -1348,10 +1434,13 @@ private:
    */
   std::string GetSafeFile(const std::string &dir, const std::string &name) const;
 
-  std::vector<int> CleanMediaType(const std::string &mediaType, const std::string &cleanableFileIDs,
-                                  std::map<int, bool> &pathsDeleteDecisions, std::string &deletedFileIDs, bool silent);
+  std::vector<int> CleanMediaType(KODI::MEDIA::MediaType mediaType,
+                                  const std::string& cleanableFileIDs,
+                                  std::map<int, bool>& pathsDeleteDecisions,
+                                  std::string& deletedFileIDs,
+                                  bool silent);
 
-  static void AnnounceRemove(const std::string& content, int id, bool scanning = false);
+  static void AnnounceRemove(KODI::MEDIA::MediaType content, int id, bool scanning = false);
 
   static CDateTime GetDateAdded(const std::string& filename, CDateTime dateAdded = CDateTime());
 };

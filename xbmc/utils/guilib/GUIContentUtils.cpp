@@ -18,20 +18,29 @@
 #include "video/dialogs/GUIDialogVideoInfo.h"
 
 using namespace KODI::UTILS::GUILIB;
+using KODI::MEDIA::MediaType;
 
 bool CGUIContentUtils::HasInfoForItem(const CFileItem& item)
 {
   if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
   {
-    auto mediaType = item.GetVideoInfoTag()->m_type;
-    return (mediaType == MediaTypeMovie || mediaType == MediaTypeTvShow ||
-            mediaType == MediaTypeSeason || mediaType == MediaTypeEpisode ||
-            mediaType == MediaTypeVideo || mediaType == MediaTypeVideoCollection ||
-            mediaType == MediaTypeMusicVideo);
+    switch (item.GetVideoInfoTag()->GetMediaType())
+    {
+      case MediaType::VIDEO:
+      case MediaType::MOVIE:
+      case MediaType::VIDEO_COLLECTION:
+      case MediaType::TV_SHOW:
+      case MediaType::SEASON:
+      case MediaType::EPISODE:
+      case MediaType::MUSIC_VIDEO:
+        return true;
+      default:
+        return false;
+    }
   }
 
-  return (item.HasMusicInfoTag() || item.HasAddonInfo() ||
-          CServiceBroker::GetPVRManager().Get<PVR::GUI::Utils>().HasInfoForItem(item));
+  return item.HasMusicInfoTag() || item.HasAddonInfo() ||
+         CServiceBroker::GetPVRManager().Get<PVR::GUI::Utils>().HasInfoForItem(item);
 }
 
 bool CGUIContentUtils::ShowInfoForItem(const CFileItem& item)

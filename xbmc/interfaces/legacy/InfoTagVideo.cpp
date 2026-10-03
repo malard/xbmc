@@ -11,13 +11,16 @@
 #include "AddonUtils.h"
 #include "ServiceBroker.h"
 #include "interfaces/legacy/Exception.h"
+#include "language/LanguageTag.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
-#include "utils/LangCodeExpander.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
 
 #include <utility>
+
+using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
 
 namespace XBMCAddon
 {
@@ -76,7 +79,7 @@ namespace XBMCAddon
       streamDetail->m_iDuration = m_duration;
       streamDetail->m_strCodec = m_codec;
       streamDetail->m_strStereoMode = m_stereoMode;
-      streamDetail->m_strLanguage = CLangCodeExpander::AsISO6392B(m_language);
+      streamDetail->m_language = KODI::LANGUAGE::CLanguageTag::Parse(m_language);
       streamDetail->m_strHdrType = m_hdrType;
       streamDetail->m_strHdrDetail = m_hdrDetail;
 
@@ -95,7 +98,7 @@ namespace XBMCAddon
       auto streamDetail = new CStreamDetailAudio();
       streamDetail->m_iChannels = m_channels;
       streamDetail->m_strCodec = m_codec;
-      streamDetail->m_strLanguage = CLangCodeExpander::AsISO6392B(m_language);
+      streamDetail->m_language = KODI::LANGUAGE::CLanguageTag::Parse(m_language);
 
       return streamDetail;
     }
@@ -108,9 +111,31 @@ namespace XBMCAddon
     CStreamDetailSubtitle* SubtitleStreamDetail::ToStreamDetailSubtitle() const
     {
       auto streamDetail = new CStreamDetailSubtitle();
-      streamDetail->m_strLanguage = CLangCodeExpander::AsISO6392B(m_language);
+      streamDetail->m_language = KODI::LANGUAGE::CLanguageTag::Parse(m_language);
 
       return streamDetail;
+    }
+
+    ContentGeometrySection::ContentGeometrySection(
+        const KODI::VIDEO::GEOMETRY::GeometrySection& section)
+      : m_section(section)
+    {
+    }
+
+    ContentGeometry::ContentGeometry(const KODI::VIDEO::GEOMETRY::EffectiveGeometry& geometry)
+      : m_geometry(geometry)
+    {
+    }
+
+    std::vector<ContentGeometrySection*> ContentGeometry::getSections() const
+    {
+      std::vector<ContentGeometrySection*> sections;
+      sections.reserve(m_geometry.sections.size());
+
+      for (const KODI::VIDEO::GEOMETRY::GeometrySection& section : m_geometry.sections)
+        sections.push_back(new ContentGeometrySection(section));
+
+      return sections;
     }
 
     InfoTagVideo::InfoTagVideo(bool offscreen /* = false */)
@@ -237,6 +262,11 @@ namespace XBMCAddon
       return actors;
     }
 
+    ContentGeometry* InfoTagVideo::getContentGeometry()
+    {
+      return new ContentGeometry(infoTag->ResolveContentGeometry());
+    }
+
     String InfoTagVideo::getFile()
     {
       return infoTag->m_strFile;
@@ -307,7 +337,7 @@ namespace XBMCAddon
 
     String InfoTagVideo::getOriginalLanguage()
     {
-      return infoTag->GetOriginalLanguage();
+      return infoTag->GetOriginalLanguage().ToString();
     }
 
     String InfoTagVideo::getPremiered()
@@ -897,13 +927,7 @@ namespace XBMCAddon
 
     bool InfoTagVideo::setOriginalLanguageRaw(CVideoInfoTag* infoTag, const String& language)
     {
-      if (!infoTag->SetOriginalLanguage(language,
-                                        CVideoInfoTag::LanguageTagSource::SOURCE_EXTERNAL))
-      {
-        CLog::LogF(LOGWARNING, "the language {} is not recognized", language);
-        return false;
-      }
-      return true;
+      return infoTag->SetOriginalLanguage(language);
     }
 
     void InfoTagVideo::setSortTitleRaw(CVideoInfoTag* infoTag, const String& sortTitle)
@@ -1041,7 +1065,7 @@ namespace XBMCAddon
 
     void InfoTagVideo::setMediaTypeRaw(CVideoInfoTag* infoTag, const String& mediaType)
     {
-      if (CMediaTypes::IsValidMediaType(mediaType))
+      if (MediaTypeFromName(mediaType) != MediaType::NONE)
         infoTag->m_type = mediaType;
     }
 

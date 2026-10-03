@@ -15,6 +15,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/Artwork.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/URIUtils.h"
 #include "video/Bookmark.h"
 #include "video/VideoDatabase.h"
@@ -456,6 +457,22 @@ TEST_F(TestVideoDatabase, GetItemsForPathReturnsArchivedMoviesWithCollapsedPaths
   EXPECT_EQ(archived, archivedItems[0]->GetPath());
   EXPECT_EQ(0, archivedItems[0]->GetVideoInfoTag()->GetPlayCount());
   EXPECT_EQ(1200.0, archivedItems[0]->GetVideoInfoTag()->GetResumePoint().timeInSeconds);
+}
+
+// The id column and the table NameOf() gives must name the same table
+TEST(TestVideoDatabaseContent, ContentNamesItsTableAndIdColumn)
+{
+  using KODI::MEDIA::MediaType;
+  const auto check = [](VideoDbContentType content, MediaType type, std::string_view idColumn)
+  {
+    EXPECT_EQ(DatabaseUtils::MediaTypeFromVideoContentType(content), type);
+    EXPECT_EQ(CVideoDatabase::IdColumnOf(type), idColumn);
+  };
+  check(VideoDbContentType::MOVIES, MediaType::MOVIE, "idMovie");
+  check(VideoDbContentType::TVSHOWS, MediaType::TV_SHOW, "idShow");
+  check(VideoDbContentType::EPISODES, MediaType::EPISODE, "idEpisode");
+  check(VideoDbContentType::MUSICVIDEOS, MediaType::MUSIC_VIDEO, "idMVideo");
+  check(VideoDbContentType::MOVIE_SETS, MediaType::VIDEO_COLLECTION, "");
 }
 
 TEST_F(TestVideoDatabase, ToStoredPathAddsTheTrailingSeparator)

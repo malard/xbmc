@@ -39,6 +39,7 @@
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
 #include "music/AudioType.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicFileItemClassify.h"
 #include "music/MusicLibraryQueue.h"
 #include "music/MusicThumbLoader.h"
@@ -54,6 +55,7 @@
 #include "utils/Digest.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -69,6 +71,7 @@ using namespace XFILE;
 using namespace MUSICDATABASEDIRECTORY;
 using namespace MUSIC_GRABBER;
 using namespace ADDON;
+using KODI::MEDIA::MediaType;
 using KODI::UTILITY::CDigest;
 
 CMusicInfoScanner::CMusicInfoScanner()
@@ -340,7 +343,7 @@ void CMusicInfoScanner::FetchAlbumInfo(const std::string& strDirectory,
   if (strDirectory.empty())
   {
     m_musicDatabase.Open();
-    m_musicDatabase.GetAlbumsNav("musicdb://albums/", items, SortDescription());
+    m_musicDatabase.GetAlbumsNav(MUSIC::DB_PATH::ALBUMS, items, SortDescription());
     m_musicDatabase.Close();
   }
   else
@@ -355,7 +358,7 @@ void CMusicInfoScanner::FetchAlbumInfo(const std::string& strDirectory,
       {
         //Add single album (id and path) as item to scan
         CFileItemPtr item(new CFileItem(strDirectory, false));
-        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaTypeAlbum);
+        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaType::ALBUM);
         items.Add(item);
       }
       else
@@ -404,7 +407,7 @@ void CMusicInfoScanner::FetchArtistInfo(const std::string& strDirectory,
     m_musicDatabase.Open();
     const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
     m_musicDatabase.GetArtistsNav(
-        "musicdb://artists/", items, SortDescription(),
+        MUSIC::DB_PATH::ARTISTS, items, SortDescription(),
         !settings->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS), -1);
     m_musicDatabase.Close();
   }
@@ -420,7 +423,7 @@ void CMusicInfoScanner::FetchArtistInfo(const std::string& strDirectory,
       {
         //Add single artist (id and path) as item to scan
         CFileItemPtr item(new CFileItem(strDirectory, false));
-        item->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaTypeArtist);
+        item->GetMusicInfoTag()->SetDatabaseId(params.GetArtistId(), MediaType::ARTIST);
         items.Add(item);
       }
       else
@@ -1131,7 +1134,7 @@ void CMusicInfoScanner::FindArtForAlbums(std::vector<CAlbum>& albums, const std:
      that case and set the IsHTTPDirectory property to enable scanning for art.
     */
     if (StringUtils::StartsWithNoCase(path, "http") && StringUtils::EndsWith(path, "/"))
-      album.SetProperty("IsHTTPDirectory", true);
+      album.SetProperty(ITEM::PROPERTY::IS_HTTP_DIRECTORY, true);
     albumArt = album.GetUserMusicThumb(true);
     if (!albumArt.empty())
       albums[0].art["thumb"] = albumArt;
@@ -1317,6 +1320,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
     bool bAllowSelection,
     CGUIDialogProgress* pDialog /* = NULL */)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (!scraper)
     return InfoRet::INFO_ERROR;
 
@@ -1336,18 +1340,14 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
       if (pDialog && bAllowSelection)
       {
         std::string strTempAlbum(album.strAlbum);
-        if (!CGUIKeyboardFactory::ShowAndGetInput(
-                strTempAlbum,
-                CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16011)},
-                false))
+        if (!CGUIKeyboardFactory::ShowAndGetInput(strTempAlbum,
+                                                  CVariant{localizeStrings.Get(16011)}, false))
           albumDownloadStatus = InfoRet::CANCELLED;
         else
         {
           std::string strTempArtist(album.GetAlbumArtistString());
-          if (!CGUIKeyboardFactory::ShowAndGetInput(
-                  strTempArtist,
-                  CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16025)},
-                  false))
+          if (!CGUIKeyboardFactory::ShowAndGetInput(strTempArtist,
+                                                    CVariant{localizeStrings.Get(16025)}, false))
             albumDownloadStatus = InfoRet::CANCELLED;
           else
           {
@@ -1362,10 +1362,8 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
         auto eventLog = CServiceBroker::GetEventLog();
         if (eventLog)
           eventLog->Add(EventPtr(new CMediaLibraryEvent(
-              MediaTypeAlbum, album.strPath, 24146,
-              StringUtils::Format(
-                  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24147),
-                  MediaTypeAlbum, album.strAlbum),
+              MediaType::ALBUM, album.strPath, 24146,
+              StringUtils::Format(localizeStrings.Get(24147), MediaType::ALBUM, album.strAlbum),
               CScraperUrl::GetThumbUrl(album.thumbURL.GetFirstUrlByType()),
               CURL::GetRedacted(album.strPath), EventLevel::Warning)));
       }
@@ -1437,10 +1435,10 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseArtistInfo(
         auto eventLog = CServiceBroker::GetEventLog();
         if (eventLog)
           eventLog->Add(EventPtr(new CMediaLibraryEvent(
-              MediaTypeArtist, artist.strPath, 24146,
+              MediaType::ARTIST, artist.strPath, 24146,
               StringUtils::Format(
                   CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24147),
-                  MediaTypeArtist, artist.strArtist),
+                  MediaType::ARTIST, artist.strArtist),
               CScraperUrl::GetThumbUrl(artist.thumbURL.GetFirstUrlByType()),
               CURL::GetRedacted(artist.strPath), EventLevel::Warning)));
       }
@@ -2025,7 +2023,7 @@ bool CMusicInfoScanner::AddArtistArtwork(CArtist& artist, const std::string& art
     return false; // No local or scraped possible art to process
 
   if (artist.art.empty())
-    m_musicDatabase.GetArtForItem(artist.idArtist, MediaTypeArtist, artist.art);
+    m_musicDatabase.GetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
   std::map<std::string, std::string> addedart;
   std::string strArt;
@@ -2045,10 +2043,10 @@ bool CMusicInfoScanner::AddArtistArtwork(CArtist& artist, const std::string& art
   }
 
   // Process additional art types in artist folder
-  AddLocalArtwork(addedart, MediaTypeArtist, artist.strArtist, artfolder);
+  AddLocalArtwork(addedart, MediaType::ARTIST, artist.strArtist, artfolder);
 
   // Process remote artist art filling gaps with first of scraped art URLs
-  AddRemoteArtwork(addedart, MediaTypeArtist, artist.thumbURL);
+  AddRemoteArtwork(addedart, MediaType::ARTIST, artist.thumbURL);
 
   int iArtLevel = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
       CSettings::SETTING_MUSICLIBRARY_ARTWORKLEVEL);
@@ -2062,7 +2060,7 @@ bool CMusicInfoScanner::AddArtistArtwork(CArtist& artist, const std::string& art
       CServiceBroker::GetTextureCache()->BackgroundCacheImage(it.second);
     auto ret = artist.art.insert(it);
     if (ret.second)
-      m_musicDatabase.SetArtForItem(artist.idArtist, MediaTypeArtist, it.first, it.second);
+      m_musicDatabase.SetArtForItem(artist.idArtist, MediaType::ARTIST, it.first, it.second);
   }
   return !addedart.empty();
 }
@@ -2086,7 +2084,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
     return false; // No local or scraped possible art to process
 
   if (album.art.empty())
-    m_musicDatabase.GetArtForItem(album.idAlbum, MediaTypeAlbum, album.art);
+    m_musicDatabase.GetArtForItem(album.idAlbum, MediaType::ALBUM, album.art);
   auto thumb = album.art.find("thumb"); // Find "thumb", may want to replace it
 
   bool replaceThumb = paths.size() > 1;
@@ -2122,7 +2120,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
     }
   }
   // Process additional art types in album folder
-  AddLocalArtwork(addedart, MediaTypeAlbum, album.strAlbum, album.strPath);
+  AddLocalArtwork(addedart, MediaType::ALBUM, album.strAlbum, album.strPath);
 
   // Fetch local art from disc subfolders
   if (paths.size() > 1)
@@ -2156,13 +2154,13 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
         }
       }
       // Process additional art types in disc subfolder
-      AddLocalArtwork(addedart, MediaTypeAlbum, album.strAlbum, pathpair.first, discnum);
+      AddLocalArtwork(addedart, MediaType::ALBUM, album.strAlbum, pathpair.first, discnum);
     }
     // Finally if we still don't have album thumb then use the art from the
     // first disc in the set with a thumb
     if (!firstDiscThumb.empty() && !album.art.contains("thumb"))
     {
-      m_musicDatabase.SetArtForItem(album.idAlbum, MediaTypeAlbum, "thumb", firstDiscThumb);
+      m_musicDatabase.SetArtForItem(album.idAlbum, MediaType::ALBUM, "thumb", firstDiscThumb);
       // Assign art as folder thumb (in textures db) as well
 
       CFileItem albumItem(album.strPath, true);
@@ -2171,7 +2169,7 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
   }
 
   // Process remote album art filling gaps with first of scraped art URLs
-  AddRemoteArtwork(addedart, MediaTypeAlbum, album.thumbURL);
+  AddRemoteArtwork(addedart, MediaType::ALBUM, album.thumbURL);
 
   int iArtLevel = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
       CSettings::SETTING_MUSICLIBRARY_ARTWORKLEVEL);
@@ -2185,24 +2183,24 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
 
     auto ret = album.art.insert(it);
     if (ret.second)
-      m_musicDatabase.SetArtForItem(album.idAlbum, MediaTypeAlbum, it.first, it.second);
+      m_musicDatabase.SetArtForItem(album.idAlbum, MediaType::ALBUM, it.first, it.second);
   }
   return !addedart.empty();
 }
 
-std::vector<CVariant> CMusicInfoScanner::GetArtWhitelist(const MediaType& mediaType, int iArtLevel)
+std::vector<CVariant> CMusicInfoScanner::GetArtWhitelist(MediaType mediaType, int iArtLevel)
 {
   std::vector<CVariant> whitelistarttypes;
   if (iArtLevel == CSettings::MUSICLIBRARY_ARTWORK_LEVEL_BASIC)
   {
     // Basic artist artwork = thumb + fanart (but not "family" fanart1, fanart2 etc.)
     // Basic album artwork = thumb only, thumb handled separately not in whitelist
-    if (mediaType == MediaTypeArtist)
+    if (mediaType == MediaType::ARTIST)
       whitelistarttypes.emplace_back("fanart");
   }
   else
   {
-    if (mediaType == MediaTypeArtist)
+    if (mediaType == MediaType::ARTIST)
       whitelistarttypes = CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(
           CSettings::SETTING_MUSICLIBRARY_ARTISTART_WHITELIST);
     else
@@ -2214,7 +2212,7 @@ std::vector<CVariant> CMusicInfoScanner::GetArtWhitelist(const MediaType& mediaT
 }
 
 bool CMusicInfoScanner::AddLocalArtwork(std::map<std::string, std::string>& art,
-                                        const std::string& mediaType,
+                                        MediaType mediaType,
                                         const std::string& mediaName,
                                         const std::string& artfolder,
                                         int discnum)
@@ -2313,7 +2311,7 @@ bool CMusicInfoScanner::AddLocalArtwork(std::map<std::string, std::string>& art,
 }
 
 bool CMusicInfoScanner::AddRemoteArtwork(std::map<std::string, std::string>& art,
-                                         const std::string& mediaType,
+                                         MediaType mediaType,
                                          const CScraperUrl& thumbURL)
 {
   int iArtLevel = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(

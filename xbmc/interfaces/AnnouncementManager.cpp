@@ -11,9 +11,9 @@
 #include "FileItem.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
-#include "playlists/PlayListTypes.h"
 #include "pvr/channels/PVRChannel.h"
 #include "threads/SingleLock.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -22,30 +22,27 @@
 
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #define LOOKUP_PROPERTY "database-lookup"
 
 using namespace ANNOUNCEMENT;
 using namespace KODI;
+using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 const std::string CAnnouncementManager::ANNOUNCEMENT_SENDER = "xbmc";
 
 namespace
 {
 
-void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, bool copyPlayerId, CVariant& object)
+void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
 {
   auto& objItem = object["item"];
 
   objItem["type"] = "channel";
   objItem["title"] = channel.ChannelName();
-  objItem["channeltype"] = channel.IsRadio() ? "radio" : "tv";
-
-  if (copyPlayerId)
-  {
-    object["player"]["playerid"] =
-        static_cast<int>(channel.IsRadio() ? PLAYLIST::Id::TYPE_MUSIC : PLAYLIST::Id::TYPE_VIDEO);
-  }
+  objItem["channelType"] = channel.IsRadio() ? "radio" : "tv";
 
   objItem["id"] = channel.ChannelID();
 }
@@ -84,7 +81,8 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
   if (!tag.m_type.empty())
     objItem["type"] = tag.m_type;
   else
-    objItem["type"] = CVideoDatabase::VideoContentTypeToString(item.GetVideoContentType());
+    objItem["type"] =
+        NameOf(DatabaseUtils::MediaTypeFromVideoContentType(item.GetVideoContentType()));
 
   if (id <= 0)
   {
@@ -109,7 +107,7 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
         if (tag.m_iSeason >= 0)
           objItem["season"] = tag.m_iSeason;
         if (!tag.m_strShowTitle.empty())
-          objItem["showtitle"] = tag.m_strShowTitle;
+          objItem["showTitle"] = tag.m_strShowTitle;
         break;
       case MUSICVIDEOS:
         if (!tag.m_strAlbum.empty())
@@ -133,7 +131,7 @@ void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
-  objItem["type"] = MediaTypeSong;
+  objItem["type"] = NameOf(MediaType::SONG);
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
   if (id <= 0 && !item.GetPath().empty() && item.GetProperty(LOOKUP_PROPERTY).asBoolean(true))
@@ -189,8 +187,7 @@ CVariant CreateDataObjectFromItem(CFileItem& item, const CVariant& data)
 
   if (item.HasPVRChannelInfoTag())
   {
-    const bool copyPlayerId = data.isMember("player") && data["player"].isMember("playerid");
-    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), copyPlayerId, object);
+    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), object);
   }
   else if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
   {
@@ -263,6 +260,11 @@ void CAnnouncementManager::RemoveAnnouncer(IAnnouncer *listener)
 
   std::unique_lock lock(m_announcersCritSection);
   m_announcers.erase(listener);
+
+  // Its owner may destroy it once this returns, so a call in progress elsewhere must finish
+  // first. An announcer removing itself from inside that call is on this thread.
+  if (!IsCurrentThread())
+    m_announced.wait(lock, [this, listener] { return m_announcing != listener; });
 }
 
 void CAnnouncementManager::Announce(AnnouncementFlag flag, const std::string& message)
@@ -343,14 +345,27 @@ void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
 
   std::unique_lock lock(m_announcersCritSection);
 
-  // Make a copy of announcers. They may be removed or even remove themselves during execution of IAnnouncer::Announce()!
-  std::unordered_map<IAnnouncer*, int> announcers{m_announcers};
-  for (const auto& [announcer, flagMask] : announcers)
+  std::vector<IAnnouncer*> announcers;
+  announcers.reserve(m_announcers.size());
+  for (const auto& [announcer, flagMask] : m_announcers)
+    announcers.push_back(announcer);
+
+  for (IAnnouncer* announcer : announcers)
   {
-    if (flag & flagMask)
+    // Re-read: the list may have changed while the lock was released for the previous call.
+    const auto it = m_announcers.find(announcer);
+    if (it == m_announcers.end() || !(flag & it->second))
+      continue;
+
+    // The lock is released for the call. Announcers wait on other threads - closing a window
+    // waits on the GUI thread - and the GUI thread adds announcers of its own.
+    m_announcing = announcer;
     {
+      CSingleExit unlock(m_announcersCritSection);
       announcer->Announce(flag, sender, message, data);
     }
+    m_announcing = nullptr;
+    m_announced.notifyAll();
   }
 }
 

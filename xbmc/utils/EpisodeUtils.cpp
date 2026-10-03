@@ -17,6 +17,7 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 
@@ -429,8 +430,9 @@ std::vector<std::tuple<int, int, int>> ParseEpisodes(const std::string& input)
 
 std::string CEpisodeUtils::GetEpisodesLabel(const CFileItem& item)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   const std::string episodeString{item.GetProperty("episodes").asString("")};
-  const int numSpecials{item.GetProperty("episodes_specials").asInteger32(0)};
+  const int numSpecials{item.GetProperty(ITEM::PROPERTY::EPISODES_SPECIALS).asInteger32(0)};
   const auto episodes{ParseEpisodes(episodeString)};
   const bool hasSpecials{numSpecials > 0};
   bool singleSeason{!episodes.empty() &&
@@ -449,35 +451,28 @@ std::string CEpisodeUtils::GetEpisodesLabel(const CFileItem& item)
       if (singleSeason)
       {
         if (endEpisode == startEpisode)
-          labels.push_back(StringUtils::Format(
-              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(BASE),
-              startEpisode));
+          labels.push_back(StringUtils::Format(localizeStrings.Get(BASE), startEpisode));
         else
-          labels.push_back(StringUtils::Format(
-              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(BASE + RANGE),
-              startEpisode, endEpisode));
+          labels.push_back(
+              StringUtils::Format(localizeStrings.Get(BASE + RANGE), startEpisode, endEpisode));
       }
       else
       {
         if (endEpisode == startEpisode)
-          labels.push_back(StringUtils::Format(
-              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(BASE + SEASON),
-              season, startEpisode));
-        else
           labels.push_back(
-              StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
-                                      BASE + SEASON + RANGE),
-                                  season, startEpisode, endEpisode));
+              StringUtils::Format(localizeStrings.Get(BASE + SEASON), season, startEpisode));
+        else
+          labels.push_back(StringUtils::Format(localizeStrings.Get(BASE + SEASON + RANGE), season,
+                                               startEpisode, endEpisode));
       }
     }
   }
   if (hasSpecials)
-    labels.push_back(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(SPECIALS));
+    labels.push_back(localizeStrings.Get(SPECIALS));
 
   // Generate label
   using namespace KODI::LANGUAGE::I18N;
-  const auto fmt =
-      CListFormatter::CreateInstance(CServiceBroker::GetResourcesComponent().GetLocalizeStrings());
+  const auto fmt = CListFormatter::CreateInstance(localizeStrings);
   const std::string label{fmt.Format(labels)};
 
   return label;

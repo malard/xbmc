@@ -10,6 +10,7 @@
 
 #include "CacheStrategy.h"
 #include "IFile.h"
+#include "URL.h"
 #include "threads/CriticalSection.h"
 #include "threads/Thread.h"
 
@@ -89,10 +90,32 @@ public:
     */
     CFileCache(unsigned int flags, std::unique_ptr<IFileCacheSource> source);
 
+    //! Builds an unopened memory cache of the given size per buffer
+    virtual std::unique_ptr<CCacheStrategy> CreateMemoryCache(size_t cacheSize) const;
+
   private:
+    //! Opens the source and applies the controls the cache relies on
+    bool OpenSource(const CURL& url);
+    //! Double-buffers a cache for a multi-stream reader
+    std::unique_ptr<CCacheStrategy> ForStreams(std::unique_ptr<CCacheStrategy> cache) const;
+    //! Makes the memory cache current and records the forward capacity of its size per buffer
+    void SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize);
+    void ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled);
+    //! Cancels a source read left unanswered for longer than a healthy source takes
+    void CancelStalledSourceRead();
+    //! Replaces the source with a new connection at the position; false leaves it closed
+    bool ReopenSource(int64_t position);
+
+    //! The per-buffer size holding a minute of content at the given rate, within a memory budget
+    size_t CacheSizeForRate(uint32_t bytesPerSecond) const;
+    //! Grows a default-sized memory cache once the content's rate is known
+    void GrowCacheForRate(uint32_t bytesPerSecond);
+
     std::unique_ptr<CCacheStrategy> m_pCache;
-    int m_seekPossible = 0;
+    std::atomic<int> m_seekPossible{0};
     std::unique_ptr<IFileCacheSource> m_source;
+    bool m_sourceOpen = false;
+    CURL m_sourceUrl;
     std::string m_sourcePath;
     CEvent m_seekEvent;
     CEvent m_seekEnded;
@@ -113,6 +136,12 @@ public:
     unsigned int m_flags;
     CCriticalSection m_sync;
     std::chrono::milliseconds m_processWait{100ms};
+    std::atomic<int64_t> m_sourceReadStart{0}; // steady ms, 0 while no source read is outstanding
+    std::atomic<bool> m_sourceReadCancelled{false};
+    mutable CCriticalSection m_sourceSection; // held while the source is replaced
+    size_t m_memoryCacheSize = 0; // per buffer, 0 when caching to disk
+    size_t m_pendingCacheSize = 0; // size the fill thread rebuilds the cache at, 0 for none
+    bool m_autoSizeCache = false;
   };
 
 }

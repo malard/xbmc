@@ -20,7 +20,10 @@
 #include "profiles/ProfileManager.h"
 #include "settings/MediaSourceSettings.h"
 #include "storage/MediaManager.h"
+#include "utils/ArtTypes.h"
 #include "utils/FileUtils.h"
+#include "utils/PlaceholderPaths.h"
+#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/VideoFileItemClassify.h"
 
@@ -31,19 +34,29 @@ CSourcesDirectory::CSourcesDirectory(void) = default;
 
 CSourcesDirectory::~CSourcesDirectory(void) = default;
 
-bool CSourcesDirectory::GetDirectory(const CURL& url, CFileItemList &items)
+std::string CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection section)
 {
-  // break up our path
-  // format is:  sources://<type>/
-  std::string type(url.GetFileName());
-  URIUtils::RemoveSlashAtEnd(type);
+  return StringUtils::Format("sources://{}/", KODI::MEDIA::NameOf(section));
+}
 
-  std::vector<CMediaSource> sources;
-  std::vector<CMediaSource>* sourcesFromType = CMediaSourceSettings::GetInstance().GetSources(type);
-  if (!sourcesFromType)
+std::optional<KODI::MEDIA::MediaSection> CSourcesDirectory::SectionOf(const std::string& path)
+{
+  const CURL url{path};
+  if (!url.IsProtocol("sources"))
+    return {};
+
+  std::string name{url.GetFileName()};
+  URIUtils::RemoveSlashAtEnd(name);
+  return KODI::MEDIA::MediaSectionFromName(name);
+}
+
+bool CSourcesDirectory::GetDirectory(const CURL& url, CFileItemList& items)
+{
+  const std::optional<KODI::MEDIA::MediaSection> section{SectionOf(url.Get())};
+  if (!section)
     return false;
 
-  sources = *sourcesFromType;
+  std::vector<CMediaSource> sources{CMediaSourceSettings::GetInstance().GetSources(*section)};
   CServiceBroker::GetMediaManager().GetRemovableDrives(sources);
 
   return GetDirectory(sources, items);
@@ -66,15 +79,15 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
       // CDetectDVDMedia::SetNewDVDShareUrl() caches disc thumb as special://temp/dvdicon.tbn
       std::string strThumb = "special://temp/dvdicon.tbn";
       if (CFileUtils::Exists(strThumb))
-        pItem->SetArt("thumb", strThumb);
+        pItem->SetArt(ART::TYPE::THUMB, strThumb);
     }
     else if (URIUtils::IsProtocol(pItem->GetPath(), "addons"))
       strIcon = "DefaultHardDisk.png";
-    else if (   pItem->IsPath("special://musicplaylists/")
-             || pItem->IsPath("special://videoplaylists/"))
+    else if (pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC)) ||
+             pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
       strIcon = "DefaultPlaylist.png";
     else if (VIDEO::IsVideoDb(*pItem) || MUSIC::IsMusicDb(*pItem) || pItem->IsPlugin() ||
-             pItem->IsPath("musicsearch://"))
+             pItem->IsPath(ITEM::PLACEHOLDER::MUSIC_SEARCH))
       strIcon = "DefaultFolder.png";
     else if (NETWORK::IsRemote(*pItem))
       strIcon = "DefaultNetwork.png";
@@ -91,7 +104,7 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
     else
       strIcon = "DefaultHardDisk.png";
 
-    pItem->SetArt("icon", strIcon);
+    pItem->SetArt(ART::TYPE::ICON, strIcon);
     if (share.GetLockInfo().IsLocked() &&
         m_profileManager->GetMasterProfile().getLockMode() != LockMode::EVERYONE)
       pItem->SetOverlayImage(CGUIListItem::ICON_OVERLAY_LOCKED);

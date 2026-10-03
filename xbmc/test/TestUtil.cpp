@@ -12,6 +12,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/FilenameAttributes.h"
@@ -39,6 +40,20 @@ TEST(TestUtil, GetQualifiedFilename)
   file = "smb://foo/bar/";
   CUtil::GetQualifiedFilename("upnp://", file);
   EXPECT_EQ(file, "smb://foo/bar/");
+}
+
+TEST(TestUtil, IsInPlaylistsFolderFollowsThePlaylistsSetting)
+{
+  using KODI::MEDIA::MediaSection;
+  const CScopedSetting playlists{CSettings::SETTING_SYSTEM_PLAYLISTSPATH, "special://temp/lists/"};
+
+  EXPECT_TRUE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::VIDEO));
+  EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::MUSIC));
+  EXPECT_TRUE(CUtil::IsInPlaylistsFolder("special://temp/lists/mixed/a.m3u", MediaSection::MUSIC));
+  EXPECT_TRUE(CUtil::IsInPlaylistsFolder("special://musicplaylists/a.xsp", MediaSection::MUSIC));
+  EXPECT_FALSE(
+      CUtil::IsInPlaylistsFolder("special://profile/playlists/video/a.m3u", MediaSection::VIDEO));
+  EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::FILES));
 }
 
 TEST(TestUtil, MakeLegalPath)
@@ -924,7 +939,7 @@ TEST_P(TestExternalStreamDetails, GetExternalStreamDetailsFromFilename)
   const ExternalStreamInfo info =
       CUtil::GetExternalStreamDetailsFromFilename(GetParam().videoPath, GetParam().associatedFile);
 
-  EXPECT_EQ(info.language.AsBcp47(), GetParam().language);
+  EXPECT_EQ(info.language.ToString(), GetParam().language);
   EXPECT_EQ(info.flag, GetParam().flag);
 }
 
@@ -932,10 +947,6 @@ INSTANTIATE_TEST_SUITE_P(GetExternalStreamDetailsFromFilename,
                          TestExternalStreamDetails,
                          ValuesIn(ExternalStreams));
 
-/*!
- * A percent-encoded path reaches here from any VFS that escapes its names - WebDAV among them.
- * Hiding the extension must not hand back the escaped form.
- */
 class TestTitleFromPath : public Test
 {
 protected:
@@ -959,12 +970,51 @@ private:
 TEST_F(TestTitleFromPath, DecodesAnEscapedNameWhileHidingTheExtension)
 {
   EXPECT_EQ("file name", CUtil::GetTitleFromPath("davs://server/files/file%20name.mkv"));
-  EXPECT_EQ("file_name", CUtil::GetTitleFromPath("davs://server/files/file_name.mkv"));
 }
 
-/*! A local path is not escaped, so decoding one would corrupt every name holding a plus. */
-TEST_F(TestTitleFromPath, LeavesALocalNameAlone)
+TEST_F(TestTitleFromPath, LeavesAnUnescapedNameAlone)
 {
+  EXPECT_EQ("file_name", CUtil::GetTitleFromPath("davs://server/files/file_name.mkv"));
   EXPECT_EQ("C++ Media", CUtil::GetTitleFromPath("/path/to/C++ Media.mkv"));
   EXPECT_EQ("100% proof", CUtil::GetTitleFromPath("/path/to/100% proof.mkv"));
+}
+
+TEST_F(TestTitleFromPath, KeepsAPlusInTheName)
+{
+  EXPECT_EQ("C++ Collection", CUtil::GetTitleFromPath("smb://server/share/C++ Collection.mkv"));
+  EXPECT_EQ("C++ Collection", CUtil::GetTitleFromPath("davs://server/files/C++ Collection.mkv"));
+}
+
+TEST_F(TestTitleFromPath, DecodesAnEscapedPercent)
+{
+  EXPECT_EQ("100% proof", CUtil::GetTitleFromPath("davs://server/files/100%25%20proof.mkv"));
+
+  // a name that itself contains the characters "%20"
+  EXPECT_EQ("100%20proof", CUtil::GetTitleFromPath("davs://server/files/100%2520proof.mkv"));
+
+  // the name is taken off the path before the decode, so an escaped separator stays in the leaf
+  EXPECT_EQ("file/name", CUtil::GetTitleFromPath("davs://server/files/file%2Fname.mkv"));
+}
+
+TEST_F(TestTitleFromPath, LeavesAMalformedEscapeAlone)
+{
+  EXPECT_EQ("file%2", CUtil::GetTitleFromPath("davs://server/files/file%2.mkv"));
+  EXPECT_EQ("file%zz", CUtil::GetTitleFromPath("davs://server/files/file%zz.mkv"));
+  EXPECT_EQ("file%", CUtil::GetTitleFromPath("davs://server/files/file%.mkv"));
+  EXPECT_EQ("100% off", CUtil::GetTitleFromPath("davs://server/files/100% off.mkv"));
+}
+
+TEST_F(TestTitleFromPath, LeavesANameOnANonEscapingProtocolAlone)
+{
+  EXPECT_EQ("file name", CUtil::GetTitleFromPath("smb://server/share/file name.mkv"));
+  EXPECT_EQ("file name", CUtil::GetTitleFromPath("nfs://server/export/file name.mkv"));
+  EXPECT_EQ("file name", CUtil::GetTitleFromPath("ftp://server/pub/file name.mkv"));
+  EXPECT_EQ("100% proof", CUtil::GetTitleFromPath("smb://server/share/100% proof.mkv"));
+}
+
+TEST_F(TestTitleFromPath, DecodesAnEscapeWhateverTheProtocol)
+{
+  // SMB, NFS and FTP put the server's name into the path unescaped, so a name that itself
+  // contains an escape triplet is decoded here, as it is when the extension is shown.
+  EXPECT_EQ("100 proof", CUtil::GetTitleFromPath("smb://server/share/100%20proof.mkv"));
 }

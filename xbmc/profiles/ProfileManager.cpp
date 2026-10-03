@@ -14,7 +14,6 @@
 #include "GUIInfoManager.h"
 #include "GUIPassword.h"
 #include "PasswordManager.h"
-#include "PlayListPlayer.h" //! @todo Remove me
 #include "ServiceBroker.h"
 #include "TextureCache.h"
 #include "Util.h"
@@ -22,6 +21,8 @@
 #include "addons/Service.h" //! @todo Remove me
 #include "addons/Skin.h"
 #include "application/Application.h" //! @todo Remove me
+#include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPowerHandling.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "events/EventLog.h"
@@ -35,7 +36,6 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h" //! @todo Remove me
 #include "input/InputManager.h"
-#include "interfaces/json-rpc/JSONRPC.h" //! @todo Remove me
 #include "music/MusicLibraryQueue.h"
 #include "network/Network.h" //! @todo Remove me
 #include "network/NetworkServices.h" //! @todo Remove me
@@ -303,7 +303,7 @@ bool CProfileManager::LoadProfile(unsigned int index)
   if (skin && !m_previousProfileLoadedForLogin)
     skin->SaveSettings();
 
-  // @todo: why is m_settings not used here?
+  //! @todo why is m_settings not used here?
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
 
   // unload any old settings
@@ -394,14 +394,12 @@ void CProfileManager::FinalizeLoadProfile()
   ADDON::CAddonMgr &addonManager = CServiceBroker::GetAddonMgr();
   CWeatherManager &weatherManager = CServiceBroker::GetWeatherManager();
   CFavouritesService &favouritesManager = CServiceBroker::GetFavouritesService();
-  PLAYLIST::CPlayListPlayer &playlistManager = CServiceBroker::GetPlaylistPlayer();
+  CApplicationPlayLists& playLists = *CServiceBroker::GetPlayLists();
   CStereoscopicsManager &stereoscopicsManager = CServiceBroker::GetGUI()->GetStereoscopicsManager();
 
   if (m_lastUsedProfile != m_currentProfile)
   {
-    playlistManager.ClearPlaylist(PLAYLIST::Id::TYPE_VIDEO);
-    playlistManager.ClearPlaylist(PLAYLIST::Id::TYPE_MUSIC);
-    playlistManager.SetCurrentPlaylist(PLAYLIST::Id::TYPE_NONE);
+    playLists.Reset();
   }
 
   networkManager.NetworkMessage(CNetworkBase::SERVICES_UP, 1);
@@ -420,8 +418,6 @@ void CProfileManager::FinalizeLoadProfile()
   }
 
   weatherManager.Refresh();
-
-  JSONRPC::CJSONRPC::Initialize();
 
   // Restart context menu manager
   contextMenuManager.Init();

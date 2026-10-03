@@ -15,7 +15,7 @@
 #include "addons/IAddon.h"
 #include "addons/addoninfo/AddonType.h"
 #include "filesystem/Directory.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
@@ -86,6 +86,21 @@ static constexpr const std::array<TypeMapping, 42> types =
   }};
 // clang-format on
 
+struct SubContentName
+{
+  std::string_view name;
+  AddonType type;
+};
+
+//! The content a plugin can provide, by the name it gives it
+constexpr std::array<SubContentName, 5> SUB_CONTENT_NAMES{{
+    {"audio", AddonType::AUDIO},
+    {"image", AddonType::IMAGE},
+    {"executable", AddonType::EXECUTABLE},
+    {"video", AddonType::VIDEO},
+    {"game", AddonType::GAME},
+}};
+
 const std::string& CAddonInfo::OriginName() const
 {
   if (!m_originName)
@@ -142,18 +157,14 @@ std::string CAddonInfo::TranslateIconType(AddonType type)
 
 AddonType CAddonInfo::TranslateSubContent(std::string_view content)
 {
-  if (content == "audio")
-    return AddonType::AUDIO;
-  else if (content == "image")
-    return AddonType::IMAGE;
-  else if (content == "executable")
-    return AddonType::EXECUTABLE;
-  else if (content == "video")
-    return AddonType::VIDEO;
-  else if (content == "game")
-    return AddonType::GAME;
-  else
-    return AddonType::UNKNOWN;
+  const auto it = std::ranges::find(SUB_CONTENT_NAMES, content, &SubContentName::name);
+  return it != SUB_CONTENT_NAMES.end() ? it->type : AddonType::UNKNOWN;
+}
+
+std::string_view CAddonInfo::SubContentNameOf(AddonType type)
+{
+  const auto it = std::ranges::find(SUB_CONTENT_NAMES, type, &SubContentName::type);
+  return it != SUB_CONTENT_NAMES.end() ? it->name : std::string_view{};
 }
 
 AddonInstanceSupport CAddonInfo::InstanceSupportType(AddonType type)
@@ -247,21 +258,57 @@ const CAddonVersion& CAddonInfo::DependencyVersion(const std::string& dependency
   return emptyVersion;
 }
 
-const std::string& CAddonInfo::GetTranslatedText(const CLocale::LocalizedStringsMap& locales) const
+namespace
+{
+//! Higher is better; -1 where the candidate names a different language altogether
+int MatchRank(const KODI::LANGUAGE::CLanguageTag& wanted,
+              const KODI::LANGUAGE::CLanguageTag& candidate)
+{
+  if (!wanted.Matches(candidate))
+    return -1;
+
+  // A translation for the same place is the better match, so two tags naming no place are not
+  // a better match than any other - only two naming the same one are
+  const KODI::LANGUAGE::CTerritory territory{wanted.GetTerritory()};
+
+  return territory != KODI::LANGUAGE::CTerritory{} && territory == candidate.GetTerritory() ? 1 : 0;
+}
+} // namespace
+
+const std::string& CAddonInfo::GetTranslatedText(const LocalizedStringsMap& locales) const
 {
   if (locales.size() == 1)
     return locales.begin()->second;
   else if (locales.empty())
     return StringUtils::Empty;
 
-  // find the language from the list that matches the current locale best
-  std::string matchingLanguage = g_langInfo.GetLocale().FindBestMatch(locales);
-  if (matchingLanguage.empty())
-    matchingLanguage = KODI_ADDON_DEFAULT_LANGUAGE_CODE;
+  static const KODI::LANGUAGE::CLanguageTag fallback{
+      KODI::LANGUAGE::CLanguageTag::Parse(KODI_ADDON_DEFAULT_LANGUAGE_CODE)};
+  const KODI::LANGUAGE::CLanguageTag& wanted{KODI::LANGUAGE::CLanguage::GetInstance().UI()};
+  const std::string* bestText{nullptr};
+  const std::string* fallbackText{nullptr};
+  int bestRank = -1;
 
-  auto const& translatedValue = locales.find(matchingLanguage);
-  if (translatedValue != locales.end())
-    return translatedValue->second;
+  for (const auto& [locale, text] : locales)
+  {
+    const KODI::LANGUAGE::CLanguageTag candidate{KODI::LANGUAGE::CLanguageTag::Parse(locale)};
+    if (wanted == candidate)
+      return text;
+
+    if (candidate == fallback)
+      fallbackText = &text;
+
+    if (const int rank = MatchRank(wanted, candidate); rank > bestRank)
+    {
+      bestRank = rank;
+      bestText = &text;
+    }
+  }
+
+  if (bestText)
+    return *bestText;
+  if (fallbackText)
+    return *fallbackText;
   return StringUtils::Empty;
 }
 

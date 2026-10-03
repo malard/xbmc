@@ -140,7 +140,7 @@ private:
   void AnnouncePlayerStop(const CFileItemPtr& item);
   void AnnouncePlaylistClear();
   void AnnouncePlaylistAdd(const CFileItemPtr& item, int pos);
-  void AnnouncePropertyChanged(const std::string &strProperty, const CVariant &value);
+  void AnnounceShuffled();
 
   int m_iCurrentSlide;
   int m_iNextSlide;

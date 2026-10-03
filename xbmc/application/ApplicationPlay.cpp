@@ -10,15 +10,13 @@
 
 #include "ApplicationStackHelper.h"
 #include "FileItem.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "Util.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/DirectoryFactory.h"
 #include "filesystem/DiscDirectoryHelper.h"
-#include "music/MusicFileItemClassify.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/DiscSettings.h"
@@ -26,6 +24,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/DiscsUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/Bookmark.h"
@@ -95,21 +94,21 @@ bool GetEpisodeBookmark(const CFileItem& item, CPlayerOptions& options, CVideoDa
 
 void CApplicationPlay::GetOptionsAndUpdateItem()
 {
-  if (m_item.HasProperty("StartPercent"))
+  if (m_item.HasProperty(ITEM::PROPERTY::START_PERCENT))
   {
-    m_options.startpercent = m_item.GetProperty("StartPercent").asDouble();
+    m_options.startpercent = m_item.GetProperty(ITEM::PROPERTY::START_PERCENT).asDouble();
     m_item.SetStartOffset(0);
   }
   m_options.starttime = CUtil::ConvertMilliSecsToSecs(m_item.GetStartOffset());
 
   if (VIDEO::IsVideo(m_item))
   {
-    if (m_item.HasProperty("savedplayerstate"))
+    if (m_item.HasProperty(ITEM::PROPERTY::SAVED_PLAYER_STATE))
     {
       // savedplayerstate is set in CPowerManager on sleep
       m_options.starttime = CUtil::ConvertMilliSecsToSecs(m_item.GetStartOffset());
-      m_options.state = m_item.GetProperty("savedplayerstate").asString();
-      m_item.ClearProperty("savedplayerstate");
+      m_options.state = m_item.GetProperty(ITEM::PROPERTY::SAVED_PLAYER_STATE).asString();
+      m_item.ClearProperty(ITEM::PROPERTY::SAVED_PLAYER_STATE);
       return;
     }
 
@@ -127,10 +126,11 @@ void CApplicationPlay::GetOptionsAndUpdateItem()
           VIDEO::IsVideoDb(m_item))
         path = videoInfoTagPath;
     }
-    else if (m_item.HasProperty("original_listitem_url") &&
-             URIUtils::IsPlugin(m_item.GetProperty("original_listitem_url").asString()))
+    else if (m_item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL) &&
+             URIUtils::IsPlugin(
+                 m_item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
     {
-      path = m_item.GetProperty("original_listitem_url").asString();
+      path = m_item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     }
 
     // Note that we need to load the tag from database also if the item already has a tag,
@@ -204,7 +204,8 @@ MenuDecision GetMenuDecisions(const CFileItem& item,
   const bool atStart{options.startpercent == 0.0 && options.starttime == 0.0};
 
   // See if choose (new) playlist has been selected from context menu
-  const bool forceSelectionAlways{item.GetProperty("force_playlist_selection").asBoolean(false)};
+  const bool forceSelectionAlways{
+      item.GetProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION).asBoolean(false)};
 
   // If we already have a playlist but Choose Playlist has been selected on the context menu
   if (forceSelectionAlways && isBlurayPath)
@@ -262,7 +263,7 @@ bool CApplicationPlay::GetPlaylistIfDisc()
       // Reset any resume state as new playlist chosen
       m_options.starttime = m_options.startpercent = 0.0;
       m_options.state = {};
-      m_item.ClearProperty("force_playlist_selection");
+      m_item.ClearProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION);
       break;
     }
     case NO_ACTION:
@@ -271,64 +272,24 @@ bool CApplicationPlay::GetPlaylistIfDisc()
   return true;
 }
 
-namespace
+void CApplicationPlay::DetermineFullScreen(KODI::APPLICATION::StartsRun startsRun)
 {
-enum class PlayMediaType : uint8_t
-{
-  MUSIC_PLAYLIST,
-  VIDEO,
-  VIDEO_PLAYLIST
-};
-
-bool ShouldGoFullScreen(PlayMediaType mediaType)
-{
-  // Determine if we should go fullscreen based on the media type and settings
-  if (const bool windowedStart{CMediaSettings::GetInstance().DoesMediaStartWindowed()};
-      windowedStart)
-    return false;
+  if (startsRun == KODI::APPLICATION::StartsRun::No ||
+      CMediaSettings::GetInstance().DoesMediaStartWindowed())
+  {
+    m_options.fullscreen = false;
+    return;
+  }
 
   const auto settings{CServiceBroker::GetSettingsComponent()};
-  const bool fullScreenOnMovieStart{settings->GetAdvancedSettings()->m_fullScreenOnMovieStart};
-  const bool hasPlayedFirstFile{CServiceBroker::GetPlaylistPlayer().HasPlayedFirstFile()};
-
-  using enum PlayMediaType;
-  switch (mediaType)
-  {
-    case VIDEO_PLAYLIST:
-      return !hasPlayedFirstFile && fullScreenOnMovieStart;
-    case MUSIC_PLAYLIST:
-      return !hasPlayedFirstFile &&
-             settings->GetSettings()->GetBool(CSettings::SETTING_MUSICFILES_SELECTACTION);
-    case VIDEO:
-      return fullScreenOnMovieStart;
-    default:
-      break;
-  }
-
-  return false; // should never reach here
-}
-} // namespace
-
-void CApplicationPlay::DetermineFullScreen()
-{
-  // Get current playlist info
-  const auto playlistId{CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist()};
-
-  // Determine fullscreen status based on media type and playlist
-  using enum PlayMediaType;
-  if (MUSIC::IsAudio(m_item) && playlistId == PLAYLIST::Id::TYPE_MUSIC)
-    m_options.fullscreen = ShouldGoFullScreen(MUSIC_PLAYLIST);
-  else if (VIDEO::IsVideo(m_item) && playlistId == PLAYLIST::Id::TYPE_VIDEO &&
-           CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId).size() > 1)
-  {
-    m_options.fullscreen = ShouldGoFullScreen(VIDEO_PLAYLIST);
-  }
-  else
-    m_options.fullscreen = ShouldGoFullScreen(VIDEO);
+  m_options.fullscreen =
+      CServiceBroker::GetPlayLists()->IsStartingAsAudio(m_item)
+          ? settings->GetSettings()->GetBool(CSettings::SETTING_MUSICFILES_SELECTACTION)
+          : settings->GetAdvancedSettings()->m_fullScreenOnMovieStart;
 }
 
 CApplicationPlay::GatherPlaybackDetailsResult CApplicationPlay::GatherPlaybackDetails(
-    const CFileItem& item, std::string player, bool restart)
+    const CFileItem& item, std::string player, bool restart, KODI::APPLICATION::StartsRun startsRun)
 {
   m_item = item;
   m_player = std::move(player);
@@ -374,7 +335,7 @@ CApplicationPlay::GatherPlaybackDetailsResult CApplicationPlay::GatherPlaybackDe
     return GatherPlaybackDetailsResult::
         RESULT_NO_PLAYLIST_SELECTED; // Playlist needed but none selected (ie. user cancelled) so abort playback
 
-  DetermineFullScreen();
+  DetermineFullScreen(startsRun);
 
   // Stereo streams may have lower quality, i.e. 32bit vs 16 bit
   m_options.preferStereo =

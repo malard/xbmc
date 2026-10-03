@@ -33,13 +33,14 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
 #include "jobs/Job.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
+#include "language/LanguageTag.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
-#include "utils/LangCodeExpander.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -152,7 +153,8 @@ bool CGUIDialogSubtitles::OnMessage(CGUIMessage& message)
       int item = msg.GetParam1();
       if (item >= 0 && item < m_serviceItems->Size())
       {
-        SetService(m_serviceItems->Get(item)->GetProperty("Addon.ID").asString());
+        SetService(
+            m_serviceItems->Get(item)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
         Search();
       }
       return true;
@@ -340,7 +342,7 @@ const CFileItemPtr CGUIDialogSubtitles::GetService() const
 {
   for (int i = 0; i < m_serviceItems->Size(); i++)
   {
-    if (m_serviceItems->Get(i)->GetProperty("Addon.ID") == m_currentService)
+    if (m_serviceItems->Get(i)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID) == m_currentService)
       return m_serviceItems->Get(i);
   }
   return CFileItemPtr();
@@ -372,25 +374,44 @@ void CGUIDialogSubtitles::Search(const std::string &search/*=""*/)
   if (g_application.CurrentFileItem().IsStack())
     url.SetOption("stack", "1");
 
-  std::string preferredLanguage = settings->GetString(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE);
+  // Passed to the subtitle service addon as a url option: it must stay unlocalized, and must name
+  // the language alone, as addons match on names such as "English", never on qualified names such
+  // as "English (Australia)"
+  const KODI::LANGUAGE::CLanguagePreference& preference{
+      KODI::LANGUAGE::CLanguage::GetInstance().SubtitlePreference()};
+  std::string preferredLanguage;
 
-  if (StringUtils::EqualsNoCase(preferredLanguage, KODI::LANGINFO::subLanguageOriginal))
+  switch (preference.GetKind())
   {
-    AudioStreamInfo info;
+    case KODI::LANGUAGE::CLanguagePreference::Kind::Language:
+      preferredLanguage = preference.GetLanguage().ToEnglishLanguageName();
+      break;
 
-    const auto& components = CServiceBroker::GetAppComponents();
-    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-    appPlayer->GetAudioStreamInfo(CURRENT_STREAM, info);
+    case KODI::LANGUAGE::CLanguagePreference::Kind::FollowUI:
+      preferredLanguage = KODI::LANGUAGE::CLanguage::GetInstance().PackName();
+      break;
 
-    // Passed to the subtitle service addon as a url option: it must stay unlocalized, and must
-    // name the language alone, as addons match on names such as "English", never on qualified
-    // names such as "English (Australia)"
-    preferredLanguage = info.language.GetEnglishLanguageName();
-    if (preferredLanguage.empty())
-      preferredLanguage = "Unknown";
+    case KODI::LANGUAGE::CLanguagePreference::Kind::Original:
+    {
+      AudioStreamInfo info;
+
+      const auto& components = CServiceBroker::GetAppComponents();
+      const auto appPlayer = components.GetComponent<CApplicationPlayer>();
+      appPlayer->GetAudioStreamInfo(CURRENT_STREAM, info);
+
+      preferredLanguage = info.language.ToEnglishLanguageName();
+      if (preferredLanguage.empty())
+        preferredLanguage = "Unknown";
+      break;
+    }
+
+    case KODI::LANGUAGE::CLanguagePreference::Kind::None:
+    case KODI::LANGUAGE::CLanguagePreference::Kind::ForcedOnly:
+    case KODI::LANGUAGE::CLanguagePreference::Kind::MediaDefault:
+      // Answered by a stream flag, or by wanting no subtitles at all. There is no language for a
+      // service to search on, and the setting's own text is not one.
+      break;
   }
-  else if (StringUtils::EqualsNoCase(preferredLanguage, KODI::LANGINFO::subLanguageDefault))
-    preferredLanguage = g_langInfo.GetEnglishLanguageName();
 
   url.SetOption("preferredlanguage", preferredLanguage);
 
@@ -452,25 +473,26 @@ void CGUIDialogSubtitles::OnSubtitleServiceContextMenu(int itemIdx)
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_SETTINGS:
     {
       AddonPtr addon;
-      if (CServiceBroker::GetAddonMgr().GetAddon(service->GetProperty("Addon.ID").asString(), addon,
-                                                 AddonType::SUBTITLE_MODULE,
-                                                 OnlyEnabled::CHOICE_YES))
+      if (CServiceBroker::GetAddonMgr().GetAddon(
+              service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), addon,
+              AddonType::SUBTITLE_MODULE, OnlyEnabled::CHOICE_YES))
       {
         CGUIDialogAddonSettings::ShowForAddon(addon);
       }
       else
       {
         CLog::Log(LOGERROR, "{} - Could not open settings for addon: {}", __FUNCTION__,
-                  service->GetProperty("Addon.ID").asString());
+                  service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
       }
       break;
     }
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_DISABLE:
     {
-      CServiceBroker::GetAddonMgr().DisableAddon(service->GetProperty("Addon.ID").asString(),
-                                                 AddonDisabledReason::USER);
+      CServiceBroker::GetAddonMgr().DisableAddon(
+          service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(),
+          AddonDisabledReason::USER);
       const bool currentActiveServiceWasDisabled =
-          m_currentService == service->GetProperty("Addon.ID").asString();
+          m_currentService == service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString();
       FillServices();
       // restart search if the current active service was disabled
       if (currentActiveServiceWasDisabled && !m_serviceItems->IsEmpty())
@@ -606,10 +628,11 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
   if (strDestPath.empty())
     strDestPath = strDownloadPath;
 
-  // Extract the language and appropriate extension
-  std::string strSubLang;
-  CLangCodeExpander::ConvertToISO6391(language, strSubLang);
-  const std::string langSuffix{strSubLang.empty() ? "" : "." + strSubLang};
+  // The suffix Kodi's own external subtitle scan reads back, and that scan tokenizes a filename
+  // on " .-" - a hyphen separates there, so a tag naming a region cannot survive the round
+  // trip: movie.pt-BR.srt would be read as Breton. A bare ISO 639-1 code is what fits.
+  const std::string subLang{KODI::LANGUAGE::CLanguageTag::Parse(language).AsIso6391()};
+  const std::string langSuffix{subLang.empty() ? "" : "." + subLang};
 
   // Iterate over all items to transfer
   for (unsigned int i = 0; i < vecFiles.size() && i < (unsigned int) items->Size(); i++)

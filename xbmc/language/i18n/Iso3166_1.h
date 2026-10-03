@@ -27,31 +27,10 @@ public:
   static std::optional<std::string> Alpha2ToAlpha3(std::string_view code);
 
   /*!
-   * \brief Retrieve the alpha-2 ISO 3166-1 code for the provided alpha-3 code.
-   * \param[in] code lowercase alpha-3 code
-   * \return alpha-2 code or nullopt for an unknown alpha-3 code.
-   */
-  static std::optional<std::string> Alpha3ToAlpha2(std::string_view code);
-
-  /*!
-   * \brief Existence of the provided alpha-3 code in the collection of ISO 3166-1 regions.
-   * \param[in] code lowercase alpha-3 code
-   * \return true for an existing alpha-3 code, false otherwise.
-   */
-  static bool ContainsAlpha3(std::string_view code);
-
-  /*!
    * \brief Existence of the provided alpha-2 code in the collection of ISO 3166-1 regions.
    * \param[in] code lowercase alpha-2 code
    * \return true for an existing alpha-2 code, false otherwise.
    */
   static bool ContainsAlpha2(std::string_view code);
-
-  /*!
-   * \brief Retrieve the name of the provided ISO 3166-1 regionl code.
-   * \param[in] code alpha-2 or alpha-3 ISO 3166-1 code
-   * \return English name of the region, nullopt if no region by that code exists.
-   */
-  static std::optional<std::string> LookupByCode(std::string_view code);
 };
 } // namespace KODI::LANGUAGE::I18N

@@ -14,8 +14,11 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationContentGeometry.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationStackHelper.h"
+#include "application/PlaybackAnnouncer.h"
+#include "cores/VideoPlayer/LiveGeometryMonitor.h"
 #ifdef HAVE_LIBBLURAY
 #include "filesystem/BlurayDirectory.h"
 #endif
@@ -23,6 +26,7 @@
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h"
+#include "interfaces/PlaybackValues.h"
 #include "interfaces/python/XBPython.h"
 #include "jobs/JobManager.h"
 #include "music/MusicFileItemClassify.h"
@@ -32,6 +36,7 @@
 #include "settings/MediaSettings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/ItemProperties.h"
 #include "utils/SaveFileStateJob.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -39,7 +44,9 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
+#include "video/geometry/ContentGeometryRecord.h"
 
+#include <algorithm>
 #include <chrono>
 #include <memory>
 
@@ -49,6 +56,8 @@ using namespace std::chrono_literals;
 void CApplicationPlayerCallback::OnPlayBackEnded()
 {
   CLog::LogF(LOGDEBUG, "call");
+
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_ENDED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
@@ -205,16 +214,17 @@ bool UpdateDiscStackBookmark(CBookmark& bookmark,
         if (!stackHelper->IsPlayingLastStackPart())
           return false; // Not finished if not playing last part
         if (!stackHelper->IsSeekingParts() &&
-            !file.GetProperty("stopped_before_end").asBoolean(false))
+            !file.GetProperty(ITEM::PROPERTY::STOPPED_BEFORE_END).asBoolean(false))
           return true; // For disc stacks, if not flagged then we have not stopped early (decision made in InputStream unless seeking cross-parts)
         if (WithinPercentOfEnd(bookmark, advancedSettings->m_videoIgnorePercentAtEnd))
           return true; // Within videoIgnorePercentAtEnd of the end so consider watched
         return false;
       }()};
 
-  const bool currentPartFinished{!file.GetProperty("stopped_before_end").asBoolean(false)};
+  const bool currentPartFinished{
+      !file.GetProperty(ITEM::PROPERTY::STOPPED_BEFORE_END).asBoolean(false)};
   const bool allStackPartsPlayed{stackHelper->IsPlayingLastStackPart()};
-  const bool noMainTitle{file.GetProperty("no_main_title").asBoolean(false)};
+  const bool noMainTitle{file.GetProperty(ITEM::PROPERTY::NO_MAIN_TITLE).asBoolean(false)};
 
   bookmark.partNumber = stackHelper->GetStackPartNumber(file);
   stackHelper->SetCurrentPartFinished(currentPartFinished);
@@ -295,7 +305,7 @@ void UpdateStackAndItem(const CFileItem& file,
   {
     stackHelper->UpdateDiscStackAndTimes(file);
 
-    if (file.GetProperty("update_stream_details").asBoolean(false))
+    if (file.GetProperty(ITEM::PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false))
     {
       fileItem.GetVideoInfoTag()->m_streamDetails =
           file.GetVideoInfoTag()->m_streamDetails; // Update streamdetails
@@ -304,7 +314,7 @@ void UpdateStackAndItem(const CFileItem& file,
     const std::string oldStackPath{stackHelper->GetOldStackDynPath()};
     if (!oldStackPath.empty())
     {
-      fileItem.SetProperty("new_stack_path", true);
+      fileItem.SetProperty(ITEM::PROPERTY::NEW_STACK_PATH, true);
       fileItem.SetProperty("old_stack_path", oldStackPath);
     }
 
@@ -347,7 +357,8 @@ bool UpdatePlayCount(const CFileItem& fileItem, const CBookmark& bookmark)
 
   return false;
 }
-} // namespace
+
+} // unnamed namespace
 
 void CApplicationPlayerCallback::OnPlayerCloseFile(const CFileItem& file,
                                                    const CBookmark& bookmarkParam)
@@ -372,7 +383,8 @@ void CApplicationPlayerCallback::OnPlayerCloseFile(const CFileItem& file,
     // otherwise if played through Video->Files we need to retrieve the removable:// path
     // We need to update DynPath with the removable:// path (for the database), keeping the playlist
     // Also flag if we need to update stream details from the played file
-    UpdateRemovableBlurayPath(fileItem, file.GetProperty("update_stream_details").asBoolean(false));
+    UpdateRemovableBlurayPath(
+        fileItem, file.GetProperty(ITEM::PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false));
 #endif
 
     // Update the stack
@@ -433,13 +445,15 @@ void CApplicationPlayerCallback::OnPlayBackStopped()
 {
   CLog::LogF(LOGDEBUG, "call");
 
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
+
   CGUIMessage msg(GUI_MSG_PLAYBACK_STOPPED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
 }
 
 void CApplicationPlayerCallback::OnPlayBackError()
 {
-  //@todo Playlists can be continued by calling OnPlaybackEnded instead
+  //! @todo Playlists could continue by calling OnPlayBackEnded() instead
   // open error dialog
   CGUIMessage msg(GUI_MSG_PLAYBACK_ERROR, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
@@ -494,6 +508,8 @@ void CApplicationPlayerCallback::OnAVChange()
 
   CServiceBroker::GetGUI()->GetStereoscopicsManager().OnStreamChange();
 
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
+
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVCHANGE, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
 }
@@ -502,8 +518,46 @@ void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 {
   CLog::LogF(LOGDEBUG, "call");
 
+  CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
+
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVSTARTED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
+}
+
+void CApplicationPlayerCallback::OnSubtitleVisibilityChanged(bool visible)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::SubtitleEnabled, visible);
+}
+
+void CApplicationPlayerCallback::OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentSubtitle, INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnAudioStreamChanged(int index, const AudioStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentAudioStream,
+      INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnVideoStreamChanged(int index, const VideoStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      CPlaybackAnnouncer::PlayerProperty::CurrentVideoStream,
+      INTERFACES::StreamToObject(index, info));
+}
+
+void CApplicationPlayerCallback::OnContentGeometryChanged(const LiveGeometryUpdate& update)
+{
+  const auto geometry =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
+  if (update.clear)
+    geometry->ClearLive();
+  else
+    geometry->SetLive(update.rect, update.varies);
 }
 
 void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
@@ -521,6 +575,11 @@ void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
     auto& components = CServiceBroker::GetAppComponents();
     const auto appPlayer = components.GetComponent<CApplicationPlayer>();
     appPlayer->SetVideoSettings(vs);
+
+    const VIDEO::GEOMETRY::ContentGeometryLookup cached{dbs.GetContentGeometry(
+        dbs.GetFileId(fileItem), VIDEO::GEOMETRY::GetFileIdentity(fileItem.GetDynPath()))};
+
+    components.GetComponent<CApplicationContentGeometry>()->SetFileInputs(cached);
 
     dbs.Close();
   }

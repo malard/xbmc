@@ -9,9 +9,11 @@
 #pragma once
 
 #include "MediaSource.h"
+#include "media/MediaSection.h"
 #include "utils/LabelFormatter.h"
 #include "utils/SortUtils.h"
 
+#include <optional>
 #include <vector>
 
 class CViewState; // forward
@@ -19,7 +21,7 @@ class CFileItemList;
 
 namespace KODI::PLAYLIST
 {
-enum class Id;
+enum class Type;
 } // namespace KODI::PLAYLIST
 
 class CGUIViewState
@@ -50,13 +52,11 @@ public:
   virtual bool HideParentDirItems();
   virtual bool DisableAddSourceButtons();
 
-  virtual KODI::PLAYLIST::Id GetPlaylist() const;
-  const std::string& GetPlaylistDirectory();
-  void SetPlaylistDirectory(const std::string& strDirectory);
-  bool IsCurrentPlaylistDirectory(const std::string& strDirectory);
+  virtual std::optional<KODI::PLAYLIST::Type> GetPlayListType() const;
   virtual bool AutoPlayNextItem();
 
-  virtual std::string GetLockType();
+  //! The section whose source locks apply in this view, if any
+  virtual std::optional<KODI::MEDIA::MediaSection> GetLockType();
   virtual std::string GetExtensions();
   virtual std::vector<CMediaSource>& GetSources();
 
@@ -72,7 +72,7 @@ protected:
   /*! \brief Add the sort order defined in a smartplaylist
    Defaults to SORT_METHOD_PLAYLIST_ORDER if no order is defined.
    \param items the list of items for the view state.
-   \param label_mask the label masks for formatting items.
+   \param label_masks the label masks for formatting items.
    */
   void AddPlaylistOrder(const CFileItemList& items, const LABEL_MASKS& label_masks);
 
@@ -98,13 +98,11 @@ protected:
   const CFileItemList& m_items;
 
   int m_currentViewAsControl;
-  KODI::PLAYLIST::Id m_playlist;
 
   std::vector<GUIViewSortDetails> m_sortMethods;
   int m_currentSortMethod;
 
   static std::vector<CMediaSource> m_sources;
-  static std::string m_strPlaylistDirectory;
 };
 
 class CGUIViewStateGeneral : public CGUIViewState
@@ -121,6 +119,12 @@ class CGUIViewStateFromItems : public CGUIViewState
 public:
   explicit CGUIViewStateFromItems(const CFileItemList& items);
   bool AutoPlayNextItem() override;
+
+  /*!
+   * \return For a plugin that provides only audio or only video, that playlist; otherwise none, so
+   * the items decide.
+   */
+  std::optional<KODI::PLAYLIST::Type> GetPlayListType() const override;
 
 protected:
   void SaveViewState() override;

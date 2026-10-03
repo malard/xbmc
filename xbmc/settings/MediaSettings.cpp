@@ -8,9 +8,9 @@
 
 #include "MediaSettings.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/RetroPlayer/RetroPlayerUtils.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "interfaces/AnnouncementManager.h"
@@ -24,6 +24,7 @@
 #include "settings/dialogs/GUIDialogLibExportSettings.h"
 #include "settings/lib/Setting.h"
 #include "storage/MediaManager.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
@@ -31,6 +32,7 @@
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoLibraryQueue.h"
+#include "video/geometry/ContentGeometryScanner.h"
 
 #include <algorithm>
 #include <array>
@@ -144,15 +146,6 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_musicNeedsUpdate = 0;
   }
 
-  // Set music playlist player repeat and shuffle from loaded settings
-  if (m_musicPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_MUSIC, m_musicPlaylistShuffle);
-
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
   if (pElement)
@@ -177,16 +170,29 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_videoNeedsUpdate = 0;
   }
 
-  // Set video playlist player repeat and shuffle from loaded settings
-  if (m_videoPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_VIDEO, m_videoPlaylistShuffle);
+  CServiceBroker::GetPlayLists()->RestoreSavedPlayOrder();
 
   return true;
+}
+
+bool CMediaSettings::GetPlayListRepeat(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat;
+}
+
+void CMediaSettings::SetPlayListRepeat(PLAYLIST::Type type, bool repeats)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat) = repeats;
+}
+
+bool CMediaSettings::GetPlayListShuffled(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle;
+}
+
+void CMediaSettings::SetPlayListShuffled(PLAYLIST::Type type, bool shuffled)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle) = shuffled;
 }
 
 bool CMediaSettings::Save(TiXmlNode *settings) const
@@ -358,6 +364,10 @@ void CMediaSettings::OnSettingAction(const std::shared_ptr<const CSetting>& sett
       videodatabase.Close();
     }
   }
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_SCANCONTENTGEOMETRY)
+  {
+    KODI::VIDEO::GEOMETRY::CContentGeometryScanner::GetInstance().Sweep(true);
+  }
   else if (settingId == CSettings::SETTING_MAINTENANCE_CLEANIMAGECACHE)
   {
     CServiceBroker::GetTextureCache()->CleanAllUnusedImages();
@@ -369,8 +379,18 @@ void CMediaSettings::OnSettingChanged(const std::shared_ptr<const CSetting>& set
   if (!setting)
     return;
 
-  if (setting->GetId() == CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)
+  const std::string& settingId{setting->GetId()};
+  if (settingId == CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)
     CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnRefresh");
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY ||
+           settingId == CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN)
+  {
+    auto& scanner{KODI::VIDEO::GEOMETRY::CContentGeometryScanner::GetInstance()};
+    if (std::static_pointer_cast<const CSettingBool>(setting)->GetValue())
+      scanner.Sweep();
+    else
+      scanner.StopSweep();
+  }
 }
 
 WatchedMode CMediaSettings::GetWatchedMode(const std::string& content) const
@@ -404,8 +424,8 @@ void CMediaSettings::CycleWatchedMode(WatchedMode& mode)
 
 std::string CMediaSettings::GetWatchedContent(const std::string &content)
 {
-  if (content == "seasons" || content == "episodes")
-    return "tvshows";
+  if (content == MEDIA::CONTENT::SEASONS || content == MEDIA::CONTENT::EPISODES)
+    return MEDIA::CONTENT::TVSHOWS;
 
   return content;
 }

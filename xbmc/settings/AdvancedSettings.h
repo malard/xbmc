@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "language/LangInfo.h"
+#include "media/MediaSection.h"
 #include "pictures/PictureScalingAlgorithm.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
@@ -188,6 +188,16 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     int m_musicPercentSeekBackwardBig;
     int m_videoIgnoreSecondsAtStart;
     float m_videoIgnorePercentAtEnd;
+
+    //! \brief Share of a title's samples a second shape needs before content counts as varying.
+    float m_videoContentGeometryVariesShare;
+
+    //! \brief Width of the reduced copy live geometry reads a hardware-decoded picture through.
+    int m_videoContentGeometryReductionWidth;
+
+    //! \brief Whether a live reading may narrow the published shape as well as widen it. Off
+    //! by default.
+    bool m_videoContentGeometryLiveRepublishes;
     float m_audioApplyDrc;
     unsigned int m_maxPassthroughOffSyncDuration = 50; // when 50 ms off adjust
     bool m_AllowMultiChannelFloat = false; // Android only switch to be removed in v22
@@ -240,6 +250,11 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     std::string m_videoCleanDateTimeRegExp;
     std::string m_videoFilenameAttributePairsRegExp;
     std::vector<std::string> m_videoCleanStringRegExps;
+    //! \brief The patterns a listing of \p section leaves out: none for a section without its
+    //! own.
+    const std::vector<std::string>& GetExcludeFromListingRegExps(
+        KODI::MEDIA::MediaSection section) const;
+
     std::vector<std::string> m_videoExcludeFromListingRegExps;
     std::vector<std::string> m_allExcludeFromScanRegExps;
     std::vector<std::string> m_moviesExcludeFromScanRegExps;
@@ -309,8 +324,6 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_disableEpisodeRanges{false};
     bool m_bNoRemoteArtWithLocalScraper{false};
     bool m_ignoreFolderNamesInArchives{true};
-
-    CLangInfo::Tokens m_vecTokens;
 
     int m_iEpgUpdateCheckInterval;  // seconds
     int m_iEpgCleanupInterval;      // seconds
@@ -394,6 +407,9 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
 
     bool m_jsonOutputCompact;
     unsigned int m_jsonTcpPort;
+    //! Whether GUI.DeleteScreenshots is offered. Off by default: it is the only call that deletes
+    //! from disk, and the folder it clears is wherever debug.screenshotpath points.
+    bool m_jsonAllowScreenshotDeletion;
 
     bool m_enableMultimediaKeys;
     std::vector<std::string> m_settingsFiles;
@@ -403,6 +419,8 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_initialized{false};
 
     void SetDebugMode(bool debug);
+    //! Sets the level everything is logged at, which SetDebugMode also sets
+    void SetLogLevel(int level);
 
     //! \brief Toggles dirty-region visualization
     void ToggleDirtyRegionVisualization()

@@ -79,7 +79,7 @@ int CPVRCachedImages::Cleanup(const std::vector<PVRImagePattern>& urlPatterns,
                              [&textureURL](std::string_view url) { return url == textureURL; }))
     {
       CLog::LogFC(LOGDEBUG, LOGPVR, "Removing stale cached image: '{}'", textureURL);
-      CServiceBroker::GetTextureCache()->ClearCachedImage(items[i]["textureid"].asInteger());
+      CServiceBroker::GetTextureCache()->ClearCachedImage(items[i]["textureId"].asInteger());
 
       if (clearTextureForPath)
         db.ClearTextureForPath(textureURL, "thumb");

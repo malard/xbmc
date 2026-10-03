@@ -15,6 +15,7 @@
 #include "music/MusicFileItemClassify.h"
 #include "music/tags/MusicInfoTag.h"
 #include "utils/CharsetConverter.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/VideoFileItemClassify.h"
@@ -177,9 +178,9 @@ bool CPlayListM3U::Load(const std::string& strFileName)
         {
           newItem->SetStartOffset(iStartOffset);
           newItem->SetStartPartNumber(1);
-          newItem->SetProperty("item_start", iStartOffset);
+          newItem->SetProperty(ITEM::PROPERTY::ITEM_START, iStartOffset);
           newItem->SetEndOffset(iEndOffset);
-          newItem->SetProperty("cueloadinformation", true);
+          newItem->SetProperty(ITEM::PROPERTY::CUE_LOAD_INFORMATION, true);
           newItem->GetMusicInfoTag()->SetTitle(strInfo);
           if (iEndOffset)
             lDuration = static_cast<int>(CUtil::ConvertMilliSecsToSecsIntRounded(iEndOffset - iStartOffset));
@@ -245,7 +246,7 @@ bool CPlayListM3U::Load(const std::string& strFileName)
 
 void CPlayListM3U::Save(const std::string& strFileName) const
 {
-  if (m_vecItems.empty())
+  if (m_items.empty())
     return;
   bool utf8 = false;
   if (URIUtils::GetExtension(strFileName) == ".m3u8")
@@ -261,9 +262,9 @@ void CPlayListM3U::Save(const std::string& strFileName) const
   if (file.Write(strLine.c_str(), strLine.size()) != static_cast<ssize_t>(strLine.size()))
     return; // error
 
-  for (int i = 0; i < (int)m_vecItems.size(); ++i)
+  for (int i = 0; i < (int)m_items.size(); ++i)
   {
-    CFileItemPtr item = m_vecItems[i];
+    CFileItemPtr item = m_items[i];
     std::string strDescription=item->GetLabel();
     if (!utf8)
       g_charsetConverter.utf8ToStringCharset(strDescription);

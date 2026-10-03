@@ -14,8 +14,12 @@ set(SOURCES AudioSinkAE.cpp
             Edl/EdlParsers/MultipleEpisodeEdlParser.cpp
             Edl/EdlParsers/PvrEdlParser.cpp
             Edl/EdlParsers/VideoReDoParser.cpp
+            LiveGeometryMonitor.cpp
             PTSTracker.cpp
+            RadioRDSCountries.cpp
+            RadioRDSLanguages.cpp
             VideoDecodeSession.cpp
+            VideoFileGeometry.cpp
             VideoPlayer.cpp
             VideoPlayerAudio.cpp
             VideoPlayerAudioID3.cpp
@@ -44,8 +48,12 @@ set(HEADERS AudioSinkAE.h
             Edl/EdlParsers/PvrEdlParser.h
             Edl/EdlParsers/VideoReDoParser.h
             IVideoPlayer.h
+            LiveGeometryMonitor.h
             PTSTracker.h
+            RadioRDSCountries.h
+            RadioRDSLanguages.h
             VideoDecodeSession.h
+            VideoFileGeometry.h
             VideoPlayer.h
             VideoPlayerAudio.h
             VideoPlayerAudioID3.h

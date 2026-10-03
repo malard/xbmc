@@ -7,6 +7,7 @@ set(SOURCES TestAlarmClock.cpp
             TestBitstreamConverter.cpp
             TestBitstreamStats.cpp
             TestCharsetConverter.cpp
+            TestContentNames.cpp
             TestCPUInfo.cpp
             TestComponentContainer.cpp
             TestContentUtils.cpp
@@ -30,20 +31,20 @@ set(SOURCES TestAlarmClock.cpp
             TestJSONVariantParser.cpp
             TestJSONVariantWriter.cpp
             TestLabelFormatter.cpp
-            TestLangCodeExpander.cpp
-            TestLanguageTag.cpp
-            TestLocale.cpp
+            TestLegacyPathTranslation.cpp
             Testlog.cpp
             TestMap.cpp
             TestMathUtils.cpp
             TestMime.cpp
             TestMp4ChplReader.cpp
+            TestPlaceholderPaths.cpp
             TestPOUtils.cpp
             TestRegExp.cpp
             TestRingBuffer.cpp
             TestRssReader.cpp
             TestScraperParser.cpp
             TestScraperUrl.cpp
+            TestScreenshot.cpp
             TestSet.cpp
             TestSortUtils.cpp
             TestStopwatch.cpp

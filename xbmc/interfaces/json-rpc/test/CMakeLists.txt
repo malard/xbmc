@@ -1,9 +1,38 @@
 set(SOURCES TestAddonsExecuteAddon.cpp
+            TestAddonsOperations.cpp
+            TestAnnouncementToJSONRPC.cpp
+            TestApplicationLogLevel.cpp
             TestAudioLibrary.cpp
+            TestAudioLibraryInfoProviderView.cpp
+            TestDeprecatedMethodSchema.cpp
+            TestFailureReasons.cpp
+            TestFileItemHandler.cpp
             TestFileOperations.cpp
+            TestGUIPropertySchema.cpp
+            TestJSONRPCErrorData.cpp
             TestJSONRPCPermission.cpp
             TestJSONRPCStatus.cpp
+            TestJSONServiceDescription.cpp
+            TestJSONServiceDescriptionIntrospect.cpp
+            TestLibraryItems.cpp
+            TestLibraryLookup.cpp
+            TestPlayerOpenDirectory.cpp
+            TestPlayerTargets.cpp
+            TestPlaylistOperations.cpp
+            TestPVRBroadcastRange.cpp
+            TestPVRBroadcastSchema.cpp
+            TestPVREpgFields.cpp
+            TestPVRRecordingSchema.cpp
+            TestRequestableFields.cpp
             TestSetConfiguration.cpp
-            TestVideoLibrarySetSourceContent.cpp)
+            TestSettingsLevel.cpp
+            TestSettingsValueGate.cpp
+            TestSettingsValueRefusal.cpp
+            TestSharedFieldDeclarations.cpp
+            TestStreamObjects.cpp
+            TestVideoLibraryPlaybackState.cpp
+            TestVideoLibraryRefreshSchema.cpp
+            TestVideoLibrarySetSourceContent.cpp
+            TestVideoStreamsSchema.cpp)
 
 core_add_test_library(jsonrpc_test)

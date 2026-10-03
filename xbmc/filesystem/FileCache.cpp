@@ -14,7 +14,10 @@
 #include "URL.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "settings/lib/Setting.h"
 #include "threads/Thread.h"
+#include "utils/MemUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/log.h"
 
 #include <mutex>
@@ -55,6 +58,12 @@ public:
 private:
   CFile m_file;
 };
+
+//! The forward part of a memory cache, which is three quarters of it
+size_t ForwardCacheSize(size_t cacheSize)
+{
+  return cacheSize - cacheSize / 4;
+}
 } // namespace
 
 class CWriteRate
@@ -125,25 +134,114 @@ IFile *CFileCache::GetFileImp()
   return m_source->GetImplementation();
 }
 
+std::unique_ptr<CCacheStrategy> CFileCache::CreateMemoryCache(size_t cacheSize) const
+{
+  const size_t front = ForwardCacheSize(cacheSize);
+  return ForStreams(std::make_unique<CCircularCache>(front, cacheSize - front));
+}
+
+std::unique_ptr<CCacheStrategy> CFileCache::ForStreams(std::unique_ptr<CCacheStrategy> cache) const
+{
+  // NOTE: READ_MULTI_STREAM is only used with READ_AUDIO_VIDEO, and needs double buffering
+  if (m_flags & READ_MULTI_STREAM)
+    return std::make_unique<CDoubleCache>(cache.release());
+  return cache;
+}
+
+void CFileCache::SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize)
+{
+  if (m_flags & READ_MULTI_STREAM)
+    CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using double memory cache each sized {} bytes",
+              __FUNCTION__, m_sourcePath, cacheSize);
+  else
+    CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using single memory cache sized {} bytes",
+              __FUNCTION__, m_sourcePath, cacheSize);
+
+  m_pCache = std::move(cache);
+  m_forwardCacheSize = ForwardCacheSize(cacheSize);
+  m_maxForward = m_forwardCacheSize;
+  m_memoryCacheSize = cacheSize;
+}
+
+bool CFileCache::OpenSource(const CURL& url)
+{
+  // The READ_NO_CACHE and READ_NO_BUFFER flags are required to avoid create other instances of
+  // FileCache or StreamBuffer since CFile::Open is called again in loop
+  if (!m_source->Open(url, READ_NO_CACHE | READ_TRUNCATED | READ_NO_BUFFER))
+    return false;
+
+  m_source->IoControl(IOControl::SET_CACHE, this);
+
+  bool retry = false;
+  m_source->IoControl(IOControl::SET_RETRY, &retry); // We already handle retrying ourselves
+
+  m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, nullptr);
+  return true;
+}
+
+size_t CFileCache::CacheSizeForRate(uint32_t bytesPerSecond) const
+{
+  constexpr int64_t secondsForward = 60;
+
+  // Only three quarters of the cache is forward
+  const int64_t wanted = static_cast<int64_t>(bytesPerSecond) * secondsForward * 4 / 3;
+
+  // Bounded by installed memory, so the size does not depend on what is resident at the time
+  KODI::MEMORY::MemoryStatus memory{};
+  KODI::MEMORY::GetMemoryStatus(&memory);
+  int64_t budget = static_cast<int64_t>(memory.totalPhys / 16);
+  if (m_flags & READ_MULTI_STREAM)
+    budget /= 2;
+
+  return static_cast<size_t>(std::min(wanted, budget));
+}
+
+void CFileCache::GrowCacheForRate(uint32_t bytesPerSecond)
+{
+  // Rebuilding refetches the cached content, which needs a source that can seek back to it
+  if (!m_autoSizeCache || !m_seekPossible || bytesPerSecond == 0 || m_memoryCacheSize == 0 ||
+      !CThread::IsRunning())
+    return;
+
+  const size_t wanted = CacheSizeForRate(bytesPerSecond);
+  if (wanted <= m_memoryCacheSize)
+    return;
+
+  // Rebuilt by the fill thread at the read position, the way a seek rebuilds it
+  std::unique_lock lock(m_sync);
+
+  CLog::LogF(LOGINFO, "<{}> growing the cache from {} to {} bytes for {} bytes per second",
+             m_sourcePath, m_memoryCacheSize, wanted, bytesPerSecond);
+
+  m_pendingCacheSize = wanted;
+  m_seekPos = m_readPos;
+  m_seekEnded.Reset();
+  m_seekEvent.Set();
+  while (!m_seekEnded.Wait(100ms))
+  {
+    if (!CThread::IsRunning())
+      return;
+  }
+}
+
 bool CFileCache::Open(const CURL& url)
 {
   Close();
 
   std::unique_lock lock(m_sync);
 
+  m_sourceUrl = url;
   m_sourcePath = url.GetRedacted();
 
   CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> opening", __FUNCTION__, m_sourcePath);
 
-  // Opening the source file.
-  // The READ_NO_CACHE and READ_NO_BUFFER flags are required to avoid create other instances of
-  // FileCache or StreamBuffer since CFile::Open is called again in loop
-  if (!m_source->Open(url, READ_NO_CACHE | READ_TRUNCATED | READ_NO_BUFFER))
+  if (!OpenSource(url))
   {
     CLog::Log(LOGERROR, "CFileCache::{} - <{}> failed to open", __FUNCTION__, m_sourcePath);
     Close();
     return false;
   }
+  m_sourceOpen = true;
 
   const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
   if (!settings)
@@ -152,14 +250,6 @@ bool CFileCache::Open(const CURL& url)
   const unsigned int cacheMemSize =
       settings->GetInt(CSettings::SETTING_FILECACHE_MEMORYSIZE) * 1024 * 1024;
 
-  m_source->IoControl(IOControl::SET_CACHE, this);
-
-  bool retry = false;
-  m_source->IoControl(IOControl::SET_RETRY, &retry); // We already handle retrying ourselves
-
-  // check if source can seek
-  m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, NULL);
-
   // Determine the best chunk size we can use
   m_chunkSize = CFile::DetermineChunkSize(m_source->GetChunkSize(),
                                           settings->GetInt(CSettings::SETTING_FILECACHE_CHUNKSIZE));
@@ -167,14 +257,15 @@ bool CFileCache::Open(const CURL& url)
             "CFileCache::{} - <{}> source chunk size is {}, setting cache chunk size to {}",
             __FUNCTION__, m_sourcePath, m_source->GetChunkSize(), m_chunkSize);
 
-  m_fileSize = m_source->GetLength();
+  // A negative length means unknown size, not past the end
+  m_fileSize = std::max<int64_t>(0, m_source->GetLength());
 
   if (!m_pCache)
   {
     if (cacheMemSize == 0)
     {
       // Use cache on disk
-      m_pCache = std::make_unique<CSimpleFileCache>();
+      m_pCache = ForStreams(std::make_unique<CSimpleFileCache>());
       m_forwardCacheSize = 0;
       m_maxForward = m_fileSize;
     }
@@ -207,25 +298,11 @@ bool CFileCache::Open(const CURL& url)
           cacheSize = m_chunkSize * 2;
       }
 
-      if (m_flags & READ_MULTI_STREAM)
-        CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using double memory cache each sized {} bytes",
-                  __FUNCTION__, m_sourcePath, cacheSize);
-      else
-        CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using single memory cache sized {} bytes",
-                  __FUNCTION__, m_sourcePath, cacheSize);
+      SetMemoryCache(CreateMemoryCache(cacheSize), cacheSize);
 
-      const size_t back = cacheSize / 4;
-      const size_t front = cacheSize - back;
-
-      m_pCache = std::make_unique<CCircularCache>(front, back);
-      m_forwardCacheSize = front;
-      m_maxForward = m_forwardCacheSize;
-    }
-
-    if (m_flags & READ_MULTI_STREAM)
-    {
-      // If READ_MULTI_STREAM flag is set: Double buffering is required
-      m_pCache = std::make_unique<CDoubleCache>(m_pCache.release());
+      // A size the user chose is left as chosen
+      const auto sizeSetting = settings->GetSetting(CSettings::SETTING_FILECACHE_MEMORYSIZE);
+      m_autoSizeCache = sizeSetting && sizeSetting->IsDefault();
     }
   }
 
@@ -286,7 +363,10 @@ void CFileCache::Process()
     bool seekRequested = false;
     if (m_sourcePositionValid)
     {
-      m_fileSize = m_source->GetLength();
+      // A dead source reports no length, which must not erase the real one mid-file
+      const int64_t sourceLength = m_source->GetLength();
+      if (sourceLength > 0)
+        m_fileSize = sourceLength;
       seekRequested = m_seekEvent.Wait(0ms);
     }
     else
@@ -299,13 +379,29 @@ void CFileCache::Process()
     // check for seek events
     if (seekRequested)
     {
+      // Only safe here: the reader is held in Seek or GrowCacheForRate until the seek completes
+      if (m_pendingCacheSize)
+      {
+        std::unique_ptr<CCacheStrategy> grown = CreateMemoryCache(m_pendingCacheSize);
+        if (grown->Open() == CACHE_RC_OK)
+          SetMemoryCache(std::move(grown), m_pendingCacheSize);
+        else
+          CLog::LogF(LOGERROR, "<{}> could not allocate the grown cache, keeping the current one",
+                     m_sourcePath);
+        m_pendingCacheSize = 0;
+      }
+
       const int64_t cacheMaxPos = m_pCache->CachedDataEndPosIfSeekTo(m_seekPos);
-      const bool cacheReachEOF = (cacheMaxPos == m_fileSize);
+      // A length of 0 is unknown, not an end the cache has reached
+      const bool cacheReachEOF = m_fileSize > 0 && cacheMaxPos == m_fileSize;
 
       bool sourceSeekFailed = false;
       if (!cacheReachEOF || !m_sourcePositionValid)
       {
-        const int64_t sourceSeekResult = m_source->Seek(cacheMaxPos, SEEK_SET);
+        // A source closed by a failed reconnect is reopened rather than sought
+        const int64_t sourceSeekResult = m_sourceOpen
+                                             ? m_source->Seek(cacheMaxPos, SEEK_SET)
+                                             : (ReopenSource(cacheMaxPos) ? cacheMaxPos : -1);
         const DWORD sourceSeekError = GetLastError();
         if (sourceSeekResult != cacheMaxPos)
         {
@@ -315,7 +411,8 @@ void CFileCache::Process()
                     sourceSeekResult);
           m_nSeekResult = -1;
           m_seekError = sourceSeekError != 0 ? sourceSeekError : EIO;
-          m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, NULL);
+          if (m_sourceOpen)
+            m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, NULL);
           sourceSeekFailed = true;
           m_sourcePositionValid = false;
 
@@ -407,9 +504,37 @@ void CFileCache::Process()
 
     ssize_t iRead = 0;
     if (maxSourceRead > 0)
+    {
+      // Published for CancelStalledSourceRead
+      m_sourceReadStart = CTimeUtils::MonotonicMs();
       iRead = m_source->Read(buffer.get(), maxSourceRead);
+      const int64_t answeredIn = CTimeUtils::MonotonicMs() - m_sourceReadStart;
+      const bool wasCancelled = m_sourceReadCancelled;
+      m_sourceReadStart = 0;
+      m_sourceReadCancelled = false;
+      ReportSourceOutage(answeredIn, iRead, wasCancelled);
+    }
     if (iRead <= 0)
     {
+      // Mid-file on a seekable source this is a stalled or dropped connection, not the end
+      if (!m_bStop && m_seekPossible && m_fileSize > 0 && m_writePos < m_fileSize)
+      {
+        CLog::LogF(LOGWARNING, "<{}> source read returned {} at {} of {}, reconnecting",
+                   m_sourcePath, iRead, m_writePos, m_fileSize.load());
+
+        if (m_seekEvent.Wait(2000ms))
+        {
+          if (!m_bStop)
+            m_seekEvent.Set(); // hack so that later we realize seek is needed
+        }
+        else if (ReopenSource(m_writePos))
+        {
+          CLog::LogF(LOGINFO, "<{}> source reconnected at {}", m_sourcePath, m_writePos);
+        }
+
+        continue; // while (!m_bStop)
+      }
+
       // Check for actual EOF and retry as long as we still have data in our cache
       if (m_writePos < m_fileSize && m_pCache->WaitForData(0, 0ms) > 0)
       {
@@ -513,6 +638,26 @@ void CFileCache::Process()
   }
 }
 
+bool CFileCache::ReopenSource(int64_t position)
+{
+  // Held so a cancel or a property query cannot reach a handle being closed
+  std::unique_lock sourceLock(m_sourceSection);
+  m_source->Close();
+  m_sourceOpen = false;
+  if (!OpenSource(m_sourceUrl))
+    return false;
+
+  // Reading from a misplaced connection would corrupt the cache silently
+  if (!m_seekPossible || m_source->Seek(position, SEEK_SET) != position)
+  {
+    m_source->Close();
+    return false;
+  }
+
+  m_sourceOpen = true;
+  return true;
+}
+
 void CFileCache::OnExit()
 {
   m_bStop = true;
@@ -535,8 +680,66 @@ int CFileCache::Stat(const CURL& url, struct __stat64* buffer)
   return CFile::Stat(url.Get(), buffer);
 }
 
+void CFileCache::ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled)
+{
+  // Below this a source is merely slow; above it, playback was carried by the cache alone
+  constexpr int64_t worthReporting = 2000;
+
+  if (answeredInMs < worthReporting)
+    return;
+
+  const int64_t forward = m_pCache ? m_pCache->WaitForData(0, 0ms) : 0;
+  const double cover = m_writeRate > 0 ? static_cast<double>(forward) / m_writeRate : 0.0;
+
+  CLog::LogF(LOGINFO,
+             "<{}> the source went quiet for {:.1f} s at {} of {} and then {}; the cache still "
+             "holds {:.1f} s of content",
+             m_sourcePath, answeredInMs / 1000.0, m_writePos, m_fileSize.load(),
+             iRead > 0 ? "answered"
+                       : (wasCancelled ? "was cancelled to force a reconnect" : "failed"),
+             cover);
+}
+
+void CFileCache::CancelStalledSourceRead()
+{
+  // A healthy source answers one chunk in well under a second
+  constexpr auto answerTimeout = 10s;
+
+  // Only a source the fill thread can reconnect and resume is worth cancelling
+  if (!m_seekPossible || m_sourceReadCancelled)
+    return;
+
+  const int64_t startedAt = m_sourceReadStart;
+  if (startedAt == 0 ||
+      CTimeUtils::MonotonicMs() - startedAt <
+          std::chrono::duration_cast<std::chrono::milliseconds>(answerTimeout).count())
+    return;
+
+  // A held lock means the fill thread is already replacing the connection
+  std::unique_lock sourceLock(m_sourceSection, std::try_to_lock);
+  if (!sourceLock.owns_lock())
+    return;
+
+  // The read may have been answered, and another started, since it was checked
+  if (m_sourceReadStart != startedAt)
+    return;
+
+  m_sourceReadCancelled = true;
+
+  if (m_source->IoControl(IOControl::CANCEL_IO, nullptr) >= 0)
+    CLog::LogF(LOGWARNING,
+               "<{}> source has not answered a read for {} s at {} of {}, cancelling it to "
+               "reconnect",
+               m_sourcePath,
+               std::chrono::duration_cast<std::chrono::seconds>(answerTimeout).count(), m_writePos,
+               m_fileSize.load());
+}
+
 ssize_t CFileCache::Read(void* lpBuf, size_t uiBufSize)
 {
+  // The fill thread cannot notice its own blocked read; this thread can
+  CancelStalledSourceRead();
+
   std::unique_lock lock(m_sync);
   if (!m_pCache)
   {
@@ -573,6 +776,16 @@ retry:
     if (!m_sourcePositionValid)
     {
       SetLastError(m_seekError != 0 ? m_seekError : EIO);
+      return -1;
+    }
+
+    // Zero means end-of-file to every caller, so starvation has to surface as an error
+    if (iRc == 0 && m_readPos < m_fileSize)
+    {
+      CLog::LogF(LOGWARNING, "<{}> timeout waiting for data at {} of {}", m_sourcePath, m_readPos,
+                 m_fileSize.load());
+      // The wait above can outlast the stall timeout
+      CancelStalledSourceRead();
       return -1;
     }
   }
@@ -688,7 +901,9 @@ void CFileCache::Close()
   if (m_pCache)
     m_pCache->Close();
 
+  std::unique_lock sourceLock(m_sourceSection);
   m_source->Close();
+  m_sourceOpen = false;
 }
 
 int64_t CFileCache::GetPosition()
@@ -711,6 +926,8 @@ void CFileCache::StopThread(bool bWait /*= true*/)
 
 const std::string CFileCache::GetProperty(XFILE::FileProperty type, const std::string &name) const
 {
+  // The fill thread may be replacing the source to reconnect
+  std::unique_lock sourceLock(m_sourceSection);
   if (!m_source->GetImplementation())
     return IFile::GetProperty(type, name);
 
@@ -731,7 +948,7 @@ int CFileCache::IoControl(IOControl request, void* param)
     return 0;
   }
 
-  if (request == IOControl::CACHE_SETRATE)
+  if (request == IOControl::CACHE_SETRATE || request == IOControl::CACHE_SETRATE_KEEPSIZE)
   {
     m_writeRate = *static_cast<uint32_t*>(param);
 
@@ -746,6 +963,9 @@ int CFileCache::IoControl(IOControl request, void* param)
     CLog::Log(LOGDEBUG,
               "CFileCache::IoControl - setting maxRate to {:.2f} Mbit/s with processWait of {} ms",
               mBits, wait);
+
+    if (request == IOControl::CACHE_SETRATE)
+      GrowCacheForRate(m_writeRate);
     return 0;
   }
 

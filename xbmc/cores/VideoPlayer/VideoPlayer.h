@@ -22,9 +22,9 @@
 #include "cores/VideoPlayer/Interface/TimingConstants.h"
 #include "cores/VideoPlayer/VideoRenderers/RenderManager.h"
 #include "guilib/DispResource.h"
+#include "language/LanguageTag.h"
 #include "threads/SystemClock.h"
 #include "threads/Thread.h"
-#include "utils/LanguageTag.h"
 
 #include <atomic>
 #include <chrono>
@@ -197,7 +197,7 @@ struct SelectionStream
   int type_index = 0;
   std::string filename;
   std::string filename2;  // for vobsub subtitles, 2 files are necessary (idx/sub)
-  KODI::UTILS::CLanguageTag language;
+  KODI::LANGUAGE::CLanguageTag language;
   std::string name;
   StreamFlags flags = StreamFlags::FLAG_NONE;
   int source = 0;
@@ -216,6 +216,7 @@ struct SelectionStream
   CRect VideoRect;
   std::string stereo_mode;
   float aspect_ratio = 0.0f;
+  int orientation = 0;
   StreamHdrType hdrType = StreamHdrType::HDR_TYPE_NONE;
   AVDOVIDecoderConfigurationRecord dovi{};
   uint32_t fpsScale{0};
@@ -389,6 +390,14 @@ public:
   void OnLostDisplay() override;
   void OnResetDisplay() override;
 
+  /*!
+   \brief Hold presentation after the audio format on the wire changes, until the downstream
+   chain reports ready or the delay setting expires.
+   */
+  void HoldForAudioFormatChange();
+  void ReleaseAudioFormatHold();
+  void NotifyAudioChainReady() override;
+
   bool IsCaching() const override;
   int GetCacheLevel() const override;
 
@@ -407,7 +416,7 @@ protected:
   void OnExit() override;
   void Process() override;
   void VideoParamsChange() override;
-  void GetDebugInfo(std::string &audio, std::string &video, std::string &general) override;
+  void GetDebugInfo(DEBUG_INFO_PLAYER& info) override;
   void UpdateClockSync(bool enabled) override;
   void UpdateRenderInfo(CRenderInfo &info) override;
   void UpdateRenderBuffers(int queued, int discard, int free) override;
@@ -416,6 +425,27 @@ protected:
 
   virtual void CreatePlayers();
   void DestroyPlayers();
+
+  //! \brief Why presentation is suspended. While any is held, audio, video and the clock pause.
+  enum class SuspendReason : unsigned
+  {
+    DISPLAY_LOST = 1U << 0,
+    AUDIO_FORMAT_CHANGE = 1U << 1,
+  };
+
+  /*!
+   * \brief Hold a reason to suspend presentation, pausing it if no other is held.
+   * \return false when the reason was already held.
+   */
+  bool SuspendPresentation(SuspendReason reason);
+  /*!
+   * \brief Drop a reason to suspend presentation, resuming it if no other is held.
+   * \return false when the reason was not held.
+   */
+  bool ResumePresentation(SuspendReason reason);
+  bool IsPresentationSuspended(SuspendReason reason) const;
+  //! \brief Pause a stream player just opened if presentation is suspended, or start it.
+  void SendPresentationState(IDVDStreamPlayer& player);
 
   void Prepare();
   bool ShouldDeferSync(bool ready, std::chrono::steady_clock::time_point now);
@@ -427,7 +457,7 @@ protected:
   bool OpenRadioRDSStream(CDVDStreamInfo& hint);
   bool OpenAudioID3Stream(CDVDStreamInfo& hint);
 
-  /** \brief Switches forced subtitles to forced subtitles matching the language of the current audio track.
+  /*! \brief Switches forced subtitles to forced subtitles matching the language of the current audio track.
   *          If these are not available, subtitles are disabled.
   */
   void AdaptForcedSubtitles();
@@ -453,17 +483,13 @@ protected:
 
   void SetSubtitleVisibleInternal(bool bVisible);
 
-  enum SubtitleChange
-  {
-    FLAG_STATUS_CHANGE = 0x0001,
-    FLAG_STREAMINFO_CHANGE = 0x0002,
-  };
-  void NotifySubtitleUpdate(int flags);
+  void NotifySubtitleUpdate();
   void NotifyAudioUpdate();
   void NotifyVideoUpdate();
 
-  /**
-   * one of the DVD_PLAYSPEED defines
+  /*!
+   * \brief Set the play speed.
+   * \param iSpeed One of the DVD_PLAYSPEED values.
    */
   void SetPlaySpeed(int iSpeed);
 
@@ -568,6 +594,12 @@ protected:
   ECacheState  m_caching;
   XbmcThreads::EndTime<> m_cachingTimer;
 
+  //! SuspendReason bits. Changed under m_suspendSection, from the player and windowing threads.
+  std::atomic<unsigned> m_suspendReasons{0};
+  CCriticalSection m_suspendSection;
+  XbmcThreads::EndTime<> m_audioFormatHoldTimer;
+  std::atomic<bool> m_audioChainReady{false};
+
   std::unique_ptr<CProcessInfo> m_processInfo;
 
   CCurrentStream m_CurrentAudio;
@@ -588,6 +620,9 @@ protected:
     int m_videoIndex{-1};
     int m_audioIndex{-1};
     int m_subtitleIndex{-1};
+    //! Last subtitle index that resolved to an open stream. A hidden subtitle is
+    //! closed on the demuxer but stays selected, so this outlives the stream.
+    int m_selectedSubtitleIndex{-1};
   } m_content;
 
   int m_playSpeed;
@@ -670,8 +705,6 @@ protected:
   bool m_HasAudio;
 
   bool m_updateStreamDetails{false};
-
-  std::atomic<bool> m_displayLost;
 
   double m_messageQueueTimeSize{0.0};
 };

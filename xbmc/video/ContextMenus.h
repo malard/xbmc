@@ -20,48 +20,48 @@ namespace CONTEXTMENU
 class CVideoInfoBase : public CStaticContextMenuAction
 {
 public:
-  explicit CVideoInfoBase(MediaType mediaType);
+  explicit CVideoInfoBase(KODI::MEDIA::MediaType mediaType);
   bool IsVisible(const CFileItem& item) const override;
   bool Execute(const std::shared_ptr<CFileItem>& item) const override;
 
 private:
-  const MediaType m_mediaType;
+  const KODI::MEDIA::MediaType m_mediaType;
 };
 
 struct CVideoInfo : CVideoInfoBase
 {
-  CVideoInfo() : CVideoInfoBase(MediaTypeVideo) {}
+  CVideoInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::VIDEO) {}
   bool IsVisible(const CFileItem& item) const override;
 };
 
 struct CTVShowInfo : CVideoInfoBase
 {
-  CTVShowInfo() : CVideoInfoBase(MediaTypeTvShow) {}
+  CTVShowInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::TV_SHOW) {}
 };
 
 struct CSeasonInfo : CVideoInfoBase
 {
-  CSeasonInfo() : CVideoInfoBase(MediaTypeSeason) {}
+  CSeasonInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::SEASON) {}
 };
 
 struct CEpisodeInfo : CVideoInfoBase
 {
-  CEpisodeInfo() : CVideoInfoBase(MediaTypeEpisode) {}
+  CEpisodeInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::EPISODE) {}
 };
 
 struct CMusicVideoInfo : CVideoInfoBase
 {
-  CMusicVideoInfo() : CVideoInfoBase(MediaTypeMusicVideo) {}
+  CMusicVideoInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::MUSIC_VIDEO) {}
 };
 
 struct CMovieInfo : CVideoInfoBase
 {
-  CMovieInfo() : CVideoInfoBase(MediaTypeMovie) {}
+  CMovieInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::MOVIE) {}
 };
 
 struct CMovieSetInfo : CVideoInfoBase
 {
-  CMovieSetInfo() : CVideoInfoBase(MediaTypeVideoCollection) {}
+  CMovieSetInfo() : CVideoInfoBase(KODI::MEDIA::MediaType::VIDEO_COLLECTION) {}
 };
 
 struct CVideoRemoveResumePoint : CStaticContextMenuAction

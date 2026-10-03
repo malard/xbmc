@@ -11,7 +11,7 @@
 #include "SortFileItem.h"
 #include "URL.h"
 #include "Util.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "utils/CharsetConverter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -19,6 +19,9 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+
+using KODI::MEDIA::MediaType;
+using KODI::MEDIA::NameOf;
 
 std::string ArrayToString(SortAttribute attributes, const CVariant &variant, const std::string &separator = " / ")
 {
@@ -210,10 +213,9 @@ std::string ByProgramCount(SortAttribute attributes, const SortItem &values)
   return std::to_string(values.at(Field::PROGRAM_COUNT).asInteger());
 }
 
-std::string ByPlaylistOrder(SortAttribute attributes, const SortItem &values)
+std::string ByPlaylistOrder(SortAttribute attributes, const SortItem& values)
 {
-  //! @todo Playlist order is hacked into program count variable (not nice, but ok until 2.0)
-  return ByProgramCount(attributes, values);
+  return std::to_string(values.at(Field::PLAYLIST_ORDER).asInteger());
 }
 
 std::string ByGenre(SortAttribute attributes, const SortItem &values)
@@ -351,7 +353,7 @@ std::string ByEpisodeNumber(SortAttribute attributes, const SortItem &values)
 
   std::string title;
   if (values.contains(Field::MEDIA_TYPE) &&
-      values.at(Field::MEDIA_TYPE).asString() == MediaTypeMovie)
+      values.at(Field::MEDIA_TYPE).asString() == NameOf(MediaType::MOVIE))
     title = BySortTitle(attributes, values);
   if (title.empty())
     title = ByLabel(attributes, values);
@@ -746,7 +748,7 @@ std::map<SortBy, Fields> fillSortingFields()
     {SortBy::VOTES,                      {Field::VOTES}},
     {SortBy::TOP250,                     {Field::TOP250}},
     {SortBy::PROGRAM_COUNT,              {Field::PROGRAM_COUNT}},
-    {SortBy::PLAYLIST_ORDER,             {Field::PROGRAM_COUNT}},
+    {SortBy::PLAYLIST_ORDER,             {Field::PLAYLIST_ORDER}},
     {SortBy::EPISODE_NUMBER,             {Field::EPISODE_NUMBER, Field::SEASON, Field::EPISODE_NUMBER_SPECIAL_SORT,
                                           Field::SEASON_SPECIAL_SORT, Field::TITLE, Field::SORT_TITLE}},
     {SortBy::SEASON,                     {Field::SEASON, Field::SEASON_SPECIAL_SORT}},
@@ -792,185 +794,86 @@ std::map<SortBy, Fields> fillSortingFields()
 std::map<SortBy, SortUtils::SortPreparator> SortUtils::m_preparators = fillPreparators();
 std::map<SortBy, Fields> SortUtils::m_sortingFields = fillSortingFields();
 
-void SortUtils::GetFieldsForSQLSort(const MediaType& mediaType,
-                                    SortBy sortMethod,
-                                    FieldList& fields)
+namespace
+{
+using SqlSortFields = std::map<SortBy, FieldList>;
+
+const SqlSortFields ALBUM_SORT_FIELDS{
+    {SortBy::LABEL, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::ALBUM, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::TITLE, {Field::ALBUM, Field::ARTIST}},
+    {SortBy::ALBUM_TYPE, {Field::ALBUM_TYPE, Field::ALBUM, Field::ARTIST}},
+    {SortBy::ARTIST, {Field::ARTIST, Field::ALBUM}},
+    {SortBy::ARTIST_THEN_YEAR, {Field::ARTIST, Field::YEAR, Field::ALBUM}},
+    {SortBy::YEAR, {Field::YEAR, Field::ALBUM}},
+    {SortBy::GENRE, {Field::GENRE, Field::ALBUM}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+    {SortBy::PLAYCOUNT, {Field::PLAYCOUNT, Field::ALBUM}},
+    {SortBy::LAST_PLAYED, {Field::LAST_PLAYED, Field::ALBUM}},
+    {SortBy::RATING, {Field::RATING, Field::ALBUM}},
+    {SortBy::VOTES, {Field::VOTES, Field::ALBUM}},
+    {SortBy::USER_RATING, {Field::USER_RATING, Field::ALBUM}},
+    {SortBy::TOTAL_DISCS, {Field::TOTAL_DISCS, Field::ALBUM}},
+    {SortBy::ORIG_DATE, {Field::ORIG_DATE, Field::ALBUM}},
+};
+
+const SqlSortFields SONG_SORT_FIELDS{
+    {SortBy::LABEL, {Field::TRACK_NUMBER}},
+    {SortBy::TRACK_NUMBER, {Field::TRACK_NUMBER}},
+    {SortBy::TITLE, {Field::TITLE}},
+    {SortBy::ALBUM, {Field::ALBUM, Field::ALBUM_ARTIST, Field::TRACK_NUMBER}},
+    {SortBy::ARTIST, {Field::ARTIST, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::ARTIST_THEN_YEAR, {Field::ARTIST, Field::YEAR, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::YEAR, {Field::YEAR, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::GENRE, {Field::GENRE, Field::ALBUM}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+    {SortBy::PLAYCOUNT, {Field::PLAYCOUNT, Field::TRACK_NUMBER}},
+    {SortBy::LAST_PLAYED, {Field::LAST_PLAYED, Field::TRACK_NUMBER}},
+    {SortBy::RATING, {Field::RATING, Field::TRACK_NUMBER}},
+    {SortBy::VOTES, {Field::VOTES, Field::TRACK_NUMBER}},
+    {SortBy::USER_RATING, {Field::USER_RATING, Field::TRACK_NUMBER}},
+    {SortBy::FILE, {Field::PATH, Field::FILENAME, Field::START_OFFSET}},
+    {SortBy::TIME, {Field::TIME}},
+    {SortBy::ALBUM_TYPE, {Field::ALBUM_TYPE, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::ORIG_DATE, {Field::ORIG_DATE, Field::ALBUM, Field::TRACK_NUMBER}},
+    {SortBy::BPM, {Field::BPM}},
+};
+
+const SqlSortFields ARTIST_SORT_FIELDS{
+    {SortBy::LABEL, {Field::ARTIST}},          {SortBy::TITLE, {Field::ARTIST}},
+    {SortBy::ARTIST, {Field::ARTIST}},         {SortBy::GENRE, {Field::GENRE}},
+    {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
+};
+
+const SqlSortFields& SqlSortFieldsOf(MediaType mediaType)
+{
+  static const SqlSortFields none;
+  switch (mediaType)
+  {
+    case MediaType::ALBUM:
+      return ALBUM_SORT_FIELDS;
+    case MediaType::SONG:
+      return SONG_SORT_FIELDS;
+    case MediaType::ARTIST:
+      return ARTIST_SORT_FIELDS;
+    default:
+      return none;
+  }
+}
+} // namespace
+
+void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, FieldList& fields)
 {
   fields.clear();
-  if (mediaType == MediaTypeNone)
+  if (mediaType == MediaType::NONE)
     return;
 
-  if (mediaType == MediaTypeAlbum)
-  {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::ALBUM || sortMethod == SortBy::TITLE)
-    {
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ARTIST);
-    }
-    else if (sortMethod == SortBy::ALBUM_TYPE)
-    {
-      fields.emplace_back(Field::ALBUM_TYPE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ARTIST);
-    }
-    else if (sortMethod == SortBy::ARTIST)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::YEAR)
-    {
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::GENRE)
-    {
-      fields.emplace_back(Field::GENRE);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
-    else if (sortMethod == SortBy::PLAYCOUNT)
-    {
-      fields.emplace_back(Field::PLAYCOUNT);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::LAST_PLAYED)
-    {
-      fields.emplace_back(Field::LAST_PLAYED);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::RATING)
-    {
-      fields.emplace_back(Field::RATING);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::VOTES)
-    {
-      fields.emplace_back(Field::VOTES);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::USER_RATING)
-    {
-      fields.emplace_back(Field::USER_RATING);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::TOTAL_DISCS)
-    {
-      fields.emplace_back(Field::TOTAL_DISCS);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::ORIG_DATE)
-    {
-      fields.emplace_back(Field::ORIG_DATE);
-      fields.emplace_back(Field::ALBUM);
-    }
-  }
-  else if (mediaType == MediaTypeSong)
-  {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TRACK_NUMBER)
-      fields.emplace_back(Field::TRACK_NUMBER);
-    else if (sortMethod == SortBy::TITLE)
-      fields.emplace_back(Field::TITLE);
-    else if (sortMethod == SortBy::ALBUM)
-    {
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::ALBUM_ARTIST);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ARTIST)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ARTIST_THEN_YEAR)
-    {
-      fields.emplace_back(Field::ARTIST);
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::YEAR)
-    {
-      fields.emplace_back(Field::YEAR);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::GENRE)
-    {
-      fields.emplace_back(Field::GENRE);
-      fields.emplace_back(Field::ALBUM);
-    }
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
-    else if (sortMethod == SortBy::PLAYCOUNT)
-    {
-      fields.emplace_back(Field::PLAYCOUNT);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::LAST_PLAYED)
-    {
-      fields.emplace_back(Field::LAST_PLAYED);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::RATING)
-    {
-      fields.emplace_back(Field::RATING);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::VOTES)
-    {
-      fields.emplace_back(Field::VOTES);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::USER_RATING)
-    {
-      fields.emplace_back(Field::USER_RATING);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::FILE)
-    {
-      fields.emplace_back(Field::PATH);
-      fields.emplace_back(Field::FILENAME);
-      fields.emplace_back(Field::START_OFFSET);
-    }
-    else if (sortMethod == SortBy::TIME)
-      fields.emplace_back(Field::TIME);
-    else if (sortMethod == SortBy::ALBUM_TYPE)
-    {
-      fields.emplace_back(Field::ALBUM_TYPE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::ORIG_DATE)
-    {
-      fields.emplace_back(Field::ORIG_DATE);
-      fields.emplace_back(Field::ALBUM);
-      fields.emplace_back(Field::TRACK_NUMBER);
-    }
-    else if (sortMethod == SortBy::BPM)
-      fields.emplace_back(Field::BPM);
-  }
-  else if (mediaType == MediaTypeArtist)
-  {
-    if (sortMethod == SortBy::LABEL || sortMethod == SortBy::TITLE || sortMethod == SortBy::ARTIST)
-      fields.emplace_back(Field::ARTIST);
-    else if (sortMethod == SortBy::GENRE)
-      fields.emplace_back(Field::GENRE);
-    else if (sortMethod == SortBy::DATE_ADDED)
-      fields.emplace_back(Field::DATE_ADDED);
-  }
+  const SqlSortFields& sortFields{SqlSortFieldsOf(mediaType)};
+  if (const auto it = sortFields.find(sortMethod); it != sortFields.end())
+    fields = it->second;
 
   // Add sort by id to define order when other fields same or sort none
   fields.emplace_back(Field::ID);
-  return;
 }
 
 void SortUtils::Sort(SortBy sortBy, SortOrder sortOrder, SortAttribute attributes, DatabaseResults& items, int limitEnd /* = -1 */, int limitStart /* = 0 */)
@@ -1064,7 +967,7 @@ void SortUtils::Sort(const SortDescription &sortDescription, SortItems& items)
 }
 
 bool SortUtils::SortFromDataset(const SortDescription& sortDescription,
-                                const MediaType& mediaType,
+                                MediaType mediaType,
                                 dbiplus::Dataset& dataset,
                                 DatabaseResults& results)
 {
@@ -1119,7 +1022,7 @@ const Fields& SortUtils::GetFieldsForSorting(SortBy sortBy)
 
 std::string SortUtils::RemoveArticles(const std::string &label)
 {
-  const CLangInfo::Tokens sortTokens = g_langInfo.GetSortTokens();
+  const auto& sortTokens = KODI::LANGUAGE::CLanguage::GetInstance().SortTokens();
   const auto match = std::ranges::find_if(sortTokens, [&label](const auto& token)
                                           { return StringUtils::StartsWithNoCase(label, token); });
   return match == sortTokens.end() ? label : label.substr(match->size());
@@ -1188,7 +1091,7 @@ const auto table = std::array{
   sort_map{SortBy::ORIG_DATE,                   SortMethod::ORIG_DATE,                       SortAttributeNone,          38079 },
   sort_map{SortBy::BPM,                         SortMethod::BPM,                             SortAttributeNone,          38080 },
 
-  // the following have no corresponding SortMetho d::*
+  // the following have no corresponding SortMethod::*
   sort_map{SortBy::ALBUM_TYPE,                  SortMethod::NONE,                            SortAttributeNone,          564 },
   sort_map{SortBy::VOTES,                       SortMethod::NONE,                            SortAttributeNone,          205 },
   sort_map{SortBy::TOP250,                      SortMethod::NONE,                            SortAttributeNone,          13409 },

@@ -10,6 +10,7 @@
 
 #include "ISerializable.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
+#include "language/LanguageTag.h"
 #include "utils/IArchivable.h"
 #include "utils/StreamUtils.h"
 
@@ -70,10 +71,10 @@ protected:
   friend class CVideoDatabase;
 };
 
-// Language codes held by the classes below are ISO 639-2/B, not BCP 47 as used elsewhere in the
-// player, and every writer narrows them on the way in. Archive reads and writes that form, while
-// Serialize widens to BCP 47 so a JSON-RPC client sees one notation across the API - though only
-// ever a bare language, since a value carrying a region lost it before it arrived.
+// A stream detail holds the language as its source declared it, subtags and all. Archive and the
+// streamdetails table take ISO 639-2/B, which is as much of it as they can hold, and Serialize
+// takes BCP 47. So an item answers with a fuller tag while it is playing than after it has been
+// read back from the library.
 //
 // The classes are the shape of the streamdetails table, which smart playlists filter with SQL
 // built from user-authored rules (see CSmartPlaylistRule::GetWhereClause). Those rules live in
@@ -97,7 +98,7 @@ public:
   int m_iDuration = 0;
   std::string m_strCodec;
   std::string m_strStereoMode;
-  std::string m_strLanguage;
+  KODI::LANGUAGE::CLanguageTag m_language;
   std::string m_strHdrType;
   std::string m_strHdrTypeAlt;
   std::string m_strHdrDetail;
@@ -115,7 +116,7 @@ public:
 
   int m_iChannels = -1;
   std::string m_strCodec;
-  std::string m_strLanguage;
+  KODI::LANGUAGE::CLanguageTag m_language;
   StreamFlags m_flags{StreamFlags::FLAG_NONE};
 };
 
@@ -130,7 +131,7 @@ public:
   void Serialize(CVariant& value) const override;
   bool IsWorseThan(const CStreamDetail &that) const override;
 
-  std::string m_strLanguage;
+  KODI::LANGUAGE::CLanguageTag m_language;
   StreamFlags m_flags{StreamFlags::FLAG_NONE};
 };
 
@@ -175,47 +176,6 @@ public:
   });
 
   /*!
-   * \brief A common aspect ratio, and the label Kodi reports for content closest to it.
-   */
-  struct AspectRatio
-  {
-    float ratio;
-    std::string_view label;
-  };
-
-  /*!
-   * \brief The vocabulary of aspect ratio labels Kodi reports, in ascending order.
-   *
-   * Content is classified as the closest entry in log space, which means the cutoff between
-   * two adjacent entries is their geometric mean. See VideoAspectToAspectDescription().
-   *
-   * This is the single source of truth for the aspect labels skins display. Anything else
-   * needing the same vocabulary - a selection list, a reported label, a plausibility check -
-   * must use this table rather than defining a parallel list, or the two will drift.
-   *
-   * \note The table classifies but never rejects. Any value wider than the last entry is
-   *       reported as that entry, so this cannot be used as a validity check on its own.
-   */
-  static constexpr auto COMMON_ASPECT_RATIOS = std::to_array<AspectRatio>({
-      {1.00f, "1.00"},
-      {1.19f, "1.19"},
-      {1.33f, "1.33"},
-      {1.37f, "1.37"},
-      {1.43f, "1.43"}, // IMAX 70mm
-      {1.50f, "1.50"}, // IMAX digital, VistaVision
-      {1.66f, "1.66"},
-      {1.78f, "1.78"},
-      {1.85f, "1.85"},
-      {1.90f, "1.90"}, // IMAX digital, DCI full container
-      {2.00f, "2.00"},
-      {2.20f, "2.20"},
-      {2.35f, "2.35"},
-      {2.40f, "2.40"},
-      {2.55f, "2.55"},
-      {2.76f, "2.76"},
-  });
-
-  /*!
    * \brief A stream flag, and the name Kodi reads and writes for it in an NFO.
    */
   struct FlagName
@@ -248,6 +208,8 @@ public:
                 "in order and its callers rely on the names coming out sorted");
 
   static std::string VideoDimsToResolutionDescription(int iWidth, int iHeight);
+
+  //! \brief The label Kodi reports for \p fAspect. See KODI::UTILS::CAspectRatioVocabulary.
   static std::string VideoAspectToAspectDescription(float fAspect);
 
   /*!
@@ -281,7 +243,7 @@ public:
   int GetVideoDuration(int idx = 0) const;
   void SetVideoDuration(int idx, const int duration);
   std::string GetStereoMode(int idx = 0) const;
-  std::string GetVideoLanguage(int idx = 0) const;
+  KODI::LANGUAGE::CLanguageTag GetVideoLanguage(int idx = 0) const;
 
   /*!
    * \name Audio stream properties
@@ -294,12 +256,12 @@ public:
    * @{
    */
   std::string GetAudioCodec(int idx = 0) const;
-  std::string GetAudioLanguage(int idx = 0) const;
+  KODI::LANGUAGE::CLanguageTag GetAudioLanguage(int idx = 0) const;
   int GetAudioChannels(int idx = 0) const;
   StreamFlags GetAudioFlags(int idx = 0) const;
   /*! @} */
 
-  std::string GetSubtitleLanguage(int idx = 0) const;
+  KODI::LANGUAGE::CLanguageTag GetSubtitleLanguage(int idx = 0) const;
   StreamFlags GetSubtitleFlags(int idx = 0) const;
 
   /*!
@@ -346,9 +308,9 @@ public:
    *
    * \todo Persist a stream ordinal and order by it, so this holds unconditionally.
    *
-   * \return The language of the first audio stream, or an empty string if there is none
+   * \return The language of the first audio stream, or an empty tag if there is none
    */
-  std::string GetFirstAudioLanguage() const;
+  KODI::LANGUAGE::CLanguageTag GetFirstAudioLanguage() const;
 
   /*!
    * \brief Get the codec of the first audio stream in the order the source lists them.
@@ -375,9 +337,9 @@ public:
    * number 1 of a bluray playlist. Note that this says nothing about whether subtitles are
    * displayed to begin with, which the locale.subtitlelanguage setting decides.
    *
-   * \return The language of the first subtitle stream, or an empty string if there is none
+   * \return The language of the first subtitle stream, or an empty tag if there is none
    */
-  std::string GetFirstSubtitleLanguage() const;
+  KODI::LANGUAGE::CLanguageTag GetFirstSubtitleLanguage() const;
 
   void AddStream(CStreamDetail *item);
   void Reset(void);

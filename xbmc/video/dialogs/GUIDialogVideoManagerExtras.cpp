@@ -30,9 +30,13 @@
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/VideoManagerTypes.h"
+#include "video/geometry/ContentGeometryScanner.h"
 
 #include <algorithm>
 #include <string>
+
+using KODI::MEDIA::MediaSection;
+using KODI::MEDIA::MediaType;
 
 static constexpr unsigned int CONTROL_BUTTON_ADD_EXTRAS = 23;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_EXTRA = 28;
@@ -106,12 +110,14 @@ void CGUIDialogVideoManagerExtras::SetVideoAsset(const std::shared_ptr<CFileItem
 
 bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   // @todo: combine with versions add file logic, structured similarly and sharing most logic.
 
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->m_type};
+  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
 
   // prompt to choose a video file
-  std::vector<CMediaSource> sources{*CMediaSourceSettings::GetInstance().GetSources("files")};
+  std::vector<CMediaSource> sources{
+      CMediaSourceSettings::GetInstance().GetSources(MediaSection::FILES)};
 
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
   CServiceBroker::GetMediaManager().GetNetworkLocations(sources);
@@ -120,7 +126,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
   std::string path;
   if (CGUIDialogFileBrowser::ShowAndGetFile(
           sources, CServiceBroker::GetFileExtensionProvider().GetVideoExtensions(),
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40015), path))
+          localizeStrings.Get(40015), path))
   {
     const int dbId{m_videoAsset->GetVideoInfoTag()->m_iDbId};
     const VideoDbContentType itemType = m_videoAsset->GetVideoContentType();
@@ -150,9 +156,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 
         CGUIDialogOK::ShowAndGetInput(
             CVariant{40015},
-            StringUtils::Format(
-                CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(msgid),
-                newAsset.m_assetTypeName));
+            StringUtils::Format(localizeStrings.Get(msgid), newAsset.m_assetTypeName));
         return false;
       }
 
@@ -160,16 +164,14 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 
       // The video is a version, ask for confirmation of the asset type change
       if (newAsset.m_assetType == VideoAssetType::VERSION &&
-          !CGUIDialogYesNo::ShowAndGetInput(
-              CVariant{40015},
-              StringUtils::Format(
-                  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40036))))
+          !CGUIDialogYesNo::ShowAndGetInput(CVariant{40015},
+                                            StringUtils::Format(localizeStrings.Get(40036))))
       {
         return false;
       }
 
       std::string videoTitle;
-      if (newAsset.m_mediaType == MediaTypeMovie)
+      if (newAsset.m_mediaType == MediaType::MOVIE)
       {
         videoTitle = m_database.GetMovieTitle(newAsset.m_idMedia);
       }
@@ -191,10 +193,8 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
         }
 
         if (!CGUIDialogYesNo::ShowAndGetInput(
-                CVariant{40015},
-                StringUtils::Format(
-                    CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(msgid),
-                    newAsset.m_assetTypeName, videoTitle)))
+                CVariant{40015}, StringUtils::Format(localizeStrings.Get(msgid),
+                                                     newAsset.m_assetTypeName, videoTitle)))
         {
           return false;
         }
@@ -245,6 +245,8 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
       return false;
 
     m_database.AddVideoAsset(itemType, dbId, idNewVideoVersion, VideoAssetType::EXTRA, item);
+
+    KODI::VIDEO::GEOMETRY::CContentGeometryScanner::GetInstance().Sweep();
 
     return true;
   }

@@ -17,8 +17,8 @@
 #include "music/MusicFileItemClassify.h"
 #include "music/MusicUtils.h"
 #include "music/dialogs/GUIDialogMusicInfo.h"
-#include "playlists/PlayListTypes.h"
 #include "tags/MusicInfoTag.h"
+#include "utils/ItemProperties.h"
 #include "utils/Variant.h"
 #include "video/VideoFileItemClassify.h"
 
@@ -26,6 +26,7 @@
 
 using namespace CONTEXTMENU;
 using namespace KODI;
+using KODI::MEDIA::MediaType;
 
 CMusicInfoBase::CMusicInfoBase(MediaType mediaType)
   : CStaticContextMenuAction(19033), m_mediaType(std::move(mediaType))
@@ -34,11 +35,11 @@ CMusicInfoBase::CMusicInfoBase(MediaType mediaType)
 
 bool CMusicInfoBase::IsVisible(const CFileItem& item) const
 {
-  return (item.HasMusicInfoTag() && item.GetMusicInfoTag()->GetType() == m_mediaType) ||
-         (m_mediaType == MediaTypeArtist && VIDEO::IsVideoDb(item) &&
-          item.HasProperty("artist_musicid")) ||
-         (m_mediaType == MediaTypeAlbum && VIDEO::IsVideoDb(item) &&
-          item.HasProperty("album_musicid"));
+  return (item.HasMusicInfoTag() && item.GetMusicInfoTag()->GetMediaType() == m_mediaType) ||
+         (m_mediaType == MediaType::ARTIST && VIDEO::IsVideoDb(item) &&
+          item.HasProperty(ITEM::PROPERTY::ARTIST_MUSICID)) ||
+         (m_mediaType == MediaType::ALBUM && VIDEO::IsVideoDb(item) &&
+          item.HasProperty(ITEM::PROPERTY::ALBUM_MUSICID));
 }
 
 bool CMusicInfoBase::Execute(const std::shared_ptr<CFileItem>& item) const
@@ -56,7 +57,7 @@ bool CMusicInfo::IsVisible(const CFileItem& item) const
     return false;
 
   const auto* tag{item.GetMusicInfoTag()};
-  return tag && tag->GetType() == MediaTypeNone && !tag->GetTitle().empty() && MUSIC::IsAudio(item);
+  return tag && tag->GetType().empty() && !tag->GetTitle().empty() && MUSIC::IsAudio(item);
 }
 
 bool CMusicBrowse::IsVisible(const CFileItem& item) const
@@ -94,11 +95,10 @@ namespace
 {
 void Play(const std::shared_ptr<CFileItem>& item, const std::string& player)
 {
-  item->SetProperty("playlist_type_hint", static_cast<int>(PLAYLIST::Id::TYPE_MUSIC));
-
-  const ContentUtils::PlayMode mode = item->GetProperty("CheckAutoPlayNextItem").asBoolean()
-                                          ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
-                                          : ContentUtils::PlayMode::PLAY_ONLY_THIS;
+  const ContentUtils::PlayMode mode =
+      item->GetProperty(ITEM::PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM).asBoolean()
+          ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
+          : ContentUtils::PlayMode::PLAY_ONLY_THIS;
   MUSIC_UTILS::PlayItem(item, player, mode);
 }
 

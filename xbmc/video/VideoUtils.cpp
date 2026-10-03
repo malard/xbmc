@@ -25,6 +25,7 @@
 #include "utils/ArtUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/XBMCTinyXML2.h"
@@ -38,6 +39,9 @@
 #include <cstdint>
 #include <ranges>
 #include <vector>
+
+using KODI::MEDIA::MediaType;
+using KODI::MEDIA::MediaTypeFromName;
 
 namespace KODI::VIDEO::UTILS
 {
@@ -174,22 +178,64 @@ bool IsAutoPlayNextItem(const CFileItem& item)
 bool IsAutoPlayNextItem(const std::string& content)
 {
   int settingValue = CSettings::SETTING_AUTOPLAYNEXT_UNCATEGORIZED;
-  if (content == MediaTypeMovie || content == MediaTypeMovies ||
-      content == MediaTypeVideoCollections)
-    settingValue = CSettings::SETTING_AUTOPLAYNEXT_MOVIES;
-  else if (content == MediaTypeEpisode || content == MediaTypeSeasons ||
-           content == MediaTypeEpisodes)
-    settingValue = CSettings::SETTING_AUTOPLAYNEXT_EPISODES;
-  else if (content == MediaTypeMusicVideo || content == MediaTypeMusicVideos)
-    settingValue = CSettings::SETTING_AUTOPLAYNEXT_MUSICVIDEOS;
-  else if (content == MediaTypeTvShow || content == MediaTypeTvShows)
-    settingValue = CSettings::SETTING_AUTOPLAYNEXT_TVSHOWS;
+  switch (MediaTypeFromName(content))
+  {
+    case MediaType::MOVIE:
+    case MediaType::VIDEO_COLLECTION:
+      settingValue = CSettings::SETTING_AUTOPLAYNEXT_MOVIES;
+      break;
+    case MediaType::SEASON:
+    case MediaType::EPISODE:
+      settingValue = CSettings::SETTING_AUTOPLAYNEXT_EPISODES;
+      break;
+    case MediaType::MUSIC_VIDEO:
+      settingValue = CSettings::SETTING_AUTOPLAYNEXT_MUSICVIDEOS;
+      break;
+    case MediaType::TV_SHOW:
+      settingValue = CSettings::SETTING_AUTOPLAYNEXT_TVSHOWS;
+      break;
+    default:
+      break;
+  }
 
   const auto setting = std::dynamic_pointer_cast<CSettingList>(
       CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
           CSettings::SETTING_VIDEOPLAYER_AUTOPLAYNEXTITEM));
 
   return setting && CSettingUtils::FindIntInList(setting, settingValue);
+}
+
+bool IsPlotHidden(const CVideoInfoTag& tag)
+{
+  if (tag.GetPlayCount() != 0)
+    return false;
+
+  const auto setting = std::dynamic_pointer_cast<CSettingList>(
+      CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
+          CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS));
+  if (!setting)
+    return false;
+
+  switch (tag.GetMediaType())
+  {
+    case MediaType::MOVIE:
+      return !CSettingUtils::FindIntInList(setting,
+                                           CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_MOVIES);
+    case MediaType::EPISODE:
+      return !CSettingUtils::FindIntInList(
+          setting, CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_TVSHOWEPISODES);
+    default:
+      return false;
+  }
+}
+
+void SetEpisodeCounts(CFileItem& item, int total, int watched)
+{
+  item.SetProperty(ITEM::PROPERTY::TOTAL_EPISODES, total);
+  item.SetProperty(ITEM::PROPERTY::NUM_EPISODES, total);
+  item.SetProperty(ITEM::PROPERTY::WATCHED_EPISODES, watched);
+  item.SetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES, total - watched);
+  item.SetProperty(ITEM::PROPERTY::WATCHED_EPISODE_PERCENT, total > 0 ? watched * 100 / total : 0);
 }
 
 std::optional<int> GetNextPartFromBookmark(const CBookmark& bookmark)

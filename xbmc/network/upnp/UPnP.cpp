@@ -26,6 +26,7 @@
 #include "profiles/ProfileManager.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "utils/SystemInfo.h"
 #include "utils/TimeUtils.h"
 #include "utils/URIUtils.h"
@@ -205,7 +206,7 @@ public:
     if (watched)
     {
       CFileItem temp(item);
-      temp.SetProperty("original_listitem_url", item.GetPath());
+      temp.SetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL, item.GetPath());
       return SaveFileState(temp, CBookmark(), watched);
     }
     else
@@ -221,7 +222,7 @@ public:
 
   bool SaveFileState(const CFileItem& item, const CBookmark& bookmark, const bool updatePlayCount)
   {
-    std::string path = item.GetProperty("original_listitem_url").asString();
+    std::string path = item.GetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     if (!item.HasVideoInfoTag() || path.empty())
     {
       return false;
@@ -407,6 +408,16 @@ public:
     CHECK_USERDATA_RETURN(userdata);
     static_cast<PLT_MediaControllerDelegate*>(userdata)->OnSetAVTransportURIResult(res, device,
                                                                                    userdata);
+  }
+
+  void OnSetNextAVTransportURIResult(NPT_Result res,
+                                     PLT_DeviceDataReference& device,
+                                     void* userdata) override
+  {
+    NPT_AutoLock lock(g_UserDataLock);
+    CHECK_USERDATA_RETURN(userdata);
+    static_cast<PLT_MediaControllerDelegate*>(userdata)->OnSetNextAVTransportURIResult(res, device,
+                                                                                       userdata);
   }
 
   void OnSeekResult(NPT_Result res, PLT_DeviceDataReference& device, void* userdata) override

@@ -14,10 +14,10 @@ class CVariant;
 
 namespace JSONRPC
 {
-  class CTextureOperations
-  {
-  public:
-    static JSONRPC_STATUS GetTextures(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveTexture(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-  };
-}
+class CTextureOperations
+{
+public:
+  static JSONRPC_STATUS GetTextures(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveTexture(const CVariant& parameterObject, CVariant& result);
+};
+} // namespace JSONRPC

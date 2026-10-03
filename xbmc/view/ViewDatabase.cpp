@@ -71,9 +71,9 @@ void CViewDatabase::UpdateTables(int version)
       {
         std::string originalPath = m_pDS->fv(1).get_asString();
         std::string path = originalPath;
-        if (StringUtils::StartsWithNoCase(path, "musicdb://"))
+        if (URIUtils::IsMusicDb(path))
           path = CLegacyPathTranslation::TranslateMusicDbPath(path);
-        else if (StringUtils::StartsWithNoCase(path, "videodb://"))
+        else if (URIUtils::IsVideoDb(path))
           path = CLegacyPathTranslation::TranslateVideoDbPath(path);
 
         if (!StringUtils::EqualsNoCase(path, originalPath))

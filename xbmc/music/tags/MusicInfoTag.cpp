@@ -159,6 +159,11 @@ const std::string &CMusicInfoTag::GetType() const
   return m_type;
 }
 
+KODI::MEDIA::MediaType CMusicInfoTag::GetMediaType() const
+{
+  return KODI::MEDIA::MediaTypeOf(m_type);
+}
+
 int CMusicInfoTag::GetYear() const
 {
   return atoi(GetYearString().c_str());
@@ -433,7 +438,7 @@ void CMusicInfoTag::SetGenre(const std::vector<std::string>& genres, bool bTrim 
 {
   m_genre = genres;
   if (bTrim)
-    for (auto genre : m_genre)
+    for (std::string& genre : m_genre)
       StringUtils::Trim(genre);
 }
 
@@ -455,6 +460,11 @@ void CMusicInfoTag::SetDatabaseId(int id, std::string_view type)
 {
   m_iDbId = id;
   m_type = type;
+}
+
+void CMusicInfoTag::SetDatabaseId(int id, KODI::MEDIA::MediaType type)
+{
+  SetDatabaseId(id, KODI::MEDIA::NameOf(type));
 }
 
 void CMusicInfoTag::SetTrackNumber(int iTrack)
@@ -766,9 +776,14 @@ void CMusicInfoTag::SetAlbumReleaseType(AudioType::Type releaseType)
   m_albumReleaseType = releaseType;
 }
 
-void CMusicInfoTag::SetType(MediaType_view mediaType)
+void CMusicInfoTag::SetType(std::string_view mediaType)
 {
   m_type = mediaType;
+}
+
+void CMusicInfoTag::SetType(KODI::MEDIA::MediaType mediaType)
+{
+  m_type = KODI::MEDIA::NameOf(mediaType);
 }
 
 // This is the Musicbrainz release status tag. See https://musicbrainz.org/doc/Release#Status
@@ -806,7 +821,7 @@ void CMusicInfoTag::SetArtist(const CArtist& artist)
   SetDateAdded(artist.dateAdded);
   SetDateUpdated(artist.dateUpdated);
   SetDateNew(artist.dateNew);
-  SetDatabaseId(artist.idArtist, MediaTypeArtist);
+  SetDatabaseId(artist.idArtist, KODI::MEDIA::MediaType::ARTIST);
 
   SetLoaded();
 }
@@ -845,7 +860,7 @@ void CMusicInfoTag::SetAlbum(const CAlbum& album)
   SetDateUpdated(album.dateUpdated);
   SetDateNew(album.dateNew);
   SetPlayCount(album.iTimesPlayed);
-  SetDatabaseId(album.idAlbum, MediaTypeAlbum);
+  SetDatabaseId(album.idAlbum, KODI::MEDIA::MediaType::ALBUM);
   SetLastPlayed(album.lastPlayed);
   SetTotalDiscs(album.iTotalDiscs);
   SetDuration(album.iAlbumDuration);
@@ -896,7 +911,7 @@ void CMusicInfoTag::SetSong(const CSong& song)
   SetMood(song.strMood);
   SetCompilation(song.bCompilation);
   SetAlbumId(song.idAlbum);
-  SetDatabaseId(song.idSong, MediaTypeSong);
+  SetDatabaseId(song.idSong, KODI::MEDIA::MediaType::SONG);
   SetBPM(song.iBPM);
   SetBitRate(song.iBitRate);
   SetSampleRate(song.iSampleRate);
@@ -915,7 +930,7 @@ void CMusicInfoTag::Serialize(CVariant& value) const
 {
   value["url"] = m_strURL;
   value["title"] = m_strTitle;
-  if (m_type.compare(MediaTypeArtist) == 0 && m_artist.size() == 1)
+  if (GetMediaType() == KODI::MEDIA::MediaType::ARTIST && m_artist.size() == 1)
     value["artist"] = m_artist[0];
   else
     value["artist"] = m_artist;
@@ -929,11 +944,11 @@ void CMusicInfoTag::Serialize(CVariant& value) const
   if (m_artist.empty())
     value["artist"] = StringUtils::Split(GetArtistString(), CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
 
-  value["displayartist"] = GetArtistString();
+  value["displayArtist"] = GetArtistString();
   value["displayalbumartist"] = GetAlbumArtistString();
-  value["sortartist"] = GetArtistSort();
+  value["sortArtist"] = GetArtistSort();
   value["album"] = m_strAlbum;
-  value["albumartist"] = m_albumArtist;
+  value["albumArtist"] = m_albumArtist;
   value["sortalbumartist"] = m_strAlbumArtistSort;
   value["genre"] = m_genre;
   value["duration"] = m_iDuration;
@@ -941,11 +956,11 @@ void CMusicInfoTag::Serialize(CVariant& value) const
   value["disc"] = GetDiscNumber();
   value["loaded"] = m_bLoaded;
   value["year"] = GetYear(); // Optionally from m_strOriginalDate
-  value["musicbrainztrackid"] = m_strMusicBrainzTrackID;
-  value["musicbrainzartistid"] = m_musicBrainzArtistID;
-  value["musicbrainzalbumid"] = m_strMusicBrainzAlbumID;
-  value["musicbrainzreleasegroupid"] = m_strMusicBrainzReleaseGroupID;
-  value["musicbrainzalbumartistid"] = m_musicBrainzAlbumArtistID;
+  value["musicBrainzTrackId"] = m_strMusicBrainzTrackID;
+  value["musicBrainzArtistId"] = m_musicBrainzArtistID;
+  value["musicBrainzAlbumId"] = m_strMusicBrainzAlbumID;
+  value["musicBrainzReleaseGroupId"] = m_strMusicBrainzReleaseGroupID;
+  value["musicBrainzAlbumArtistId"] = m_musicBrainzAlbumArtistID;
   value["comment"] = m_strComment;
   value["contributors"] = CVariant(CVariant::VariantTypeArray);
   for (const auto& role : m_musicRoles)
@@ -953,45 +968,53 @@ void CMusicInfoTag::Serialize(CVariant& value) const
     CVariant contributor;
     contributor["name"] = role.GetArtist();
     contributor["role"] = role.GetRoleDesc();
-    contributor["roleid"] = role.GetRoleId();
-    contributor["artistid"] = role.GetArtistId();
+    contributor["roleId"] = role.GetRoleId();
+    contributor["artistId"] = role.GetArtistId();
     value["contributors"].push_back(contributor);
   }
-  value["displaycomposer"] = GetArtistStringForRole("composer");   //TCOM
-  value["displayconductor"] = GetArtistStringForRole("conductor"); //TPE3
-  value["displayorchestra"] = GetArtistStringForRole("orchestra");
-  value["displaylyricist"] = GetArtistStringForRole("lyricist");   //TEXT
+  value["displayComposer"] = GetArtistStringForRole("composer"); //TCOM
+  value["displayConductor"] = GetArtistStringForRole("conductor"); //TPE3
+  value["displayOrchestra"] = GetArtistStringForRole("orchestra");
+  value["displayLyricist"] = GetArtistStringForRole("lyricist"); //TEXT
   value["mood"] = StringUtils::Split(m_strMood, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
   value["recordlabel"] = m_strRecordLabel;
   value["rating"] = m_Rating;
-  value["userrating"] = m_Userrating;
+  value["userRating"] = m_Userrating;
   value["votes"] = m_Votes;
-  value["playcount"] = m_iTimesPlayed;
-  value["lastplayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
-  value["dateadded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
-  value["datenew"] = m_dateNew.IsValid() ? m_dateNew.GetAsDBDateTime() : StringUtils::Empty;
-  value["datemodified"] =
+  value["playCount"] = m_iTimesPlayed;
+  value["lastPlayed"] =
+      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["dateAdded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
+  value["dateNew"] = m_dateNew.IsValid() ? m_dateNew.GetAsDBDateTime() : StringUtils::Empty;
+  value["dateModified"] =
       m_dateUpdated.IsValid() ? m_dateUpdated.GetAsDBDateTime() : StringUtils::Empty;
   value["lyrics"] = m_strLyrics;
-  value["albumid"] = m_iAlbumId;
-  value["compilationartist"] = m_bCompilation;
+  value["albumId"] = m_iAlbumId;
+  value["compilationArtist"] = m_bCompilation;
   value["compilation"] = m_bCompilation;
-  if (m_type.compare(MediaTypeAlbum) == 0)
-    value["releasetype"] = AudioType::ToString(m_albumReleaseType);
-  else if (m_type.compare(MediaTypeSong) == 0)
-    value["albumreleasetype"] = AudioType::ToString(m_albumReleaseType);
-  value["isboxset"] = m_bBoxset;
-  value["totaldiscs"] = m_iDiscTotal;
-  value["disctitle"] = m_strDiscSubtitle;
-  value["releasedate"] = m_strReleaseDate;
-  value["originaldate"] = m_strOriginalDate;
-  value["albumstatus"] = m_strReleaseStatus;
+  switch (GetMediaType())
+  {
+    case KODI::MEDIA::MediaType::ALBUM:
+      value["releaseType"] = AudioType::ToString(m_albumReleaseType);
+      break;
+    case KODI::MEDIA::MediaType::SONG:
+      value["albumReleaseType"] = AudioType::ToString(m_albumReleaseType);
+      break;
+    default:
+      break;
+  }
+  value["isBoxSet"] = m_bBoxset;
+  value["totalDiscs"] = m_iDiscTotal;
+  value["discTitle"] = m_strDiscSubtitle;
+  value["releaseDate"] = m_strReleaseDate;
+  value["originalDate"] = m_strOriginalDate;
+  value["albumStatus"] = m_strReleaseStatus;
   value["bpm"] = m_iBPM;
   value["bitrate"] = m_bitrate;
-  value["samplerate"] = m_samplerate;
+  value["sampleRate"] = m_samplerate;
   value["channels"] = m_channels;
-  value["songvideourl"] = m_songVideoURL;
-  value["stationname"] = m_stationName;
+  value["songVideoUrl"] = m_songVideoURL;
+  value["stationName"] = m_stationName;
 }
 
 void CMusicInfoTag::ToSortable(SortItem& sortable, Field field) const

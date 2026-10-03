@@ -743,14 +743,23 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
           return;
         case CActiveAEControlProtocol::PAUSESTREAM:
           CActiveAEStream *stream;
-          stream = *(CActiveAEStream**)msg->data;
+          MsgStreamPause* pauseMsg;
+          pauseMsg = reinterpret_cast<MsgStreamPause*>(msg->data);
+          stream = pauseMsg->stream;
           if (!stream->m_paused && m_streams.size() == 1)
           {
             FlushEngine();
-            streaming = false;
-            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming, sizeof(bool));
+            // Kept output leaves STREAMING set, so the sink keeps the wire alive
+            if (!pauseMsg->keepOutput)
+            {
+              streaming = false;
+              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming,
+                                                  sizeof(bool));
+            }
           }
           stream->m_paused = true;
+          if (pauseMsg->keepOutput)
+            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
           return;
         case CActiveAEControlProtocol::RESUMESTREAM:
           stream = *(CActiveAEStream**)msg->data;
@@ -1268,6 +1277,9 @@ void CActiveAE::Configure(AEAudioFormat *desiredFmt)
     m_currentDeviceFollowsDefault =
         requestedDefaultDevice || !IsSameDevice(m_openedDriver, m_openedDevice, dev);
     initSink = true;
+    // The wire format changed, so a downstream device has to acquire it again.
+    for (auto* activeStream : m_streams)
+      activeStream->m_sinkFormatChanged = true;
     m_stats.Reset(m_sinkFormat.m_sampleRate, m_mode == MODE_PCM);
     m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::VOLUME, &m_volume, sizeof(float));
 
@@ -3661,12 +3673,15 @@ void CActiveAE::FlushStream(CActiveAEStream *stream)
   }
 }
 
-void CActiveAE::PauseStream(CActiveAEStream *stream, bool pause)
+void CActiveAE::PauseStream(CActiveAEStream* stream, bool pause, bool keepOutput)
 {
   //! @todo pause sink, needs api change
   if (pause)
-    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM,
-                                   &stream, sizeof(CActiveAEStream*));
+  {
+    MsgStreamPause msg{stream, keepOutput};
+    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM, &msg,
+                                 sizeof(MsgStreamPause));
+  }
   else
     m_controlPort.SendOutMessage(CActiveAEControlProtocol::RESUMESTREAM,
                                    &stream, sizeof(CActiveAEStream*));
