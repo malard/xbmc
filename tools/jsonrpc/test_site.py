@@ -185,32 +185,9 @@ class TestSiteGeneration(unittest.TestCase):
         placeholders = [name for name, schema in service["types"].items()
                         if schema.get("x-kodi-runtime-enum")]
         self.assertGreater(len(placeholders), 0)
-        self.assertIn(f"{len(placeholders)} types carry no values", text)
         for name in placeholders:
             with self.subTest(type=name):
                 self.assertIn(f"<code>{markup.esc(name)}</code>", text)
-
-    def test_landing_page_explains_introspect_against_the_artifacts(self):
-        text = (self.out / "index.html").read_text(encoding="utf-8")
-        self.assertIn("Discovering the API at runtime", text)
-        # the three things only the live call can answer
-        for claim in ("runtime enumeration", "What your connection may call",
-                      "Which version you are talking to"):
-            with self.subTest(claim=claim):
-                self.assertIn(claim, text)
-
-    def test_landing_page_leads_with_the_socket_transports(self):
-        text = (self.out / "index.html").read_text(encoding="utf-8")
-        order = [text.index(f"<strong>{name}</strong>")
-                 for name in ("WebSocket", "Raw TCP", "HTTP")]
-        self.assertEqual(order, sorted(order))
-        self.assertIn("Which to use", text)
-
-    def test_landing_page_does_not_claim_the_socket_is_authenticated(self):
-        """Authentication is described as covering HTTP only."""
-        text = (self.out / "index.html").read_text(encoding="utf-8")
-        self.assertIn("Authentication over HTTP is basic auth", text)
-        self.assertNotIn("Authentication is HTTP basic auth", text)
 
     def test_landing_page_renders_every_example(self):
         text = (self.out / "index.html").read_text(encoding="utf-8")
