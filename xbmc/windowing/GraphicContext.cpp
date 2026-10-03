@@ -283,9 +283,9 @@ CRect CGraphicContext::StereoCorrection(const CRect &rect) const
 
 void CGraphicContext::SetScissors(const CRect &rect)
 {
-  m_scissors = rect;
-  m_scissors.Intersect(ClipBounds());
-  CServiceBroker::GetRenderSystem()->SetScissors(StereoCorrection(m_scissors));
+  CRect scissors = rect;
+  scissors.Intersect(ClipBounds());
+  SetClip(scissors);
 }
 
 CRect CGraphicContext::ScreenRect() const
@@ -322,11 +322,7 @@ const CRect &CGraphicContext::GetScissors() const
 
 void CGraphicContext::ResetScissors()
 {
-  m_scissors = ClipBounds();
-
-  auto* const renderSystem = CServiceBroker::GetRenderSystem();
-  if (renderSystem)
-    renderSystem->SetScissors(StereoCorrection(m_scissors));
+  ClipToGui();
 }
 
 const CRect CGraphicContext::GetViewWindow() const
