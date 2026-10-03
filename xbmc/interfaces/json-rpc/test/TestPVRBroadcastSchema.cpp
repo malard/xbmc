@@ -32,22 +32,6 @@ std::set<std::string> DeclaredProperties()
 
 } // unnamed namespace
 
-/*!
- A field a caller may ask for that the details type does not declare arrives
- with no documented type or meaning. Half a field addition landing on its own
- says nothing at runtime, in either direction.
- */
-TEST(TestPVRBroadcastSchema, EveryRequestableFieldIsDeclared)
-{
-  const std::set<std::string> properties{DeclaredProperties()};
-
-  for (const std::string& field : RequestableFields())
-  {
-    EXPECT_TRUE(properties.contains(field)) << "PVR.Fields.Broadcast offers \"" << field
-                                            << "\", which PVR.Details.Broadcast does not declare";
-  }
-}
-
 TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
 {
   const std::set<std::string> fields{RequestableFields()};

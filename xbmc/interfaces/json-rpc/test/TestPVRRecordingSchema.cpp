@@ -28,11 +28,6 @@ std::set<std::string> RequestableFields()
   return EnumValues(ShippedType("PVR.Fields.Recording")["items"]);
 }
 
-std::set<std::string> DeclaredProperties()
-{
-  return Keys(ShippedType("PVR.Details.Recording")["properties"]);
-}
-
 /*!
  \brief A recording as a client reports one.
 
@@ -84,16 +79,5 @@ TEST(TestPVRRecordingSchema, EveryValueTheRecordingAddsIsRequestable)
 
     EXPECT_TRUE(fields.contains(value->first)) << "CPVRRecording::Serialize writes \""
                                                << value->first << "\", which no caller can request";
-  }
-}
-
-TEST(TestPVRRecordingSchema, EveryRequestableFieldIsDeclared)
-{
-  const std::set<std::string> declared{DeclaredProperties()};
-
-  for (const std::string& field : RequestableFields())
-  {
-    EXPECT_TRUE(declared.contains(field)) << "PVR.Fields.Recording offers \"" << field
-                                          << "\", which PVR.Details.Recording does not declare";
   }
 }
