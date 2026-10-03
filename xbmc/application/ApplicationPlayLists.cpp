@@ -469,19 +469,6 @@ bool CApplicationPlayLists::PlayExpanded(Type type,
   return PlayItems(type, items, start < 0 ? std::nullopt : std::optional<int>(start), options);
 }
 
-bool CApplicationPlayLists::PlayFolder(Type type,
-                                       const CFileItemList& items,
-                                       const std::shared_ptr<const CFileItem>& start,
-                                       const PlayOptions& options,
-                                       const std::string& sourcePath)
-{
-  std::optional<int> position;
-  for (int i = 0; i < items.Size(); ++i)
-    if (items[i] == start)
-      position = i;
-  return PlayItems(type, items, position, options, sourcePath);
-}
-
 namespace
 {
 class CEntryExpansion

@@ -300,10 +300,6 @@ public:
                  const std::string& sourcePath = "");
 
   /*!
-   * \brief Play a folder in place: replace the playlist's contents with its items, and play from
-   * the chosen one, which is one of them.
-   */
-  /*!
    * \brief Play items expanded from a selection, from the chosen one; a chosen item that did
    * not become one of them plays on its own.
    * \param start The chosen item's position in items, or -1 when it is not among them.
@@ -314,12 +310,6 @@ public:
                     int start,
                     const std::shared_ptr<CFileItem>& chosen,
                     const PlayOptions& options);
-
-  bool PlayFolder(KODI::PLAYLIST::Type type,
-                  const CFileItemList& items,
-                  const std::shared_ptr<const CFileItem>& start,
-                  const PlayOptions& options,
-                  const std::string& sourcePath);
 
   /*!
    * \brief Play one item on the named playlist or, with none named, the one PLAYLIST::TypeFor()
