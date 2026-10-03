@@ -1249,17 +1249,27 @@ JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant& parameterObject)
   if (!videodatabase.Open())
     return InternalError;
 
-  if (parameterObject.isMember("movieId"))
+  // each Remove method's schema requires its kind's id
+  const KindTraits& traits = *TraitsOfIdIn(parameterObject);
+  const int id = static_cast<int>(parameterObject[traits.id].asInteger());
+  switch (traits.kind)
   {
-    if (!videodatabase.DeleteMovie(static_cast<int>(parameterObject["movieId"].asInteger())))
-      return InternalError;
+    case VideoKind::Movie:
+      if (!videodatabase.DeleteMovie(id))
+        return InternalError;
+      break;
+    case VideoKind::TVShow:
+      videodatabase.DeleteTvShow(id);
+      break;
+    case VideoKind::Episode:
+      videodatabase.DeleteEpisode(id);
+      break;
+    case VideoKind::MusicVideo:
+      videodatabase.DeleteMusicVideo(id);
+      break;
+    default:
+      break;
   }
-  else if (parameterObject.isMember("tvShowId"))
-    videodatabase.DeleteTvShow(static_cast<int>(parameterObject["tvShowId"].asInteger()));
-  else if (parameterObject.isMember("episodeId"))
-    videodatabase.DeleteEpisode(static_cast<int>(parameterObject["episodeId"].asInteger()));
-  else if (parameterObject.isMember("musicVideoId"))
-    videodatabase.DeleteMusicVideo(static_cast<int>(parameterObject["musicVideoId"].asInteger()));
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
