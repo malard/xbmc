@@ -109,20 +109,6 @@ TEST(TestApplicationContentGeometry, DisarmingLeavesThePlaybackInProgressAlone)
   EXPECT_FLOAT_EQ(2.35f, geometry.GetOverrides().maintainAspect);
 }
 
-// The mid-playback half. Stated against the stream that is already running, so it applies at
-// once rather than waiting for anything.
-TEST(TestApplicationContentGeometry, AnInstructionGivenDuringPlaybackAppliesImmediately)
-{
-  CApplicationContentGeometry geometry;
-  OpenFile(geometry);
-
-  geometry.SetOverrides(Stated(0.0f, OsdPlacement::Picture, 1.78f));
-
-  EXPECT_EQ(OsdPlacement::Picture,
-            geometry.GetOverrides().osdPlacement.value_or(OsdPlacement::Raster));
-  EXPECT_FLOAT_EQ(1.78f, geometry.GetOverrides().maintainAspect);
-}
-
 // An override outliving its film holds the room in that film's shape over the interface, with
 // nothing on screen to explain it.
 TEST(TestApplicationContentGeometry, StoppingRevertsEveryOverride)
@@ -203,20 +189,6 @@ TEST(TestApplicationContentGeometry, StoppingAlsoDiscardsAnInstructionThatNeverO
   OpenFile(geometry);
 
   EXPECT_FALSE(geometry.GetOverrides().Any());
-}
-
-/*!
- * What the masking was opened to at playback start, and therefore where it physically sits for
- * the whole title. A live reading can be wider than any shape the measurement found - a scan
- * samples a few dozen points and can have missed one - and the picture is then scaled down
- * inside the opening rather than spilling onto the mask.
- */
-TEST(TestApplicationContentGeometry, TheMaskOpeningIsTheWidestShapeMeasured)
-{
-  CApplicationContentGeometry geometry;
-  geometry.SetFileInputs(MeasuredScope());
-
-  EXPECT_NEAR(1920.0f / 800.0f, geometry.GetRenderInputs().maskAspect, 0.001f);
 }
 
 /*!

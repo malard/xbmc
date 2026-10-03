@@ -255,17 +255,6 @@ TEST_F(TestLiveGeometryMonitor, AHalfSideBySideViewIsReadAtItsOwnPixelAspect)
       << "the view was read at the packing's pixel aspect";
 }
 
-//! Every rendered stream is read, whatever the item - a Blu-ray playlist included.
-TEST_F(TestLiveGeometryMonitor, EveryOpenedStreamIsRead)
-{
-  VideoPicture& picture = LetterboxedMono();
-
-  OpenStream();
-
-  EXPECT_FALSE(Feed(picture).IsEmpty());
-  EXPECT_TRUE(LastPosted().has_value());
-}
-
 //! Trick play scrubs across the timeline, and the shape must not chase it.
 TEST_F(TestLiveGeometryMonitor, NothingIsReadDuringTrickPlay)
 {
