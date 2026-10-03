@@ -1116,8 +1116,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     }
 
     // check for the partymode playlist items - they may not exist yet
-    if ((pItem->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp")) ||
-        (pItem->GetPath() == profileManager->GetUserDataItem("PartyMode-Video.xsp")))
+    if (PARTYMODE::IsRulesPath(pItem->GetPath()))
     {
       // party mode playlist item - if it doesn't exist, prompt for user to define it
       if (!CFileUtils::Exists(pItem->GetPath()))

@@ -25,7 +25,6 @@
 #include "music/windows/GUIWindowMusicBase.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListM3U.h"
-#include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
@@ -348,10 +347,7 @@ bool CGUIWindowPlayList<Base>::OnContextButton(int itemNumber, CONTEXT_BUTTON bu
 
     case CONTEXT_BUTTON_EDIT_PARTYMODE:
     {
-      std::string rules =
-          CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem(
-              m_type == PLAYLIST::Audio ? "PartyMode.xsp" : "PartyMode-Video.xsp");
-      if (CGUIDialogSmartPlaylistEditor::EditPlaylist(rules))
+      if (CGUIDialogSmartPlaylistEditor::EditPlaylist(PARTYMODE::RulesPath(m_type)))
         PARTYMODE::Start(m_type);
       return true;
     }

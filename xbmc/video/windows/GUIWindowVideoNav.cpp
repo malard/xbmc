@@ -203,19 +203,13 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
       int iControl = message.GetSenderId();
       if (iControl == CONTROL_BTNPARTYMODE)
       {
-        if (PARTYMODE::IsRunning(PLAYLIST::Video))
-          PARTYMODE::Stop();
-        else
+        if (!PARTYMODE::Toggle(PLAYLIST::Video))
         {
-          if (!PARTYMODE::Start(PLAYLIST::Video))
-          {
-            SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE,false);
-            return false;
-          }
-
-          return true;
+          SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, false);
+          return false;
         }
         UpdateButtons();
+        return true;
       }
 
       if (iControl == CONTROL_BTNSEARCH)
