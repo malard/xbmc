@@ -307,8 +307,10 @@ public:
                      CFileItem* item = nullptr,
                      int getDetails = VideoDbDetailsAll);
   bool GetSeasonInfo(const std::string& path, int season, CVideoInfoTag& details, CFileItem* item);
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item);
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails = true);
+  bool GetSeasonInfo(int idSeason,
+                     CVideoInfoTag& details,
+                     CFileItem* item = nullptr,
+                     bool allDetails = true);
   bool GetEpisodeBasicInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode  = -1);
   bool GetEpisodeInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode = -1, int getDetails = VideoDbDetailsAll);
   bool GetMusicVideoInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idMVideo = -1, int getDetails = VideoDbDetailsAll);
@@ -331,9 +333,10 @@ public:
                              int getDetails = VideoDbDetailsAll);
 
   //! allDetails fills from the season view rather than the season row.
-  GetResult TryGetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails = true);
-
-  GetResult TryGetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item);
+  GetResult TryGetSeasonInfo(int idSeason,
+                             CVideoInfoTag& details,
+                             CFileItem* item = nullptr,
+                             bool allDetails = true);
 
   //! The path is ignored when idEpisode is given.
   GetResult TryGetEpisodeInfo(const std::string& strFilenameAndPath,
@@ -617,6 +620,17 @@ public:
    */
   bool GetFileMetadataForPath(const std::string& strPath,
                               std::map<std::string, CVideoInfoTag>& metadata);
+  /*! \brief The details of the library item of \p type with \p id.
+   \param item when given, filled as the library lists a set, show or season
+   \param idVersion, idFile for a movie, the version to read, as TryGetMovieInfo takes them
+   */
+  GetResult TryGetDetailsByTypeAndId(KODI::MEDIA::MediaType type,
+                                     int id,
+                                     CVideoInfoTag& details,
+                                     CFileItem* item = nullptr,
+                                     int getDetails = VideoDbDetailsAll,
+                                     int idVersion = -1,
+                                     int idFile = -1);
   bool GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id);
   CVideoInfoTag GetDetailsByTypeAndId(VideoDbContentType type, int id);
 
@@ -1449,12 +1463,6 @@ private:
    \return true if a stream was added, false otherwise
    */
   static bool AddStreamDetailFromRow(dbiplus::Dataset& ds, CStreamDetails& details);
-
-  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails, CFileItem* item);
-  GetResult TryGetSeasonInfo(int idSeason,
-                             CVideoInfoTag& details,
-                             bool allDetails,
-                             CFileItem* item);
 
   int GetMinSchemaVersion() const override { return 75; }
   int GetSchemaVersion() const override;

@@ -201,6 +201,11 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 }
 } // unnamed namespace
 
+bool CAudioLibrary::IsItemKind(MediaType type)
+{
+  return std::ranges::find(KINDS, type, &KindTraits::type) != std::end(KINDS);
+}
+
 JSONRPC_STATUS CAudioLibrary::GetItems(const CVariant& parameterObject, CVariant& result)
 {
   const KindTraits* traits = TraitsNamed(parameterObject["kind"].asString());
@@ -688,17 +693,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
     musicdatabase.GetArtForItem(artist.idArtist, MediaType::ARTIST, artist.art);
 
     std::set<std::string, std::less<>> removedArtwork;
-    CVariant art = properties["art"];
-    for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
-    {
-      if (artIt->second.isString() && !artIt->second.asString().empty())
-        artist.art[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
-      else if (artIt->second.isNull())
-      {
-        artist.art.erase(artIt->first);
-        removedArtwork.insert(artIt->first);
-      }
-    }
+    EditArtwork(properties["art"], artist.art, removedArtwork);
     // Remove null art now, as not done by update
     if (!musicdatabase.RemoveArtForItem(artist.idArtist, MediaType::ARTIST, removedArtwork))
       return InternalError;
@@ -788,17 +783,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
     musicdatabase.GetArtForItem(album.idAlbum, MediaType::ALBUM, album.art);
 
     std::set<std::string, std::less<>> removedArtwork;
-    CVariant art = properties["art"];
-    for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
-    {
-      if (artIt->second.isString() && !artIt->second.asString().empty())
-        album.art[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
-      else if (artIt->second.isNull())
-      {
-        album.art.erase(artIt->first);
-        removedArtwork.insert(artIt->first);
-      }
-    }
+    EditArtwork(properties["art"], album.art, removedArtwork);
     // Remove null art now, as not done by update
     if (!musicdatabase.RemoveArtForItem(album.idAlbum, MediaType::ALBUM, removedArtwork))
       return InternalError;
@@ -879,17 +864,7 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id,
     musicdatabase.GetArtForItem(song.idSong, MediaType::SONG, artwork);
 
     std::set<std::string, std::less<>> removedArtwork;
-    CVariant art = properties["art"];
-    for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
-    {
-      if (artIt->second.isString() && !artIt->second.asString().empty())
-        artwork[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
-      else if (artIt->second.isNull())
-      {
-        artwork.erase(artIt->first);
-        removedArtwork.insert(artIt->first);
-      }
-    }
+    EditArtwork(properties["art"], artwork, removedArtwork);
     //Update artwork, not done in update song
     musicdatabase.SetArtForItem(song.idSong, MediaType::SONG, artwork);
     if (!musicdatabase.RemoveArtForItem(song.idSong, MediaType::SONG, removedArtwork))
@@ -1436,25 +1411,11 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
   ADDON::ScraperPtr scraper;
   if (!scraperId.empty())
   {
-    ADDON::AddonPtr addon;
-    ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
-    if (!addonMgr.GetAddon(scraperId, addon, ADDON::ScraperTypeFromContent(target.content),
-                           ADDON::OnlyEnabled::CHOICE_YES))
-    {
-      if (!addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
-        return Fail(result, NotFound, Reason::NoSuchAddon,
-                    Target("scraperId", parameterObject["scraperId"]));
-      return InvalidParams;
-    }
-
-    scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
-    if (!scraper)
-      return InvalidParams;
-
-    // Without supplied XML a failure is the scraper's own defaults, not the caller's doing.
-    const std::string scraperSettings = parameterObject["scraperSettings"].asString();
-    if (!scraper->SetPathSettings(target.content, scraperSettings) && !scraperSettings.empty())
-      return InvalidParams;
+    if (const JSONRPC_STATUS status =
+            ResolveScraper(scraperId, target.content, parameterObject["scraperSettings"].asString(),
+                           scraper, result);
+        status != OK)
+      return status;
   }
 
   bool written = false;

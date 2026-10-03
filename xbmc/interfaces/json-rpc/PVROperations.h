@@ -11,6 +11,7 @@
 #include "FileItemHandler.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class CDateTime;
@@ -18,9 +19,12 @@ class CVariant;
 
 namespace PVR
 {
+class CPVRChannel;
 class CPVRChannelGroup;
 class CPVREpg;
 class CPVREpgInfoTag;
+class CPVRRecording;
+class CPVRTimerInfoTag;
 } // namespace PVR
 
 namespace JSONRPC
@@ -56,6 +60,29 @@ public:
   static JSONRPC_STATUS Scan(const CVariant& parameterObject, CVariant& result);
 
   static std::shared_ptr<CFileItem> GetRecordingFileItem(int recordingId);
+
+  /*! \name Lookups by id
+     Each answers FailedToExecute before PVR has started, and NotFound for an id it does not
+     know, naming the parameter \p key the caller gave \p id in.
+     */
+  ///@{
+  static JSONRPC_STATUS FindChannel(const std::string& key,
+                                    const CVariant& id,
+                                    std::shared_ptr<PVR::CPVRChannel>& channel,
+                                    CVariant& result);
+  static JSONRPC_STATUS FindBroadcast(const std::string& key,
+                                      const CVariant& id,
+                                      std::shared_ptr<PVR::CPVREpgInfoTag>& broadcast,
+                                      CVariant& result);
+  static JSONRPC_STATUS FindRecording(const std::string& key,
+                                      const CVariant& id,
+                                      std::shared_ptr<PVR::CPVRRecording>& recording,
+                                      CVariant& result);
+  static JSONRPC_STATUS FindTimer(const std::string& key,
+                                  const CVariant& id,
+                                  std::shared_ptr<PVR::CPVRTimerInfoTag>& timer,
+                                  CVariant& result);
+  ///@}
 
 protected:
   /*!

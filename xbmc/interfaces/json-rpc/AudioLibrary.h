@@ -40,6 +40,9 @@ class CAudioLibrary : public CFileItemHandler
 public:
   static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
 
+  //! Whether the library holds items of \p type
+  static bool IsItemKind(KODI::MEDIA::MediaType type);
+
   //! The query over one kind's items
   static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
 

@@ -1592,17 +1592,21 @@ void CAdvancedSettings::SetDebugMode(bool debug)
   if (debug)
   {
     int level = std::max(m_logLevelHint, LOG_LEVEL_DEBUG_FREEMEM);
-    m_logLevel = level;
-    CServiceBroker::GetLogging().SetLogLevel(level);
+    SetLogLevel(level);
     CLog::Log(LOGINFO, "Enabled debug logging due to GUI setting. Level {}.", level);
   }
   else
   {
     int level = std::min(m_logLevelHint, LOG_LEVEL_DEBUG/*LOG_LEVEL_NORMAL*/);
     CLog::Log(LOGINFO, "Disabled debug logging due to GUI setting. Level {}.", level);
-    m_logLevel = level;
-    CServiceBroker::GetLogging().SetLogLevel(level);
+    SetLogLevel(level);
   }
+}
+
+void CAdvancedSettings::SetLogLevel(int level)
+{
+  m_logLevel = level;
+  CServiceBroker::GetLogging().SetLogLevel(level);
 }
 
 void CAdvancedSettings::SetExtraArtwork(const TiXmlElement* arttypes,

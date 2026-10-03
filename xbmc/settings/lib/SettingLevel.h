@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "utils/StringUtils.h"
+
+#include <string_view>
+
 /*!
  \ingroup settings
  \brief Levels which every setting is assigned to.
@@ -39,4 +43,20 @@ inline const char* SettingLevelToString(SettingLevel level)
     default:
       return nullptr;
   }
+}
+
+/*!
+ \ingroup settings
+ \brief The level \p name names, ignoring case; Standard for any other name
+ */
+inline SettingLevel SettingLevelFromString(std::string_view name)
+{
+  if (StringUtils::EqualsNoCase(name, "basic"))
+    return SettingLevel::Basic;
+  if (StringUtils::EqualsNoCase(name, "advanced"))
+    return SettingLevel::Advanced;
+  if (StringUtils::EqualsNoCase(name, "expert"))
+    return SettingLevel::Expert;
+
+  return SettingLevel::Standard;
 }

@@ -2237,42 +2237,18 @@ bool CVideoDatabase::GetSeasonInfo(const std::string& path,
   return false;
 }
 
-bool CVideoDatabase::GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails /* = true */)
-{
-  return GetSeasonInfo(idSeason, details, allDetails, nullptr);
-}
-
-bool CVideoDatabase::GetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item)
-{
-  return GetSeasonInfo(idSeason, details, true, item);
-}
-
 bool CVideoDatabase::GetSeasonInfo(int idSeason,
                                    CVideoInfoTag& details,
-                                   bool allDetails,
-                                   CFileItem* item)
+                                   CFileItem* item /* = nullptr */,
+                                   bool allDetails /* = true */)
 {
-  return TryGetSeasonInfo(idSeason, details, allDetails, item) == GetResult::Ok;
+  return TryGetSeasonInfo(idSeason, details, item, allDetails) == GetResult::Ok;
 }
 
 CVideoDatabase::GetResult CVideoDatabase::TryGetSeasonInfo(int idSeason,
                                                            CVideoInfoTag& details,
+                                                           CFileItem* item /* = nullptr */,
                                                            bool allDetails /* = true */)
-{
-  return TryGetSeasonInfo(idSeason, details, allDetails, nullptr);
-}
-
-CVideoDatabase::GetResult CVideoDatabase::TryGetSeasonInfo(int idSeason,
-                                                           CVideoInfoTag& details,
-                                                           CFileItem* item)
-{
-  return TryGetSeasonInfo(idSeason, details, true, item);
-}
-
-CVideoDatabase::GetResult CVideoDatabase::TryGetSeasonInfo(int idSeason,
-                                                           CVideoInfoTag& details,
-                                                           bool allDetails,
-                                                           CFileItem* item)
 {
   if (idSeason < 0)
     return GetResult::NotFound;
@@ -2989,7 +2965,7 @@ bool CVideoDatabase::UpdateDetailsForTvShow(int idTvShow,
 
     // get any existing details for the named season
     CVideoInfoTag season;
-    if (!GetSeasonInfo(seasonId, season, false) ||
+    if (!GetSeasonInfo(seasonId, season, nullptr, false) ||
         (season.m_strSortTitle == seasonDetails.m_name && season.m_strPlot == seasonDetails.m_plot))
       continue;
 
@@ -4873,30 +4849,38 @@ void CVideoDatabase::GetDetailsFromDB(const dbiplus::sql_record* const record,
   }
 }
 
+CVideoDatabase::GetResult CVideoDatabase::TryGetDetailsByTypeAndId(
+    MediaType type,
+    int id,
+    CVideoInfoTag& details,
+    CFileItem* item /* = nullptr */,
+    int getDetails /* = VideoDbDetailsAll */,
+    int idVersion /* = -1 */,
+    int idFile /* = -1 */)
+{
+  switch (type)
+  {
+    case MediaType::MOVIE:
+      return TryGetMovieInfo("", details, id, idVersion, idFile, getDetails);
+    case MediaType::VIDEO_COLLECTION:
+      return TryGetSetInfo(id, details, item);
+    case MediaType::TV_SHOW:
+      return TryGetTvShowInfo("", details, id, item, getDetails);
+    case MediaType::SEASON:
+      return TryGetSeasonInfo(id, details, item);
+    case MediaType::EPISODE:
+      return TryGetEpisodeInfo("", details, id, getDetails);
+    case MediaType::MUSIC_VIDEO:
+      return TryGetMusicVideoInfo("", details, id, getDetails);
+    default:
+      return GetResult::NotFound;
+  }
+}
+
 bool CVideoDatabase::GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id)
 {
   CVideoInfoTag details;
-  details.Reset();
-
-  switch (type)
-  {
-    case VideoDbContentType::MOVIES:
-      GetMovieInfo("", details, id);
-      break;
-    case VideoDbContentType::TVSHOWS:
-      GetTvShowInfo("", details, id, &item);
-      break;
-    case VideoDbContentType::EPISODES:
-      GetEpisodeInfo("", details, id);
-      break;
-    case VideoDbContentType::MUSICVIDEOS:
-      GetMusicVideoInfo("", details, id);
-      break;
-    default:
-      return false;
-  }
-
-  if (details.m_iDbId < 0)
+  if (TryGetDetailsByTypeAndId(MediaTypeOfContent(type), id, details, &item) != GetResult::Ok)
     return false;
 
   item.SetFromVideoInfoTag(details);

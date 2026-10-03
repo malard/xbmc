@@ -90,34 +90,17 @@ JSONRPC_STATUS CAddonsOperations::GetAddons(const CVariant& parameterObject, CVa
   for (const auto& typeIt : addonTypes)
   {
     VECADDONS typeAddons;
-    if (typeIt == AddonType::UNKNOWN)
+    if (!enabled.isBoolean()) //All
     {
-      if (!enabled.isBoolean()) //All
-      {
-        if (!installed.isBoolean() || installed.asBoolean())
-          addonMgr.GetInstalledAddons(typeAddons);
-        if (!installed.isBoolean() || (installed.isBoolean() && !installed.asBoolean()))
-          addonMgr.GetInstallableAddons(typeAddons);
-      }
-      else if (enabled.asBoolean() && (!installed.isBoolean() || installed.asBoolean())) //Enabled
-        addonMgr.GetAddons(typeAddons);
-      else if (!installed.isBoolean() || installed.asBoolean())
-        addonMgr.GetDisabledAddons(typeAddons);
+      if (!installed.isBoolean() || installed.asBoolean())
+        addonMgr.GetInstalledAddons(typeAddons, typeIt);
+      if (!installed.isBoolean() || (installed.isBoolean() && !installed.asBoolean()))
+        addonMgr.GetInstallableAddons(typeAddons, typeIt);
     }
-    else
-    {
-      if (!enabled.isBoolean()) //All
-      {
-        if (!installed.isBoolean() || installed.asBoolean())
-          addonMgr.GetInstalledAddons(typeAddons, typeIt);
-        if (!installed.isBoolean() || (installed.isBoolean() && !installed.asBoolean()))
-          addonMgr.GetInstallableAddons(typeAddons, typeIt);
-      }
-      else if (enabled.asBoolean() && (!installed.isBoolean() || installed.asBoolean())) //Enabled
-        addonMgr.GetAddons(typeAddons, typeIt);
-      else if (!installed.isBoolean() || installed.asBoolean())
-        addonMgr.GetDisabledAddons(typeAddons, typeIt);
-    }
+    else if (enabled.asBoolean() && (!installed.isBoolean() || installed.asBoolean())) //Enabled
+      addonMgr.GetAddons(typeAddons, typeIt);
+    else if (!installed.isBoolean() || installed.asBoolean())
+      addonMgr.GetDisabledAddons(typeAddons, typeIt);
 
     addons.insert(addons.end(), typeAddons.begin(), typeAddons.end());
   }
