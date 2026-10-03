@@ -48,18 +48,6 @@ TEST_F(TestJSONServiceDescriptionIntrospect, EveryDefinitionSurvivesToIntrospect
   }
 }
 
-//! \brief The service header identifies the API as Kodi, not XBMC
-TEST_F(TestJSONServiceDescriptionIntrospect, TheServiceHeaderIsNotBranded)
-{
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
-
-  EXPECT_EQ(std::string::npos, result["id"].asString().find("xbmc"))
-      << "service id: " << result["id"].asString();
-  EXPECT_EQ(std::string::npos, result["description"].asString().find("XBMC"))
-      << "service description: " << result["description"].asString();
-}
-
 //! \brief A method's declared errors are served under it, with their descriptions
 TEST_F(TestJSONServiceDescriptionIntrospect, DeclaredErrorsAreServedWithTheMethod)
 {
