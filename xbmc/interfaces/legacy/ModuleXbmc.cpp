@@ -491,13 +491,10 @@ namespace XBMCAddon
       switch (format)
       {
         case KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME:
-          return tag->ToEnglishName();
-        case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
-          return tag->AsIso6391();
-        case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
-          return tag->AsIso6392B();
         case KODI::LANGUAGE::CLanguageTag::ISO_NAME:
-          return tag->ToEnglishLanguageName();
+        case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
+        case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
+          return tag->In(static_cast<KODI::LANGUAGE::CLanguageTag::Notation>(format));
         default:
           return "";
       }

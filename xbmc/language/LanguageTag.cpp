@@ -441,3 +441,20 @@ std::string CLanguageTag::ToEnglishLanguageName() const
 {
   return EnglishNameOf(AsIso6392B());
 }
+
+std::string CLanguageTag::In(Notation notation) const
+{
+  switch (notation)
+  {
+    case ISO_639_1:
+      return AsIso6391();
+    case ISO_639_2:
+      return AsIso6392B();
+    case ENGLISH_NAME:
+      return ToEnglishName();
+    case ISO_NAME:
+      return ToEnglishLanguageName();
+  }
+
+  return {};
+}

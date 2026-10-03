@@ -40,6 +40,7 @@ inline constexpr std::size_t MAX_COMPOSED_NAME_LENGTH{30};
  * - As* states the language to a named standard, narrowing where that standard says less
  * - To* expresses the language some other way, such as a name composed for a reader
  * - Get* answers for one part of the tag rather than for the language
+ * - In is whichever of the As* and To* members a Notation names
  */
 class CLanguageTag
 {
@@ -253,6 +254,14 @@ public:
    * \return The name, or an empty string where the tag yields none.
    */
   std::string ToEnglishLanguageName() const;
+
+  /*!
+   * \brief The language in a notation chosen at run time.
+   * \param[in] notation The notation.
+   * \return What the member the notation names returns: AsIso6391, AsIso6392B, ToEnglishName or
+   *         ToEnglishLanguageName.
+   */
+  std::string In(Notation notation) const;
 
 private:
   /*!

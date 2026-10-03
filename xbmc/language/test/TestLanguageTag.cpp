@@ -375,6 +375,15 @@ TEST(TestLanguageTag, NarrowingDropsTheRegionFromTheEnglishName)
   EXPECT_EQ(CLanguageTag::Parse("eng").ToEnglishLanguageName(), "English");
 }
 
+TEST(TestLanguageTag, StatesItselfInTheNotationAskedFor)
+{
+  const CLanguageTag tag{CLanguageTag::Parse("fr-CA")};
+  EXPECT_EQ(tag.In(CLanguageTag::ISO_639_1), "fr");
+  EXPECT_EQ(tag.In(CLanguageTag::ISO_639_2), "fre");
+  EXPECT_EQ(tag.In(CLanguageTag::ENGLISH_NAME), tag.ToEnglishName());
+  EXPECT_EQ(tag.In(CLanguageTag::ISO_NAME), "French");
+}
+
 TEST(TestLanguageTag, ShortensAComposedNameThatIsTooLongToShow)
 {
   // Nothing names this tag, so the name is composed from its subtags and cut to fit a list. The
