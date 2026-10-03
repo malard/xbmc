@@ -538,14 +538,10 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
         return -1;
       }
 
-      if (!components.GetComponent<CApplicationPlayer>()->IsPlaying())
-      {
-        playLists->SetPlayingType(type);
-
-        // video does not auto play on queue like music
-        if (containsMusic && !playLists->PlayFrom(type, hasPlayOffset ? playOffset : first))
-          return -1;
-      }
+      // video does not auto play on queue like music
+      if (containsMusic && !components.GetComponent<CApplicationPlayer>()->IsPlaying() &&
+          !playLists->PlayFrom(type, hasPlayOffset ? playOffset : first))
+        return -1;
       return 0;
     }
   }
