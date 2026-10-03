@@ -15488,6 +15488,12 @@
           "disambiguation": {
             "type": "string"
           },
+          "dateModified": {
+            "type": "string"
+          },
+          "dateNew": {
+            "type": "string"
+          },
           "sourceId": {
             "$ref": "#/components/schemas/Array.Integer"
           }
@@ -15650,6 +15656,12 @@
             "$ref": "#/components/schemas/Audio.Details.Genres"
           },
           "lastPlayed": {
+            "type": "string"
+          },
+          "dateModified": {
+            "type": "string"
+          },
+          "dateNew": {
             "type": "string"
           },
           "sourceId": {
@@ -15844,10 +15856,19 @@
           "musicBrainzArtistId": {
             "$ref": "#/components/schemas/Array.String"
           },
+          "musicBrainzAlbumId": {
+            "type": "string"
+          },
           "albumId": {
             "$ref": "#/components/schemas/Library.Id"
           },
           "lastPlayed": {
+            "type": "string"
+          },
+          "dateModified": {
+            "type": "string"
+          },
+          "dateNew": {
             "type": "string"
           },
           "disc": {

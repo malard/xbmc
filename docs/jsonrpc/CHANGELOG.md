@@ -251,7 +251,8 @@ Properties and types:
 - Broadcast times from 2038-01-19 on are no longer in the past.
 - The schema declares what the serializers send: stream `source`, `version`, `flags`,
   `stereomode`, `language`, `hdrdetail`; broadcast `imdbnumber` as a string; `genre` as an array;
-  `textureid` required; `volume` listed once.
+  `textureid` required; `volume` listed once; artist, album and song `dateModified` and `dateNew`,
+  and song `musicBrainzAlbumId`.
 - A song's `releaseDate` and `votes` are stored when set; they were declared and ignored.
 - The `director` filter of `VideoLibrary.GetMovies`, `GetEpisodes` and `GetMusicVideos` finds
   what the director directed, where it failed with `InvalidParams`.
