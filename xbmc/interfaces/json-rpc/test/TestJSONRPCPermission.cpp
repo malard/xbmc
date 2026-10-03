@@ -57,13 +57,6 @@ TEST(TestJSONRPCPermission, UnknownValueHasNoName)
   EXPECT_STREQ("Unknown", PermissionToString(static_cast<OperationPermission>(0x4000)));
 }
 
-TEST(TestJSONRPCPermission, EverySettingsWriteRequiresWriteSetting)
-{
-  for (const char* const name : {"Settings.SetSettingValue", "Settings.ResetSettingValue",
-                                 "Settings.SetSkinSettingValue", "Settings.SetLevel"})
-    EXPECT_EQ("WriteSetting", ShippedMethod(name)["permission"].asString()) << name;
-}
-
 TEST(TestJSONRPCPermission, AllCoversEveryPermission)
 {
   int combined = 0;

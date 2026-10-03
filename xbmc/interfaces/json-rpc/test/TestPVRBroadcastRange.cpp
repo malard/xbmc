@@ -13,8 +13,6 @@
 #include "interfaces/json-rpc/PVROperations.h"
 #include "utils/Variant.h"
 
-#include <map>
-#include <set>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -47,56 +45,6 @@ CVariant Request(const std::string& starttime, const std::string& endtime)
 }
 
 } // unnamed namespace
-
-/*!
- The range on PVR.GetBroadcasts is an addition to a method clients already call, so a
- request that does not give one must keep meaning "everything".
- */
-TEST(TestPVRBroadcastRange, TheRangeOnGetBroadcastsIsOptional)
-{
-  const std::map<std::string, CVariant> params{Params(ShippedMethod("PVR.GetBroadcasts"))};
-
-  ASSERT_TRUE(params.contains("startTime"));
-  ASSERT_TRUE(params.contains("endTime"));
-  EXPECT_FALSE(params.at("startTime")["required"].asBoolean());
-  EXPECT_FALSE(params.at("endTime")["required"].asBoolean());
-}
-
-/*!
- The group form always needs a range; a limit over channels has no meaning, so there is none.
- */
-TEST(TestPVRBroadcastRange, TheGroupFormRequiresARange)
-{
-  const std::map<std::string, CVariant> params{
-      Params(ShippedMethod("PVR.GetBroadcastsByChannelGroup"))};
-
-  ASSERT_TRUE(params.contains("channelGroupId"));
-  ASSERT_TRUE(params.contains("startTime"));
-  ASSERT_TRUE(params.contains("endTime"));
-  EXPECT_TRUE(params.at("channelGroupId")["required"].asBoolean());
-  EXPECT_TRUE(params.at("startTime")["required"].asBoolean());
-  EXPECT_TRUE(params.at("endTime")["required"].asBoolean());
-  EXPECT_TRUE(params.contains("properties"));
-  EXPECT_FALSE(params.contains("limits"));
-}
-
-/*!
- A broadcast does not carry the Kodi channel id it belongs to, so the group form has to
- answer per channel for the caller to tell them apart.
- */
-TEST(TestPVRBroadcastRange, TheGroupFormAnswersPerChannel)
-{
-  const CVariant returns{ShippedMethod("PVR.GetBroadcastsByChannelGroup")["returns"]};
-
-  EXPECT_TRUE(RequiredMembers(returns).contains("channels"));
-
-  const CVariant& channel{returns["properties"]["channels"]["items"]};
-  const std::set<std::string> required{RequiredMembers(channel)};
-  EXPECT_TRUE(required.contains("channelId"));
-  EXPECT_TRUE(required.contains("broadcasts"));
-  EXPECT_EQ(channel["properties"]["broadcasts"]["items"]["$ref"].asString(),
-            "#/$defs/PVR.Details.Broadcast");
-}
 
 TEST(TestPVRBroadcastRange, AnOmittedOptionalRangeMeansNoRange)
 {

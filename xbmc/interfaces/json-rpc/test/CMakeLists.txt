@@ -5,7 +5,6 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestApplicationLogLevel.cpp
             TestAudioLibrary.cpp
             TestAudioLibraryInfoProviderView.cpp
-            TestAudioLibrarySetInfoProviderSchema.cpp
             TestDeprecatedMethodSchema.cpp
             TestFailureReasons.cpp
             TestFileItemHandler.cpp

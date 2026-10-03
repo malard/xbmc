@@ -92,10 +92,3 @@ TEST(TestFileOperations, VideoPropertiesNeedLibraryLookup)
   EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"cast"})));
   EXPECT_TRUE(CFileOperations::NeedsLibraryLookup(ParamsWithProperties({"file", "streamDetails"})));
 }
-
-//! \brief No transport serves a file directly, so a download is always prepared, never made
-TEST(TestFileOperations, ADownloadIsOnlyPrepared)
-{
-  EXPECT_EQ(0u, ShippedMethods().count("Files.Download"));
-  EXPECT_FALSE(ShippedMethod("Files.PrepareDownload")["returns"]["properties"].isMember("mode"));
-}

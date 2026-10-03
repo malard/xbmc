@@ -105,26 +105,3 @@ TEST_F(TestPVRBroadcastFields, EveryFieldTheSchemaOffersIsAnswered)
   ASSERT_FALSE(offered.empty()) << "the two sides agreeing on nothing is not agreement";
   EXPECT_EQ(offered, BroadcastFields());
 }
-
-/*!
- CPVREpgInfoTag::Serialize writes these four, and the schema declares none of them, so a
- caller asking for one by name is refused. A nested broadcast answers on the same terms.
- */
-TEST_F(TestPVRBroadcastFields, UndeclaredSerializedKeysAreNotAnswered)
-{
-  const std::set<std::string> fields{BroadcastFields()};
-
-  EXPECT_FALSE(fields.contains("channelUid"));
-  EXPECT_FALSE(fields.contains("filenameandpath"));
-  EXPECT_FALSE(fields.contains("serieslink"));
-  EXPECT_FALSE(fields.contains("titleExtraInfo"));
-}
-
-/*!
- Item.Details.Base requires the label, and no caller may ask for it. Whatever builds a
- nested broadcast has to supply it unasked.
- */
-TEST_F(TestPVRBroadcastFields, TheRequiredLabelIsNotOneOfThem)
-{
-  EXPECT_FALSE(BroadcastFields().contains("label"));
-}

@@ -107,11 +107,6 @@ inline CVariant ShippedDefinition(const char* const entries[],
   return {};
 }
 
-inline CVariant ShippedMethod(const std::string& name)
-{
-  return ShippedDefinition(JSONRPC_SERVICE_METHODS, std::size(JSONRPC_SERVICE_METHODS), name);
-}
-
 inline CVariant ShippedNotification(const std::string& name)
 {
   return ShippedDefinition(JSONRPC_SERVICE_NOTIFICATIONS, std::size(JSONRPC_SERVICE_NOTIFICATIONS),
@@ -148,16 +143,6 @@ inline std::set<std::string> EnumValues(const CVariant& schema)
   for (auto value = list.begin_array(); value != list.end_array(); ++value)
     values.insert(value->asString());
   return values;
-}
-
-//! \brief The names an object schema's "required" lists
-inline std::set<std::string> RequiredMembers(const CVariant& object)
-{
-  std::set<std::string> required;
-  const CVariant& values{object["required"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-    required.insert(value->asString());
-  return required;
 }
 
 inline std::set<std::string> Keys(const CVariant& object)

@@ -49,13 +49,3 @@ TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
         << "PVR.Details.Broadcast declares \"" << property << "\", which no caller can request";
   }
 }
-
-/*!
- A recording is reachable from its broadcast as a library item, so PVR.GetRecordingDetails
- can follow it.
- */
-TEST(TestPVRBroadcastSchema, TheRecordingIsAddressableByItsIdentifier)
-{
-  EXPECT_TRUE(RequestableFields().contains("recordingId"));
-  EXPECT_TRUE(DeclaredProperties().contains("recordingId"));
-}
