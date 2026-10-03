@@ -556,12 +556,6 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
     return -1;
   }
 
-  if ((MUSIC::IsAudio(item) || VIDEO::IsVideo(item)) && !PLAYLIST::IsSmartPlayList(item) &&
-      !item.IsPVR())
-    return CServiceBroker::GetPlayLists()->PlayItem(namedType, std::make_shared<CFileItem>(item))
-               ? 0
-               : -1;
-
   return g_application.PlayMedia(item, "", namedType,
                                  hasPlayOffset ? std::optional<int>(playOffset) : std::nullopt)
              ? 0

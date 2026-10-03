@@ -1906,14 +1906,18 @@ bool CApplication::PlayMedia(const CFileItem& item,
                              std::optional<PLAYLIST::Type> type /* = std::nullopt */,
                              std::optional<int> position /* = std::nullopt */)
 {
+  const auto playLists = CServiceBroker::GetPlayLists();
   const std::shared_ptr<CFileItem> playable = PlayableItem(item);
   if (!playable)
+  {
+    playLists->ReportFailed(std::make_shared<CFileItem>(item),
+                            CApplicationPlayLists::FailReason::Unresolved);
     return false;
+  }
 
   if (playable->IsPVR())
     return CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(*playable);
 
-  const auto playLists = CServiceBroker::GetPlayLists();
   if (!PLAYLIST::HoldsEntries(*playable))
     return playLists->PlayItem(type, playable, {.player = player});
 
@@ -2151,7 +2155,7 @@ bool CApplication::ExecuteXBMCAction(std::string actionStr,
 #endif
         if (MUSIC::IsAudio(item) || VIDEO::IsVideo(item) || item.IsGame())
     { // an audio or video file
-      CServiceBroker::GetPlayLists()->PlayItem(std::nullopt, std::make_shared<CFileItem>(item));
+      PlayMedia(item);
     }
     else
     {

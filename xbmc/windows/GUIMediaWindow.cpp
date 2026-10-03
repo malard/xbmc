@@ -25,7 +25,6 @@
 #include "filesystem/SourcesDirectory.h"
 #include "media/MediaSection.h"
 #include "messaging/ApplicationMessenger.h"
-#include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #if defined(TARGET_ANDROID)
 #include "platform/android/activity/XBMCApp.h"
@@ -1536,17 +1535,7 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 
   CLog::Log(LOGDEBUG, "{} {}", __FUNCTION__, CURL::GetRedacted(pItem->GetPath()));
 
-  const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType();
-  bool bResult = false;
-  if (NETWORK::IsInternetStream(*pItem) || PLAYLIST::IsPlayList(*pItem))
-  {
-    bResult = g_application.PlayMedia(*pItem, player, type);
-  }
-  else
-  {
-    bResult = CServiceBroker::GetPlayLists()->PlayItem(type, std::make_shared<CFileItem>(*pItem),
-                                                       {.player = player});
-  }
+  const bool bResult = g_application.PlayMedia(*pItem, player, m_guiState->GetPlayListType());
 
   if (pItem->GetStartOffset() == STARTOFFSET_RESUME)
     pItem->SetStartOffset(0);
