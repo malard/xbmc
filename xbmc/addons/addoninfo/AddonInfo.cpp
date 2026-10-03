@@ -282,8 +282,11 @@ const std::string& CAddonInfo::GetTranslatedText(const LocalizedStringsMap& loca
   else if (locales.empty())
     return StringUtils::Empty;
 
+  static const KODI::LANGUAGE::CLanguageTag fallback{
+      KODI::LANGUAGE::CLanguageTag::Parse(KODI_ADDON_DEFAULT_LANGUAGE_CODE)};
   const KODI::LANGUAGE::CLanguageTag& wanted{KODI::LANGUAGE::CLanguage::GetInstance().UI()};
-  std::string matchingLanguage;
+  const std::string* bestText{nullptr};
+  const std::string* fallbackText{nullptr};
   int bestRank = -1;
 
   for (const auto& [locale, text] : locales)
@@ -292,19 +295,20 @@ const std::string& CAddonInfo::GetTranslatedText(const LocalizedStringsMap& loca
     if (wanted == candidate)
       return text;
 
+    if (candidate == fallback)
+      fallbackText = &text;
+
     if (const int rank = MatchRank(wanted, candidate); rank > bestRank)
     {
       bestRank = rank;
-      matchingLanguage = locale;
+      bestText = &text;
     }
   }
 
-  if (matchingLanguage.empty())
-    matchingLanguage = KODI_ADDON_DEFAULT_LANGUAGE_CODE;
-
-  auto const& translatedValue = locales.find(matchingLanguage);
-  if (translatedValue != locales.end())
-    return translatedValue->second;
+  if (bestText)
+    return *bestText;
+  if (fallbackText)
+    return *fallbackText;
   return StringUtils::Empty;
 }
 
