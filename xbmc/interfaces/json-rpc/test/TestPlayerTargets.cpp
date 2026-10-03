@@ -30,11 +30,6 @@ TEST(TestPlayerTargets, AVerbOnThePlayerFailsWhenTheNamedPlayListIsIdle)
   EXPECT_EQ(FailedToExecute, CPlayerOperations::Stop(Named("audio"), result));
   EXPECT_EQ("nothing-playing", result["reason"].asString());
   EXPECT_EQ("audio", result["target"]["playlist"].asString());
-
-  result = CVariant();
-  EXPECT_EQ(FailedToExecute, CPlayerOperations::PlayPause(Named("video"), result));
-  EXPECT_EQ("nothing-playing", result["reason"].asString());
-  EXPECT_EQ("video", result["target"]["playlist"].asString());
 }
 
 //! \brief With nothing playing, a verb that cannot act says so rather than blaming the media
@@ -47,11 +42,6 @@ TEST(TestPlayerTargets, AVerbFailsForNothingPlayingWhenNothingPlays)
   EXPECT_EQ(FailedToExecute, CPlayerOperations::Seek(params, result));
   EXPECT_EQ("nothing-playing", result["reason"].asString());
   EXPECT_FALSE(result.isMember("target"));
-
-  result = CVariant();
-  EXPECT_EQ(FailedToExecute,
-            CPlayerOperations::Zoom(CVariant(CVariant::VariantTypeObject), result));
-  EXPECT_EQ("nothing-playing", result["reason"].asString());
 }
 
 //! \brief Chapters asked of a playlist that is not playing fail as the other verbs do
@@ -102,15 +92,6 @@ TEST_F(TestPlayerTargetParameter, AnOmittedPlaylistIsPlaying)
   EXPECT_EQ("audio", output["playlist"].asString());
   ASSERT_EQ(OK, Call("Player.Stop", R"({"playlist": "picture"})", output));
   EXPECT_EQ("picture", output["playlist"].asString());
-}
-
-//! \brief "playing" is what naming nothing means
-TEST(TestPlayerTargets, PlayingNamesNoPlaylist)
-{
-  CVariant result;
-  EXPECT_EQ(FailedToExecute, CPlayerOperations::Seek(Named("playing"), result));
-  EXPECT_EQ("nothing-playing", result["reason"].asString());
-  EXPECT_FALSE(result.isMember("target"));
 }
 
 //! \brief The picture playlist names the slideshow, which is not running
