@@ -992,14 +992,6 @@ public:
   */
   unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
-  bool SetArtForItem(int mediaId,
-                     const std::string& mediaType,
-                     const std::string& artType,
-                     const std::string& url);
-  bool SetArtForItem(int mediaId, const std::string& mediaType, const KODI::ART::Artwork& art);
-  bool GetArtForItem(int mediaId, const std::string& mediaType, KODI::ART::Artwork& art);
-  std::string GetArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-
   void UpdateArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType) const;
 
   /*!
@@ -1013,10 +1005,6 @@ public:
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
   bool HasArtForItem(int mediaId, const std::string& mediaType);
-  bool RemoveArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-  bool RemoveArtForItem(int mediaId,
-                        const std::string& mediaType,
-                        const std::set<std::string, std::less<>>& artTypes);
   /*!
    * \brief Retrieve season information of a TV show.
    * \param[in] showId ID of the show
@@ -1041,7 +1029,6 @@ public:
   std::string GetTvShowNamedSeasonById(int tvshowId, int seasonId) const;
 
   bool GetTvShowSeasonArt(int mediaId, KODI::ART::SeasonsArtwork& seasonArt);
-  bool GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes);
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -1062,35 +1049,6 @@ public:
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
                                                              KODI::MEDIA::MediaType mediaType,
                                                              const std::string& artType);
-
-  //! \brief The art functions above, for an item whose table is a media type.
-  bool SetArtForItem(int mediaId,
-                     KODI::MEDIA::MediaType mediaType,
-                     const std::string& artType,
-                     const std::string& url)
-  {
-    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
-  }
-  bool SetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, const KODI::ART::Artwork& art)
-  {
-    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  bool GetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, KODI::ART::Artwork& art)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  std::string GetArtForItem(int mediaId,
-                            KODI::MEDIA::MediaType mediaType,
-                            const std::string& artType)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
-  }
-  bool RemoveArtForItem(int mediaId,
-                        KODI::MEDIA::MediaType mediaType,
-                        const std::set<std::string, std::less<>>& artTypes)
-  {
-    return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);
-  }
 
   int AddTag(const std::string &tag);
   void AddTagToItem(int idItem, int idTag, KODI::MEDIA::MediaType type);
