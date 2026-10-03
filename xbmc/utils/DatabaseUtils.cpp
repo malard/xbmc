@@ -203,9 +203,7 @@ const DatabaseUtils::View* DatabaseUtils::ViewOf(MediaType mediaType)
       numbered(Field::STUDIO,         VIDEODB_ID_STUDIOS,           2),
       numbered(Field::TRAILER,        VIDEODB_ID_TRAILER,           2),
       numbered(Field::COUNTRY,        VIDEODB_ID_COUNTRY,           2),
-      // Offset like a numbered column, unlike the other named ones
-      Column{Field::FILENAME,         "movie_view.strFilename",
-             VIDEODB_DETAILS_MOVIE_FILE, VIDEODB_DETAILS_MOVIE_FILE + 2},
+      named(Field::FILENAME,          "movie_view.strFilename",     VIDEODB_DETAILS_MOVIE_FILE),
       named(Field::PATH,              "movie_view.strPath",         VIDEODB_DETAILS_MOVIE_PATH),
       named(Field::PLAYCOUNT,         "movie_view.playCount",       VIDEODB_DETAILS_MOVIE_PLAYCOUNT),
       named(Field::LAST_PLAYED,       "movie_view.lastPlayed",      VIDEODB_DETAILS_MOVIE_LASTPLAYED),
