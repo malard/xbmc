@@ -426,6 +426,27 @@ protected:
   virtual void CreatePlayers();
   void DestroyPlayers();
 
+  //! \brief Why presentation is suspended. While any is held, audio, video and the clock pause.
+  enum class SuspendReason : unsigned
+  {
+    DISPLAY_LOST = 1U << 0,
+    AUDIO_FORMAT_CHANGE = 1U << 1,
+  };
+
+  /*!
+   * \brief Hold a reason to suspend presentation, pausing it if no other is held.
+   * \return false when the reason was already held.
+   */
+  bool SuspendPresentation(SuspendReason reason);
+  /*!
+   * \brief Drop a reason to suspend presentation, resuming it if no other is held.
+   * \return false when the reason was not held.
+   */
+  bool ResumePresentation(SuspendReason reason);
+  bool IsPresentationSuspended(SuspendReason reason) const;
+  //! \brief Pause a stream player just opened if presentation is suspended, or start it.
+  void SendPresentationState(IDVDStreamPlayer& player);
+
   void Prepare();
   bool ShouldDeferSync(bool ready, std::chrono::steady_clock::time_point now);
   bool OpenStream(CCurrentStream& current, int64_t demuxerId, int iStream, int source, bool reset = true);
@@ -573,8 +594,9 @@ protected:
   ECacheState  m_caching;
   XbmcThreads::EndTime<> m_cachingTimer;
 
-  //! Atomic: set on the player thread, read by OnResetDisplay on the windowing thread.
-  std::atomic<bool> m_audioFormatHold{false};
+  //! SuspendReason bits. Changed under m_suspendSection, from the player and windowing threads.
+  std::atomic<unsigned> m_suspendReasons{0};
+  CCriticalSection m_suspendSection;
   XbmcThreads::EndTime<> m_audioFormatHoldTimer;
   std::atomic<bool> m_audioChainReady{false};
 
@@ -683,8 +705,6 @@ protected:
   bool m_HasAudio;
 
   bool m_updateStreamDetails{false};
-
-  std::atomic<bool> m_displayLost;
 
   double m_messageQueueTimeSize{0.0};
 };

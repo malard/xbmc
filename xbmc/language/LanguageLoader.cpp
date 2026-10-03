@@ -129,6 +129,23 @@ void LoadAddonStrings(const std::string& locale)
 }
 
 /*!
+ * \brief Hand a stream language setting to CLanguage, putting a value the settings list never
+ *        offered back to its default.
+ * \param[in] settingId The audio or the subtitle language setting.
+ */
+void ApplyStreamLanguage(const std::string& settingId)
+{
+  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
+  const std::string value = settings->GetString(settingId);
+  CLanguage& language = CLanguage::GetInstance();
+  const bool known = settingId == CSettings::SETTING_LOCALE_AUDIOLANGUAGE
+                         ? language.SetAudio(value)
+                         : language.SetSubtitle(value);
+  if (!known)
+    settings->GetSetting(settingId)->Reset();
+}
+
+/*!
  * \brief The English names of every language Kodi knows of and every language the installed
  * language addons name, sorted for display.
  * \return The names, without duplicates.
@@ -176,18 +193,9 @@ void CLanguageLoader::OnSettingChanged(const std::shared_ptr<const CSetting>& se
   const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
 
   const std::string& settingId = setting->GetId();
-  if (settingId == CSettings::SETTING_LOCALE_AUDIOLANGUAGE)
-  {
-    if (!CLanguage::GetInstance().SetAudio(
-            std::static_pointer_cast<const CSettingString>(setting)->GetValue()))
-      settings->GetSetting(settingId)->Reset();
-  }
-  else if (settingId == CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)
-  {
-    if (!CLanguage::GetInstance().SetSubtitle(
-            std::static_pointer_cast<const CSettingString>(setting)->GetValue()))
-      settings->GetSetting(settingId)->Reset();
-  }
+  if (settingId == CSettings::SETTING_LOCALE_AUDIOLANGUAGE ||
+      settingId == CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)
+    ApplyStreamLanguage(settingId);
   else if (settingId == CSettings::SETTING_LOCALE_LANGUAGE)
   {
     // Put the setting back to a language that does load
@@ -233,6 +241,9 @@ bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices 
   }
 
   LoadAddonStrings(language);
+
+  ApplyStreamLanguage(CSettings::SETTING_LOCALE_AUDIOLANGUAGE);
+  ApplyStreamLanguage(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE);
 
   if (reloadServices)
   {

@@ -811,7 +811,6 @@ CVideoPlayer::CVideoPlayer(IPlayerCallback& callback)
 
   CreatePlayers();
 
-  m_displayLost = false;
   m_error = false;
   m_bCloseRequest = false;
   if (auto system = CServiceBroker::GetWinSystem(); system != nullptr)
@@ -1625,14 +1624,14 @@ void CVideoPlayer::Process()
   while (!m_bAbortRequest)
   {
     // check display lost
-    if (m_displayLost)
+    if (IsPresentationSuspended(SuspendReason::DISPLAY_LOST))
     {
       CThread::Sleep(50ms);
       continue;
     }
 
     // Does not service messages, like the display-lost guard above.
-    if (m_audioFormatHold)
+    if (IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE))
     {
       if (!m_bAbortRequest && !m_audioFormatHoldTimer.IsTimePast() && !m_audioChainReady.load())
       {
@@ -4424,7 +4423,7 @@ bool CVideoPlayer::OpenAudioStream(CDVDStreamInfo& hint, bool reset)
     if (!player->OpenStream(hint))
       return false;
 
-    player->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, m_displayLost), 1);
+    SendPresentationState(*player);
 
     static_cast<IDVDStreamPlayerAudio*>(player)->SetSpeed(m_streamPlayerSpeed);
     m_CurrentAudio.syncState = IDVDStreamPlayer::SYNC_STARTING;
@@ -4522,7 +4521,7 @@ bool CVideoPlayer::OpenVideoStream(CDVDStreamInfo& hint, bool reset)
     if (!player->OpenStream(hint))
       return false;
 
-    player->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, m_displayLost), 1);
+    SendPresentationState(*player);
 
     // look for any EDL files
     m_Edl.Clear();
@@ -5874,7 +5873,8 @@ void CVideoPlayer::UpdatePlayState(double timeout)
 
   CServiceBroker::GetDataCacheCore().SetChapters(chapters);
 
-  if ((m_caching > CACHESTATE_DONE && m_caching < CACHESTATE_PLAY) || m_audioFormatHold)
+  const bool formatHold = IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE);
+  if ((m_caching > CACHESTATE_DONE && m_caching < CACHESTATE_PLAY) || formatHold)
     state.caching = true;
   else
     state.caching = false;
@@ -5895,7 +5895,7 @@ void CVideoPlayer::UpdatePlayState(double timeout)
     state.cache_time = queueTime / 1000.0;
   }
 
-  if (m_audioFormatHold)
+  if (formatHold)
   {
     const double total =
         static_cast<double>(m_audioFormatHoldTimer.GetInitialTimeoutValue().count());
@@ -6156,25 +6156,49 @@ void CVideoPlayer::UpdateVideoRender(bool video)
 void CVideoPlayer::OnLostDisplay()
 {
   CLog::Log(LOGINFO, "VideoPlayer: OnLostDisplay received");
-  if (m_VideoPlayerAudio->IsInited())
-    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
-  if (m_VideoPlayerVideo->IsInited())
-    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
-  m_clock.Pause(true);
-  m_displayLost = true;
+  SuspendPresentation(SuspendReason::DISPLAY_LOST);
   FlushRenderer();
 }
 
 void CVideoPlayer::OnResetDisplay()
 {
-  if (!m_displayLost)
+  if (!ResumePresentation(SuspendReason::DISPLAY_LOST))
     return;
 
   CLog::Log(LOGINFO, "VideoPlayer: OnResetDisplay received");
-  m_displayLost = false;
+  m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsg>(CDVDMsg::PLAYER_DISPLAY_RESET), 1);
+}
 
-  // The format hold still wants playback down, and releases it itself
-  if (!m_audioFormatHold)
+bool CVideoPlayer::SuspendPresentation(SuspendReason reason)
+{
+  std::unique_lock lock(m_suspendSection);
+  const unsigned held = m_suspendReasons;
+  if (held & static_cast<unsigned>(reason))
+    return false;
+
+  m_suspendReasons = held | static_cast<unsigned>(reason);
+  if (held == 0)
+  {
+    if (m_VideoPlayerAudio->IsInited())
+      m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
+                                      1);
+    if (m_VideoPlayerVideo->IsInited())
+      m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
+                                      1);
+    m_clock.Pause(true);
+  }
+  return true;
+}
+
+bool CVideoPlayer::ResumePresentation(SuspendReason reason)
+{
+  std::unique_lock lock(m_suspendSection);
+  const unsigned held = m_suspendReasons;
+  if (!(held & static_cast<unsigned>(reason)))
+    return false;
+
+  m_suspendReasons = held & ~static_cast<unsigned>(reason);
+  if (m_suspendReasons == 0)
   {
     m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false),
                                     1);
@@ -6182,7 +6206,20 @@ void CVideoPlayer::OnResetDisplay()
                                     1);
     m_clock.Pause(false);
   }
-  m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsg>(CDVDMsg::PLAYER_DISPLAY_RESET), 1);
+  return true;
+}
+
+bool CVideoPlayer::IsPresentationSuspended(SuspendReason reason) const
+{
+  return (m_suspendReasons & static_cast<unsigned>(reason)) != 0;
+}
+
+void CVideoPlayer::SendPresentationState(IDVDStreamPlayer& player)
+{
+  // Under the lock, so a suspension from the windowing thread cannot overtake this message
+  std::unique_lock lock(m_suspendSection);
+  player.SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, m_suspendReasons != 0),
+                     1);
 }
 
 void CVideoPlayer::HoldForAudioFormatChange()
@@ -6196,23 +6233,15 @@ void CVideoPlayer::HoldForAudioFormatChange()
   // time already served was spent on the previous one.
   m_audioChainReady = false;
   m_audioFormatHoldTimer.Set(std::chrono::milliseconds(tenths * 100));
-  if (m_audioFormatHold)
+  if (!SuspendPresentation(SuspendReason::AUDIO_FORMAT_CHANGE))
     return;
 
   CLog::Log(LOGINFO, "VideoPlayer: holding playback {:.1f}s for the audio format change",
             static_cast<double>(tenths) / 10.0);
 
   if (m_VideoPlayerAudio->IsInited())
-  {
-    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
     m_VideoPlayerAudio->SendMessage(
         std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, true), 1);
-  }
-  if (m_VideoPlayerVideo->IsInited())
-    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
-  m_clock.Pause(true);
-
-  m_audioFormatHold = true;
 
   // Opened without the render loop: the blocking form would not return.
   CGUIDialog* busy = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(
@@ -6223,7 +6252,7 @@ void CVideoPlayer::HoldForAudioFormatChange()
 
 void CVideoPlayer::ReleaseAudioFormatHold()
 {
-  if (!m_audioFormatHold)
+  if (!IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE))
     return;
 
   const bool early = m_audioChainReady.load();
@@ -6235,10 +6264,7 @@ void CVideoPlayer::ReleaseAudioFormatHold()
             early ? "chain reported ready" : "timed out");
   m_VideoPlayerAudio->SendMessage(
       std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
-  m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
-  m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
-  m_clock.Pause(false);
-  m_audioFormatHold = false;
+  ResumePresentation(SuspendReason::AUDIO_FORMAT_CHANGE);
   m_audioChainReady = false;
 
   CGUIDialog* busy = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(

@@ -61,6 +61,24 @@ std::optional<std::string> ChosenCharset(const std::string& settingId)
 
   return setting->GetValue();
 }
+
+/*!
+ * \brief Store a parsed stream language setting, or the default where it names nothing.
+ * \param[out] preference Where the setting goes.
+ * \param[in] parsed The setting as parsed.
+ * \param[in] setting The setting as written, for the log.
+ * \return Whether the setting named something.
+ */
+bool SetPreference(CLanguagePreference& preference,
+                   const std::optional<CLanguagePreference>& parsed,
+                   const std::string& setting)
+{
+  if (!parsed.has_value())
+    CLog::LogF(LOGWARNING, "unknown language '{}', using default", setting);
+
+  preference = parsed.value_or(CLanguagePreference{});
+  return parsed.has_value();
+}
 } // namespace
 
 std::optional<CLanguagePreference> CLanguagePreference::Parse(const std::string& setting)
@@ -132,22 +150,12 @@ CLanguageTag CLanguage::Subtitle(bool fallbackToUI /* = true */) const
 
 bool CLanguage::SetAudio(const std::string& setting)
 {
-  const auto preference = CLanguagePreference::ForAudio(setting);
-  if (!preference.has_value())
-    CLog::LogF(LOGWARNING, "unknown language '{}', using default", setting);
-
-  m_audio = preference.value_or(CLanguagePreference{});
-  return preference.has_value();
+  return SetPreference(m_audio, CLanguagePreference::ForAudio(setting), setting);
 }
 
 bool CLanguage::SetSubtitle(const std::string& setting)
 {
-  const auto preference = CLanguagePreference::ForSubtitles(setting);
-  if (!preference.has_value())
-    CLog::LogF(LOGWARNING, "unknown language '{}', using default", setting);
-
-  m_subtitle = preference.value_or(CLanguagePreference{});
-  return preference.has_value();
+  return SetPreference(m_subtitle, CLanguagePreference::ForSubtitles(setting), setting);
 }
 
 void CLanguage::SetPack(const LanguageResourcePtr& pack)
