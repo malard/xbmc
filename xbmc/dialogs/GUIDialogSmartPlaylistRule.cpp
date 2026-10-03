@@ -27,6 +27,7 @@
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
 #include "utils/ContentNames.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/LabelFormatter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -116,31 +117,29 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
 
   std::string basePath{PLAYLIST::CSmartPlaylist::IsMusicType(m_type) ? MUSIC::DB_PATH::ROOT
                                                                      : VIDEO::DB_PATH::ROOT};
-  VideoDbContentType type = VideoDbContentType::MOVIES;
+  VideoDbContentType type{DatabaseUtils::VideoContentTypeFromMediaType(mediaType)};
   switch (mediaType)
   {
     case MediaType::MOVIE:
       basePath = VIDEO::DB_PATH::MOVIES;
       break;
     case MediaType::TV_SHOW:
-      type = VideoDbContentType::TVSHOWS;
       basePath = VIDEO::DB_PATH::TVSHOWS;
       // a show's title is what the tv show title field browses
       if (field == Field::TITLE)
         field = Field::TVSHOW_TITLE;
       break;
     case MediaType::MUSIC_VIDEO:
-      type = VideoDbContentType::MUSICVIDEOS;
       basePath = VIDEO::DB_PATH::MUSICVIDEOS;
       break;
     case MediaType::EPISODE:
       // genres, years and studios belong to the show
-      type = field == Field::GENRE || field == Field::YEAR || field == Field::STUDIO
-                 ? VideoDbContentType::TVSHOWS
-                 : VideoDbContentType::EPISODES;
+      if (field == Field::GENRE || field == Field::YEAR || field == Field::STUDIO)
+        type = VideoDbContentType::TVSHOWS;
       basePath = VIDEO::DB_PATH::TVSHOWS;
       break;
     default:
+      type = VideoDbContentType::MOVIES;
       break;
   }
 
@@ -368,22 +367,12 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     case Field::TAG:
     {
       // an episode's tags are its show's
-      VideoDbContentType tagType;
-      switch (mediaType)
-      {
-        case MediaType::MOVIE:
-          tagType = VideoDbContentType::MOVIES;
-          break;
-        case MediaType::TV_SHOW:
-        case MediaType::EPISODE:
-          tagType = VideoDbContentType::TVSHOWS;
-          break;
-        case MediaType::MUSIC_VIDEO:
-          tagType = VideoDbContentType::MUSICVIDEOS;
-          break;
-        default:
-          return;
-      }
+      const VideoDbContentType tagType{
+          mediaType == MediaType::EPISODE
+              ? VideoDbContentType::TVSHOWS
+              : DatabaseUtils::VideoContentTypeFromMediaType(mediaType)};
+      if (tagType == VideoDbContentType::UNKNOWN)
+        return;
 
       videodatabase.GetTagsNav(basePath + "tags/", items, tagType);
       iLabel = 20459;
