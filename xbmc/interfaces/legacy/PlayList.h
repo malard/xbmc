@@ -14,8 +14,6 @@
 #include "playlists/PlayList.h"
 #include "playlists/PlayListTypes.h"
 
-#include <optional>
-
 namespace XBMCAddon
 {
   namespace xbmc
@@ -26,9 +24,6 @@ namespace XBMCAddon
     // the values of xbmc.PLAYLIST_MUSIC and xbmc.PLAYLIST_VIDEO
     constexpr int PLAYLIST_MUSIC_ID = 0;
     constexpr int PLAYLIST_VIDEO_ID = 1;
-
-    // the playlist a Python playlist id names, if it names one
-    std::optional<KODI::PLAYLIST::Type> PlayListFromId(int playList);
 #endif
 
     //
@@ -60,7 +55,7 @@ namespace XBMCAddon
     //
     class PlayList : public AddonClass
     {
-      int iPlayList;
+      KODI::PLAYLIST::Type m_type;
       const KODI::PLAYLIST::CPlayList* pPlayList;
 
     public:
@@ -77,7 +72,11 @@ namespace XBMCAddon
       ///
       getPlayListId();
 #else
-      inline int getPlayListId() const { return iPlayList; }
+      int getPlayListId() const;
+#endif
+
+#ifndef SWIG
+      KODI::PLAYLIST::Type GetType() const { return m_type; }
 #endif
 
 #ifdef DOXYGEN_SHOULD_USE_THIS

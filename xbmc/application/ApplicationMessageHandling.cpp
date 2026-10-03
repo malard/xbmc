@@ -25,7 +25,6 @@
 #include "application/ApplicationSkinHandling.h"
 #include "application/ApplicationStackHelper.h"
 #include "application/ApplicationVolumeHandling.h"
-#include "application/PlaybackAnnouncer.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/DataCacheCore.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -553,16 +552,15 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
     case GUI_MSG_PLAYBACK_STARTED:
     {
       m_app.m_ServiceManager->GetPlatform().OnPlayingVideoChanged(appPlayer->IsPlayingVideo());
-      // what started has already been recorded and published
-      const std::shared_ptr<CFileItem> started =
-          m_app.GetComponent<CPlaybackAnnouncer>()->GetStartedItem();
       m_app.ResetPlayerEvent();
 
       pvrManager.OnPlaybackStarted(m_app.CurrentFileItem());
 
-      if (!started)
+      if (!message.GetItem())
         return true;
 
+      // the playlists have already recorded what started
+      const std::shared_ptr<CFileItem> started = CServiceBroker::GetPlayLists()->GetCurrentItem();
       CServiceBroker::GetGUI()->GetInfoManager().SetCurrentItem(*started);
 
 #ifdef HAS_PYTHON

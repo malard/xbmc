@@ -148,14 +148,8 @@ bool Fail(int error, const std::string& message)
 bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
 {
   PLAYLIST::CSmartPlaylist rules;
-  std::string rulesPath = xspPath;
-  if (rulesPath.empty())
-  {
-    const std::shared_ptr<CProfileManager> profileManager =
-        CServiceBroker::GetSettingsComponent()->GetProfileManager();
-    rulesPath = profileManager->GetUserDataItem(named == PLAYLIST::Video ? "PartyMode-Video.xsp"
-                                                                         : "PartyMode.xsp");
-  }
+  const std::string rulesPath =
+      xspPath.empty() ? PARTYMODE::RulesPath(named.value_or(PLAYLIST::Audio)) : xspPath;
 
   const bool rulesLoaded = rules.Load(rulesPath);
   const PLAYLIST::Type playList =
@@ -230,6 +224,14 @@ void Stop()
   CServiceBroker::GetPlayLists()->DropFeed();
 }
 
+bool Toggle(PLAYLIST::Type playList)
+{
+  if (!IsRunning(playList))
+    return Start(playList);
+  Stop();
+  return true;
+}
+
 bool IsRunning()
 {
   return CServiceBroker::GetPlayLists()->GetFedType().has_value();
@@ -238,6 +240,17 @@ bool IsRunning()
 bool IsRunning(PLAYLIST::Type playList)
 {
   return CServiceBroker::GetPlayLists()->GetFedType() == playList;
+}
+
+std::string RulesPath(PLAYLIST::Type playList)
+{
+  return CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem(
+      playList == PLAYLIST::Video ? "PartyMode-Video.xsp" : "PartyMode.xsp");
+}
+
+bool IsRulesPath(const std::string& path)
+{
+  return path == RulesPath(PLAYLIST::Audio) || path == RulesPath(PLAYLIST::Video);
 }
 
 std::vector<std::shared_ptr<CFileItem>> InMatchOrder(const std::vector<Match>& matches,

@@ -13,6 +13,7 @@
 #include "GUIDialogContextMenu.h"
 #include "GUIDialogSelect.h"
 #include "GUIDialogSmartPlaylistRule.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "filesystem/File.h"
@@ -20,7 +21,7 @@
 #include "guilib/GUIKeyboardFactory.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
-#include "profiles/ProfileManager.h"
+#include "playlists/PlayListTypes.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
@@ -154,9 +155,9 @@ bool CGUIDialogSmartPlaylistEditor::OnMessage(CGUIMessage& message)
       if (!startupList.empty())
       {
         int party = 0;
-        if (URIUtils::PathEquals(startupList, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode.xsp")))
+        if (URIUtils::PathEquals(startupList, PARTYMODE::RulesPath(PLAYLIST::Audio)))
           party = 1;
-        else if (URIUtils::PathEquals(startupList, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode-Video.xsp")))
+        else if (URIUtils::PathEquals(startupList, PARTYMODE::RulesPath(PLAYLIST::Video)))
           party = 2;
 
         if ((party && !XFILE::CFile::Exists(startupList)) ||
@@ -716,9 +717,9 @@ bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string &path, const 
   if (!editor) return false;
 
   editor->m_mode = type;
-  if (URIUtils::PathEquals(path, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode.xsp")))
+  if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Audio)))
     editor->m_mode = "partymusic";
-  if (URIUtils::PathEquals(path, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode-Video.xsp")))
+  if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Video)))
     editor->m_mode = "partyvideo";
 
   PLAYLIST::CSmartPlaylist playlist;

@@ -145,15 +145,6 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_musicNeedsUpdate = 0;
   }
 
-  // Apply the loaded music playlist repeat and shuffle
-  const auto playLists = CServiceBroker::GetPlayLists();
-  playLists->SetRepeat(PLAYLIST::Audio,
-                       m_musicPlaylistRepeat ? CApplicationPlayLists::Repeat::All
-                                             : CApplicationPlayLists::Repeat::Off,
-                       CApplicationPlayLists::Persist::No);
-  playLists->SetShuffle(PLAYLIST::Audio, m_musicPlaylistShuffle,
-                        CApplicationPlayLists::Persist::No);
-
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
   if (pElement)
@@ -178,15 +169,29 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_videoNeedsUpdate = 0;
   }
 
-  // Apply the loaded video playlist repeat and shuffle
-  playLists->SetRepeat(PLAYLIST::Video,
-                       m_videoPlaylistRepeat ? CApplicationPlayLists::Repeat::All
-                                             : CApplicationPlayLists::Repeat::Off,
-                       CApplicationPlayLists::Persist::No);
-  playLists->SetShuffle(PLAYLIST::Video, m_videoPlaylistShuffle,
-                        CApplicationPlayLists::Persist::No);
+  CServiceBroker::GetPlayLists()->RestoreSavedPlayOrder();
 
   return true;
+}
+
+bool CMediaSettings::GetPlayListRepeat(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat;
+}
+
+void CMediaSettings::SetPlayListRepeat(PLAYLIST::Type type, bool repeats)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat) = repeats;
+}
+
+bool CMediaSettings::GetPlayListShuffled(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle;
+}
+
+void CMediaSettings::SetPlayListShuffled(PLAYLIST::Type type, bool shuffled)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle) = shuffled;
 }
 
 bool CMediaSettings::Save(TiXmlNode *settings) const

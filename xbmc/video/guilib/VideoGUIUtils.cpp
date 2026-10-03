@@ -12,6 +12,7 @@
 #include "FileItemList.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "application/ApplicationPlayLists.h"
@@ -25,12 +26,10 @@
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
-#include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
 #include "settings/Settings.h"
-#include "settings/SettingsComponent.h"
 #include "threads/IRunnable.h"
 #include "utils/FileUtils.h"
 #include "utils/ItemProperties.h"
@@ -435,9 +434,7 @@ bool IsNonExistingUserPartyModePlaylist(const CFileItem& item)
     return false;
 
   const std::string& path{item.GetPath()};
-  const auto profileManager{CServiceBroker::GetSettingsComponent()->GetProfileManager()};
-  return ((profileManager->GetUserDataItem("PartyMode-Video.xsp") == path) &&
-          !CFileUtils::Exists(path));
+  return path == PARTYMODE::RulesPath(PLAYLIST::Video) && !CFileUtils::Exists(path);
 }
 
 bool IsEmptyVideoItem(const CFileItem& item)

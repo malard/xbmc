@@ -16,24 +16,24 @@ class CURL;
 
 namespace KODI::PLAYLIST
 {
-  class CPlayList;
+class CPlayListFile;
 
-  class CPlayListFactory
-  {
-  public:
-    static CPlayList* Create(const CURL& url);
-    static CPlayList* Create(const std::string& filename);
-    static CPlayList* Create(const CFileItem& item);
+class CPlayListFactory
+{
+public:
+  static CPlayListFile* Create(const CURL& url);
+  static CPlayListFile* Create(const std::string& filename);
+  static CPlayListFile* Create(const CFileItem& item);
 
-    /*!
-     * \return The playlist file at the item's path, read, or nullptr if it is not a playlist Kodi
-     * can read or reading it failed.
-     */
-    static std::unique_ptr<CPlayList> Load(const CFileItem& item);
-    static std::unique_ptr<CPlayList> Load(const std::string& filename);
+  /*!
+   * \return The playlist file at the item's path, read, or nullptr if it is not a playlist Kodi
+   * can read or reading it failed.
+   */
+  static std::unique_ptr<CPlayListFile> Load(const CFileItem& item);
+  static std::unique_ptr<CPlayListFile> Load(const std::string& filename);
 
-    static bool IsPlaylist(const CURL& url);
-    static bool IsPlaylist(const std::string& filename);
-    static bool IsPlaylist(const CFileItem& item);
-  };
+  static bool IsPlaylist(const CURL& url);
+  static bool IsPlaylist(const std::string& filename);
+  static bool IsPlaylist(const CFileItem& item);
+};
 }

@@ -10,6 +10,7 @@
 #include "GUIUserMessages.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/PlaybackAnnouncer.h"
+#include "application/test/PlayListsTestHelpers.h"
 #include "guilib/GUIMessage.h"
 #include "playlists/PlayList.h"
 #include "utils/Variant.h"
@@ -21,39 +22,11 @@
 #include <gtest/gtest.h>
 
 using namespace KODI;
+using namespace KODI::APPLICATION::TEST;
 using namespace KODI::PLAYLIST;
 
 namespace
 {
-class CNoPlayback : public CApplicationPlayLists::IPlayback
-{
-public:
-  bool Open(const CFileItem& item,
-            const CApplicationPlayLists::PlayOptions& options,
-            KODI::APPLICATION::StartsRun startsRun) override
-  {
-    return true;
-  }
-  bool LoadLibraryTag(CFileItem& item) const override { return false; }
-  Queued QueueNext(const CFileItem& item) override { return Queued::Refused; }
-  void NothingToQueue() override {}
-  void Stop() override {}
-  void Close() override {}
-  bool IsPlaying() const override { return false; }
-  bool IsPlayingVideo() const override { return false; }
-  bool IsPlayingAudio() const override { return false; }
-  std::string GetName() const override { return {}; }
-  bool RestartsOnPrevious() const override { return false; }
-};
-
-class CTestPlayLists : public CApplicationPlayLists
-{
-public:
-  CTestPlayLists() : CApplicationPlayLists(std::make_unique<CNoPlayback>()) {}
-
-  using CApplicationPlayLists::EditPlayList;
-};
-
 struct Published
 {
   ANNOUNCEMENT::AnnouncementFlag flag;
@@ -119,11 +92,10 @@ TEST_F(TestPlaybackAnnouncer, WhatStartedIsACopyOfWhatThePlayerReports)
   const auto reported = std::make_shared<CFileItem>("/video/film.mkv", false);
   Send(GUI_MSG_PLAYBACK_STARTED, reported);
 
-  const auto item = m_announcer.GetStartedItem();
+  const auto item = m_playLists->GetCurrentItem();
   ASSERT_NE(nullptr, item);
   EXPECT_NE(reported, item);
   EXPECT_EQ("/video/film.mkv", item->GetPath());
-  EXPECT_EQ(m_playLists->GetCurrentItem(), item) << "one record, not a copy";
 }
 
 TEST_F(TestPlaybackAnnouncer, WhatStartedIsPublishedWithWhatItClaimsAndForgottenOnStop)
@@ -146,14 +118,12 @@ TEST_F(TestPlaybackAnnouncer, WhatStartedIsPublishedWithWhatItClaimsAndForgotten
   EXPECT_FALSE(stop->data["end"].asBoolean());
   ASSERT_NE(nullptr, stop->item);
   EXPECT_EQ("/music/one.flac", stop->item->GetPath());
-  EXPECT_EQ(nullptr, m_announcer.GetStartedItem());
 }
 
 TEST_F(TestPlaybackAnnouncer, NothingIsPublishedWhenThePlayerReportsNoItem)
 {
   Send(GUI_MSG_PLAYBACK_STARTED);
   EXPECT_EQ(nullptr, Find("OnPlay"));
-  EXPECT_EQ(nullptr, m_announcer.GetStartedItem());
 }
 
 TEST_F(TestPlaybackAnnouncer, AListChangeNamesItsPlayList)

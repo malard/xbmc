@@ -11,28 +11,23 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "PlayListFactory.h"
+#include "PlayListFile.h"
 #include "PlayListShuffle.h"
-#include "filesystem/File.h"
 #include "music/MusicFileItemClassify.h"
-#include "music/tags/MusicInfoTag.h"
 #include "pvr/PVRItem.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
-#include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/VideoFileItemClassify.h"
 
 #include <algorithm>
 #include <deque>
-#include <iostream>
 #include <mutex>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace MUSIC_INFO;
-using namespace XFILE;
 
 namespace KODI::PLAYLIST
 {
@@ -106,10 +101,6 @@ PlayListEntry CPlayList::MakeEntryLocked(const std::shared_ptr<CFileItem>& item)
   // set 'IsPlayable' property - needed for properly handling plugin:// URLs
   owned->SetProperty(ITEM::PROPERTY::IS_PLAYABLE, true);
 
-  // set 'BasePath' property - needed for properly handling browse for subtitles
-  if (!owned->HasProperty("BasePath"))
-    owned->SetProperty("BasePath", m_strBasePath);
-
   PlayListEntry entry;
   entry.item = std::move(owned);
   entry.holds = HoldsOf(*entry.item);
@@ -167,11 +158,6 @@ EntryId CPlayList::Add(const std::shared_ptr<CFileItem>& item)
   return Insert(item, -1);
 }
 
-void CPlayList::Add(const CPlayList& playlist)
-{
-  Insert(playlist, -1);
-}
-
 void CPlayList::Add(const CFileItemList& items)
 {
   Insert(items, -1);
@@ -189,13 +175,6 @@ void CPlayList::AddFromFeed(const std::vector<std::shared_ptr<CFileItem>>& items
       InsertLocked(item, -1, changes);
   }
   Notify(changes);
-}
-
-void CPlayList::Insert(const CPlayList& playlist, int iPosition /* = -1 */)
-{
-  CFileItemList items;
-  playlist.GetItems(items);
-  Insert(items, iPosition);
 }
 
 void CPlayList::Insert(const CFileItemList& items, int iPosition /* = -1 */)
@@ -242,7 +221,6 @@ void CPlayList::ClearLocked(Changes& changes)
   m_current = NO_ENTRY;
   m_requests.clear();
   m_shuffle->Reset({}, NO_ENTRY);
-  m_strPlayListName.clear();
   m_sourcePath.clear();
   if (std::exchange(m_feed, nullptr))
     changes.push_back({PlayListChange::Type::Feed, NO_ENTRY, -1, nullptr});
@@ -743,12 +721,6 @@ bool CPlayList::IsShuffled() const
   return !m_shuffle->IsListOrder();
 }
 
-std::string CPlayList::GetName() const
-{
-  std::unique_lock lock(m_critSection);
-  return m_strPlayListName;
-}
-
 void CPlayList::SetSourcePath(const std::string& path)
 {
   std::unique_lock lock(m_critSection);
@@ -905,38 +877,6 @@ int CPlayList::GetPlayable() const
   return static_cast<int>(std::ranges::count(m_entries, true, &PlayListEntry::playable));
 }
 
-bool CPlayList::Load(const std::string& strFileName)
-{
-  Clear();
-  m_strBasePath = URIUtils::GetDirectory(strFileName);
-
-  CFileStream file;
-  if (!file.Open(strFileName))
-    return false;
-
-  if (file.GetLength() > 1024*1024)
-  {
-    CLog::Log(LOGWARNING, "{} - File is larger than 1 MB, most likely not a playlist",
-              __FUNCTION__);
-    return false;
-  }
-
-  return LoadData(file);
-}
-
-bool CPlayList::LoadData(std::istream &stream)
-{
-  // try to read as a string
-  std::ostringstream ostr;
-  ostr << stream.rdbuf();
-  return LoadData(ostr.str());
-}
-
-bool CPlayList::LoadData(const std::string& strData)
-{
-  return false;
-}
-
 EntryId CPlayList::Expand(EntryId expanded)
 {
   const std::shared_ptr<CFileItem> item = GetItem(expanded);
@@ -946,7 +886,7 @@ EntryId CPlayList::Expand(EntryId expanded)
 
   // the factory fills in a stream's mime type, so it is given a copy
   const CFileItem probe(*item);
-  std::unique_ptr<CPlayList> playlist(CPlayListFactory::Create(probe));
+  std::unique_ptr<CPlayListFile> playlist(CPlayListFactory::Create(probe));
   if (playlist == nullptr)
     return NO_ENTRY;
 
@@ -955,15 +895,12 @@ EntryId CPlayList::Expand(EntryId expanded)
   if (!playlist->Load(path))
     return NO_ENTRY;
 
-  for (const auto& entry : playlist->GetEntries())
+  std::vector<std::shared_ptr<CFileItem>> expansion;
+  for (const std::shared_ptr<CFileItem>& loaded : playlist->GetItems())
   {
-    const std::shared_ptr<CFileItem>& loaded = entry.item;
     // an entry pointing back at the playlist would expand for ever
     if (StringUtils::EqualsNoCase(loaded->GetPath(), path))
-    {
-      playlist->Remove(playlist->GetPosition(entry.id));
       continue;
-    }
 
     // What plays is still the entry that was expanded, such as a radio station's .pls, so each
     // stream keeps that entry's path as its identity and plays from its own.
@@ -974,10 +911,11 @@ EntryId CPlayList::Expand(EntryId expanded)
     if (!loaded->HasProperty(ITEM::PROPERTY::ITEM_START))
       loaded->SetStartOffset(item->GetStartOffset());
     if (!loaded->HasProperty("BasePath"))
-      loaded->SetProperty("BasePath", playlist->m_strBasePath);
+      loaded->SetProperty("BasePath", playlist->GetBasePath());
+    expansion.push_back(loaded);
   }
 
-  if (playlist->IsEmpty())
+  if (expansion.empty())
     return NO_ENTRY;
 
   Changes changes;
@@ -993,9 +931,9 @@ EntryId CPlayList::Expand(EntryId expanded)
     RemoveLocked(position, changes);
 
     int insertAt = position;
-    for (const auto& entry : playlist->m_entries)
+    for (const auto& loaded : expansion)
     {
-      const EntryId added = InsertLocked(entry.item, insertAt++, changes);
+      const EntryId added = InsertLocked(loaded, insertAt++, changes);
       if (first == NO_ENTRY)
         first = added;
     }
@@ -1017,14 +955,6 @@ void CPlayList::UpdateItem(const CFileItem& item)
     replacement->SetPath(entry.item->GetPath());
     entry.item = std::move(replacement);
   }
-}
-
-std::string CPlayList::ResolveURL(const std::shared_ptr<CFileItem>& item)
-{
-  if (MUSIC::IsMusicDb(*item) && item->HasMusicInfoTag())
-    return item->GetMusicInfoTag()->GetURL();
-  else
-    return item->GetDynPath();
 }
 
 } // namespace KODI::PLAYLIST

@@ -122,12 +122,14 @@ public:
   void OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg) override;
 
   /*!
-   * \brief Play the item on the named playlist, or with none on the one it chooses: its own kind,
-   * or what a smart playlist or a playlist file holds.
+   * \brief Play the item, whatever it is: an add-on item once it resolves, a PVR item through PVR
+   * playback, and anything else on the named playlist, or with none on the one it chooses: its own
+   * kind, or what a smart playlist or a playlist file holds.
    * \param player The player to use; empty for the default.
    * \param type The playlist to play on; none lets the item choose.
    * \param position Where to start in what a smart playlist or playlist file holds.
-   * \return false if nothing could be played, or the user cancelled reading a playlist.
+   * \return false if nothing could be played, or the user cancelled reading a playlist. An add-on
+   * item that does not resolve is reported as a failed play.
    */
   bool PlayMedia(const CFileItem& item,
                  const std::string& player = "",

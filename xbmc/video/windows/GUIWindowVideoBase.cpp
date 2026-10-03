@@ -1128,9 +1128,7 @@ bool CGUIWindowVideoBase::GetDirectory(const std::string &strDirectory, CFileIte
   if ((items.GetPath() == CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)) &&
       !items.Contains(ITEM::PLACEHOLDER::NEW_PLAYLIST))
   {
-    const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
-
-    CFileItemPtr newPlaylist(new CFileItem(profileManager->GetUserDataItem("PartyMode-Video.xsp"),false));
+    CFileItemPtr newPlaylist(new CFileItem(PARTYMODE::RulesPath(PLAYLIST::Video), false));
     newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16035));
     newPlaylist->SetLabelPreformatted(true);
     newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");

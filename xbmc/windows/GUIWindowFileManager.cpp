@@ -16,7 +16,6 @@
 #include "Util.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
-#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -624,17 +623,11 @@ void CGUIWindowFileManager::OnClick(int iList, int iItem)
 // in filemanager view.
 void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
 {
-  // start playlists from file manager
-  if (PLAYLIST::IsPlayList(*pItem))
+  const bool isPlayList = PLAYLIST::IsPlayList(*pItem);
+  if (isPlayList || MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem) || pItem->IsGame())
   {
-    if (!g_application.PlayMedia(*pItem))
+    if (!g_application.PlayMedia(*pItem, player) && isPlayList)
       HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-    return;
-  }
-  if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem) || pItem->IsGame())
-  {
-    CServiceBroker::GetPlayLists()->PlayItem(std::nullopt, std::make_shared<CFileItem>(*pItem),
-                                             {.player = player});
     return;
   }
 #ifdef HAS_PYTHON

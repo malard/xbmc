@@ -18,40 +18,35 @@
 
 using namespace KODI;
 
-namespace
-{
-PLAYLIST::Type TypeOf(int playList)
-{
-  return *XBMCAddon::xbmc::PlayListFromId(playList);
-}
-} // namespace
-
 namespace XBMCAddon
 {
   namespace xbmc
   {
-  std::optional<PLAYLIST::Type> PlayListFromId(int playList)
+  namespace
+  {
+  PLAYLIST::Type TypeFromId(int playList)
   {
     if (playList == PLAYLIST_MUSIC_ID)
       return PLAYLIST::Audio;
     if (playList == PLAYLIST_VIDEO_ID)
       return PLAYLIST::Video;
-    return std::nullopt;
+    throw PlayListException("PlayList does not exist");
+  }
+  } // namespace
+
+  // a Python playlist wraps the Video or Audio playlist rather than owning one
+  PlayList::PlayList(int playList)
+    : m_type(TypeFromId(playList)),
+      pPlayList(&CServiceBroker::GetPlayLists()->GetPlayList(m_type))
+  {
   }
 
-    PlayList::PlayList(int playList) :
-      iPlayList(playList), pPlayList(NULL)
-    {
-      const std::optional<PLAYLIST::Type> type = PlayListFromId(playList);
-      if (!type)
-        throw PlayListException("PlayList does not exist");
-
-      // a Python playlist wraps the Video or Audio playlist rather than owning one
-      pPlayList = &CServiceBroker::GetPlayLists()->GetPlayList(*type);
-      iPlayList = playList;
-    }
-
     PlayList::~PlayList() = default;
+
+    int PlayList::getPlayListId() const
+    {
+      return m_type == PLAYLIST::Audio ? PLAYLIST_MUSIC_ID : PLAYLIST_VIDEO_ID;
+    }
 
     void PlayList::add(const String& url, XBMCAddon::xbmcgui::ListItem* listitem, int index)
     {
@@ -73,7 +68,7 @@ namespace XBMCAddon
         items.Add(item);
       }
 
-      CServiceBroker::GetPlayLists()->Insert(TypeOf(iPlayList), items, index);
+      CServiceBroker::GetPlayLists()->Insert(m_type, items, index);
     }
 
     bool PlayList::load(const char* cFileName)
@@ -94,7 +89,7 @@ namespace XBMCAddon
           if (entry->GetLabel().empty())
             entry->SetLabel(URIUtils::GetFileName(entry->GetPath()));
         }
-        CServiceBroker::GetPlayLists()->Replace(TypeOf(iPlayList), items);
+        CServiceBroker::GetPlayLists()->Replace(m_type, items);
       }
       else
         // filename is not a valid playlist
@@ -105,12 +100,12 @@ namespace XBMCAddon
 
     void PlayList::remove(const char* filename)
     {
-      CServiceBroker::GetPlayLists()->Remove(TypeOf(iPlayList), std::string{filename});
+      CServiceBroker::GetPlayLists()->Remove(m_type, std::string{filename});
     }
 
     void PlayList::clear()
     {
-      CServiceBroker::GetPlayLists()->Clear(TypeOf(iPlayList));
+      CServiceBroker::GetPlayLists()->Clear(m_type);
     }
 
     int PlayList::size()
@@ -120,14 +115,12 @@ namespace XBMCAddon
 
     void PlayList::shuffle()
     {
-      CServiceBroker::GetPlayLists()->SetShuffle(TypeOf(iPlayList), true,
-                                                 CApplicationPlayLists::Persist::No);
+      CServiceBroker::GetPlayLists()->SetShuffle(m_type, true, CApplicationPlayLists::Persist::No);
     }
 
     void PlayList::unshuffle()
     {
-      CServiceBroker::GetPlayLists()->SetShuffle(TypeOf(iPlayList), false,
-                                                 CApplicationPlayLists::Persist::No);
+      CServiceBroker::GetPlayLists()->SetShuffle(m_type, false, CApplicationPlayLists::Persist::No);
     }
 
     int PlayList::getposition()

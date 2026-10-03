@@ -438,7 +438,7 @@ void CGUIWindowMusicBase::GetContextButtons(int itemNumber, CContextButtons &but
     // Check for the partymode playlist item.
     // When "PartyMode.xsp" not exist, only context menu button is edit
     if (PLAYLIST::IsSmartPlayList(*item) &&
-        (item->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp")) &&
+        item->GetPath() == PARTYMODE::RulesPath(PLAYLIST::Audio) &&
         !CFileUtils::Exists(item->GetPath()))
     {
       buttons.Add(CONTEXT_BUTTON_EDIT_SMART_PLAYLIST, 586);
@@ -619,14 +619,10 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
 #endif
 
   // Check for the partymode playlist item, do nothing when "PartyMode.xsp" not exist
-  if (PLAYLIST::IsSmartPlayList(*pItem))
-  {
-    const std::shared_ptr<CProfileManager> profileManager =
-        CServiceBroker::GetSettingsComponent()->GetProfileManager();
-    if ((pItem->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp")) &&
-        !CFileUtils::Exists(pItem->GetPath()))
-      return;
-  }
+  if (PLAYLIST::IsSmartPlayList(*pItem) &&
+      pItem->GetPath() == PARTYMODE::RulesPath(PLAYLIST::Audio) &&
+      !CFileUtils::Exists(pItem->GetPath()))
+    return;
 
   // if its a folder, build a playlist
   if (pItem->IsFolder() && !pItem->IsPlugin())
@@ -800,9 +796,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
         (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC)) &&
         !items.Contains(ITEM::PLACEHOLDER::NEW_PLAYLIST))
     {
-      const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
-
-      CFileItemPtr newPlaylist(new CFileItem(profileManager->GetUserDataItem("PartyMode.xsp"),false));
+      CFileItemPtr newPlaylist(new CFileItem(PARTYMODE::RulesPath(PLAYLIST::Audio), false));
       newPlaylist->SetLabel(localizeStrings.Get(16035));
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");

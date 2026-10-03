@@ -10,7 +10,7 @@
 
 #include <memory>
 
-namespace JSONRPC
+namespace KODI::MESSAGING
 {
 /*!
  * \brief Hand a payload to the messenger. The message's handler frees it once it has run,
@@ -31,4 +31,4 @@ void* LendToMessenger(T& payload)
 {
   return &payload;
 }
-} // namespace JSONRPC
+} // namespace KODI::MESSAGING

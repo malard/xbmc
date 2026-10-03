@@ -300,10 +300,6 @@ public:
                  const std::string& sourcePath = "");
 
   /*!
-   * \brief Play a folder in place: replace the playlist's contents with its items, and play from
-   * the chosen one, which is one of them.
-   */
-  /*!
    * \brief Play items expanded from a selection, from the chosen one; a chosen item that did
    * not become one of them plays on its own.
    * \param start The chosen item's position in items, or -1 when it is not among them.
@@ -314,12 +310,6 @@ public:
                     int start,
                     const std::shared_ptr<CFileItem>& chosen,
                     const PlayOptions& options);
-
-  bool PlayFolder(KODI::PLAYLIST::Type type,
-                  const CFileItemList& items,
-                  const std::shared_ptr<const CFileItem>& start,
-                  const PlayOptions& options,
-                  const std::string& sourcePath);
 
   /*!
    * \brief Play one item on the named playlist or, with none named, the one PLAYLIST::TypeFor()
@@ -461,6 +451,9 @@ public:
    */
   void CycleRepeat(KODI::PLAYLIST::Type type, Persist persist);
 
+  //! Put back each playlist's saved shuffle and repeat, once the settings have loaded them.
+  void RestoreSavedPlayOrder();
+
   /*!
    * \brief Replace a playlist's contents with what a feed places, and play it. One feed plays at a
    * time, so the other playlist's is dropped.
@@ -572,7 +565,7 @@ private:
    */
   bool ReportRepeat(KODI::PLAYLIST::Type type);
   void ReportPlayListsChanged() const;
-  //! Put back the saved shuffle and repeat, as when a feed goes.
+  //! Put back the playlist's saved shuffle and repeat, as when a feed goes.
   void RestoreSavedPlayOrder(KODI::PLAYLIST::Type type);
 
   /*!

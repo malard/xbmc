@@ -28,8 +28,8 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/json-rpc/MessengerPayload.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "music/tags/MusicInfoTag.h"
 #include "network/Network.h"
 #include "network/Zeroconf.h"
@@ -171,8 +171,8 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
     item->SetArt(KODI::ART::TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
     KODI::ART::FillInDefaultIcon(*item);
 
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,
-                                               JSONRPC::TransferToMessenger(std::move(item)));
+    CServiceBroker::GetAppMessenger()->PostMsg(
+        TMSG_UPDATE_PLAYER_ITEM, -1, -1, KODI::MESSAGING::TransferToMessenger(std::move(item)));
   }
 }
 

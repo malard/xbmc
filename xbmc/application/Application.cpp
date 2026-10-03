@@ -17,6 +17,7 @@
 #include "GUILargeTextureManager.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
+#include "HDRStatus.h"
 #include "SectionLoader.h"
 #include "SeekHandler.h"
 #include "ServiceBroker.h"
@@ -182,6 +183,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 
 #ifdef TARGET_WASM
 #include <emscripten.h>
@@ -1046,6 +1048,60 @@ void ShowRatingChanged(const std::shared_ptr<CFileItem>& playing)
   CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
   CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
 }
+
+//! The HDR toggle and tone map cycling, which depend on whether video is playing
+bool OnVideoDisplayAction(const CAction& action, CApplicationPlayer& player)
+{
+  if (action.GetID() != ACTION_HDR_TOGGLE && action.GetID() != ACTION_CYCLE_TONEMAP_METHOD)
+    return false;
+
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
+
+  if (action.GetID() == ACTION_HDR_TOGGLE)
+  {
+    // Only enables manual HDR toggle if no video is playing or auto HDR switch is disabled
+    if (player.IsPlayingVideo() && winSystem->IsHDRDisplaySettingEnabled())
+      return true;
+
+    const HDR_STATUS hdrStatus = winSystem->ToggleHDR();
+    if (hdrStatus == HDR_STATUS::HDR_OFF || hdrStatus == HDR_STATUS::HDR_ON)
+      CGUIDialogKaiToast::QueueNotification(
+          CGUIDialogKaiToast::Info, localizeStrings.Get(34220),
+          localizeStrings.Get(hdrStatus == HDR_STATUS::HDR_OFF ? 34221 : 34222));
+    return true;
+  }
+
+  // Only enables tone mapping switch if display is not HDR capable or HDR is not enabled
+  if (winSystem->IsHDRDisplaySettingEnabled() || !player.IsPlayingVideo())
+    return true;
+
+  CVideoSettings vs = player.GetVideoSettings();
+  vs.m_ToneMapMethod = static_cast<ETONEMAPMETHOD>(static_cast<int>(vs.m_ToneMapMethod) + 1);
+  if (vs.m_ToneMapMethod >= VS_TONEMAPMETHOD_MAX)
+    vs.m_ToneMapMethod = static_cast<ETONEMAPMETHOD>(static_cast<int>(VS_TONEMAPMETHOD_OFF) + 1);
+
+  player.SetVideoSettings(vs);
+
+  int code = 0;
+  switch (vs.m_ToneMapMethod)
+  {
+    case VS_TONEMAPMETHOD_REINHARD:
+      code = 36555;
+      break;
+    case VS_TONEMAPMETHOD_ACES:
+      code = 36557;
+      break;
+    case VS_TONEMAPMETHOD_HABLE:
+      code = 36558;
+      break;
+    default:
+      throw std::logic_error("Tonemapping method not found. Did you forget to add a mapping?");
+  }
+  CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, localizeStrings.Get(34224),
+                                        localizeStrings.Get(code), 1000, false, 500);
+  return true;
+}
 } // namespace
 
 bool CApplication::OnAction(const CAction &action)
@@ -1123,7 +1179,7 @@ bool CApplication::OnAction(const CAction &action)
     CScreenShot::TakeScreenshot();
     return true;
   }
-  if (appPlayer->OnVideoDisplayAction(action))
+  if (OnVideoDisplayAction(action, *appPlayer))
     return true;
   // built in functions : execute the built-in
   if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
@@ -1850,14 +1906,18 @@ bool CApplication::PlayMedia(const CFileItem& item,
                              std::optional<PLAYLIST::Type> type /* = std::nullopt */,
                              std::optional<int> position /* = std::nullopt */)
 {
+  const auto playLists = CServiceBroker::GetPlayLists();
   const std::shared_ptr<CFileItem> playable = PlayableItem(item);
   if (!playable)
+  {
+    playLists->ReportFailed(std::make_shared<CFileItem>(item),
+                            CApplicationPlayLists::FailReason::Unresolved);
     return false;
+  }
 
   if (playable->IsPVR())
     return CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().PlayMedia(*playable);
 
-  const auto playLists = CServiceBroker::GetPlayLists();
   if (!PLAYLIST::HoldsEntries(*playable))
     return playLists->PlayItem(type, playable, {.player = player});
 
@@ -2095,7 +2155,7 @@ bool CApplication::ExecuteXBMCAction(std::string actionStr,
 #endif
         if (MUSIC::IsAudio(item) || VIDEO::IsVideo(item) || item.IsGame())
     { // an audio or video file
-      CServiceBroker::GetPlayLists()->PlayItem(std::nullopt, std::make_shared<CFileItem>(item));
+      PlayMedia(item);
     }
     else
     {

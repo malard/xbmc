@@ -469,19 +469,6 @@ bool CApplicationPlayLists::PlayExpanded(Type type,
   return PlayItems(type, items, start < 0 ? std::nullopt : std::optional<int>(start), options);
 }
 
-bool CApplicationPlayLists::PlayFolder(Type type,
-                                       const CFileItemList& items,
-                                       const std::shared_ptr<const CFileItem>& start,
-                                       const PlayOptions& options,
-                                       const std::string& sourcePath)
-{
-  std::optional<int> position;
-  for (int i = 0; i < items.Size(); ++i)
-    if (items[i] == start)
-      position = i;
-  return PlayItems(type, items, position, options, sourcePath);
-}
-
 namespace
 {
 class CEntryExpansion
@@ -1037,10 +1024,7 @@ void CApplicationPlayLists::SetShuffle(Type type, bool shuffle, Persist persist)
 
   if (persist == Persist::No)
     return;
-  if (type == PLAYLIST::Audio)
-    CMediaSettings::GetInstance().SetMusicPlaylistShuffled(IsShuffled(type));
-  else
-    CMediaSettings::GetInstance().SetVideoPlaylistShuffled(IsShuffled(type));
+  CMediaSettings::GetInstance().SetPlayListShuffled(type, IsShuffled(type));
   CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 }
 
@@ -1115,12 +1099,7 @@ void CApplicationPlayLists::SetRepeat(Type type, Repeat repeat, Persist persist)
 
   if (persist == Persist::No)
     return;
-  // the saved setting only records whether the playlist repeats all
-  const bool repeatAll = GetRepeat(type) == Repeat::All;
-  if (type == PLAYLIST::Audio)
-    CMediaSettings::GetInstance().SetMusicPlaylistRepeat(repeatAll);
-  else
-    CMediaSettings::GetInstance().SetVideoPlaylistRepeat(repeatAll);
+  CMediaSettings::GetInstance().SetPlayListRepeat(type, GetRepeat(type) == Repeat::All);
   CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 }
 
@@ -1134,14 +1113,17 @@ CApplicationPlayLists::Repeat CApplicationPlayLists::GetRepeat(Type type) const
   return Repeat::Off;
 }
 
+void CApplicationPlayLists::RestoreSavedPlayOrder()
+{
+  RestoreSavedPlayOrder(PLAYLIST::Audio);
+  RestoreSavedPlayOrder(PLAYLIST::Video);
+}
+
 void CApplicationPlayLists::RestoreSavedPlayOrder(Type type)
 {
   const CMediaSettings& saved = CMediaSettings::GetInstance();
-  const bool isAudio = type == PLAYLIST::Audio;
-  const bool repeats = isAudio ? saved.GetMusicPlaylistRepeat() : saved.GetVideoPlaylistRepeat();
-  SetRepeat(type, repeats ? Repeat::All : Repeat::Off, Persist::No);
-  SetShuffle(type, isAudio ? saved.GetMusicPlaylistShuffled() : saved.GetVideoPlaylistShuffled(),
-             Persist::No);
+  SetRepeat(type, saved.GetPlayListRepeat(type) ? Repeat::All : Repeat::Off, Persist::No);
+  SetShuffle(type, saved.GetPlayListShuffled(type), Persist::No);
 }
 
 bool CApplicationPlayLists::PlayFeed(Type type, std::shared_ptr<IFeed> feed, Repeat repeat)
@@ -1283,4 +1265,3 @@ bool CApplicationPlayLists::IsSlideShowRunning() const
   std::unique_lock lock(m_critSection);
   return m_slideShowRunning;
 }
-

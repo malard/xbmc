@@ -25,7 +25,6 @@
 #include "filesystem/SourcesDirectory.h"
 #include "media/MediaSection.h"
 #include "messaging/ApplicationMessenger.h"
-#include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #if defined(TARGET_ANDROID)
 #include "platform/android/activity/XBMCApp.h"
@@ -1116,8 +1115,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     }
 
     // check for the partymode playlist items - they may not exist yet
-    if ((pItem->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp")) ||
-        (pItem->GetPath() == profileManager->GetUserDataItem("PartyMode-Video.xsp")))
+    if (PARTYMODE::IsRulesPath(pItem->GetPath()))
     {
       // party mode playlist item - if it doesn't exist, prompt for user to define it
       if (!CFileUtils::Exists(pItem->GetPath()))
@@ -1537,17 +1535,7 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 
   CLog::Log(LOGDEBUG, "{} {}", __FUNCTION__, CURL::GetRedacted(pItem->GetPath()));
 
-  const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType();
-  bool bResult = false;
-  if (NETWORK::IsInternetStream(*pItem) || PLAYLIST::IsPlayList(*pItem))
-  {
-    bResult = g_application.PlayMedia(*pItem, player, type);
-  }
-  else
-  {
-    bResult = CServiceBroker::GetPlayLists()->PlayItem(type, std::make_shared<CFileItem>(*pItem),
-                                                       {.player = player});
-  }
+  const bool bResult = g_application.PlayMedia(*pItem, player, m_guiState->GetPlayListType());
 
   if (pItem->GetStartOffset() == STARTOFFSET_RESUME)
     pItem->SetStartOffset(0);
@@ -1566,10 +1554,17 @@ bool CGUIMediaWindow::OnPlayMedia(int iItem, const std::string &player)
 bool CGUIMediaWindow::OnPlayAndQueueMedia(const CFileItemPtr& item, const std::string& player)
 {
   // the folder plays in place: what in it can play replaces the playlist, from the chosen item
-  if (const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType(); type)
-    CServiceBroker::GetPlayLists()->PlayFolder(*type, *m_vecItems, item,
-                                               {.player = player, .inOrder = PlaysFolderInOrder()},
-                                               m_vecItems->GetPath());
+  const std::optional<PLAYLIST::Type> type = m_guiState->GetPlayListType();
+  if (!type)
+    return true;
+
+  std::optional<int> position;
+  for (int i = 0; i < m_vecItems->Size(); ++i)
+    if (m_vecItems->Get(i) == item)
+      position = i;
+  CServiceBroker::GetPlayLists()->PlayItems(*type, *m_vecItems, position,
+                                            {.player = player, .inOrder = PlaysFolderInOrder()},
+                                            m_vecItems->GetPath());
   return true;
 }
 

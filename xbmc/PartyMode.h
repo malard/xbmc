@@ -42,10 +42,21 @@ bool Start(const std::string& rulesPath);
 //! Stop party mode; see CApplicationPlayLists::DropFeed().
 void Stop();
 
+/*!
+ * \brief Stop party mode if it plays on this playlist; otherwise start it there.
+ * \return false if it was to start and did not.
+ */
+bool Toggle(PLAYLIST::Type playList);
+
 //! Whether a feed is playing on either playlist.
 bool IsRunning();
 //! Whether a feed is playing on this playlist.
 bool IsRunning(PLAYLIST::Type playList);
+
+//! The playlist's party rules file in the profile: PartyMode.xsp, or PartyMode-Video.xsp for Video.
+std::string RulesPath(PLAYLIST::Type playList);
+//! Whether the path is either playlist's party rules file.
+bool IsRulesPath(const std::string& path);
 
 enum class Library
 {

@@ -14,7 +14,6 @@
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
 #include "InputOperations.h"
-#include "MessengerPayload.h"
 #include "PVROperations.h"
 #include "PartyMode.h"
 #include "PlaybackModes.h"
@@ -40,6 +39,7 @@
 #include "interfaces/PlaybackValues.h"
 #include "interfaces/builtins/Builtins.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicFileItemClassify.h"
 #include "music/tags/MusicInfoTag.h"
@@ -82,6 +82,7 @@
 using namespace KODI;
 using namespace JSONRPC;
 using namespace PVR;
+using KODI::MESSAGING::TransferToMessenger;
 
 namespace
 {

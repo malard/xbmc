@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIPassword.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "application/Application.h"
@@ -36,7 +37,6 @@
 #include "playlists/PlayList.h"
 #include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
-#include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
@@ -711,12 +711,9 @@ void QueueItem(const std::shared_ptr<CFileItem>& item, QueuePosition pos)
   const PLAYLIST::Type type = playLists->GetQueueType(PLAYLIST::Audio);
 
   // Check for the partymode playlist item, do nothing when "PartyMode.xsp" does not exist
-  if (PLAYLIST::IsSmartPlayList(*item) && !CFileUtils::Exists(item->GetPath()))
-  {
-    const auto profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
-    if (item->GetPath() == profileManager->GetUserDataItem("PartyMode.xsp"))
-      return;
-  }
+  if (PLAYLIST::IsSmartPlayList(*item) && !CFileUtils::Exists(item->GetPath()) &&
+      item->GetPath() == PARTYMODE::RulesPath(PLAYLIST::Audio))
+    return;
 
   CFileItemList queuedItems;
   GetItemsForPlayList(item, queuedItems);
@@ -758,8 +755,7 @@ bool IsNonExistingUserPartyModePlaylist(const CFileItem& item)
     return false;
 
   const std::string& path{item.GetPath()};
-  const auto profileManager{CServiceBroker::GetSettingsComponent()->GetProfileManager()};
-  return ((profileManager->GetUserDataItem("PartyMode.xsp") == path) && !CFileUtils::Exists(path));
+  return path == PARTYMODE::RulesPath(PLAYLIST::Audio) && !CFileUtils::Exists(path);
 }
 
 bool IsEmptyMusicItem(const CFileItem& item)

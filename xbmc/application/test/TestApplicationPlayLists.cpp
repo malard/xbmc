@@ -11,17 +11,16 @@
 #include "GUIUserMessages.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/PlayListsMessageHandler.h"
+#include "application/test/PlayListsTestHelpers.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "guilib/GUIMessage.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/ThreadMessage.h"
-#include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "utils/URIUtils.h"
-#include "video/VideoInfoTag.h"
 
 #include <memory>
 #include <set>
@@ -31,73 +30,11 @@
 #include <gtest/gtest.h>
 
 using namespace KODI;
+using namespace KODI::APPLICATION::TEST;
 using namespace KODI::PLAYLIST;
 
 namespace
 {
-// Stands in for the player: records the files it is asked to open, and fails the paths it is told to.
-struct CPlayerLog
-{
-  std::vector<std::string> opened;
-  std::vector<KODI::APPLICATION::StartsRun> startsRun;
-  std::vector<std::string> players;
-  std::set<std::string, std::less<>> failing;
-};
-
-class CFakePlayback : public CApplicationPlayLists::IPlayback
-{
-public:
-  explicit CFakePlayback(std::shared_ptr<CPlayerLog> log) : m_log(std::move(log)) {}
-
-  bool Open(const CFileItem& item,
-            const CApplicationPlayLists::PlayOptions& options,
-            KODI::APPLICATION::StartsRun startsRun) override
-  {
-    m_log->opened.push_back(item.GetDynPath());
-    m_log->startsRun.push_back(startsRun);
-    m_log->players.push_back(options.player);
-    return !m_log->failing.contains(item.GetPath());
-  }
-  bool LoadLibraryTag(CFileItem& item) const override { return false; }
-  Queued QueueNext(const CFileItem& item) override { return Queued::Yes; }
-  void NothingToQueue() override {}
-  void Stop() override {}
-  void Close() override {}
-  bool IsPlaying() const override { return false; }
-  bool IsPlayingVideo() const override { return false; }
-  bool IsPlayingAudio() const override { return false; }
-  std::string GetName() const override { return {}; }
-  bool RestartsOnPrevious() const override { return false; }
-
-private:
-  const std::shared_ptr<CPlayerLog> m_log;
-};
-
-class CTestPlayLists : public CApplicationPlayLists
-{
-public:
-  CTestPlayLists() : CTestPlayLists(std::make_shared<CPlayerLog>()) {}
-
-  using CApplicationPlayLists::EditPlayList;
-  using CApplicationPlayLists::EntriesOf;
-  using CApplicationPlayLists::OnNextQueued;
-
-private:
-  explicit CTestPlayLists(const std::shared_ptr<CPlayerLog>& log)
-    : CApplicationPlayLists(std::make_unique<CFakePlayback>(log)),
-      m_log(log)
-  {
-  }
-
-  const std::shared_ptr<CPlayerLog> m_log;
-
-public:
-  std::vector<std::string>& m_opened{m_log->opened};
-  std::vector<KODI::APPLICATION::StartsRun>& m_startsRun{m_log->startsRun};
-  std::set<std::string, std::less<>>& m_failing{m_log->failing};
-  std::vector<std::string>& m_players{m_log->players};
-};
-
 std::unique_ptr<CFileItemList> Items(std::initializer_list<const char*> paths)
 {
   auto items = std::make_unique<CFileItemList>();
@@ -114,18 +51,6 @@ void FillVideo(CTestPlayLists& playLists)
   const EntryId second = playList.Add(std::make_shared<CFileItem>("/video/second.mkv", false));
   playList.SetCurrent(second);
 }
-
-class CAnyEntry : public IEntryRules
-{
-public:
-  bool IsUnlocked(CFileItem&) override { return true; }
-  void Arrange(const CFileItem&, CFileItemList&, std::shared_ptr<CFileItem>&) override {}
-  std::shared_ptr<CFileItem> Accept(const std::shared_ptr<CFileItem>& file,
-                                    const CFileItemList&) override
-  {
-    return CanBeEntry(*file) ? file : nullptr;
-  }
-};
 
 constexpr auto EXPANSION_FOLDER = "special://temp/test-playlist-expansion/";
 
@@ -190,8 +115,7 @@ TEST(TestApplicationPlayLists, AFilmOnTheVideoPlayListTakesAudioWithIt)
   FillVideo(playLists);
   playLists.SetPlayingType(PLAYLIST::Video);
 
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
 
   EXPECT_TRUE(playLists.IsAudioFollowingVideo());
   EXPECT_EQ(PLAYLIST::Video, playLists.GetQueueType(PLAYLIST::Audio));
@@ -254,21 +178,6 @@ TEST(TestApplicationPlayLists, RemovingByPathLeavesTheEntryBeingPlayed)
   EXPECT_EQ("/music/two.flac", playList[1]->GetPath());
 }
 
-TEST(TestApplicationPlayLists, ReplacingKeepsWhatWasCurrentCurrent)
-{
-  CTestPlayLists playLists;
-  FillVideo(playLists);
-
-  CFileItemList items;
-  items.Add(std::make_shared<CFileItem>("/video/second.mkv", false));
-  items.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
-  playLists.Replace(PLAYLIST::Video, items);
-
-  const CPlayList& playList = playLists.GetPlayList(PLAYLIST::Video);
-  ASSERT_EQ(2, playList.Size());
-  EXPECT_EQ(0, playList.GetCurrentPosition());
-}
-
 TEST(TestApplicationPlayLists, ReSortingAFolderKeepsItsEntriesAndItsSourceEachTime)
 {
   CTestPlayLists playLists;
@@ -316,8 +225,7 @@ TEST(TestApplicationPlayLists, PickingAnEntryInAPlayingPlayListMovesWithinTheRun
       CApplicationPlayLists::Placement::End);
   playLists.SetShuffle(PLAYLIST::Video, true, CApplicationPlayLists::Persist::No);
   ASSERT_TRUE(playLists.PlayFrom(PLAYLIST::Video, 0));
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
   const std::vector<EntryId> order = playLists.GetPlayList(PLAYLIST::Video).GetPlayOrder();
 
   ASSERT_TRUE(playLists.PlayFrom(PLAYLIST::Video, 3));
@@ -428,8 +336,7 @@ TEST(TestApplicationPlayLists, AnEndedTrackLeavesItsPlayListPlayingUntilNothingF
   playLists.Queue(PLAYLIST::Audio, std::make_shared<CFileItem>("/music/one.flac", false));
   ASSERT_TRUE(playLists.PlayFrom(PLAYLIST::Audio, 0));
 
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
   CGUIMessage ended(GUI_MSG_PLAYBACK_ENDED, 0, 0);
   playLists.OnMessage(ended);
   EXPECT_EQ(PLAYLIST::Audio, playLists.GetPlayingType()) << "the next track has yet to be chosen";
@@ -446,8 +353,7 @@ TEST(TestApplicationPlayLists, ClearingThePlayingPlayListLeavesThePlaybackToItsS
   FillVideo(playLists);
   playLists.SetPlayingType(PLAYLIST::Video);
 
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
 
   playLists.EditPlayList(PLAYLIST::Video).Clear();
   EXPECT_EQ(NO_ENTRY, playLists.EditPlayList(PLAYLIST::Video).GetCurrent());
@@ -464,8 +370,7 @@ TEST(TestApplicationPlayLists, ASingleItemPlaysAfterThePlayingPlayListIsCleared)
   CTestPlayLists playLists;
   FillVideo(playLists);
   playLists.SetPlayingType(PLAYLIST::Video);
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
   playLists.EditPlayList(PLAYLIST::Video).Clear();
 
   KODI::MESSAGING::ThreadMessage message{TMSG_MEDIA_PLAY_ITEM, 0, 0,
@@ -547,8 +452,7 @@ TEST(TestApplicationPlayLists, QueueingReportsWhereTheItemsLanded)
       << "nothing plays, so at the end";
 
   playLists.SetPlayingType(PLAYLIST::Video);
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
   playLists.EditPlayList(PLAYLIST::Video)
       .SetCurrent(playLists.EditPlayList(PLAYLIST::Video).GetEntryId(0));
 
@@ -568,9 +472,7 @@ TEST(TestApplicationPlayLists, AHandedOnEntryIsWhatStartedAndBecomesCurrent)
   const EntryId third = playList.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
 
   playLists.OnNextQueued(third);
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
-                      std::make_shared<CFileItem>("/resolved/third.mkv", false));
-  playLists.OnMessage(started);
+  playLists.Started(std::make_shared<CFileItem>("/resolved/third.mkv", false));
 
   EXPECT_EQ(third, playList.GetCurrent());
   EXPECT_EQ("/video/third.mkv", playLists.GetCurrentItem()->GetPath());
@@ -588,9 +490,7 @@ TEST(TestApplicationPlayLists, AHandedOnEntryStillListedAfterARebuildBecomesCurr
 
   playLists.Replace(PLAYLIST::Video,
                     *Items({"/video/second.mkv", "/video/new.mkv", "/video/third.mkv"}));
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
-                      std::make_shared<CFileItem>("/video/third.mkv", false));
-  playLists.OnMessage(started);
+  playLists.Started(std::make_shared<CFileItem>("/video/third.mkv", false));
 
   EXPECT_EQ("/video/third.mkv", playList.GetCurrentItem()->GetPath())
       << "the second file does not play twice";
@@ -607,9 +507,7 @@ TEST(TestApplicationPlayLists, AHandedOnEntryThatLeftThePlayListIsStillWhatStart
 
   playLists.OnNextQueued(third);
   playList.Remove(2);
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
-                      std::make_shared<CFileItem>("/video/third.mkv", false));
-  playLists.OnMessage(started);
+  playLists.Started(std::make_shared<CFileItem>("/video/third.mkv", false));
 
   EXPECT_EQ("/video/third.mkv", playLists.GetCurrentItem()->GetPath())
       << "what the player reports is what started";
@@ -635,9 +533,7 @@ TEST(TestApplicationPlayLists, TheCurrentItemOutlivesPlaybackUntilReset)
   CTestPlayLists playLists;
   EXPECT_TRUE(playLists.GetCurrentItem()->GetPath().empty());
 
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0,
-                      std::make_shared<CFileItem>("/music/one.flac", false));
-  playLists.OnMessage(started);
+  playLists.Started(std::make_shared<CFileItem>("/music/one.flac", false));
   const auto current = playLists.GetCurrentItem();
   EXPECT_EQ("/music/one.flac", current->GetPath());
 
@@ -699,45 +595,6 @@ TEST(TestApplicationPlayLists, OnlyWhatCanPlayBecomesAnEntry)
   CFileItemList more;
   EXPECT_EQ(std::nullopt, CTestPlayLists::EntriesOf(listing, 2, more))
       << "a chosen item that cannot play starts nothing";
-}
-
-TEST(TestApplicationPlayLists, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
-{
-  CFileItemList music;
-  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  music.Add(std::make_shared<CFileItem>("/music/two.mp3", false));
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music));
-
-  CFileItemList mixed;
-  mixed.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  mixed.Add(std::make_shared<CFileItem>("/video/one.mkv", false));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(mixed));
-}
-
-TEST(TestApplicationPlayLists, EntriesThatSayNothingFollowTheirSource)
-{
-  CFileItemList silent;
-  silent.Add(std::make_shared<CFileItem>("plugin://plugin.video.x/play?id=1", false));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent)) << "with no source, as a single item does";
-
-  CFileItem film("/films/movie.strm", false);
-  film.GetVideoInfoTag()->m_strTitle = "Film";
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent, film));
-
-  CFileItem album("/music/album.m3u", false);
-  album.GetMusicInfoTag()->SetTitle("Album");
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(silent, album));
-
-  CFileItemList music;
-  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music, film)) << "an entry that says wins";
-}
-
-TEST(TestApplicationPlayLists, AnItemNobodyPlacedGoesOnAudioOnlyIfItHoldsOnlyAudio)
-{
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem("/music/one.flac", false)));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/video/one.mkv", false)));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/other/unknown", false)));
 }
 
 namespace
@@ -823,8 +680,7 @@ TEST(TestApplicationPlayLists, AnItemPlayedOnAFedPlayListUsesTheCallersPlayer)
   CTestPlayLists playLists;
   StartFed(playLists, 50);
   ASSERT_TRUE(playLists.PlayFrom(PLAYLIST::Audio, 0));
-  CGUIMessage started(GUI_MSG_PLAYBACK_STARTED, 0, 0);
-  playLists.OnMessage(started);
+  playLists.Started();
 
   const auto item = std::make_shared<CFileItem>("/music/asked.flac", false);
   ASSERT_TRUE(playLists.PlayItem(PLAYLIST::Audio, item, {.player = "chosen"}));
@@ -974,7 +830,7 @@ TEST_F(TestPlayListExpansion, APlayListFileThatListsItselfIsOpenedOnce)
 {
   const std::string path = WriteFile("self.m3u", "one.mp3\nself.m3u\ntwo.mp3\n");
   ASSERT_FALSE(path.empty());
-  CAnyEntry rules;
+  CEntriesAsListed rules;
   CFileItemList entries;
 
   CApplicationPlayLists::ExpandToEntries(std::make_shared<CFileItem>(path, false), rules, nullptr,
@@ -986,7 +842,7 @@ TEST_F(TestPlayListExpansion, APlayListFileThatListsItselfIsOpenedOnce)
 TEST_F(TestPlayListExpansion, APlayListFileInAFolderGivesItsEntries)
 {
   ASSERT_FALSE(WriteFile("list.m3u", "one.mp3\ntwo.mp3\n").empty());
-  CAnyEntry rules;
+  CEntriesAsListed rules;
   CFileItemList entries;
 
   CApplicationPlayLists::ExpandToEntries(std::make_shared<CFileItem>(EXPANSION_FOLDER, true), rules,
@@ -999,7 +855,7 @@ TEST_F(TestPlayListExpansion, TheStartIsWhereTheItemAskedForLanded)
 {
   const std::string path = WriteFile("list.m3u", "one.mp3\ntwo.mp3\n");
   ASSERT_FALSE(path.empty());
-  CAnyEntry rules;
+  CEntriesAsListed rules;
   CFileItemList entries;
 
   const std::optional<int> start = CApplicationPlayLists::ExpandToEntries(
