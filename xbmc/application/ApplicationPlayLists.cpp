@@ -622,7 +622,7 @@ int CApplicationPlayLists::Queue(Type type, const CFileItemList& queued, Placeme
     placement = Placement::Next;
 
   CPlayList& playList = EditPlayList(type);
-  playList.SetSourcePath("");
+  playList.ClearSourcePath();
   if (placement == Placement::Next && GetPlayingType() == type)
     return playList.GetPosition(playList.QueueNext(items));
 
@@ -651,7 +651,7 @@ void CApplicationPlayLists::Insert(Type type, const CFileItemList& items, int po
   CFileItemList entries;
   EntriesOf(items, std::nullopt, entries);
   CPlayList& playList = EditPlayList(type);
-  playList.SetSourcePath("");
+  playList.ClearSourcePath();
   playList.Insert(entries, position);
 }
 

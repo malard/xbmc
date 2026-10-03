@@ -94,10 +94,10 @@ public:
   EntryId Insert(const std::shared_ptr<CFileItem>& item, int iPosition = -1);
 
   /*!
-   * \brief The playlist file, smart playlist or folder the entries were read from, if any. Cleared
-   * with the entries.
+   * \brief The playlist file, smart playlist or folder the entries were read from, if any. Set by
+   * Assign() and cleared with the entries.
    */
-  void SetSourcePath(const std::string& path);
+  void ClearSourcePath();
   std::string GetSourcePath() const;
 
   /*!

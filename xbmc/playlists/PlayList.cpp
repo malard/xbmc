@@ -704,10 +704,10 @@ bool CPlayList::IsShuffled() const
   return !m_shuffle->IsListOrder();
 }
 
-void CPlayList::SetSourcePath(const std::string& path)
+void CPlayList::ClearSourcePath()
 {
   std::unique_lock lock(m_critSection);
-  m_sourcePath = path;
+  m_sourcePath.clear();
 }
 
 std::string CPlayList::GetSourcePath() const

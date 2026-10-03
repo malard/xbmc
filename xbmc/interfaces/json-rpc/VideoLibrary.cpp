@@ -194,7 +194,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
     if (!listed)
       return InternalError;
 
-    return HandleItems(traits.id, "items", items, parameterObject, result, true);
+    return HandleItems(traits.id, items, parameterObject, result, true);
   }
 
   if (listing == Listing::InProgress)
@@ -203,7 +203,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
                                                details))
       return InternalError;
 
-    return HandleItems(traits.id, "items", items, parameterObject, result, true);
+    return HandleItems(traits.id, items, parameterObject, result, true);
   }
 
   const int tvshowID = static_cast<int>(parameterObject["tvShowId"].asInteger());
@@ -283,7 +283,7 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
                                                 details))
     return InternalError;
 
-  return HandleItems(traits.id, "items", items, parameterObject, result, false);
+  return HandleItems(traits.id, items, parameterObject, result, false);
 }
 
 JSONRPC_STATUS CVideoLibrary::GetItemProperties(const CVariant& parameterObject, CVariant& result)
@@ -1156,7 +1156,6 @@ int CVideoLibrary::GetDetailsFromJsonParameters(const CVariant& parameterObject)
 }
 
 JSONRPC_STATUS CVideoLibrary::HandleItems(const char* idProperty,
-                                          const char* resultName,
                                           CFileItemList& items,
                                           const CVariant& parameterObject,
                                           CVariant& result,
@@ -1165,7 +1164,7 @@ JSONRPC_STATUS CVideoLibrary::HandleItems(const char* idProperty,
   int size = items.Size();
   if (!limit && items.HasProperty("total") && items.GetProperty("total").asInteger() > size)
     size = static_cast<int>(items.GetProperty("total").asInteger());
-  HandleFileItemList(idProperty, true, resultName, items, parameterObject, result, size, limit);
+  HandleFileItemList(idProperty, true, "items", items, parameterObject, result, size, limit);
 
   return OK;
 }
