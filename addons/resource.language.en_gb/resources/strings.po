@@ -5608,11 +5608,7 @@ msgctxt "#10213"
 msgid "buffering"
 msgstr ""
 
-msgctxt "#10214"
-msgid "Opening stream"
-msgstr ""
-
-#empty strings from id 10215 to 10499
+#empty strings from id 10214 to 10499
 
 #: xbmc/guilib/WindowIDs.h
 msgctxt "#10500"
