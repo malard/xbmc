@@ -64,30 +64,6 @@ const auto CATEGORY_GAME_PROVIDERS = "category.gameproviders";
 const auto CATEGORY_GAME_RESOURCES = "category.gameresources";
 const auto CATEGORY_GAME_SUPPORT_ADDONS = "category.gamesupport";
 
-namespace
-{
-//! The content add-ons provide to \p section
-AddonType AddonTypeOf(MediaSection section)
-{
-  switch (section)
-  {
-    case MediaSection::VIDEO:
-      return AddonType::VIDEO;
-    case MediaSection::MUSIC:
-      return AddonType::AUDIO;
-    case MediaSection::PICTURES:
-      return AddonType::IMAGE;
-    case MediaSection::PROGRAMS:
-      return AddonType::EXECUTABLE;
-    case MediaSection::GAMES:
-      return AddonType::GAME;
-    case MediaSection::FILES:
-      break;
-  }
-  return AddonType::UNKNOWN;
-}
-} // namespace
-
 const std::set<AddonType> infoProviderTypes = {
     AddonType::SCRAPER_ALBUMS,      AddonType::SCRAPER_ARTISTS, AddonType::SCRAPER_MOVIES,
     AddonType::SCRAPER_MUSICVIDEOS, AddonType::SCRAPER_TVSHOWS,
@@ -769,9 +745,11 @@ bool CAddonsDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 
 std::string CAddonsDirectory::SourcesPathOf(MediaSection section)
 {
-  const std::string_view content{CAddonInfo::SubContentNameOf(AddonTypeOf(section))};
-  if (content.empty())
+  const auto source{
+      std::ranges::find(ADDONS::SECTION_SOURCES, section, &ADDONS::SectionSource::section)};
+  if (source == ADDONS::SECTION_SOURCES.end())
     return {};
+  const std::string_view content{CAddonInfo::SubContentNameOf(source->type)};
   return std::string{ADDONS::SOURCES}.append(content).append("/");
 }
 

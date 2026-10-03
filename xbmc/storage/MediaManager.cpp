@@ -18,8 +18,9 @@
 #include "addons/VFSEntry.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogPlayEject.h"
-#ifdef HAVE_LIBBLURAY
 #include "filesystem/AddonsDirectory.h"
+#include "filesystem/AddonsPaths.h"
+#ifdef HAVE_LIBBLURAY
 #include "filesystem/BlurayDirectory.h"
 #include "filesystem/BlurayDiscCache.h"
 #endif
@@ -387,52 +388,20 @@ bool CMediaManager::SetLocationPath(const std::string& oldPath, const std::strin
 
 void CMediaManager::LoadAddonSources() const
 {
-  if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bVirtualShares)
-  {
-    for (const MediaSection section :
-         {MediaSection::VIDEO, MediaSection::PROGRAMS, MediaSection::PICTURES, MediaSection::MUSIC,
-          MediaSection::GAMES})
-      CMediaSourceSettings::GetInstance().AddShare(section, GetRootAddonTypeSource(section));
-  }
-}
+  if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bVirtualShares)
+    return;
 
-CMediaSource CMediaManager::GetRootAddonTypeSource(MediaSection section) const
-{
   auto& localizeStrings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
-  switch (section)
+  for (const KODI::ADDONS::SectionSource& entry : KODI::ADDONS::SECTION_SOURCES)
   {
-    case MediaSection::PROGRAMS:
-      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1043),
-                                        "DefaultAddonProgram.png");
-    case MediaSection::VIDEO:
-      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1037),
-                                        "DefaultAddonVideo.png");
-    case MediaSection::MUSIC:
-      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1038),
-                                        "DefaultAddonMusic.png");
-    case MediaSection::PICTURES:
-      return ComputeRootAddonTypeSource(section, localizeStrings.Get(1039),
-                                        "DefaultAddonPicture.png");
-    case MediaSection::GAMES:
-      return ComputeRootAddonTypeSource(section, localizeStrings.Get(35049),
-                                        "DefaultAddonGame.png");
-    case MediaSection::FILES:
-      break;
+    CMediaSource source;
+    source.strPath = XFILE::CAddonsDirectory::SourcesPathOf(entry.section);
+    source.strName = localizeStrings.Get(entry.label);
+    source.m_strThumbnailImage = entry.icon;
+    source.m_iDriveType = SourceType::VPATH;
+    source.m_ignore = true;
+    CMediaSourceSettings::GetInstance().AddShare(entry.section, source);
   }
-  return {};
-}
-
-CMediaSource CMediaManager::ComputeRootAddonTypeSource(MediaSection section,
-                                                       const std::string& label,
-                                                       const std::string& thumb) const
-{
-  CMediaSource source;
-  source.strPath = XFILE::CAddonsDirectory::SourcesPathOf(section);
-  source.strName = label;
-  source.m_strThumbnailImage = thumb;
-  source.m_iDriveType = SourceType::VPATH;
-  source.m_ignore = true;
-  return source;
 }
 
 void CMediaManager::AddAutoSource(const CMediaSource &share, bool bAutorun)

@@ -8,6 +8,11 @@
 
 #pragma once
 
+#include "addons/addoninfo/AddonType.h"
+#include "media/MediaSection.h"
+
+#include <array>
+#include <cstdint>
 #include <string_view>
 
 //! \brief The addons:// paths of the add-on browser's nodes, as XFILE::CAddonsDirectory parses
@@ -42,5 +47,24 @@ constexpr std::string_view EndpointOf(std::string_view path)
   path.remove_suffix(1);
   return path;
 }
+
+//! \brief The source at the root of a section listing the add-ons that provide its content.
+struct SectionSource
+{
+  MEDIA::MediaSection section;
+  ADDON::AddonType type;
+  uint32_t label;
+  std::string_view icon;
+};
+
+// clang-format off
+inline constexpr std::array<SectionSource, 5> SECTION_SOURCES{{
+    {MEDIA::MediaSection::VIDEO,    ADDON::AddonType::VIDEO,      1037,  "DefaultAddonVideo.png"},
+    {MEDIA::MediaSection::PROGRAMS, ADDON::AddonType::EXECUTABLE, 1043,  "DefaultAddonProgram.png"},
+    {MEDIA::MediaSection::PICTURES, ADDON::AddonType::IMAGE,      1039,  "DefaultAddonPicture.png"},
+    {MEDIA::MediaSection::MUSIC,    ADDON::AddonType::AUDIO,      1038,  "DefaultAddonMusic.png"},
+    {MEDIA::MediaSection::GAMES,    ADDON::AddonType::GAME,       35049, "DefaultAddonGame.png"},
+}};
+// clang-format on
 
 } // namespace KODI::ADDONS
