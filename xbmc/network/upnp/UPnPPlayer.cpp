@@ -27,6 +27,8 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoThumbLoader.h"
 
+#include <mutex>
+
 #include <Platinum/Source/Devices/MediaRenderer/PltMediaController.h>
 #include <Platinum/Source/Devices/MediaServer/PltDidl.h>
 #include <Platinum/Source/Platinum/Platinum.h>
@@ -173,7 +175,7 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
                           XbmcThreads::EndTime<>& timeout)
 {
   std::string uri, metadata;
-  CUPnPPlayerController::CAction* action = nullptr;
+  PLT_TransportInfo transport;
 
   NPT_CHECK_POINTER_LABEL_SEVERE(m_delegate, failed);
   if (!BuildResource(file, uri, metadata))
@@ -182,23 +184,21 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   // get the transport info to evaluate the TransportState to be able to
   // determine whether we first need to call Stop()
   timeout.Set(timeout.GetInitialTimeoutValue());
-  NPT_CHECK_LABEL_SEVERE(m_delegate->SendGetTransportInfo(action), failed_gettransportinfo);
-  NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed_gettransportinfo);
+  NPT_CHECK_LABEL_SEVERE(m_delegate->QueryTransport(timeout, transport), failed_gettransportinfo);
 
-  if (const NPT_String openingState = action->GetTransportState();
-      openingState != "NO_MEDIA_PRESENT" && openingState != "STOPPED")
+  if (transport.cur_transport_state != "NO_MEDIA_PRESENT" &&
+      transport.cur_transport_state != "STOPPED")
   {
     timeout.Set(timeout.GetInitialTimeoutValue());
-    NPT_CHECK_LABEL_SEVERE(m_delegate->SendStop(action), failed_stop);
-    NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed_stop);
-    NPT_CHECK_LABEL_SEVERE(action->GetStatus(), failed_stop);
+    NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->Stop(), timeout), failed_stop);
 
     // Stop is acknowledged before the renderer has stopped. Wait for STOPPED so the states read
     // from here on belong to the file being opened.
     XbmcThreads::EndTime<> stopping(3s);
     while (!stopping.IsTimePast())
     {
-      if (NPT_FAILED(m_delegate->SendGetTransportInfo(action)))
+      CUPnPPlayerController::CAction* action = nullptr;
+      if (NPT_FAILED(m_delegate->Send(action, m_delegate->GetTransportInfo())))
         break;
       if (!m_delegate->WaitForReplyFor(*action, 500ms))
         continue;
@@ -210,10 +210,8 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   }
 
   timeout.Set(timeout.GetInitialTimeoutValue());
-  NPT_CHECK_LABEL_SEVERE(m_delegate->SendSetAVTransportURI(action, uri.c_str(), metadata.c_str()),
+  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->SetAVTransportURI(uri, metadata), timeout),
                          failed_setavtransporturi);
-  NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed_setavtransporturi);
-  NPT_CHECK_LABEL_SEVERE(action->GetStatus(), failed_setavtransporturi);
 
   {
     std::unique_lock lock(m_queueSection);
@@ -221,17 +219,14 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   }
 
   timeout.Set(timeout.GetInitialTimeoutValue());
-  NPT_CHECK_LABEL_SEVERE(m_delegate->SendPlay(action), failed_play);
-  NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed_play);
-  NPT_CHECK_LABEL_SEVERE(action->GetStatus(), failed_play);
+  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->Play(), timeout), failed_play);
 
   /* wait for PLAYING state */
   timeout.Set(timeout.GetInitialTimeoutValue());
   do
   {
     // Wait for the reply before reading the state, or the first pass sees the old file's state.
-    NPT_CHECK_LABEL_SEVERE(m_delegate->SendGetTransportInfo(action), failed_waitplaying);
-    if (NPT_FAILED(m_delegate->WaitForReply(*action, timeout)))
+    if (NPT_FAILED(m_delegate->QueryTransport(timeout, transport)))
     {
       // Reaching the deadline ends the loop without failing the open; a wait that ends before the
       // deadline is the user cancelling.
@@ -240,13 +235,12 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
       goto failed_waitplaying;
     }
 
-    const NPT_String transportStatus = action->GetTransportStatus();
-    const NPT_String transportState = action->GetTransportState();
+    const NPT_String& transportState = transport.cur_transport_state;
     if (transportState == "PLAYING" || transportState == "PAUSED_PLAYBACK")
     {
       break;
     }
-    if (transportState == "STOPPED" && transportStatus != "OK")
+    if (transportState == "STOPPED" && transport.cur_transport_status != "OK")
     {
       m_logger->error("OpenFile({}): remote player signalled error", file.GetPath());
       return NPT_FAILURE;
@@ -290,7 +284,6 @@ failed:
 bool CUPnPPlayer::OpenFile(const CFileItem& file, const CPlayerOptions& options)
 {
   XbmcThreads::EndTime<> timeout(10s);
-  CUPnPPlayerController::CAction* action = nullptr;
 
   m_started = false;
   {
@@ -304,13 +297,12 @@ bool CUPnPPlayer::OpenFile(const CFileItem& file, const CPlayerOptions& options)
   /* if no path we want to attach to a already playing player */
   if (file.GetPath().empty())
   {
-    NPT_CHECK_LABEL_SEVERE(m_delegate->SendGetTransportInfo(action), failed);
-
-    NPT_CHECK_LABEL_SEVERE(m_delegate->WaitForReply(*action, timeout), failed);
+    PLT_TransportInfo transport;
+    NPT_CHECK_LABEL_SEVERE(m_delegate->QueryTransport(timeout, transport), failed);
 
     /* make sure the attached player is actually playing */
-    const NPT_String transportState = action->GetTransportState();
-    if (transportState != "PLAYING" && transportState != "PAUSED_PLAYBACK")
+    if (transport.cur_transport_state != "PLAYING" &&
+        transport.cur_transport_state != "PAUSED_PLAYBACK")
     {
       goto failed;
     }
@@ -374,7 +366,7 @@ bool CUPnPPlayer::QueueNextFile(const CFileItem& file)
   // opened the ordinary way once this one ends.
   m_delegate->m_nextRefused = false;
   NPT_CHECK_LABEL_WARNING(
-      m_delegate->SendSetNextAVTransportURI(action, uri.c_str(), metadata.c_str()), failed);
+      m_delegate->Send(action, m_delegate->SetNextAVTransportURI(uri, metadata)), failed);
   m_delegate->EndAction(*action);
   {
     std::unique_lock lock(m_queueSection);
@@ -395,9 +387,7 @@ bool CUPnPPlayer::CloseFile(bool reopen)
   // Also reached from the player thread's exit and the destructor; the renderer is told once.
   if (m_delegate && m_stopremote.exchange(false))
   {
-    CUPnPPlayerController::CAction* action = nullptr;
-    if (NPT_FAILED(m_delegate->SendStop(action)) || !m_delegate->WaitForReplyFor(*action, 10000ms) ||
-        NPT_FAILED(action->GetStatus()))
+    if (NPT_FAILED(m_delegate->Call(m_delegate->Stop(), 10000ms)))
     {
       m_logger->error("CloseFile - unable to stop playback");
       stopped = false;
