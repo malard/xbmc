@@ -9,9 +9,8 @@
 #include "addons/Scraper.h"
 #include "addons/addoninfo/AddonInfoBuilder.h"
 #include "addons/addoninfo/AddonType.h"
-#include "filesystem/SpecialProtocol.h"
+#include "dbwrappers/test/DatabaseTestUtils.h"
 #include "music/MusicDatabase.h"
-#include "settings/AdvancedSettings.h"
 
 #include <memory>
 #include <string>
@@ -33,12 +32,8 @@ protected:
   // Each test gets its own database file: a test that dies mid-transaction leaks a write lock.
   void Connect(const std::string& name)
   {
-    DatabaseSettings settings;
-    settings.type = "sqlite3";
-    settings.name = name;
-    settings.host = CSpecialProtocol::TranslatePath("special://temp/");
-
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED, database.Connect(name, settings, true));
+    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
+              database.Connect(name, TestDatabaseSettings(), true));
   }
 
   void TearDown() override { database.Close(); }
