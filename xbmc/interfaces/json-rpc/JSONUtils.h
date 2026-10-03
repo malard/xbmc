@@ -17,6 +17,7 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <memory>
 #include <set>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +26,12 @@
 #include <vector>
 
 class CDateTime;
+
+namespace ADDON
+{
+class CScraper;
+enum class ContentType;
+} // namespace ADDON
 
 namespace JSONRPC
 {
@@ -524,6 +531,18 @@ protected:
   static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);
 
   static void SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date);
+
+  /*!
+     \brief The enabled scraper \p scraperId names for \p content, with \p settings applied
+     \param settings the caller's settings XML, empty for the scraper's defaults
+     \return NotFound for no such enabled add-on; InvalidParams for an add-on that is not a
+     scraper for \p content, or for settings the scraper rejects
+     */
+  static JSONRPC_STATUS ResolveScraper(const std::string& scraperId,
+                                       ADDON::ContentType content,
+                                       const std::string& settings,
+                                       std::shared_ptr<ADDON::CScraper>& scraper,
+                                       CVariant& result);
 
   static bool GetXspFiltering(const std::string& type, const CVariant& filter, std::string& xsp)
   {

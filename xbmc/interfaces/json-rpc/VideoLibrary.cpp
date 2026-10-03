@@ -992,32 +992,11 @@ JSONRPC_STATUS CVideoLibrary::SetSourceContent(const CVariant& parameterObject, 
   ADDON::ScraperPtr scraper;
   if (parsed.content != ADDON::ContentType::NONE)
   {
-    // Looked up by type: a scraper serving more than one content type has an instance per
-    // type, and the binding is stored with the instance's own content.
-    ADDON::AddonPtr addon;
-    ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
-    if (!addonMgr.GetAddon(parsed.scraperId, addon, ADDON::ScraperTypeFromContent(parsed.content),
-                           ADDON::OnlyEnabled::CHOICE_YES))
+    if (const JSONRPC_STATUS resolved = ResolveScraper(parsed.scraperId, parsed.content,
+                                                       parsed.scraperSettings, scraper, result);
+        resolved != OK)
     {
-      if (!addonMgr.GetAddon(parsed.scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
-      {
-        return Fail(result, NotFound, Reason::NoSuchAddon,
-                    Target("scraperId", parameterObject["scraperId"]));
-      }
-      return InvalidParams;
-    }
-
-    scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
-    if (!scraper)
-    {
-      return InvalidParams;
-    }
-
-    // Without supplied XML a failure is the scraper's own defaults, not the caller's doing.
-    if (!scraper->SetPathSettings(parsed.content, parsed.scraperSettings) &&
-        !parsed.scraperSettings.empty())
-    {
-      return InvalidParams;
+      return resolved;
     }
   }
   else if (parsed.clearMode == SourceContentClearMode::REMOVE)

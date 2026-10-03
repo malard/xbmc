@@ -1436,25 +1436,11 @@ JSONRPC_STATUS CAudioLibrary::SetInfoProvider(const CVariant& parameterObject, C
   ADDON::ScraperPtr scraper;
   if (!scraperId.empty())
   {
-    ADDON::AddonPtr addon;
-    ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
-    if (!addonMgr.GetAddon(scraperId, addon, ADDON::ScraperTypeFromContent(target.content),
-                           ADDON::OnlyEnabled::CHOICE_YES))
-    {
-      if (!addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
-        return Fail(result, NotFound, Reason::NoSuchAddon,
-                    Target("scraperId", parameterObject["scraperId"]));
-      return InvalidParams;
-    }
-
-    scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
-    if (!scraper)
-      return InvalidParams;
-
-    // Without supplied XML a failure is the scraper's own defaults, not the caller's doing.
-    const std::string scraperSettings = parameterObject["scraperSettings"].asString();
-    if (!scraper->SetPathSettings(target.content, scraperSettings) && !scraperSettings.empty())
-      return InvalidParams;
+    if (const JSONRPC_STATUS status =
+            ResolveScraper(scraperId, target.content, parameterObject["scraperSettings"].asString(),
+                           scraper, result);
+        status != OK)
+      return status;
   }
 
   bool written = false;
