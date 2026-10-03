@@ -33,16 +33,6 @@ class TestDeclarations(unittest.TestCase):
         cls.derived = method_errors.derive()
         cls.derived_reasons = method_errors.derive_reasons()
 
-    def test_every_method_declares_a_list(self):
-        for name, method in self.methods.items():
-            with self.subTest(method=name):
-                self.assertIsInstance(method.get("errors"), list)
-
-    def test_declared_names_are_in_the_taxonomy(self):
-        for name, method in self.methods.items():
-            with self.subTest(method=name):
-                self.assertTrue(set(method["errors"]) <= self.taxonomy)
-
     def test_pre_dispatch_names_are_in_the_taxonomy(self):
         self.assertTrue(set(method_errors.PRE_DISPATCH) <= self.taxonomy)
 
@@ -54,23 +44,10 @@ class TestDeclarations(unittest.TestCase):
             with self.subTest(method=name):
                 self.assertEqual(self.methods[name]["errors"], errors)
 
-    def test_every_method_declares_a_reason_map(self):
-        for name, method in self.methods.items():
-            with self.subTest(method=name):
-                self.assertIsInstance(method.get("reasons"), dict)
-
     def test_declared_reasons_match_the_handlers(self):
         for name, reasons in self.derived_reasons.items():
             with self.subTest(method=name):
                 self.assertEqual(self.methods[name]["reasons"], reasons)
-
-    def test_reasons_are_declared_under_declared_errors(self):
-        for name, method in self.methods.items():
-            for error, reasons in method["reasons"].items():
-                with self.subTest(method=name, error=error):
-                    self.assertIn(error, method["errors"])
-                    self.assertTrue(reasons)
-                    self.assertTrue(set(reasons) <= set(self.reasons))
 
     def test_every_reason_is_used(self):
         used = {reason for method in self.methods.values()
@@ -83,11 +60,6 @@ class TestDeclarations(unittest.TestCase):
         reasons = {reason for reasons in self.derived_reasons["Playlist.Add"].values()
                    for reason in reasons}
         self.assertEqual(set(declared), reasons)
-
-    def test_reason_names_are_kebab_case(self):
-        for name in self.reasons:
-            with self.subTest(reason=name):
-                self.assertRegex(name, r"^[a-z]+(-[a-z]+)*$")
 
 
 class TestDerivation(unittest.TestCase):

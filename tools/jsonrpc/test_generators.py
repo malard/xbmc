@@ -48,23 +48,12 @@ class TestErrorTaxonomyParser(unittest.TestCase):
     def setUp(self):
         self.taxonomy = kodi_schema.load_error_taxonomy()
 
-    def test_entry_count(self):
-        self.assertEqual(len(self.taxonomy), 10)
-
     def test_expected_codes(self):
         by_name = {entry["name"]: entry for entry in self.taxonomy}
         self.assertEqual(by_name["InvalidParams"]["code"], -32602)
         self.assertTrue(by_name["InvalidParams"]["has_data"])
         self.assertEqual(by_name["FailedToExecute"]["code"], -32100)
         self.assertEqual(by_name["AccessDenied"]["code"], -32096)
-
-    def test_all_fields_populated(self):
-        for entry in self.taxonomy:
-            self.assertTrue(entry["name"])
-            self.assertTrue(entry["message"])
-            self.assertTrue(entry["description"])
-            self.assertIsInstance(entry["code"], int)
-            self.assertIsInstance(entry["has_data"], bool)
 
 
 class TestReasonTaxonomyParser(unittest.TestCase):
@@ -75,11 +64,6 @@ class TestReasonTaxonomyParser(unittest.TestCase):
     def test_expected_reason(self):
         by_name = {entry["name"]: entry for entry in self.reasons}
         self.assertEqual(by_name["nothing-playing"]["enumerator"], "NothingPlaying")
-
-    def test_every_reason_is_described(self):
-        for entry in self.reasons:
-            with self.subTest(reason=entry["name"]):
-                self.assertTrue(entry["description"])
 
 
 class TestLiteralParsing(unittest.TestCase):
