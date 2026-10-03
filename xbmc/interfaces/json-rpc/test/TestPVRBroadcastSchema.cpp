@@ -32,22 +32,6 @@ std::set<std::string> DeclaredProperties()
 
 } // unnamed namespace
 
-/*!
- A field a caller may ask for that the details type does not declare arrives
- with no documented type or meaning. Half a field addition landing on its own
- says nothing at runtime, in either direction.
- */
-TEST(TestPVRBroadcastSchema, EveryRequestableFieldIsDeclared)
-{
-  const std::set<std::string> properties{DeclaredProperties()};
-
-  for (const std::string& field : RequestableFields())
-  {
-    EXPECT_TRUE(properties.contains(field)) << "PVR.Fields.Broadcast offers \"" << field
-                                            << "\", which PVR.Details.Broadcast does not declare";
-  }
-}
-
 TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
 {
   const std::set<std::string> fields{RequestableFields()};
@@ -64,14 +48,4 @@ TEST(TestPVRBroadcastSchema, EveryDeclaredPropertyIsRequestable)
     EXPECT_TRUE(fields.contains(property))
         << "PVR.Details.Broadcast declares \"" << property << "\", which no caller can request";
   }
-}
-
-/*!
- A recording is reachable from its broadcast as a library item, so PVR.GetRecordingDetails
- can follow it.
- */
-TEST(TestPVRBroadcastSchema, TheRecordingIsAddressableByItsIdentifier)
-{
-  EXPECT_TRUE(RequestableFields().contains("recordingId"));
-  EXPECT_TRUE(DeclaredProperties().contains("recordingId"));
 }

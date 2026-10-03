@@ -45,11 +45,7 @@ class TestJSONRPCErrorData : public JSONServiceDescriptionTestBase
 protected:
   CVariant Respond(const std::string& name, JSONRPC::MethodCall::Handler handler)
   {
-    EXPECT_TRUE(CJSONServiceDescription::AddMethod(std::string{R"({"Test.)"} + name + R"(": {
-  "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-  "params": [], "returns": "string", "errors": []
-}})",
-                                                   handler));
+    EXPECT_TRUE(AddTestMethod("Test." + name, "[]", R"("errors": [])", handler));
     return ParseJson(CJSONRPC::MethodCall(std::string{R"({"jsonrpc": "2.0", "method": "Test.)"} +
                                               name + R"(", "id": 1})",
                                           &m_transport, &m_client));
@@ -98,12 +94,9 @@ TEST_F(TestJSONRPCErrorData, AStatusAloneCarriesNoData)
 //! \brief The validator's data is unchanged by reasons
 TEST_F(TestJSONRPCErrorData, TheValidatorStillDescribesInvalidParams)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Params": {
-  "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-  "params": [{"name": "value", "required": true, "schema": {"type": "integer"}}],
-  "returns": "string", "errors": []
-}})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Params", R"([{"name": "value", "required": true, "schema": {"type": "integer"}}])",
+      R"("errors": [])"));
 
   const CVariant response = ParseJson(CJSONRPC::MethodCall(
       R"({"jsonrpc": "2.0", "method": "Test.Params", "params": {"value": "x"}, "id": 1})",

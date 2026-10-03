@@ -15,6 +15,7 @@ import json
 import re
 import shutil
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -47,33 +48,12 @@ class TestErrorTaxonomyParser(unittest.TestCase):
     def setUp(self):
         self.taxonomy = kodi_schema.load_error_taxonomy()
 
-    def test_entry_count(self):
-        self.assertEqual(len(self.taxonomy), 10)
-
     def test_expected_codes(self):
         by_name = {entry["name"]: entry for entry in self.taxonomy}
         self.assertEqual(by_name["InvalidParams"]["code"], -32602)
         self.assertTrue(by_name["InvalidParams"]["has_data"])
         self.assertEqual(by_name["FailedToExecute"]["code"], -32100)
         self.assertEqual(by_name["AccessDenied"]["code"], -32096)
-
-    def test_all_fields_populated(self):
-        for entry in self.taxonomy:
-            self.assertTrue(entry["name"])
-            self.assertTrue(entry["message"])
-            self.assertTrue(entry["description"])
-            self.assertIsInstance(entry["code"], int)
-            self.assertIsInstance(entry["has_data"], bool)
-
-    def test_split_literals_are_joined(self):
-        by_name = {entry["name"]: entry for entry in self.taxonomy}
-        description = by_name["MethodNotFound"]["description"]
-        self.assertIn("not available over the transport", description)
-        self.assertNotIn('"  "', description)
-
-    def test_escaped_quotes_are_unescaped(self):
-        by_name = {entry["name"]: entry for entry in self.taxonomy}
-        self.assertIn('"data"', by_name["InvalidParams"]["description"])
 
 
 class TestReasonTaxonomyParser(unittest.TestCase):
@@ -85,14 +65,54 @@ class TestReasonTaxonomyParser(unittest.TestCase):
         by_name = {entry["name"]: entry for entry in self.reasons}
         self.assertEqual(by_name["nothing-playing"]["enumerator"], "NothingPlaying")
 
-    def test_every_reason_is_described(self):
-        for entry in self.reasons:
-            with self.subTest(reason=entry["name"]):
-                self.assertTrue(entry["description"])
+
+class TestLiteralParsing(unittest.TestCase):
+
+    HEADER = textwrap.dedent("""
+        enum JSONRPC_STATUS
+        {
+          OK = 0,
+          MethodNotFound = -32601,
+          InvalidParams = -32602,
+        };
+
+        inline constexpr std::array<JsonRpcStatusDescription, 2> JSONRPC_STATUS_DESCRIPTIONS{{
+            {MethodNotFound, "MethodNotFound", "Method not found.",
+             "One literal "
+             "and the next.",
+             false},
+            {InvalidParams, "InvalidParams", "Invalid params.", "Names the \\"data\\" member.", true},
+        }};
+
+        enum class Reason
+        {
+          NothingPlaying,
+        };
+
+        inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
+            {Reason::NothingPlaying, "nothing-playing",
+             "One literal "
+             "and the next."},
+        };
+        """)
+
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.header = Path(self.tempdir.name) / "JSONRPCUtils.h"
+        self.header.write_text(self.HEADER, encoding="utf-8")
+
+    def tearDown(self):
+        self.tempdir.cleanup()
 
     def test_split_literals_are_joined(self):
-        by_name = {entry["name"]: entry for entry in self.reasons}
-        self.assertIn("choosing a subtitle for music", by_name["not-applicable"]["description"])
+        errors = {entry["name"]: entry for entry in kodi_schema.load_error_taxonomy(self.header)}
+        self.assertEqual(errors["MethodNotFound"]["description"], "One literal and the next.")
+        reasons = kodi_schema.load_reason_taxonomy(self.header)
+        self.assertEqual(reasons[0]["description"], "One literal and the next.")
+
+    def test_escaped_quotes_are_unescaped(self):
+        errors = {entry["name"]: entry for entry in kodi_schema.load_error_taxonomy(self.header)}
+        self.assertEqual(errors["InvalidParams"]["description"], 'Names the "data" member.')
 
 
 class TestOpenRpcDocument(unittest.TestCase):

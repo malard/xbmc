@@ -107,11 +107,6 @@ inline CVariant ShippedDefinition(const char* const entries[],
   return {};
 }
 
-inline CVariant ShippedMethod(const std::string& name)
-{
-  return ShippedDefinition(JSONRPC_SERVICE_METHODS, std::size(JSONRPC_SERVICE_METHODS), name);
-}
-
 inline CVariant ShippedNotification(const std::string& name)
 {
   return ShippedDefinition(JSONRPC_SERVICE_NOTIFICATIONS, std::size(JSONRPC_SERVICE_NOTIFICATIONS),
@@ -148,16 +143,6 @@ inline std::set<std::string> EnumValues(const CVariant& schema)
   for (auto value = list.begin_array(); value != list.end_array(); ++value)
     values.insert(value->asString());
   return values;
-}
-
-//! \brief The names an object schema's "required" lists
-inline std::set<std::string> RequiredMembers(const CVariant& object)
-{
-  std::set<std::string> required;
-  const CVariant& values{object["required"]};
-  for (auto value = values.begin_array(); value != values.end_array(); ++value)
-    required.insert(value->asString());
-  return required;
 }
 
 inline std::set<std::string> Keys(const CVariant& object)
@@ -236,6 +221,34 @@ class JSONServiceDescriptionTestBase : public ::testing::Test
 public:
   void SetUp() override { CJSONServiceDescription::Cleanup(); }
   void TearDown() override { CJSONServiceDescription::Cleanup(); }
+
+  /*!
+   \brief Registers a method answering with \p handler
+   \param params the "params" array, as JSON
+   \param extra further members of the definition, as JSON, e.g. R"("errors": [])"
+   */
+  static bool AddTestMethod(const std::string& name,
+                            const std::string& params = "[]",
+                            const std::string& extra = "",
+                            MethodCall handler = StubMethod)
+  {
+    return CJSONServiceDescription::AddMethod(
+        R"({")" + name +
+            R"(": {"type": "method", "description": "test", "transport": "Response",
+                   "permission": "ReadData", "returns": "string", "params": )" +
+            params + (extra.empty() ? std::string{} : ", " + extra) + "}}",
+        handler);
+  }
+
+  //! \brief What JSONRPC.Introspect answers, for one method when \p method is given
+  CVariant Introspect(const std::string& method = "", bool descriptions = true)
+  {
+    CVariant result;
+    EXPECT_EQ(OK,
+              CJSONServiceDescription::Print(result, &m_transport, &m_client, descriptions, true,
+                                             false, method, method.empty() ? "" : "method"));
+    return result;
+  }
 
   JSONRPC_STATUS Call(const char* method, const std::string& paramsJson, CVariant& output)
   {

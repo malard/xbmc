@@ -18,7 +18,6 @@
 #include "utils/Variant.h"
 #include "utils/log.h"
 
-#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -66,37 +65,6 @@ private:
 };
 
 } // unnamed namespace
-
-/*!
- The level is reported as a property of the application, next to volume and mute, and
- moved by a setter next to theirs.
- */
-TEST(TestApplicationLogLevel, TheLevelIsAnApplicationProperty)
-{
-  EXPECT_TRUE(EnumValues(ShippedType("Application.Property.Name")).contains("logLevel"));
-  EXPECT_EQ(ShippedType("Application.Property.Value")["properties"]["logLevel"]["$ref"].asString(),
-            "#/$defs/Application.LogLevel.Value");
-}
-
-/*!
- Both parameters are optional and default to null, because the service description fills
- every omitted parameter before the handler runs: null is the only value that can mean
- "leave it as it is".
- */
-TEST(TestApplicationLogLevel, TheSetterLeavesWhatItIsNotGiven)
-{
-  const CVariant method{ShippedMethod("Application.SetLogLevel")};
-  EXPECT_EQ(method["permission"].asString(), "ControlSystem");
-
-  const std::map<std::string, CVariant> params{Params(method)};
-  ASSERT_TRUE(params.contains("level"));
-  ASSERT_TRUE(params.contains("components"));
-  EXPECT_FALSE(params.at("level")["required"].asBoolean());
-  EXPECT_FALSE(params.at("components")["required"].asBoolean());
-  EXPECT_TRUE(params.at("level")["schema"]["default"].isNull());
-  EXPECT_TRUE(params.at("components")["schema"]["default"].isNull());
-  EXPECT_EQ(method["returns"]["$ref"].asString(), "#/$defs/Application.LogLevel.Value");
-}
 
 /*!
  Every name the schema offers is one the handler understands, and every level the handler

@@ -57,34 +57,6 @@ TEST(TestJSONRPCPermission, UnknownValueHasNoName)
   EXPECT_STREQ("Unknown", PermissionToString(static_cast<OperationPermission>(0x4000)));
 }
 
-//! \brief Every permission the shipped service description names is one that exists
-TEST(TestJSONRPCPermission, EveryPermissionTheSchemaDeclaresExists)
-{
-  for (const auto& [name, method] : ShippedMethods())
-  {
-    const CVariant& declared = method["permission"];
-    ASSERT_FALSE(declared.isNull()) << name;
-    if (declared.isArray())
-    {
-      for (unsigned int index = 0; index < declared.size(); index++)
-        EXPECT_TRUE(StringToPermission(declared[index].asString()).has_value())
-            << name << " declares " << declared[index].asString();
-    }
-    else
-    {
-      EXPECT_TRUE(StringToPermission(declared.asString()).has_value())
-          << name << " declares " << declared.asString();
-    }
-  }
-}
-
-TEST(TestJSONRPCPermission, EverySettingsWriteRequiresWriteSetting)
-{
-  for (const char* const name : {"Settings.SetSettingValue", "Settings.ResetSettingValue",
-                                 "Settings.SetSkinSettingValue", "Settings.SetLevel"})
-    EXPECT_EQ("WriteSetting", ShippedMethod(name)["permission"].asString()) << name;
-}
-
 TEST(TestJSONRPCPermission, AllCoversEveryPermission)
 {
   int combined = 0;

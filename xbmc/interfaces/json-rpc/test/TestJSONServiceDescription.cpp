@@ -61,12 +61,9 @@ TEST_F(TestJSONServiceDescription, APropertyLeftOutOfSetPropertiesStaysUnset)
 
 TEST_F(TestJSONServiceDescription, MissingRequiredParameter)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Required": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "value", "required": true, "schema": { "type": "string" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Required",
+      R"([ { "name": "value", "required": true, "schema": { "type": "string" } } ])"));
 
   CVariant output;
   EXPECT_EQ(InvalidParams, Call("Test.Required", "{}", output));
@@ -79,9 +76,7 @@ TEST_F(TestJSONServiceDescription, MissingRequiredParameter)
 
 TEST_F(TestJSONServiceDescription, ObjectParameter)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Object": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [
+  ASSERT_TRUE(AddTestMethod("Test.Object", R"([
       { "name": "opts", "required": true, "schema": {
           "type": "object",
           "properties": {
@@ -91,10 +86,7 @@ TEST_F(TestJSONServiceDescription, ObjectParameter)
           "required": ["path"],
           "additionalProperties": false } },
       { "name": "speed", "schema": { "type": "integer", "default": 5 } }
-    ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+    ])"));
 
   // A missing required property names the property and its type in the error data
   CVariant output;
@@ -129,9 +121,7 @@ TEST_F(TestJSONServiceDescription, ObjectParameter)
 
 TEST_F(TestJSONServiceDescription, UnionParameter)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Union": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [
+  ASSERT_TRUE(AddTestMethod("Test.Union", R"([
       { "name": "target", "required": true, "schema": { "anyOf": [
           { "type": "object",
             "properties": { "movieId": { "type": "integer" } },
@@ -147,10 +137,7 @@ TEST_F(TestJSONServiceDescription, UnionParameter)
           { "type": "string", "enum": ["now", "later"] }
         ], "default": null } },
       { "name": "flag", "schema": { "type": ["null", "boolean"], "default": null } }
-    ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+    ])"));
 
   CVariant output;
   EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"movieId": 3}})", output));
@@ -230,12 +217,9 @@ TEST_F(TestJSONServiceDescription, ExtendedType)
     },
     "required": ["b"]
   }})"));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Extends": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Derived.B" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Extends",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Derived.B" } } ])"));
   CJSONServiceDescription::ResolveReferences();
 
   // The base type is validated first and fills the output first; the derived
@@ -279,12 +263,9 @@ TEST_F(TestJSONServiceDescription, ForwardReferences)
 
   EXPECT_NE(nullptr, CJSONServiceDescription::GetType("C.Container"));
   EXPECT_NE(nullptr, CJSONServiceDescription::GetType("C.Base"));
-  EXPECT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Forward": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/C.Container" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  EXPECT_TRUE(AddTestMethod(
+      "Test.Forward",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/C.Container" } } ])"));
 
   CVariant output;
   EXPECT_EQ(OK, Call("Test.Forward", R"({"data": {"inner": {"x": 1}}})", output));
@@ -305,12 +286,9 @@ TEST_F(TestJSONServiceDescription, MutuallyReferencingTypes)
   CJSONServiceDescription::ResolveReferences();
 
   ASSERT_NE(nullptr, CJSONServiceDescription::GetType("Cycle.A"));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Cycle": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Cycle.A" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Cycle",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Cycle.A" } } ])"));
 
   // Both types validate: the default of the second fills in, and its constraint holds
   CVariant output;
@@ -344,12 +322,9 @@ TEST_F(TestJSONServiceDescription, ForwardCompositionReference)
   CJSONServiceDescription::ResolveReferences();
 
   ASSERT_NE(nullptr, CJSONServiceDescription::GetType("Late.Derived"));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.LateExtends": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Late.Derived" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.LateExtends",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Late.Derived" } } ])"));
 
   CVariant output;
   EXPECT_EQ(OK, Call("Test.LateExtends", R"({"data": {"a": "x", "b": true}})", output));
@@ -364,12 +339,9 @@ TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefault)
   ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Level.T": {
     "type": "integer", "minimum": 0, "maximum": 10, "default": 5
   }})"));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Ref": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "level", "schema": { "$ref": "#/$defs/Level.T", "default": 7 } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Ref",
+      R"([ { "name": "level", "schema": { "$ref": "#/$defs/Level.T", "default": 7 } } ])"));
   CJSONServiceDescription::ResolveReferences();
 
   // The parameter's own default overrides the referenced type's default
@@ -398,12 +370,9 @@ TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefault)
 
 TEST_F(TestJSONServiceDescription, EnumParameter)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Enum": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "mode", "schema": { "type": "string", "enum": ["one", "two"] } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Enum",
+      R"([ { "name": "mode", "schema": { "type": "string", "enum": ["one", "two"] } } ])"));
 
   // An enum type without an explicit default defaults to its first value
   CVariant output;
@@ -424,39 +393,26 @@ TEST_F(TestJSONServiceDescription, EnumParameter)
 
 TEST_F(TestJSONServiceDescription, APropertyNameMatchesOnlyInItsOwnCase)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Camel": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "o", "required": true, "schema": {
+  ASSERT_TRUE(AddTestMethod("Test.Camel", R"([ { "name": "o", "required": true, "schema": {
       "type": "object",
       "properties": { "movieId": { "type": "integer" } },
-      "additionalProperties": false } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+      "additionalProperties": false } } ])"));
 
   CVariant output;
   EXPECT_EQ(OK, Call("Test.Camel", R"({"o": {"movieId": 3}})", output));
   EXPECT_EQ(InvalidParams, Call("Test.Camel", R"({"o": {"movieid": 3}})", output))
       << "a name in another case is an unexpected property, not the declared one";
 
-  CVariant printed;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(printed, &m_transport, &m_client, false, false,
-                                               false));
-  EXPECT_TRUE(printed["methods"]["Test.Camel"]["params"][0]["schema"]["properties"].isMember(
-      "movieId"));
+  const CVariant schema{Introspect("Test.Camel")["methods"]["Test.Camel"]["params"][0]["schema"]};
+  EXPECT_TRUE(schema["properties"].isMember("movieId"));
 }
 
 TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Case": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "o", "required": true, "schema": {
+  ASSERT_TRUE(AddTestMethod("Test.Case", R"([ { "name": "o", "required": true, "schema": {
       "type": "object",
       "properties": { "MixedCase": { "type": "string" } },
-      "required": ["MixedCase"] } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+      "required": ["MixedCase"] } } ])"));
 
   CVariant output;
   EXPECT_EQ(OK, Call("Test.Case", R"({"o": {"MixedCase": "v"}})", output));
@@ -477,15 +433,10 @@ TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)
 
 TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
 {
-  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.Bad": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "o", "schema": {
+  EXPECT_FALSE(AddTestMethod("Test.Bad", R"([ { "name": "o", "schema": {
       "type": "object",
       "properties": { "real": { "type": "string" } },
-      "required": ["nonexistent"] } } ],
-    "returns": "string"
-  }})",
-                                                  StubMethod));
+      "required": ["nonexistent"] } } ])"));
 }
 
 TEST_F(TestJSONServiceDescription, SchemaWithoutATypeAcceptsAnyValue)
@@ -518,12 +469,7 @@ TEST_F(TestJSONServiceDescription, SchemaWithAMalformedTypeStillFailsParse)
 {
   // Absent is not the same as nonsense: a "type" that is neither a name nor a list of names
   // is a broken schema and must not be read as "any".
-  EXPECT_FALSE(CJSONServiceDescription::AddMethod(R"({"Test.BadType": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "data", "schema": { "type": 5 } } ],
-    "returns": "string"
-  }})",
-                                                  StubMethod));
+  EXPECT_FALSE(AddTestMethod("Test.BadType", R"([ { "name": "data", "schema": { "type": 5 } } ])"));
 }
 
 TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
@@ -546,17 +492,11 @@ TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
         { "type": "string" },
         { "type": "integer" }
       ] }})"));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Print.Method": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [ { "name": "target", "required": true, "description": "what to print",
-                  "schema": { "$ref": "#/$defs/Print.Enum" } } ],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod("Print.Method", R"([ { "name": "target", "required": true,
+                    "description": "what to print", "schema": { "$ref": "#/$defs/Print.Enum" } } ])"));
   CJSONServiceDescription::ResolveReferences();
 
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+  const CVariant result{Introspect()};
 
   const CVariant& types = result["types"];
   ASSERT_TRUE(types.isMember("Print.Enum"));
@@ -588,104 +528,50 @@ TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
                   param);
 }
 
+//! \brief The annotation is part of the contract, so it outlives suppressed descriptions
 TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
 {
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "deprecated": true,
-    "params": [],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.New": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "params": [],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
+  ASSERT_TRUE(AddTestMethod("Test.Old", "[]", R"("deprecated": true)"));
+  ASSERT_TRUE(AddTestMethod("Test.New"));
 
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+  for (const bool descriptions : {true, false})
+  {
+    SCOPED_TRACE(descriptions ? "with descriptions" : "without descriptions");
+    const CVariant methods{Introspect("", descriptions)["methods"]};
 
-  ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
-  EXPECT_FALSE(result["methods"]["Test.New"].isMember("deprecated"));
+    ExpectVariantEq(CVariant(true), methods["Test.Old"]["deprecated"]);
+    EXPECT_EQ(descriptions, methods["Test.Old"].isMember("description"));
+    EXPECT_FALSE(methods["Test.New"].isMember("deprecated"));
+  }
 }
 
-//! \brief Suppressing descriptions must not also drop the deprecation annotation
-TEST_F(TestJSONServiceDescription, DeprecationSurvivesDescriptionsBeingSuppressed)
-{
-  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Old": {
-    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
-    "deprecated": true,
-    "params": [],
-    "returns": "string"
-  }})",
-                                                 StubMethod));
-
-  CVariant result;
-  ASSERT_EQ(OK,
-            CJSONServiceDescription::Print(result, &m_transport, &m_client, false, true, false));
-
-  EXPECT_FALSE(result["methods"]["Test.Old"].isMember("description"));
-  ExpectVariantEq(CVariant(true), result["methods"]["Test.Old"]["deprecated"]);
-}
-
-//! \brief A single property can carry the annotation without the whole type being deprecated
+/*!
+ A single property can carry the annotation without the whole type being deprecated, and a
+ deprecated reference does not deprecate the type it refers to.
+ */
 TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
 {
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Target": { "type": "integer" }})"));
   ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {
     "type": "object",
     "properties": {
       "old": { "type": "integer", "deprecated": true, "description": "Use new instead" },
-      "new": { "type": "integer" }
+      "new": { "type": "integer" },
+      "oldReference": { "$ref": "#/$defs/Dep.Target", "deprecated": true },
+      "newReference": { "$ref": "#/$defs/Dep.Target" }
     }
   }})"));
   CJSONServiceDescription::ResolveReferences();
 
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
+  for (const bool descriptions : {true, false})
+  {
+    SCOPED_TRACE(descriptions ? "with descriptions" : "without descriptions");
+    const CVariant properties{Introspect("", descriptions)["types"]["Dep.Thing"]["properties"]};
 
-  const CVariant& properties = result["types"]["Dep.Thing"]["properties"];
-  ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
-  EXPECT_FALSE(properties["new"].isMember("deprecated"));
-}
-
-TEST_F(TestJSONServiceDescription, ADeprecatedReferenceKeepsItsAnnotation)
-{
-  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Target": { "type": "integer" }})"));
-  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Holder": {
-    "type": "object",
-    "properties": {
-      "old": { "$ref": "#/$defs/Dep.Target", "deprecated": true },
-      "new": { "$ref": "#/$defs/Dep.Target" }
-    }
-  }})"));
-  CJSONServiceDescription::ResolveReferences();
-
-  CVariant result;
-  ASSERT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, true, true, false));
-
-  const CVariant& properties = result["types"]["Dep.Holder"]["properties"];
-  ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
-  EXPECT_FALSE(properties["new"].isMember("deprecated"));
-}
-
-//! \brief The annotation is part of the contract, so it outlives suppressed descriptions
-TEST_F(TestJSONServiceDescription, ADeprecatedPropertySurvivesDescriptionsBeingSuppressed)
-{
-  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Dep.Thing": {
-    "type": "object",
-    "properties": {
-      "old": { "type": "integer", "deprecated": true, "description": "Use new instead" }
-    }
-  }})"));
-  CJSONServiceDescription::ResolveReferences();
-
-  CVariant result;
-  ASSERT_EQ(OK,
-            CJSONServiceDescription::Print(result, &m_transport, &m_client, false, true, false));
-
-  const CVariant& property = result["types"]["Dep.Thing"]["properties"]["old"];
-  ExpectVariantEq(CVariant(true), property["deprecated"]);
-  EXPECT_FALSE(property.isMember("description"));
+    ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
+    EXPECT_EQ(descriptions, properties["old"].isMember("description"));
+    EXPECT_FALSE(properties["new"].isMember("deprecated"));
+    ExpectVariantEq(CVariant(true), properties["oldReference"]["deprecated"]);
+    EXPECT_FALSE(properties["newReference"].isMember("deprecated"));
+  }
 }

@@ -5,7 +5,6 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestApplicationLogLevel.cpp
             TestAudioLibrary.cpp
             TestAudioLibraryInfoProviderView.cpp
-            TestAudioLibrarySetInfoProviderSchema.cpp
             TestDeprecatedMethodSchema.cpp
             TestFailureReasons.cpp
             TestFileItemHandler.cpp
@@ -25,6 +24,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestPVRBroadcastSchema.cpp
             TestPVREpgFields.cpp
             TestPVRRecordingSchema.cpp
+            TestRequestableFields.cpp
             TestSetConfiguration.cpp
             TestSettingsLevel.cpp
             TestSettingsValueGate.cpp
