@@ -207,17 +207,14 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
   switch (event)
   {
     case SlideShowEvent::Play:
-      m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = running ? 1 : 0;
       message = "OnPlay";
       break;
     case SlideShowEvent::Pause:
-      m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = 0;
       message = "OnPause";
       break;
     case SlideShowEvent::Stop:
-      m_playLists->SetSlideShowRunning(false);
       data["end"] = true;
       message = "OnStop";
       break;

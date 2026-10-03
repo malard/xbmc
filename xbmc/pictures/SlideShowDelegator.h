@@ -32,6 +32,7 @@ public:
   void StartSlideShow() override;
   void PlayPicture() override;
   bool InSlideShow() const override;
+  bool IsRunning() const override;
   int NumSlides() const override;
   int CurrentSlide() const override;
   bool IsPaused() const override;
@@ -57,5 +58,5 @@ public:
                    const std::string& strExtensions = "") override;
 
 private:
-  ISlideShowDelegate* m_delegate;
+  ISlideShowDelegate* m_delegate{nullptr};
 };

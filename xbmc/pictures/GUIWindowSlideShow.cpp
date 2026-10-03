@@ -182,18 +182,21 @@ void CGUIWindowSlideShow::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
 void CGUIWindowSlideShow::AnnouncePlayerPlay(const CFileItemPtr& item)
 {
+  m_running = true;
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
       CPlaybackAnnouncer::SlideShowEvent::Play, item, m_bSlideShow && !m_bPause);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerPause(const CFileItemPtr& item)
 {
+  m_running = true;
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
       CPlaybackAnnouncer::SlideShowEvent::Pause, item, false);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerStop(const CFileItemPtr& item)
 {
+  m_running = false;
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
       CPlaybackAnnouncer::SlideShowEvent::Stop, item, false);
 }

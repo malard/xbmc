@@ -527,12 +527,6 @@ public:
   void SetObserver(IObserver* observer);
   void SetGUIListener(IGUIListener* listener);
 
-  /*!
-   * \brief The picture slideshow keeps its own list and cursor, and holds Video while it runs.
-   */
-  void SetSlideShowRunning(bool running);
-  bool IsSlideShowRunning() const;
-
 protected:
   KODI::PLAYLIST::CPlayList& EditPlayList(KODI::PLAYLIST::Type type);
 
@@ -626,7 +620,6 @@ private:
   std::atomic<bool> m_composingFeed{false};
   //! Top-up requests per playlist; one runs at a time and serves those that arrive meanwhile.
   std::array<std::atomic<int>, 2> m_topUpRequests{};
-  bool m_slideShowRunning{false};
   bool m_audioFollowsVideo{false};
   bool m_playbackStarted{false};
   KODI::PLAYLIST::EntryId m_queued{KODI::PLAYLIST::NO_ENTRY};

@@ -1626,7 +1626,7 @@ std::vector<PlayerType> CPlayerOperations::GetTargets(const CVariant& playlist)
     return {Picture};
 
   const auto playLists = CServiceBroker::GetPlayLists();
-  const bool slideShow = playLists->IsSlideShowRunning();
+  const bool slideShow = CServiceBroker::GetSlideShowDelegator().IsRunning();
   // the slideshow shows on the video side
   if (named == PLAYLIST::Video)
     return {slideShow && playLists->GetPlayingType() != PLAYLIST::Video ? Picture : Video};
@@ -1655,9 +1655,10 @@ JSONRPC_STATUS CPlayerOperations::ForEachTarget(
   const auto playLists = CServiceBroker::GetPlayLists();
   const std::string& name = parameterObject["playlist"].asString();
   const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
-  const bool idle = named ? playLists->GetPlayingType() != named &&
-                                !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
-                          : name == "picture" && !playLists->IsSlideShowRunning();
+  const bool slideShow = CServiceBroker::GetSlideShowDelegator().IsRunning();
+  const bool idle =
+      named ? playLists->GetPlayingType() != named && !(*named == PLAYLIST::Video && slideShow)
+            : name == "picture" && !slideShow;
   if (idle)
     return Fail(result, FailedToExecute, Reason::NothingPlaying,
                 Target("playlist", parameterObject["playlist"]));
@@ -1711,7 +1712,7 @@ JSONRPC_STATUS CPlayerOperations::ForEachOnList(
 
 bool CPlayerOperations::IsAnythingPlaying()
 {
-  return AppPlayer()->IsPlaying() || CServiceBroker::GetPlayLists()->IsSlideShowRunning();
+  return AppPlayer()->IsPlaying() || CServiceBroker::GetSlideShowDelegator().IsRunning();
 }
 
 std::optional<PLAYLIST::Type> CPlayerOperations::GetPlayList(PlayerType player,
