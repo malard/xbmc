@@ -40,6 +40,9 @@ enum class VideoKind
 class CVideoLibrary : public CFileItemHandler
 {
 public:
+  //! Whether the library holds items of \p type
+  static bool IsItemKind(KODI::MEDIA::MediaType type);
+
   //! The query over one kind's items
   static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
 

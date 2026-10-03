@@ -164,6 +164,11 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 }
 } // unnamed namespace
 
+bool CVideoLibrary::IsItemKind(MediaType type)
+{
+  return std::ranges::find(KINDS, type, &KindTraits::type) != std::end(KINDS);
+}
+
 JSONRPC_STATUS CVideoLibrary::GetItems(const CVariant& parameterObject, CVariant& result)
 {
   const KindTraits* traits = TraitsNamed(parameterObject["kind"].asString());

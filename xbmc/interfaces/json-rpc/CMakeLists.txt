@@ -7,6 +7,7 @@ set(SOURCES AddonsExecuteAddon.cpp
             FileItemHandler.cpp
             FileOperations.cpp
             GUIOperations.cpp
+            IJSONRPCAnnouncer.cpp
             InputOperations.cpp
             JSONRPC.cpp
             JSONServiceDescription.cpp
