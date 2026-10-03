@@ -12,6 +12,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/FilenameAttributes.h"
@@ -44,9 +45,7 @@ TEST(TestUtil, GetQualifiedFilename)
 TEST(TestUtil, IsInPlaylistsFolderFollowsThePlaylistsSetting)
 {
   using KODI::MEDIA::MediaSection;
-  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-  const std::string original{settings->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH)};
-  settings->SetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH, "special://temp/lists/");
+  const CScopedSetting playlists{CSettings::SETTING_SYSTEM_PLAYLISTSPATH, "special://temp/lists/"};
 
   EXPECT_TRUE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::VIDEO));
   EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::MUSIC));
@@ -55,8 +54,6 @@ TEST(TestUtil, IsInPlaylistsFolderFollowsThePlaylistsSetting)
   EXPECT_FALSE(
       CUtil::IsInPlaylistsFolder("special://profile/playlists/video/a.m3u", MediaSection::VIDEO));
   EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::FILES));
-
-  settings->SetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH, original);
 }
 
 TEST(TestUtil, MakeLegalPath)

@@ -9,6 +9,7 @@
 #include "ServiceBroker.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "video/geometry/ContentGeometryScanner.h"
 #include "video/geometry/GeometrySettings.h"
 
@@ -22,15 +23,6 @@ namespace
 class TestGeometrySettings : public ::testing::Test
 {
 protected:
-  void SetUp() override
-  {
-    const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    m_extractWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY);
-    m_libraryWas = settings->GetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN);
-  }
-
-  void TearDown() override { Set(m_extractWas, m_libraryWas); }
-
   static void Set(bool extract, bool library)
   {
     const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
@@ -38,8 +30,8 @@ protected:
     settings->SetBool(CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN, library);
   }
 
-  bool m_extractWas{false};
-  bool m_libraryWas{false};
+  const CScopedSetting m_extract{CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY};
+  const CScopedSetting m_library{CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN};
 };
 
 } // namespace
