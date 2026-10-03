@@ -10,6 +10,7 @@
 #include "GUIUserMessages.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/PlaybackAnnouncer.h"
+#include "application/test/PlayListsTestHelpers.h"
 #include "guilib/GUIMessage.h"
 #include "playlists/PlayList.h"
 #include "utils/Variant.h"
@@ -21,39 +22,11 @@
 #include <gtest/gtest.h>
 
 using namespace KODI;
+using namespace KODI::APPLICATION::TEST;
 using namespace KODI::PLAYLIST;
 
 namespace
 {
-class CNoPlayback : public CApplicationPlayLists::IPlayback
-{
-public:
-  bool Open(const CFileItem& item,
-            const CApplicationPlayLists::PlayOptions& options,
-            KODI::APPLICATION::StartsRun startsRun) override
-  {
-    return true;
-  }
-  bool LoadLibraryTag(CFileItem& item) const override { return false; }
-  Queued QueueNext(const CFileItem& item) override { return Queued::Refused; }
-  void NothingToQueue() override {}
-  void Stop() override {}
-  void Close() override {}
-  bool IsPlaying() const override { return false; }
-  bool IsPlayingVideo() const override { return false; }
-  bool IsPlayingAudio() const override { return false; }
-  std::string GetName() const override { return {}; }
-  bool RestartsOnPrevious() const override { return false; }
-};
-
-class CTestPlayLists : public CApplicationPlayLists
-{
-public:
-  CTestPlayLists() : CApplicationPlayLists(std::make_unique<CNoPlayback>()) {}
-
-  using CApplicationPlayLists::EditPlayList;
-};
-
 struct Published
 {
   ANNOUNCEMENT::AnnouncementFlag flag;
