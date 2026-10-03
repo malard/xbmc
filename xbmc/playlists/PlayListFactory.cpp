@@ -26,7 +26,7 @@
 namespace KODI::PLAYLIST
 {
 
-CPlayList* CPlayListFactory::Create(const CURL& url)
+CPlayListFile* CPlayListFactory::Create(const CURL& url)
 {
   CFileItem item{url.Get(), false};
 
@@ -39,13 +39,13 @@ CPlayList* CPlayListFactory::Create(const CURL& url)
   return Create(item);
 }
 
-CPlayList* CPlayListFactory::Create(const std::string& filename)
+CPlayListFile* CPlayListFactory::Create(const std::string& filename)
 {
   CFileItem item(filename,false);
   return Create(item);
 }
 
-CPlayList* CPlayListFactory::Create(const CFileItem& item)
+CPlayListFile* CPlayListFactory::Create(const CFileItem& item)
 {
   if (NETWORK::IsInternetStream(item))
   {
@@ -121,15 +121,15 @@ CPlayList* CPlayListFactory::Create(const CFileItem& item)
 
 }
 
-std::unique_ptr<CPlayList> CPlayListFactory::Load(const CFileItem& item)
+std::unique_ptr<CPlayListFile> CPlayListFactory::Load(const CFileItem& item)
 {
-  std::unique_ptr<CPlayList> playlist(Create(item));
+  std::unique_ptr<CPlayListFile> playlist(Create(item));
   if (!playlist || !playlist->Load(item.GetPath()))
     return nullptr;
   return playlist;
 }
 
-std::unique_ptr<CPlayList> CPlayListFactory::Load(const std::string& filename)
+std::unique_ptr<CPlayListFile> CPlayListFactory::Load(const std::string& filename)
 {
   return Load(CFileItem(filename, false));
 }

@@ -33,8 +33,8 @@
 #include "media/MediaLockState.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "pictures/SlideShowDelegator.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -546,17 +546,14 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
   CLog::Log(LOGDEBUG,
             "CGUIWindowPictures::LoadPlayList()... converting playlist into slideshow: {}",
             strPlayList);
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (nullptr != pPlayList)
+  const auto pPlayList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!pPlayList)
   {
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return ; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return; //hmmm unable to load playlist?
   }
 
-  const PLAYLIST::CPlayList& playlist = *pPlayList;
+  const PLAYLIST::CPlayListFile& playlist = *pPlayList;
   if (!playlist.IsEmpty())
   {
     //! @todo this should be reactive, based on a given event app player should stop the playback
@@ -568,9 +565,8 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
     CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
     // convert playlist items into slideshow items
     slideShow.Reset();
-    for (const auto& entry : playlist.GetEntries())
+    for (const CFileItemPtr& pItem : playlist.GetItems())
     {
-      const CFileItemPtr& pItem = entry.item;
       if (pItem->IsPicture() && !(pItem->IsZIP() || pItem->IsRAR() || pItem->IsCBZ() || pItem->IsCBR()))
       {
         slideShow.Add(pItem.get());

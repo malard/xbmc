@@ -8,8 +8,8 @@
  */
 
 #include "URL.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListXSPF.h"
 #include "test/TestUtils.h"
 
@@ -21,7 +21,7 @@ TEST(TestPlayListFactory, XSPF)
 {
   std::string filename = XBMC_REF_FILE_PATH("/xbmc/playlists/test/newfile.xspf");
   CURL url("http://example.com/playlists/playlist.xspf");
-  PLAYLIST::CPlayList* playlist = nullptr;
+  PLAYLIST::CPlayListFile* playlist = nullptr;
 
   EXPECT_TRUE(PLAYLIST::CPlayListFactory::IsPlaylist(url));
   EXPECT_TRUE(PLAYLIST::CPlayListFactory::IsPlaylist(filename));

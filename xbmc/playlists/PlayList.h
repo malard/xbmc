@@ -73,34 +73,25 @@ struct PlayListChange
  * order: the first queued play-next request, the current entry again when the playlist repeats
  * it and it ended by itself, what the shuffle says follows, the wrap, and otherwise nothing.
  *
- * Editing and reading the entries is safe from any thread; loading and saving are not. The list
- * owns its items, and they are shared with whoever reads them: nothing changes one in place;
- * UpdateItem() and ReplaceItem() replace it.
+ * Editing and reading the entries is safe from any thread. The list owns its items, and they are
+ * shared with whoever reads them: nothing changes one in place; UpdateItem() and ReplaceItem()
+ * replace it.
  */
-class CPlayList
+class CPlayList final
 {
 public:
   using Observer = std::function<void(const std::vector<PlayListChange>&)>;
 
   CPlayList();
-  virtual ~CPlayList();
+  ~CPlayList();
   CPlayList(const CPlayList&) = delete;
   CPlayList& operator=(const CPlayList&) = delete;
 
-  virtual bool Load(const std::string& strFileName);
-  virtual bool LoadData(std::istream &stream);
-  virtual bool LoadData(const std::string& strData);
-  virtual void Save(const std::string& strFileName) const {};
-
   EntryId Add(const std::shared_ptr<CFileItem>& item);
-  void Add(const CPlayList& playlist);
   void Add(const CFileItemList& items);
 
-  void Insert(const CPlayList& playlist, int iPosition = -1);
   void Insert(const CFileItemList& items, int iPosition = -1);
   EntryId Insert(const std::shared_ptr<CFileItem>& item, int iPosition = -1);
-
-  std::string GetName() const;
 
   /*!
    * \brief The playlist file, smart playlist or folder the entries were read from, if any. Cleared
@@ -254,18 +245,11 @@ public:
    */
   void UpdateItem(const CFileItem& item);
 
-  static std::string ResolveURL(const std::shared_ptr<CFileItem>& item);
-
   /*!
    * \brief Be told of each PlayListChange; replacing an item or marking it unplayable is not
    * reported. Called without the playlist's lock held.
    */
   void SetObserver(Observer observer);
-
-protected:
-  std::string m_strPlayListName;
-  std::string m_strBasePath;
-  std::vector<PlayListEntry> m_entries;
 
 private:
   struct Request
@@ -304,6 +288,7 @@ private:
   void Notify(const Changes& changes) const;
 
   mutable CCriticalSection m_critSection;
+  std::vector<PlayListEntry> m_entries;
   EntryId m_lastId{NO_ENTRY};
   EntryId m_current{NO_ENTRY};
   Wrap m_wrap{Wrap::None};

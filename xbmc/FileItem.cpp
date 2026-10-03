@@ -34,8 +34,8 @@
 #include "music/tags/MusicInfoTagLoaderFactory.h"
 #include "network/NetworkFileItemClassify.h"
 #include "pictures/PictureInfoTag.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannel.h"
@@ -2273,7 +2273,8 @@ bool CFileItem::LoadDetails()
 
   if (PLAYLIST::IsPlayList(*this) && IsType(".strm"))
   {
-    const std::unique_ptr<PLAYLIST::CPlayList> playlist(PLAYLIST::CPlayListFactory::Create(*this));
+    const std::unique_ptr<PLAYLIST::CPlayListFile> playlist(
+        PLAYLIST::CPlayListFactory::Create(*this));
     if (playlist && playlist->Load(GetPath()) && playlist->Size() == 1)
     {
       const auto item{(*playlist)[0]};

@@ -12,8 +12,8 @@
 #include "FileItemList.h"
 #include "URL.h"
 #include "filesystem/File.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 
 using namespace KODI;
 
@@ -25,7 +25,7 @@ namespace XFILE
 
   bool CPlaylistFileDirectory::GetDirectory(const CURL& url, CFileItemList& items)
   {
-    std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(url));
+    std::unique_ptr<PLAYLIST::CPlayListFile> pPlayList(PLAYLIST::CPlayListFactory::Create(url));
     if (nullptr != pPlayList)
     {
       // load it
@@ -39,7 +39,7 @@ namespace XFILE
 
   bool CPlaylistFileDirectory::ContainsFiles(const CURL& url)
   {
-    std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(url));
+    std::unique_ptr<PLAYLIST::CPlayListFile> pPlayList(PLAYLIST::CPlayListFactory::Create(url));
     if (nullptr != pPlayList)
     {
       // load it
