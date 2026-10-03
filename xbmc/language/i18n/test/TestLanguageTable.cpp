@@ -209,4 +209,23 @@ TEST_F(LanguageTableTest, ListsOnlyTheIso6391CodesInUse)
   // the codes ISO 639-1 has withdrawn
   for (const std::string_view code : {"bh", "in", "iw", "ji", "jw", "mo", "sh"})
     EXPECT_FALSE(languages.contains(std::string{code})) << code;
+
+  // nor the ISO 639-2 codes for no particular language, which have no alpha-2 code
+  EXPECT_FALSE(languages.contains(""));
+}
+
+TEST_F(LanguageTableTest, NamesNoWithdrawnAlpha2CodeButKnowsTheNamesTheyHad)
+{
+  EXPECT_FALSE(Table().NameOf("bh").has_value());
+  EXPECT_FALSE(Table().NameOf("sh").has_value());
+  EXPECT_EQ(Table().NameOf("bih"), "Bihari languages");
+
+  EXPECT_EQ(Table().CodeOf("Bihari"), "bh");
+  EXPECT_EQ(Table().CodeOf("Serbo-Croatian"), "sh");
+
+  // A current code outranks a withdrawn one with the same name
+  EXPECT_EQ(Table().CodeOf("Hebrew"), "he");
+  EXPECT_EQ(Table().CodeOf("Yiddish"), "yi");
+
+  EXPECT_EQ(Table().CodeOf("Undetermined"), "und");
 }

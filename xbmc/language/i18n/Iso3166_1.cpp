@@ -14,23 +14,11 @@
 
 using namespace KODI::LANGUAGE::I18N;
 
-namespace
-{
-std::optional<ISO3166_1> FindAlpha2(std::string_view code)
+std::optional<std::string> CIso3166_1::Alpha2ToAlpha3(std::string_view code)
 {
   const auto it = std::ranges::lower_bound(TableISO3166_1, code, {}, &ISO3166_1::alpha2);
   if (it != TableISO3166_1.end() && it->alpha2 == code)
-    return *it;
-
-  return std::nullopt;
-}
-} // namespace
-
-std::optional<std::string> CIso3166_1::Alpha2ToAlpha3(std::string_view code)
-{
-  const auto entry = FindAlpha2(code);
-  if (entry.has_value())
-    return std::string{entry->alpha3};
+    return std::string{it->alpha3};
 
   return std::nullopt;
 }

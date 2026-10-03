@@ -9,8 +9,8 @@
 #include "language/i18n/LanguageTable.h"
 
 #include "language/i18n/Iso639.h"
-#include "language/i18n/Iso639_1_Table.h"
 #include "language/i18n/Iso639_2_Table.h"
+#include "language/i18n/TableLanguageCodes.h"
 #include "utils/StringUtils.h"
 
 #include <algorithm>
@@ -34,8 +34,11 @@ std::string Key(std::string_view text)
 //! The ISO 639-1 codes in use, to their names. Withdrawn codes are left out.
 void ListIso6391Languages(std::map<std::string, std::string>& languages)
 {
-  for (const LCENTRY& entry : TableISO639_1)
-    languages.emplace(LongCodeToString(entry.code), entry.name);
+  for (const ISO639_1& entry : TableISO639_1)
+  {
+    if (!entry.alpha2.empty() && !entry.withdrawn)
+      languages.emplace(entry.alpha2, entry.name);
+  }
 }
 
 //! The ISO 639-2 codes in either form, to their names
@@ -58,10 +61,14 @@ void ListLanguageNames(std::map<std::string, std::string>& names)
 {
   // ISO 639-1 first, so that a language having codes in both standards is named by its alpha-2
   // one, which is what the rest of the application prefers
-  for (const LCENTRY& entry : TableISO639_1)
-    names.emplace(entry.name, LongCodeToString(entry.code));
-  for (const LCENTRY& entry : TableISO639_1_Depr)
-    names.emplace(entry.name, LongCodeToString(entry.code));
+  for (const bool withdrawn : {false, true})
+  {
+    for (const ISO639_1& entry : TableISO639_1)
+    {
+      if (!entry.alpha2.empty() && entry.withdrawn == withdrawn)
+        names.emplace(entry.name, entry.alpha2);
+    }
+  }
 
   // ISO 639-2 names are mapped to the ISO 639-2/T code
   for (const LCENTRY& entry : TableISO639_2ByCode)

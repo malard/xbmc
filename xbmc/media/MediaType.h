@@ -53,16 +53,7 @@ MediaType MediaTypeOf(std::string_view name);
 //! \brief Whether an item of this type holds other items, as an album holds songs.
 bool IsContainer(MediaType type);
 
-//! \brief The localized name, e.g. "movie". Empty for NONE.
-std::string GetLocalization(MediaType type);
-
-//! \brief The localized plural name, e.g. "movies". Empty for NONE.
-std::string GetPluralLocalization(MediaType type);
-
 //! \brief The localized name as a heading, e.g. "Movie". Empty for NONE.
 std::string GetCapitalLocalization(MediaType type);
-
-//! \brief The localized plural name as a heading, e.g. "Movies". Empty for NONE.
-std::string GetCapitalPluralLocalization(MediaType type);
 
 } // namespace KODI::MEDIA

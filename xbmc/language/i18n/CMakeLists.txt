@@ -16,7 +16,6 @@ set(HEADERS Bcp47.h
             Iso3166_1.h
             Iso3166_1_Table.h
             Iso639.h
-            Iso639_1_Table.h
             Iso639_2_Table.h
             IsoCodes.h
             LanguageTable.h
