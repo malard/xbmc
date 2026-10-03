@@ -43,7 +43,6 @@
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
 #include "platform/Filesystem.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"

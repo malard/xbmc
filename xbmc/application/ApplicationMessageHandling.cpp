@@ -41,7 +41,6 @@
 #include "messaging/helpers/DialogOKHelper.h"
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "playlists/PlayListTypes.h"
 #include "powermanagement/PowerManager.h"
