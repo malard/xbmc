@@ -820,11 +820,6 @@ std::string CStreamDetails::VideoAspectToAspectDescription(float fAspect)
   return KODI::UTILS::CAspectRatioVocabulary::Label(fAspect);
 }
 
-std::string CStreamDetails::VideoAspectToAspectName(float fAspect)
-{
-  return KODI::UTILS::CAspectRatioVocabulary::Name(fAspect);
-}
-
 bool CStreamDetails::SetStreams(const VideoStreamInfo& videoInfo,
                                 int videoDuration,
                                 const AudioStreamInfo& audioInfo,
