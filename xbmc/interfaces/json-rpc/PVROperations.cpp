@@ -355,9 +355,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastIsPlayable(const CVariant& parameterO
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetPlayableBroadcasts(ITransportLayer* transport,
-                                                     IClient* client,
-                                                     const CVariant& parameterObject,
+JSONRPC_STATUS CPVROperations::GetPlayableBroadcasts(const CVariant& parameterObject,
                                                      CVariant& result)
 {
   if (!PvrStarted())
