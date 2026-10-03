@@ -2673,20 +2673,7 @@ bool CApplication::SetLanguage(const std::string &strLanguage)
 
 bool CApplication::LoadLanguage(bool reload)
 {
-  // load the configured language
-  if (!KODI::LANGUAGE::CLanguageLoader::GetInstance().Load("", reload))
-    return false;
-
-  // set the proper audio and subtitle languages
-  const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-  KODI::LANGUAGE::CLanguage& language = KODI::LANGUAGE::CLanguage::GetInstance();
-  // A value the settings list never offered is put back to the default
-  if (!language.SetAudio(settings->GetString(CSettings::SETTING_LOCALE_AUDIOLANGUAGE)))
-    settings->GetSetting(CSettings::SETTING_LOCALE_AUDIOLANGUAGE)->Reset();
-  if (!language.SetSubtitle(settings->GetString(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)))
-    settings->GetSetting(CSettings::SETTING_LOCALE_SUBTITLELANGUAGE)->Reset();
-
-  return true;
+  return KODI::LANGUAGE::CLanguageLoader::GetInstance().Load("", reload);
 }
 
 void CApplication::SetLoggingIn(bool switchingProfiles)
