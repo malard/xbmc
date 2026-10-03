@@ -743,22 +743,23 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
           return;
         case CActiveAEControlProtocol::PAUSESTREAM:
           CActiveAEStream *stream;
-          stream = *(CActiveAEStream**)msg->data;
+          MsgStreamPause* pauseMsg;
+          pauseMsg = reinterpret_cast<MsgStreamPause*>(msg->data);
+          stream = pauseMsg->stream;
           if (!stream->m_paused && m_streams.size() == 1)
           {
             FlushEngine();
-            streaming = false;
-            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming, sizeof(bool));
+            // Kept output leaves STREAMING set, so the sink keeps the wire alive
+            if (!pauseMsg->keepOutput)
+            {
+              streaming = false;
+              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming,
+                                                  sizeof(bool));
+            }
           }
           stream->m_paused = true;
-          return;
-        case CActiveAEControlProtocol::HOLDSTREAM:
-          // A pause that leaves STREAMING set, so the sink keeps the wire alive for the hold.
-          stream = *(CActiveAEStream**)msg->data;
-          if (!stream->m_paused && m_streams.size() == 1)
-            FlushEngine();
-          stream->m_paused = true;
-          m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
+          if (pauseMsg->keepOutput)
+            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
           return;
         case CActiveAEControlProtocol::RESUMESTREAM:
           stream = *(CActiveAEStream**)msg->data;
@@ -3672,21 +3673,18 @@ void CActiveAE::FlushStream(CActiveAEStream *stream)
   }
 }
 
-void CActiveAE::PauseStream(CActiveAEStream *stream, bool pause)
+void CActiveAE::PauseStream(CActiveAEStream* stream, bool pause, bool keepOutput)
 {
   //! @todo pause sink, needs api change
   if (pause)
-    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM,
-                                   &stream, sizeof(CActiveAEStream*));
+  {
+    MsgStreamPause msg{stream, keepOutput};
+    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM, &msg,
+                                 sizeof(MsgStreamPause));
+  }
   else
     m_controlPort.SendOutMessage(CActiveAEControlProtocol::RESUMESTREAM,
                                    &stream, sizeof(CActiveAEStream*));
-}
-
-void CActiveAE::HoldStream(CActiveAEStream* stream)
-{
-  m_controlPort.SendOutMessage(CActiveAEControlProtocol::HOLDSTREAM, &stream,
-                               sizeof(CActiveAEStream*));
 }
 
 void CActiveAE::SetStreamAmplification(CActiveAEStream *stream, float amplify)

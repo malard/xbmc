@@ -85,7 +85,6 @@ public:
     MUTE,
     VOLUME,
     PAUSESTREAM,
-    HOLDSTREAM,
     RESUMESTREAM,
     FLUSHSTREAM,
     STREAMRGAIN,
@@ -155,6 +154,12 @@ struct MsgStreamSample
 {
   CSampleBuffer *buffer;
   CActiveAEStream *stream;
+};
+
+struct MsgStreamPause
+{
+  CActiveAEStream* stream;
+  bool keepOutput;
 };
 
 struct MsgStreamParameter
@@ -298,8 +303,7 @@ protected:
   float GetCacheTotal() { return m_stats.GetCacheTotal(); }
   float GetMaxDelay() { return m_stats.GetMaxDelay(); }
   void FlushStream(CActiveAEStream *stream);
-  void PauseStream(CActiveAEStream *stream, bool pause);
-  void HoldStream(CActiveAEStream* stream);
+  void PauseStream(CActiveAEStream* stream, bool pause, bool keepOutput = false);
   void StopSound(CActiveAESound *sound);
   void SetStreamAmplification(CActiveAEStream *stream, float amplify);
   void SetStreamReplaygain(CActiveAEStream *stream, float rgain);
