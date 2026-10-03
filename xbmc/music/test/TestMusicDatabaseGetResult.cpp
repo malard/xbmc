@@ -6,12 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "filesystem/SpecialProtocol.h"
+#include "dbwrappers/test/DatabaseTestUtils.h"
 #include "music/Album.h"
 #include "music/Artist.h"
 #include "music/MusicDatabase.h"
 #include "music/Song.h"
-#include "settings/AdvancedSettings.h"
 #include "utils/StringUtils.h"
 
 #include <gtest/gtest.h>
@@ -27,14 +26,6 @@ constexpr int MISSING_ID = 4242;
 // The album the songless-album test adds.
 constexpr int ALBUM_ID = 4243;
 
-DatabaseSettings SqliteSettings()
-{
-  DatabaseSettings settings;
-  settings.type = "sqlite3";
-  settings.host = CSpecialProtocol::TranslatePath("special://temp/");
-  return settings;
-}
-
 } // namespace
 
 class MusicDatabaseGetResultTest : public ::testing::Test
@@ -42,7 +33,7 @@ class MusicDatabaseGetResultTest : public ::testing::Test
 protected:
   void SetUp() override
   {
-    ASSERT_EQ(m_db.Connect("TestMusicDatabaseGetResult", SqliteSettings(), true),
+    ASSERT_EQ(m_db.Connect("TestMusicDatabaseGetResult", TestDatabaseSettings(), true),
               CDatabase::ConnectionState::STATE_CONNECTED);
   }
 
@@ -105,7 +96,7 @@ TEST(MusicDatabaseGetResultSonglessAlbumTest, AlbumWithNoSongsIsRetrievedWithAnE
 {
   CMusicDatabase db;
   // A database of this test's own, because it adds rows.
-  ASSERT_EQ(db.Connect("TestMusicDatabaseSonglessAlbum", SqliteSettings(), true),
+  ASSERT_EQ(db.Connect("TestMusicDatabaseSonglessAlbum", TestDatabaseSettings(), true),
             CDatabase::ConnectionState::STATE_CONNECTED);
 
   // An album credited to the artist the schema seeds, and deliberately no songs.
@@ -134,7 +125,7 @@ TEST(MusicDatabaseGetResultSonglessAlbumTest, AlbumWithNoSongsIsRetrievedWithAnE
 TEST(MusicDatabaseTransactionTest, CommitSucceedsWithoutAGui)
 {
   CMusicDatabase db;
-  ASSERT_EQ(db.Connect("TestMusicDatabaseTransaction", SqliteSettings(), true),
+  ASSERT_EQ(db.Connect("TestMusicDatabaseTransaction", TestDatabaseSettings(), true),
             CDatabase::ConnectionState::STATE_CONNECTED);
 
   db.BeginTransaction();
@@ -147,7 +138,7 @@ TEST(MusicDatabaseGetResultQueryFailureTest, FailedQueryReportsError)
 {
   CMusicDatabase db;
   // A database of this test's own, because it damages the schema.
-  ASSERT_EQ(db.Connect("TestMusicDatabaseGetResultQueryFailure", SqliteSettings(), true),
+  ASSERT_EQ(db.Connect("TestMusicDatabaseGetResultQueryFailure", TestDatabaseSettings(), true),
             CDatabase::ConnectionState::STATE_CONNECTED);
 
   // Remove what each getter selects from, so the query itself fails.

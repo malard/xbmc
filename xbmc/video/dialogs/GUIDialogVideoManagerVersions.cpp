@@ -304,7 +304,7 @@ void CGUIDialogVideoManagerVersions::SetDefaultVideoVersion(const CFileItem& ver
 
   // Widgets reload on the announcement
   CUtil::DeleteVideoDatabaseDirectoryCache();
-  CVideoDatabase::AnnounceUpdate(m_videoAsset->GetVideoInfoTag()->m_type, dbId);
+  CVideoDatabase::AnnounceUpdate(m_videoAsset->GetVideoInfoTag()->GetMediaType(), dbId);
 }
 
 bool CGUIDialogVideoManagerVersions::AddVideoVersion()
@@ -499,7 +499,7 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
   try
   {
     int idFile{-1};
-    std::optional<std::pair<std::string, int>> announce;
+    std::optional<std::pair<MediaType, int>> announce;
     m_database.BeginTransaction();
     if (replaceExistingFile == ReplaceExistingFile::YES)
     {
@@ -520,7 +520,7 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
           tag->m_iDbId = idFile;
         tag->m_iFileId = idFile;
         KODI::VIDEO::UTILS::NotifyItemPathChanged(*item, oldPath, oldFileId);
-        announce = {owner.GetVideoInfoTag()->m_type, owner.GetVideoInfoTag()->m_iDbId};
+        announce = {owner.GetVideoInfoTag()->GetMediaType(), owner.GetVideoInfoTag()->m_iDbId};
       }
     }
     else

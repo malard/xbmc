@@ -420,12 +420,6 @@ public:
   bool UpdateArtistScrapedMBID(int idArtist, const std::string& strMusicBrainzArtistID);
   bool GetTranslateBlankArtist() const { return m_translateBlankArtist; }
   void SetTranslateBlankArtist(bool translate) { m_translateBlankArtist = translate; }
-  /*!
-   \brief Whether this connection's writes announce the items they update
-
-   A caller that announces what it changed itself turns this off, so a change is announced once.
-   */
-  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
   bool HasArtistBeenScraped(int idArtist) const;
   bool ClearArtistLastScrapedTime(int idArtist);
   int AddArtistDiscography(int idArtist, const CDiscoAlbum& discoAlbum);
@@ -749,27 +743,15 @@ public:
   /////////////////////////////////////////////////
   // Art
   /////////////////////////////////////////////////
-  /*! \brief Sets art for a database item.
-   Sets a single piece of art for a database item.
-   \param mediaId the id in the media (song/artist/album) table.
-   \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-   \param artType the type of art to set, e.g. "thumb", "fanart"
-   \param url the url to the art (this is the original url, not a cached url).
-   \sa GetArtForItem
-   */
-  void SetArtForItem(int mediaId,
-                     const std::string& mediaType,
-                     const std::string& artType,
-                     const std::string& url);
+  using CDatabase::GetArtForItem;
+  using CDatabase::SetArtForItem;
 
-  /*! \brief Sets art for a database item.
-   Sets multiple pieces of art for a database item.
-   \param mediaId the id in the media (song/artist/album) table.
-   \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-   \param art a map of <type, url> where type is "thumb", "fanart", etc. and url is the original url of the art.
-   \sa GetArtForItem
+  /*! \brief Sets each piece of \p art for a database item, carrying on past one that fails.
+   \return false if any piece could not be set
    */
-  void SetArtForItem(int mediaId, const std::string& mediaType, const KODI::ART::Artwork& art);
+  bool SetArtForItem(int mediaId,
+                     const std::string& mediaType,
+                     const KODI::ART::Artwork& art) override;
 
   /*! \brief Fetch all related art for a database item.
   Fetches multiple pieces of art for a database item including that for related media types
@@ -795,53 +777,9 @@ public:
                      std::vector<ArtForThumbLoader>& art);
 
   /*! \brief Fetch art for a database item.
-   Fetches multiple pieces of art for a database item.
-   \param mediaId the id in the media (song/artist/album) table.
-   \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-   \param art [out] a map of <type, url> where type is "thumb", "fanart", etc. and url is the original url of the art.
    \return true if art is retrieved, false if no art is found.
-   \sa SetArtForItem
    */
-  bool GetArtForItem(int mediaId, const std::string& mediaType, KODI::ART::Artwork& art);
-
-  /*! \brief Fetch art for a database item.
-   Fetches a single piece of art for a database item.
-   \param mediaId the id in the media (song/artist/album) table.
-   \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-   \param artType the type of art to retrieve, eg "thumb", "fanart".
-   \return the original URL to the piece of art, if available.
-   \sa SetArtForItem
-   */
-  std::string GetArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-
-  /*! \brief Remove art for a database item.
-  Removes  a single piece of art for a database item.
-  \param mediaId the id in the media (song/artist/album) table.
-  \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-  \param artType the type of art to remove, eg "thumb", "fanart".
-  \return true if art is removed, false if no art is found.
-  \sa RemoveArtForItem
-  */
-  bool RemoveArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-
-  /*! \brief Remove art for a database item.
-  Removes multiple pieces of art for a database item.
-  \param mediaId the id in the media (song/artist/album) table.
-  \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-  \param artTypes a set of types, e.g. "thumb", "fanart", etc. to be removed.
-  \return true if art is removed, false if no art is found.
-  \sa RemoveArtForItem
-  */
-  bool RemoveArtForItem(int mediaId,
-                        const std::string& mediaType,
-                        const std::set<std::string, std::less<>>& artTypes);
-
-  /*! \brief Fetch the distinct types of art held in the database for a type of media.
-  \param mediaType the type of media, which corresponds to the table the item resides in (song/artist/album).
-  \param artTypes [out] the types of art e.g. "thumb", "fanart", etc.
-  \return true if art is found, false if no art is found.
-  */
-  bool GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes);
+  bool GetArtForItem(int mediaId, const std::string& mediaType, KODI::ART::Artwork& art) override;
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -862,35 +800,6 @@ public:
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
                                                              KODI::MEDIA::MediaType mediaType,
                                                              const std::string& artType);
-
-  //! \brief The art functions above, for an item whose table is a media type.
-  void SetArtForItem(int mediaId,
-                     KODI::MEDIA::MediaType mediaType,
-                     const std::string& artType,
-                     const std::string& url)
-  {
-    SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
-  }
-  void SetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, const KODI::ART::Artwork& art)
-  {
-    SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  bool GetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, KODI::ART::Artwork& art)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  std::string GetArtForItem(int mediaId,
-                            KODI::MEDIA::MediaType mediaType,
-                            const std::string& artType)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
-  }
-  bool RemoveArtForItem(int mediaId,
-                        KODI::MEDIA::MediaType mediaType,
-                        const std::set<std::string, std::less<>>& artTypes)
-  {
-    return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);
-  }
 
   /////////////////////////////////////////////////
   // Tag Scan Version
@@ -1037,7 +946,6 @@ private:
   std::map<std::string, int, std::less<>> m_genreCache;
   std::map<std::string, int, std::less<>> m_pathCache;
   bool m_translateBlankArtist{true};
-  bool m_announceUpdates{true};
 
   // Fields should be ordered as they
   // appear in the songview

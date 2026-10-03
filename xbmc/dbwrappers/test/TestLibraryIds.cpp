@@ -6,13 +6,9 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DatabaseManager.h"
-#include "ServiceBroker.h"
+#include "dbwrappers/test/DatabaseTestUtils.h"
 #include "filesystem/File.h"
-#include "filesystem/SpecialProtocol.h"
 #include "music/MusicDatabase.h"
-#include "settings/AdvancedSettings.h"
-#include "settings/SettingsComponent.h"
 #include "utils/StringUtils.h"
 #include "video/VideoDatabase.h"
 #if defined(HAS_MYSQL) || defined(HAS_MARIADB)
@@ -95,15 +91,6 @@ int CurrentSchemaVersion(const DatabaseSettings& settings)
   return version;
 }
 
-//! Takes back what the 150 upgrade adds besides the ids, so that upgrade can run again.
-void RestateVideo149(CDatabase& db)
-{
-  ASSERT_TRUE(db.ExecuteQuery("DROP TABLE contentgeometry"));
-  for (const char* column : {"DeclaredAspect", "DeclaredOn", "DetectedWhenDeclared"})
-    ASSERT_TRUE(
-        db.ExecuteQuery(StringUtils::Format("ALTER TABLE settings DROP COLUMN {}", column)));
-}
-
 /*!
  * \brief Builds a database at an earlier schema version with ids that can be reused, runs the
  * real upgrade through CDatabaseManager, and checks the tables afterwards.
@@ -115,11 +102,8 @@ void ExpectTheUpgradeStopsIdReuse(DatabaseSettings CAdvancedSettings::* slot,
                                   const std::array<IdTable, N>& tables,
                                   const std::function<void(CDatabase&)>& restatePrevious = {})
 {
-  const std::string folder{CSpecialProtocol::TranslatePath("special://temp/")};
-
-  DatabaseSettings settings;
-  settings.type = "sqlite3";
-  settings.host = folder;
+  const DatabaseSettings settings{TestDatabaseSettings()};
+  const std::string& folder{settings.host};
 
   const int current{CurrentSchemaVersion<DB>(settings)};
   const std::string oldName{StringUtils::Format("{}{}", baseName, previous)};
@@ -143,22 +127,8 @@ void ExpectTheUpgradeStopsIdReuse(DatabaseSettings CAdvancedSettings::* slot,
     old.Close();
   }
 
-  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
-  DatabaseSettings& target{(*advancedSettings).*slot};
-  const DatabaseSettings restore{target};
-
-  target.type = "sqlite3";
-  target.host = folder;
-  target.name = baseName;
-
-  CDatabaseManager& manager{CServiceBroker::GetDatabaseManager()};
-  manager.Deinitialize();
-  const bool initialized{manager.Initialize()};
-
-  target = restore;
-  manager.Deinitialize();
-
-  ASSERT_TRUE(initialized) << "the database manager could not upgrade " << baseName;
+  ASSERT_TRUE(UpgradeThroughManager(slot, baseName))
+      << "the database manager could not upgrade " << baseName;
 
   DB migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
@@ -183,8 +153,6 @@ class TestLibraryIds : public ::testing::Test
 protected:
   void SetUp() override
   {
-    m_settings.type = "sqlite3";
-    m_settings.host = CSpecialProtocol::TranslatePath("special://temp/");
     m_name = StringUtils::Format("TestLibraryIds{}",
                                  ::testing::UnitTest::GetInstance()->current_test_info()->name());
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED, m_db.Connect(m_name, m_settings, true));
@@ -196,7 +164,7 @@ protected:
     XFILE::CFile::Delete(m_settings.host + m_name + ".db");
   }
 
-  DatabaseSettings m_settings;
+  const DatabaseSettings m_settings{TestDatabaseSettings()};
   std::string m_name;
   DB m_db;
 };

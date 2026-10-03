@@ -34,7 +34,6 @@
 
 using namespace KODI;
 using KODI::MEDIA::MediaType;
-using KODI::MEDIA::NameOf;
 namespace
 {
 void RetypeAsVersion(CFileItem& item)
@@ -195,7 +194,7 @@ bool ReassignPlaylist(const CFileItem& item,
   // Notify the rest of kodi
   CUtil::DeleteVideoDatabaseDirectoryCache();
   for (const auto& d : displaced)
-    CVideoDatabase::AnnounceUpdate(NameOf(d.mediaType), d.idMedia);
+    CVideoDatabase::AnnounceUpdate(d.mediaType, d.idMedia);
 
   return true;
 }

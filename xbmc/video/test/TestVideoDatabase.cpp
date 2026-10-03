@@ -15,6 +15,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/Artwork.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/URIUtils.h"
 #include "video/Bookmark.h"
 #include "video/VideoDatabase.h"
@@ -464,14 +465,14 @@ TEST(TestVideoDatabaseContent, ContentNamesItsTableAndIdColumn)
   using KODI::MEDIA::MediaType;
   const auto check = [](VideoDbContentType content, MediaType type, std::string_view idColumn)
   {
-    EXPECT_EQ(CVideoDatabase::MediaTypeOfContent(content), type);
+    EXPECT_EQ(DatabaseUtils::MediaTypeFromVideoContentType(content), type);
     EXPECT_EQ(CVideoDatabase::IdColumnOf(type), idColumn);
   };
   check(VideoDbContentType::MOVIES, MediaType::MOVIE, "idMovie");
   check(VideoDbContentType::TVSHOWS, MediaType::TV_SHOW, "idShow");
   check(VideoDbContentType::EPISODES, MediaType::EPISODE, "idEpisode");
   check(VideoDbContentType::MUSICVIDEOS, MediaType::MUSIC_VIDEO, "idMVideo");
-  check(VideoDbContentType::MOVIE_SETS, MediaType::NONE, "");
+  check(VideoDbContentType::MOVIE_SETS, MediaType::VIDEO_COLLECTION, "");
 }
 
 TEST_F(TestVideoDatabase, ToStoredPathAddsTheTrailingSeparator)

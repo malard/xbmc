@@ -12,13 +12,12 @@
 #include "FileItemList.h"
 #include "PlayListFactory.h"
 #include "PlayListFile.h"
+#include "PlayListFileItemClassify.h"
 #include "PlayListShuffle.h"
 #include "music/MusicFileItemClassify.h"
-#include "pvr/PVRItem.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
-#include "video/VideoFileItemClassify.h"
 
 #include <algorithm>
 #include <deque>
@@ -31,22 +30,6 @@ using namespace MUSIC_INFO;
 
 namespace KODI::PLAYLIST
 {
-
-namespace
-{
-std::optional<Holds> HoldsOf(const CFileItem& item)
-{
-  if (item.IsPVRChannel() || item.IsPVRRecording() || item.IsEPG())
-    return PVR::CPVRItem(item).IsRadio() ? Holds::Audio : Holds::VideoAndAudio;
-  if (item.IsPicture())
-    return Holds::Video;
-  if (VIDEO::IsVideo(item) || item.HasGameInfoTag())
-    return Holds::VideoAndAudio;
-  if (MUSIC::IsAudio(item))
-    return Holds::Audio;
-  return std::nullopt;
-}
-} // namespace
 
 CPlayList::CPlayList() : m_shuffle(std::make_unique<CPlayListNoShuffle>())
 {

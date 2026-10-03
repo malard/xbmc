@@ -11,6 +11,7 @@
 #include "ServiceBroker.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 
 #include <algorithm>
@@ -35,18 +36,18 @@ struct MediaTypeInfo
 
 // clang-format off
 constexpr std::array<MediaTypeInfo, 12> MEDIA_TYPES{{
-    {MediaType::MUSIC,            "music",        "music",         true,  36914, 36915,   249,   249},
-    {MediaType::ARTIST,           "artist",       "artists",       true,  36916, 36917,   557,   133},
-    {MediaType::ALBUM,            "album",        "albums",        true,  36918, 36919,   558,   132},
-    {MediaType::SONG,             "song",         "songs",         false, 36920, 36921,   179,   134},
-    {MediaType::VIDEO,            "video",        "videos",        true,  36912, 36913,   291,     3},
-    {MediaType::VIDEO_COLLECTION, "set",          "sets",          true,  36910, 36911, 20141, 20434},
-    {MediaType::MUSIC_VIDEO,      "musicvideo",   "musicvideos",   false, 36908, 36909, 20391, 20389},
-    {MediaType::MOVIE,            "movie",        "movies",        false, 36900, 36901, 20338, 20342},
-    {MediaType::TV_SHOW,          "tvshow",       "tvshows",       true,  36902, 36903, 36902, 36903},
-    {MediaType::SEASON,           "season",       "seasons",       true,  36904, 36905, 20373, 33054},
-    {MediaType::EPISODE,          "episode",      "episodes",      false, 36906, 36907, 20359, 20360},
-    {MediaType::VIDEO_VERSION,    "videoversion", "videoversions", false, 40010, 40011, 40012, 40013},
+    {MediaType::MUSIC,            "music",        "music",              true,  36914, 36915,   249,   249},
+    {MediaType::ARTIST,           "artist",       CONTENT::ARTISTS,     true,  36916, 36917,   557,   133},
+    {MediaType::ALBUM,            "album",        CONTENT::ALBUMS,      true,  36918, 36919,   558,   132},
+    {MediaType::SONG,             "song",         CONTENT::SONGS,       false, 36920, 36921,   179,   134},
+    {MediaType::VIDEO,            "video",        "videos",             true,  36912, 36913,   291,     3},
+    {MediaType::VIDEO_COLLECTION, "set",          CONTENT::SETS,        true,  36910, 36911, 20141, 20434},
+    {MediaType::MUSIC_VIDEO,      "musicvideo",   CONTENT::MUSICVIDEOS, false, 36908, 36909, 20391, 20389},
+    {MediaType::MOVIE,            "movie",        CONTENT::MOVIES,      false, 36900, 36901, 20338, 20342},
+    {MediaType::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902, 36903, 36902, 36903},
+    {MediaType::SEASON,           "season",       CONTENT::SEASONS,     true,  36904, 36905, 20373, 33054},
+    {MediaType::EPISODE,          "episode",      CONTENT::EPISODES,    false, 36906, 36907, 20359, 20360},
+    {MediaType::VIDEO_VERSION,    "videoversion", "videoversions",      false, 40010, 40011, 40012, 40013},
 }};
 // clang-format on
 

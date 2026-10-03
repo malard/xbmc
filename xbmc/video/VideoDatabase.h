@@ -477,14 +477,7 @@ public:
    * \brief Announce that a library item has changed, so that widgets and other listeners reload it
    * \param[in] content The item's media type
    */
-  static void AnnounceUpdate(const std::string& content, int id);
-
-  /*!
-   \brief Whether this connection's writes announce the items they update
-
-   A caller that announces what it changed itself turns this off, so a change is announced once.
-   */
-  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
+  static void AnnounceUpdate(KODI::MEDIA::MediaType content, int id);
 
   void SetTrailerForMovie(int idMovie, const std::string& trailer);
 
@@ -751,11 +744,6 @@ public:
    */
   static std::string ToStoredPath(const std::string& directory);
 
-  /*! \brief The media type of the items of \p content.
-   \return NONE for content that does not hold one media type
-   */
-  static KODI::MEDIA::MediaType MediaTypeOfContent(VideoDbContentType content);
-
   /*! \brief The id column of the table holding \p type, which NameOf(type) names.
    \return empty for a type without a table of its own
    */
@@ -1004,15 +992,7 @@ public:
   */
   unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
-  bool SetArtForItem(int mediaId,
-                     const std::string& mediaType,
-                     const std::string& artType,
-                     const std::string& url);
-  bool SetArtForItem(int mediaId, const std::string& mediaType, const KODI::ART::Artwork& art);
-  bool GetArtForItem(int mediaId, const std::string& mediaType, KODI::ART::Artwork& art);
-  std::string GetArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-
-  void UpdateArtForItem(int mediaId, const std::string& mediaType) const;
+  void UpdateArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType) const;
 
   /*!
    * \brief Retrieve all art for the given video asset, with optional fallback to the art of the
@@ -1025,10 +1005,6 @@ public:
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
   bool HasArtForItem(int mediaId, const std::string& mediaType);
-  bool RemoveArtForItem(int mediaId, const std::string& mediaType, const std::string& artType);
-  bool RemoveArtForItem(int mediaId,
-                        const std::string& mediaType,
-                        const std::set<std::string, std::less<>>& artTypes);
   /*!
    * \brief Retrieve season information of a TV show.
    * \param[in] showId ID of the show
@@ -1053,7 +1029,6 @@ public:
   std::string GetTvShowNamedSeasonById(int tvshowId, int seasonId) const;
 
   bool GetTvShowSeasonArt(int mediaId, KODI::ART::SeasonsArtwork& seasonArt);
-  bool GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes);
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -1074,35 +1049,6 @@ public:
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
                                                              KODI::MEDIA::MediaType mediaType,
                                                              const std::string& artType);
-
-  //! \brief The art functions above, for an item whose table is a media type.
-  bool SetArtForItem(int mediaId,
-                     KODI::MEDIA::MediaType mediaType,
-                     const std::string& artType,
-                     const std::string& url)
-  {
-    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
-  }
-  bool SetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, const KODI::ART::Artwork& art)
-  {
-    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  bool GetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, KODI::ART::Artwork& art)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
-  }
-  std::string GetArtForItem(int mediaId,
-                            KODI::MEDIA::MediaType mediaType,
-                            const std::string& artType)
-  {
-    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
-  }
-  bool RemoveArtForItem(int mediaId,
-                        KODI::MEDIA::MediaType mediaType,
-                        const std::set<std::string, std::less<>>& artTypes)
-  {
-    return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);
-  }
 
   int AddTag(const std::string &tag);
   void AddTagToItem(int idItem, int idTag, KODI::MEDIA::MediaType type);
@@ -1495,9 +1441,7 @@ private:
                                   std::string& deletedFileIDs,
                                   bool silent);
 
-  static void AnnounceRemove(const std::string& content, int id, bool scanning = false);
+  static void AnnounceRemove(KODI::MEDIA::MediaType content, int id, bool scanning = false);
 
   static CDateTime GetDateAdded(const std::string& filename, CDateTime dateAdded = CDateTime());
-
-  bool m_announceUpdates{true};
 };

@@ -122,6 +122,15 @@ TEST(TestPlayListFileItemClassify, TypeForAnOrdinaryItemFollowsWhatItHolds)
   EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/home/user/unknown", false)));
 }
 
+TEST(TestPlayListFileItemClassify, HoldsOfAnOrdinaryItem)
+{
+  EXPECT_EQ(PLAYLIST::Holds::VideoAndAudio,
+            PLAYLIST::HoldsOf(CFileItem("/home/user/a.avi", false)));
+  EXPECT_EQ(PLAYLIST::Holds::Audio, PLAYLIST::HoldsOf(CFileItem("/home/user/a.mp3", false)));
+  EXPECT_EQ(PLAYLIST::Holds::Video, PLAYLIST::HoldsOf(CFileItem("/home/user/a.jpg", false)));
+  EXPECT_FALSE(PLAYLIST::HoldsOf(CFileItem("/home/user/unknown", false)));
+}
+
 TEST(TestPlayListFileItemClassify, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
 {
   CFileItemList music;

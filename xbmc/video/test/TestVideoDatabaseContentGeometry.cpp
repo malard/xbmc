@@ -6,11 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DatabaseManager.h"
-#include "ServiceBroker.h"
 #include "filesystem/File.h"
-#include "settings/AdvancedSettings.h"
-#include "settings/SettingsComponent.h"
 #include "test/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -350,17 +346,8 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
 //! The real 149 to 150 upgrade, driven through CDatabaseManager.
 TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
 {
-  const std::string folder{CSpecialProtocol::TranslatePath("special://temp/")};
+  const DatabaseSettings settings{TestDatabaseSettings()};
 
-  DatabaseSettings settings;
-  settings.type = "sqlite3";
-  settings.host = folder;
-
-  // A database as 149 left it. Connect() builds the *current* schema, so the tables 150
-  // touches are restated here as 149 defined them rather than derived by subtraction from
-  // the current ones - a column added to the 150 migration and not taken back out here would
-  // otherwise abort the upgrade on a duplicate and make this test fail for the wrong reason.
-  //
   // Started at 149 rather than earlier because 149 is upstream's streamdetails migration, and
   // replaying it over a table the current schema already built adds a duplicate column and
   // aborts. This test is about the 150 upgrade.
@@ -368,37 +355,13 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom149AddsTheTableAndItsCascade)
     CVideoDatabase old;
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
               old.Connect("MyVideosMigration149", settings, true));
-    ASSERT_TRUE(old.ExecuteQuery("DROP TABLE contentgeometry"));
-    ASSERT_TRUE(old.ExecuteQuery("DROP TABLE settings"));
-    ASSERT_TRUE(old.ExecuteQuery(
-        "CREATE TABLE settings ( idFile integer, Deinterlace bool,"
-        "ViewMode integer,ZoomAmount float, PixelRatio float, VerticalShift float, AudioStream "
-        "integer, SubtitleStream integer,"
-        "SubtitleDelay float, SubtitlesOn bool, Brightness float, Contrast float, Gamma float,"
-        "VolumeAmplification float, AudioDelay float, ResumeTime integer,"
-        "Sharpness float, NoiseReduction float, NonLinStretch bool, PostProcess bool,"
-        "ScalingMethod integer, DeinterlaceMode integer, StereoMode integer, StereoInvert bool, "
-        "VideoStream integer,"
-        "TonemapMethod integer, TonemapParam float, Orientation integer, CenterMixLevel integer)"));
+    RestateVideo149(old);
     ASSERT_TRUE(old.ExecuteQuery("UPDATE version SET idVersion=149"));
     old.Close();
   }
 
-  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
-  const DatabaseSettings restore{advancedSettings->m_databaseVideo};
-
-  advancedSettings->m_databaseVideo.type = "sqlite3";
-  advancedSettings->m_databaseVideo.host = folder;
-  advancedSettings->m_databaseVideo.name = "MyVideosMigration";
-
-  CDatabaseManager& manager{CServiceBroker::GetDatabaseManager()};
-  manager.Deinitialize();
-  const bool initialized{manager.Initialize()};
-
-  advancedSettings->m_databaseVideo = restore;
-  manager.Deinitialize();
-
-  ASSERT_TRUE(initialized) << "the database manager could not migrate the video database";
+  ASSERT_TRUE(UpgradeThroughManager(&CAdvancedSettings::m_databaseVideo, "MyVideosMigration"))
+      << "the database manager could not migrate the video database";
 
   CVideoDatabase migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "filesystem/SpecialProtocol.h"
+#include "dbwrappers/test/DatabaseTestUtils.h"
 #include "utils/StringUtils.h"
 #include "video/VideoDatabase.h"
 
@@ -16,15 +16,6 @@
 #include <utility>
 
 #include <gtest/gtest.h>
-
-//! \brief Where a test database lives: an sqlite file in special://temp/.
-inline DatabaseSettings TestDatabaseSettings()
-{
-  DatabaseSettings settings;
-  settings.type = "sqlite3";
-  settings.host = CSpecialProtocol::TranslatePath("special://temp/");
-  return settings;
-}
 
 /*!
  * \brief A fixture holding a private video database in special://temp/.

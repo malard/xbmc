@@ -23,6 +23,8 @@ TEST(TestContentNames, AMediaTypesPluralIsItsContent)
   EXPECT_EQ(PluralNameOf(MediaType::SONG), MEDIA::CONTENT::SONGS);
   EXPECT_EQ(PluralNameOf(MediaType::MOVIE), MEDIA::CONTENT::MOVIES);
   EXPECT_EQ(PluralNameOf(MediaType::TV_SHOW), MEDIA::CONTENT::TVSHOWS);
+  EXPECT_EQ(PluralNameOf(MediaType::SEASON), MEDIA::CONTENT::SEASONS);
   EXPECT_EQ(PluralNameOf(MediaType::EPISODE), MEDIA::CONTENT::EPISODES);
   EXPECT_EQ(PluralNameOf(MediaType::MUSIC_VIDEO), MEDIA::CONTENT::MUSICVIDEOS);
+  EXPECT_EQ(PluralNameOf(MediaType::VIDEO_COLLECTION), MEDIA::CONTENT::SETS);
 }
