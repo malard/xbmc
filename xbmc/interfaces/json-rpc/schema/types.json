@@ -40,6 +40,17 @@
       "type": "integer"
     }
   },
+  "Optional.Array.String": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Array.String"
+      }
+    ],
+    "default": null
+  },
   "Global.Time": {
     "type": "object",
     "description": "A duration.",
@@ -1404,6 +1415,17 @@
       ]
     }
   },
+  "Optional.Media.Artwork.Set": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Media.Artwork.Set"
+      }
+    ],
+    "default": null
+  },
   "Video.Rating": {
     "type": "object",
     "properties": {
@@ -1458,6 +1480,17 @@
         }
       ]
     }
+  },
+  "Optional.Media.UniqueID.Set": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Media.UniqueID.Set"
+      }
+    ],
+    "default": null
   },
   "Library.Fields.Source": {
     "allOf": [
@@ -1776,6 +1809,20 @@
     ],
     "additionalProperties": false
   },
+  "Audio.Item.Fields": {
+    "description": "The fields of one kind of music library item",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Fields.Artist"
+      },
+      {
+        "$ref": "#/$defs/Audio.Fields.Album"
+      },
+      {
+        "$ref": "#/$defs/Audio.Fields.Song"
+      }
+    ]
+  },
   "Audio.Album.ReleaseType": {
     "type": "string",
     "enum": [
@@ -2002,37 +2049,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "instrument": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "style": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "mood": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "born": {
         "$ref": "#/$defs/Optional.String"
@@ -2044,15 +2067,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "died": {
         "$ref": "#/$defs/Optional.String"
@@ -2061,15 +2076,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "yearsActive": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "musicBrainzArtistId": {
         "$ref": "#/$defs/Optional.String"
@@ -2087,15 +2094,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       }
     },
     "additionalProperties": false
@@ -2183,62 +2182,22 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "description": {
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "theme": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "mood": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "style": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "type": {
         "$ref": "#/$defs/Optional.String"
@@ -2271,26 +2230,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "musicBrainzAlbumArtistId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "isBoxSet": {
         "$ref": "#/$defs/Optional.Boolean"
@@ -2426,26 +2369,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "$ref": "#/$defs/Optional.Integer"
@@ -2493,15 +2420,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "discTitle": {
         "$ref": "#/$defs/Optional.String"
@@ -2520,6 +2439,34 @@
       }
     },
     "additionalProperties": false
+  },
+  "Audio.Item.Details": {
+    "description": "A music library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Details.Artist"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Album"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Song"
+      }
+    ]
+  },
+  "Audio.Item.Changes": {
+    "description": "What SetItemProperties can change on a music library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Details.Artist.Set"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Album.Set"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Song.Set"
+      }
+    ]
   },
   "Audio.Property.Name": {
     "type": "string",
@@ -2821,6 +2768,29 @@
     ],
     "additionalProperties": false
   },
+  "Video.Item.Fields": {
+    "description": "The fields of one kind of video library item",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Fields.Movie"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.MovieSet"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.TVShow"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.Season"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.Episode"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.MusicVideo"
+      }
+    ]
+  },
   "Video.Cast": {
     "type": "array",
     "items": {
@@ -3109,6 +3079,17 @@
     },
     "additionalProperties": false
   },
+  "Optional.Video.Resume": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Video.Resume"
+      }
+    ],
+    "default": null
+  },
   "Video.Details.Base": {
     "allOf": [
       {
@@ -3281,26 +3262,10 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "description": "linked with premiered. Overridden by premiered parameter",
@@ -3310,15 +3275,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -3348,26 +3305,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "writer": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "country": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "top250": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3379,15 +3320,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "showLink": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "thumbnail": {
         "$ref": "#/$defs/Optional.String"
@@ -3396,37 +3329,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3442,15 +3351,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -3481,15 +3382,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
@@ -3591,29 +3484,13 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -3652,26 +3529,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3691,15 +3552,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -3746,15 +3599,7 @@
     "description": "What SetItemProperties can change on a season. A property not named is left as it is",
     "properties": {
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3852,15 +3697,7 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
@@ -3875,15 +3712,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "writer": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "firstAired": {
         "$ref": "#/$defs/Optional.String"
@@ -3907,26 +3736,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3938,15 +3751,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -4014,26 +3819,10 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "description": "linked with premiered. Overridden by premiered parameter",
@@ -4046,25 +3835,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ]
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "track": {
         "$ref": "#/$defs/Optional.Integer"
@@ -4079,37 +3853,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -4125,18 +3875,56 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
+  },
+  "Video.Item.Details": {
+    "description": "A video library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Details.Movie"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MovieSet"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.TVShow"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Season"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Episode"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MusicVideo"
+      }
+    ]
+  },
+  "Video.Item.Changes": {
+    "description": "What SetItemProperties can change on a video library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Details.Movie.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MovieSet.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.TVShow.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Season.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Episode.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MusicVideo.Set"
+      }
+    ]
   },
   "PVR.Property.Name": {
     "type": "string",
@@ -5447,8 +5235,7 @@
       }
     ]
   },
-  "Video.Filter.Movies": {
-    "description": "A movie filter: one field's value, or smart playlist rules",
+  "Video.Filter.ByGenre": {
     "anyOf": [
       {
         "type": "object",
@@ -5474,58 +5261,91 @@
           "genre"
         ],
         "additionalProperties": false
+      }
+    ]
+  },
+  "Video.Filter.ByYear": {
+    "type": "object",
+    "properties": {
+      "year": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "year"
+    ],
+    "additionalProperties": false
+  },
+  "Video.Filter.ByActor": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "actor"
+    ],
+    "additionalProperties": false
+  },
+  "Video.Filter.ByDirector": {
+    "type": "object",
+    "properties": {
+      "director": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "director"
+    ],
+    "additionalProperties": false
+  },
+  "Video.Filter.ByStudio": {
+    "type": "object",
+    "properties": {
+      "studio": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "studio"
+    ],
+    "additionalProperties": false
+  },
+  "Video.Filter.ByTag": {
+    "type": "object",
+    "properties": {
+      "tag": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "tag"
+    ],
+    "additionalProperties": false
+  },
+  "Video.Filter.Movies": {
+    "description": "A movie filter: one field's value, or smart playlist rules",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Filter.ByGenre"
       },
       {
-        "type": "object",
-        "properties": {
-          "year": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "year"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByYear"
       },
       {
-        "type": "object",
-        "properties": {
-          "actor": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "actor"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByActor"
       },
       {
-        "type": "object",
-        "properties": {
-          "director": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "director"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByDirector"
       },
       {
-        "type": "object",
-        "properties": {
-          "studio": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "studio"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByStudio"
       },
       {
         "type": "object",
@@ -5566,17 +5386,7 @@
         "additionalProperties": false
       },
       {
-        "type": "object",
-        "properties": {
-          "tag": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "tag"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByTag"
       },
       {
         "$ref": "#/$defs/List.Filter.Movies"
@@ -5587,81 +5397,19 @@
     "description": "A tv show filter: one field's value, or smart playlist rules",
     "anyOf": [
       {
-        "type": "object",
-        "properties": {
-          "genreId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "genreId"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByGenre"
       },
       {
-        "type": "object",
-        "properties": {
-          "genre": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "genre"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByYear"
       },
       {
-        "type": "object",
-        "properties": {
-          "year": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "year"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByActor"
       },
       {
-        "type": "object",
-        "properties": {
-          "actor": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "actor"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByStudio"
       },
       {
-        "type": "object",
-        "properties": {
-          "studio": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "studio"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "tag": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "tag"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByTag"
       },
       {
         "$ref": "#/$defs/List.Filter.TVShows"
@@ -5699,17 +5447,7 @@
         "additionalProperties": false
       },
       {
-        "type": "object",
-        "properties": {
-          "year": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "year"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByYear"
       },
       {
         "type": "object",
@@ -5726,17 +5464,7 @@
         "additionalProperties": false
       },
       {
-        "type": "object",
-        "properties": {
-          "director": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "director"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Video.Filter.ByDirector"
       },
       {
         "$ref": "#/$defs/List.Filter.Episodes"
@@ -5760,10 +5488,33 @@
         "additionalProperties": false
       },
       {
+        "$ref": "#/$defs/Video.Filter.ByGenre"
+      },
+      {
+        "$ref": "#/$defs/Video.Filter.ByYear"
+      },
+      {
+        "$ref": "#/$defs/Video.Filter.ByDirector"
+      },
+      {
+        "$ref": "#/$defs/Video.Filter.ByStudio"
+      },
+      {
+        "$ref": "#/$defs/Video.Filter.ByTag"
+      },
+      {
+        "$ref": "#/$defs/List.Filter.MusicVideos"
+      }
+    ]
+  },
+  "Audio.Filter.ByGenre": {
+    "anyOf": [
+      {
         "type": "object",
         "properties": {
           "genreId": {
-            "$ref": "#/$defs/Library.Id"
+            "$ref": "#/$defs/Library.Id",
+            "description": "Song genre. Filter for existence of songs with this genre"
           }
         },
         "required": [
@@ -5776,68 +5527,140 @@
         "properties": {
           "genre": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Song genre. Filter for existence of songs with this genre"
           }
         },
         "required": [
           "genre"
         ],
         "additionalProperties": false
-      },
+      }
+    ]
+  },
+  "Audio.Filter.ByArtist": {
+    "anyOf": [
       {
         "type": "object",
         "properties": {
-          "year": {
-            "type": "integer",
-            "minimum": 0
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
           }
         },
         "required": [
-          "year"
+          "artistId"
         ],
         "additionalProperties": false
       },
       {
         "type": "object",
         "properties": {
-          "director": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artistId",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artistId": {
+            "$ref": "#/$defs/Library.Id"
+          },
+          "role": {
             "type": "string",
             "minLength": 1
           }
         },
         "required": [
-          "director"
+          "artistId",
+          "role"
         ],
         "additionalProperties": false
       },
       {
         "type": "object",
         "properties": {
-          "studio": {
+          "artist": {
             "type": "string",
             "minLength": 1
           }
         },
         "required": [
-          "studio"
+          "artist"
         ],
         "additionalProperties": false
       },
       {
         "type": "object",
         "properties": {
-          "tag": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roleId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "artist",
+          "roleId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "artist": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
             "type": "string",
             "minLength": 1
           }
         },
         "required": [
-          "tag"
+          "artist",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  },
+  "Audio.Filter.ByAlbum": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "albumId": {
+            "$ref": "#/$defs/Library.Id"
+          }
+        },
+        "required": [
+          "albumId"
         ],
         "additionalProperties": false
       },
       {
-        "$ref": "#/$defs/List.Filter.MusicVideos"
+        "type": "object",
+        "properties": {
+          "album": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "album"
+        ],
+        "additionalProperties": false
       }
     ]
   },
@@ -5969,29 +5792,7 @@
         "additionalProperties": false
       },
       {
-        "type": "object",
-        "properties": {
-          "albumId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "albumId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "album": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "album"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByAlbum"
       },
       {
         "type": "object",
@@ -6074,124 +5875,10 @@
     "description": "An album filter: one field's value, or smart playlist rules",
     "anyOf": [
       {
-        "type": "object",
-        "properties": {
-          "genreId": {
-            "$ref": "#/$defs/Library.Id",
-            "description": "Song genre. Filter for existence of songs with this genre"
-          }
-        },
-        "required": [
-          "genreId"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByGenre"
       },
       {
-        "type": "object",
-        "properties": {
-          "genre": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Song genre. Filter for existence of songs with this genre"
-          }
-        },
-        "required": [
-          "genre"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artistId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          },
-          "roleId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artistId",
-          "roleId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          },
-          "role": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artistId",
-          "role"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artist"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          },
-          "roleId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artist",
-          "roleId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          },
-          "role": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artist",
-          "role"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByArtist"
       },
       {
         "$ref": "#/$defs/List.Filter.Albums"
@@ -6202,149 +5889,13 @@
     "description": "A song filter: one field's value, or smart playlist rules",
     "anyOf": [
       {
-        "type": "object",
-        "properties": {
-          "genreId": {
-            "$ref": "#/$defs/Library.Id",
-            "description": "Song genre. Filter for existence of songs with this genre"
-          }
-        },
-        "required": [
-          "genreId"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByGenre"
       },
       {
-        "type": "object",
-        "properties": {
-          "genre": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Song genre. Filter for existence of songs with this genre"
-          }
-        },
-        "required": [
-          "genre"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByArtist"
       },
       {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artistId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          },
-          "roleId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artistId",
-          "roleId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artistId": {
-            "$ref": "#/$defs/Library.Id"
-          },
-          "role": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artistId",
-          "role"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artist"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          },
-          "roleId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "artist",
-          "roleId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "artist": {
-            "type": "string",
-            "minLength": 1
-          },
-          "role": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "artist",
-          "role"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "albumId": {
-            "$ref": "#/$defs/Library.Id"
-          }
-        },
-        "required": [
-          "albumId"
-        ],
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "properties": {
-          "album": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "album"
-        ],
-        "additionalProperties": false
+        "$ref": "#/$defs/Audio.Filter.ByAlbum"
       },
       {
         "$ref": "#/$defs/List.Filter.Songs"

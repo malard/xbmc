@@ -244,18 +244,6 @@ def derive_all(source_dir=SOURCE_DIR, taxonomy=None, reasons=None):
     return derived
 
 
-def derive(source_dir=SOURCE_DIR, taxonomy=None):
-    """Return {method name: [error names]} in taxonomy order."""
-    return {method: failures["errors"]
-            for method, failures in derive_all(source_dir, taxonomy).items()}
-
-
-def derive_reasons(source_dir=SOURCE_DIR):
-    """Return {method name: {error: [reason names]}}."""
-    return {method: failures["reasons"]
-            for method, failures in derive_all(source_dir).items()}
-
-
 def explain(method, source_dir=SOURCE_DIR):
     """Print the call tree behind a method's derived errors and reasons."""
     failures, calls = build_graph(source_dir)

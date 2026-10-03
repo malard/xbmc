@@ -8,12 +8,10 @@
 
 #include "DatabaseManager.h"
 #include "FileItem.h"
-#include "GUIInfoManager.h"
 #include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
 #include "Util.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
+#include "guilib/test/TestGUIStubs.h"
 #include "interfaces/AnnouncementManager.h"
 #include "music/MusicDatabase.h"
 #include "utils/URIUtils.h"
@@ -33,46 +31,12 @@ using namespace JSONRPC;
 
 namespace
 {
-class TestGUI : public CGUIComponent
-{
-public:
-  TestGUI() : CGUIComponent(false)
-  {
-    m_pWindowManager = std::make_unique<CGUIWindowManager>();
-    m_guiInfoManager = std::make_unique<CGUIInfoManager>();
-    CServiceBroker::RegisterGUI(this);
-  }
-
-  ~TestGUI() override { m_pWindowManager.reset(); }
-};
+using KODI::GUILIB::TEST::CTestGUIComponent;
 
 //! Calls methods as a client would: validated against the shipped schema, then handled
-class TestLibraryItems : public JSONServiceDescriptionTestBase
+class TestLibraryItems : public ShippedServiceDescriptionTestBase
 {
 public:
-  void SetUp() override
-  {
-    JSONServiceDescriptionTestBase::SetUp();
-    AddShippedServiceDescription();
-  }
-
-  JSONRPC_STATUS Invoke(const char* method, const std::string& paramsJson, CVariant& result)
-  {
-    std::string key = method;
-    StringUtils::ToLower(key);
-    MethodCall call;
-    CVariant params;
-    result = CVariant();
-    const JSONRPC_STATUS status{CJSONServiceDescription::CheckCall(
-        key.c_str(), ParseJson(paramsJson), &m_transport, &m_client, false, call, params)};
-    if (status != OK)
-    {
-      result = params;
-      return status;
-    }
-    return call(&m_transport, &m_client, params, result);
-  }
-
   //! The parameter a refusal names
   std::string Refused(const char* method, const std::string& paramsJson)
   {
@@ -89,9 +53,6 @@ public:
   void SetUp() override
   {
     TestLibraryItems::SetUp();
-    m_previousAnnouncements = CServiceBroker::GetAnnouncementManager();
-    CServiceBroker::RegisterAnnouncementManager(
-        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
     if (!CServiceBroker::GetDatabaseManager().CanOpen("MyVideos") ||
         !CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
     {
@@ -151,7 +112,6 @@ public:
     m_videos.DeleteSet(m_setId);
     m_videos.Close();
 
-    CServiceBroker::RegisterAnnouncementManager(m_previousAnnouncements);
     TestLibraryItems::TearDown();
   }
 
@@ -230,10 +190,10 @@ public:
     EXPECT_TRUE(listed["items"].isArray());
   }
 
-  TestGUI m_gui;
+  CTestGUIComponent m_gui{CTestGUIComponent::InfoManager::WITH};
+  CScopedAnnouncementManager m_announcements;
   CVideoDatabase m_videos;
   CMusicDatabase m_music;
-  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previousAnnouncements;
   int m_movieId{-1};
   int m_otherMovieId{-1};
   int m_setId{-1};

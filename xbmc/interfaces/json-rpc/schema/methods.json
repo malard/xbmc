@@ -2280,15 +2280,7 @@
       {
         "name": "resume",
         "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Video.Resume"
-            }
-          ],
-          "default": null
+          "$ref": "#/$defs/Optional.Video.Resume"
         }
       }
     ],
@@ -2352,17 +2344,7 @@
         "name": "properties",
         "description": "Fields of the kind named: Audio.Fields.Artist for an artist, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Audio.Fields.Artist"
-            },
-            {
-              "$ref": "#/$defs/Audio.Fields.Album"
-            },
-            {
-              "$ref": "#/$defs/Audio.Fields.Song"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Item.Fields"
         }
       },
       {
@@ -2433,17 +2415,7 @@
         "items": {
           "type": "array",
           "items": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/Audio.Details.Artist"
-              },
-              {
-                "$ref": "#/$defs/Audio.Details.Album"
-              },
-              {
-                "$ref": "#/$defs/Audio.Details.Song"
-              }
-            ]
+            "$ref": "#/$defs/Audio.Item.Details"
           }
         }
       },
@@ -2475,32 +2447,12 @@
         "name": "properties",
         "description": "Fields of the item's kind: Audio.Fields.Artist for a artist, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Audio.Fields.Artist"
-            },
-            {
-              "$ref": "#/$defs/Audio.Fields.Album"
-            },
-            {
-              "$ref": "#/$defs/Audio.Fields.Song"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Item.Fields"
         }
       }
     ],
     "returns": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Audio.Details.Artist"
-        },
-        {
-          "$ref": "#/$defs/Audio.Details.Album"
-        },
-        {
-          "$ref": "#/$defs/Audio.Details.Song"
-        }
-      ]
+      "$ref": "#/$defs/Audio.Item.Details"
     },
     "errors": [
       "InvalidParams",
@@ -2531,32 +2483,12 @@
         "required": true,
         "description": "Properties of the item's kind: Audio.Details.Artist.Set for a artist, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Audio.Details.Artist.Set"
-            },
-            {
-              "$ref": "#/$defs/Audio.Details.Album.Set"
-            },
-            {
-              "$ref": "#/$defs/Audio.Details.Song.Set"
-            }
-          ]
+          "$ref": "#/$defs/Audio.Item.Changes"
         }
       }
     ],
     "returns": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Audio.Details.Artist"
-        },
-        {
-          "$ref": "#/$defs/Audio.Details.Album"
-        },
-        {
-          "$ref": "#/$defs/Audio.Details.Song"
-        }
-      ]
+      "$ref": "#/$defs/Audio.Item.Details"
     },
     "errors": [
       "InvalidParams",
@@ -3521,26 +3453,7 @@
         "name": "properties",
         "description": "Fields of the kind named: Video.Fields.Movie for a movie, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Video.Fields.Movie"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.MovieSet"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.TVShow"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.Season"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.Episode"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.MusicVideo"
-            }
-          ]
+          "$ref": "#/$defs/Video.Item.Fields"
         }
       },
       {
@@ -3601,26 +3514,7 @@
         "items": {
           "type": "array",
           "items": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/Video.Details.Movie"
-              },
-              {
-                "$ref": "#/$defs/Video.Details.MovieSet"
-              },
-              {
-                "$ref": "#/$defs/Video.Details.TVShow"
-              },
-              {
-                "$ref": "#/$defs/Video.Details.Season"
-              },
-              {
-                "$ref": "#/$defs/Video.Details.Episode"
-              },
-              {
-                "$ref": "#/$defs/Video.Details.MusicVideo"
-              }
-            ]
+            "$ref": "#/$defs/Video.Item.Details"
           }
         }
       },
@@ -3652,50 +3546,12 @@
         "name": "properties",
         "description": "Fields of the item's kind: Video.Fields.Movie for a movie, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Video.Fields.Movie"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.MovieSet"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.TVShow"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.Season"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.Episode"
-            },
-            {
-              "$ref": "#/$defs/Video.Fields.MusicVideo"
-            }
-          ]
+          "$ref": "#/$defs/Video.Item.Fields"
         }
       }
     ],
     "returns": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Video.Details.Movie"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.MovieSet"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.TVShow"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.Season"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.Episode"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.MusicVideo"
-        }
-      ]
+      "$ref": "#/$defs/Video.Item.Details"
     },
     "errors": [
       "InvalidParams",
@@ -3726,50 +3582,12 @@
         "required": true,
         "description": "Properties of the item's kind: Video.Details.Movie.Set for a movie, and so on",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Video.Details.Movie.Set"
-            },
-            {
-              "$ref": "#/$defs/Video.Details.MovieSet.Set"
-            },
-            {
-              "$ref": "#/$defs/Video.Details.TVShow.Set"
-            },
-            {
-              "$ref": "#/$defs/Video.Details.Season.Set"
-            },
-            {
-              "$ref": "#/$defs/Video.Details.Episode.Set"
-            },
-            {
-              "$ref": "#/$defs/Video.Details.MusicVideo.Set"
-            }
-          ]
+          "$ref": "#/$defs/Video.Item.Changes"
         }
       }
     ],
     "returns": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Video.Details.Movie"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.MovieSet"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.TVShow"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.Season"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.Episode"
-        },
-        {
-          "$ref": "#/$defs/Video.Details.MusicVideo"
-        }
-      ]
+      "$ref": "#/$defs/Video.Item.Details"
     },
     "errors": [
       "InvalidParams",

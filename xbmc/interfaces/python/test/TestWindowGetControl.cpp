@@ -6,7 +6,6 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "GUIInfoManager.h"
 #include "ServiceBroker.h"
 #include "guilib/GUIButtonControl.h"
 #include "guilib/GUIComponent.h"
@@ -30,6 +29,7 @@ constexpr int WINDOW_ID = 5000;
 constexpr int BUTTON_ID = 5001;
 constexpr int TOGGLE_ID = 5002;
 
+using KODI::GUILIB::TEST::CTestGUIComponent;
 using KODI::GUILIB::TEST::CTestWinSystem;
 
 class CTestGUITexture : public CGUITexture
@@ -54,16 +54,6 @@ protected:
   void End() override {}
 };
 
-class CTestGUIComponent : public KODI::GUILIB::TEST::CTestGUIComponent
-{
-public:
-  CTestGUIComponent()
-  {
-    // The window code under test dereferences it through CServiceBroker::GetGUI()
-    m_guiInfoManager = std::make_unique<CGUIInfoManager>();
-  }
-};
-
 class TestWindowGetControl : public ::testing::Test
 {
 protected:
@@ -77,7 +67,8 @@ protected:
         [](const CRect&, KODI::UTILS::COLOR::Color, CTexture*, const CRect*, float, bool) {});
 
     CServiceBroker::RegisterWinSystem(&m_winSystem);
-    m_gui = std::make_unique<CTestGUIComponent>();
+    // The window code under test dereferences the info manager through CServiceBroker::GetGUI()
+    m_gui = std::make_unique<CTestGUIComponent>(CTestGUIComponent::InfoManager::WITH);
 
     const CTextureInfo texture;
     const CLabelInfo label;

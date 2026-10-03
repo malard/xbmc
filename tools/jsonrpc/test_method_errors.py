@@ -30,8 +30,7 @@ class TestDeclarations(unittest.TestCase):
                         for error in kodi_schema.load_error_taxonomy()}
         cls.reasons = {reason["name"]: reason
                        for reason in kodi_schema.load_reason_taxonomy()}
-        cls.derived = method_errors.derive()
-        cls.derived_reasons = method_errors.derive_reasons()
+        cls.derived = method_errors.derive_all()
 
     def test_pre_dispatch_names_are_in_the_taxonomy(self):
         self.assertTrue(set(method_errors.PRE_DISPATCH) <= self.taxonomy)
@@ -40,14 +39,14 @@ class TestDeclarations(unittest.TestCase):
         self.assertEqual(set(self.derived), set(self.methods))
 
     def test_declarations_match_the_handlers(self):
-        for name, errors in self.derived.items():
+        for name, failures in self.derived.items():
             with self.subTest(method=name):
-                self.assertEqual(self.methods[name]["errors"], errors)
+                self.assertEqual(self.methods[name]["errors"], failures["errors"])
 
     def test_declared_reasons_match_the_handlers(self):
-        for name, reasons in self.derived_reasons.items():
+        for name, failures in self.derived.items():
             with self.subTest(method=name):
-                self.assertEqual(self.methods[name]["reasons"], reasons)
+                self.assertEqual(self.methods[name]["reasons"], failures["reasons"])
 
     def test_every_reason_is_used(self):
         used = {reason for method in self.methods.values()
@@ -57,7 +56,7 @@ class TestDeclarations(unittest.TestCase):
     def test_an_unresolved_items_reason_is_one_playlist_add_can_fail_with(self):
         types = kodi_schema.load_service()["types"]
         declared = types["Playlist.UnresolvedItem"]["properties"]["reason"]["enum"]
-        reasons = {reason for reasons in self.derived_reasons["Playlist.Add"].values()
+        reasons = {reason for reasons in self.derived["Playlist.Add"]["reasons"].values()
                    for reason in reasons}
         self.assertEqual(set(declared), reasons)
 
@@ -156,49 +155,48 @@ class TestDerivation(unittest.TestCase):
         (source_dir / "Test.cpp").write_text(self.SOURCE, encoding="utf-8")
         (source_dir / method_errors.METHOD_MAP.name).write_text(
             self.METHOD_MAP, encoding="utf-8")
-        self.derived = method_errors.derive(source_dir)
-        self.derived_reasons = method_errors.derive_reasons(source_dir)
+        self.derived = method_errors.derive_all(source_dir)
 
     def tearDown(self):
         self.tempdir.cleanup()
 
     def test_statuses_travel_through_called_functions(self):
-        self.assertEqual(self.derived["Test.Outer"],
+        self.assertEqual(self.derived["Test.Outer"]["errors"],
                          ["InternalError", "FailedToExecute", "BadPermission", "NotFound"])
 
     def test_a_function_passed_by_name_reaches_its_statuses(self):
-        self.assertEqual(self.derived["Test.Forward"], ["NotFound"])
+        self.assertEqual(self.derived["Test.Forward"]["errors"], ["NotFound"])
 
     def test_a_bare_call_reaches_an_inherited_static(self):
-        self.assertIn("BadPermission", self.derived["Test.Outer"])
+        self.assertIn("BadPermission", self.derived["Test.Outer"]["errors"])
 
     def test_a_member_call_is_not_a_handler_call(self):
         # database.Open() must not pull in CTest::Open's Unavailable
-        self.assertNotIn("Unavailable", self.derived["Test.Outer"])
+        self.assertNotIn("Unavailable", self.derived["Test.Outer"]["errors"])
 
     def test_a_template_handler_has_the_statuses_of_its_template(self):
-        self.assertEqual(self.derived["Test.Preset"], ["InternalError", "NotFound"])
+        self.assertEqual(self.derived["Test.Preset"]["errors"], ["InternalError", "NotFound"])
 
     def test_comments_and_strings_are_ignored(self):
-        self.assertNotIn("AccessDenied", self.derived["Test.Outer"])
-        self.assertNotIn("Unavailable", self.derived["Test.Outer"])
-        self.assertEqual(self.derived["Test.Open"], ["Unavailable"])
+        self.assertNotIn("AccessDenied", self.derived["Test.Outer"]["errors"])
+        self.assertNotIn("Unavailable", self.derived["Test.Outer"]["errors"])
+        self.assertEqual(self.derived["Test.Open"]["errors"], ["Unavailable"])
 
     def test_a_reason_is_declared_under_the_status_its_call_names(self):
-        self.assertEqual(self.derived_reasons["Test.Refuse"],
+        self.assertEqual(self.derived["Test.Refuse"]["reasons"],
                          {"FailedToExecute": ["nothing-playing"]})
-        self.assertEqual(self.derived["Test.Refuse"], ["FailedToExecute"])
+        self.assertEqual(self.derived["Test.Refuse"]["errors"], ["FailedToExecute"])
 
     def test_a_reason_can_come_with_more_than_one_status(self):
-        self.assertEqual(self.derived_reasons["Test.Delegate"],
+        self.assertEqual(self.derived["Test.Delegate"]["reasons"],
                          {"FailedToExecute": ["nothing-playing"],
                           "NotFound": ["unreachable"],
                           "Unavailable": ["unreachable"]})
-        self.assertEqual(self.derived["Test.Delegate"],
+        self.assertEqual(self.derived["Test.Delegate"]["errors"],
                          ["FailedToExecute", "NotFound", "Unavailable"])
 
     def test_a_method_naming_no_reason_derives_none(self):
-        self.assertEqual(self.derived_reasons["Test.Outer"], {})
+        self.assertEqual(self.derived["Test.Outer"]["reasons"], {})
 
     def test_a_reason_outside_a_fail_call_is_an_error(self):
         source_dir = Path(self.tempdir.name)
@@ -210,7 +208,7 @@ class TestDerivation(unittest.TestCase):
             }
             """), encoding="utf-8")
         with self.assertRaises(ValueError):
-            method_errors.derive(source_dir)
+            method_errors.derive_all(source_dir)
 
     def test_an_undescribed_reason_is_an_error(self):
         source_dir = Path(self.tempdir.name)
@@ -221,7 +219,7 @@ class TestDerivation(unittest.TestCase):
             }
             """), encoding="utf-8")
         with self.assertRaises(ValueError):
-            method_errors.derive(source_dir)
+            method_errors.derive_all(source_dir)
 
 
 if __name__ == "__main__":

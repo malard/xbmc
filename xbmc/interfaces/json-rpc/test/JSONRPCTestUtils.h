@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "ServiceBroker.h"
 #include "ServiceDescription.h"
+#include "interfaces/AnnouncementManager.h"
 #include "interfaces/json-rpc/IClient.h"
 #include "interfaces/json-rpc/ITransportLayer.h"
 #include "interfaces/json-rpc/JSONRPCUtils.h"
@@ -20,6 +22,7 @@
 
 #include <iterator>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -250,19 +253,73 @@ public:
     return result;
   }
 
+  //! \brief Validates a call against the registered schema; \p output has the checked parameters
   JSONRPC_STATUS Call(const char* method, const std::string& paramsJson, CVariant& output)
   {
-    // the transport layer lowercases the method before dispatch
-    std::string key = method;
-    StringUtils::ToLower(key);
     MethodCall call;
-    output = CVariant();
-    return CJSONServiceDescription::CheckCall(key.c_str(), ParseJson(paramsJson), &m_transport,
-                                              &m_client, false, call, output);
+    return Check(method, paramsJson, call, output);
+  }
+
+  //! \brief Calls a method as a client would: validated, then handled
+  JSONRPC_STATUS Invoke(const char* method, const std::string& paramsJson, CVariant& result)
+  {
+    MethodCall call;
+    CVariant params;
+    result = CVariant();
+    const JSONRPC_STATUS status{Check(method, paramsJson, call, params)};
+    if (status != OK)
+    {
+      result = params;
+      return status;
+    }
+    return call(&m_transport, &m_client, params, result);
   }
 
   CAllCapabilityTransport m_transport;
   CAllPermissionClient m_client;
+
+private:
+  JSONRPC_STATUS Check(const char* method,
+                       const std::string& paramsJson,
+                       MethodCall& call,
+                       CVariant& output)
+  {
+    // the transport layer lowercases the method before dispatch
+    std::string key = method;
+    StringUtils::ToLower(key);
+    output = CVariant();
+    return CJSONServiceDescription::CheckCall(key.c_str(), ParseJson(paramsJson), &m_transport,
+                                              &m_client, false, call, output);
+  }
+};
+
+//! \brief Fixture with the whole shipped service description registered
+class ShippedServiceDescriptionTestBase : public JSONServiceDescriptionTestBase
+{
+public:
+  void SetUp() override
+  {
+    JSONServiceDescriptionTestBase::SetUp();
+    AddShippedServiceDescription();
+  }
+};
+
+//! \brief Registers a fresh announcement manager for its lifetime, and the previous one after it
+class CScopedAnnouncementManager
+{
+public:
+  CScopedAnnouncementManager() : m_previous(CServiceBroker::GetAnnouncementManager())
+  {
+    CServiceBroker::RegisterAnnouncementManager(
+        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
+  }
+  ~CScopedAnnouncementManager() { CServiceBroker::RegisterAnnouncementManager(m_previous); }
+
+  CScopedAnnouncementManager(const CScopedAnnouncementManager&) = delete;
+  CScopedAnnouncementManager& operator=(const CScopedAnnouncementManager&) = delete;
+
+private:
+  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previous;
 };
 
 } // namespace JSONRPC

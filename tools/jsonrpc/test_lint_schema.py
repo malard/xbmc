@@ -19,7 +19,7 @@ class TestLintSchema(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.schemas = lint_schema.load(kodi_schema.SCHEMA_DIR)
+        cls.schemas = kodi_schema.load_schema_files()
 
     def test_the_shipped_schema_is_clean(self):
         self.assertEqual(lint_schema.lint(self.schemas), [])

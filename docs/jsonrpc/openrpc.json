@@ -3813,15 +3813,7 @@
         {
           "name": "resume",
           "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           }
         }
       ],
@@ -3948,17 +3940,7 @@
           "name": "properties",
           "description": "Fields of the kind named: Audio.Fields.Artist for an artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Artist"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Album"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Song"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Fields"
           }
         },
         {
@@ -4031,17 +4013,7 @@
             "items": {
               "type": "array",
               "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Artist"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Album"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Song"
-                  }
-                ]
+                "$ref": "#/components/schemas/Audio.Item.Details"
               }
             }
           },
@@ -4096,34 +4068,14 @@
           "name": "properties",
           "description": "Fields of the item's kind: Audio.Fields.Artist for a artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Artist"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Album"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Song"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Fields"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Audio.Details.Artist"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Album"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Song"
-            }
-          ]
+          "$ref": "#/components/schemas/Audio.Item.Details"
         }
       },
       "errors": [
@@ -4181,34 +4133,14 @@
           "required": true,
           "description": "Properties of the item's kind: Audio.Details.Artist.Set for a artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Details.Artist.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Details.Album.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Details.Song.Set"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Changes"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Audio.Details.Artist"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Album"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Song"
-            }
-          ]
+          "$ref": "#/components/schemas/Audio.Item.Details"
         }
       },
       "errors": [
@@ -5683,26 +5615,7 @@
           "name": "properties",
           "description": "Fields of the kind named: Video.Fields.Movie for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Fields.Movie"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MovieSet"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.TVShow"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Season"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Episode"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MusicVideo"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Fields"
           }
         },
         {
@@ -5765,26 +5678,7 @@
             "items": {
               "type": "array",
               "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Movie"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.MovieSet"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.TVShow"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Season"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Episode"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.MusicVideo"
-                  }
-                ]
+                "$ref": "#/components/schemas/Video.Item.Details"
               }
             }
           },
@@ -5839,52 +5733,14 @@
           "name": "properties",
           "description": "Fields of the item's kind: Video.Fields.Movie for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Fields.Movie"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MovieSet"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.TVShow"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Season"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Episode"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MusicVideo"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Fields"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MovieSet"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.TVShow"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Season"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Episode"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MusicVideo"
-            }
-          ]
+          "$ref": "#/components/schemas/Video.Item.Details"
         }
       },
       "errors": [
@@ -5942,52 +5798,14 @@
           "required": true,
           "description": "Properties of the item's kind: Video.Details.Movie.Set for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Details.Movie.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.MovieSet.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.TVShow.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.Season.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.Episode.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Changes"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MovieSet"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.TVShow"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Season"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Episode"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MusicVideo"
-            }
-          ]
+          "$ref": "#/components/schemas/Video.Item.Details"
         }
       },
       "errors": [
@@ -13549,6 +13367,17 @@
           "type": "integer"
         }
       },
+      "Optional.Array.String": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Array.String"
+          }
+        ],
+        "default": null
+      },
       "Global.Time": {
         "type": "object",
         "description": "A duration.",
@@ -14913,6 +14742,17 @@
           ]
         }
       },
+      "Optional.Media.Artwork.Set": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
       "Video.Rating": {
         "type": "object",
         "properties": {
@@ -14967,6 +14807,17 @@
             }
           ]
         }
+      },
+      "Optional.Media.UniqueID.Set": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
       },
       "Library.Fields.Source": {
         "allOf": [
@@ -15285,6 +15136,20 @@
         ],
         "additionalProperties": false
       },
+      "Audio.Item.Fields": {
+        "description": "The fields of one kind of music library item",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Artist"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Album"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Song"
+          }
+        ]
+      },
       "Audio.Album.ReleaseType": {
         "type": "string",
         "enum": [
@@ -15511,37 +15376,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "instrument": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "style": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "mood": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "born": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15553,15 +15394,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "died": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15570,15 +15403,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "yearsActive": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "musicBrainzArtistId": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15596,15 +15421,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           }
         },
         "additionalProperties": false
@@ -15692,62 +15509,22 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "description": {
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "theme": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "mood": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "style": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "type": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15780,26 +15557,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "musicBrainzAlbumArtistId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "isBoxSet": {
             "$ref": "#/components/schemas/Optional.Boolean"
@@ -15935,26 +15696,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -16002,15 +15747,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "discTitle": {
             "$ref": "#/components/schemas/Optional.String"
@@ -16029,6 +15766,34 @@
           }
         },
         "additionalProperties": false
+      },
+      "Audio.Item.Details": {
+        "description": "A music library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Details.Artist"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Album"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Song"
+          }
+        ]
+      },
+      "Audio.Item.Changes": {
+        "description": "What SetItemProperties can change on a music library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Details.Artist.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Album.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Song.Set"
+          }
+        ]
       },
       "Audio.Property.Name": {
         "type": "string",
@@ -16330,6 +16095,29 @@
         ],
         "additionalProperties": false
       },
+      "Video.Item.Fields": {
+        "description": "The fields of one kind of video library item",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Fields.Movie"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.MovieSet"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.TVShow"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.Season"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.Episode"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.MusicVideo"
+          }
+        ]
+      },
       "Video.Cast": {
         "type": "array",
         "items": {
@@ -16618,6 +16406,17 @@
         },
         "additionalProperties": false
       },
+      "Optional.Video.Resume": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Resume"
+          }
+        ],
+        "default": null
+      },
       "Video.Details.Base": {
         "allOf": [
           {
@@ -16790,26 +16589,10 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "description": "linked with premiered. Overridden by premiered parameter",
@@ -16819,15 +16602,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -16857,26 +16632,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "writer": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "country": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "top250": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -16888,15 +16647,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "showLink": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "thumbnail": {
             "$ref": "#/components/schemas/Optional.String"
@@ -16905,37 +16656,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -16951,15 +16678,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -16990,15 +16709,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17100,29 +16811,13 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -17161,26 +16856,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17200,15 +16879,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -17255,15 +16926,7 @@
         "description": "What SetItemProperties can change on a season. A property not named is left as it is",
         "properties": {
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17361,15 +17024,7 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17384,15 +17039,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "writer": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "firstAired": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17416,26 +17063,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17447,15 +17078,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -17523,26 +17146,10 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "description": "linked with premiered. Overridden by premiered parameter",
@@ -17555,25 +17162,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ]
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "track": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17588,37 +17180,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -17634,18 +17202,56 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
+      },
+      "Video.Item.Details": {
+        "description": "A video library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Details.Movie"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MovieSet"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.TVShow"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Season"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Episode"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MusicVideo"
+          }
+        ]
+      },
+      "Video.Item.Changes": {
+        "description": "What SetItemProperties can change on a video library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Details.Movie.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MovieSet.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.TVShow.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Season.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Episode.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
+          }
+        ]
       },
       "PVR.Property.Name": {
         "type": "string",
@@ -18956,8 +18562,7 @@
           }
         ]
       },
-      "Video.Filter.Movies": {
-        "description": "A movie filter: one field's value, or smart playlist rules",
+      "Video.Filter.ByGenre": {
         "anyOf": [
           {
             "type": "object",
@@ -18983,58 +18588,91 @@
               "genre"
             ],
             "additionalProperties": false
+          }
+        ]
+      },
+      "Video.Filter.ByYear": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByActor": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByDirector": {
+        "type": "object",
+        "properties": {
+          "director": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "director"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByStudio": {
+        "type": "object",
+        "properties": {
+          "studio": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "studio"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByTag": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.Movies": {
+        "description": "A movie filter: one field's value, or smart playlist rules",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
-            "type": "object",
-            "properties": {
-              "actor": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "actor"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByActor"
           },
           {
-            "type": "object",
-            "properties": {
-              "director": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "director"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
           },
           {
-            "type": "object",
-            "properties": {
-              "studio": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "studio"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
           },
           {
             "type": "object",
@@ -19075,17 +18713,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "tag": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "tag"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Movies"
@@ -19096,81 +18724,19 @@
         "description": "A tv show filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByActor"
           },
           {
-            "type": "object",
-            "properties": {
-              "actor": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "actor"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
           },
           {
-            "type": "object",
-            "properties": {
-              "studio": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "studio"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tag": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "tag"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
           },
           {
             "$ref": "#/components/schemas/List.Filter.TVShows"
@@ -19208,17 +18774,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
             "type": "object",
@@ -19235,17 +18791,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "director": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "director"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Episodes"
@@ -19269,10 +18815,33 @@
             "additionalProperties": false
           },
           {
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
+          },
+          {
+            "$ref": "#/components/schemas/List.Filter.MusicVideos"
+          }
+        ]
+      },
+      "Audio.Filter.ByGenre": {
+        "anyOf": [
+          {
             "type": "object",
             "properties": {
               "genreId": {
-                "$ref": "#/components/schemas/Library.Id"
+                "$ref": "#/components/schemas/Library.Id",
+                "description": "Song genre. Filter for existence of songs with this genre"
               }
             },
             "required": [
@@ -19285,68 +18854,140 @@
             "properties": {
               "genre": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "Song genre. Filter for existence of songs with this genre"
               }
             },
             "required": [
               "genre"
             ],
             "additionalProperties": false
-          },
+          }
+        ]
+      },
+      "Audio.Filter.ByArtist": {
+        "anyOf": [
           {
             "type": "object",
             "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
               }
             },
             "required": [
-              "year"
+              "artistId"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "director": {
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
+              },
+              "roleId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "artistId",
+              "roleId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
+              },
+              "role": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "director"
+              "artistId",
+              "role"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "studio": {
+              "artist": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "studio"
+              "artist"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "tag": {
+              "artist": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roleId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "artist",
+              "roleId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artist": {
+                "type": "string",
+                "minLength": 1
+              },
+              "role": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "tag"
+              "artist",
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Audio.Filter.ByAlbum": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "albumId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "albumId"
             ],
             "additionalProperties": false
           },
           {
-            "$ref": "#/components/schemas/List.Filter.MusicVideos"
+            "type": "object",
+            "properties": {
+              "album": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "album"
+            ],
+            "additionalProperties": false
           }
         ]
       },
@@ -19478,29 +19119,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "albumId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "albumId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "album": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "album"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByAlbum"
           },
           {
             "type": "object",
@@ -19583,124 +19202,10 @@
         "description": "An album filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id",
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artistId",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artist",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist",
-              "role"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByArtist"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Albums"
@@ -19711,149 +19216,13 @@
         "description": "A song filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id",
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByArtist"
           },
           {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artistId",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artist",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "albumId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "albumId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "album": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "album"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByAlbum"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Songs"
