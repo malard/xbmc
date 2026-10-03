@@ -13,8 +13,6 @@
 #include <string>
 
 class CVariant;
-class ITransportLayer;
-class IClient;
 
 namespace JSONRPC
 {
