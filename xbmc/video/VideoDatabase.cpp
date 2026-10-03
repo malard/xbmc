@@ -467,7 +467,7 @@ bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
     if (content.empty())
       return true;
     if (byDirectory && content == MEDIA::CONTENT::TVSHOWS)
-      return pathContent == MEDIA::CONTENT::TVSHOWS || pathContent == "seasons" ||
+      return pathContent == MEDIA::CONTENT::TVSHOWS || pathContent == MEDIA::CONTENT::SEASONS ||
              pathContent == MEDIA::CONTENT::EPISODES;
     return pathContent == content;
   };
@@ -9286,7 +9286,8 @@ std::string CVideoDatabase::GetContentForPath(const std::string& strPath)
 
       // If the scraper was set directly on this path, it is a tvshows root
       // unless the scraper is set for a single tv show in this folder
-      return foundDirectly && !settings.parent_name ? MEDIA::CONTENT::TVSHOWS : "seasons";
+      return foundDirectly && !settings.parent_name ? MEDIA::CONTENT::TVSHOWS
+                                                    : MEDIA::CONTENT::SEASONS;
     }
     return TranslateContent(scraper->Content());
   }
