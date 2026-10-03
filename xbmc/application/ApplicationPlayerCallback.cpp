@@ -44,9 +44,7 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
-#include "video/geometry/ContentGeometryCombiner.h"
 #include "video/geometry/ContentGeometryRecord.h"
-#include "video/geometry/EffectiveGeometry.h"
 
 #include <algorithm>
 #include <chrono>

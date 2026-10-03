@@ -10,7 +10,6 @@
 
 #include "JSONRPC.h"
 
-#include <string>
 
 class CVariant;
 

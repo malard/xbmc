@@ -11,7 +11,6 @@
 #include "FileItem.h"
 #include "ServiceBroker.h"
 #include "URL.h"
-#include "XBDateTime.h"
 #include "cores/VideoPlayer/VideoFileGeometry.h"
 #include "cores/VideoSettings.h"
 #include "dialogs/GUIDialogBusy.h"

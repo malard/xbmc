@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "video/geometry/FrameSampling.h"
 #include "video/geometry/SampledGeometry.h"
 
 #include <functional>

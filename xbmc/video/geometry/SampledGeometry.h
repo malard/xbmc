@@ -11,7 +11,6 @@
 #include "utils/Geometry.h"
 #include "video/geometry/ContentGeometryCombiner.h"
 #include "video/geometry/ContentGeometryRecord.h"
-#include "video/geometry/FrameSampling.h"
 
 #include <vector>
 

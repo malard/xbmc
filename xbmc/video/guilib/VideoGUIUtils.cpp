@@ -29,7 +29,6 @@
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
-#include "settings/Settings.h"
 #include "threads/IRunnable.h"
 #include "utils/FileUtils.h"
 #include "utils/ItemProperties.h"

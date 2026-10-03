@@ -19,7 +19,6 @@
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "filesystem/AddonsDirectory.h"
-#include "filesystem/AddonsPaths.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "games/GameUtils.h"
 #include "guilib/GUIComponent.h"

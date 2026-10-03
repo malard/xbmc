@@ -17,7 +17,6 @@
 #include "addons/gui/GUIDialogAddonInfo.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "filesystem/AddonsDirectory.h"
-#include "filesystem/AddonsPaths.h"
 #include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"

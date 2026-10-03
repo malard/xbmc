@@ -10,7 +10,6 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "GUIUserMessages.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogProgress.h"

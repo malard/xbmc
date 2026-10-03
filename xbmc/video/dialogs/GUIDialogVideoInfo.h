@@ -9,7 +9,6 @@
 #pragma once
 
 #include "guilib/GUIDialog.h"
-#include "media/MediaType.h"
 
 #include <memory>
 #include <vector>

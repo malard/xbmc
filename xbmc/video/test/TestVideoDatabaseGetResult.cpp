@@ -6,7 +6,6 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "settings/AdvancedSettings.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
 #include "video/test/VideoDatabaseTestBase.h"

@@ -7,7 +7,6 @@
  */
 
 #include "cores/VideoSettings.h"
-#include "settings/AdvancedSettings.h"
 #include "utils/StringUtils.h"
 #include "video/test/VideoDatabaseTestBase.h"
 

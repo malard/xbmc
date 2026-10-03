@@ -25,7 +25,6 @@
 #include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "guilib/guiinfo/GUIInfoUtils.h"
-#include "language/Language.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayList.h"
 #include "resources/LocalizeStrings.h"

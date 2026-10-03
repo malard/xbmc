@@ -14,7 +14,6 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
-#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <array>
