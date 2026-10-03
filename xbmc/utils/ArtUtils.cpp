@@ -42,7 +42,7 @@ std::string GetArtTypeFromSize(unsigned int width, unsigned int height)
   if (width * 5 < height * 4)
     type = "poster";
   else if (width > height * 4)
-    type = "banner";
+    type = KODI::ART::TYPE::BANNER;
   return type;
 }
 } // unnamed namespace

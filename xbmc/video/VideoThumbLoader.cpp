@@ -87,13 +87,13 @@ std::vector<std::string> GetSettingListAsString(const std::string& settingID)
 
 const std::map<std::string, std::vector<std::string>> artTypeDefaults = {
     {NameOf(MediaType::EPISODE), {"thumb"}},
-    {NameOf(MediaType::TV_SHOW), {"poster", "fanart", "banner"}},
-    {NameOf(MediaType::SEASON), {"poster", "fanart", "banner"}},
+    {NameOf(MediaType::TV_SHOW), {"poster", "fanart", ART::TYPE::BANNER}},
+    {NameOf(MediaType::SEASON), {"poster", "fanart", ART::TYPE::BANNER}},
     {NameOf(MediaType::MOVIE), {"poster", "fanart"}},
     {NameOf(MediaType::VIDEO_COLLECTION), {"poster", "fanart"}},
     {NameOf(MediaType::MUSIC_VIDEO), {"poster", "fanart"}},
-    {NameOf(MediaType::VIDEO_VERSION), {"poster", "fanart", "banner", "thumb"}},
-    {NameOf(MediaType::NONE), {"poster", "fanart", "banner", "thumb"}},
+    {NameOf(MediaType::VIDEO_VERSION), {"poster", "fanart", ART::TYPE::BANNER, "thumb"}},
+    {NameOf(MediaType::NONE), {"poster", "fanart", ART::TYPE::BANNER, "thumb"}},
 };
 
 const std::vector<std::string> artTypeDefaultsFallback = {};
