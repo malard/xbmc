@@ -17,7 +17,6 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
-#include <optional>
 #include <queue>
 #include <string>
 #include <thread>
@@ -244,7 +243,7 @@ private:
   /*! \brief Workers that are unavailable: running a job, or still in its callbacks.
    Must be called with m_section held.
    */
-  size_t GetBusyCount() const { return m_processing.size() + m_completingJobs.size(); }
+  size_t GetBusyCount() const;
 
   void StartWorkers(CJob::PRIORITY priority);
   void RemoveWorker(const CJobWorker* worker);
@@ -280,22 +279,19 @@ private:
   // Incremented only across the m_jobEvent wait, always under m_section.
   size_t m_idleWorkers{0};
 
-  // Jobs CancelJobs has taken off the queues whose abort callbacks have not run yet, and the
-  // one whose callback is running now.
+  // Jobs CancelJobs has taken off the queues whose abort callbacks have not run yet.
   JobQueue m_aborting;
-  std::optional<unsigned int> m_abortingId;
-  std::thread::id m_abortingThread;
-  std::condition_variable_any m_abortDone;
 
-  // Jobs out of m_processing whose completion callbacks are running. They are neither processing
-  // nor free, and an owner cancelling one has to outlive its callback.
-  struct CompletingJob
+  // Jobs whose abort or completion callback is running, which an owner cancelling one has to
+  // outlive. A completing job is out of m_processing but still holds its worker.
+  struct CallbackInFlight
   {
     std::thread::id thread;
     CJob::PRIORITY priority;
+    bool completing;
   };
-  std::unordered_map<unsigned int, CompletingJob> m_completingJobs;
-  std::condition_variable_any m_completeDone;
+  std::unordered_map<unsigned int, CallbackInFlight> m_inCallback;
+  std::condition_variable_any m_callbackDone;
 
   mutable CCriticalSection m_section;
   CEvent m_jobEvent;
