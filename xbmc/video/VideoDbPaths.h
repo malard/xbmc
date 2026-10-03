@@ -10,7 +10,7 @@
 
 //! \brief The videodb:// paths of the video library's nodes, as XFILE::CVideoDatabaseDirectory
 //! parses them.
-namespace KODI::VIDEODB
+namespace KODI::VIDEO::DB_PATH
 {
 
 inline constexpr char ROOT[] = "videodb://";
@@ -50,4 +50,4 @@ inline constexpr char RECENTLY_ADDED_EPISODES[] = "videodb://recentlyaddedepisod
 inline constexpr char RECENTLY_ADDED_MUSICVIDEOS[] = "videodb://recentlyaddedmusicvideos/";
 inline constexpr char INPROGRESS_TVSHOWS[] = "videodb://inprogresstvshows/";
 
-} // namespace KODI::VIDEODB
+} // namespace KODI::VIDEO::DB_PATH

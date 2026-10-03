@@ -46,7 +46,7 @@ CFileItemPtr CreateNewSaveItem()
 
   // A nonexistent path ensures a gamewindow control won't render any pixels
   item->SetPath(NO_PIXEL_DATA);
-  item->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
+  item->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
   item->SetProperty(SAVESTATE_CAPTION,
                     CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
                         15315)); // "Save progress to a new save file"

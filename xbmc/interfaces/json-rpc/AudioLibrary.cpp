@@ -140,12 +140,12 @@ struct KindTraits
 };
 
 constexpr KindTraits KINDS[] = {
-    {AudioKind::Artist, MediaType::ARTIST, "artistId", "artists", KODI::MUSICDB::ARTISTS,
+    {AudioKind::Artist, MediaType::ARTIST, "artistId", "artists", KODI::MUSIC::DB_PATH::ARTISTS,
      "Audio.Fields.Artist", "Audio.Filter.Artists", ARTIST_FILTERS, "Audio.Details.Artist.Set"},
-    {AudioKind::Album, MediaType::ALBUM, "albumId", "albums", KODI::MUSICDB::ALBUMS,
+    {AudioKind::Album, MediaType::ALBUM, "albumId", "albums", KODI::MUSIC::DB_PATH::ALBUMS,
      "Audio.Fields.Album", "Audio.Filter.Albums", ALBUM_FILTERS, "Audio.Details.Album.Set"},
-    {AudioKind::Song, MediaType::SONG, "songId", "songs", KODI::MUSICDB::SONGS, "Audio.Fields.Song",
-     "Audio.Filter.Songs", SONG_FILTERS, "Audio.Details.Song.Set"},
+    {AudioKind::Song, MediaType::SONG, "songId", "songs", KODI::MUSIC::DB_PATH::SONGS,
+     "Audio.Fields.Song", "Audio.Filter.Songs", SONG_FILTERS, "Audio.Details.Song.Set"},
 };
 
 const KindTraits& TraitsOf(AudioKind kind)
@@ -240,10 +240,11 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
 
       for (const CAlbum& album : albums)
       {
-        const std::string path = StringUtils::Format("{}{}/",
-                                                     added ? KODI::MUSICDB::RECENTLY_ADDED_ALBUMS
-                                                           : KODI::MUSICDB::RECENTLY_PLAYED_ALBUMS,
-                                                     album.idAlbum);
+        const std::string path =
+            StringUtils::Format("{}{}/",
+                                added ? KODI::MUSIC::DB_PATH::RECENTLY_ADDED_ALBUMS
+                                      : KODI::MUSIC::DB_PATH::RECENTLY_PLAYED_ALBUMS,
+                                album.idAlbum);
 
         CFileItemPtr item;
         FillAlbumItem(album, path, item);
@@ -374,12 +375,12 @@ void CAudioLibrary::FillListArt(CVariant& list,
     thumbLoader.FillLibraryArt(item);
 
     if (fetchThumb)
-      entry["thumbnail"] = item.HasArt(KODI::ART_TYPE::THUMB)
-                               ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART_TYPE::THUMB))
+      entry["thumbnail"] = item.HasArt(KODI::ART::TYPE::THUMB)
+                               ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART::TYPE::THUMB))
                                : "";
     if (fetchFanart)
-      entry["fanart"] = item.HasArt(KODI::ART_TYPE::FANART)
-                            ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART_TYPE::FANART))
+      entry["fanart"] = item.HasArt(KODI::ART::TYPE::FANART)
+                            ? IMAGE_FILES::URLFromFile(item.GetArt(KODI::ART::TYPE::FANART))
                             : "";
     if (fetchArt)
     {
@@ -497,7 +498,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
       return status;
 
     CFileItemPtr albumItem;
-    FillAlbumItem(album, StringUtils::Format("{}{}/", KODI::MUSICDB::ALBUMS, id), albumItem);
+    FillAlbumItem(album, StringUtils::Format("{}{}/", KODI::MUSIC::DB_PATH::ALBUMS, id), albumItem);
     items.Add(albumItem);
 
     status = GetAdditionalAlbumDetails(request, items, musicdatabase);
@@ -555,7 +556,7 @@ JSONRPC_STATUS CAudioLibrary::GetRoles(const CVariant& parameterObject, CVariant
     return InternalError;
 
   CFileItemList items;
-  if (!musicdatabase.GetRolesNav(KODI::MUSICDB::SONGS, items))
+  if (!musicdatabase.GetRolesNav(KODI::MUSIC::DB_PATH::SONGS, items))
     return InternalError;
 
   /* need to set strTitle in each item*/
@@ -1021,8 +1022,8 @@ bool CAudioLibrary::FillFileItemList(const CVariant& parameterObject, CFileItemL
   }
 
   if (artistID != -1 || albumID != -1 || genreID != -1)
-    success |= musicdatabase.GetSongsNav(KODI::MUSICDB::SONGS, resolved, SortDescription(), genreID,
-                                         artistID, albumID);
+    success |= musicdatabase.GetSongsNav(KODI::MUSIC::DB_PATH::SONGS, resolved, SortDescription(),
+                                         genreID, artistID, albumID);
 
   int songID = static_cast<int>(parameterObject["songId"].asInteger(-1));
   if (songID != -1)
@@ -1320,13 +1321,13 @@ bool CAudioLibrary::ResolveInfoProviderView(const std::string& path,
   if (StringUtils::EqualsNoCase(musicUrl.GetType(), "artists"))
   {
     content = ADDON::ContentType::ARTISTS;
-    listing = KODI::MUSICDB::ARTISTS;
+    listing = KODI::MUSIC::DB_PATH::ARTISTS;
     singleItem = "artistid";
   }
   else if (StringUtils::EqualsNoCase(musicUrl.GetType(), "albums"))
   {
     content = ADDON::ContentType::ALBUMS;
-    listing = KODI::MUSICDB::ALBUMS;
+    listing = KODI::MUSIC::DB_PATH::ALBUMS;
     singleItem = "albumid";
   }
   else
@@ -1411,8 +1412,8 @@ JSONRPC_STATUS CAudioLibrary::ResolveInfoProviderTarget(const CVariant& paramete
       return InvalidParams;
 
     target.scope = InfoProviderTarget::Scope::Default;
-    target.viewPath = target.content == ADDON::ContentType::ARTISTS ? KODI::MUSICDB::ARTISTS
-                                                                    : KODI::MUSICDB::ALBUMS;
+    target.viewPath = target.content == ADDON::ContentType::ARTISTS ? KODI::MUSIC::DB_PATH::ARTISTS
+                                                                    : KODI::MUSIC::DB_PATH::ALBUMS;
     return OK;
   }
 

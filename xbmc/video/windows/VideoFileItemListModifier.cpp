@@ -86,14 +86,14 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
       {
         CFileItemPtr item = items[i];
         watched +=
-            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES).asInteger());
+            static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger());
         unwatched += static_cast<int>(
-            item->GetProperty(KODI::ITEM_PROPERTY::UNWATCHED_EPISODES).asInteger());
+            item->GetProperty(KODI::ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger());
         inprogress += static_cast<int>(
-            item->GetProperty(KODI::ITEM_PROPERTY::IN_PROGRESS_EPISODES).asInteger());
+            item->GetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES).asInteger());
       }
       KODI::VIDEO::UTILS::SetEpisodeCounts(*pItem, watched + unwatched, watched);
-      pItem->SetProperty(KODI::ITEM_PROPERTY::IN_PROGRESS_EPISODES, inprogress);
+      pItem->SetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES, inprogress);
 
       // @note: The items list may contain additional items that do not belong to the show.
       // This is the case of the up directory (..) or movies linked to the tvshow.

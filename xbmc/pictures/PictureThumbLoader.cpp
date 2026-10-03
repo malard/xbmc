@@ -69,23 +69,23 @@ bool CPictureThumbLoader::LoadItemCached(CFileItem* pItem)
   if (pItem->IsShareOrDrive() || pItem->IsParentFolder())
     return false;
 
-  if (pItem->HasArt(ART_TYPE::THUMB) && m_regenerateThumbs)
+  if (pItem->HasArt(ART::TYPE::THUMB) && m_regenerateThumbs)
   {
-    CServiceBroker::GetTextureCache()->ClearCachedImage(pItem->GetArt(ART_TYPE::THUMB));
+    CServiceBroker::GetTextureCache()->ClearCachedImage(pItem->GetArt(ART::TYPE::THUMB));
     if (m_textureDatabase->Open())
     {
       m_textureDatabase->ClearTextureForPath(pItem->GetPath(), "thumb");
       m_textureDatabase->Close();
     }
-    pItem->SetArt(ART_TYPE::THUMB, "");
+    pItem->SetArt(ART::TYPE::THUMB, "");
   }
 
   std::string thumb;
   if (pItem->IsPicture() && !pItem->IsZIP() && !pItem->IsRAR() && !pItem->IsCBZ() &&
       !pItem->IsCBR() && !PLAYLIST::IsPlayList(*pItem))
   { // load the thumb from the image file
-    thumb = pItem->HasArt(ART_TYPE::THUMB) ? pItem->GetArt(ART_TYPE::THUMB)
-                                           : IMAGE_FILES::URLFromFile(pItem->GetPath());
+    thumb = pItem->HasArt(ART::TYPE::THUMB) ? pItem->GetArt(ART::TYPE::THUMB)
+                                            : IMAGE_FILES::URLFromFile(pItem->GetPath());
   }
   else if (VIDEO::IsVideo(*pItem) && !pItem->IsZIP() && !pItem->IsRAR() && !pItem->IsCBZ() &&
            !pItem->IsCBR() && !PLAYLIST::IsPlayList(*pItem))
@@ -93,14 +93,14 @@ bool CPictureThumbLoader::LoadItemCached(CFileItem* pItem)
     CVideoThumbLoader loader;
     loader.LoadItem(pItem);
   }
-  else if (!pItem->HasArt(ART_TYPE::THUMB))
+  else if (!pItem->HasArt(ART::TYPE::THUMB))
   { // folder, zip, cbz, rar, cbr, playlist may have a previously cached image
     thumb = GetCachedImage(*pItem, "thumb");
   }
   if (!thumb.empty())
   {
     CServiceBroker::GetTextureCache()->BackgroundCacheImage(thumb);
-    pItem->SetArt(ART_TYPE::THUMB, thumb);
+    pItem->SetArt(ART::TYPE::THUMB, thumb);
   }
   ART::FillInDefaultIcon(*pItem);
   return true;
@@ -113,7 +113,7 @@ bool CPictureThumbLoader::LoadItemLookup(CFileItem* pItem)
 
 void CPictureThumbLoader::ProcessFoldersAndArchives(CFileItem *pItem)
 {
-  if (pItem->HasArt(ART_TYPE::THUMB))
+  if (pItem->HasArt(ART::TYPE::THUMB))
     return;
 
   CTextureDatabase db;
@@ -125,12 +125,12 @@ void CPictureThumbLoader::ProcessFoldersAndArchives(CFileItem *pItem)
     {
       db.SetTextureForPath(pItem->GetPath(), "thumb", strTBN);
       CServiceBroker::GetTextureCache()->BackgroundCacheImage(strTBN);
-      pItem->SetArt(ART_TYPE::THUMB, strTBN);
+      pItem->SetArt(ART::TYPE::THUMB, strTBN);
       return;
     }
   }
   if ((pItem->IsFolder() || pItem->IsCBR() || pItem->IsCBZ()) && !pItem->IsShareOrDrive() &&
-      !pItem->IsParentFolder() && !pItem->IsPath(PLACEHOLDER::ADD_SOURCE))
+      !pItem->IsParentFolder() && !pItem->IsPath(ITEM::PLACEHOLDER::ADD_SOURCE))
   {
     // first check for a folder.jpg
     std::string thumb = "folder.jpg";
@@ -152,7 +152,7 @@ void CPictureThumbLoader::ProcessFoldersAndArchives(CFileItem *pItem)
     {
       db.SetTextureForPath(pItem->GetPath(), "thumb", thumb);
       CServiceBroker::GetTextureCache()->BackgroundCacheImage(thumb);
-      pItem->SetArt(ART_TYPE::THUMB, thumb);
+      pItem->SetArt(ART::TYPE::THUMB, thumb);
       return;
     }
     if (!pItem->IsPlugin())
@@ -189,8 +189,8 @@ void CPictureThumbLoader::ProcessFoldersAndArchives(CFileItem *pItem)
             if (item->IsFolder())
             {
               ProcessFoldersAndArchives(item.get());
-              pItem->SetArt(ART_TYPE::THUMB, items[i]->GetArt(ART_TYPE::THUMB));
-              pItem->SetArt(ART_TYPE::ICON, items[i]->GetArt(ART_TYPE::ICON));
+              pItem->SetArt(ART::TYPE::THUMB, items[i]->GetArt(ART::TYPE::THUMB));
+              pItem->SetArt(ART::TYPE::ICON, items[i]->GetArt(ART::TYPE::ICON));
               return;
             }
           }
@@ -207,13 +207,13 @@ void CPictureThumbLoader::ProcessFoldersAndArchives(CFileItem *pItem)
         std::string thumb = IMAGE_FILES::URLFromFile(items[0]->GetPath());
         db.SetTextureForPath(pItem->GetPath(), "thumb", thumb);
         CServiceBroker::GetTextureCache()->BackgroundCacheImage(thumb);
-        pItem->SetArt(ART_TYPE::THUMB, thumb);
+        pItem->SetArt(ART::TYPE::THUMB, thumb);
       }
       else
       {
         std::string thumb = IMAGE_FILES::URLFromFile(pItem->GetPath(), "picturefolder");
         db.SetTextureForPath(pItem->GetPath(), "thumb", thumb);
-        pItem->SetArt(ART_TYPE::THUMB, thumb);
+        pItem->SetArt(ART::TYPE::THUMB, thumb);
       }
     }
     // refill in the icon to get it to update

@@ -266,12 +266,12 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
     windowManager.ActivateWindow(WINDOW_SCREEN_ALIGNMENT);
   else if (settingId == CSettings::SETTING_SOURCE_VIDEOS)
   {
-    std::vector<std::string> params{KODI::LIBRARY::VIDEO_FILES, "return"};
+    std::vector<std::string> params{KODI::MEDIA::LIBRARY_PATH::VIDEO_FILES, "return"};
     windowManager.ActivateWindow(WINDOW_VIDEO_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_MUSIC)
   {
-    std::vector<std::string> params{KODI::LIBRARY::MUSIC_FILES, "return"};
+    std::vector<std::string> params{KODI::MEDIA::LIBRARY_PATH::MUSIC_FILES, "return"};
     windowManager.ActivateWindow(WINDOW_MUSIC_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_PICTURES)

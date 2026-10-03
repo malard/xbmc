@@ -253,7 +253,7 @@ void CDialogGameAchievements::RefreshList()
                                       ? achievement.badgeUrl
                                       : achievement.lockedBadgeUrl;
     if (!badgeUrl.empty())
-      item->SetArt(ART_TYPE::ICON, badgeUrl);
+      item->SetArt(ART::TYPE::ICON, badgeUrl);
 
     // Not shown; carried so the selection survives a resort
     item->SetProperty(ACHIEVEMENT_ID, achievement.id);

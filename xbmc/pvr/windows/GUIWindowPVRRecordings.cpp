@@ -153,7 +153,7 @@ bool CGUIWindowPVRRecordingsBase::OnAction(const CAction& action)
     if (pItem->HasPVRRecordingInfoTag())
       bUnWatched = pItem->GetPVRRecordingInfoTag()->GetPlayCount() == 0;
     else if (pItem->IsFolder())
-      bUnWatched = pItem->GetProperty(ITEM_PROPERTY::UNWATCHED_EPISODES).asInteger() > 0;
+      bUnWatched = pItem->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() > 0;
     else
       return false;
 
@@ -169,7 +169,7 @@ bool CGUIWindowPVRRecordingsBase::OnPopupMenu(int iItem)
   if (iItem >= 0 && iItem < m_vecItems->Size())
   {
     const auto item = m_vecItems->Get(iItem);
-    item->SetProperty(ITEM_PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM, true);
+    item->SetProperty(ITEM::PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM, true);
   }
 
   return CGUIWindowPVRBase::OnPopupMenu(iItem);

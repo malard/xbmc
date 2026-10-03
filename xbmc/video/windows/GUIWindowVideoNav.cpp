@@ -414,7 +414,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     if (!isVideoDb)
     {
       if (URIUtils::PathEquals(items.GetPath(), CUtil::PlaylistsPathOf(MediaSection::VIDEO)))
-        items.SetContent(CONTENT::PLAYLISTS);
+        items.SetContent(MEDIA::CONTENT::PLAYLISTS);
       else if (!items.IsVirtualDirectoryRoot())
       { // load info from the database
         std::string label;
@@ -429,7 +429,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     }
 
     m_persistWatchedMode = true;
-    if (const CVariant prop = items.GetProperty(ITEM_PROPERTY::WATCHED_MODE); prop.isInteger())
+    if (const CVariant prop = items.GetProperty(ITEM::PROPERTY::WATCHED_MODE); prop.isInteger())
     {
       if (const auto wm = CMediaSettings::ToWatchedMode(prop.asInteger()); wm.has_value())
       {
@@ -469,7 +469,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
           for(int i = 0; i < items.Size(); i++)
           {
             const CFileItemPtr item = items.Get(i);
-            if (item->GetProperty(ITEM_PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 &&
+            if (item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 &&
                 item->GetVideoInfoTag()->m_iSeason > 0)
               count++;
           }
@@ -500,13 +500,13 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         if (m_database.GetArtForItem(details.m_iDbId, details.m_type, art) && !art.empty())
         {
           items.AppendArt(art, details.m_type);
-          items.SetArtFallback(ART_TYPE::FANART, "tvshow.fanart");
+          items.SetArtFallback(ART::TYPE::FANART, "tvshow.fanart");
           if (node == NodeType::SEASONS)
           { // set an art fallback for "thumb"
             if (items.HasArt("tvshow.poster"))
-              items.SetArtFallback(ART_TYPE::THUMB, "tvshow.poster");
+              items.SetArtFallback(ART::TYPE::THUMB, "tvshow.poster");
             else if (items.HasArt("tvshow.banner"))
-              items.SetArtFallback(ART_TYPE::THUMB, "tvshow.banner");
+              items.SetArtFallback(ART::TYPE::THUMB, "tvshow.banner");
           }
         }
 
@@ -541,9 +541,9 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
             items.AppendArt(seasonArt, NameOf(MediaType::SEASON));
             // set an art fallback for "thumb"
             if (items.HasArt("season.poster"))
-              items.SetArtFallback(ART_TYPE::THUMB, "season.poster");
+              items.SetArtFallback(ART::TYPE::THUMB, "season.poster");
             else if (items.HasArt("season.banner"))
-              items.SetArtFallback(ART_TYPE::THUMB, "season.banner");
+              items.SetArtFallback(ART::TYPE::THUMB, "season.banner");
           }
         }
       }
@@ -556,9 +556,9 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
               !setArt.empty())
           {
             items.AppendArt(setArt, NameOf(MediaType::VIDEO_COLLECTION));
-            items.SetArtFallback(ART_TYPE::FANART, "set.fanart");
+            items.SetArtFallback(ART::TYPE::FANART, "set.fanart");
             if (items.HasArt("set.poster"))
-              items.SetArtFallback(ART_TYPE::THUMB, "set.poster");
+              items.SetArtFallback(ART::TYPE::THUMB, "set.poster");
           }
         }
       }
@@ -567,11 +567,11 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     CVideoDbUrl videoUrl;
     if (videoUrl.FromString(items.GetPath()))
     {
-      if (items.GetContent() == CONTENT::TAGS &&
-          !items.Contains(PLACEHOLDER::NEW_TAG + videoUrl.GetType()))
+      if (items.GetContent() == MEDIA::CONTENT::TAGS &&
+          !items.Contains(ITEM::PLACEHOLDER::NEW_TAG + videoUrl.GetType()))
       {
         const auto newTag{
-            std::make_shared<CFileItem>(PLACEHOLDER::NEW_TAG + videoUrl.GetType(), false)};
+            std::make_shared<CFileItem>(ITEM::PLACEHOLDER::NEW_TAG + videoUrl.GetType(), false)};
         newTag->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20462));
         newTag->SetLabelPreformatted(true);
         newTag->SetSpecialSort(SortSpecial::TOP);
@@ -728,13 +728,13 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
 
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
-    if (!pItem->IsPath(std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
+    if (!pItem->IsPath(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
         !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) &&
         !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
-  else if (StringUtils::StartsWithNoCase(pItem->GetPath(), VIDEODB::MOVIE_SETS) &&
+  else if (StringUtils::StartsWithNoCase(pItem->GetPath(), VIDEO::DB_PATH::MOVIE_SETS) &&
            pItem->GetPath().size() > 22 && pItem->IsFolder())
   {
     CGUIDialogYesNo* pDialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogYesNo>(WINDOW_DIALOG_YES_NO);
@@ -801,7 +801,8 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
-    if (!item->IsDVD() && item->GetPath() != PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE &&
+        !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
@@ -825,10 +826,10 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
     // are we in the playlists location?
     const bool inPlaylists{CUtil::IsPlaylistsPath(m_vecItems->GetPath(), MediaSection::VIDEO)};
 
-    if (item->HasVideoInfoTag() && item->HasProperty(ITEM_PROPERTY::ARTIST_MUSICID))
+    if (item->HasVideoInfoTag() && item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID))
       buttons.Add(CONTEXT_BUTTON_GO_TO_ARTIST, 20396);
 
-    if (item->HasVideoInfoTag() && item->HasProperty(ITEM_PROPERTY::ALBUM_MUSICID))
+    if (item->HasVideoInfoTag() && item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID))
       buttons.Add(CONTEXT_BUTTON_GO_TO_ALBUM, 20397);
 
     if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->m_strAlbum.empty() &&
@@ -909,7 +910,7 @@ bool CGUIWindowVideoNav::OnPopupMenu(int iItem)
   if (iItem >= 0 && iItem < m_vecItems->Size())
   {
     const auto item = m_vecItems->Get(iItem);
-    item->SetProperty(ITEM_PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM, true);
+    item->SetProperty(ITEM::PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM, true);
   }
 
   return CGUIWindowVideoBase::OnPopupMenu(iItem);
@@ -960,16 +961,16 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   case CONTEXT_BUTTON_GO_TO_ARTIST:
     {
       std::string strPath;
-      strPath = StringUtils::Format("{}{}/", MUSICDB::ARTISTS,
-                                    item->GetProperty(ITEM_PROPERTY::ARTIST_MUSICID).asInteger());
+      strPath = StringUtils::Format("{}{}/", MUSIC::DB_PATH::ARTISTS,
+                                    item->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger());
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, strPath);
       return true;
     }
   case CONTEXT_BUTTON_GO_TO_ALBUM:
     {
       std::string strPath;
-      strPath = StringUtils::Format("{}{}/", MUSICDB::ALBUMS,
-                                    item->GetProperty(ITEM_PROPERTY::ALBUM_MUSICID).asInteger());
+      strPath = StringUtils::Format("{}{}/", MUSIC::DB_PATH::ALBUMS,
+                                    item->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger());
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, strPath);
       return true;
     }
@@ -1007,7 +1008,7 @@ bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CFileItemPtr item = m_vecItems->Get(iItem);
-  if (StringUtils::StartsWithNoCase(item->GetPath(), PLACEHOLDER::NEW_TAG))
+  if (StringUtils::StartsWithNoCase(item->GetPath(), ITEM::PLACEHOLDER::NEW_TAG))
   {
     // dont allow update while scanning
     if (CVideoLibraryQueue::GetInstance().IsScanningLibrary())
@@ -1065,36 +1066,36 @@ std::string CGUIWindowVideoNav::GetStartFolder(const std::string &dir)
 {
   static const auto map = std::map<std::string, std::string>{
       {"files", CSourcesDirectory::PathOf(MediaSection::VIDEO)},
-      {"inprogresstvshows", VIDEODB::INPROGRESS_TVSHOWS},
-      {"movieactors", VIDEODB::MOVIE_ACTORS},
-      {"moviecountries", VIDEODB::MOVIE_COUNTRIES},
-      {"moviedirectors", VIDEODB::MOVIE_DIRECTORS},
-      {"moviegenres", VIDEODB::MOVIE_GENRES},
-      {"movies", VIDEODB::MOVIES},
-      {"moviesets", VIDEODB::MOVIE_SETS},
-      {"moviestudios", VIDEODB::MOVIE_STUDIOS},
-      {"movietags", VIDEODB::MOVIE_TAGS},
-      {"movietitles", VIDEODB::MOVIE_TITLES},
-      {"movieyears", VIDEODB::MOVIE_YEARS},
-      {"musicvideoalbums", VIDEODB::MUSICVIDEO_ALBUMS},
-      {"musicvideoartists", VIDEODB::MUSICVIDEO_ARTISTS},
-      {"musicvideodirectors", VIDEODB::MUSICVIDEO_DIRECTORS},
-      {"musicvideogenres", VIDEODB::MUSICVIDEO_GENRES},
-      {"musicvideos", VIDEODB::MUSICVIDEOS},
-      {"musicvideostudios", VIDEODB::MUSICVIDEO_STUDIOS},
-      {"musicvideotags", VIDEODB::MUSICVIDEO_TAGS},
-      {"musicvideotitles", VIDEODB::MUSICVIDEO_TITLES},
-      {"musicvideoyears", VIDEODB::MUSICVIDEO_YEARS},
-      {"recentlyaddedepisodes", VIDEODB::RECENTLY_ADDED_EPISODES},
-      {"recentlyaddedmovies", VIDEODB::RECENTLY_ADDED_MOVIES},
-      {"recentlyaddedmusicvideos", VIDEODB::RECENTLY_ADDED_MUSICVIDEOS},
-      {"tvshowactors", VIDEODB::TVSHOW_ACTORS},
-      {"tvshowgenres", VIDEODB::TVSHOW_GENRES},
-      {"tvshows", VIDEODB::TVSHOWS},
-      {"tvshowstudios", VIDEODB::TVSHOW_STUDIOS},
-      {"tvshowtags", VIDEODB::TVSHOW_TAGS},
-      {"tvshowtitles", VIDEODB::TVSHOW_TITLES},
-      {"tvshowyears", VIDEODB::TVSHOW_YEARS},
+      {"inprogresstvshows", VIDEO::DB_PATH::INPROGRESS_TVSHOWS},
+      {"movieactors", VIDEO::DB_PATH::MOVIE_ACTORS},
+      {"moviecountries", VIDEO::DB_PATH::MOVIE_COUNTRIES},
+      {"moviedirectors", VIDEO::DB_PATH::MOVIE_DIRECTORS},
+      {"moviegenres", VIDEO::DB_PATH::MOVIE_GENRES},
+      {"movies", VIDEO::DB_PATH::MOVIES},
+      {"moviesets", VIDEO::DB_PATH::MOVIE_SETS},
+      {"moviestudios", VIDEO::DB_PATH::MOVIE_STUDIOS},
+      {"movietags", VIDEO::DB_PATH::MOVIE_TAGS},
+      {"movietitles", VIDEO::DB_PATH::MOVIE_TITLES},
+      {"movieyears", VIDEO::DB_PATH::MOVIE_YEARS},
+      {"musicvideoalbums", VIDEO::DB_PATH::MUSICVIDEO_ALBUMS},
+      {"musicvideoartists", VIDEO::DB_PATH::MUSICVIDEO_ARTISTS},
+      {"musicvideodirectors", VIDEO::DB_PATH::MUSICVIDEO_DIRECTORS},
+      {"musicvideogenres", VIDEO::DB_PATH::MUSICVIDEO_GENRES},
+      {"musicvideos", VIDEO::DB_PATH::MUSICVIDEOS},
+      {"musicvideostudios", VIDEO::DB_PATH::MUSICVIDEO_STUDIOS},
+      {"musicvideotags", VIDEO::DB_PATH::MUSICVIDEO_TAGS},
+      {"musicvideotitles", VIDEO::DB_PATH::MUSICVIDEO_TITLES},
+      {"musicvideoyears", VIDEO::DB_PATH::MUSICVIDEO_YEARS},
+      {"recentlyaddedepisodes", VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES},
+      {"recentlyaddedmovies", VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES},
+      {"recentlyaddedmusicvideos", VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS},
+      {"tvshowactors", VIDEO::DB_PATH::TVSHOW_ACTORS},
+      {"tvshowgenres", VIDEO::DB_PATH::TVSHOW_GENRES},
+      {"tvshows", VIDEO::DB_PATH::TVSHOWS},
+      {"tvshowstudios", VIDEO::DB_PATH::TVSHOW_STUDIOS},
+      {"tvshowtags", VIDEO::DB_PATH::TVSHOW_TAGS},
+      {"tvshowtitles", VIDEO::DB_PATH::TVSHOW_TITLES},
+      {"tvshowyears", VIDEO::DB_PATH::TVSHOW_YEARS},
   };
 
   const auto it = map.find(StringUtils::ToLower(dir));
@@ -1119,7 +1120,7 @@ bool CGUIWindowVideoNav::ApplyWatchedFilter(CFileItemList &items)
     filterWatched = true;
   if (!VIDEO::IsVideoDb(items))
     filterWatched = true;
-  if (items.GetContent() == CONTENT::TVSHOWS &&
+  if (items.GetContent() == MEDIA::CONTENT::TVSHOWS &&
       (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder()))
     node = NodeType::TITLE_TVSHOWS; // so that the check below works
 
@@ -1131,14 +1132,14 @@ bool CGUIWindowVideoNav::ApplyWatchedFilter(CFileItemList &items)
     {
       if (m_watchedMode == WatchedMode::UNWATCHED)
         item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM_PROPERTY::UNWATCHED_EPISODES).asInteger();
+            (int)item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::WATCHED)
         item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM_PROPERTY::WATCHED_EPISODES).asInteger();
+            (int)item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::ALL)
         item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM_PROPERTY::TOTAL_EPISODES).asInteger();
-      item->SetProperty(ITEM_PROPERTY::NUM_EPISODES, item->GetVideoInfoTag()->m_iEpisode);
+            (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
+      item->SetProperty(ITEM::PROPERTY::NUM_EPISODES, item->GetVideoInfoTag()->m_iEpisode);
       listchanged = true;
     }
 

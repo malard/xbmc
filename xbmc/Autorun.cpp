@@ -264,7 +264,7 @@ bool CAutorun::RunDisc(IDirectory* pDir,
             }
           }
           if (options.forceSelection)
-            item->SetProperty(ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION, true);
+            item->SetProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION, true);
 
           playLists->PlayItem(PLAYLIST::Video, item);
           return true;

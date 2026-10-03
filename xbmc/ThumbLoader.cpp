@@ -81,7 +81,7 @@ bool CProgramThumbLoader::LoadItemLookup(CFileItem *pItem)
 bool CProgramThumbLoader::FillThumb(CFileItem &item)
 {
   // no need to do anything if we already have a thumb set
-  std::string thumb = item.GetArt(ART_TYPE::THUMB);
+  std::string thumb = item.GetArt(ART::TYPE::THUMB);
 
   if (thumb.empty())
   { // see whether we have a cached image for this item
@@ -97,7 +97,7 @@ bool CProgramThumbLoader::FillThumb(CFileItem &item)
   if (!thumb.empty())
   {
     CServiceBroker::GetTextureCache()->BackgroundCacheImage(thumb);
-    item.SetArt(ART_TYPE::THUMB, thumb);
+    item.SetArt(ART::TYPE::THUMB, thumb);
   }
   return true;
 }

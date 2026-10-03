@@ -145,7 +145,7 @@ bool CGUIDialogMediaSource::ShowAndAddMediaSource(MediaSection section)
     CMediaSource share;
     share.FromNameAndPaths(strName, dialog->GetPaths());
     if (dialog->m_paths->Size() > 0)
-      share.m_strThumbnailImage = dialog->m_paths->Get(0)->GetArt(KODI::ART_TYPE::THUMB);
+      share.m_strThumbnailImage = dialog->m_paths->Get(0)->GetArt(KODI::ART::TYPE::THUMB);
     CMediaSourceSettings::GetInstance().AddShare(section, share);
     OnMediaSourceChanged(section, "", share);
   }

@@ -110,20 +110,20 @@ bool CVideoDatabaseDirectory::GetDirectory(const CURL& url, CFileItemList &items
   for (int i=0;i<items.Size();++i)
   {
     CFileItemPtr item = items[i];
-    if (item->IsFolder() && !item->HasArt(KODI::ART_TYPE::ICON) &&
-        !item->HasArt(KODI::ART_TYPE::THUMB))
+    if (item->IsFolder() && !item->HasArt(KODI::ART::TYPE::ICON) &&
+        !item->HasArt(KODI::ART::TYPE::THUMB))
     {
       std::string strImage = GetIcon(item->GetPath());
       if (!strImage.empty() && CServiceBroker::GetGUI()->GetTextureManager().HasTexture(strImage))
-        item->SetArt(KODI::ART_TYPE::ICON, strImage);
+        item->SetArt(KODI::ART::TYPE::ICON, strImage);
     }
     if (item->HasVideoInfoTag())
     {
       item->SetDynPath(item->GetVideoInfoTag()->GetPath());
     }
   }
-  if (items.HasProperty(KODI::ITEM_PROPERTY::CUSTOM_TITLE))
-    items.SetLabel(items.GetProperty(KODI::ITEM_PROPERTY::CUSTOM_TITLE).asString());
+  if (items.HasProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE))
+    items.SetLabel(items.GetProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE).asString());
   else
     items.SetLabel(pNode->GetLocalizedName());
 
@@ -334,7 +334,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
   switch (GetDirectoryChildType(path))
   {
     case NodeType::TITLE_MOVIES:
-      if (URIUtils::PathEquals(path, KODI::VIDEODB::MOVIE_TITLES))
+      if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::MOVIE_TITLES))
       {
         if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMovies.png";
@@ -342,7 +342,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
       }
       return "";
     case NodeType::TITLE_TVSHOWS:
-      if (URIUtils::PathEquals(path, KODI::VIDEODB::TVSHOW_TITLES))
+      if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::TVSHOW_TITLES))
       {
         if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultTVShows.png";
@@ -350,7 +350,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
       }
       return "";
     case NodeType::TITLE_MUSICVIDEOS:
-      if (URIUtils::PathEquals(path, KODI::VIDEODB::MUSICVIDEO_TITLES))
+      if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES))
       {
         if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMusicVideos.png";

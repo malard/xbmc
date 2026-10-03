@@ -219,7 +219,7 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
 
   // video db items normally have info in the database
   if (pItem->HasVideoInfoTag() &&
-      !pItem->GetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean())
+      !pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean())
   {
     FillLibraryArt(*pItem);
 
@@ -255,7 +255,7 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
 bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
 {
   if (pItem->IsShareOrDrive() || pItem->IsParentFolder() ||
-      pItem->GetPath() == PLACEHOLDER::ADD_SOURCE)
+      pItem->GetPath() == ITEM::PLACEHOLDER::ADD_SOURCE)
     return false;
 
   if (pItem->HasVideoInfoTag() && HasOnlyLibraryArt(*pItem->GetVideoInfoTag()))
@@ -265,8 +265,8 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
 
   const bool isLibraryItem = pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->m_iDbId > -1 &&
                              !pItem->GetVideoInfoTag()->m_type.empty();
-  const bool libraryArtFilled =
-      pItem->HasVideoInfoTag() && pItem->GetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean();
+  const bool libraryArtFilled = pItem->HasVideoInfoTag() &&
+                                pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean();
   if (!isLibraryItem || !libraryArtFilled)
   {
     KODI::ART::Artwork artwork = pItem->GetArt();
@@ -310,7 +310,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
   if (!pItem->IsFolder() && VIDEO::IsVideo(*pItem))
   {
     const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    if (!pItem->HasArt(ART_TYPE::THUMB))
+    if (!pItem->HasArt(ART::TYPE::THUMB))
     {
       std::string thumbURL = GetEmbeddedThumbURL(*pItem);
       if (CDVDFileInfo::CanExtract(*pItem) &&
@@ -318,7 +318,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
           settings->GetInt(CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL) !=
               CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_NONE)
       {
-        pItem->SetArt(ART_TYPE::THUMB, thumbURL);
+        pItem->SetArt(ART::TYPE::THUMB, thumbURL);
 
         if (pItem->HasVideoInfoTag())
         {
@@ -421,7 +421,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     CMusicDatabase database;
     database.Open();
     if (idAlbum < 0 && !tag.m_strAlbum.empty() &&
-        item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ALBUM))
+        item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ALBUM))
     {
       // Musicvideo album - try to match album in music db on artist(s) and album name.
       // Get review if available and save the matching music library album id.
@@ -432,7 +432,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       if (database.GetMatchingMusicVideoAlbum(
           tag.m_strAlbum, strArtist, idAlbum, strReview))
       {
-        item.SetProperty(ITEM_PROPERTY::ALBUM_MUSICID, idAlbum);
+        item.SetProperty(ITEM::PROPERTY::ALBUM_MUSICID, idAlbum);
         item.SetProperty("album_description", strReview);
       }
     }
@@ -442,7 +442,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     database.Close();
   }
   else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
-           item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ARTIST))
+           item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ARTIST))
   {
     // Try to match artist in music db on name, get bio if available and fetch artist art
     // Save the matching music library artist id.
@@ -454,7 +454,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     {
       database.GetArtist(idArtist, artist);
       tag.m_strPlot = artist.strBiography;
-      item.SetProperty(ITEM_PROPERTY::ARTIST_MUSICID, idArtist);
+      item.SetProperty(ITEM::PROPERTY::ARTIST_MUSICID, idArtist);
     }
     if (database.GetArtForItem(idArtist, MediaType::ARTIST, artwork))
       item.SetArt(artwork);
@@ -483,7 +483,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       item.AppendArt(artwork);
     }
     else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
-             item.GetProperty(ITEM_PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MediaType::ARTIST))
+             item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MediaType::ARTIST))
     {
       // Fallback to music library for actors without art
       //! @todo Is m_artist set other than musicvideo? Remove this fallback if not.
@@ -506,7 +506,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
         if (!artmap.empty())
         {
           item.AppendArt(artmap, NameOf(MediaType::TV_SHOW));
-          item.SetArtFallback(ART_TYPE::FANART, "tvshow.fanart");
+          item.SetArtFallback(ART::TYPE::FANART, "tvshow.fanart");
           item.SetArtFallback("tvshow.thumb", "tvshow.poster");
         }
       }
@@ -528,13 +528,13 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     }
     m_videoDatabase->Close();
   }
-  item.SetProperty(ITEM_PROPERTY::LIBRARY_ART_FILLED, true);
+  item.SetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED, true);
   return !item.GetArt().empty();
 }
 
 bool CVideoThumbLoader::FillThumb(CFileItem &item)
 {
-  if (item.HasArt(ART_TYPE::THUMB))
+  if (item.HasArt(ART::TYPE::THUMB))
     return true;
   std::string thumb = GetCachedImage(item, "thumb");
   if (thumb.empty())
@@ -544,7 +544,7 @@ bool CVideoThumbLoader::FillThumb(CFileItem &item)
       SetCachedImage(item, "thumb", thumb);
   }
   if (!thumb.empty())
-    item.SetArt(ART_TYPE::THUMB, thumb);
+    item.SetArt(ART::TYPE::THUMB, thumb);
   else
   {
     // If nothing was found, try embedded art

@@ -145,8 +145,8 @@ void CGUIGameControllerProvider::UpdateItems()
     {
       fileItem->SetLabel(controller->Layout().Label());
       fileItem->SetPath(m_peripheralLocation);
-      fileItem->SetProperty(ITEM_PROPERTY::ADDON_ID, controller->ID());
-      fileItem->SetArt(ART_TYPE::ICON, controller->Layout().ImagePath());
+      fileItem->SetProperty(ITEM::PROPERTY::ADDON_ID, controller->ID());
+      fileItem->SetArt(ART::TYPE::ICON, controller->Layout().ImagePath());
     }
 
     guiItem = std::move(fileItem);

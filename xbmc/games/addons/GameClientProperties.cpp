@@ -366,7 +366,7 @@ bool CGameClientProperties::InstallDependencies(const std::vector<std::string>& 
   for (const auto& addon : installableAddons)
   {
     CFileItem item{addon->Name()};
-    item.SetArt(ART_TYPE::ICON, addon->Icon());
+    item.SetArt(ART::TYPE::ICON, addon->Icon());
     selectDialog->Add(item);
   }
 

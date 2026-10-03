@@ -259,7 +259,7 @@ namespace XBMCAddon
       else if (lowerKey == "specialsort")
         setSpecialSortRaw(value);
       else if (lowerKey == "fanart_image")
-        item->SetArt(KODI::ART_TYPE::FANART, value);
+        item->SetArt(KODI::ART::TYPE::FANART, value);
       else
         addPropertyRaw(lowerKey, value);
     }
@@ -300,7 +300,7 @@ namespace XBMCAddon
         value = StringUtils::Format("{:f}", GetVideoInfoTag()->GetResumePoint().timeInSeconds);
       }
       else if (lowerKey == "fanart_image")
-        value = item->GetArt(KODI::ART_TYPE::FANART);
+        value = item->GetArt(KODI::ART::TYPE::FANART);
       else
         value = item->GetProperty(lowerKey).asString();
 

@@ -325,7 +325,7 @@ void CGUIWindowFileManager::OnSort(int iList)
   for (int i = 0; i < m_vecItems[iList]->Size(); i++)
   {
     CFileItemPtr pItem = m_vecItems[iList]->Get(i);
-    if (pItem->IsFolder() && (!pItem->GetSize() || pItem->IsPath(PLACEHOLDER::ADD_SOURCE)))
+    if (pItem->IsFolder() && (!pItem->GetSize() || pItem->IsPath(ITEM::PLACEHOLDER::ADD_SOURCE)))
       pItem->SetLabel2("");
     else
       pItem->SetFileSizeLabel();
@@ -479,8 +479,8 @@ bool CGUIWindowFileManager::Update(int iList, const std::string &strDirectory)
     const std::string& strLabel =
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(1026);
     CFileItemPtr pItem(new CFileItem(strLabel));
-    pItem->SetPath(PLACEHOLDER::ADD_SOURCE);
-    pItem->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
+    pItem->SetPath(ITEM::PLACEHOLDER::ADD_SOURCE);
+    pItem->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
     pItem->SetLabel(strLabel);
     pItem->SetLabelPreformatted(true);
     pItem->SetFolder(true);
@@ -502,21 +502,21 @@ bool CGUIWindowFileManager::Update(int iList, const std::string &strDirectory)
   {
     CFileItemPtr pItem(new CFileItem("special://profile/", true));
     pItem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20070));
-    pItem->SetArt(ART_TYPE::THUMB, "DefaultFolder.png");
+    pItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
     pItem->SetLabelPreformatted(true);
     m_vecItems[iList]->Add(pItem);
 
     #ifdef TARGET_DARWIN_EMBEDDED
       CFileItemPtr iItem(new CFileItem("special://envhome/Documents/Inbox", true));
       iItem->SetLabel("Inbox");
-      iItem->SetArt(ART_TYPE::THUMB, "DefaultFolder.png");
+      iItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
       iItem->SetLabelPreformatted(true);
       m_vecItems[iList]->Add(iItem);
     #endif
     #ifdef TARGET_ANDROID
       CFileItemPtr iItem(new CFileItem("special://logpath", true));
       iItem->SetLabel("Logs");
-      iItem->SetArt(ART_TYPE::THUMB, "DefaultFolder.png");
+      iItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
       iItem->SetLabelPreformatted(true);
       m_vecItems[iList]->Add(iItem);
     #endif
@@ -529,7 +529,7 @@ bool CGUIWindowFileManager::Update(int iList, const std::string &strDirectory)
     if (pItem->IsHD() &&
         URIUtils::HasExtension(pItem->GetPath(), ".tbn"))
     {
-      pItem->SetArt(ART_TYPE::THUMB, pItem->GetPath());
+      pItem->SetArt(ART::TYPE::THUMB, pItem->GetPath());
     }
   }
   m_vecItems[iList]->FillInDefaultIcons();
@@ -561,7 +561,7 @@ void CGUIWindowFileManager::OnClick(int iList, int iItem)
   if ( iItem < 0 || iItem >= m_vecItems[iList]->Size() ) return ;
 
   CFileItemPtr pItem = m_vecItems[iList]->Get(iItem);
-  if (pItem->GetPath() == PLACEHOLDER::ADD_SOURCE &&
+  if (pItem->GetPath() == ITEM::PLACEHOLDER::ADD_SOURCE &&
       pItem->GetLabel() == CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
                                1026)) // 'add source button' in empty root
   {

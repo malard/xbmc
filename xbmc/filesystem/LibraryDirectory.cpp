@@ -64,7 +64,7 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
         if (playlist.LoadFromXML(node) &&
             CSmartPlaylistDirectory::GetDirectory(playlist, items))
         {
-          items.SetProperty(ITEM_PROPERTY::LIBRARY_FILTER, "true");
+          items.SetProperty(ITEM::PROPERTY::LIBRARY_FILTER, "true");
           items.SetPath(items.GetProperty("path.db").asString());
           return true;
         }
@@ -128,7 +128,7 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 
       item->SetLabel(label);
       if (!icon.empty() && CServiceBroker::GetGUI()->GetTextureManager().HasTexture(icon))
-        item->SetArt(ART_TYPE::ICON, icon);
+        item->SetArt(ART::TYPE::ICON, icon);
       item->SetPlayListOrder(order);
       items.Add(item);
     }

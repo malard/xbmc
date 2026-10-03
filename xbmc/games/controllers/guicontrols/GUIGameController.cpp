@@ -111,8 +111,8 @@ void CGUIGameController::UpdateInfo(const CGUIListItem* item /* = nullptr */)
     std::string portAddress;
     std::string peripheralLocation;
 
-    if (item->HasProperty(ITEM_PROPERTY::ADDON_ID))
-      controllerId = item->GetProperty(ITEM_PROPERTY::ADDON_ID).asString();
+    if (item->HasProperty(ITEM::PROPERTY::ADDON_ID))
+      controllerId = item->GetProperty(ITEM::PROPERTY::ADDON_ID).asString();
 
     if (controllerId.empty())
       controllerId = m_controllerIdInfo.GetItemLabel(item);

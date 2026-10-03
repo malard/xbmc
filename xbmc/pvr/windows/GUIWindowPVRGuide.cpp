@@ -305,7 +305,7 @@ CFileItemPtr CGUIWindowPVRGuideBase::GetCurrentListItem(int offset /*= 0*/)
 int CGUIWindowPVRGuideBase::GetCurrentListItemIndex(
     const std::shared_ptr<const CFileItem>& item) const
 {
-  return item ? item->GetProperty(KODI::ITEM_PROPERTY::TIMELINE_INDEX).asInteger32() : -1;
+  return item ? item->GetProperty(KODI::ITEM::PROPERTY::TIMELINE_INDEX).asInteger32() : -1;
 }
 
 bool CGUIWindowPVRGuideBase::ShouldNavigateToGridContainer(int iAction)

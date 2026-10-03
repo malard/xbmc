@@ -79,7 +79,7 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
       // CDetectDVDMedia::SetNewDVDShareUrl() caches disc thumb as special://temp/dvdicon.tbn
       std::string strThumb = "special://temp/dvdicon.tbn";
       if (CFileUtils::Exists(strThumb))
-        pItem->SetArt(ART_TYPE::THUMB, strThumb);
+        pItem->SetArt(ART::TYPE::THUMB, strThumb);
     }
     else if (URIUtils::IsProtocol(pItem->GetPath(), "addons"))
       strIcon = "DefaultHardDisk.png";
@@ -87,7 +87,7 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
              pItem->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
       strIcon = "DefaultPlaylist.png";
     else if (VIDEO::IsVideoDb(*pItem) || MUSIC::IsMusicDb(*pItem) || pItem->IsPlugin() ||
-             pItem->IsPath(PLACEHOLDER::MUSIC_SEARCH))
+             pItem->IsPath(ITEM::PLACEHOLDER::MUSIC_SEARCH))
       strIcon = "DefaultFolder.png";
     else if (NETWORK::IsRemote(*pItem))
       strIcon = "DefaultNetwork.png";
@@ -104,7 +104,7 @@ bool CSourcesDirectory::GetDirectory(const std::vector<CMediaSource>& sources, C
     else
       strIcon = "DefaultHardDisk.png";
 
-    pItem->SetArt(ART_TYPE::ICON, strIcon);
+    pItem->SetArt(ART::TYPE::ICON, strIcon);
     if (share.GetLockInfo().IsLocked() &&
         m_profileManager->GetMasterProfile().getLockMode() != LockMode::EVERYONE)
       pItem->SetOverlayImage(CGUIListItem::ICON_OVERLAY_LOCKED);

@@ -224,8 +224,8 @@ void CGUIAgentControllerList::AddItem(const CAgentController& agentController)
   item->SetPath(path);
   if (controller)
   {
-    item->SetProperty(ITEM_PROPERTY::ADDON_ID, controller->ID());
-    item->SetArt(ART_TYPE::ICON, controller->Layout().ImagePath());
+    item->SetProperty(ITEM::PROPERTY::ADDON_ID, controller->ID());
+    item->SetArt(ART::TYPE::ICON, controller->Layout().ImagePath());
   }
   m_vecItems->Add(std::move(item));
 }

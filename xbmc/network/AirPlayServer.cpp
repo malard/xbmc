@@ -978,7 +978,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
       location += "|User-Agent=" + userAgent;
 
       CFileItem fileToPlay(location, false);
-      fileToPlay.SetProperty(ITEM_PROPERTY::START_PERCENT, position * 100.0f);
+      fileToPlay.SetProperty(ITEM::PROPERTY::START_PERCENT, position * 100.0f);
       ServerInstance->AnnounceToClients(EVENT_LOADING);
 
       CFileItemList *l = new CFileItemList; //don't delete,

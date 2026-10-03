@@ -168,7 +168,7 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
     auto item = std::make_unique<CFileItem>();
     item->SetPath(ServerInstance->m_pPipe->GetName());
     item->SetMimeType("audio/x-xbmc-pcm");
-    item->SetArt(KODI::ART_TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
+    item->SetArt(KODI::ART::TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
     KODI::ART::FillInDefaultIcon(*item);
 
     CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,

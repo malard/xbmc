@@ -71,7 +71,7 @@ void FillInDefaultIcon(CFileItem& item)
   //   for .. folders the default picture for parent folder
   //   for other folders the defaultFolder.png
 
-  if (item.GetArt(ART_TYPE::ICON).empty())
+  if (item.GetArt(ART::TYPE::ICON).empty())
   {
     if (!item.IsFolder())
     {
@@ -83,88 +83,88 @@ void FillInDefaultIcon(CFileItem& item)
       if (item.IsPVRChannel())
       {
         if (URIUtils::IsPVRRadioChannel(item.GetPath()))
-          item.SetArt(ART_TYPE::ICON, "DefaultMusicSongs.png");
+          item.SetArt(ART::TYPE::ICON, "DefaultMusicSongs.png");
         else
-          item.SetArt(ART_TYPE::ICON, "DefaultTVShows.png");
+          item.SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
       }
       else if (item.IsLiveTV())
       {
         // Live TV Channel
-        item.SetArt(ART_TYPE::ICON, "DefaultTVShows.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
       }
       else if (URIUtils::IsArchive(item.GetPath()))
       { // archive
-        item.SetArt(ART_TYPE::ICON, "DefaultFile.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultFile.png");
       }
       else if (item.IsUsablePVRRecording())
       {
         // PVR recording
-        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsDeletedPVRRecording())
       {
         // PVR deleted recording
-        item.SetArt(ART_TYPE::ICON, "DefaultVideoDeleted.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultVideoDeleted.png");
       }
       else if (item.IsPVRProvider())
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultPVRProvider.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultPVRProvider.png");
       }
       else if (PLAYLIST::IsPlayList(item) || PLAYLIST::IsSmartPlayList(item))
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultPlaylist.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultPlaylist.png");
       }
       else if (MUSIC::IsAudio(item))
       {
         // audio
-        item.SetArt(ART_TYPE::ICON, "DefaultAudio.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultAudio.png");
       }
       else if (VIDEO::IsVideo(item))
       {
         // video
-        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsPVRTimer())
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultVideo.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultVideo.png");
       }
       else if (item.IsPicture())
       {
         // picture
-        item.SetArt(ART_TYPE::ICON, "DefaultPicture.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultPicture.png");
       }
       else if (item.IsPythonScript())
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultScript.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultScript.png");
       }
       else if (item.IsFavourite())
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultFavourites.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultFavourites.png");
       }
       else
       {
         // default icon for unknown file type
-        item.SetArt(ART_TYPE::ICON, "DefaultFile.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultFile.png");
       }
     }
     else
     {
       if (PLAYLIST::IsPlayList(item) || PLAYLIST::IsSmartPlayList(item))
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultPlaylist.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultPlaylist.png");
       }
       else if (item.IsParentFolder())
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultFolderBack.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultFolderBack.png");
       }
       else
       {
-        item.SetArt(ART_TYPE::ICON, "DefaultFolder.png");
+        item.SetArt(ART::TYPE::ICON, "DefaultFolder.png");
       }
     }
   }
   // Set the icon overlays (if applicable)
-  if (!item.HasOverlay() && !item.HasProperty(ITEM_PROPERTY::ICON_NEVER_OVERLAY))
+  if (!item.HasOverlay() && !item.HasProperty(ITEM::PROPERTY::ICON_NEVER_OVERLAY))
   {
     if (URIUtils::IsInZIP(item.GetPath()))
       item.SetOverlayImage(CGUIListItem::ICON_OVERLAY_ZIP);
@@ -273,7 +273,7 @@ std::string GetLocalArtBaseFilename(const CFileItem& item,
       }
       case PLAYLIST:
       {
-        const int playlist{item.GetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
+        const int playlist{item.GetProperty(ITEM::PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
         if (playlist > -1)
         {
           std::string baseFile{file};

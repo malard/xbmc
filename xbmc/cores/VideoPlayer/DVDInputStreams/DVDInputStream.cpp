@@ -205,7 +205,7 @@ CDVDInputStream::UpdateState CDVDInputStream::UpdateItemFromPlaylistDetails(
       item.GetVideoInfoTag()->m_streamDetails.Reset();
     item.SetDynPath("");
     // Not continuing to play if in stack
-    item.SetProperty(KODI::ITEM_PROPERTY::NO_MAIN_TITLE, true);
+    item.SetProperty(KODI::ITEM::PROPERTY::NO_MAIN_TITLE, true);
     CLog::LogF(LOGDEBUG, "No main title playlist played");
     return NOT_PLAYED;
   }
@@ -244,16 +244,16 @@ CDVDInputStream::UpdateState CDVDInputStream::UpdateItemFromPlaylistDetails(
       }()};
 
   if (stoppedBeforeEnd)
-    item.SetProperty(KODI::ITEM_PROPERTY::STOPPED_BEFORE_END, true);
+    item.SetProperty(KODI::ITEM::PROPERTY::STOPPED_BEFORE_END, true);
   else
     closed = false; // Feed back to VideoPlayer
 
   const int playlist{it3->playlist};
-  item.SetProperty(KODI::ITEM_PROPERTY::BLURAY_PLAYLIST, playlist);
+  item.SetProperty(KODI::ITEM::PROPERTY::BLURAY_PLAYLIST, playlist);
   CLog::LogF(LOGDEBUG, "Main playlist {}", playlist);
 
   if (type == DVDSTREAM_TYPE_DVD &&
-      item.GetProperty(KODI::ITEM_PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false) &&
+      item.GetProperty(KODI::ITEM::PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false) &&
       item.HasVideoInfoTag())
   {
     // Update streamdetails for DVD titles (bluray handled when playlist selected)
@@ -298,7 +298,7 @@ void CDVDInputStream::UpdateStackItem(CFileItem& item, std::chrono::milliseconds
                  time.count(), end.count());
 
       // Update streamdetails in stack part if they aren't updated from the stream in VideoPlayer (ie. already in item)
-      if (!item.GetProperty(KODI::ITEM_PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false))
+      if (!item.GetProperty(KODI::ITEM::PROPERTY::UPDATE_STREAM_DETAILS).asBoolean(false))
         stackHelper->SetStackPartStreamDetails(item);
 
       stackHelper->SetStackPartPath(item);

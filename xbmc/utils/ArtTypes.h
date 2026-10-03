@@ -9,7 +9,7 @@
 #pragma once
 
 //! \brief The names of the art types every kind of item can have, as items key their art by.
-namespace KODI::ART_TYPE
+namespace KODI::ART::TYPE
 {
 
 inline constexpr char THUMB[] = "thumb";
@@ -18,4 +18,4 @@ inline constexpr char FANART[] = "fanart";
 inline constexpr char POSTER[] = "poster";
 inline constexpr char BANNER[] = "banner";
 
-} // namespace KODI::ART_TYPE
+} // namespace KODI::ART::TYPE

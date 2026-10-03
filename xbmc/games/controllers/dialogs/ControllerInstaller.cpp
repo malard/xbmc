@@ -68,7 +68,7 @@ void CControllerInstaller::Process()
   for (const auto& addon : installableAddons)
   {
     CFileItemPtr item(new CFileItem(addon->Name()));
-    item->SetArt(ART_TYPE::ICON, addon->Icon());
+    item->SetArt(ART::TYPE::ICON, addon->Icon());
     items.Add(std::move(item));
   }
 

@@ -104,7 +104,7 @@ PlayListEntry CPlayList::MakeEntryLocked(const std::shared_ptr<CFileItem>& item)
   auto owned = std::make_shared<CFileItem>(*item);
 
   // set 'IsPlayable' property - needed for properly handling plugin:// URLs
-  owned->SetProperty(ITEM_PROPERTY::IS_PLAYABLE, true);
+  owned->SetProperty(ITEM::PROPERTY::IS_PLAYABLE, true);
 
   // set 'BasePath' property - needed for properly handling browse for subtitles
   if (!owned->HasProperty("BasePath"))
@@ -971,7 +971,7 @@ EntryId CPlayList::Expand(EntryId expanded)
     loaded->SetPath(item->GetDynPath());
     // Only propagate parent's start offset if the loaded item doesn't already
     // have its own (e.g. a CUE sheet offset loaded from the playlist file).
-    if (!loaded->HasProperty(ITEM_PROPERTY::ITEM_START))
+    if (!loaded->HasProperty(ITEM::PROPERTY::ITEM_START))
       loaded->SetStartOffset(item->GetStartOffset());
     if (!loaded->HasProperty("BasePath"))
       loaded->SetProperty("BasePath", playlist->m_strBasePath);

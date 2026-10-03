@@ -194,14 +194,14 @@ bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory
     files->SetIsShareOrDrive(true);
     items.Add(files);
 
-    CFileItemPtr mdb(new CFileItem(LIBRARY::MUSIC, true));
+    CFileItemPtr mdb(new CFileItem(MEDIA::LIBRARY_PATH::MUSIC, true));
     mdb->SetLabel(localizeStrings.Get(14022));
     mdb->SetLabelPreformatted(true);
     mdb->SetIsShareOrDrive(true);
     items.SetPath("");
     items.Add(mdb);
 
-    CFileItemPtr vdb(new CFileItem(VIDEODB::MUSICVIDEOS, true));
+    CFileItemPtr vdb(new CFileItem(VIDEO::DB_PATH::MUSICVIDEOS, true));
     vdb->SetLabel(localizeStrings.Get(20389));
     vdb->SetLabelPreformatted(true);
     vdb->SetIsShareOrDrive(true);
@@ -282,7 +282,7 @@ bool CGUIWindowMusicPlaylistEditor::Update(const std::string &strDirectory, bool
   if (!CGUIMediaWindow::Update(strDirectory, updateFilterPath))
     return false;
 
-  m_vecItems->SetContent(CONTENT::FILES);
+  m_vecItems->SetContent(MEDIA::CONTENT::FILES);
   m_thumbLoader.Load(*m_vecItems);
 
   // update our playlist control

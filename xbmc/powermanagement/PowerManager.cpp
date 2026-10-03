@@ -285,7 +285,7 @@ void CPowerManager::StorePlayerState()
     m_lastPlayedFileItem->SetStartPartNumber(
         stackHelper->IsPlayingDiscStack() ? stackHelper->GetCurrentPartNumber() + 1 : 1);
     // for iso and iso stacks, keep track of playerstate
-    m_lastPlayedFileItem->SetProperty(KODI::ITEM_PROPERTY::SAVED_PLAYER_STATE,
+    m_lastPlayedFileItem->SetProperty(KODI::ITEM::PROPERTY::SAVED_PLAYER_STATE,
                                       appPlayer->GetPlayerState());
     CLog::Log(LOGDEBUG,
               "CPowerManager::StorePlayerState - store last played item (startOffset: {} ms)",

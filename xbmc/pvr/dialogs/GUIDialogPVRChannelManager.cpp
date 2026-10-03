@@ -401,23 +401,23 @@ bool CGUIDialogPVRChannelManager::OnClickButtonChannelLogo()
   // add the current thumb, if available
   if (!pItem->GetProperty(PROPERTY_CHANNEL_ICON).asString().empty())
   {
-    auto current{std::make_shared<CFileItem>(KODI::IMAGE_CHOICE::CURRENT, false)};
-    current->SetArt(KODI::ART_TYPE::THUMB, pItem->GetPVRChannelInfoTag()->IconPath());
+    auto current{std::make_shared<CFileItem>(KODI::ART::CHOICE::CURRENT, false)};
+    current->SetArt(KODI::ART::TYPE::THUMB, pItem->GetPVRChannelInfoTag()->IconPath());
     current->SetLabel(localizeStrings.Get(19282));
     items.Add(std::move(current));
   }
-  else if (pItem->HasArt(KODI::ART_TYPE::THUMB))
+  else if (pItem->HasArt(KODI::ART::TYPE::THUMB))
   {
     // already have a thumb that the share doesn't know about - must be a local one, so we mayaswell reuse it.
-    auto current{std::make_shared<CFileItem>(KODI::IMAGE_CHOICE::CURRENT, false)};
-    current->SetArt(KODI::ART_TYPE::THUMB, pItem->GetArt(KODI::ART_TYPE::THUMB));
+    auto current{std::make_shared<CFileItem>(KODI::ART::CHOICE::CURRENT, false)};
+    current->SetArt(KODI::ART::TYPE::THUMB, pItem->GetArt(KODI::ART::TYPE::THUMB));
     current->SetLabel(localizeStrings.Get(19282));
     items.Add(std::move(current));
   }
 
   // and add a "no thumb" entry as well
-  auto nothumb{std::make_shared<CFileItem>(KODI::IMAGE_CHOICE::NONE, false)};
-  nothumb->SetArt(KODI::ART_TYPE::ICON, pItem->GetArt(KODI::ART_TYPE::ICON));
+  auto nothumb{std::make_shared<CFileItem>(KODI::ART::CHOICE::NONE, false)};
+  nothumb->SetArt(KODI::ART::TYPE::ICON, pItem->GetArt(KODI::ART::TYPE::ICON));
   nothumb->SetLabel(localizeStrings.Get(19283));
   items.Add(std::move(nothumb));
 
@@ -436,10 +436,10 @@ bool CGUIDialogPVRChannelManager::OnClickButtonChannelLogo()
                                               nullptr, 19285))
     return false;
 
-  if (strThumb == KODI::IMAGE_CHOICE::CURRENT)
+  if (strThumb == KODI::ART::CHOICE::CURRENT)
     return true;
 
-  if (strThumb == KODI::IMAGE_CHOICE::NONE)
+  if (strThumb == KODI::ART::CHOICE::NONE)
     strThumb = "";
 
   if (pItem->GetProperty(PROPERTY_CHANNEL_ICON).asString() != strThumb)
@@ -584,12 +584,12 @@ bool CGUIDialogPVRChannelManager::OnClickButtonRefreshChannelLogos()
 {
   for (const auto& item : *m_channelItems)
   {
-    const std::string thumb = item->GetArt(KODI::ART_TYPE::THUMB);
+    const std::string thumb = item->GetArt(KODI::ART::TYPE::THUMB);
     if (!thumb.empty())
     {
       // clear current cached image
       CServiceBroker::GetTextureCache()->ClearCachedImage(thumb);
-      item->SetArt(KODI::ART_TYPE::THUMB, "");
+      item->SetArt(KODI::ART::TYPE::THUMB, "");
     }
   }
 

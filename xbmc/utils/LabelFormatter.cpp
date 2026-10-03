@@ -395,8 +395,8 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
       value = pic->GetDateTimeTaken().GetAsLocalizedDate();
     break;
   case 's': // Addon status
-    if (item->HasProperty(KODI::ITEM_PROPERTY::ADDON_STATUS))
-      value = item->GetProperty(KODI::ITEM_PROPERTY::ADDON_STATUS).asString();
+    if (item->HasProperty(KODI::ITEM::PROPERTY::ADDON_STATUS))
+      value = item->GetProperty(KODI::ITEM::PROPERTY::ADDON_STATUS).asString();
     break;
   case 'i': // Install date
     if (item->HasAddonInfo() && item->GetAddonInfo()->InstallDate().IsValid())

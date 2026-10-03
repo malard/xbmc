@@ -295,7 +295,7 @@ public:
           CFileItem item(m_url, true);
           item.SetLabel(
               CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(22082)); // More...
-          item.SetArt(ART_TYPE::ICON, "DefaultFolder.png");
+          item.SetArt(ART::TYPE::ICON, "DefaultFolder.png");
           item.SetProperty("node.target", m_target);
           item.SetProperty("node.type", "target_folder"); // make item identifiable, e.g. by skins
 

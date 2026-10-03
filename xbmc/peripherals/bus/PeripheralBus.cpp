@@ -333,7 +333,7 @@ void CPeripheralBus::GetDirectory(const std::string& strPath, CFileItemList& ite
 
     peripheralFile->SetProperty("version", strVersion);
     peripheralFile->SetLabel2(strDetails);
-    peripheralFile->SetArt(KODI::ART_TYPE::ICON, peripheral->GetIcon());
+    peripheralFile->SetArt(KODI::ART::TYPE::ICON, peripheral->GetIcon());
 
     items.Add(peripheralFile);
   }

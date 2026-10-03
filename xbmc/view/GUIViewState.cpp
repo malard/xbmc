@@ -80,16 +80,16 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
 
   if (PLAYLIST::IsSmartPlayList(items) || url.IsProtocol("upnp") || items.IsLibraryFolder())
   {
-    if (items.GetContent() == CONTENT::SONGS || items.GetContent() == CONTENT::ALBUMS ||
-        items.GetContent() == CONTENT::MIXED)
+    if (items.GetContent() == MEDIA::CONTENT::SONGS ||
+        items.GetContent() == MEDIA::CONTENT::ALBUMS || items.GetContent() == MEDIA::CONTENT::MIXED)
       return new CGUIViewStateMusicSmartPlaylist(items);
-    else if (items.GetContent() == CONTENT::MUSICVIDEOS)
+    else if (items.GetContent() == MEDIA::CONTENT::MUSICVIDEOS)
       return new CGUIViewStateVideoMusicVideos(items);
-    else if (items.GetContent() == CONTENT::TVSHOWS)
+    else if (items.GetContent() == MEDIA::CONTENT::TVSHOWS)
       return new CGUIViewStateVideoTVShows(items);
-    else if (items.GetContent() == CONTENT::EPISODES)
+    else if (items.GetContent() == MEDIA::CONTENT::EPISODES)
       return new CGUIViewStateVideoEpisodes(items);
-    else if (items.GetContent() == CONTENT::MOVIES)
+    else if (items.GetContent() == MEDIA::CONTENT::MOVIES)
       return new CGUIViewStateVideoMovies(items);
   }
 

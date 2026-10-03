@@ -39,25 +39,25 @@ std::optional<Destination> DestinationFor(MediaType type)
       return Destination{WINDOW_VIDEO_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)};
     case MediaType::MOVIE:
-      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MOVIE_TITLES};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_TITLES};
     case MediaType::VIDEO_COLLECTION:
-      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MOVIE_SETS};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_SETS};
     case MediaType::MUSIC_VIDEO:
-      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::MUSICVIDEO_TITLES};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES};
     case MediaType::TV_SHOW:
     case MediaType::SEASON:
-      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::TVSHOW_TITLES};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
     case MediaType::EPISODE:
-      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEODB::TVSHOW_TITLES};
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
     case MediaType::MUSIC:
       return Destination{WINDOW_MUSIC_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC)};
     case MediaType::ARTIST:
-      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::ARTISTS};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ARTISTS};
     case MediaType::ALBUM:
-      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::ALBUMS};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ALBUMS};
     case MediaType::SONG:
-      return Destination{WINDOW_MUSIC_NAV, KODI::MUSICDB::SONGS};
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::SONGS};
     case MediaType::NONE:
     case MediaType::VIDEO_VERSION:
       break;

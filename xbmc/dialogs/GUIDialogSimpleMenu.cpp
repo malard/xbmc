@@ -228,7 +228,7 @@ bool CGUIDialogSimpleMenu::ShowPlaylistSelection(
     return true;
 
   CLog::LogF(LOGDEBUG, "Playlist {} chosen for {}",
-             selectedItem.GetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST).asInteger32(-1),
+             selectedItem.GetProperty(ITEM::PROPERTY::BLURAY_PLAYLIST).asInteger32(-1),
              CURL::GetRedacted(item.GetDynPath()));
 
   // See if already selected
@@ -236,7 +236,7 @@ bool CGUIDialogSimpleMenu::ShowPlaylistSelection(
     return true; // No playlists used yet
 
   // See if playlist already used
-  const int newPlaylist{selectedItem.GetProperty(ITEM_PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
+  const int newPlaylist{selectedItem.GetProperty(ITEM::PROPERTY::BLURAY_PLAYLIST).asInteger32(-1)};
   auto matching{usedPlaylists |
                 std::views::filter([newPlaylist](const CVideoDatabase::PlaylistInfo& p)
                                    { return p.playlist == newPlaylist; })};

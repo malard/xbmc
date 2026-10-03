@@ -146,7 +146,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
     CLog::Log(LOGDEBUG, "CVideoGUIInfo::InitCurrentItem({})", CURL::GetRedacted(item->GetPath()));
 
     // Find a thumb for this file.
-    if (!item->HasArt(ART_TYPE::THUMB))
+    if (!item->HasArt(ART::TYPE::THUMB))
     {
       CVideoThumbLoader loader;
       loader.LoadItem(item);
@@ -164,7 +164,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 
         CVideoThumbLoader loader;
         if (loader.FillThumb(thumbItem))
-          item->SetArt(ART_TYPE::THUMB, thumbItem.GetArt(ART_TYPE::THUMB));
+          item->SetArt(ART::TYPE::THUMB, thumbItem.GetArt(ART::TYPE::THUMB));
       }
     }
     return true;
@@ -740,8 +740,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         if (fallback)
           *fallback = "DefaultVideoCover.png";
 
-        value =
-            item->HasArt(ART_TYPE::THUMB) ? item->GetArt(ART_TYPE::THUMB) : "DefaultVideoCover.png";
+        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
+                                               : "DefaultVideoCover.png";
         return true;
       }
       break;
@@ -834,7 +834,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
       GUIINFO::LookUpOnce(*m_playLists, PLAYLIST::Video, *found, m_lookedUp,
                           [](CFileItem& item)
                           {
-                            if (!item.HasArt(ART_TYPE::THUMB))
+                            if (!item.HasArt(ART::TYPE::THUMB))
                             {
                               CVideoThumbLoader loader;
                               loader.LoadItem(&item);
@@ -848,7 +848,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
   }
   else if (info.GetInfo() == VIDEOPLAYER_COVER)
   {
-    value = playlistItem->GetArt(ART_TYPE::THUMB);
+    value = playlistItem->GetArt(ART::TYPE::THUMB);
     return true;
   }
   else if (info.GetInfo() == VIDEOPLAYER_ART)

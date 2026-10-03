@@ -199,7 +199,7 @@ void CGUIDialogAddonInfo::UpdateControls(PerformButtonFocus performButtonFocus)
       (!isInstalled && addonMgr.IsAddonInstalled(itemAddonInfo->ID(), itemAddonInfo->Origin()));
 
   bool showUpdateButton = m_localAddon && addonMgr.IsAutoUpdateable(m_localAddon->ID()) &&
-                          m_item->GetProperty(ITEM_PROPERTY::ADDON_HAS_UPDATE).asBoolean();
+                          m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean();
 
   if (isInstalled)
   {
@@ -283,7 +283,7 @@ void CGUIDialogAddonInfo::UpdateControls(PerformButtonFocus performButtonFocus)
   for (const auto& screenshot : m_item->GetAddonInfo()->Screenshots())
   {
     auto item = std::make_shared<CFileItem>("");
-    item->SetArt(ART_TYPE::THUMB, screenshot);
+    item->SetArt(ART::TYPE::THUMB, screenshot);
     items.Add(std::move(item));
   }
   CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_LIST_SCREENSHOTS, 0, 0, &items);
@@ -312,14 +312,14 @@ int CGUIDialogAddonInfo::AskForVersion(
     if (origin == LOCAL_CACHE)
     {
       item.SetLabel2(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24095));
-      item.SetArt(ART_TYPE::ICON, "DefaultAddonRepository.png");
+      item.SetArt(ART::TYPE::ICON, "DefaultAddonRepository.png");
       dialog->Add(item);
     }
     else if (CServiceBroker::GetAddonMgr().GetAddon(origin, repo, AddonType::REPOSITORY,
                                                     OnlyEnabled::CHOICE_YES))
     {
       item.SetLabel2(repo->Name());
-      item.SetArt(ART_TYPE::ICON, repo->Icon());
+      item.SetArt(ART::TYPE::ICON, repo->Icon());
       dialog->Add(item);
     }
   }
@@ -333,9 +333,9 @@ void CGUIDialogAddonInfo::OnUpdate()
   const auto& itemAddonInfo = m_item->GetAddonInfo();
   const std::string& addonId = itemAddonInfo->ID();
   const std::string& origin =
-      m_item->GetProperty(ITEM_PROPERTY::ADDON_VALID_UPDATE_ORIGIN).asString();
+      m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_ORIGIN).asString();
   const CAddonVersion& version = static_cast<CAddonVersion>(
-      m_item->GetProperty(ITEM_PROPERTY::ADDON_VALID_UPDATE_VERSION).asString());
+      m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_VERSION).asString());
 
   Close();
   if (!m_depsInstalledWithAvailable.empty() &&
@@ -447,7 +447,7 @@ void CGUIDialogAddonInfo::OnToggleAutoUpdates()
       addonMgr.AddUpdateRuleToList(m_localAddon->ID(), AddonUpdateRule::USER_DISABLED_AUTO_UPDATE);
 
     bool showUpdateButton =
-        (selected && m_item->GetProperty(ITEM_PROPERTY::ADDON_HAS_UPDATE).asBoolean());
+        (selected && m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean());
 
     if (showUpdateButton)
     {
@@ -636,7 +636,7 @@ void CGUIDialogAddonInfo::OnEnableDisable()
 
     if (CServiceBroker::GetAddonMgr().DisableAddon(m_localAddon->ID(), AddonDisabledReason::USER))
       m_item->SetProperty(
-          ITEM_PROPERTY::ADDON_STATUS,
+          ITEM::PROPERTY::ADDON_STATUS,
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24023)); // Disabled
   }
   else
@@ -647,7 +647,7 @@ void CGUIDialogAddonInfo::OnEnableDisable()
 
     if (CServiceBroker::GetAddonMgr().EnableAddon(m_localAddon->ID()))
       m_item->SetProperty(
-          ITEM_PROPERTY::ADDON_STATUS,
+          ITEM::PROPERTY::ADDON_STATUS,
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(305)); // Enabled
   }
 
@@ -722,7 +722,7 @@ bool CGUIDialogAddonInfo::ShowDependencyList(Reactivate reactivate, EntryPoint e
                 it.m_available ? it.m_available->Version().asString() : "",
                 it.m_depInfo.optional ? localizeStrings.Get(24184) : ""));
 
-            item->SetArt(ART_TYPE::ICON, infoAddon->Icon());
+            item->SetArt(ART::TYPE::ICON, infoAddon->Icon());
             item->SetProperty("addon_id", it.m_depInfo.id);
             items.Add(std::move(item));
           }
@@ -807,11 +807,11 @@ void CGUIDialogAddonInfo::ShowSupportList() const
     auto item{std::make_shared<CFileItem>(label)};
     item->SetLabel2(entry.m_description);
     if (!entry.m_icon.empty())
-      item->SetArt(ART_TYPE::ICON, entry.m_icon);
+      item->SetArt(ART::TYPE::ICON, entry.m_icon);
     else if (entry.m_type == AddonSupportType::Extension)
-      item->SetArt(ART_TYPE::ICON, "DefaultExtensionInfo.png");
+      item->SetArt(ART::TYPE::ICON, "DefaultExtensionInfo.png");
     else if (entry.m_type == AddonSupportType::Mimetype)
-      item->SetArt(ART_TYPE::ICON, "DefaultMimetypeInfo.png");
+      item->SetArt(ART::TYPE::ICON, "DefaultMimetypeInfo.png");
     item->SetProperty("addon_id", m_localAddon->ID());
     items.Add(std::move(item));
   }

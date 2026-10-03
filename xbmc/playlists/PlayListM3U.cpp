@@ -178,9 +178,9 @@ bool CPlayListM3U::Load(const std::string& strFileName)
         {
           newItem->SetStartOffset(iStartOffset);
           newItem->SetStartPartNumber(1);
-          newItem->SetProperty(ITEM_PROPERTY::ITEM_START, iStartOffset);
+          newItem->SetProperty(ITEM::PROPERTY::ITEM_START, iStartOffset);
           newItem->SetEndOffset(iEndOffset);
-          newItem->SetProperty(ITEM_PROPERTY::CUE_LOAD_INFORMATION, true);
+          newItem->SetProperty(ITEM::PROPERTY::CUE_LOAD_INFORMATION, true);
           newItem->GetMusicInfoTag()->SetTitle(strInfo);
           if (iEndOffset)
             lDuration = static_cast<int>(CUtil::ConvertMilliSecsToSecsIntRounded(iEndOffset - iStartOffset));

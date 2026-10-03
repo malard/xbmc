@@ -705,7 +705,7 @@ void CFileItemList::Stack()
   if (IsVirtualDirectoryRoot() || IsLiveTV() || IsSourcesPath() || IsLibraryFolder())
     return;
 
-  SetProperty(ITEM_PROPERTY::IS_STACKED, true);
+  SetProperty(ITEM::PROPERTY::IS_STACKED, true);
 
   // items needs to be sorted for stuff below to work properly
   Sort(SortBy::LABEL, SortOrder::ASCENDING);
@@ -964,7 +964,7 @@ bool CFileItemList::Save(int windowID)
     StringUtils::Replace(cachefile, "special://temp/archive_cache/", "");
     StringUtils::Replace(cachefile, ".fi", "");
     for (const auto& item : m_items)
-      item->SetProperty(ITEM_PROPERTY::CACHE_FILENAME, cachefile);
+      item->SetProperty(ITEM::PROPERTY::CACHE_FILENAME, cachefile);
 
     CArchive ar(&file, CArchive::store);
     ar << *this;

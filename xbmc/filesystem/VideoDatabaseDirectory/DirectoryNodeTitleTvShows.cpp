@@ -45,8 +45,8 @@ bool CDirectoryNodeTitleTvShows::GetContent(CFileItemList& items) const
   CQueryParams params;
   CollectQueryParams(params);
 
-  int details = items.HasProperty(KODI::ITEM_PROPERTY::SET_VIDEODB_DETAILS)
-                    ? items.GetProperty(KODI::ITEM_PROPERTY::SET_VIDEODB_DETAILS).asInteger32()
+  int details = items.HasProperty(KODI::ITEM::PROPERTY::SET_VIDEODB_DETAILS)
+                    ? items.GetProperty(KODI::ITEM::PROPERTY::SET_VIDEODB_DETAILS).asInteger32()
                     : VideoDbDetailsNone;
 
   bool bSuccess = videodatabase.GetTvShowsNav(

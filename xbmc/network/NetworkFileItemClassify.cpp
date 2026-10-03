@@ -17,7 +17,7 @@ namespace KODI::NETWORK
 
 bool IsInternetStream(const CFileItem& item)
 {
-  if (item.HasProperty(ITEM_PROPERTY::IS_HTTP_DIRECTORY))
+  if (item.HasProperty(ITEM::PROPERTY::IS_HTTP_DIRECTORY))
     return false;
 
   return URIUtils::IsInternetStream(item.GetDynURL());

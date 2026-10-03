@@ -47,10 +47,10 @@ void CSaveFileState::DoWork(CFileItem& item,
         item.GetVideoInfoTag()
             ->m_strFileNameAndPath; // we need the file url of the video db item to create the bookmark
   }
-  else if (item.HasProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL))
+  else if (item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
   {
     // only use original_listitem_url for Python, UPnP and Bluray sources
-    std::string original = item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
+    std::string original = item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     if (URIUtils::IsPlugin(original) || URIUtils::IsUPnP(original) ||
         URIUtils::IsBlurayPath(item.GetPath()))
       progressTrackingFile = original;
@@ -68,9 +68,9 @@ void CSaveFileState::DoWork(CFileItem& item,
         CFileItem updatedItem(item);
         if (updatedItem.HasVideoInfoTag())
           updatedItem.GetVideoInfoTag()->SetResumePoint(bookmark);
-        if (updatedItem.HasProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL))
+        if (updatedItem.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
           updatedItem.SetPath(
-              updatedItem.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString());
+              updatedItem.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString());
         else
           updatedItem.SetPath(
               progressTrackingFile); // fallback to progressTrackingFile which should be the upnp path
@@ -103,7 +103,7 @@ void CSaveFileState::DoWork(CFileItem& item,
           if (videodatabase.LoadVideoInfo(progressTrackingFile, *tag))
           {
             item.SetPath(progressTrackingFile);
-            item.ClearProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL);
+            item.ClearProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL);
             tag->m_streamDetails = streams;
           }
         }
@@ -134,7 +134,7 @@ void CSaveFileState::DoWork(CFileItem& item,
               if (item.HasVideoInfoTag())
               {
                 if (item.GetVideoInfoTag()->IncrementPlayCount())
-                  item.SetProperty(ITEM_PROPERTY::PLAYCOUNT_INCREMENTED, CVariant{true});
+                  item.SetProperty(ITEM::PROPERTY::PLAYCOUNT_INCREMENTED, CVariant{true});
 
                 if (newLastPlayed.IsValid())
                   item.GetVideoInfoTag()->m_lastPlayed = newLastPlayed;
@@ -234,9 +234,9 @@ void CSaveFileState::DoWork(CFileItem& item,
                   !URIUtils::IsStack(tag->m_strFileNameAndPath) &&
                   tag->m_strFileNameAndPath != item.GetDynPath())
                 return true; // Bluray path to update
-              if (item.GetProperty(ITEM_PROPERTY::NEW_PLAYLIST_PATH).asBoolean(false))
+              if (item.GetProperty(ITEM::PROPERTY::NEW_PLAYLIST_PATH).asBoolean(false))
                 return true; // Bluray playlist replaced by user selection
-              if (item.GetProperty(ITEM_PROPERTY::NEW_STACK_PATH).asBoolean(false))
+              if (item.GetProperty(ITEM::PROPERTY::NEW_STACK_PATH).asBoolean(false))
                 return true; // Stack path to update
               return false;
             }()};
@@ -274,10 +274,10 @@ void CSaveFileState::DoWork(CFileItem& item,
         {
           CUtil::DeleteVideoDatabaseDirectoryCache();
           CFileItemPtr msgItem(new CFileItem(item));
-          if (item.HasProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL))
-            msgItem->SetPath(item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString());
+          if (item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
+            msgItem->SetPath(item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString());
           if (replacedFileId > 0)
-            msgItem->SetProperty(ITEM_PROPERTY::REPLACED_FILE_ID, replacedFileId);
+            msgItem->SetProperty(ITEM::PROPERTY::REPLACED_FILE_ID, replacedFileId);
 
           CGUIMessage message(GUI_MSG_NOTIFY_ALL, CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow(), 0, GUI_MSG_UPDATE_ITEM, 0, msgItem);
           CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(message);

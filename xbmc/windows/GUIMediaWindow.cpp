@@ -406,16 +406,16 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
           CFileItemList items;
           items.SetPath(URIUtils::GetDirectory(newItem->GetPath()));
 
-          const bool hasCacheFilename = newItem->HasProperty(ITEM_PROPERTY::CACHE_FILENAME);
-          const bool hasParentPath = newItem->HasProperty(ITEM_PROPERTY::PARENT_PATH);
+          const bool hasCacheFilename = newItem->HasProperty(ITEM::PROPERTY::CACHE_FILENAME);
+          const bool hasParentPath = newItem->HasProperty(ITEM::PROPERTY::PARENT_PATH);
 
           // Use the stored cache file name
           if (hasCacheFilename)
             items.RemoveDiscCacheCRC(
-                newItem->GetProperty(ITEM_PROPERTY::CACHE_FILENAME).asString());
+                newItem->GetProperty(ITEM::PROPERTY::CACHE_FILENAME).asString());
 
           if (hasParentPath)
-            RemoveDiscCache(newItem->GetProperty(ITEM_PROPERTY::PARENT_PATH).asString());
+            RemoveDiscCache(newItem->GetProperty(ITEM::PROPERTY::PARENT_PATH).asString());
 
           // No stored cache file name or parent path, try the truncated item path as list path
           if (!hasCacheFilename && !hasParentPath)
@@ -766,7 +766,7 @@ bool CGUIMediaWindow::GetDirectory(const std::string &strDirectory, CFileItemLis
   // Store parent path along with item as parent path cannot safely be calculated from item's path.
   for (const auto& item : items)
   {
-    item->SetProperty(ITEM_PROPERTY::PARENT_PATH, m_vecItems->GetPath());
+    item->SetProperty(ITEM::PROPERTY::PARENT_PATH, m_vecItems->GetPath());
   }
 
   // update the view state's reference to the current items
@@ -941,8 +941,8 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
     const std::string& strLabel =
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(showLabel);
     CFileItemPtr pItem(new CFileItem(strLabel));
-    pItem->SetPath(PLACEHOLDER::ADD_SOURCE);
-    pItem->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
+    pItem->SetPath(ITEM::PLACEHOLDER::ADD_SOURCE);
+    pItem->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
     pItem->SetLabel(strLabel);
     pItem->SetLabelPreformatted(true);
     pItem->SetFolder(true);
@@ -1058,7 +1058,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     return true;
   }
 
-  if (pItem->GetPath() == PLACEHOLDER::ADD_SOURCE ||
+  if (pItem->GetPath() == ITEM::PLACEHOLDER::ADD_SOURCE ||
       pItem->GetPath() == "sources://add/") // 'add source button' in empty root
   {
     if (profileManager->IsMasterProfile())
@@ -1157,7 +1157,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
 
     return true;
   }
-  else if (pItem->IsPlugin() && !pItem->GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean())
+  else if (pItem->IsPlugin() && !pItem->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean())
   {
     bool resume = pItem->GetStartOffset() == STARTOFFSET_RESUME;
     return XFILE::CPluginDirectory::RunScriptWithParams(pItem->GetURL(), resume);
@@ -1174,14 +1174,14 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
   {
     SaveSelectedItemInHistory();
 
-    if (pItem->GetPath() == PLACEHOLDER::NEW_PLAYLIST)
+    if (pItem->GetPath() == ITEM::PLACEHOLDER::NEW_PLAYLIST)
     {
       m_vecItems->RemoveDiscCache(GetID());
       CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST_EDITOR,
-                                                                  PLACEHOLDER::NEW_PLAYLIST);
+                                                                  ITEM::PLACEHOLDER::NEW_PLAYLIST);
       return true;
     }
-    else if (StringUtils::StartsWithNoCase(pItem->GetPath(), PLACEHOLDER::NEW_SMART_PLAYLIST))
+    else if (StringUtils::StartsWithNoCase(pItem->GetPath(), ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST))
     {
       m_vecItems->RemoveDiscCache(GetID());
       if (CGUIDialogSmartPlaylistEditor::NewPlaylist(pItem->GetPath().substr(19)))

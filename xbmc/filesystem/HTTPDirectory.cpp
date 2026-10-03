@@ -183,7 +183,7 @@ bool CHTTPDirectory::GetDirectory(const CURL& url, CFileItemList &items)
       if (strLinkTemp != ".." && !strLinkTemp.empty() && NameMatchesLink(strNameTemp, strLinkTemp))
       {
         CFileItemPtr pItem(new CFileItem(strNameTemp));
-        pItem->SetProperty(KODI::ITEM_PROPERTY::IS_HTTP_DIRECTORY, true);
+        pItem->SetProperty(KODI::ITEM::PROPERTY::IS_HTTP_DIRECTORY, true);
         CURL url2(url);
 
         url2.SetFileName(strBasePath + strLinkBase);
@@ -301,7 +301,7 @@ bool CHTTPDirectory::GetDirectory(const CURL& url, CFileItemList &items)
   }
   http.Close();
 
-  items.SetProperty(KODI::ITEM_PROPERTY::IS_HTTP_DIRECTORY, true);
+  items.SetProperty(KODI::ITEM::PROPERTY::IS_HTTP_DIRECTORY, true);
 
   return true;
 }

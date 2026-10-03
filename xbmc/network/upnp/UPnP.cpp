@@ -206,7 +206,7 @@ public:
     if (watched)
     {
       CFileItem temp(item);
-      temp.SetProperty(KODI::ITEM_PROPERTY::ORIGINAL_LISTITEM_URL, item.GetPath());
+      temp.SetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL, item.GetPath());
       return SaveFileState(temp, CBookmark(), watched);
     }
     else
@@ -222,7 +222,7 @@ public:
 
   bool SaveFileState(const CFileItem& item, const CBookmark& bookmark, const bool updatePlayCount)
   {
-    std::string path = item.GetProperty(KODI::ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
+    std::string path = item.GetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     if (!item.HasVideoInfoTag() || path.empty())
     {
       return false;

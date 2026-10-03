@@ -204,7 +204,7 @@ bool CGUIPortList::AddItems(const CPortNode& port,
     CFileItemPtr item = std::make_shared<CFileItem>(itemLabel);
     item->SetLabel2(controller->Layout().Label());
     item->SetPath(port.GetAddress());
-    item->SetArt(ART_TYPE::ICON, controller->Layout().ImagePath());
+    item->SetArt(ART::TYPE::ICON, controller->Layout().ImagePath());
     m_vecItems->Add(std::move(item));
     ++itemId;
 
@@ -229,7 +229,7 @@ bool CGUIPortList::AddItems(const CPortNode& port,
     item->SetLabel2(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13298)); // "Disconnected"
     item->SetPath(port.GetAddress());
-    item->SetArt(ART_TYPE::ICON, "DefaultAddonNone.png");
+    item->SetArt(ART::TYPE::ICON, "DefaultAddonNone.png");
     m_vecItems->Add(std::move(item));
     ++itemId;
   }

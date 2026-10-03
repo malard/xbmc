@@ -127,7 +127,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
   const std::string extensions{
       CServiceBroker::GetFileExtensionProvider().GetMediaExtensions(section)};
   if (section == MediaSection::VIDEO)
-    items.SetProperty(ITEM_PROPERTY::SET_VIDEODB_DETAILS,
+    items.SetProperty(ITEM::PROPERTY::SET_VIDEODB_DETAILS,
                       CVideoLibrary::GetDetailsFromJsonParameters(parameterObject));
 
   if (CDirectory::GetDirectory(strPath, items, extensions, DIR_FLAG_DEFAULTS))

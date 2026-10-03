@@ -110,7 +110,7 @@ void CGUIListItem::ClearArt()
 {
   m_art.clear();
   m_artFallbacks.clear();
-  SetProperty(KODI::ITEM_PROPERTY::LIBRARY_ART_FILLED, false);
+  SetProperty(KODI::ITEM::PROPERTY::LIBRARY_ART_FILLED, false);
 }
 
 void CGUIListItem::AppendArt(const KODI::ART::Artwork& art, const std::string& prefix)

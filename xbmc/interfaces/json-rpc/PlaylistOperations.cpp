@@ -197,8 +197,8 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CV
     {
       auto item = std::make_shared<CFileItem>(*entries[position].item);
       const int displayOrder = source.GetPlayOrderPosition(entries[position].id);
-      item->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position);
-      item->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER,
+      item->SetProperty(ITEM::PROPERTY::PLAYLIST_POSITION, position);
+      item->SetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER,
                         displayOrder < 0 ? position : displayOrder);
       list.Add(std::move(item));
     }
@@ -208,8 +208,8 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CV
     CServiceBroker::GetSlideShowDelegator().GetSlideShowContents(list);
     for (int position = 0; position < list.Size(); ++position)
     {
-      list[position]->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position);
-      list[position]->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER, position);
+      list[position]->SetProperty(ITEM::PROPERTY::PLAYLIST_POSITION, position);
+      list[position]->SetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER, position);
     }
   }
 

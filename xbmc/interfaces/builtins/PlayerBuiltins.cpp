@@ -495,7 +495,7 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
   }
 
   if (!item.IsFolder() && item.IsPlugin())
-    item.SetProperty(ITEM_PROPERTY::IS_PLAYABLE, true);
+    item.SetProperty(ITEM::PROPERTY::IS_PLAYABLE, true);
 
   if (forcePlay && askToResume)
   {

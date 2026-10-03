@@ -211,7 +211,7 @@ std::string CDirectoryNode::BuildPath() const
     pParent=pParent->GetParent();
   }
 
-  std::string strPath = KODI::MUSICDB::ROOT;
+  std::string strPath = KODI::MUSIC::DB_PATH::ROOT;
   for (int i = 0; i < static_cast<int>(array.size()); ++i)
     strPath+=array[i]+"/";
 

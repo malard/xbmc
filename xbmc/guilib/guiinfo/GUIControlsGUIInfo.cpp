@@ -396,7 +396,7 @@ bool CGUIControlsGUIInfo::GetLabel(std::string& value,
       const CGUIMediaWindow* window{GUIINFO::GetMediaWindow(contextWindow)};
       if (window)
       {
-        value = window->CurrentDirectory().GetArt(KODI::ART_TYPE::FANART);
+        value = window->CurrentDirectory().GetArt(KODI::ART::TYPE::FANART);
         return true;
       }
       break;
@@ -470,7 +470,8 @@ bool CGUIControlsGUIInfo::GetBool(bool& value,
       const CGUIMediaWindow* window{GUIINFO::GetMediaWindow(contextWindow)};
       if (window)
       {
-        value = window->CurrentDirectory().GetProperty(KODI::ITEM_PROPERTY::IS_STACKED).asBoolean();
+        value =
+            window->CurrentDirectory().GetProperty(KODI::ITEM::PROPERTY::IS_STACKED).asBoolean();
         return true;
       }
       break;
@@ -480,7 +481,7 @@ bool CGUIControlsGUIInfo::GetBool(bool& value,
       const CGUIMediaWindow* window{GUIINFO::GetMediaWindow(contextWindow)};
       if (window)
       {
-        value = window->CurrentDirectory().HasArt(KODI::ART_TYPE::THUMB);
+        value = window->CurrentDirectory().HasArt(KODI::ART::TYPE::THUMB);
         return true;
       }
       break;

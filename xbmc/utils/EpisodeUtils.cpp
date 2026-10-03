@@ -432,7 +432,7 @@ std::string CEpisodeUtils::GetEpisodesLabel(const CFileItem& item)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   const std::string episodeString{item.GetProperty("episodes").asString("")};
-  const int numSpecials{item.GetProperty(ITEM_PROPERTY::EPISODES_SPECIALS).asInteger32(0)};
+  const int numSpecials{item.GetProperty(ITEM::PROPERTY::EPISODES_SPECIALS).asInteger32(0)};
   const auto episodes{ParseEpisodes(episodeString)};
   const bool hasSpecials{numSpecials > 0};
   bool singleSeason{!episodes.empty() &&

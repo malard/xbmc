@@ -50,16 +50,16 @@ bool ChooseAndSetNewThumbnail(CFileItem& item)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CFileItemList prefilledItems;
-  if (item.HasArt(KODI::ART_TYPE::THUMB))
+  if (item.HasArt(KODI::ART::TYPE::THUMB))
   {
-    const auto current = std::make_shared<CFileItem>(KODI::IMAGE_CHOICE::CURRENT, false);
-    current->SetArt(KODI::ART_TYPE::THUMB, item.GetArt(KODI::ART_TYPE::THUMB));
+    const auto current = std::make_shared<CFileItem>(KODI::ART::CHOICE::CURRENT, false);
+    current->SetArt(KODI::ART::TYPE::THUMB, item.GetArt(KODI::ART::TYPE::THUMB));
     current->SetLabel(localizeStrings.Get(20016)); // Current thumb
     prefilledItems.Add(current);
   }
 
-  const auto none = std::make_shared<CFileItem>(KODI::IMAGE_CHOICE::NONE, false);
-  none->SetArt(KODI::ART_TYPE::ICON, item.GetArt(KODI::ART_TYPE::ICON));
+  const auto none = std::make_shared<CFileItem>(KODI::ART::CHOICE::NONE, false);
+  none->SetArt(KODI::ART::TYPE::ICON, item.GetArt(KODI::ART::TYPE::ICON));
   none->SetLabel(localizeStrings.Get(20018)); // No thumb
   prefilledItems.Add(none);
 
@@ -74,10 +74,10 @@ bool ChooseAndSetNewThumbnail(CFileItem& item)
 
 bool SetChosenThumbnail(CFileItem& item, const std::string& choice)
 {
-  if (choice == KODI::IMAGE_CHOICE::CURRENT)
+  if (choice == KODI::ART::CHOICE::CURRENT)
     return false;
 
-  item.SetArt(KODI::ART_TYPE::THUMB, choice == KODI::IMAGE_CHOICE::NONE ? "" : choice);
+  item.SetArt(KODI::ART::TYPE::THUMB, choice == KODI::ART::CHOICE::NONE ? "" : choice);
   return true;
 }
 

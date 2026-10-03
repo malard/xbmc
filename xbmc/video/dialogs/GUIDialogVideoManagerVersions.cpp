@@ -468,7 +468,7 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
 
   // Select the playlist using the simple menu
   const std::string oldPath{item->GetDynPath()};
-  item->SetProperty(KODI::ITEM_PROPERTY::FORCE_PLAYLIST_SELECTION, true);
+  item->SetProperty(KODI::ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION, true);
   const int idMovie{m_database.GetMovieId(oldPath)};
 
   CFileItemList items;
@@ -777,7 +777,7 @@ bool CGUIDialogVideoManagerVersions::GetAllOtherMovies(const std::shared_ptr<CFi
   list.Clear();
 
   if (item->GetVideoContentType() == VideoDbContentType::MOVIES)
-    videoDb.GetMoviesNav(KODI::VIDEODB::MOVIE_TITLES, list);
+    videoDb.GetMoviesNav(KODI::VIDEO::DB_PATH::MOVIE_TITLES, list);
   else
     return false;
 

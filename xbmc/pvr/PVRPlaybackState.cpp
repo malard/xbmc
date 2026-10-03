@@ -389,7 +389,7 @@ bool CPVRPlaybackState::OnPlaybackStopped(const CFileItem& item)
 
 std::unique_ptr<CFileItem> CPVRPlaybackState::GetNextAutoplayItem(const CFileItem& item)
 {
-  if (!item.GetProperty(KODI::ITEM_PROPERTY::EPG_PLAYLIST_ITEM).asBoolean(false))
+  if (!item.GetProperty(KODI::ITEM::PROPERTY::EPG_PLAYLIST_ITEM).asBoolean(false))
     return {};
 
   std::unique_lock lock(m_critSection);
@@ -457,11 +457,11 @@ void CPVRPlaybackState::StartPlayback(std::unique_ptr<CFileItem>& item,
     {
       if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
               CSettings::SETTING_PVRPLAYBACK_AUTOPLAYNEXTPROGRAMME))
-        item->SetProperty(KODI::ITEM_PROPERTY::EPG_PLAYLIST_ITEM, true);
+        item->SetProperty(KODI::ITEM::PROPERTY::EPG_PLAYLIST_ITEM, true);
     }
     else if (mode == ContentUtils::PlayMode::PLAY_FROM_HERE)
     {
-      item->SetProperty(KODI::ITEM_PROPERTY::EPG_PLAYLIST_ITEM, true);
+      item->SetProperty(KODI::ITEM::PROPERTY::EPG_PLAYLIST_ITEM, true);
     }
   }
 

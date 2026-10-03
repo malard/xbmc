@@ -35,7 +35,7 @@ enum class Method
   BY_FOLDERTHUMBS,
 };
 
-auto hasThumb = [](const auto& item) { return item->HasArt(KODI::ART_TYPE::THUMB); };
+auto hasThumb = [](const auto& item) { return item->HasArt(KODI::ART::TYPE::THUMB); };
 }
 
 /// \brief Generic function to add a layer of transparency to the calling window
@@ -163,7 +163,7 @@ bool CAutoSwitch::ByFolderThumbPercentage(bool hideParentDirItems, int percent, 
 
   const int numThumbs =
       std::ranges::count_if(vecItems, [](const auto& item)
-                            { return item->IsFolder() && item->HasArt(KODI::ART_TYPE::THUMB); });
+                            { return item->IsFolder() && item->HasArt(KODI::ART::TYPE::THUMB); });
   return numThumbs >= 0.01f * percent * (numItems - fileCount);
 }
 
@@ -179,7 +179,7 @@ float CAutoSwitch::MetadataPercentage(const CFileItemList &vecItems)
 
                               return item->HasMusicInfoTag() || item->HasVideoInfoTag() ||
                                      item->HasPictureInfoTag() ||
-                                     item->HasProperty(KODI::ITEM_PROPERTY::ADDON_ID);
+                                     item->HasProperty(KODI::ITEM::PROPERTY::ADDON_ID);
                             });
   return total != 0 ? count / total : 0.0f;
 }

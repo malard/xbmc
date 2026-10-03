@@ -10,7 +10,7 @@
 
 //! \brief The musicdb:// paths of the music library's nodes, as XFILE::CMusicDatabaseDirectory
 //! parses them.
-namespace KODI::MUSICDB
+namespace KODI::MUSIC::DB_PATH
 {
 
 inline constexpr char ROOT[] = "musicdb://";
@@ -33,4 +33,4 @@ inline constexpr char ROLES[] = "musicdb://roles/";
 inline constexpr char SOURCES[] = "musicdb://sources/";
 inline constexpr char DISCS[] = "musicdb://discs/";
 
-} // namespace KODI::MUSICDB
+} // namespace KODI::MUSIC::DB_PATH

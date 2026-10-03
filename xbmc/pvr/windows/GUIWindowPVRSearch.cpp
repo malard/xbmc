@@ -154,7 +154,7 @@ void CGUIWindowPVRSearchBase::OnPrepareFileItems(CFileItemList& items)
         m_searchfilter == nullptr ? 19335 : 19336)); // "New search..." / "Edit search..."
     item->SetLabelPreformatted(true);
     item->SetSpecialSort(SortSpecial::TOP);
-    item->SetArt(KODI::ART_TYPE::ICON, "DefaultPVRSearch.png");
+    item->SetArt(KODI::ART::TYPE::ICON, "DefaultPVRSearch.png");
     items.Add(item);
 
     item = std::make_shared<CFileItem>(IsRadio() ? CPVREpgSearchPath::PATH_RADIO_SAVEDSEARCHES
@@ -164,7 +164,7 @@ void CGUIWindowPVRSearchBase::OnPrepareFileItems(CFileItemList& items)
         19337)); // "Saved searches"
     item->SetLabelPreformatted(true);
     item->SetSpecialSort(SortSpecial::TOP);
-    item->SetArt(KODI::ART_TYPE::ICON, "DefaultFolder.png");
+    item->SetArt(KODI::ART::TYPE::ICON, "DefaultFolder.png");
     items.Add(item);
   }
 

@@ -257,13 +257,13 @@ bool CGUIWindowPictures::Update(const std::string &strDirectory, bool updateFilt
   if (!CGUIMediaWindow::Update(strDirectory, updateFilterPath))
     return false;
 
-  m_vecItems->SetArt(ART_TYPE::THUMB, "");
+  m_vecItems->SetArt(ART::TYPE::THUMB, "");
   if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_PICTURES_GENERATETHUMBS))
     m_thumbLoader.Load(*m_vecItems);
 
   CPictureThumbLoader thumbLoader;
   std::string thumb = thumbLoader.GetCachedImage(*m_vecItems, "thumb");
-  m_vecItems->SetArt(ART_TYPE::THUMB, thumb);
+  m_vecItems->SetArt(ART::TYPE::THUMB, thumb);
 
   return true;
 }
@@ -303,7 +303,7 @@ bool CGUIWindowPictures::GetDirectory(const std::string &strDirectory, CFileItem
     items.SetLabel(label);
 
   if (items.GetContent().empty() && !items.IsVirtualDirectoryRoot() && !items.IsPlugin())
-    items.SetContent(CONTENT::IMAGES);
+    items.SetContent(MEDIA::CONTENT::IMAGES);
   return true;
 }
 

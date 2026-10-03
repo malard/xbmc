@@ -42,7 +42,7 @@ namespace CONTEXTMENU
 #ifdef HAS_OPTICAL_DRIVE
     // Sources carry the drive, which cdda://local/ and mount points don't name. An item on the
     // disc itself has no source, so fall back to the drive root of its own path.
-    std::string devicePath{item->GetProperty(ITEM_PROPERTY::DEVICE_PATH).asString()};
+    std::string devicePath{item->GetProperty(ITEM::PROPERTY::DEVICE_PATH).asString()};
     const std::string& path{item->GetPath()};
     if (devicePath.empty() && URIUtils::IsDOSPath(path) && path[1] == ':')
       devicePath = path.substr(0, 2);
@@ -90,11 +90,12 @@ std::string CAddRemoveFavourite::GetLabel(const CFileItem& item) const
 
 bool CAddRemoveFavourite::IsVisible(const CFileItem& item) const
 {
-  if (item.GetProperty(ITEM_PROPERTY::HIDE_ADD_REMOVE_FAVOURITE).asBoolean())
+  if (item.GetProperty(ITEM::PROPERTY::HIDE_ADD_REMOVE_FAVOURITE).asBoolean())
     return false;
 
   return (!item.GetPath().empty() && !item.IsParentFolder() &&
-          !item.IsPath(PLACEHOLDER::ADD_SOURCE) && !item.IsPath(PLACEHOLDER::NEW_PLAYLIST) &&
+          !item.IsPath(ITEM::PLACEHOLDER::ADD_SOURCE) &&
+          !item.IsPath(ITEM::PLACEHOLDER::NEW_PLAYLIST) &&
           !URIUtils::IsProtocol(item.GetPath(), "favourites") &&
           !URIUtils::IsProtocol(item.GetPath(), "newsmartplaylist") &&
           !URIUtils::IsProtocol(item.GetPath(), "newtag") &&

@@ -51,7 +51,7 @@ void CPVRThumbLoader::OnLoaderFinish()
 
 void CPVRThumbLoader::ClearCachedImage(CFileItem& item)
 {
-  const std::string thumb = item.GetArt(KODI::ART_TYPE::THUMB);
+  const std::string thumb = item.GetArt(KODI::ART::TYPE::THUMB);
   if (!thumb.empty())
   {
     CServiceBroker::GetTextureCache()->ClearCachedImage(thumb);
@@ -60,7 +60,7 @@ void CPVRThumbLoader::ClearCachedImage(CFileItem& item)
       m_textureDatabase->ClearTextureForPath(item.GetPath(), "thumb");
       m_textureDatabase->Close();
     }
-    item.SetArt(KODI::ART_TYPE::THUMB, "");
+    item.SetArt(KODI::ART::TYPE::THUMB, "");
     m_bInvalidated = true;
   }
 }
@@ -92,7 +92,7 @@ bool CPVRThumbLoader::FillThumb(CFileItem& item)
   if (thumb.empty())
     return false;
 
-  item.SetArt(KODI::ART_TYPE::THUMB, thumb);
+  item.SetArt(KODI::ART::TYPE::THUMB, thumb);
   return true;
 }
 

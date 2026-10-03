@@ -208,7 +208,7 @@ std::string CDirectoryNode::BuildPath() const
     pParent = pParent->GetParent();
   }
 
-  std::string strPath = KODI::VIDEODB::ROOT;
+  std::string strPath = KODI::VIDEO::DB_PATH::ROOT;
   for (int i = 0; i < static_cast<int>(array.size()); ++i)
     strPath += array[i]+"/";
 

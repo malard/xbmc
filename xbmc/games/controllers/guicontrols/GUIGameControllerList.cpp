@@ -106,7 +106,7 @@ void CGUIGameControllerList::UpdateInfo(const CGUIListItem* item)
     }
 
     // Update current controller
-    const std::string newControllerId = item->GetProperty(ITEM_PROPERTY::ADDON_ID).asString();
+    const std::string newControllerId = item->GetProperty(ITEM::PROPERTY::ADDON_ID).asString();
     if (!newControllerId.empty())
     {
       std::string currentControllerId;

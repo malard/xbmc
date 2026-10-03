@@ -18,11 +18,11 @@ using KODI::MEDIA::PluralNameOf;
 // A list is given its media type's plural as its content in places, so the two must agree
 TEST(TestContentNames, AMediaTypesPluralIsItsContent)
 {
-  EXPECT_EQ(PluralNameOf(MediaType::ALBUM), CONTENT::ALBUMS);
-  EXPECT_EQ(PluralNameOf(MediaType::ARTIST), CONTENT::ARTISTS);
-  EXPECT_EQ(PluralNameOf(MediaType::SONG), CONTENT::SONGS);
-  EXPECT_EQ(PluralNameOf(MediaType::MOVIE), CONTENT::MOVIES);
-  EXPECT_EQ(PluralNameOf(MediaType::TV_SHOW), CONTENT::TVSHOWS);
-  EXPECT_EQ(PluralNameOf(MediaType::EPISODE), CONTENT::EPISODES);
-  EXPECT_EQ(PluralNameOf(MediaType::MUSIC_VIDEO), CONTENT::MUSICVIDEOS);
+  EXPECT_EQ(PluralNameOf(MediaType::ALBUM), MEDIA::CONTENT::ALBUMS);
+  EXPECT_EQ(PluralNameOf(MediaType::ARTIST), MEDIA::CONTENT::ARTISTS);
+  EXPECT_EQ(PluralNameOf(MediaType::SONG), MEDIA::CONTENT::SONGS);
+  EXPECT_EQ(PluralNameOf(MediaType::MOVIE), MEDIA::CONTENT::MOVIES);
+  EXPECT_EQ(PluralNameOf(MediaType::TV_SHOW), MEDIA::CONTENT::TVSHOWS);
+  EXPECT_EQ(PluralNameOf(MediaType::EPISODE), MEDIA::CONTENT::EPISODES);
+  EXPECT_EQ(PluralNameOf(MediaType::MUSIC_VIDEO), MEDIA::CONTENT::MUSICVIDEOS);
 }

@@ -264,7 +264,7 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (field == "art")
     {
-      fillLibraryArt(!item->GetProperty(KODI::ITEM_PROPERTY::LIBRARY_ART_FILLED).asBoolean());
+      fillLibraryArt(!item->GetProperty(KODI::ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean());
 
       const KODI::ART::Artwork& artMap = item->GetArt();
       CVariant artObj(CVariant::VariantTypeObject);
@@ -280,23 +280,23 @@ bool CFileItemHandler::GetField(const std::string& field,
 
     if (field == "thumbnail")
     {
-      if (thumbLoader && !item->HasArt(KODI::ART_TYPE::THUMB) && !fetchedArt &&
+      if (thumbLoader && !item->HasArt(KODI::ART::TYPE::THUMB) && !fetchedArt &&
           IsLibraryItem(*item))
         fillLibraryArt(true);
-      else if (item->HasPictureInfoTag() && !item->HasArt(KODI::ART_TYPE::THUMB))
-        item->SetArt(KODI::ART_TYPE::THUMB, IMAGE_FILES::URLFromFile(item->GetPath()));
+      else if (item->HasPictureInfoTag() && !item->HasArt(KODI::ART::TYPE::THUMB))
+        item->SetArt(KODI::ART::TYPE::THUMB, IMAGE_FILES::URLFromFile(item->GetPath()));
 
-      result["thumbnail"] = item->HasArt(KODI::ART_TYPE::THUMB)
-                                ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART_TYPE::THUMB))
+      result["thumbnail"] = item->HasArt(KODI::ART::TYPE::THUMB)
+                                ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART::TYPE::THUMB))
                                 : "";
       return true;
     }
 
     if (field == "fanart")
     {
-      fillLibraryArt(!item->HasArt(KODI::ART_TYPE::FANART));
-      result["fanart"] = item->HasArt(KODI::ART_TYPE::FANART)
-                             ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART_TYPE::FANART))
+      fillLibraryArt(!item->HasArt(KODI::ART::TYPE::FANART));
+      result["fanart"] = item->HasArt(KODI::ART::TYPE::FANART)
+                             ? IMAGE_FILES::URLFromFile(item->GetArt(KODI::ART::TYPE::FANART))
                              : "";
       return true;
     }
@@ -306,13 +306,13 @@ bool CFileItemHandler::GetField(const std::string& field,
       if (item->GetVideoInfoTag()->m_iSeason < 0 && field == "season")
       {
         result[field] =
-            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::TOTAL_SEASONS).asInteger());
+            static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::TOTAL_SEASONS).asInteger());
         return true;
       }
       if (field == "watchedEpisodes")
       {
         result[field] =
-            static_cast<int>(item->GetProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES).asInteger());
+            static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger());
         return true;
       }
     }
@@ -445,10 +445,10 @@ void CFileItemHandler::HandleFileItem(const char* ID,
         object["file"] = item->GetDynPath();
     }
 
-    if (item->HasProperty(KODI::ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER))
+    if (item->HasProperty(KODI::ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER))
     {
-      object["position"] = item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_POSITION);
-      object["displayOrder"] = item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER);
+      object["position"] = item->GetProperty(KODI::ITEM::PROPERTY::PLAYLIST_POSITION);
+      object["displayOrder"] = item->GetProperty(KODI::ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER);
     }
 
     if (fields.erase("mediaPath") > 0)

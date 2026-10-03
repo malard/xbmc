@@ -368,7 +368,7 @@ int CGUIWindowPlayList<Base>::ListPosition(int iItem) const
   if (iItem < 0 || iItem >= this->m_vecItems->Size())
     return -1;
   return static_cast<int>(
-      this->m_vecItems->Get(iItem)->GetProperty(ITEM_PROPERTY::PLAYLIST_POSITION).asInteger(-1));
+      this->m_vecItems->Get(iItem)->GetProperty(ITEM::PROPERTY::PLAYLIST_POSITION).asInteger(-1));
 }
 
 template<typename Base>

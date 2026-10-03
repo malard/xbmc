@@ -114,9 +114,9 @@ namespace
 //! The paths remote clients may always access, by prefix
 constexpr std::array<std::string_view, 9> ALWAYS_ALLOWED_PREFIXES{
     "virtualpath://upnproot/",
-    KODI::LIBRARY::VIDEO,
-    KODI::LIBRARY::VIDEO_FLAT,
-    KODI::LIBRARY::MUSIC,
+    KODI::MEDIA::LIBRARY_PATH::VIDEO,
+    KODI::MEDIA::LIBRARY_PATH::VIDEO_FLAT,
+    KODI::MEDIA::LIBRARY_PATH::MUSIC,
     KODI::ADDONS::SOURCES,
     "special://skin",
     "special://profile/addon_data",

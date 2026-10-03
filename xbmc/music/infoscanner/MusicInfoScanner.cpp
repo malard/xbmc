@@ -343,7 +343,7 @@ void CMusicInfoScanner::FetchAlbumInfo(const std::string& strDirectory,
   if (strDirectory.empty())
   {
     m_musicDatabase.Open();
-    m_musicDatabase.GetAlbumsNav(MUSICDB::ALBUMS, items, SortDescription());
+    m_musicDatabase.GetAlbumsNav(MUSIC::DB_PATH::ALBUMS, items, SortDescription());
     m_musicDatabase.Close();
   }
   else
@@ -407,7 +407,7 @@ void CMusicInfoScanner::FetchArtistInfo(const std::string& strDirectory,
     m_musicDatabase.Open();
     const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
     m_musicDatabase.GetArtistsNav(
-        MUSICDB::ARTISTS, items, SortDescription(),
+        MUSIC::DB_PATH::ARTISTS, items, SortDescription(),
         !settings->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS), -1);
     m_musicDatabase.Close();
   }
@@ -1134,7 +1134,7 @@ void CMusicInfoScanner::FindArtForAlbums(std::vector<CAlbum>& albums, const std:
      that case and set the IsHTTPDirectory property to enable scanning for art.
     */
     if (StringUtils::StartsWithNoCase(path, "http") && StringUtils::EndsWith(path, "/"))
-      album.SetProperty(ITEM_PROPERTY::IS_HTTP_DIRECTORY, true);
+      album.SetProperty(ITEM::PROPERTY::IS_HTTP_DIRECTORY, true);
     albumArt = album.GetUserMusicThumb(true);
     if (!albumArt.empty())
       albums[0].art["thumb"] = albumArt;

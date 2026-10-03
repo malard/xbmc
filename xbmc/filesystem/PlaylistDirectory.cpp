@@ -69,9 +69,9 @@ bool CPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList& items)
     if (position == positions.end())
       continue;
     auto row = std::make_shared<CFileItem>(*entries[position->second].item);
-    row->SetProperty(ITEM_PROPERTY::PLAYLIST_ENTRY, id);
-    row->SetProperty(ITEM_PROPERTY::PLAYLIST_POSITION, position->second);
-    row->SetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER, displayOrder++);
+    row->SetProperty(ITEM::PROPERTY::PLAYLIST_ENTRY, id);
+    row->SetProperty(ITEM::PROPERTY::PLAYLIST_POSITION, position->second);
+    row->SetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER, displayOrder++);
     row->SetProperty("playlisttype", static_cast<int>(*type));
     items.Add(std::move(row));
   }

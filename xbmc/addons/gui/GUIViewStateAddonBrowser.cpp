@@ -45,7 +45,7 @@ CGUIViewStateAddonBrowser::CGUIViewStateAddonBrowser(const CFileItemList& items)
                     SortAttributeIgnoreFolders, SortOrder::DESCENDING); //Label, Last used
 
     if (StringUtils::StartsWith(items.GetPath(), KODI::ADDONS::USER) &&
-        items.GetContent() == KODI::CONTENT::ADDONS)
+        items.GetContent() == KODI::MEDIA::CONTENT::ADDONS)
       AddSortMethod(SortBy::INSTALL_DATE, 12013, LABEL_MASKS("%L", "%i", "%L", "%i"),
                     SortAttributeIgnoreFolders, SortOrder::DESCENDING);
 

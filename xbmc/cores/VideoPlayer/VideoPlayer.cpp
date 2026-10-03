@@ -6273,7 +6273,7 @@ void CVideoPlayer::UpdateFileItemStreamDetails(CFileItem& item, UpdateStreamDeta
       return;
 
     // For blurays
-    item.SetProperty(ITEM_PROPERTY::UPDATE_STREAM_DETAILS, true);
+    item.SetProperty(ITEM::PROPERTY::UPDATE_STREAM_DETAILS, true);
 
     m_updateStreamDetails = false;
   }

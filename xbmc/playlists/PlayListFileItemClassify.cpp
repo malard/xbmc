@@ -32,7 +32,7 @@ bool IsPlayList(const CFileItem& item)
 
 bool IsSmartPlayList(const CFileItem& item)
 {
-  if (item.GetProperty(ITEM_PROPERTY::LIBRARY_SMARTPLAYLIST).asBoolean(false))
+  if (item.GetProperty(ITEM::PROPERTY::LIBRARY_SMARTPLAYLIST).asBoolean(false))
     return true;
 
   return item.GetURL().HasExtension(".xsp");

@@ -320,11 +320,11 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
       value = item->GetArt(info.GetData3());
       return true;
     case PLAYER_ICON:
-      value = item->GetArt(KODI::ART_TYPE::THUMB);
+      value = item->GetArt(KODI::ART::TYPE::THUMB);
       if (value.empty())
-        value = item->GetArt(KODI::ART_TYPE::ICON);
+        value = item->GetArt(KODI::ART::TYPE::ICON);
       if (fallback)
-        *fallback = item->GetArt(KODI::ART_TYPE::ICON);
+        *fallback = item->GetArt(KODI::ART::TYPE::ICON);
       return true;
     case PLAYER_EDITLIST:
     case PLAYER_CUTS:
@@ -678,12 +678,12 @@ bool CPlayerGUIInfo::GetBool(bool& value,
     {
       if (item)
       {
-        if (item->HasProperty(KODI::ITEM_PROPERTY::PLAYLIST_ENTRY))
+        if (item->HasProperty(KODI::ITEM::PROPERTY::PLAYLIST_ENTRY))
         {
           const std::optional<PLAYLIST::Type> type =
               PLAYLIST::TypeFromInt(item->GetProperty("playlisttype").asInteger32(-1));
           value =
-              type && item->GetProperty(KODI::ITEM_PROPERTY::PLAYLIST_ENTRY).asUnsignedInteger() ==
+              type && item->GetProperty(KODI::ITEM::PROPERTY::PLAYLIST_ENTRY).asUnsignedInteger() ==
                           m_playLists->GetPlayingEntry(*type);
           return true;
         }

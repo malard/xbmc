@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<CFileItem>> Fetch(const std::vector<Match>& matches)
     CMusicDatabase database;
     if (database.Open())
     {
-      database.GetSongsFullByWhere(MUSICDB::SONGS, fetched, SortDescription{},
+      database.GetSongsFullByWhere(MUSIC::DB_PATH::SONGS, fetched, SortDescription{},
                                    CDatabase::Filter("songview.idSong IN (" + songIds + ")"), true);
       for (const auto& item : fetched)
         database.SetPropertiesForFileItem(*item);
@@ -130,7 +130,7 @@ std::vector<std::shared_ptr<CFileItem>> Fetch(const std::vector<Match>& matches)
   {
     CVideoDatabase database;
     if (database.Open())
-      database.GetMusicVideosByWhere(VIDEODB::MUSICVIDEO_TITLES,
+      database.GetMusicVideosByWhere(VIDEO::DB_PATH::MUSICVIDEO_TITLES,
                                      CDatabase::Filter("idMVideo IN (" + videoIds + ")"), fetched);
     else
       CLog::LogF(LOGERROR, "could not open the video database");

@@ -68,8 +68,8 @@ bool CMusicGUIInfo::InitCurrentItem(CFileItem* item)
 
         CMusicThumbLoader loader;
         loader.FillThumb(streamingItem);
-        if (streamingItem.HasArt(ART_TYPE::THUMB))
-          item->SetArt(ART_TYPE::THUMB, streamingItem.GetArt(ART_TYPE::THUMB));
+        if (streamingItem.HasArt(ART::TYPE::THUMB))
+          item->SetArt(ART::TYPE::THUMB, streamingItem.GetArt(ART::TYPE::THUMB));
       }
     }
     else
@@ -471,8 +471,8 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
       {
         if (fallback)
           *fallback = "DefaultAlbumCover.png";
-        value =
-            item->HasArt(ART_TYPE::THUMB) ? item->GetArt(ART_TYPE::THUMB) : "DefaultAlbumCover.png";
+        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
+                                               : "DefaultAlbumCover.png";
         return true;
       }
       break;
@@ -592,7 +592,7 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
                               item.LoadMusicTag();
                               item.GetMusicInfoTag()->SetLoaded();
                             }
-                            if (!item.HasArt(ART_TYPE::THUMB))
+                            if (!item.HasArt(ART::TYPE::THUMB))
                             {
                               CMusicThumbLoader loader;
                               loader.LoadItem(&item);
@@ -601,8 +601,8 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
 
   if (info.GetInfo() == MUSICPLAYER_COVER)
   {
-    value = playlistItem->HasArt(ART_TYPE::THUMB) ? playlistItem->GetArt(ART_TYPE::THUMB)
-                                                  : "DefaultAlbumCover.png";
+    value = playlistItem->HasArt(ART::TYPE::THUMB) ? playlistItem->GetArt(ART::TYPE::THUMB)
+                                                   : "DefaultAlbumCover.png";
     return true;
   }
 

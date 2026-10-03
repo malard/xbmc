@@ -140,7 +140,7 @@ bool CGUIWindowAddonBrowser::OnMessage(CGUIMessage& message)
         // iItem is checked for validity inside these routines
         if (iAction == ACTION_SHOW_INFO)
         {
-          if (!m_vecItems->Get(iItem)->GetProperty(KODI::ITEM_PROPERTY::ADDON_ID).empty())
+          if (!m_vecItems->Get(iItem)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).empty())
             return CGUIDialogAddonInfo::ShowForItem((*m_vecItems)[iItem]);
           return false;
         }
@@ -155,7 +155,7 @@ bool CGUIWindowAddonBrowser::OnMessage(CGUIMessage& message)
         for (int i = 0; i < m_vecItems->Size(); ++i)
         {
           CFileItemPtr item = m_vecItems->Get(i);
-          if (item->GetProperty(KODI::ITEM_PROPERTY::ADDON_ID) == message.GetStringParam())
+          if (item->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID) == message.GetStringParam())
           {
             UpdateStatus(item);
             FormatAndSort(*m_vecItems);
@@ -254,14 +254,14 @@ bool CGUIWindowAddonBrowser::OnClick(int iItem, const std::string& player)
   if (!item->IsFolder())
   {
     // cancel a downloading job
-    if (item->HasProperty(KODI::ITEM_PROPERTY::ADDON_DOWNLOADING))
+    if (item->HasProperty(KODI::ITEM::PROPERTY::ADDON_DOWNLOADING))
     {
       if (CGUIDialogYesNo::ShowAndGetInput(CVariant{24000},
-                                           item->GetProperty(KODI::ITEM_PROPERTY::ADDON_NAME),
+                                           item->GetProperty(KODI::ITEM::PROPERTY::ADDON_NAME),
                                            CVariant{24066}, CVariant{""}))
       {
         if (CAddonInstaller::GetInstance().Cancel(
-                item->GetProperty(KODI::ITEM_PROPERTY::ADDON_ID).asString()))
+                item->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString()))
           Refresh();
       }
       return true;
@@ -343,7 +343,7 @@ bool CGUIWindowAddonBrowser::GetDirectory(const std::string& strDirectory, CFile
           //check if it's installed
           AddonPtr addon;
           if (!CServiceBroker::GetAddonMgr().GetAddon(
-                  items[i]->GetProperty(KODI::ITEM_PROPERTY::ADDON_ID).asString(), addon,
+                  items[i]->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), addon,
                   OnlyEnabled::CHOICE_YES))
             items.Remove(i);
         }
@@ -365,17 +365,17 @@ void CGUIWindowAddonBrowser::UpdateStatus(const CFileItemPtr& item) const
   unsigned int percent;
   bool downloadFinshed;
   if (CAddonInstaller::GetInstance().GetProgress(
-          item->GetProperty(KODI::ITEM_PROPERTY::ADDON_ID).asString(), percent, downloadFinshed))
+          item->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), percent, downloadFinshed))
   {
     std::string progress = StringUtils::Format(
         !downloadFinshed ? CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24042)
                          : CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24044),
         percent);
-    item->SetProperty(KODI::ITEM_PROPERTY::ADDON_STATUS, progress);
-    item->SetProperty(KODI::ITEM_PROPERTY::ADDON_DOWNLOADING, true);
+    item->SetProperty(KODI::ITEM::PROPERTY::ADDON_STATUS, progress);
+    item->SetProperty(KODI::ITEM::PROPERTY::ADDON_DOWNLOADING, true);
   }
   else
-    item->ClearProperty(KODI::ITEM_PROPERTY::ADDON_DOWNLOADING);
+    item->ClearProperty(KODI::ITEM::PROPERTY::ADDON_DOWNLOADING);
 }
 
 bool CGUIWindowAddonBrowser::Update(const std::string& strDirectory,
@@ -583,7 +583,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
     auto item{std::make_shared<CFileItem>("", false)};
     item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(231));
     item->SetLabel2(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24040));
-    item->SetArt(KODI::ART_TYPE::ICON, "DefaultAddonNone.png");
+    item->SetArt(KODI::ART::TYPE::ICON, "DefaultAddonNone.png");
     item->SetSpecialSort(SortSpecial::TOP);
     items.Add(std::move(item));
   }

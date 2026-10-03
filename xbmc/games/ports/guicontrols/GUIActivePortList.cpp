@@ -158,7 +158,7 @@ void CGUIActivePortList::DeinitializeGUI()
 void CGUIActivePortList::AddInputDisabled()
 {
   CFileItem item;
-  item.SetArt(ART_TYPE::ICON, "DefaultAddonNone.png");
+  item.SetArt(ART::TYPE::ICON, "DefaultAddonNone.png");
   m_vecItems->Add(std::move(item));
 }
 
@@ -184,7 +184,7 @@ void CGUIActivePortList::AddItem(const ControllerPtr& controller,
   {
     // Add GUI item
     CFileItemPtr item = std::make_shared<CFileItem>(controller->Layout().Label());
-    item->SetArt(ART_TYPE::ICON, controller->Layout().ImagePath());
+    item->SetArt(ART::TYPE::ICON, controller->Layout().ImagePath());
     item->SetPath(controllerAddress);
     m_vecItems->Add(std::move(item));
   }

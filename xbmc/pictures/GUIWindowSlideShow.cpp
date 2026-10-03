@@ -1402,12 +1402,12 @@ std::string CGUIWindowSlideShow::GetPicturePath(CFileItem *item)
   std::string picturePath = item->GetDynPath();
   if (isVideo)
   {
-    picturePath = item->GetArt(ART_TYPE::THUMB);
+    picturePath = item->GetArt(ART::TYPE::THUMB);
     if (picturePath.empty() && !item->HasProperty("nothumb"))
     {
       CPictureThumbLoader thumbLoader;
       thumbLoader.LoadItem(item);
-      picturePath = item->GetArt(ART_TYPE::THUMB);
+      picturePath = item->GetArt(ART::TYPE::THUMB);
       if (picturePath.empty())
         item->SetProperty("nothumb", true);
     }

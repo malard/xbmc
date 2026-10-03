@@ -318,7 +318,7 @@ std::string GetVideoDbItemPath(const CFileItem& item)
 {
   std::string path = item.GetPath();
   if (!URIUtils::IsVideoDb(path))
-    path = item.GetProperty(ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
+    path = item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
 
   if (URIUtils::IsVideoDb(path))
     return path;
@@ -359,7 +359,7 @@ void PlayItem(const std::shared_ptr<CFileItem>& item,
     {
       // Add item and all its siblings to the playlist and play. Prefer videodb path if available,
       // because it provides more information than just a plain file system path for example.
-      std::string parentPath = item->GetProperty(ITEM_PROPERTY::PARENT_PATH).asString();
+      std::string parentPath = item->GetProperty(ITEM::PROPERTY::PARENT_PATH).asString();
       if (parentPath.empty())
       {
         std::string path = GetVideoDbItemPath(*item);
@@ -376,7 +376,7 @@ void PlayItem(const std::shared_ptr<CFileItem>& item,
       }
 
       const auto parentItem = std::make_shared<CFileItem>(parentPath, true);
-      parentItem->SetProperty(ITEM_PROPERTY::IS_VIDEO_FOLDER, true);
+      parentItem->SetProperty(ITEM::PROPERTY::IS_VIDEO_FOLDER, true);
       parentItem->LoadDetails();
       if (item->GetStartOffset() == STARTOFFSET_RESUME)
         parentItem->SetStartOffset(STARTOFFSET_RESUME);
@@ -463,7 +463,8 @@ bool IsItemPlayable(const CFileItem& item)
     return true;
 
   // Exclude all music library items
-  if (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::MUSIC))
+  if (MUSIC::IsMusicDb(item) ||
+      StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC))
     return false;
 
   // Exclude add-ons
@@ -471,7 +472,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   // Exclude special items
-  if (KODI::PLACEHOLDER::IsNewItem(item.GetPath()))
+  if (KODI::ITEM::PLACEHOLDER::IsNewItem(item.GetPath()))
     return false;
 
   // Include playlists located at one of the possible video/mixed playlist locations
@@ -493,8 +494,8 @@ bool IsItemPlayable(const CFileItem& item)
   if (IsNonExistingUserPartyModePlaylist(item))
     return false;
 
-  if (item.IsFolder() &&
-      (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO)))
+  if (item.IsFolder() && (IsVideoDb(item) || StringUtils::StartsWithNoCase(
+                                                 item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CVideoDatabaseDirectory::GetDirectoryParentType(item.GetPath());
@@ -508,7 +509,7 @@ bool IsItemPlayable(const CFileItem& item)
   }
 
   if (item.IsPlugin() && IsVideo(item) && !IsEmptyVideoItem(item) &&
-      item.GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean(false))
+      item.GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean(false))
   {
     return true;
   }
@@ -525,7 +526,7 @@ bool IsItemPlayable(const CFileItem& item)
   {
     // Not a video-specific folder (like file:// or nfs://). Allow play if context is Video window.
     if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VIDEO_NAV &&
-        item.GetPath() != KODI::PLACEHOLDER::ADD_SOURCE) // Exclude "Add video source" item
+        item.GetPath() != KODI::ITEM::PLACEHOLDER::ADD_SOURCE) // Exclude "Add video source" item
       return true;
   }
 
@@ -594,7 +595,7 @@ void NotifyItemPathChanged(const CFileItem& item, const std::string& oldPath, in
   CFileItem oldItem{item};
   oldItem.SetPath(oldPath);
   if (oldFileId > 0 && item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iFileId != oldFileId)
-    oldItem.SetProperty(ITEM_PROPERTY::REPLACED_FILE_ID, oldFileId);
+    oldItem.SetProperty(ITEM::PROPERTY::REPLACED_FILE_ID, oldFileId);
   CGUIMessage msg{GUI_MSG_NOTIFY_ALL,
                   0,
                   0,

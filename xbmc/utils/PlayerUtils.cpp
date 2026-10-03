@@ -29,7 +29,7 @@ bool CPlayerUtils::IsItemPlayable(const CFileItem& itemIn)
     return false;
 
   // Plugins
-  if (item.IsPlugin() && item.GetProperty(ITEM_PROPERTY::IS_PLAYABLE).asBoolean())
+  if (item.IsPlugin() && item.GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean())
     return true;
 
   // Music

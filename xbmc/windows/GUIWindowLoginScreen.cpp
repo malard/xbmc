@@ -214,9 +214,9 @@ void CGUIWindowLoginScreen::Update()
           profile->getDate());
 
     item->SetLabel2(strLabel);
-    item->SetArt(KODI::ART_TYPE::THUMB, profile->getThumb());
+    item->SetArt(KODI::ART::TYPE::THUMB, profile->getThumb());
     if (profile->getThumb().empty())
-      item->SetArt(KODI::ART_TYPE::THUMB, "DefaultUser.png");
+      item->SetArt(KODI::ART::TYPE::THUMB, "DefaultUser.png");
     item->SetLabelPreformatted(true);
 
     m_vecItems->Add(item);

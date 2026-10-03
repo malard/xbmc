@@ -464,7 +464,7 @@ NPT_Result CUPnPRenderer::GetMetadata(NPT_String& meta)
     PLT_AlbumArtInfo art;
     art.uri = NPT_HttpUrl(ip, m_URLDescription.GetPort(), "/thumb", query.ToString()).ToString();
     // Set DLNA profileID by extension, defaulting to JPEG.
-    if (URIUtils::HasExtension(item.GetArt(ART_TYPE::THUMB), ".png"))
+    if (URIUtils::HasExtension(item.GetArt(ART::TYPE::THUMB), ".png"))
     {
       art.dlna_profile = "PNG_TN";
     }

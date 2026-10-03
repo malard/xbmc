@@ -43,7 +43,7 @@ bool CDirectoryNodeMovieAssets::GetContent(CFileItemList& items) const
   CQueryParams params;
   CollectQueryParams(params);
 
-  const int details{items.GetProperty(KODI::ITEM_PROPERTY::SET_VIDEODB_DETAILS)
+  const int details{items.GetProperty(KODI::ITEM::PROPERTY::SET_VIDEODB_DETAILS)
                         .asInteger32(VideoDbDetailsStream)};
 
   const std::string path{BuildPath()};
@@ -69,7 +69,7 @@ bool CDirectoryNodeMovieAssets::GetContent(CFileItemList& items) const
     item->SetLabelPreformatted(true); //! @todo not sure, but used elsewhere
 
     //! @todo wrong art type? some Estuary views don't show it
-    item->SetArt(KODI::ART_TYPE::ICON, "DefaultVideoExtras.png");
+    item->SetArt(KODI::ART::TYPE::ICON, "DefaultVideoExtras.png");
 
     items.Add(item);
   }

@@ -91,7 +91,7 @@ std::shared_ptr<CFileItem> ResolveFavouriteItem(const CFileItem& item)
   std::shared_ptr<CFileItem> targetItem{
       CServiceBroker::GetFavouritesService().ResolveFavourite(item)};
   if (targetItem)
-    targetItem->SetProperty(ITEM_PROPERTY::HIDE_ADD_REMOVE_FAVOURITE, CVariant{true});
+    targetItem->SetProperty(ITEM::PROPERTY::HIDE_ADD_REMOVE_FAVOURITE, CVariant{true});
 
   return targetItem;
 }

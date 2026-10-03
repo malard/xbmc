@@ -53,7 +53,7 @@ std::shared_ptr<CFileItem> LoadRecordingFileOrFolderItem(const CFileItem& item)
   if (URIUtils::IsPVRRecordingFileOrFolder(item.GetPath()))
   {
     //! @todo prop misused to detect loaded state for recording folder item
-    if (item.HasPVRRecordingInfoTag() || item.HasProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES))
+    if (item.HasPVRRecordingInfoTag() || item.HasProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES))
       return std::make_shared<CFileItem>(item); // already loaded
 
     if (item.IsFolder())

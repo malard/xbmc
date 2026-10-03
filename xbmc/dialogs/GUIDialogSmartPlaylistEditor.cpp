@@ -63,14 +63,14 @@ typedef struct
 } translateType;
 
 static const translateType types[] = {
-    {CGUIDialogSmartPlaylistEditor::TYPE_SONGS, CONTENT::SONGS, 134},
-    {CGUIDialogSmartPlaylistEditor::TYPE_ALBUMS, CONTENT::ALBUMS, 132},
-    {CGUIDialogSmartPlaylistEditor::TYPE_ARTISTS, CONTENT::ARTISTS, 133},
-    {CGUIDialogSmartPlaylistEditor::TYPE_MIXED, CONTENT::MIXED, 20395},
-    {CGUIDialogSmartPlaylistEditor::TYPE_MUSICVIDEOS, CONTENT::MUSICVIDEOS, 20389},
-    {CGUIDialogSmartPlaylistEditor::TYPE_MOVIES, CONTENT::MOVIES, 20342},
-    {CGUIDialogSmartPlaylistEditor::TYPE_TVSHOWS, CONTENT::TVSHOWS, 20343},
-    {CGUIDialogSmartPlaylistEditor::TYPE_EPISODES, CONTENT::EPISODES, 20360}};
+    {CGUIDialogSmartPlaylistEditor::TYPE_SONGS, MEDIA::CONTENT::SONGS, 134},
+    {CGUIDialogSmartPlaylistEditor::TYPE_ALBUMS, MEDIA::CONTENT::ALBUMS, 132},
+    {CGUIDialogSmartPlaylistEditor::TYPE_ARTISTS, MEDIA::CONTENT::ARTISTS, 133},
+    {CGUIDialogSmartPlaylistEditor::TYPE_MIXED, MEDIA::CONTENT::MIXED, 20395},
+    {CGUIDialogSmartPlaylistEditor::TYPE_MUSICVIDEOS, MEDIA::CONTENT::MUSICVIDEOS, 20389},
+    {CGUIDialogSmartPlaylistEditor::TYPE_MOVIES, MEDIA::CONTENT::MOVIES, 20342},
+    {CGUIDialogSmartPlaylistEditor::TYPE_TVSHOWS, MEDIA::CONTENT::TVSHOWS, 20343},
+    {CGUIDialogSmartPlaylistEditor::TYPE_EPISODES, MEDIA::CONTENT::EPISODES, 20360}};
 
 CGUIDialogSmartPlaylistEditor::CGUIDialogSmartPlaylistEditor(void)
     : CGUIDialog(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR, "SmartPlaylistEditor.xml")
@@ -624,7 +624,7 @@ std::string CGUIDialogSmartPlaylistEditor::ConvertType(PLAYLIST_TYPE type)
     if (t.type == type)
       return std::string{t.string};
   assert(false);
-  return CONTENT::SONGS;
+  return MEDIA::CONTENT::SONGS;
 }
 
 int CGUIDialogSmartPlaylistEditor::GetSelectedItem()
@@ -728,7 +728,8 @@ bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string &path, const 
     if (!StringUtils::StartsWithNoCase(editor->m_mode, "party"))
       return false; // only edit normal playlists that exist
     // party mode playlists can be edited even if they don't exist
-    playlist.SetType(editor->m_mode == "partymusic" ? CONTENT::SONGS : CONTENT::MUSICVIDEOS);
+    playlist.SetType(editor->m_mode == "partymusic" ? MEDIA::CONTENT::SONGS
+                                                    : MEDIA::CONTENT::MUSICVIDEOS);
   }
 
   editor->m_playlist = playlist;

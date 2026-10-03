@@ -456,7 +456,7 @@ bool DeleteWatchedRecordings::IsVisible(const CFileItem& item) const
 {
   // recordings folder?
   if (item.IsFolder() && !item.IsParentFolder() && CPVRRecordingsPath(item.GetPath()).IsValid())
-    return item.GetProperty(KODI::ITEM_PROPERTY::WATCHED_EPISODES).asInteger() > 0;
+    return item.GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger() > 0;
 
   return false;
 }

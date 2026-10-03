@@ -91,7 +91,7 @@ public:
 
   bool HandlePlaycountIncremented() const
   {
-    return m_item.GetProperty(ITEM_PROPERTY::PLAYCOUNT_INCREMENTED).asBoolean(false) &&
+    return m_item.GetProperty(ITEM::PROPERTY::PLAYCOUNT_INCREMENTED).asBoolean(false) &&
            m_item.IsPVRRecording() &&
            CServiceBroker::GetPVRManager().Get<PVR::GUI::Recordings>().ProcessDeleteAfterWatch(
                m_item);

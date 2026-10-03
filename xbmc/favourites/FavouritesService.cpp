@@ -137,7 +137,7 @@ bool LoadFromFile(const std::string& strPath, CFileItemList& items)
         const auto item{std::make_shared<CFileItem>(name)};
         item->SetPath(favURL);
         if (thumb)
-          item->SetArt(ART_TYPE::THUMB, thumb);
+          item->SetArt(ART::TYPE::THUMB, thumb);
         items.Add(item);
       }
     }
@@ -159,7 +159,7 @@ void CFavouritesService::ReInit(std::string userDataFolder)
   m_userDataFolder = std::move(userDataFolder);
   m_favourites.Clear();
   m_targets.clear();
-  m_favourites.SetContent(CONTENT::FAVOURITES);
+  m_favourites.SetContent(MEDIA::CONTENT::FAVOURITES);
 
   std::string favourites = "special://xbmc/system/favourites.xml";
   if (CFileUtils::Exists(favourites))
@@ -210,8 +210,8 @@ bool CFavouritesService::Persist() const
   {
     auto* favNode = doc.NewElement("favourite");
     favNode->SetAttribute("name", item->GetLabel().c_str());
-    if (item->HasArt(ART_TYPE::THUMB))
-      favNode->SetAttribute("thumb", item->GetArt(ART_TYPE::THUMB).c_str());
+    if (item->HasArt(ART::TYPE::THUMB))
+      favNode->SetAttribute("thumb", item->GetArt(ART::TYPE::THUMB).c_str());
 
     auto* execute = doc.NewText(CFavouritesURL(item->GetPath()).GetExecString().c_str());
     favNode->InsertEndChild(execute);
@@ -261,7 +261,7 @@ bool CFavouritesService::AddOrRemove(const CFileItem& item, int contextWindow)
       const auto favourite{std::make_shared<CFileItem>(item.GetLabel())};
       if (item.GetLabel().empty())
         favourite->SetLabel(CUtil::GetTitleFromPath(item.GetPath(), item.IsFolder()));
-      favourite->SetArt(ART_TYPE::THUMB, ContentUtils::GetPreferredArtImage(item));
+      favourite->SetArt(ART::TYPE::THUMB, ContentUtils::GetPreferredArtImage(item));
       const std::string favUrl{CFavouritesURL(item, contextWindow).GetURL()};
       favourite->SetPath(favUrl);
       m_favourites.Add(favourite);

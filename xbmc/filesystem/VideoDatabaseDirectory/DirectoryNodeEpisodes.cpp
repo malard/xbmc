@@ -35,8 +35,8 @@ bool CDirectoryNodeEpisodes::GetContent(CFileItemList& items) const
   if (season == -2)
     season = -1;
 
-  int details = items.HasProperty(KODI::ITEM_PROPERTY::SET_VIDEODB_DETAILS)
-                    ? items.GetProperty(KODI::ITEM_PROPERTY::SET_VIDEODB_DETAILS).asInteger32()
+  int details = items.HasProperty(KODI::ITEM::PROPERTY::SET_VIDEODB_DETAILS)
+                    ? items.GetProperty(KODI::ITEM::PROPERTY::SET_VIDEODB_DETAILS).asInteger32()
                     : VideoDbDetailsNone;
 
   bool bSuccess = videodatabase.GetEpisodesNav(

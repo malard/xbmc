@@ -137,12 +137,12 @@ static void ParseItemMRSS(CFileItem* item,
   else if(name == "thumbnail")
   {
     if (!item_child->NoChildren() && IsPathToThumbnail(item_child->FirstChild()->Value()))
-      item->SetArt(KODI::ART_TYPE::THUMB, item_child->FirstChild()->Value());
+      item->SetArt(KODI::ART::TYPE::THUMB, item_child->FirstChild()->Value());
     else
     {
       const char * url = item_child->Attribute("url");
       if(url && IsPathToThumbnail(url))
-        item->SetArt(KODI::ART_TYPE::THUMB, url);
+        item->SetArt(KODI::ART::TYPE::THUMB, url);
     }
   }
   else if (name == "title")
@@ -237,9 +237,9 @@ static void ParseItemItunes(CFileItem* item,
   {
     const char * url = item_child->Attribute("href");
     if(url)
-      item->SetArt(KODI::ART_TYPE::THUMB, url);
+      item->SetArt(KODI::ART::TYPE::THUMB, url);
     else
-      item->SetArt(KODI::ART_TYPE::THUMB, text);
+      item->SetArt(KODI::ART::TYPE::THUMB, text);
   }
   else if(name == "summary")
     vtag->m_strPlot = text;
@@ -338,9 +338,9 @@ static void ParseItemVoddler(CFileItem* item,
   {
     const char* url = element->Attribute("url");
     if(url)
-      item->SetArt(KODI::ART_TYPE::FANART, url);
+      item->SetArt(KODI::ART::TYPE::FANART, url);
     else if(IsPathToThumbnail(text))
-      item->SetArt(KODI::ART_TYPE::FANART, text);
+      item->SetArt(KODI::ART::TYPE::FANART, text);
   }
 }
 
@@ -355,7 +355,7 @@ static void ParseItemBoxee(CFileItem* item,
   std::string text = GetValue(element);
 
   if     (name == "image")
-    item->SetArt(KODI::ART_TYPE::THUMB, text);
+    item->SetArt(KODI::ART::TYPE::THUMB, text);
   else if(name == "user_agent")
     item->SetProperty("boxee:user_agent", text);
   else if(name == "content_type")
@@ -629,8 +629,8 @@ bool CRSSDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 
     item->SetProperty("isrss", "1");
     // Use channel image if item doesn't have one
-    if (!item->HasArt(KODI::ART_TYPE::THUMB) && items.HasArt(KODI::ART_TYPE::THUMB))
-      item->SetArt(KODI::ART_TYPE::THUMB, items.GetArt(KODI::ART_TYPE::THUMB));
+    if (!item->HasArt(KODI::ART::TYPE::THUMB) && items.HasArt(KODI::ART::TYPE::THUMB))
+      item->SetArt(KODI::ART::TYPE::THUMB, items.GetArt(KODI::ART::TYPE::THUMB));
 
     if (!item->GetPath().empty())
       items.Add(item);

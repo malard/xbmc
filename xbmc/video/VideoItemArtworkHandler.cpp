@@ -89,8 +89,8 @@ std::string CVideoItemArtworkHandler::GetCurrentArt() const
   std::string currentArt;
   if (m_item->HasArt(m_artType))
     currentArt = m_item->GetArt(m_artType);
-  else if (m_item->HasArt(ART_TYPE::THUMB) && (m_artType == "poster" || m_artType == "banner"))
-    currentArt = m_item->GetArt(ART_TYPE::THUMB);
+  else if (m_item->HasArt(ART::TYPE::THUMB) && (m_artType == "poster" || m_artType == "banner"))
+    currentArt = m_item->GetArt(ART::TYPE::THUMB);
 
   return currentArt;
 }
@@ -392,8 +392,8 @@ std::vector<std::string> CVideoItemArtworkMovieSetHandler::GetRemoteArt() const
   }
 
   std::vector<std::string> remoteArt;
-  const std::string baseDir =
-      StringUtils::Format("{}{}", KODI::VIDEODB::MOVIE_SETS, m_item->GetVideoInfoTag()->m_iDbId);
+  const std::string baseDir = StringUtils::Format("{}{}", KODI::VIDEO::DB_PATH::MOVIE_SETS,
+                                                  m_item->GetVideoInfoTag()->m_iDbId);
   CFileItemList items;
   if (videodb.GetMoviesNav(baseDir, items))
   {
@@ -474,7 +474,7 @@ public:
 
 std::string CVideoItemArtworkFanartHandler::GetCurrentArt() const
 {
-  return m_item->GetArt(ART_TYPE::FANART);
+  return m_item->GetArt(ART::TYPE::FANART);
 }
 
 std::vector<std::string> CVideoItemArtworkFanartHandler::GetRemoteArt() const

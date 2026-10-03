@@ -88,12 +88,12 @@ bool CMusicDatabaseDirectory::GetDirectory(const CURL& url, CFileItemList &items
   for (int i=0;i<items.Size();++i)
   {
     CFileItemPtr item = items[i];
-    if (item->IsFolder() && !item->HasArt(KODI::ART_TYPE::ICON) &&
-        !item->HasArt(KODI::ART_TYPE::THUMB))
+    if (item->IsFolder() && !item->HasArt(KODI::ART::TYPE::ICON) &&
+        !item->HasArt(KODI::ART::TYPE::THUMB))
     {
       std::string strImage = GetIcon(item->GetPath());
       if (!strImage.empty() && CServiceBroker::GetGUI()->GetTextureManager().HasTexture(strImage))
-        item->SetArt(KODI::ART_TYPE::ICON, strImage);
+        item->SetArt(KODI::ART::TYPE::ICON, strImage);
     }
   }
   if (items.GetLabel().empty())

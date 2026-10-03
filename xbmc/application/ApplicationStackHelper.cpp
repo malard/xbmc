@@ -186,9 +186,9 @@ void CApplicationStackHelper::GetStackPartAndOptions(CFileItem& item,
   bool updated{false};
 
   std::string path{item.GetDynPath()}; // stack:// path
-  if (item.HasProperty(KODI::ITEM_PROPERTY::ORIGINAL_LISTITEM_URL) &&
-      URIUtils::IsPlugin(item.GetProperty(KODI::ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
-    path = item.GetProperty(KODI::ITEM_PROPERTY::ORIGINAL_LISTITEM_URL).asString();
+  if (item.HasProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL) &&
+      URIUtils::IsPlugin(item.GetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
+    path = item.GetProperty(KODI::ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
 
   if (restart)
   {

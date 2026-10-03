@@ -87,7 +87,7 @@ bool CVideoLibraryMarkWatchedJob::Work(CVideoDatabase &db)
       if (m_mark)
       {
         auto file{std::make_unique<CFileItem>(*item)};
-        file->SetProperty(KODI::ITEM_PROPERTY::PLAYCOUNT_INCREMENTED, CVariant{true});
+        file->SetProperty(KODI::ITEM::PROPERTY::PLAYCOUNT_INCREMENTED, CVariant{true});
         CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PROCESS_DELETE_AFTER_WATCH, -1, -1,
                                                    static_cast<void*>(file.release()));
       }

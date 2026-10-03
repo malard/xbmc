@@ -80,7 +80,8 @@ void CGUIWindowMusicPlayList::OnItemLoaded(CFileItem* pItem)
       std::string str;
       str = CUtil::GetTitleFromPath(pItem->GetPath());
       str = StringUtils::Format(
-          "{:02}. {} ", pItem->GetProperty(ITEM_PROPERTY::PLAYLIST_DISPLAY_ORDER).asInteger(), str);
+          "{:02}. {} ", pItem->GetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER).asInteger(),
+          str);
       pItem->SetLabel(str);
     }
   }
@@ -95,7 +96,7 @@ bool CGUIWindowMusicPlayList::Update(const std::string& strDirectory,
     return false;
 
   if (m_vecItems->GetContent().empty())
-    m_vecItems->SetContent(CONTENT::SONGS);
+    m_vecItems->SetContent(MEDIA::CONTENT::SONGS);
 
   StartLoadingItems();
   return true;

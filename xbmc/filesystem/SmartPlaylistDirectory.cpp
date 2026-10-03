@@ -57,7 +57,7 @@ namespace XFILE
       return false;
     bool result = GetDirectory(playlist, items);
     if (result)
-      items.SetProperty(ITEM_PROPERTY::LIBRARY_SMARTPLAYLIST, true);
+      items.SetProperty(ITEM::PROPERTY::LIBRARY_SMARTPLAYLIST, true);
 
     return result;
   }
@@ -105,8 +105,9 @@ namespace XFILE
       }
     }
 
-    if (playlist.GetType() == CONTENT::MOVIES || playlist.GetType() == CONTENT::TVSHOWS ||
-        playlist.GetType() == CONTENT::EPISODES)
+    if (playlist.GetType() == MEDIA::CONTENT::MOVIES ||
+        playlist.GetType() == MEDIA::CONTENT::TVSHOWS ||
+        playlist.GetType() == MEDIA::CONTENT::EPISODES)
     {
       CVideoDatabase db;
       if (db.Open())
@@ -117,9 +118,9 @@ namespace XFILE
         if (strBaseDir.empty())
         {
           if (mediaType == MediaType::TV_SHOW || mediaType == MediaType::EPISODE)
-            baseDir = VIDEODB::TVSHOWS;
+            baseDir = VIDEO::DB_PATH::TVSHOWS;
           else if (mediaType == MediaType::MOVIE)
-            baseDir = VIDEODB::MOVIES;
+            baseDir = VIDEO::DB_PATH::MOVIES;
           else
             return false;
 
@@ -167,15 +168,15 @@ namespace XFILE
       if (db.Open())
       {
         PLAYLIST::CSmartPlaylist plist(playlist);
-        if (playlist.GetType() == CONTENT::MIXED || playlist.GetType().empty())
-          plist.SetType(CONTENT::SONGS);
+        if (playlist.GetType() == MEDIA::CONTENT::MIXED || playlist.GetType().empty())
+          plist.SetType(MEDIA::CONTENT::SONGS);
 
         MediaType mediaType = MediaTypeFromName(plist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
         {
-          baseDir = MUSICDB::ROOT;
+          baseDir = MUSIC::DB_PATH::ROOT;
           if (!isGrouped)
           {
             if (mediaType != MediaType::ARTIST && mediaType != MediaType::ALBUM &&
@@ -214,19 +215,20 @@ namespace XFILE
       }
     }
 
-    if (playlist.GetType() == CONTENT::MUSICVIDEOS || playlist.GetType() == CONTENT::MIXED)
+    if (playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS ||
+        playlist.GetType() == MEDIA::CONTENT::MIXED)
     {
       CVideoDatabase db;
       if (db.Open())
       {
         PLAYLIST::CSmartPlaylist mvidPlaylist(playlist);
-        if (playlist.GetType() == CONTENT::MIXED)
-          mvidPlaylist.SetType(CONTENT::MUSICVIDEOS);
+        if (playlist.GetType() == MEDIA::CONTENT::MIXED)
+          mvidPlaylist.SetType(MEDIA::CONTENT::MUSICVIDEOS);
 
         std::string baseDir = strBaseDir;
         if (baseDir.empty())
         {
-          baseDir = VIDEODB::MUSICVIDEOS;
+          baseDir = VIDEO::DB_PATH::MUSICVIDEOS;
 
           if (!isGrouped)
             baseDir += "titles";
@@ -293,7 +295,7 @@ namespace XFILE
     if (items.Size() > 1 && !group.empty())
     {
       if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
-          playlist.GetType() == CONTENT::MUSICVIDEOS)
+          playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
                    settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
@@ -306,11 +308,11 @@ namespace XFILE
     }
 
     if (auto watchedMode = playlist.GetWatchedMode(); watchedMode.has_value())
-      items.SetProperty(ITEM_PROPERTY::WATCHED_MODE, static_cast<int>(watchedMode.value()));
+      items.SetProperty(ITEM::PROPERTY::WATCHED_MODE, static_cast<int>(watchedMode.value()));
 
-    if (playlist.GetType() == CONTENT::MIXED)
+    if (playlist.GetType() == MEDIA::CONTENT::MIXED)
       return success || success2;
-    else if (playlist.GetType() == CONTENT::MUSICVIDEOS)
+    else if (playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
       return success2;
     else
       return success;

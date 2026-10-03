@@ -43,7 +43,7 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
 
     object["title"] = item->GetLabel();
     if (fields.contains("thumbnail"))
-      object["thumbnail"] = item->GetArt(KODI::ART_TYPE::THUMB);
+      object["thumbnail"] = item->GetArt(KODI::ART::TYPE::THUMB);
 
     if (function == CFavouritesURL::Action::ACTIVATE_WINDOW)
     {
@@ -149,7 +149,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
 
   item.SetLabel(title);
   if (ParameterNotNull(parameterObject, "thumbnail"))
-    item.SetArt(KODI::ART_TYPE::THUMB, parameterObject["thumbnail"].asString());
+    item.SetArt(KODI::ART::TYPE::THUMB, parameterObject["thumbnail"].asString());
 
   if (CServiceBroker::GetFavouritesService().AddOrRemove(item, contextWindow))
     return ACK;

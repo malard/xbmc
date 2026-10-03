@@ -356,7 +356,7 @@ void CPeripheralAddon::GetDirectory(const std::string& strPath, CFileItemList& i
     peripheralFile->SetProperty("class",
                                 PeripheralTypeTranslator::TypeToString(peripheral->Type()));
     peripheralFile->SetProperty("version", peripheral->GetVersionInfo());
-    peripheralFile->SetArt(ART_TYPE::ICON, peripheral->GetIcon());
+    peripheralFile->SetArt(ART::TYPE::ICON, peripheral->GetIcon());
     items.Add(peripheralFile);
   }
 }

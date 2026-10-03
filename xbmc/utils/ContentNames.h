@@ -10,7 +10,7 @@
 
 //! \brief What a list of items holds, as CFileItemList::SetContent() takes it and skins read it
 //! from Container.Content.
-namespace KODI::CONTENT
+namespace KODI::MEDIA::CONTENT
 {
 
 inline constexpr char ADDONS[] = "addons";
@@ -38,4 +38,4 @@ inline constexpr char TAGS[] = "tags";
 inline constexpr char TVSHOWS[] = "tvshows";
 inline constexpr char YEARS[] = "years";
 
-} // namespace KODI::CONTENT
+} // namespace KODI::MEDIA::CONTENT

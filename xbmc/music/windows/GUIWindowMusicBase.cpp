@@ -284,9 +284,9 @@ bool CGUIWindowMusicBase::OnAction(const CAction &action)
 void CGUIWindowMusicBase::OnItemInfoAll(const std::string& strPath, bool refresh)
 {
   ADDON::ContentType content{ADDON::ContentType::NONE};
-  if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), CONTENT::ALBUMS))
+  if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), MEDIA::CONTENT::ALBUMS))
     content = ADDON::ContentType::ALBUMS;
-  else if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), CONTENT::ARTISTS))
+  else if (StringUtils::EqualsNoCase(m_vecItems->GetContent(), MEDIA::CONTENT::ARTISTS))
     content = ADDON::ContentType::ARTISTS;
   else
     return;
@@ -306,8 +306,8 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
 
   // Match visibility test of CMusicInfo::IsVisible
   if (VIDEO::IsVideoDb(*item) && item->HasVideoInfoTag() &&
-      (item->HasProperty(ITEM_PROPERTY::ARTIST_MUSICID) ||
-       item->HasProperty(ITEM_PROPERTY::ALBUM_MUSICID)))
+      (item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID) ||
+       item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID)))
   {
     // Music video artist or album (navigation by music > music video > artist))
     CGUIDialogMusicInfo::ShowFor(item.get());
@@ -798,29 +798,29 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     // Add "New Playlist" items when in the playlists folder, except on playlist editor screen
     if ((iWindow != WINDOW_MUSIC_PLAYLIST_EDITOR) &&
         (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC)) &&
-        !items.Contains(PLACEHOLDER::NEW_PLAYLIST))
+        !items.Contains(ITEM::PLACEHOLDER::NEW_PLAYLIST))
     {
       const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
       CFileItemPtr newPlaylist(new CFileItem(profileManager->GetUserDataItem("PartyMode.xsp"),false));
       newPlaylist->SetLabel(localizeStrings.Get(16035));
       newPlaylist->SetLabelPreformatted(true);
-      newPlaylist->SetArt(ART_TYPE::ICON, "DefaultPartyMode.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");
       newPlaylist->SetFolder(true);
       items.Add(newPlaylist);
 
-      newPlaylist = std::make_shared<CFileItem>(PLACEHOLDER::NEW_PLAYLIST, false);
+      newPlaylist = std::make_shared<CFileItem>(ITEM::PLACEHOLDER::NEW_PLAYLIST, false);
       newPlaylist->SetLabel(localizeStrings.Get(525));
-      newPlaylist->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);
       newPlaylist->SetCanQueue(false);
       items.Add(newPlaylist);
 
       newPlaylist = std::make_shared<CFileItem>(
-          std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "music", false);
+          std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "music", false);
       newPlaylist->SetLabel(localizeStrings.Get(21437));
-      newPlaylist->SetArt(ART_TYPE::ICON, "DefaultAddSource.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);
       newPlaylist->SetCanQueue(false);
@@ -884,7 +884,7 @@ bool CGUIWindowMusicBase::OnSelect(int iItem)
         auto choice = CGUIDialogContextMenu::Show(choices);
         if (choice == MUSIC_SELECT_ACTION_RESUME)
         {
-          (*itemIt)->SetProperty(ITEM_PROPERTY::AUDIOBOOK_BOOKMARK, bookmark);
+          (*itemIt)->SetProperty(ITEM::PROPERTY::AUDIOBOOK_BOOKMARK, bookmark);
           return CGUIMediaWindow::OnSelect(static_cast<int>(itemIt - m_vecItems->cbegin()));
         }
         else if (choice < 0)
