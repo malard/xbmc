@@ -620,6 +620,17 @@ public:
    */
   bool GetFileMetadataForPath(const std::string& strPath,
                               std::map<std::string, CVideoInfoTag>& metadata);
+  /*! \brief The details of the library item of \p type with \p id.
+   \param item when given, filled as the library lists a set, show or season
+   \param idVersion, idFile for a movie, the version to read, as TryGetMovieInfo takes them
+   */
+  GetResult TryGetDetailsByTypeAndId(KODI::MEDIA::MediaType type,
+                                     int id,
+                                     CVideoInfoTag& details,
+                                     CFileItem* item = nullptr,
+                                     int getDetails = VideoDbDetailsAll,
+                                     int idVersion = -1,
+                                     int idFile = -1);
   bool GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id);
   CVideoInfoTag GetDetailsByTypeAndId(VideoDbContentType type, int id);
 

@@ -146,29 +146,49 @@ private:
                                  CVideoDatabase& videodatabase,
                                  CVariant& result);
 
-  //! Store each of \p properties given a value on the item of their kind with \p id
+  /*! \brief Stores \p infos, the item of their kind with \p id after \p edit
+     \param before the item's playback state before the edit
+     */
   static JSONRPC_STATUS SetMovieDetails(int id,
                                         const CVariant& properties,
+                                        const PlaybackUpdate& before,
+                                        const DetailsEdit& edit,
+                                        CVideoInfoTag& infos,
                                         CVideoDatabase& videodatabase,
                                         CVariant& result);
   static JSONRPC_STATUS SetMovieSetDetails(int id,
                                            const CVariant& properties,
+                                           const PlaybackUpdate& before,
+                                           const DetailsEdit& edit,
+                                           CVideoInfoTag& infos,
                                            CVideoDatabase& videodatabase,
                                            CVariant& result);
   static JSONRPC_STATUS SetTVShowDetails(int id,
                                          const CVariant& properties,
+                                         const PlaybackUpdate& before,
+                                         const DetailsEdit& edit,
+                                         CVideoInfoTag& infos,
                                          CVideoDatabase& videodatabase,
                                          CVariant& result);
   static JSONRPC_STATUS SetSeasonDetails(int id,
                                          const CVariant& properties,
+                                         const PlaybackUpdate& before,
+                                         const DetailsEdit& edit,
+                                         CVideoInfoTag& infos,
                                          CVideoDatabase& videodatabase,
                                          CVariant& result);
   static JSONRPC_STATUS SetEpisodeDetails(int id,
                                           const CVariant& properties,
+                                          const PlaybackUpdate& before,
+                                          const DetailsEdit& edit,
+                                          CVideoInfoTag& infos,
                                           CVideoDatabase& videodatabase,
                                           CVariant& result);
   static JSONRPC_STATUS SetMusicVideoDetails(int id,
                                              const CVariant& properties,
+                                             const PlaybackUpdate& before,
+                                             const DetailsEdit& edit,
+                                             CVideoInfoTag& infos,
                                              CVideoDatabase& videodatabase,
                                              CVariant& result);
 

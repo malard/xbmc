@@ -261,30 +261,10 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
         CVideoDatabase videodatabase;
         if ((additionalInfo) && videodatabase.Open())
         {
-          switch (fileItem->GetVideoContentType())
-          {
-            case VideoDbContentType::MOVIES:
-              videodatabase.GetMovieInfo("", *(fileItem->GetVideoInfoTag()),
-                                         fileItem->GetVideoInfoTag()->m_iDbId,
-                                         fileItem->GetVideoInfoTag()->GetAssetInfo().GetId(),
-                                         fileItem->GetVideoInfoTag()->m_iFileId);
-              break;
-
-            case VideoDbContentType::MUSICVIDEOS:
-              videodatabase.GetMusicVideoInfo("", *(fileItem->GetVideoInfoTag()),
-                                              fileItem->GetVideoInfoTag()->m_iDbId);
-              break;
-
-            case VideoDbContentType::EPISODES:
-              videodatabase.GetEpisodeInfo("", *(fileItem->GetVideoInfoTag()),
-                                           fileItem->GetVideoInfoTag()->m_iDbId);
-              break;
-
-            case VideoDbContentType::TVSHOWS:
-            case VideoDbContentType::MOVIE_SETS:
-            default:
-              break;
-          }
+          CVideoInfoTag& tag = *fileItem->GetVideoInfoTag();
+          videodatabase.TryGetDetailsByTypeAndId(
+              CVideoDatabase::MediaTypeOfContent(fileItem->GetVideoContentType()), tag.m_iDbId, tag,
+              nullptr, VideoDbDetailsAll, tag.GetAssetInfo().GetId(), tag.m_iFileId);
         }
       }
       else // Audio
