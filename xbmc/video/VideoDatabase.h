@@ -1004,7 +1004,6 @@ public:
    * \return true on success, false on a database error
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
-  bool HasArtForItem(int mediaId, const std::string& mediaType);
   /*!
    * \brief Retrieve season information of a TV show.
    * \param[in] showId ID of the show

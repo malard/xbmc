@@ -104,6 +104,7 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   on the other playlist is `FailedToExecute` (`party-mode-elsewhere`), and `PVR.AddTimer` for a
   broadcast that already has a timer is `FailedToExecute` (`timer-exists`), none of them
   `InvalidParams` any more.
+- The type `PVR.Fields.Client` is removed; nothing referenced it.
 
 ### Deprecated
 

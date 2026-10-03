@@ -4285,26 +4285,6 @@
       "limits"
     ]
   },
-  "PVR.Fields.Client": {
-    "allOf": [
-      {
-        "$ref": "#/$defs/Item.Fields.Base"
-      }
-    ],
-    "items": {
-      "type": "string",
-      "enum": [
-        "addonId",
-        "supportsTv",
-        "supportsRadio",
-        "supportsEpg",
-        "supportsRecordings",
-        "supportsTimers",
-        "supportsChannelGroups",
-        "supportsChannelScan"
-      ]
-    }
-  },
   "PVR.Details.Client": {
     "allOf": [
       {
