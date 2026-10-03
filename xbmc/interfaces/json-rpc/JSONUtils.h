@@ -11,6 +11,7 @@
 #include "JSONRPCUtils.h"
 #include "dbwrappers/Database.h"
 #include "playlists/SmartPlayList.h"
+#include "utils/Artwork.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/SortUtils.h"
@@ -531,6 +532,15 @@ protected:
   static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);
 
   static void SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date);
+
+  /*!
+     \brief Applies a caller's art edit: a value replaces its art type, a null removes it
+     \param removed gains each art type the edit removed
+     \return whether the edit gave any art type a value
+     */
+  static bool EditArtwork(const CVariant& art,
+                          KODI::ART::Artwork& artwork,
+                          std::set<std::string, std::less<>>& removed);
 
   /*!
      \brief The enabled scraper \p scraperId names for \p content, with \p settings applied

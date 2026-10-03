@@ -12,6 +12,7 @@
 #include "XBDateTime.h"
 #include "addons/AddonManager.h"
 #include "addons/Scraper.h"
+#include "imagefiles/ImageFileURL.h"
 
 namespace JSONRPC
 {
@@ -36,6 +37,27 @@ void CJSONUtils::SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date)
     date.Reset();
   else
     date.SetFromDBDateTime(jsonDate.asString());
+}
+
+bool CJSONUtils::EditArtwork(const CVariant& art,
+                             KODI::ART::Artwork& artwork,
+                             std::set<std::string, std::less<>>& removed)
+{
+  bool set = false;
+  for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
+  {
+    if (artIt->second.isString() && !artIt->second.asString().empty())
+    {
+      artwork[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
+      set = true;
+    }
+    else if (artIt->second.isNull())
+    {
+      artwork.erase(artIt->first);
+      removed.insert(artIt->first);
+    }
+  }
+  return set;
 }
 
 JSONRPC_STATUS CJSONUtils::ResolveScraper(const std::string& scraperId,

@@ -1540,23 +1540,9 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     updatedDetails.insert("art.altered");
   }
 
-  if (ParameterNotNull(parameterObject, "art"))
-  {
-    CVariant art = parameterObject["art"];
-    for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
-    {
-      if (artIt->second.isString() && !artIt->second.asString().empty())
-      {
-        artwork[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
-        updatedDetails.insert("art.altered");
-      }
-      else if (artIt->second.isNull())
-      {
-        artwork.erase(artIt->first);
-        removedArtwork.insert(artIt->first);
-      }
-    }
-  }
+  if (ParameterNotNull(parameterObject, "art") &&
+      EditArtwork(parameterObject["art"], artwork, removedArtwork))
+    updatedDetails.insert("art.altered");
 
   if (ParameterNotNull(parameterObject, "dateAdded"))
   {
