@@ -3813,15 +3813,7 @@
         {
           "name": "resume",
           "schema": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           }
         }
       ],
@@ -13375,6 +13367,17 @@
           "type": "integer"
         }
       },
+      "Optional.Array.String": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Array.String"
+          }
+        ],
+        "default": null
+      },
       "Global.Time": {
         "type": "object",
         "description": "A duration.",
@@ -14739,6 +14742,17 @@
           ]
         }
       },
+      "Optional.Media.Artwork.Set": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Media.Artwork.Set"
+          }
+        ],
+        "default": null
+      },
       "Video.Rating": {
         "type": "object",
         "properties": {
@@ -14793,6 +14807,17 @@
             }
           ]
         }
+      },
+      "Optional.Media.UniqueID.Set": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Media.UniqueID.Set"
+          }
+        ],
+        "default": null
       },
       "Library.Fields.Source": {
         "allOf": [
@@ -15351,37 +15376,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "instrument": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "style": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "mood": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "born": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15393,15 +15394,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "died": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15410,15 +15403,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "yearsActive": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "musicBrainzArtistId": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15436,15 +15421,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           }
         },
         "additionalProperties": false
@@ -15532,62 +15509,22 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "description": {
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "theme": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "mood": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "style": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "type": {
             "$ref": "#/components/schemas/Optional.String"
@@ -15620,26 +15557,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "musicBrainzAlbumArtistId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "isBoxSet": {
             "$ref": "#/components/schemas/Optional.Boolean"
@@ -15775,26 +15696,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -15842,15 +15747,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "discTitle": {
             "$ref": "#/components/schemas/Optional.String"
@@ -16509,6 +16406,17 @@
         },
         "additionalProperties": false
       },
+      "Optional.Video.Resume": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Resume"
+          }
+        ],
+        "default": null
+      },
       "Video.Details.Base": {
         "allOf": [
           {
@@ -16681,26 +16589,10 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "description": "linked with premiered. Overridden by premiered parameter",
@@ -16710,15 +16602,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -16748,26 +16632,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "writer": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "country": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "top250": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -16779,15 +16647,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "showLink": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "thumbnail": {
             "$ref": "#/components/schemas/Optional.String"
@@ -16796,37 +16656,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -16842,15 +16678,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -16881,15 +16709,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
@@ -16991,29 +16811,13 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -17052,26 +16856,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17091,15 +16879,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -17146,15 +16926,7 @@
         "description": "What SetItemProperties can change on a season. A property not named is left as it is",
         "properties": {
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17252,15 +17024,7 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "plot": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17275,15 +17039,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "writer": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "firstAired": {
             "$ref": "#/components/schemas/Optional.String"
@@ -17307,26 +17063,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "userRating": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17338,15 +17078,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false
@@ -17414,26 +17146,10 @@
             "$ref": "#/components/schemas/Optional.Integer"
           },
           "director": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "studio": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "year": {
             "description": "linked with premiered. Overridden by premiered parameter",
@@ -17446,25 +17162,10 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "artist": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ]
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "genre": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "track": {
             "$ref": "#/components/schemas/Optional.Integer"
@@ -17479,37 +17180,13 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "tag": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Array.String"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Array.String"
           },
           "art": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.Artwork.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.Artwork.Set"
           },
           "resume": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Resume"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Video.Resume"
           },
           "rating": {
             "$ref": "#/components/schemas/Optional.Number"
@@ -17525,15 +17202,7 @@
             "$ref": "#/components/schemas/Optional.String"
           },
           "uniqueId": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Media.UniqueID.Set"
-              }
-            ],
-            "default": null
+            "$ref": "#/components/schemas/Optional.Media.UniqueID.Set"
           }
         },
         "additionalProperties": false

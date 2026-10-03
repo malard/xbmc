@@ -205,6 +205,9 @@ Properties and types:
 - `Files.Media`: `games`
 - `Video.Item.Details`, `Video.Item.Fields`, `Video.Item.Changes` and the `Audio.Item` equivalents:
   the per-kind unions the library item methods take and answer with
+- `Optional.Array.String`, `Optional.Media.Artwork.Set`, `Optional.Media.UniqueID.Set`,
+  `Optional.Video.Resume`: what the settable types take for a list, artwork, unique ids or a
+  resume point, where null leaves it as it is
 
 ### Changed
 

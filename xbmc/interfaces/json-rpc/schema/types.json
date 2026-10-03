@@ -40,6 +40,17 @@
       "type": "integer"
     }
   },
+  "Optional.Array.String": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Array.String"
+      }
+    ],
+    "default": null
+  },
   "Global.Time": {
     "type": "object",
     "description": "A duration.",
@@ -1404,6 +1415,17 @@
       ]
     }
   },
+  "Optional.Media.Artwork.Set": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Media.Artwork.Set"
+      }
+    ],
+    "default": null
+  },
   "Video.Rating": {
     "type": "object",
     "properties": {
@@ -1458,6 +1480,17 @@
         }
       ]
     }
+  },
+  "Optional.Media.UniqueID.Set": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Media.UniqueID.Set"
+      }
+    ],
+    "default": null
   },
   "Library.Fields.Source": {
     "allOf": [
@@ -2016,37 +2049,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "instrument": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "style": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "mood": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "born": {
         "$ref": "#/$defs/Optional.String"
@@ -2058,15 +2067,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "died": {
         "$ref": "#/$defs/Optional.String"
@@ -2075,15 +2076,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "yearsActive": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "musicBrainzArtistId": {
         "$ref": "#/$defs/Optional.String"
@@ -2101,15 +2094,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       }
     },
     "additionalProperties": false
@@ -2197,62 +2182,22 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "description": {
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "theme": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "mood": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "style": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "type": {
         "$ref": "#/$defs/Optional.String"
@@ -2285,26 +2230,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "musicBrainzAlbumArtistId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "isBoxSet": {
         "$ref": "#/$defs/Optional.Boolean"
@@ -2440,26 +2369,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "$ref": "#/$defs/Optional.Integer"
@@ -2507,15 +2420,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "discTitle": {
         "$ref": "#/$defs/Optional.String"
@@ -3174,6 +3079,17 @@
     },
     "additionalProperties": false
   },
+  "Optional.Video.Resume": {
+    "anyOf": [
+      {
+        "type": "null"
+      },
+      {
+        "$ref": "#/$defs/Video.Resume"
+      }
+    ],
+    "default": null
+  },
   "Video.Details.Base": {
     "allOf": [
       {
@@ -3346,26 +3262,10 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "description": "linked with premiered. Overridden by premiered parameter",
@@ -3375,15 +3275,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -3413,26 +3305,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "writer": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "country": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "top250": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3444,15 +3320,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "showLink": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "thumbnail": {
         "$ref": "#/$defs/Optional.String"
@@ -3461,37 +3329,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3507,15 +3351,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -3546,15 +3382,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
@@ -3656,29 +3484,13 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -3717,26 +3529,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3756,15 +3552,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -3811,15 +3599,7 @@
     "description": "What SetItemProperties can change on a season. A property not named is left as it is",
     "properties": {
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -3917,15 +3697,7 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "plot": {
         "$ref": "#/$defs/Optional.String"
@@ -3940,15 +3712,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "writer": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "firstAired": {
         "$ref": "#/$defs/Optional.String"
@@ -3972,26 +3736,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "userRating": {
         "$ref": "#/$defs/Optional.Integer"
@@ -4003,15 +3751,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false
@@ -4079,26 +3819,10 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "director": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "studio": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "year": {
         "description": "linked with premiered. Overridden by premiered parameter",
@@ -4111,25 +3835,10 @@
         "$ref": "#/$defs/Optional.String"
       },
       "artist": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ]
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "genre": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "track": {
         "$ref": "#/$defs/Optional.Integer"
@@ -4144,37 +3853,13 @@
         "$ref": "#/$defs/Optional.String"
       },
       "tag": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Array.String"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Array.String"
       },
       "art": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.Artwork.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "resume": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Video.Resume"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Video.Resume"
       },
       "rating": {
         "$ref": "#/$defs/Optional.Number"
@@ -4190,15 +3875,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "uniqueId": {
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "$ref": "#/$defs/Media.UniqueID.Set"
-          }
-        ],
-        "default": null
+        "$ref": "#/$defs/Optional.Media.UniqueID.Set"
       }
     },
     "additionalProperties": false

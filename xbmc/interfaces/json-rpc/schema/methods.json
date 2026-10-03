@@ -2280,15 +2280,7 @@
       {
         "name": "resume",
         "schema": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/Video.Resume"
-            }
-          ],
-          "default": null
+          "$ref": "#/$defs/Optional.Video.Resume"
         }
       }
     ],
