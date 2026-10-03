@@ -3948,17 +3948,7 @@
           "name": "properties",
           "description": "Fields of the kind named: Audio.Fields.Artist for an artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Artist"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Album"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Song"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Fields"
           }
         },
         {
@@ -4031,17 +4021,7 @@
             "items": {
               "type": "array",
               "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Artist"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Album"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Audio.Details.Song"
-                  }
-                ]
+                "$ref": "#/components/schemas/Audio.Item.Details"
               }
             }
           },
@@ -4096,34 +4076,14 @@
           "name": "properties",
           "description": "Fields of the item's kind: Audio.Fields.Artist for a artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Artist"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Album"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Fields.Song"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Fields"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Audio.Details.Artist"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Album"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Song"
-            }
-          ]
+          "$ref": "#/components/schemas/Audio.Item.Details"
         }
       },
       "errors": [
@@ -4181,34 +4141,14 @@
           "required": true,
           "description": "Properties of the item's kind: Audio.Details.Artist.Set for a artist, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Audio.Details.Artist.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Details.Album.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Audio.Details.Song.Set"
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item.Changes"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Audio.Details.Artist"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Album"
-            },
-            {
-              "$ref": "#/components/schemas/Audio.Details.Song"
-            }
-          ]
+          "$ref": "#/components/schemas/Audio.Item.Details"
         }
       },
       "errors": [
@@ -5683,26 +5623,7 @@
           "name": "properties",
           "description": "Fields of the kind named: Video.Fields.Movie for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Fields.Movie"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MovieSet"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.TVShow"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Season"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Episode"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MusicVideo"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Fields"
           }
         },
         {
@@ -5765,26 +5686,7 @@
             "items": {
               "type": "array",
               "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Movie"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.MovieSet"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.TVShow"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Season"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.Episode"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Video.Details.MusicVideo"
-                  }
-                ]
+                "$ref": "#/components/schemas/Video.Item.Details"
               }
             }
           },
@@ -5839,52 +5741,14 @@
           "name": "properties",
           "description": "Fields of the item's kind: Video.Fields.Movie for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Fields.Movie"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MovieSet"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.TVShow"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Season"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.Episode"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Fields.MusicVideo"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Fields"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MovieSet"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.TVShow"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Season"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Episode"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MusicVideo"
-            }
-          ]
+          "$ref": "#/components/schemas/Video.Item.Details"
         }
       },
       "errors": [
@@ -5942,52 +5806,14 @@
           "required": true,
           "description": "Properties of the item's kind: Video.Details.Movie.Set for a movie, and so on",
           "schema": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Video.Details.Movie.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.MovieSet.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.TVShow.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.Season.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.Episode.Set"
-              },
-              {
-                "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item.Changes"
           }
         }
       ],
       "result": {
         "name": "result",
         "schema": {
-          "anyOf": [
-            {
-              "$ref": "#/components/schemas/Video.Details.Movie"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MovieSet"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.TVShow"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Season"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.Episode"
-            },
-            {
-              "$ref": "#/components/schemas/Video.Details.MusicVideo"
-            }
-          ]
+          "$ref": "#/components/schemas/Video.Item.Details"
         }
       },
       "errors": [
@@ -15285,6 +15111,20 @@
         ],
         "additionalProperties": false
       },
+      "Audio.Item.Fields": {
+        "description": "The fields of one kind of music library item",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Artist"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Album"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Fields.Song"
+          }
+        ]
+      },
       "Audio.Album.ReleaseType": {
         "type": "string",
         "enum": [
@@ -16030,6 +15870,34 @@
         },
         "additionalProperties": false
       },
+      "Audio.Item.Details": {
+        "description": "A music library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Details.Artist"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Album"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Song"
+          }
+        ]
+      },
+      "Audio.Item.Changes": {
+        "description": "What SetItemProperties can change on a music library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Audio.Details.Artist.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Album.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Audio.Details.Song.Set"
+          }
+        ]
+      },
       "Audio.Property.Name": {
         "type": "string",
         "enum": [
@@ -16329,6 +16197,29 @@
           "id"
         ],
         "additionalProperties": false
+      },
+      "Video.Item.Fields": {
+        "description": "The fields of one kind of video library item",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Fields.Movie"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.MovieSet"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.TVShow"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.Season"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.Episode"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Fields.MusicVideo"
+          }
+        ]
       },
       "Video.Cast": {
         "type": "array",
@@ -17646,6 +17537,52 @@
           }
         },
         "additionalProperties": false
+      },
+      "Video.Item.Details": {
+        "description": "A video library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Details.Movie"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MovieSet"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.TVShow"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Season"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Episode"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MusicVideo"
+          }
+        ]
+      },
+      "Video.Item.Changes": {
+        "description": "What SetItemProperties can change on a video library item of any kind",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Details.Movie.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MovieSet.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.TVShow.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Season.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.Episode.Set"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Details.MusicVideo.Set"
+          }
+        ]
       },
       "PVR.Property.Name": {
         "type": "string",

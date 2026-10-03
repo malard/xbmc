@@ -1776,6 +1776,20 @@
     ],
     "additionalProperties": false
   },
+  "Audio.Item.Fields": {
+    "description": "The fields of one kind of music library item",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Fields.Artist"
+      },
+      {
+        "$ref": "#/$defs/Audio.Fields.Album"
+      },
+      {
+        "$ref": "#/$defs/Audio.Fields.Song"
+      }
+    ]
+  },
   "Audio.Album.ReleaseType": {
     "type": "string",
     "enum": [
@@ -2521,6 +2535,34 @@
     },
     "additionalProperties": false
   },
+  "Audio.Item.Details": {
+    "description": "A music library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Details.Artist"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Album"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Song"
+      }
+    ]
+  },
+  "Audio.Item.Changes": {
+    "description": "What SetItemProperties can change on a music library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Audio.Details.Artist.Set"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Album.Set"
+      },
+      {
+        "$ref": "#/$defs/Audio.Details.Song.Set"
+      }
+    ]
+  },
   "Audio.Property.Name": {
     "type": "string",
     "enum": [
@@ -2820,6 +2862,29 @@
       "id"
     ],
     "additionalProperties": false
+  },
+  "Video.Item.Fields": {
+    "description": "The fields of one kind of video library item",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Fields.Movie"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.MovieSet"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.TVShow"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.Season"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.Episode"
+      },
+      {
+        "$ref": "#/$defs/Video.Fields.MusicVideo"
+      }
+    ]
   },
   "Video.Cast": {
     "type": "array",
@@ -4137,6 +4202,52 @@
       }
     },
     "additionalProperties": false
+  },
+  "Video.Item.Details": {
+    "description": "A video library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Details.Movie"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MovieSet"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.TVShow"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Season"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Episode"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MusicVideo"
+      }
+    ]
+  },
+  "Video.Item.Changes": {
+    "description": "What SetItemProperties can change on a video library item of any kind",
+    "anyOf": [
+      {
+        "$ref": "#/$defs/Video.Details.Movie.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MovieSet.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.TVShow.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Season.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.Episode.Set"
+      },
+      {
+        "$ref": "#/$defs/Video.Details.MusicVideo.Set"
+      }
+    ]
   },
   "PVR.Property.Name": {
     "type": "string",

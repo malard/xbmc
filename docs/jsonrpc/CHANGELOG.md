@@ -203,6 +203,8 @@ Properties and types:
 - `Video.Details.TVShow`: `status`, `trailer`
 - `Textures.Details.Texture`: `lastlibrarycheck`
 - `Files.Media`: `games`
+- `Video.Item.Details`, `Video.Item.Fields`, `Video.Item.Changes` and the `Audio.Item` equivalents:
+  the per-kind unions the library item methods take and answer with
 
 ### Changed
 
