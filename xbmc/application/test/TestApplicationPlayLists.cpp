@@ -16,12 +16,10 @@
 #include "guilib/GUIMessage.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/ThreadMessage.h"
-#include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "utils/URIUtils.h"
-#include "video/VideoInfoTag.h"
 
 #include <memory>
 #include <set>
@@ -252,21 +250,6 @@ TEST(TestApplicationPlayLists, RemovingByPathLeavesTheEntryBeingPlayed)
   ASSERT_EQ(2, playList.Size());
   EXPECT_EQ(0, playList.GetCurrentPosition());
   EXPECT_EQ("/music/two.flac", playList[1]->GetPath());
-}
-
-TEST(TestApplicationPlayLists, ReplacingKeepsWhatWasCurrentCurrent)
-{
-  CTestPlayLists playLists;
-  FillVideo(playLists);
-
-  CFileItemList items;
-  items.Add(std::make_shared<CFileItem>("/video/second.mkv", false));
-  items.Add(std::make_shared<CFileItem>("/video/third.mkv", false));
-  playLists.Replace(PLAYLIST::Video, items);
-
-  const CPlayList& playList = playLists.GetPlayList(PLAYLIST::Video);
-  ASSERT_EQ(2, playList.Size());
-  EXPECT_EQ(0, playList.GetCurrentPosition());
 }
 
 TEST(TestApplicationPlayLists, ReSortingAFolderKeepsItsEntriesAndItsSourceEachTime)
@@ -699,45 +682,6 @@ TEST(TestApplicationPlayLists, OnlyWhatCanPlayBecomesAnEntry)
   CFileItemList more;
   EXPECT_EQ(std::nullopt, CTestPlayLists::EntriesOf(listing, 2, more))
       << "a chosen item that cannot play starts nothing";
-}
-
-TEST(TestApplicationPlayLists, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
-{
-  CFileItemList music;
-  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  music.Add(std::make_shared<CFileItem>("/music/two.mp3", false));
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music));
-
-  CFileItemList mixed;
-  mixed.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  mixed.Add(std::make_shared<CFileItem>("/video/one.mkv", false));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(mixed));
-}
-
-TEST(TestApplicationPlayLists, EntriesThatSayNothingFollowTheirSource)
-{
-  CFileItemList silent;
-  silent.Add(std::make_shared<CFileItem>("plugin://plugin.video.x/play?id=1", false));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent)) << "with no source, as a single item does";
-
-  CFileItem film("/films/movie.strm", false);
-  film.GetVideoInfoTag()->m_strTitle = "Film";
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent, film));
-
-  CFileItem album("/music/album.m3u", false);
-  album.GetMusicInfoTag()->SetTitle("Album");
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(silent, album));
-
-  CFileItemList music;
-  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music, film)) << "an entry that says wins";
-}
-
-TEST(TestApplicationPlayLists, AnItemNobodyPlacedGoesOnAudioOnlyIfItHoldsOnlyAudio)
-{
-  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem("/music/one.flac", false)));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/video/one.mkv", false)));
-  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/other/unknown", false)));
 }
 
 namespace

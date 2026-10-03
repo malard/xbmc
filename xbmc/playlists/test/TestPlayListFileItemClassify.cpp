@@ -7,11 +7,14 @@
  */
 
 #include "FileItem.h"
+#include "FileItemList.h"
+#include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroupMember.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "utils/Variant.h"
+#include "video/VideoInfoTag.h"
 
 #include <array>
 
@@ -116,6 +119,39 @@ TEST(TestPlayListFileItemClassify, TypeForAnOrdinaryItemFollowsWhatItHolds)
 {
   EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/home/user/a.avi", false)));
   EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(CFileItem("/home/user/a.mp3", false)));
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(CFileItem("/home/user/unknown", false)));
+}
+
+TEST(TestPlayListFileItemClassify, ItemsNobodyPlacedChooseVideoIfAnyIsVideo)
+{
+  CFileItemList music;
+  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  music.Add(std::make_shared<CFileItem>("/music/two.mp3", false));
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music));
+
+  CFileItemList mixed;
+  mixed.Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  mixed.Add(std::make_shared<CFileItem>("/video/one.mkv", false));
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(mixed));
+}
+
+TEST(TestPlayListFileItemClassify, EntriesThatSayNothingFollowTheirSource)
+{
+  CFileItemList silent;
+  silent.Add(std::make_shared<CFileItem>("plugin://plugin.video.x/play?id=1", false));
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent)) << "with no source, as a single item does";
+
+  CFileItem film("/films/movie.strm", false);
+  film.GetVideoInfoTag()->m_strTitle = "Film";
+  EXPECT_EQ(PLAYLIST::Video, PLAYLIST::TypeFor(silent, film));
+
+  CFileItem album("/music/album.m3u", false);
+  album.GetMusicInfoTag()->SetTitle("Album");
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(silent, album));
+
+  CFileItemList music;
+  music.Add(std::make_shared<CFileItem>("/music/one.flac", false));
+  EXPECT_EQ(PLAYLIST::Audio, PLAYLIST::TypeFor(music, film)) << "an entry that says wins";
 }
 
 // CFileItem's PVR constructors reach CServiceBroker::GetPVRManager(), which the test environment
