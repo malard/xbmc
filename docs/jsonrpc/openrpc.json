@@ -18562,8 +18562,7 @@
           }
         ]
       },
-      "Video.Filter.Movies": {
-        "description": "A movie filter: one field's value, or smart playlist rules",
+      "Video.Filter.ByGenre": {
         "anyOf": [
           {
             "type": "object",
@@ -18589,58 +18588,91 @@
               "genre"
             ],
             "additionalProperties": false
+          }
+        ]
+      },
+      "Video.Filter.ByYear": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByActor": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByDirector": {
+        "type": "object",
+        "properties": {
+          "director": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "director"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByStudio": {
+        "type": "object",
+        "properties": {
+          "studio": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "studio"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.ByTag": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "tag"
+        ],
+        "additionalProperties": false
+      },
+      "Video.Filter.Movies": {
+        "description": "A movie filter: one field's value, or smart playlist rules",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
-            "type": "object",
-            "properties": {
-              "actor": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "actor"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByActor"
           },
           {
-            "type": "object",
-            "properties": {
-              "director": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "director"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
           },
           {
-            "type": "object",
-            "properties": {
-              "studio": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "studio"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
           },
           {
             "type": "object",
@@ -18681,17 +18713,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "tag": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "tag"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Movies"
@@ -18702,81 +18724,19 @@
         "description": "A tv show filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByActor"
           },
           {
-            "type": "object",
-            "properties": {
-              "actor": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "actor"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
           },
           {
-            "type": "object",
-            "properties": {
-              "studio": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "studio"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tag": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "tag"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
           },
           {
             "$ref": "#/components/schemas/List.Filter.TVShows"
@@ -18814,17 +18774,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
           },
           {
             "type": "object",
@@ -18841,17 +18791,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "director": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "director"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Episodes"
@@ -18875,10 +18815,33 @@
             "additionalProperties": false
           },
           {
+            "$ref": "#/components/schemas/Video.Filter.ByGenre"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByYear"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByDirector"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByStudio"
+          },
+          {
+            "$ref": "#/components/schemas/Video.Filter.ByTag"
+          },
+          {
+            "$ref": "#/components/schemas/List.Filter.MusicVideos"
+          }
+        ]
+      },
+      "Audio.Filter.ByGenre": {
+        "anyOf": [
+          {
             "type": "object",
             "properties": {
               "genreId": {
-                "$ref": "#/components/schemas/Library.Id"
+                "$ref": "#/components/schemas/Library.Id",
+                "description": "Song genre. Filter for existence of songs with this genre"
               }
             },
             "required": [
@@ -18891,68 +18854,140 @@
             "properties": {
               "genre": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "Song genre. Filter for existence of songs with this genre"
               }
             },
             "required": [
               "genre"
             ],
             "additionalProperties": false
-          },
+          }
+        ]
+      },
+      "Audio.Filter.ByArtist": {
+        "anyOf": [
           {
             "type": "object",
             "properties": {
-              "year": {
-                "type": "integer",
-                "minimum": 0
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
               }
             },
             "required": [
-              "year"
+              "artistId"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "director": {
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
+              },
+              "roleId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "artistId",
+              "roleId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artistId": {
+                "$ref": "#/components/schemas/Library.Id"
+              },
+              "role": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "director"
+              "artistId",
+              "role"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "studio": {
+              "artist": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "studio"
+              "artist"
             ],
             "additionalProperties": false
           },
           {
             "type": "object",
             "properties": {
-              "tag": {
+              "artist": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roleId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "artist",
+              "roleId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artist": {
+                "type": "string",
+                "minLength": 1
+              },
+              "role": {
                 "type": "string",
                 "minLength": 1
               }
             },
             "required": [
-              "tag"
+              "artist",
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Audio.Filter.ByAlbum": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "albumId": {
+                "$ref": "#/components/schemas/Library.Id"
+              }
+            },
+            "required": [
+              "albumId"
             ],
             "additionalProperties": false
           },
           {
-            "$ref": "#/components/schemas/List.Filter.MusicVideos"
+            "type": "object",
+            "properties": {
+              "album": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "album"
+            ],
+            "additionalProperties": false
           }
         ]
       },
@@ -19084,29 +19119,7 @@
             "additionalProperties": false
           },
           {
-            "type": "object",
-            "properties": {
-              "albumId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "albumId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "album": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "album"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByAlbum"
           },
           {
             "type": "object",
@@ -19189,124 +19202,10 @@
         "description": "An album filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id",
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artistId",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artist",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist",
-              "role"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByArtist"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Albums"
@@ -19317,149 +19216,13 @@
         "description": "A song filter: one field's value, or smart playlist rules",
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "genreId": {
-                "$ref": "#/components/schemas/Library.Id",
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genreId"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByGenre"
           },
           {
-            "type": "object",
-            "properties": {
-              "genre": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Song genre. Filter for existence of songs with this genre"
-              }
-            },
-            "required": [
-              "genre"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByArtist"
           },
           {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artistId",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artistId": {
-                "$ref": "#/components/schemas/Library.Id"
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artistId",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "roleId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "artist",
-              "roleId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "artist": {
-                "type": "string",
-                "minLength": 1
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "artist",
-              "role"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "albumId": {
-                "$ref": "#/components/schemas/Library.Id"
-              }
-            },
-            "required": [
-              "albumId"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "album": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "album"
-            ],
-            "additionalProperties": false
+            "$ref": "#/components/schemas/Audio.Filter.ByAlbum"
           },
           {
             "$ref": "#/components/schemas/List.Filter.Songs"
