@@ -8,7 +8,6 @@
 
 #include "InputOperations.h"
 
-#include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPowerHandling.h"
@@ -20,11 +19,13 @@
 #include "input/actions/ActionTranslator.h"
 #include "input/keymaps/ButtonTranslator.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "utils/Variant.h"
 #include "windowing/XBMC_events.h"
 
 using namespace KODI;
 using namespace JSONRPC;
+using KODI::MESSAGING::TransferToMessenger;
 
 //! @todo the breakage of the screensaver should be refactored
 //! to one central super duper place for getting rid of

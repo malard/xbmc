@@ -11,7 +11,6 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIUserMessages.h"
-#include "MessengerPayload.h"
 #include "PlaybackModes.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationPlayLists.h"
@@ -20,6 +19,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "pictures/PictureInfoTag.h"
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
@@ -35,6 +35,7 @@
 
 using namespace JSONRPC;
 using namespace KODI;
+using KODI::MESSAGING::TransferToMessenger;
 
 namespace
 {

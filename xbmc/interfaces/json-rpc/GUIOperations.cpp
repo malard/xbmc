@@ -10,7 +10,6 @@
 
 #include "GUIInfoManager.h"
 #include "JSONUtils.h"
-#include "MessengerPayload.h"
 #include "ServiceBroker.h"
 #include "addons/AddonManager.h"
 #include "addons/IAddon.h"
@@ -27,6 +26,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "powermanagement/PowerManager.h"
 #include "rendering/RenderSystem.h"
 #include "settings/AdvancedSettings.h"
@@ -45,6 +45,8 @@
 
 using namespace JSONRPC;
 using namespace ADDON;
+using KODI::MESSAGING::LendToMessenger;
+using KODI::MESSAGING::TransferToMessenger;
 
 namespace
 {
