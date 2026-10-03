@@ -10,6 +10,8 @@
 
 #include "playlists/PlayListTypes.h"
 
+#include <optional>
+
 class CFileItem;
 class CFileItemList;
 
@@ -35,10 +37,15 @@ Type TypeFor(const CFileItemList& items);
 Type TypeFor(const CFileItemList& entries, const CFileItem& source);
 
 /*!
- * \brief The playlist for an item nobody named one for: a channel's is whether it is radio or TV,
- * an item holding only audio goes on Audio, and anything else on Video.
+ * \brief The playlist for an item nobody named one for: Audio if it holds only audio, else Video.
  */
 Type TypeFor(const CFileItem& item);
+
+/*!
+ * \brief What an item holds: a channel's is whether it is radio or TV, a picture holds video only,
+ * a video or a game video and audio, and audio only audio; nothing when it is none of these.
+ */
+std::optional<Holds> HoldsOf(const CFileItem& item);
 
 //! \brief Whether an item neither is nor contains a playlist entry: the parent item or an archive.
 bool YieldsNoEntries(const CFileItem& item);
