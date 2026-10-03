@@ -593,32 +593,20 @@ JSONRPC_STATUS JSONRPC::CAudioLibrary::GetSources(const CVariant& parameterObjec
   return OK;
 }
 
-namespace
-{
-//! The type and id of the library item \p item names, or an id of -1
-std::pair<MediaType, int> ArtItemOf(const CVariant& item)
-{
-  if (item.isMember("artistId"))
-    return {MediaType::ARTIST, item["artistId"].asInteger32()};
-  if (item.isMember("albumId"))
-    return {MediaType::ALBUM, item["albumId"].asInteger32()};
-  return {MediaType::NONE, -1};
-}
-} // unnamed namespace
-
 JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
-  if (mediaID == -1)
-    return InternalError;
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
     return InternalError;
 
   CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType : musicdatabase.GetAvailableArtTypesForItem(mediaID, mediaType))
+  for (const auto& artType : musicdatabase.GetAvailableArtTypesForItem(
+           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type))
   {
     availablearttypes.append(artType);
   }
@@ -630,9 +618,9 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 
 JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
-  if (mediaID == -1)
-    return InternalError;
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
   std::string artType = parameterObject["artType"].asString();
   StringUtils::ToLower(artType);
@@ -642,7 +630,8 @@ JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, C
     return InternalError;
 
   CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry : musicdatabase.GetAvailableArtForItem(mediaID, mediaType, artType))
+  for (const auto& artentry : musicdatabase.GetAvailableArtForItem(
+           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type, artType))
   {
     CVariant item = CVariant(CVariant::VariantTypeObject);
     item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);

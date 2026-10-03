@@ -205,11 +205,21 @@ private:
                                     bool limit = true);
   static JSONRPC_STATUS RemoveVideo(const CVariant& parameterObject);
 
-  static JSONRPC_STATUS RefreshVideo(const CVariant& identifier,
+  //! A deprecated refresh method: refreshes the item its kind's id member names
+  static JSONRPC_STATUS RefreshById(const CVariant& parameterObject, CVariant& result);
+
+  /*! \brief Queues a refresh of the item of \p kind with \p id
+     \param target The item as the caller named it, for a failure to name
+     */
+  static JSONRPC_STATUS RefreshVideo(VideoKind kind,
+                                     int id,
+                                     const CVariant& target,
                                      const CVariant& parameterObject,
                                      CVariant& result);
 
-  static JSONRPC_STATUS ResolveRefreshItem(const CVariant& identifier,
+  static JSONRPC_STATUS ResolveRefreshItem(VideoKind kind,
+                                           int id,
+                                           const CVariant& target,
                                            CVideoDatabase& videodatabase,
                                            CFileItem& item,
                                            CVariant& result);

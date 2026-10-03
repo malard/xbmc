@@ -3145,32 +3145,7 @@
         "name": "item",
         "required": true,
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/Audio.Item"
         }
       }
     ],
@@ -3189,6 +3164,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ],
     "reasons": {}
@@ -3203,32 +3179,7 @@
         "name": "item",
         "required": true,
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "albumId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "albumId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "artistId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "artistId"
-              ],
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/Audio.Item"
         }
       },
       {
@@ -3270,6 +3221,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ],
     "reasons": {}
@@ -4535,80 +4487,7 @@
         "name": "item",
         "required": true,
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "episodeId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "episodeId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tvShowId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "tvShowId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "seasonId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "seasonId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "movieId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "movieId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "setId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "setId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "musicVideoId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "musicVideoId"
-              ],
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/Video.Item"
         }
       }
     ],
@@ -4627,6 +4506,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ],
     "reasons": {}
@@ -4641,80 +4521,7 @@
         "name": "item",
         "required": true,
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "episodeId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "episodeId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tvShowId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "tvShowId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "seasonId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "seasonId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "movieId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "movieId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "setId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "setId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "musicVideoId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "musicVideoId"
-              ],
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/Video.Item"
         }
       },
       {
@@ -4756,6 +4563,7 @@
       ]
     },
     "errors": [
+      "InvalidParams",
       "InternalError"
     ],
     "reasons": {}
@@ -4771,80 +4579,7 @@
         "required": true,
         "description": "The library item to refresh.",
         "schema": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "movieId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "movieId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "setId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "setId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "tvShowId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "tvShowId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "seasonId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "seasonId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "episodeId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "episodeId"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "musicVideoId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "required": [
-                "musicVideoId"
-              ],
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/Video.Item"
         }
       },
       {
@@ -5030,43 +4765,11 @@
       {
         "name": "item",
         "required": true,
+        "description": "A movie, an episode or a music video, or its file",
         "schema": {
           "anyOf": [
             {
-              "type": "object",
-              "properties": {
-                "movieId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "movieId"
-              ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "episodeId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "episodeId"
-              ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "musicVideoId": {
-                  "$ref": "#/$defs/Library.Id"
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "musicVideoId"
-              ]
+              "$ref": "#/$defs/Video.Item"
             },
             {
               "type": "object",
@@ -5095,6 +4798,7 @@
     ],
     "returns": "string",
     "errors": [
+      "InvalidParams",
       "InternalError",
       "FailedToExecute",
       "NotFound",

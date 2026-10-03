@@ -5077,32 +5077,7 @@
           "name": "item",
           "required": true,
           "schema": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "albumId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "albumId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "artistId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "artistId"
-                ],
-                "additionalProperties": false
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item"
           }
         }
       ],
@@ -5161,32 +5136,7 @@
           "name": "item",
           "required": true,
           "schema": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "albumId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "albumId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "artistId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "artistId"
-                ],
-                "additionalProperties": false
-              }
-            ]
+            "$ref": "#/components/schemas/Audio.Item"
           }
         },
         {
@@ -7113,80 +7063,7 @@
           "name": "item",
           "required": true,
           "schema": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "episodeId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "episodeId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "tvShowId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "tvShowId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "seasonId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "seasonId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "movieId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "movieId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "setId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "setId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "musicVideoId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "musicVideoId"
-                ],
-                "additionalProperties": false
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item"
           }
         }
       ],
@@ -7245,80 +7122,7 @@
           "name": "item",
           "required": true,
           "schema": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "episodeId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "episodeId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "tvShowId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "tvShowId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "seasonId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "seasonId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "movieId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "movieId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "setId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "setId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "musicVideoId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "musicVideoId"
-                ],
-                "additionalProperties": false
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item"
           }
         },
         {
@@ -7401,80 +7205,7 @@
           "required": true,
           "description": "The library item to refresh.",
           "schema": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "movieId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "movieId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "setId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "setId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "tvShowId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "tvShowId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "seasonId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "seasonId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "episodeId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "episodeId"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "musicVideoId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "required": [
-                  "musicVideoId"
-                ],
-                "additionalProperties": false
-              }
-            ]
+            "$ref": "#/components/schemas/Video.Item"
           }
         },
         {
@@ -7784,43 +7515,11 @@
         {
           "name": "item",
           "required": true,
+          "description": "A movie, an episode or a music video, or its file",
           "schema": {
             "anyOf": [
               {
-                "type": "object",
-                "properties": {
-                  "movieId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "additionalProperties": false,
-                "required": [
-                  "movieId"
-                ]
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "episodeId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "additionalProperties": false,
-                "required": [
-                  "episodeId"
-                ]
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "musicVideoId": {
-                    "$ref": "#/components/schemas/Library.Id"
-                  }
-                },
-                "additionalProperties": false,
-                "required": [
-                  "musicVideoId"
-                ]
+                "$ref": "#/components/schemas/Video.Item"
               },
               {
                 "type": "object",

@@ -239,13 +239,13 @@ still work.
 
 ```diff
 - {"method": "VideoLibrary.RefreshMovie", "params": {"movieid": 42}}
-+ {"method": "VideoLibrary.Refresh",      "params": {"item": {"movieid": 42}}}
++ {"method": "VideoLibrary.Refresh",      "params": {"item": {"kind": "movie", "id": 42}}}
 ```
 
-The id moves inside an `item` object; `ignorenfo`, `title` and
-`refreshepisodes` stay where they are. The item names exactly one of
-`movieid`, `setid`, `tvshowid`, `seasonid`, `episodeid` or `musicvideoid`, so
-a movie set and a season can be refreshed for the first time.
+The id moves inside an `item` object with its kind; `ignorenfo`, `title` and
+`refreshepisodes` stay where they are. The kind is any of `movie`, `set`,
+`tvshow`, `season`, `episode` or `musicvideo`, so a movie set and a season
+can be refreshed for the first time.
 `refreshepisodes` applies to a tv show or a season and is ignored by the rest.
 
 ---
@@ -755,6 +755,14 @@ and the like. `SetItemProperties` takes the values under `properties`,
 changes only those given, and answers like `GetItemProperties` for the ones
 it can read back, in place of `"OK"`. A movie set no longer lists its movies:
 ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
+
+`GetAvailableArtTypes` and `GetAvailableArt` of both libraries take their
+`item` the same way.
+
+```diff
+- {"method": "VideoLibrary.GetAvailableArt", "params": {"item": {"movieId": 3}, "artType": "poster"}}
++ {"method": "VideoLibrary.GetAvailableArt", "params": {"item": {"kind": "movie", "id": 3}, "artType": "poster"}}
+```
 
 **What to do.** Replace each call as above. Read the answer as the item.
 

@@ -641,39 +641,20 @@ JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant&
   return OK;
 }
 
-namespace
-{
-const std::map<std::string, MediaType> mediaIDTypes = {
-    {"episodeId", MediaType::EPISODE},      {"tvShowId", MediaType::TV_SHOW},
-    {"seasonId", MediaType::SEASON},        {"movieId", MediaType::MOVIE},
-    {"setId", MediaType::VIDEO_COLLECTION}, {"musicVideoId", MediaType::MUSIC_VIDEO},
-};
-
-//! The type and id of the library item \p item names, or an id of -1
-std::pair<MediaType, int> ArtItemOf(const CVariant& item)
-{
-  for (const auto& [member, type] : mediaIDTypes)
-  {
-    if (item.isMember(member))
-      return {type, item[member].asInteger32()};
-  }
-  return {MediaType::NONE, -1};
-}
-} // unnamed namespace
-
 JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
-  if (mediaID == -1)
-    return InternalError;
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
   CVideoDatabase videodatabase;
   if (!videodatabase.Open())
     return InternalError;
 
   CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType : videodatabase.GetAvailableArtTypesForItem(mediaID, mediaType))
+  for (const auto& artType : videodatabase.GetAvailableArtTypesForItem(
+           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type))
   {
     availablearttypes.append(artType);
   }
@@ -685,9 +666,9 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArtTypes(const CVariant& parameterObje
 
 JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  const auto [mediaType, mediaID] = ArtItemOf(parameterObject["item"]);
-  if (mediaID == -1)
-    return InternalError;
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
 
   std::string artType = parameterObject["artType"].asString();
   StringUtils::ToLower(artType);
@@ -697,7 +678,8 @@ JSONRPC_STATUS CVideoLibrary::GetAvailableArt(const CVariant& parameterObject, C
     return InternalError;
 
   CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry : videodatabase.GetAvailableArtForItem(mediaID, mediaType, artType))
+  for (const auto& artentry : videodatabase.GetAvailableArtForItem(
+           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type, artType))
   {
     CVariant item = CVariant(CVariant::VariantTypeObject);
     item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
@@ -855,27 +837,32 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(int id,
 
 JSONRPC_STATUS CVideoLibrary::Refresh(const CVariant& parameterObject, CVariant& result)
 {
-  return RefreshVideo(parameterObject["item"], parameterObject, result);
+  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  if (!traits)
+    return InvalidParams;
+
+  const int id = static_cast<int>(parameterObject["item"]["id"].asInteger());
+  return RefreshVideo(traits->kind, id, ItemTarget(traits->kind, id), parameterObject, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::RefreshMovie(const CVariant& parameterObject, CVariant& result)
 {
-  return RefreshVideo(parameterObject, parameterObject, result);
+  return RefreshById(parameterObject, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::RefreshTVShow(const CVariant& parameterObject, CVariant& result)
 {
-  return RefreshVideo(parameterObject, parameterObject, result);
+  return RefreshById(parameterObject, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::RefreshEpisode(const CVariant& parameterObject, CVariant& result)
 {
-  return RefreshVideo(parameterObject, parameterObject, result);
+  return RefreshById(parameterObject, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::RefreshMusicVideo(const CVariant& parameterObject, CVariant& result)
 {
-  return RefreshVideo(parameterObject, parameterObject, result);
+  return RefreshById(parameterObject, result);
 }
 
 JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterObject,
@@ -890,7 +877,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
   if (!videodatabase.Open())
     return InternalError;
 
-  // A path is taken as given; an id is resolved to the file behind it.
+  // A path is taken as given; an item is resolved to the file behind it.
   CFileItem fileItem;
   if (item.isMember("file"))
   {
@@ -898,14 +885,21 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
   }
   else
   {
-    // the schema admits only a movie's, an episode's or a music video's id beside a file
-    const KindTraits& traits = *TraitsOfIdIn(item);
+    const KindTraits* traits = TraitsNamed(item["kind"].asString());
+    if (!traits)
+      return InvalidParams;
 
+    if (traits->kind == VideoKind::Set || traits->kind == VideoKind::TVShow ||
+        traits->kind == VideoKind::Season)
+      return RefuseForKind("item", traits->type, result);
+
+    const int id = static_cast<int>(item["id"].asInteger());
     CVideoInfoTag infos;
-    if (videodatabase.TryGetDetailsByTypeAndId(traits.type,
-                                               static_cast<int>(item[traits.id].asInteger()),
-                                               infos) != CDatabase::GetResult::Ok)
-      return Fail(result, NotFound, Reason::NoSuchItem, Target(traits.id, item[traits.id]));
+    if (const JSONRPC_STATUS status =
+            StatusFor(videodatabase.TryGetDetailsByTypeAndId(traits->type, id, infos), result,
+                      ItemTarget(traits->kind, id));
+        status != OK)
+      return status;
 
     fileItem.SetFromVideoInfoTag(infos);
   }
@@ -1271,7 +1265,20 @@ JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant& parameterObject)
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::RefreshVideo(const CVariant& identifier,
+JSONRPC_STATUS CVideoLibrary::RefreshById(const CVariant& parameterObject, CVariant& result)
+{
+  const KindTraits* traits = TraitsOfIdIn(parameterObject);
+  if (!traits)
+    return InvalidParams;
+
+  const CVariant& id = parameterObject[traits->id];
+  return RefreshVideo(traits->kind, static_cast<int>(id.asInteger()), Target(traits->id, id),
+                      parameterObject, result);
+}
+
+JSONRPC_STATUS CVideoLibrary::RefreshVideo(VideoKind kind,
+                                           int id,
+                                           const CVariant& target,
                                            const CVariant& parameterObject,
                                            CVariant& result)
 {
@@ -1282,7 +1289,7 @@ JSONRPC_STATUS CVideoLibrary::RefreshVideo(const CVariant& identifier,
   }
 
   const std::shared_ptr<CFileItem> item = std::make_shared<CFileItem>();
-  const JSONRPC_STATUS status = ResolveRefreshItem(identifier, videodatabase, *item, result);
+  const JSONRPC_STATUS status = ResolveRefreshItem(kind, id, target, videodatabase, *item, result);
   if (status != OK)
   {
     return status;
@@ -1297,26 +1304,23 @@ JSONRPC_STATUS CVideoLibrary::RefreshVideo(const CVariant& identifier,
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(const CVariant& identifier,
+JSONRPC_STATUS CVideoLibrary::ResolveRefreshItem(VideoKind kind,
+                                                 int id,
+                                                 const CVariant& target,
                                                  CVideoDatabase& videodatabase,
                                                  CFileItem& item,
                                                  CVariant& result)
 {
-  const KindTraits* traits = TraitsOfIdIn(identifier);
-  if (!traits)
-    return InvalidParams;
-
   CVideoInfoTag details;
   //! @todo API support for video version id
-  if (const JSONRPC_STATUS status = StatusFor(
-          videodatabase.TryGetDetailsByTypeAndId(
-              traits->type, static_cast<int>(identifier[traits->id].asInteger()), details, &item),
-          result, Target(traits->id, identifier[traits->id]));
+  if (const JSONRPC_STATUS status =
+          StatusFor(videodatabase.TryGetDetailsByTypeAndId(TraitsOf(kind).type, id, details, &item),
+                    result, target);
       status != OK)
     return status;
 
   // A set's item holds its videodb:// path, which the tag cannot carry.
-  if (traits->kind != VideoKind::Set)
+  if (kind != VideoKind::Set)
     item.SetFromVideoInfoTag(details);
 
   return OK;
