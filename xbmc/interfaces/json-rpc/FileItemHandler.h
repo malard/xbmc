@@ -10,13 +10,19 @@
 
 #include "JSONRPC.h"
 #include "JSONUtils.h"
+#include "imagefiles/ImageFileURL.h"
 #include "interfaces/IAnnouncer.h"
 #include "media/MediaType.h"
+#include "utils/StringUtils.h"
+#include "utils/Variant.h"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <set>
 #include <span>
+#include <string>
+#include <string_view>
 
 class CDbUrl;
 class CFileItem;
@@ -40,6 +46,56 @@ enum class Listing
   RecentlyAdded,
   RecentlyPlayed,
   InProgress,
+};
+
+//! What a client names a library's kind by, and the types of its items
+template<typename K>
+struct LibraryKind
+{
+  using Kind = K;
+
+  Kind kind;
+  KODI::MEDIA::MediaType type; //!< the media type, whose name the kind goes by on the wire
+  const char* id;
+  const char* fields;
+  const char* settable;
+};
+
+//! A library's kinds, each described by a \p Traits, and the database that holds their items
+template<typename Traits, typename Database>
+class LibraryKinds
+{
+public:
+  using Kind = typename Traits::Kind;
+
+  constexpr explicit LibraryKinds(std::span<const Traits> kinds) : m_kinds(kinds) {}
+
+  const Traits& Of(Kind kind) const { return *std::ranges::find(m_kinds, kind, &Traits::kind); }
+
+  //! The kind a client names \p name, nullptr for none
+  const Traits* Named(std::string_view name) const
+  {
+    const auto traits = std::ranges::find(m_kinds, KODI::MEDIA::MediaTypeOf(name), &Traits::type);
+    return traits == m_kinds.end() ? nullptr : &*traits;
+  }
+
+  //! Whether the library holds items of \p type
+  bool Holds(KODI::MEDIA::MediaType type) const
+  {
+    return std::ranges::find(m_kinds, type, &Traits::type) != m_kinds.end();
+  }
+
+  //! The error target for an item, in the addressing the caller used
+  CVariant ItemTarget(Kind kind, int id) const
+  {
+    CVariant item(CVariant::VariantTypeObject);
+    item["kind"] = KODI::MEDIA::NameOf(Of(kind).type);
+    item["id"] = id;
+    return Target("item", item);
+  }
+
+private:
+  std::span<const Traits> m_kinds;
 };
 
 class CFileItemHandler : public CJSONUtils
@@ -165,6 +221,113 @@ protected:
                              int id,
                              const CVariant& names,
                              const CVariant& item);
+
+  /*!
+     \brief A library's GetItems: \p query over the kind the caller named
+     \param check Checks the parameters against the kind, filling in what was omitted
+     */
+  template<typename Traits, typename Database>
+  static JSONRPC_STATUS GetItemsIn(
+      const LibraryKinds<Traits, Database>& kinds,
+      JSONRPC_STATUS (*check)(const Traits&, const CVariant&, CVariant&, CVariant&),
+      JSONRPC_STATUS (*query)(typename Traits::Kind, Listing, const CVariant&, CVariant&),
+      const CVariant& parameterObject,
+      CVariant& result)
+  {
+    const Traits* traits = kinds.Named(parameterObject["kind"].asString());
+    if (!traits)
+      return InvalidParams;
+
+    CVariant checked(parameterObject);
+    if (const JSONRPC_STATUS status = check(*traits, parameterObject, checked, result);
+        status != OK)
+      return status;
+
+    return query(traits->kind, Listing::All, checked, result);
+  }
+
+  //! A library's GetItemProperties: \p readItem answers the item the caller named
+  template<typename Traits, typename Database>
+  static JSONRPC_STATUS GetItemPropertiesIn(
+      const LibraryKinds<Traits, Database>& kinds,
+      JSONRPC_STATUS (*readItem)(typename Traits::Kind, int, const CVariant&, Database&, CVariant&),
+      const CVariant& parameterObject,
+      CVariant& result)
+  {
+    const Traits* traits = kinds.Named(parameterObject["item"]["kind"].asString());
+    if (!traits)
+      return InvalidParams;
+
+    CVariant fields;
+    if (const JSONRPC_STATUS status = CheckAgainstType(
+            traits->fields, "properties", parameterObject["properties"], fields, result);
+        status != OK)
+      return status;
+
+    Database database;
+    if (!database.Open())
+      return InternalError;
+
+    return readItem(traits->kind, static_cast<int>(parameterObject["item"]["id"].asInteger()),
+                    fields, database, result);
+  }
+
+  //! A library's GetAvailableArtTypes
+  template<typename Traits, typename Database>
+  static JSONRPC_STATUS GetAvailableArtTypesIn(const LibraryKinds<Traits, Database>& kinds,
+                                               const CVariant& parameterObject,
+                                               CVariant& result)
+  {
+    const Traits* traits = kinds.Named(parameterObject["item"]["kind"].asString());
+    if (!traits)
+      return InvalidParams;
+
+    Database database;
+    if (!database.Open())
+      return InternalError;
+
+    CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
+    for (const auto& artType : database.GetAvailableArtTypesForItem(
+             static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type))
+      availablearttypes.append(artType);
+
+    result = CVariant(CVariant::VariantTypeObject);
+    result["availableArtTypes"] = availablearttypes;
+    return OK;
+  }
+
+  //! A library's GetAvailableArt
+  template<typename Traits, typename Database>
+  static JSONRPC_STATUS GetAvailableArtIn(const LibraryKinds<Traits, Database>& kinds,
+                                          const CVariant& parameterObject,
+                                          CVariant& result)
+  {
+    const Traits* traits = kinds.Named(parameterObject["item"]["kind"].asString());
+    if (!traits)
+      return InvalidParams;
+
+    std::string artType = parameterObject["artType"].asString();
+    StringUtils::ToLower(artType);
+
+    Database database;
+    if (!database.Open())
+      return InternalError;
+
+    CVariant availableart = CVariant(CVariant::VariantTypeArray);
+    for (const auto& artentry : database.GetAvailableArtForItem(
+             static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type, artType))
+    {
+      CVariant item = CVariant(CVariant::VariantTypeObject);
+      item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
+      item["artType"] = artentry.m_aspect;
+      if (!artentry.m_preview.empty())
+        item["previewUrl"] = IMAGE_FILES::URLFromFile(artentry.m_preview);
+      availableart.append(item);
+    }
+    result = CVariant(CVariant::VariantTypeObject);
+    result["availableArt"] = availableart;
+    return OK;
+  }
 
 private:
   static void Sort(CFileItemList& items, const CVariant& parameterObject);

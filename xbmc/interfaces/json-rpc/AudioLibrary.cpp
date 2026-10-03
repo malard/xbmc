@@ -109,8 +109,6 @@ namespace
 using FilterField = CFileItemHandler::FilterField;
 using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
-using KODI::MEDIA::MediaTypeOf;
-using KODI::MEDIA::NameOf;
 
 constexpr FilterField ARTIST_FILTERS[] = {
     FilterField::Number("genreId", "genreid"),     FilterField::Text("genre"),
@@ -125,48 +123,36 @@ constexpr FilterField SONG_FILTERS[] = {
     FilterField::Number("genreId", "genreid"),   FilterField::Text("genre"),
     FilterField::Number("albumId", "albumid"),   FilterField::Text("album")};
 
-//! What a client names a kind by, and the names and types of its items
-struct KindTraits
+//! A music kind, where its items are listed, and how they are filtered
+struct KindTraits : LibraryKind<AudioKind>
 {
-  AudioKind kind;
-  MediaType type; //!< the media type, whose name the kind goes by on the wire
-  const char* id;
   const char* list; //!< what the JSON listing answers under, and the rules' playlist type
   const char* path;
-  const char* fields;
   const char* filter;
   std::span<const FilterField> filterFields;
-  const char* settable;
 };
 
-constexpr KindTraits KINDS[] = {
-    {AudioKind::Artist, MediaType::ARTIST, "artistId", "artists", KODI::MUSIC::DB_PATH::ARTISTS,
-     "Audio.Fields.Artist", "Audio.Filter.Artists", ARTIST_FILTERS, "Audio.Details.Artist.Set"},
-    {AudioKind::Album, MediaType::ALBUM, "albumId", "albums", KODI::MUSIC::DB_PATH::ALBUMS,
-     "Audio.Fields.Album", "Audio.Filter.Albums", ALBUM_FILTERS, "Audio.Details.Album.Set"},
-    {AudioKind::Song, MediaType::SONG, "songId", "songs", KODI::MUSIC::DB_PATH::SONGS,
-     "Audio.Fields.Song", "Audio.Filter.Songs", SONG_FILTERS, "Audio.Details.Song.Set"},
+constexpr KindTraits KIND_TABLE[] = {
+    {{AudioKind::Artist, MediaType::ARTIST, "artistId", "Audio.Fields.Artist",
+      "Audio.Details.Artist.Set"},
+     "artists",
+     KODI::MUSIC::DB_PATH::ARTISTS,
+     "Audio.Filter.Artists",
+     ARTIST_FILTERS},
+    {{AudioKind::Album, MediaType::ALBUM, "albumId", "Audio.Fields.Album",
+      "Audio.Details.Album.Set"},
+     "albums",
+     KODI::MUSIC::DB_PATH::ALBUMS,
+     "Audio.Filter.Albums",
+     ALBUM_FILTERS},
+    {{AudioKind::Song, MediaType::SONG, "songId", "Audio.Fields.Song", "Audio.Details.Song.Set"},
+     "songs",
+     KODI::MUSIC::DB_PATH::SONGS,
+     "Audio.Filter.Songs",
+     SONG_FILTERS},
 };
 
-const KindTraits& TraitsOf(AudioKind kind)
-{
-  return *std::ranges::find(KINDS, kind, &KindTraits::kind);
-}
-
-//! The error target for an item, in the addressing the caller used
-CVariant ItemTarget(AudioKind kind, int id)
-{
-  CVariant item(CVariant::VariantTypeObject);
-  item["kind"] = NameOf(TraitsOf(kind).type);
-  item["id"] = id;
-  return Target("item", item);
-}
-
-const KindTraits* TraitsNamed(std::string_view name)
-{
-  const auto traits = std::ranges::find(KINDS, MediaTypeOf(name), &KindTraits::type);
-  return traits == std::end(KINDS) ? nullptr : &*traits;
-}
+constexpr LibraryKinds<KindTraits, CMusicDatabase> KINDS{KIND_TABLE};
 
 //! Checks the query's parameters against the kind the caller named; \p checked has them filled
 JSONRPC_STATUS CheckForKind(const KindTraits& traits,
@@ -203,21 +189,12 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 
 bool CAudioLibrary::IsItemKind(MediaType type)
 {
-  return std::ranges::find(KINDS, type, &KindTraits::type) != std::end(KINDS);
+  return KINDS.Holds(type);
 }
 
 JSONRPC_STATUS CAudioLibrary::GetItems(const CVariant& parameterObject, CVariant& result)
 {
-  const KindTraits* traits = TraitsNamed(parameterObject["kind"].asString());
-  if (!traits)
-    return InvalidParams;
-
-  CVariant checked(parameterObject);
-  if (const JSONRPC_STATUS status = CheckForKind(*traits, parameterObject, checked, result);
-      status != OK)
-    return status;
-
-  return Query(traits->kind, Listing::All, checked, result);
+  return GetItemsIn(KINDS, CheckForKind, Query, parameterObject, result);
 }
 
 JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
@@ -225,7 +202,7 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
                                     const CVariant& parameterObject,
                                     CVariant& result)
 {
-  const KindTraits& traits = TraitsOf(kind);
+  const KindTraits& traits = KINDS.Of(kind);
 
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -402,27 +379,12 @@ void CAudioLibrary::FillListArt(CVariant& list,
 
 JSONRPC_STATUS CAudioLibrary::GetItemProperties(const CVariant& parameterObject, CVariant& result)
 {
-  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
-  if (!traits)
-    return InvalidParams;
-
-  CVariant fields;
-  if (const JSONRPC_STATUS status = CheckAgainstType(traits->fields, "properties",
-                                                     parameterObject["properties"], fields, result);
-      status != OK)
-    return status;
-
-  CMusicDatabase musicdatabase;
-  if (!musicdatabase.Open())
-    return InternalError;
-
-  return ReadItem(traits->kind, static_cast<int>(parameterObject["item"]["id"].asInteger()), fields,
-                  musicdatabase, result);
+  return GetItemPropertiesIn(KINDS, ReadItem, parameterObject, result);
 }
 
 JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject, CVariant& result)
 {
-  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
+  const KindTraits* traits = KINDS.Named(parameterObject["item"]["kind"].asString());
   if (!traits)
     return InvalidParams;
 
@@ -469,7 +431,7 @@ JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject,
 JSONRPC_STATUS CAudioLibrary::ReadItem(
     AudioKind kind, int id, const CVariant& fields, CMusicDatabase& musicdatabase, CVariant& result)
 {
-  const KindTraits& traits = TraitsOf(kind);
+  const KindTraits& traits = KINDS.Of(kind);
 
   CVariant request(CVariant::VariantTypeObject);
   request["properties"] = fields;
@@ -487,7 +449,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
     if (!musicdatabase.GetArtistsByWhere(musicUrl.ToString(), items, SortDescription(), filter))
       return InternalError;
     if (items.Size() != 1)
-      return Fail(result, NotFound, Reason::NoSuchItem, ItemTarget(kind, id));
+      return Fail(result, NotFound, Reason::NoSuchItem, KINDS.ItemTarget(kind, id));
 
     status = GetAdditionalArtistDetails(request, items, musicdatabase);
 
@@ -497,8 +459,8 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
   else if (kind == AudioKind::Album)
   {
     CAlbum album;
-    if (status =
-            StatusFor(musicdatabase.TryGetAlbum(id, album, false), result, ItemTarget(kind, id));
+    if (status = StatusFor(musicdatabase.TryGetAlbum(id, album, false), result,
+                           KINDS.ItemTarget(kind, id));
         status != OK)
       return status;
 
@@ -511,7 +473,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
   else
   {
     CSong song;
-    if (status = StatusFor(musicdatabase.TryGetSong(id, song), result, ItemTarget(kind, id));
+    if (status = StatusFor(musicdatabase.TryGetSong(id, song), result, KINDS.ItemTarget(kind, id));
         status != OK)
       return status;
 
@@ -596,54 +558,12 @@ JSONRPC_STATUS JSONRPC::CAudioLibrary::GetSources(const CVariant& parameterObjec
 JSONRPC_STATUS CAudioLibrary::GetAvailableArtTypes(const CVariant& parameterObject,
                                                    CVariant& result)
 {
-  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
-  if (!traits)
-    return InvalidParams;
-
-  CMusicDatabase musicdatabase;
-  if (!musicdatabase.Open())
-    return InternalError;
-
-  CVariant availablearttypes = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artType : musicdatabase.GetAvailableArtTypesForItem(
-           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type))
-  {
-    availablearttypes.append(artType);
-  }
-  result = CVariant(CVariant::VariantTypeObject);
-  result["availableArtTypes"] = availablearttypes;
-
-  return OK;
+  return GetAvailableArtTypesIn(KINDS, parameterObject, result);
 }
 
 JSONRPC_STATUS CAudioLibrary::GetAvailableArt(const CVariant& parameterObject, CVariant& result)
 {
-  const KindTraits* traits = TraitsNamed(parameterObject["item"]["kind"].asString());
-  if (!traits)
-    return InvalidParams;
-
-  std::string artType = parameterObject["artType"].asString();
-  StringUtils::ToLower(artType);
-
-  CMusicDatabase musicdatabase;
-  if (!musicdatabase.Open())
-    return InternalError;
-
-  CVariant availableart = CVariant(CVariant::VariantTypeArray);
-  for (const auto& artentry : musicdatabase.GetAvailableArtForItem(
-           static_cast<int>(parameterObject["item"]["id"].asInteger()), traits->type, artType))
-  {
-    CVariant item = CVariant(CVariant::VariantTypeObject);
-    item["url"] = IMAGE_FILES::URLFromFile(artentry.m_url);
-    item["artType"] = artentry.m_aspect;
-    if (!artentry.m_preview.empty())
-      item["previewUrl"] = IMAGE_FILES::URLFromFile(artentry.m_preview);
-    availableart.append(item);
-  }
-  result = CVariant(CVariant::VariantTypeObject);
-  result["availableArt"] = availableart;
-
-  return OK;
+  return GetAvailableArtIn(KINDS, parameterObject, result);
 }
 
 JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
@@ -653,7 +573,7 @@ JSONRPC_STATUS CAudioLibrary::SetArtistDetails(int id,
 {
   CArtist artist;
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetArtist(id, artist), result,
-                                              ItemTarget(AudioKind::Artist, id));
+                                              KINDS.ItemTarget(AudioKind::Artist, id));
       status != OK)
     return status;
 
@@ -718,7 +638,7 @@ JSONRPC_STATUS CAudioLibrary::SetAlbumDetails(int id,
   CAlbum album;
   // Get current album details, but not songs as we do not want to update them here
   if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetAlbum(id, album, false), result,
-                                              ItemTarget(AudioKind::Album, id));
+                                              KINDS.ItemTarget(AudioKind::Album, id));
       status != OK)
     return status;
 
@@ -792,8 +712,8 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id,
                                              CVariant& result)
 {
   CSong song;
-  if (const JSONRPC_STATUS status =
-          StatusFor(musicdatabase.TryGetSong(id, song), result, ItemTarget(AudioKind::Song, id));
+  if (const JSONRPC_STATUS status = StatusFor(musicdatabase.TryGetSong(id, song), result,
+                                              KINDS.ItemTarget(AudioKind::Song, id));
       status != OK)
     return status;
 
