@@ -15,11 +15,11 @@ Usage: python tools/jsonrpc/lint_schema.py [--schema-dir DIR]
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
-SCHEMA_FILES = ("methods.json", "types.json", "notifications.json")
+import kodi_schema
+
 REF_PREFIX = "#/$defs/"
 SIMPLE_TYPES = frozenset(
     ("array", "boolean", "integer", "null", "number", "object", "string")
@@ -106,7 +106,7 @@ def lint(schemas):
                                 "before it is defined")
         seen.add(name)
 
-    for filename in SCHEMA_FILES:
+    for filename in kodi_schema.SCHEMA_FILES:
         for name, definition in schemas[filename].items():
             if definition.get("type") in ("method", "notification"):
                 for i, param in enumerate(definition.get("params", []) or []):
@@ -119,19 +119,12 @@ def lint(schemas):
     return problems
 
 
-def load(schema_dir):
-    return {filename: json.loads((schema_dir / filename).read_text(encoding="utf-8"))
-            for filename in SCHEMA_FILES}
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--schema-dir", type=Path,
-                        default=Path(__file__).resolve().parents[2]
-                        / "xbmc" / "interfaces" / "json-rpc" / "schema")
+    parser.add_argument("--schema-dir", type=Path, default=kodi_schema.SCHEMA_DIR)
     args = parser.parse_args()
 
-    problems = lint(load(args.schema_dir))
+    problems = lint(kodi_schema.load_schema_files(args.schema_dir))
     for problem in problems:
         print(f"lint: {problem}", file=sys.stderr)
     return 1 if problems else 0

@@ -27,6 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = REPO_ROOT / "xbmc" / "interfaces" / "json-rpc" / "schema"
 UTILS_HEADER = (REPO_ROOT / "xbmc" / "interfaces" / "json-rpc"
                 / "JSONRPCUtils.h")
+SCHEMA_FILES = ("methods.json", "types.json", "notifications.json")
 
 # The enum types CJSONRPC::Initialize registers from C++ tables; the only
 # names a $ref may point at without a definition in types.json.
@@ -158,10 +159,13 @@ def load_reason_taxonomy(header_path=UTILS_HEADER):
     return reasons
 
 
-def _load_json(schema_dir, name):
-    path = Path(schema_dir) / name
-    with open(path, encoding="utf-8") as handle:
-        return json.load(handle)
+def load_schema_files(schema_dir=SCHEMA_DIR):
+    """Return {file name: parsed JSON} for each of SCHEMA_FILES, as written."""
+    files = {}
+    for name in SCHEMA_FILES:
+        with open(Path(schema_dir) / name, encoding="utf-8") as handle:
+            files[name] = json.load(handle)
+    return files
 
 
 def collect_refs(schema, acc=None):
@@ -186,9 +190,10 @@ def load_service(schema_dir=SCHEMA_DIR):
     Returns {"methods", "types", "notifications"}; the types map includes
     synthesized placeholders for the runtime-registered enum types.
     """
-    methods = _load_json(schema_dir, "methods.json")
-    types = _load_json(schema_dir, "types.json")
-    notifications = _load_json(schema_dir, "notifications.json")
+    files = load_schema_files(schema_dir)
+    methods = files["methods.json"]
+    types = files["types.json"]
+    notifications = files["notifications.json"]
     unresolved = collect_refs([methods, types, notifications]) - set(types)
     unknown = unresolved - RUNTIME_ENUM_TYPES
     if unknown:
