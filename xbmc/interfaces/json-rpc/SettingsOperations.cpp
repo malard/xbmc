@@ -84,7 +84,7 @@ JSONRPC_STATUS CSettingsOperations::GetLevel(const CVariant& parameterObject, CV
 
 JSONRPC_STATUS CSettingsOperations::SetLevel(const CVariant& parameterObject, CVariant& result)
 {
-  const SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
+  const SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   CViewStateSettings& viewStateSettings = CViewStateSettings::GetInstance();
 
   if (level != viewStateSettings.GetSettingLevel())
@@ -104,7 +104,7 @@ JSONRPC_STATUS CSettingsOperations::SetLevel(const CVariant& parameterObject, CV
 
 JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant& parameterObject, CVariant& result)
 {
-  SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
+  SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   bool listCategories = !parameterObject["properties"].empty() &&
                         parameterObject["properties"][0].asString() == "categories";
 
@@ -145,7 +145,7 @@ JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant& parameterObject,
 
 JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant& parameterObject, CVariant& result)
 {
-  SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
+  SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   std::string strSection = parameterObject["section"].asString();
   bool listSettings = !parameterObject["properties"].empty() &&
                       parameterObject["properties"][0].asString() == "settings";
@@ -213,7 +213,7 @@ JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant& parameterObjec
 
 JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant& parameterObject, CVariant& result)
 {
-  SettingLevel level = ParseSettingLevel(parameterObject["level"].asString());
+  SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   const CVariant& filter = parameterObject["filter"];
   bool doFilter = filter.isMember("section") && filter.isMember("category");
   std::string strSection, strCategory;
@@ -471,18 +471,6 @@ JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant& parameterO
   }
 
   return ACK;
-}
-
-SettingLevel CSettingsOperations::ParseSettingLevel(const std::string& strLevel)
-{
-  if (StringUtils::EqualsNoCase(strLevel, "basic"))
-    return SettingLevel::Basic;
-  if (StringUtils::EqualsNoCase(strLevel, "advanced"))
-    return SettingLevel::Advanced;
-  if (StringUtils::EqualsNoCase(strLevel, "expert"))
-    return SettingLevel::Expert;
-
-  return SettingLevel::Standard;
 }
 
 namespace

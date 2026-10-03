@@ -419,6 +419,8 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_initialized{false};
 
     void SetDebugMode(bool debug);
+    //! Sets the level everything is logged at, which SetDebugMode also sets
+    void SetLogLevel(int level);
 
     //! \brief Toggles dirty-region visualization
     void ToggleDirtyRegionVisualization()

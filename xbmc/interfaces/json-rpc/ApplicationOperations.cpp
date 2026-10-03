@@ -74,8 +74,7 @@ JSONRPC_STATUS CApplicationOperations::SetLogLevel(const CVariant& parameterObje
   {
     // SetDebugMode cannot express none or debugfreemem, so the exact level is applied after it.
     settings->SetBool(CSettings::SETTING_DEBUG_SHOWLOGINFO, *level >= LOG_LEVEL_DEBUG);
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = *level;
-    CServiceBroker::GetLogging().SetLogLevel(*level);
+    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->SetLogLevel(*level);
   }
 
   if (!componentsParam.isNull())

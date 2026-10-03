@@ -47,8 +47,6 @@ public:
   static JSONRPC_STATUS SetSkinSettingValue(const CVariant& parameterObject, CVariant& result);
 
 private:
-  static SettingLevel ParseSettingLevel(const std::string& strLevel);
-
   static bool SerializeISetting(const std::shared_ptr<const ISetting>& setting, CVariant& obj);
   static bool SerializeSettingSection(const std::shared_ptr<const CSettingSection>& setting,
                                       CVariant& obj);
