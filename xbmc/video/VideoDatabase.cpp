@@ -431,23 +431,6 @@ bool CVideoDatabase::GetSubPaths(const std::string& basepath,
   return false;
 }
 
-MediaType CVideoDatabase::MediaTypeOfContent(VideoDbContentType content)
-{
-  switch (content)
-  {
-    case VideoDbContentType::MOVIES:
-      return MediaType::MOVIE;
-    case VideoDbContentType::TVSHOWS:
-      return MediaType::TV_SHOW;
-    case VideoDbContentType::EPISODES:
-      return MediaType::EPISODE;
-    case VideoDbContentType::MUSICVIDEOS:
-      return MediaType::MUSIC_VIDEO;
-    default:
-      return MediaType::NONE;
-  }
-}
-
 std::string_view CVideoDatabase::IdColumnOf(MediaType type)
 {
   switch (type)
@@ -4768,8 +4751,9 @@ void CVideoDatabase::DeleteTag(int idTag, VideoDbContentType mediaType)
         mediaType != VideoDbContentType::MUSICVIDEOS)
       return;
 
-    std::string strSQL = PrepareSQL("DELETE FROM tag_link WHERE tag_id = %i AND media_type = '%s'",
-                                    idTag, NameOf(MediaTypeOfContent(mediaType)).c_str());
+    std::string strSQL =
+        PrepareSQL("DELETE FROM tag_link WHERE tag_id = %i AND media_type = '%s'", idTag,
+                   NameOf(DatabaseUtils::MediaTypeFromVideoContentType(mediaType)).c_str());
     m_pDS->exec(strSQL);
   }
   catch (...)
@@ -4880,7 +4864,8 @@ CVideoDatabase::GetResult CVideoDatabase::TryGetDetailsByTypeAndId(
 bool CVideoDatabase::GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id)
 {
   CVideoInfoTag details;
-  if (TryGetDetailsByTypeAndId(MediaTypeOfContent(type), id, details, &item) != GetResult::Ok)
+  if (TryGetDetailsByTypeAndId(DatabaseUtils::MediaTypeFromVideoContentType(type), id, details,
+                               &item) != GetResult::Ok)
     return false;
 
   item.SetFromVideoInfoTag(details);
@@ -7114,8 +7099,9 @@ bool CVideoDatabase::GetNavCommon(const std::string& strBaseDir,
         !g_passwordManager.bMasterUser)
     {
       std::string view;
-      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
-      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
+      const std::string view_id{
+          IdColumnOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
+      const std::string media_type{NameOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
       std::string extraField;
       std::string extraJoin;
       if (idContent == VideoDbContentType::MOVIES)
@@ -7150,8 +7136,9 @@ bool CVideoDatabase::GetNavCommon(const std::string& strBaseDir,
     else
     {
       std::string view, extraField, extraJoin;
-      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
-      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
+      const std::string view_id{
+          IdColumnOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
+      const std::string media_type{NameOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
       if (idContent == VideoDbContentType::MOVIES)
       {
         view = NameOf(MediaType::MOVIE);
@@ -7604,8 +7591,9 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
         !g_passwordManager.bMasterUser)
     {
       std::string view;
-      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
-      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
+      const std::string view_id{
+          IdColumnOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
+      const std::string media_type{NameOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
       std::string extraField;
       std::string extraJoin;
       std::string group;
@@ -7655,8 +7643,9 @@ bool CVideoDatabase::GetPeopleNav(const std::string& strBaseDir,
     else
     {
       std::string view;
-      const std::string view_id{IdColumnOf(MediaTypeOfContent(idContent))};
-      const std::string media_type{NameOf(MediaTypeOfContent(idContent))};
+      const std::string view_id{
+          IdColumnOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
+      const std::string media_type{NameOf(DatabaseUtils::MediaTypeFromVideoContentType(idContent))};
       std::string extraField;
       std::string extraJoin;
       if (idContent == VideoDbContentType::MOVIES)
@@ -9001,8 +8990,8 @@ bool CVideoDatabase::HasContent(VideoDbContentType type)
     if (nullptr == m_pDS)
       return false;
 
-    const MediaType mediaType{MediaTypeOfContent(type)};
-    if (mediaType == MediaType::NONE)
+    const MediaType mediaType{DatabaseUtils::MediaTypeFromVideoContentType(type)};
+    if (IdColumnOf(mediaType).empty())
       return false;
 
     m_pDS->query("select count(1) from " + NameOf(mediaType));
@@ -12422,15 +12411,13 @@ bool CVideoDatabase::SetSingleValue(VideoDbContentType type,
     if (nullptr == m_pDB || nullptr == m_pDS)
       return false;
 
-    const MediaType mediaType{MediaTypeOfContent(type)};
-    const std::string strTable{mediaType == MediaType::NONE ? "" : NameOf(mediaType)};
+    const MediaType mediaType{DatabaseUtils::MediaTypeFromVideoContentType(type)};
     const std::string strField{IdColumnOf(mediaType)};
-
-    if (strTable.empty())
+    if (strField.empty())
       return false;
 
-    return SetSingleValue(strTable, StringUtils::Format("c{:02}", dbField), strValue, strField,
-                          dbId);
+    return SetSingleValue(NameOf(mediaType), StringUtils::Format("c{:02}", dbField), strValue,
+                          strField, dbId);
   }
   catch (...)
   {

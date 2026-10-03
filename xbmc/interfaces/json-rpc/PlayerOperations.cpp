@@ -61,6 +61,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/AspectRatioVocabulary.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/ItemProperties.h"
 #include "utils/MathUtils.h"
@@ -298,8 +299,9 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
         {
           CVideoInfoTag& tag = *fileItem->GetVideoInfoTag();
           videodatabase.TryGetDetailsByTypeAndId(
-              CVideoDatabase::MediaTypeOfContent(fileItem->GetVideoContentType()), tag.m_iDbId, tag,
-              nullptr, VideoDbDetailsAll, tag.GetAssetInfo().GetId(), tag.m_iFileId);
+              DatabaseUtils::MediaTypeFromVideoContentType(fileItem->GetVideoContentType()),
+              tag.m_iDbId, tag, nullptr, VideoDbDetailsAll, tag.GetAssetInfo().GetId(),
+              tag.m_iFileId);
         }
       }
       else // Audio
