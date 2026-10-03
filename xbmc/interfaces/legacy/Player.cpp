@@ -56,8 +56,6 @@ namespace XBMCAddon
 
   Player::Player()
   {
-    iPlayList = PLAYLIST_MUSIC_ID;
-
     // now that we're done, register hook me into the system
     if (languageHook)
     {
@@ -129,10 +127,9 @@ namespace XBMCAddon
       CMediaSettings::GetInstance().SetMediaStartWindowed(windowed);
 
       // play current file in playlist
-      const std::optional<PLAYLIST::Type> type = PlayListFromId(iPlayList);
       CServiceBroker::GetAppMessenger()->SendMsg(
-          TMSG_MEDIA_PLAY_PLAYLIST, type ? static_cast<int>(*type) : -1,
-          type ? CServiceBroker::GetPlayLists()->GetPlayList(*type).GetCurrentPosition() : -1);
+          TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(m_playList),
+          CServiceBroker::GetPlayLists()->GetPlayList(m_playList).GetCurrentPosition());
     }
 
     void Player::playPlaylist(const PlayList* playlist, bool windowed, int startpos)
@@ -143,10 +140,9 @@ namespace XBMCAddon
       {
         // set fullscreen or windowed
         CMediaSettings::GetInstance().SetMediaStartWindowed(windowed);
-        iPlayList = playlist->getPlayListId();
-        const std::optional<PLAYLIST::Type> type = PlayListFromId(iPlayList);
+        m_playList = playlist->GetType();
         CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PLAY_PLAYLIST,
-                                                   type ? static_cast<int>(*type) : -1, startpos);
+                                                   static_cast<int>(m_playList), startpos);
       }
       else
         playCurrent(windowed);
@@ -185,9 +181,8 @@ namespace XBMCAddon
       XBMC_TRACE;
       DelayedCallGuard dc(languageHook);
 
-      const std::optional<PLAYLIST::Type> type = PlayListFromId(iPlayList);
       CServiceBroker::GetAppMessenger()->SendMsg(TMSG_MEDIA_PLAY_PLAYLIST,
-                                                 type ? static_cast<int>(*type) : -1, selected);
+                                                 static_cast<int>(m_playList), selected);
     }
 
     void Player::OnPlayBackStarted(const CFileItem &file)
