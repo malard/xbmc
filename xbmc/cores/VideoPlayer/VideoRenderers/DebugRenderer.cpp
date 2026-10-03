@@ -183,8 +183,13 @@ void CDebugRenderer::CRenderer::Render(int idx, float depth)
       RESOLUTION_INFO resInfo = winSystem->GetGfxContext().GetResInfo();
       // Keep track of subtitle position value change,
       // can be changed by GUI Calibration or by window mode/resolution change or
-      // by user manual change (e.g. keyboard shortcut)
-      if (m_subtitlePosResInfo != resInfo.iSubtitles)
+      // by user manual change (e.g. keyboard shortcut).
+      // ResetSubtitlePosition() records the calibration line for MANUAL, the frame height
+      // otherwise.
+      const int posResInfo = m_subtitleAlign == KODI::SUBTITLES::Align::MANUAL
+                                 ? resInfo.iSubtitles
+                                 : static_cast<int>(m_rv.Height());
+      if (m_subtitlePosResInfo != posResInfo)
       {
         if (m_subtitlePosResInfo == POSRESINFO_SAVE_CHANGES)
         {
