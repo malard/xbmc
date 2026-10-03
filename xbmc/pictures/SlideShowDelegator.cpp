@@ -85,15 +85,6 @@ bool CSlideShowDelegator::InSlideShow() const
   return false;
 }
 
-bool CSlideShowDelegator::IsRunning() const
-{
-  if (m_delegate)
-  {
-    return m_delegate->IsRunning();
-  }
-  return false;
-}
-
 int CSlideShowDelegator::NumSlides() const
 {
   if (m_delegate)

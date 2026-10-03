@@ -29,10 +29,6 @@ public:
   virtual void StartSlideShow() = 0;
   virtual void PlayPicture() = 0;
   virtual bool InSlideShow() const = 0;
-  /*!
-   * \brief Whether a slideshow is showing, playing or paused, from its first slide until it stops.
-   */
-  virtual bool IsRunning() const = 0;
   virtual int NumSlides() const = 0;
   virtual int CurrentSlide() const = 0;
   virtual bool IsPaused() const = 0;

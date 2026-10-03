@@ -882,6 +882,18 @@ TEST(TestApplicationPlayLists, AnEntryHandedOnFromOnePlayListDoesNotProtectTheOt
   EXPECT_FALSE(playLists.Remove(PLAYLIST::Video, 0)) << "the handed-on entry itself stays";
 }
 
+TEST(TestApplicationPlayLists, ASlideShowDoesNotMakeAnIdleVideoPlayListPlay)
+{
+  CTestPlayLists playLists;
+  FillVideo(playLists);
+  playLists.SetPlayingType(PLAYLIST::Video);
+
+  playLists.SetSlideShowRunning(true);
+
+  EXPECT_TRUE(playLists.IsSlideShowRunning());
+  EXPECT_EQ(PLAYLIST::Video, playLists.GetPlayingType()) << "the slideshow takes no playlist";
+}
+
 TEST(TestApplicationPlayLists, AFileStartedOutsideThePlayListsIsJudgedByItself)
 {
   CTestPlayLists playLists;

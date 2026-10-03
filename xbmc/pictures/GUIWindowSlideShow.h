@@ -15,7 +15,6 @@
 #include "threads/Event.h"
 #include "threads/Thread.h"
 
-#include <atomic>
 #include <memory>
 #include <set>
 
@@ -67,7 +66,6 @@ public:
   void StartSlideShow() override;
   void PlayPicture() override;
   bool InSlideShow() const override;
-  bool IsRunning() const override { return m_running; }
   int NumSlides() const override;
   int CurrentSlide() const override;
   bool IsPaused() const override { return m_bPause; }
@@ -157,7 +155,6 @@ private:
   bool m_bSlideShow;
   bool m_bPause;
   bool m_bPlayingVideo;
-  std::atomic<bool> m_running{false};
   int m_iVideoSlide = -1;
   bool m_bErrorMessage;
 

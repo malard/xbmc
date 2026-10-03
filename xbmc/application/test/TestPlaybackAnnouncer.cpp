@@ -150,6 +150,7 @@ TEST_F(TestPlaybackAnnouncer, ASlideShowHoldsVideoUnderMusic)
   const auto slide = std::make_shared<CFileItem>("/pictures/one.jpg", false);
 
   m_announcer.OnSlideShow(CPlaybackAnnouncer::SlideShowEvent::Play, slide, true);
+  EXPECT_TRUE(m_playLists->IsSlideShowRunning());
   ASSERT_NE(nullptr, Find("OnPlay"));
   EXPECT_EQ(VIDEO, Find("OnPlay")->data["player"]["players"]);
 
@@ -159,8 +160,13 @@ TEST_F(TestPlaybackAnnouncer, ASlideShowHoldsVideoUnderMusic)
   Send(GUI_MSG_PLAYBACK_STARTED);
 
   EXPECT_EQ(PLAYLIST::Audio, m_playLists->GetPlayingType());
+  EXPECT_TRUE(m_playLists->IsSlideShowRunning()) << "music does not end the slideshow";
+
+  m_announcer.OnSlideShow(CPlaybackAnnouncer::SlideShowEvent::Pause, slide, false);
+  EXPECT_TRUE(m_playLists->IsSlideShowRunning());
 
   m_announcer.OnSlideShow(CPlaybackAnnouncer::SlideShowEvent::Stop, slide, false);
+  EXPECT_FALSE(m_playLists->IsSlideShowRunning());
   EXPECT_TRUE(m_published.back().data["end"].asBoolean());
 }
 

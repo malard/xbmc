@@ -1253,3 +1253,15 @@ void CApplicationPlayLists::ReportPlayListsChanged() const
   if (IGUIListener* listener = m_guiListener; listener)
     listener->OnPlayListsChanged();
 }
+
+void CApplicationPlayLists::SetSlideShowRunning(bool running)
+{
+  std::unique_lock lock(m_critSection);
+  m_slideShowRunning = running;
+}
+
+bool CApplicationPlayLists::IsSlideShowRunning() const
+{
+  std::unique_lock lock(m_critSection);
+  return m_slideShowRunning;
+}
