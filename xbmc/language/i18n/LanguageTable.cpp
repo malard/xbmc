@@ -8,8 +8,9 @@
 
 #include "language/i18n/LanguageTable.h"
 
-#include "language/i18n/Iso639_1.h"
-#include "language/i18n/Iso639_2.h"
+#include "language/i18n/Iso639.h"
+#include "language/i18n/Iso639_1_Table.h"
+#include "language/i18n/Iso639_2_Table.h"
 #include "utils/StringUtils.h"
 
 #include <algorithm>
@@ -28,6 +29,45 @@ std::string Key(std::string_view text)
   // A declaration may spell a code the POSIX way, pt_BR, and a tag spells it pt-BR
   std::ranges::replace(key, '_', '-');
   return key;
+}
+
+//! The ISO 639-1 codes in use, to their names. Withdrawn codes are left out.
+void ListIso6391Languages(std::map<std::string, std::string>& languages)
+{
+  for (const LCENTRY& entry : TableISO639_1)
+    languages.emplace(LongCodeToString(entry.code), entry.name);
+}
+
+//! The ISO 639-2 codes in either form, to their names
+void ListIso6392Languages(std::map<std::string, std::string>& languages)
+{
+  for (const LCENTRY& entry : TableISO639_2ByCode)
+    languages.emplace(LongCodeToString(entry.code), entry.name);
+
+  for (const ISO639_2_TB& tb : ISO639_2_TB_Mappings)
+  {
+    const auto it =
+        std::ranges::lower_bound(TableISO639_2ByCode, tb.terminological, {}, &LCENTRY::code);
+    if (it != TableISO639_2ByCode.end() && it->code == tb.terminological)
+      languages[LongCodeToString(tb.bibliographic)] = it->name;
+  }
+}
+
+//! Every name a language is known by, to its code. A name already present is kept.
+void ListLanguageNames(std::map<std::string, std::string>& names)
+{
+  // ISO 639-1 first, so that a language having codes in both standards is named by its alpha-2
+  // one, which is what the rest of the application prefers
+  for (const LCENTRY& entry : TableISO639_1)
+    names.emplace(entry.name, LongCodeToString(entry.code));
+  for (const LCENTRY& entry : TableISO639_1_Depr)
+    names.emplace(entry.name, LongCodeToString(entry.code));
+
+  // ISO 639-2 names are mapped to the ISO 639-2/T code
+  for (const LCENTRY& entry : TableISO639_2ByCode)
+    names.emplace(entry.name, LongCodeToString(entry.code));
+  for (const LCENTRY& entry : TableISO639_2_Names)
+    names.emplace(entry.name, LongCodeToString(entry.code));
 }
 } // namespace
 
@@ -48,14 +88,11 @@ void CLanguageTable::Seed()
   m_codes.clear();
   m_declared.clear();
 
-  CIso639_1::ListLanguages(m_names);
-  CIso639_2::ListLanguages(m_names);
+  ListIso6391Languages(m_names);
+  ListIso6392Languages(m_names);
 
-  // ISO 639-1 is enumerated first so that a language having codes in both standards is named by
-  // its alpha-2 one, which is what the rest of the application prefers
   std::map<std::string, std::string> names;
-  CIso639_1::ListLanguageNames(names);
-  CIso639_2::ListLanguageNames(names);
+  ListLanguageNames(names);
 
   for (const auto& [name, code] : names)
     m_codes.emplace(Key(name), code);
@@ -122,7 +159,7 @@ std::optional<std::string> CLanguageTable::CodeOf(std::string_view name) const
 
 void CLanguageTable::List(std::map<std::string, std::string>& languages) const
 {
-  CIso639_1::ListLanguages(languages);
+  ListIso6391Languages(languages);
 
   std::shared_lock lock(m_section);
   for (const auto& [code, name] : m_declared)

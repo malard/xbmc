@@ -11,7 +11,6 @@
 #include "language/i18n/Bcp47.h"
 #include "language/i18n/Bcp47Registry/SubTagRegistryManager.h"
 #include "language/i18n/Iso639.h"
-#include "language/i18n/Iso639_2.h"
 #include "language/i18n/IsoCodes.h"
 #include "language/i18n/LanguageTable.h"
 #include "utils/StringUtils.h"
@@ -378,7 +377,7 @@ std::string CLanguageTag::AsIso6392B() const
   // An alpha-3 subtag is already an ISO 639-2 code wherever that standard assigns one, so only
   // the languages spelling their two forms differently have a mapping to follow
   if (language.length() == ALPHA3_CODE_LENGTH)
-    return CIso639_2::TCodeToBCode(language).value_or(std::string{language});
+    return CIso639::TCodeToBCode(language).value_or(std::string{language});
 
   return std::string{language};
 }
@@ -392,7 +391,7 @@ std::string CLanguageTag::AsIso6392T() const
     return iso6392B;
 
   // Only the languages whose two forms are spelled differently have a mapping to follow
-  return CIso639_2::BCodeToTCode(iso6392B).value_or(iso6392B);
+  return CIso639::BCodeToTCode(iso6392B).value_or(iso6392B);
 }
 
 CTerritory CLanguageTag::GetTerritory() const
