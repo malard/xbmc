@@ -61,8 +61,9 @@ bool CVideoFileGeometry::BuildGeometryFrameRef(const VideoPicture& picture,
       (description->flags & AV_PIX_FMT_FLAG_PAL))
     return false;
 
+  // P010 and its kin store their samples in the high bits
   const unsigned int depth = description->comp[0].depth;
-  if (depth < 8 || depth > 16)
+  if (depth < 8 || depth > 16 || description->comp[0].shift != 0)
     return false;
 
   if (description->log2_chroma_w == 1 && description->log2_chroma_h == 1)
