@@ -17,6 +17,7 @@
 #include "Util.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogBusy.h"
+#include "filesystem/Directory.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
