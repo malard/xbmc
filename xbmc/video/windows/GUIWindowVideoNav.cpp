@@ -559,10 +559,10 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
     if (videoUrl.FromString(items.GetPath()))
     {
       if (items.GetContent() == "tags" &&
-          !items.Contains(PLACEHOLDER::NEW_TAG + videoUrl.GetType()))
+          !items.Contains(ITEM::PLACEHOLDER::NEW_TAG + videoUrl.GetType()))
       {
         const auto newTag{
-            std::make_shared<CFileItem>(PLACEHOLDER::NEW_TAG + videoUrl.GetType(), false)};
+            std::make_shared<CFileItem>(ITEM::PLACEHOLDER::NEW_TAG + videoUrl.GetType(), false)};
         newTag->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20462));
         newTag->SetLabelPreformatted(true);
         newTag->SetSpecialSort(SortSpecial::TOP);
@@ -719,7 +719,7 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
 
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
-    if (!pItem->IsPath(std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
+    if (!pItem->IsPath(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
         !pItem->IsPath("special://videoplaylists/") && !pItem->IsPath("sources://video/") &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
@@ -792,7 +792,8 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons("video", item, buttons);
-    if (!item->IsDVD() && item->GetPath() != PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE &&
+        !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
@@ -1001,7 +1002,7 @@ bool CGUIWindowVideoNav::OnAddMediaSource()
 bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 {
   CFileItemPtr item = m_vecItems->Get(iItem);
-  if (StringUtils::StartsWithNoCase(item->GetPath(), PLACEHOLDER::NEW_TAG))
+  if (StringUtils::StartsWithNoCase(item->GetPath(), ITEM::PLACEHOLDER::NEW_TAG))
   {
     // dont allow update while scanning
     if (CVideoLibraryQueue::GetInstance().IsScanningLibrary())

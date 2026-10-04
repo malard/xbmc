@@ -900,7 +900,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   // Exclude all video library items
-  if (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO))
+  if (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO))
     return false;
 
   // Exclude other components
@@ -908,7 +908,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   // Exclude special items
-  if (PLACEHOLDER::IsNewPlaylist(item.GetPath()))
+  if (ITEM::PLACEHOLDER::IsNewPlaylist(item.GetPath()))
     return false;
 
   // Include playlists located at one of the possible music playlist locations
@@ -939,7 +939,8 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   if (item.IsFolder() &&
-      (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::MUSIC)))
+      (MUSIC::IsMusicDb(item) ||
+       StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CMusicDatabaseDirectory::GetDirectoryParentType(item.GetPath());
@@ -966,7 +967,7 @@ bool IsItemPlayable(const CFileItem& item)
   {
     // Not a music-specific folder (just file:// or nfs://). Allow play if context is Music window.
     if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_MUSIC_NAV &&
-        item.GetPath() != PLACEHOLDER::ADD_SOURCE) // Exclude "Add music source" item
+        item.GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE) // Exclude "Add music source" item
       return true;
   }
   return false;

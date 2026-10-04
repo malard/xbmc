@@ -116,7 +116,7 @@ bool CVideoMarkWatched::IsVisible(const CFileItem& item) const
     }
     else if (VIDEO::IsVideoDb(item))
       return true;
-    else if (StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO))
+    else if (StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO))
       return true;
     else if (item.GetProperty("IsVideoFolder").asBoolean())
       return true;
@@ -155,7 +155,7 @@ bool CVideoMarkUnWatched::IsVisible(const CFileItem& item) const
     }
     else if (VIDEO::IsVideoDb(item))
       return true;
-    else if (StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO))
+    else if (StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO))
       return true;
     else if (item.GetProperty("IsVideoFolder").asBoolean())
       return true;
