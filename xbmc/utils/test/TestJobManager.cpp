@@ -511,7 +511,6 @@ TEST_F(TestJobManager, CancelJobsDoesNotRunQueuedCallbacksUnderTheLock)
 
   ScopedThreads threads([&callback]() { callback.Release(); });
   threads.Start([]() { CServiceBroker::GetJobManager()->CancelJobs(); });
-
   ASSERT_TRUE(poll([&callback]() { return callback.HasEntered(); }));
 
   threads.Start(

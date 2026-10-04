@@ -24,6 +24,5 @@ CResource::Published CSkinResource::PublishedFiles() const
 {
   static constexpr std::array<std::string_view, 11> extensions{
       ".xml", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".dds", ".tga", ".ttf", ".otf", ".ttc"};
-
   return {.extensions = extensions};
 }
