@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 using namespace std::chrono_literals;
+using WaitResult = CGUIDialogBusy::WaitResult;
 
 namespace
 {
@@ -46,7 +47,8 @@ TEST(TestGUIDialogBusy, ATimeoutEndsTheWait)
   CEvent event;
   const auto start{std::chrono::steady_clock::now()};
 
-  EXPECT_FALSE(CGUIDialogBusy::WaitOnEvent(event, DISPLAY_TIME, true, 200ms));
+  EXPECT_EQ(WaitResult::TIMED_OUT,
+            CGUIDialogBusy::WaitOnEventFor(event, 200ms, DISPLAY_TIME, true));
 
   // the wait ends on its own deadline rather than running on to displaytime
   const auto elapsed{Elapsed(start)};
@@ -59,7 +61,7 @@ TEST(TestGUIDialogBusy, AZeroTimeoutEndsTheWaitAtOnce)
   CEvent event;
   const auto start{std::chrono::steady_clock::now()};
 
-  EXPECT_FALSE(CGUIDialogBusy::WaitOnEvent(event, DISPLAY_TIME, true, 0ms));
+  EXPECT_EQ(WaitResult::TIMED_OUT, CGUIDialogBusy::WaitOnEventFor(event, 0ms, DISPLAY_TIME, true));
 
   EXPECT_LT(Elapsed(start), 200ms);
 }
@@ -77,7 +79,8 @@ TEST(TestGUIDialogBusy, AnEventArrivingBeforeTheTimeoutIsNotATimeout)
   const auto start{std::chrono::steady_clock::now()};
 
   // the deadline is armed and must not be what ends this wait
-  EXPECT_TRUE(CGUIDialogBusy::WaitOnEvent(event, DISPLAY_TIME, true, 500ms));
+  EXPECT_EQ(WaitResult::COMPLETED,
+            CGUIDialogBusy::WaitOnEventFor(event, 500ms, DISPLAY_TIME, true));
   EXPECT_LT(Elapsed(start), 500ms);
 
   setter.join();
@@ -89,7 +92,8 @@ TEST(TestGUIDialogBusy, AnEventAlreadySetNeverWaits)
   event.Set();
 
   const auto start{std::chrono::steady_clock::now()};
-  EXPECT_TRUE(CGUIDialogBusy::WaitOnEvent(event, DISPLAY_TIME, true, 200ms));
+  EXPECT_EQ(WaitResult::COMPLETED,
+            CGUIDialogBusy::WaitOnEventFor(event, 200ms, DISPLAY_TIME, true));
   EXPECT_LT(Elapsed(start), 200ms);
 }
 
@@ -98,7 +102,7 @@ TEST(TestGUIDialogBusy, AZeroTimeoutStillSeesAnEventAlreadySet)
   CEvent event;
   event.Set();
 
-  EXPECT_TRUE(CGUIDialogBusy::WaitOnEvent(event, DISPLAY_TIME, true, 0ms));
+  EXPECT_EQ(WaitResult::COMPLETED, CGUIDialogBusy::WaitOnEventFor(event, 0ms, DISPLAY_TIME, true));
 }
 
 TEST(TestGUIDialogBusy, AnUnsetTimeoutIsNotEndedByADeadline)
@@ -128,7 +132,7 @@ TEST(TestGUIDialogBusy, ATimeoutEndsTheWaitWithNoBusyDialogToShow)
     const auto start{std::chrono::steady_clock::now()};
 
     // longer than displaytime, so the dialog is looked up and found missing
-    EXPECT_FALSE(CGUIDialogBusy::WaitOnEvent(event, 100, true, 400ms));
+    EXPECT_EQ(WaitResult::TIMED_OUT, CGUIDialogBusy::WaitOnEventFor(event, 400ms, 100, true));
     EXPECT_GE(Elapsed(start), 400ms - DEADLINE_RESOLUTION);
   }
   CServiceBroker::UnregisterWinSystem();
@@ -149,7 +153,7 @@ TEST(TestGUIDialogBusy, AnEventArrivesWithNoBusyDialogToShow)
           event.Set();
         });
 
-    EXPECT_TRUE(CGUIDialogBusy::WaitOnEvent(event, 100, true, 2000ms));
+    EXPECT_EQ(WaitResult::COMPLETED, CGUIDialogBusy::WaitOnEventFor(event, 2000ms, 100, true));
 
     setter.join();
   }

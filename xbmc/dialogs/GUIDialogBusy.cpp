@@ -77,8 +77,24 @@ bool CGUIDialogBusy::Wait(IRunnable *runnable, unsigned int displaytime, bool al
 
 bool CGUIDialogBusy::WaitOnEvent(CEvent& event,
                                  unsigned int displaytime /* = 100 */,
-                                 bool allowCancel /* = true */,
-                                 std::optional<std::chrono::milliseconds> timeout /* = {} */)
+                                 bool allowCancel /* = true */)
+{
+  return DoWaitOnEvent(event, displaytime, allowCancel, {}) == WaitResult::COMPLETED;
+}
+
+CGUIDialogBusy::WaitResult CGUIDialogBusy::WaitOnEventFor(CEvent& event,
+                                                          std::chrono::milliseconds timeout,
+                                                          unsigned int displaytime /* = 100 */,
+                                                          bool allowCancel /* = true */)
+{
+  return DoWaitOnEvent(event, displaytime, allowCancel, timeout);
+}
+
+CGUIDialogBusy::WaitResult CGUIDialogBusy::DoWaitOnEvent(
+    CEvent& event,
+    unsigned int displaytime,
+    bool allowCancel,
+    std::optional<std::chrono::milliseconds> timeout)
 {
   XbmcThreads::EndTime<> deadline;
   if (timeout)
@@ -94,7 +110,7 @@ bool CGUIDialogBusy::WaitOnEvent(CEvent& event,
     // Nothing below can change the answer once the deadline has passed, and the dialog is not
     // worth looking up to abandon it.
     if (timeout && deadline.IsTimePast())
-      return false;
+      return WaitResult::TIMED_OUT;
 
     auto* dialog = static_cast<CGUIDialogBusy*>(
         CServiceBroker::GetGUI()->GetWindowManager().GetWindow(WINDOW_DIALOG_BUSY));
@@ -133,7 +149,9 @@ bool CGUIDialogBusy::WaitOnEvent(CEvent& event,
       timedout = !event.Wait(deadline.GetTimeLeft());
     }
   }
-  return !cancelled && !timedout;
+  if (cancelled)
+    return WaitResult::CANCELLED;
+  return timedout ? WaitResult::TIMED_OUT : WaitResult::COMPLETED;
 }
 
 CGUIDialogBusy::CGUIDialogBusy(void)

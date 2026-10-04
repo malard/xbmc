@@ -21,15 +21,21 @@ namespace UPNP
 
 namespace
 {
+//! NPT_ERROR_TIMEOUT when the deadline passes, NPT_FAILURE when the user cancels.
 NPT_Result WaitOnEvent(CEvent& event, XbmcThreads::EndTime<>& timeout)
 {
   if (event.Wait(std::chrono::milliseconds(0)))
     return NPT_SUCCESS;
 
-  if (!CGUIDialogBusy::WaitOnEvent(event, 100, true, timeout.GetTimeLeft()))
-    return NPT_FAILURE;
-
-  return NPT_SUCCESS;
+  switch (CGUIDialogBusy::WaitOnEventFor(event, timeout.GetTimeLeft()))
+  {
+    case CGUIDialogBusy::WaitResult::COMPLETED:
+      return NPT_SUCCESS;
+    case CGUIDialogBusy::WaitResult::TIMED_OUT:
+      return NPT_ERROR_TIMEOUT;
+    default:
+      return NPT_FAILURE;
+  }
 }
 
 PLT_TransportInfo TransportInfoOf(NPT_Result res, const PLT_TransportInfo* info)

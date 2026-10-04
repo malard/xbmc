@@ -226,14 +226,11 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   do
   {
     // Wait for the reply before reading the state, or the first pass sees the old file's state.
-    if (NPT_FAILED(m_delegate->QueryTransport(timeout, transport)))
-    {
-      // Reaching the deadline ends the loop without failing the open; a wait that ends before the
-      // deadline is the user cancelling.
-      if (timeout.IsTimePast())
-        break;
-      goto failed_waitplaying;
-    }
+    const NPT_Result queried = m_delegate->QueryTransport(timeout, transport);
+    // The deadline ends this loop, as the loop condition does, rather than failing the open
+    if (queried == NPT_ERROR_TIMEOUT)
+      break;
+    NPT_CHECK_LABEL_SEVERE(queried, failed_waitplaying);
 
     const NPT_String& transportState = transport.cur_transport_state;
     if (transportState == "PLAYING" || transportState == "PAUSED_PLAYBACK")
