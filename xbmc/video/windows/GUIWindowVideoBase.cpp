@@ -660,8 +660,7 @@ bool CGUIWindowVideoBase::OnSelect(int iItem)
 
   const std::string path{item->GetPath()};
   if (!item->IsFolder() && path != ITEM::PLACEHOLDER::ADD_SOURCE &&
-      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) &&
-        !URIUtils::IsPlugin(path)) ||
+      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) && !URIUtils::IsPlugin(path)) ||
        (URIUtils::IsPlugin(path) && item->GetProperty("IsPlayable").asBoolean(false))))
   {
     CVideoSelectActionProcessor proc(*this, item, iItem, "");
@@ -1210,8 +1209,8 @@ bool CGUIWindowVideoBase::GetDirectory(const std::string &strDirectory, CFileIte
     newPlaylist->SetLabelPreformatted(true);
     items.Add(newPlaylist);
 */
-    newPlaylist = std::make_shared<CFileItem>(
-        std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video", false);
+    newPlaylist =
+        std::make_shared<CFileItem>(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video", false);
     newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
         21437)); // "new smart playlist..."
     newPlaylist->SetArt("icon", "DefaultAddSource.png");

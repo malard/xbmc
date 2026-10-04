@@ -80,7 +80,8 @@ const char* audio_containers[] = {"musicdb://genres/",
 
 const char* video_containers[] = {
     MEDIA::LIBRARY_PATH::MOVIE_TITLES, MEDIA::LIBRARY_PATH::TVSHOW_TITLES,
-    "videodb://recentlyaddedmovies/", "videodb://recentlyaddedepisodes/"};
+                                  "videodb://recentlyaddedmovies/",
+                                  "videodb://recentlyaddedepisodes/"};
 
 /*----------------------------------------------------------------------
 |   CUPnPServer::CUPnPServer
