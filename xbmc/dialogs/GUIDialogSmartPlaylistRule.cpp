@@ -114,9 +114,13 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
 
   Field field{static_cast<Field>(m_rule.m_field)};
   const MediaType mediaType{MEDIA::MediaTypeFromName(m_type)};
+  const bool music{PLAYLIST::CSmartPlaylist::IsMusicType(m_type)};
+  const bool video{PLAYLIST::CSmartPlaylist::IsVideoType(m_type)};
+  const bool mixed{m_type == MEDIA::CONTENT::MIXED};
+  const bool musicVideos{mixed || mediaType == MediaType::MUSIC_VIDEO};
+  const bool songs{mixed || mediaType == MediaType::SONG};
 
-  std::string basePath{PLAYLIST::CSmartPlaylist::IsMusicType(m_type) ? MUSIC::DB_PATH::ROOT
-                                                                     : VIDEO::DB_PATH::ROOT};
+  std::string basePath{music ? MUSIC::DB_PATH::ROOT : VIDEO::DB_PATH::ROOT};
   VideoDbContentType type{DatabaseUtils::VideoContentTypeFromMediaType(mediaType)};
   switch (mediaType)
   {
@@ -148,13 +152,11 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   {
     case Field::GENRE:
     {
-      if (m_type == MEDIA::CONTENT::TVSHOWS || m_type == MEDIA::CONTENT::EPISODES ||
-          m_type == MEDIA::CONTENT::MOVIES)
+      if (video && !musicVideos)
         videodatabase.GetGenresNav(basePath + "genres/", items, type);
-      else if (m_type == MEDIA::CONTENT::SONGS || m_type == MEDIA::CONTENT::ALBUMS ||
-               m_type == MEDIA::CONTENT::ARTISTS || m_type == MEDIA::CONTENT::MIXED)
+      else if (music)
         database.GetGenresNav(MUSIC::DB_PATH::GENRES, items);
-      if (m_type == MEDIA::CONTENT::MUSICVIDEOS || m_type == MEDIA::CONTENT::MIXED)
+      if (musicVideos)
       {
         CFileItemList items2;
         videodatabase.GetGenresNav(VIDEO::DB_PATH::MUSICVIDEO_GENRES, items2,
@@ -166,8 +168,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::SOURCE:
     {
-      if (m_type == MEDIA::CONTENT::SONGS || m_type == MEDIA::CONTENT::ALBUMS ||
-          m_type == MEDIA::CONTENT::ARTISTS || m_type == MEDIA::CONTENT::MIXED)
+      if (music)
       {
         database.GetSourcesNav(MUSIC::DB_PATH::SOURCES, items);
         iLabel = 39030;
@@ -176,7 +177,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::ROLE:
     {
-      if (m_type == MEDIA::CONTENT::ARTISTS || m_type == MEDIA::CONTENT::MIXED)
+      if (mixed || mediaType == MediaType::ARTIST)
       {
         database.GetRolesNav(MUSIC::DB_PATH::SONGS, items);
         iLabel = 38033;
@@ -192,10 +193,10 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     case Field::ARTIST:
     case Field::ALBUM_ARTIST:
     {
-      if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
+      if (music)
         database.GetArtistsNav(MUSIC::DB_PATH::ARTISTS, items, SortDescription(),
                                field == Field::ALBUM_ARTIST, -1);
-      if (m_type == MEDIA::CONTENT::MUSICVIDEOS || m_type == MEDIA::CONTENT::MIXED)
+      if (musicVideos)
       {
         CFileItemList items2;
         videodatabase.GetMusicVideoArtistsByName("", items2);
@@ -206,9 +207,9 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::ALBUM:
     {
-      if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
+      if (music)
         database.GetAlbumsNav(MUSIC::DB_PATH::ALBUMS, items, SortDescription());
-      if (m_type == MEDIA::CONTENT::MUSICVIDEOS || m_type == MEDIA::CONTENT::MIXED)
+      if (musicVideos)
       {
         CFileItemList items2;
         videodatabase.GetMusicVideoAlbumsByName("", items2);
@@ -225,9 +226,9 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::YEAR:
     {
-      if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
+      if (music)
         database.GetYearsNav(MUSIC::DB_PATH::YEARS, items);
-      if (PLAYLIST::CSmartPlaylist::IsVideoType(m_type))
+      if (video)
       {
         CFileItemList items2;
         videodatabase.GetYearsNav(basePath + "years/", items2, type);
@@ -268,17 +269,17 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::TITLE:
     {
-      if (m_type == MEDIA::CONTENT::SONGS || m_type == MEDIA::CONTENT::MIXED)
+      if (songs)
       {
         database.GetSongsNav(MUSIC::DB_PATH::SONGS, items, SortDescription(), -1, -1, -1);
         iLabel = 134;
       }
-      if (m_type == MEDIA::CONTENT::MOVIES)
+      if (mediaType == MediaType::MOVIE)
       {
         videodatabase.GetMoviesNav(basePath + "titles/", items);
         iLabel = 20342;
       }
-      if (m_type == MEDIA::CONTENT::EPISODES)
+      if (mediaType == MediaType::EPISODE)
       {
         videodatabase.GetEpisodesNav(basePath + "titles/-1/-1/", items);
         // we need to replace the db label (<season>x<episode> <title>) with the title only
@@ -287,7 +288,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
           format.FormatLabel(items[i].get());
         iLabel = 20360;
       }
-      if (m_type == MEDIA::CONTENT::MUSICVIDEOS || m_type == MEDIA::CONTENT::MIXED)
+      if (musicVideos)
       {
         videodatabase.GetMusicVideosNav(basePath + "titles/", items);
         iLabel = 20389;
@@ -302,10 +303,10 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
       // Note: This can cause infinite loops (playlist that refers to the same playlist) but I don't
       //       think there's any decent way to deal with this, as the infinite loop may be an arbitrary
       //       number of playlists deep, eg playlist1 -> playlist2 -> playlist3 ... -> playlistn -> playlist1
-      if (PLAYLIST::CSmartPlaylist::IsVideoType(m_type))
+      if (video)
         XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::VIDEO), items, ".xsp",
                                         XFILE::DIR_FLAG_NO_FILE_DIRS);
-      if (PLAYLIST::CSmartPlaylist::IsMusicType(m_type))
+      if (music)
       {
         CFileItemList items2;
         XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::MUSIC), items2, ".xsp",
@@ -338,9 +339,9 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     case Field::PATH:
     {
       std::vector<CMediaSource> sources;
-      if (m_type == MEDIA::CONTENT::SONGS || m_type == MEDIA::CONTENT::MIXED)
+      if (songs)
         sources = CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC);
-      if (PLAYLIST::CSmartPlaylist::IsVideoType(m_type))
+      if (video)
       {
         std::vector<CMediaSource> sources2 =
             CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO);

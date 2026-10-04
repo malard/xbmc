@@ -56,6 +56,74 @@ using enum CDatabaseQueryRule::SearchOperator;
 using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 
+namespace
+{
+bool IsVideoLibrary(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::MOVIE:
+    case MediaType::TV_SHOW:
+    case MediaType::EPISODE:
+    case MediaType::MUSIC_VIDEO:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool IsMusicLibrary(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::ARTIST:
+    case MediaType::ALBUM:
+    case MediaType::SONG:
+      return true;
+    default:
+      return false;
+  }
+}
+
+VideoDbContentType VideoContentOf(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::TV_SHOW:
+      return VideoDbContentType::TVSHOWS;
+    case MediaType::EPISODE:
+      return VideoDbContentType::EPISODES;
+    case MediaType::MUSIC_VIDEO:
+      return VideoDbContentType::MUSICVIDEOS;
+    default:
+      return VideoDbContentType::MOVIES;
+  }
+}
+
+uint32_t HeadingOf(MediaType type)
+{
+  switch (type)
+  {
+    case MediaType::MOVIE:
+      return 20342;
+    case MediaType::TV_SHOW:
+      return 20343;
+    case MediaType::EPISODE:
+      return 20360;
+    case MediaType::MUSIC_VIDEO:
+      return 20389;
+    case MediaType::ARTIST:
+      return 133;
+    case MediaType::ALBUM:
+      return 132;
+    case MediaType::SONG:
+      return 134;
+    default:
+      return 0;
+  }
+}
+} // namespace
+
 // clang-format off
 static const CGUIDialogMediaFilter::Filter filterList[] = {
   {      MEDIA::CONTENT::MOVIES,          Field::TITLE,   556,  SettingType::String,   "edit",   "string",   OPERATOR_CONTAINS },
@@ -143,9 +211,7 @@ static const CGUIDialogMediaFilter::Filter filterList[] = {
 // clang-format on
 
 CGUIDialogMediaFilter::CGUIDialogMediaFilter()
-  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_MEDIA_FILTER, "DialogSettings.xml"),
-    m_dbUrl(NULL),
-    m_filter(NULL)
+  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_MEDIA_FILTER, "DialogSettings.xml")
 { }
 
 CGUIDialogMediaFilter::~CGUIDialogMediaFilter()
@@ -200,7 +266,7 @@ void CGUIDialogMediaFilter::ShowAndEditMediaFilter(const std::string& path,
                                                    PLAYLIST::CSmartPlaylist& filter)
 {
   CGUIDialogMediaFilter *dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogMediaFilter>(WINDOW_DIALOG_MEDIA_FILTER);
-  if (dialog == NULL)
+  if (dialog == nullptr)
     return;
 
   // initialize and show the dialog
@@ -245,7 +311,7 @@ void CGUIDialogMediaFilter::OnSettingChanged(const std::shared_ptr<const CSettin
     std::string value = setting->ToString();
     if (!value.empty())
     {
-      if (filter.rule == NULL)
+      if (filter.rule == nullptr)
         filter.rule = AddRule(filter.field, filter.ruleOperator);
       filter.rule->m_parameter.clear();
       filter.rule->m_parameter.push_back(value);
@@ -260,7 +326,7 @@ void CGUIDialogMediaFilter::OnSettingChanged(const std::shared_ptr<const CSettin
     {
       const CDatabaseQueryRule::SearchOperator ruleOperator =
           choice == CHECK_YES ? OPERATOR_TRUE : OPERATOR_FALSE;
-      if (filter.rule == NULL)
+      if (filter.rule == nullptr)
         filter.rule = AddRule(filter.field, ruleOperator);
       else
         filter.rule->m_operator = ruleOperator;
@@ -273,7 +339,7 @@ void CGUIDialogMediaFilter::OnSettingChanged(const std::shared_ptr<const CSettin
     std::vector<CVariant> values = CSettingUtils::GetList(std::static_pointer_cast<const CSettingList>(setting));
     if (!values.empty())
     {
-      if (filter.rule == NULL)
+      if (filter.rule == nullptr)
         filter.rule = AddRule(filter.field, filter.ruleOperator);
 
       filter.rule->m_parameter.clear();
@@ -333,7 +399,7 @@ void CGUIDialogMediaFilter::OnSettingChanged(const std::shared_ptr<const CSettin
     if (!strValueLower.empty() && !strValueUpper.empty())
     {
       // prepare the filter rule
-      if (filter.rule == NULL)
+      if (filter.rule == nullptr)
         filter.rule = AddRule(filter.field, filter.ruleOperator);
       filter.rule->m_parameter.clear();
 
@@ -347,10 +413,10 @@ void CGUIDialogMediaFilter::OnSettingChanged(const std::shared_ptr<const CSettin
     return;
 
   // we need to remove the existing rule for the title
-  if (remove && filter.rule != NULL)
+  if (remove && filter.rule != nullptr)
   {
     DeleteRule(filter.field);
-    filter.rule = NULL;
+    filter.rule = nullptr;
   }
 
   CGUIMessage msg(GUI_MSG_REFRESH_LIST, GetID(), 0);
@@ -361,29 +427,9 @@ void CGUIDialogMediaFilter::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
 
-  // set the heading label based on the media type
-  uint32_t localizedMediaId = 0;
-  if (m_mediaType == MEDIA::CONTENT::MOVIES)
-    localizedMediaId = 20342;
-  else if (m_mediaType == MEDIA::CONTENT::TVSHOWS)
-    localizedMediaId = 20343;
-  else if (m_mediaType == MEDIA::CONTENT::EPISODES)
-    localizedMediaId = 20360;
-  else if (m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
-    localizedMediaId = 20389;
-  else if (m_mediaType == MEDIA::CONTENT::ARTISTS)
-    localizedMediaId = 133;
-  else if (m_mediaType == MEDIA::CONTENT::ALBUMS)
-    localizedMediaId = 132;
-  else if (m_mediaType == MEDIA::CONTENT::SONGS)
-    localizedMediaId = 134;
-
-  // set the heading
-  SET_CONTROL_LABEL(
-      CONTROL_HEADING,
-      StringUtils::Format(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(1275),
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(localizedMediaId)));
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
+  SET_CONTROL_LABEL(CONTROL_HEADING, StringUtils::Format(localizeStrings.Get(1275),
+                                                         localizeStrings.Get(HeadingOf(m_type))));
 
   SET_CONTROL_LABEL(CONTROL_OKAY_BUTTON, 186);
   SET_CONTROL_LABEL(CONTROL_CLEAR_BUTTON, 192);
@@ -393,7 +439,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
 {
   CGUIDialogSettingsManualBase::InitializeSettings();
 
-  if (m_filter == NULL)
+  if (m_filter == nullptr)
     return;
 
   Reset(true);
@@ -401,14 +447,14 @@ void CGUIDialogMediaFilter::InitializeSettings()
   int handledRules = 0;
 
   const std::shared_ptr<CSettingCategory> category = AddCategory("filter", -1);
-  if (category == NULL)
+  if (category == nullptr)
   {
     CLog::Log(LOGERROR, "CGUIDialogMediaFilter: unable to setup filters");
     return;
   }
 
   const std::shared_ptr<CSettingGroup> group = AddGroup(category);
-  if (group == NULL)
+  if (group == nullptr)
   {
     CLog::Log(LOGERROR, "CGUIDialogMediaFilter: unable to setup filters");
     return;
@@ -437,7 +483,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
     if (filter.controlType == "edit")
     {
       CVariant data;
-      if (filter.rule != NULL && filter.rule->m_parameter.size() == 1)
+      if (filter.rule != nullptr && filter.rule->m_parameter.size() == 1)
         data = filter.rule->m_parameter.at(0);
 
       if (filter.settingType == SettingType::String)
@@ -450,7 +496,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
     else if (filter.controlType == "toggle")
     {
       int value = CHECK_ALL;
-      if (filter.rule != NULL)
+      if (filter.rule != nullptr)
         value = filter.rule->m_operator == OPERATOR_TRUE ? CHECK_YES : CHECK_NO;
 
       TranslatableIntegerSettingOptions entries;
@@ -463,7 +509,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
     else if (filter.controlType == "list")
     {
       std::vector<std::string> values;
-      if (filter.rule != NULL && !filter.rule->m_parameter.empty())
+      if (filter.rule != nullptr && !filter.rule->m_parameter.empty())
       {
         values = StringUtils::Split(filter.rule->GetParameter(), DATABASEQUERY_RULE_VALUE_SEPARATOR);
         if (values.size() == 1 && values.at(0).empty())
@@ -480,7 +526,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
     else if (filter.controlType == "range")
     {
       CVariant valueLower, valueUpper;
-      if (filter.rule != NULL)
+      if (filter.rule != nullptr)
       {
         if (filter.rule->m_parameter.size() == 2)
         {
@@ -490,7 +536,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
         else
         {
           DeleteRule(filter.field);
-          filter.rule = NULL;
+          filter.rule = nullptr;
         }
       }
 
@@ -536,7 +582,7 @@ void CGUIDialogMediaFilter::InitializeSettings()
     }
     else
     {
-      if (filter.rule != NULL)
+      if (filter.rule != nullptr)
         handledRules--;
 
       CLog::Log(LOGWARNING,
@@ -545,9 +591,9 @@ void CGUIDialogMediaFilter::InitializeSettings()
       continue;
     }
 
-    if (filter.setting == NULL)
+    if (filter.setting == nullptr)
     {
-      if (filter.rule != NULL)
+      if (filter.rule != nullptr)
         handledRules--;
 
       CLog::Log(LOGWARNING,
@@ -569,23 +615,20 @@ void CGUIDialogMediaFilter::InitializeSettings()
 
 bool CGUIDialogMediaFilter::SetPath(const std::string &path)
 {
-  if (path.empty() || m_filter == NULL)
+  if (path.empty() || m_filter == nullptr)
   {
     CLog::Log(LOGWARNING, "CGUIDialogMediaFilter::SetPath({}): invalid path or filter", path);
     return false;
   }
 
-  delete m_dbUrl;
-  bool video = false;
-  if (path.starts_with(VIDEO::DB_PATH::ROOT))
-  {
-    m_dbUrl = new CVideoDbUrl();
-    video = true;
-  }
+  const bool video{path.starts_with(VIDEO::DB_PATH::ROOT)};
+  if (video)
+    m_dbUrl = std::make_unique<CVideoDbUrl>();
   else if (path.starts_with(MUSIC::DB_PATH::ROOT))
-    m_dbUrl = new CMusicDbUrl();
+    m_dbUrl = std::make_unique<CMusicDbUrl>();
   else
   {
+    m_dbUrl.reset();
     CLog::Log(
         LOGWARNING,
         "CGUIDialogMediaFilter::SetPath({}): invalid path (neither videodb:// nor musicdb://)",
@@ -594,8 +637,7 @@ bool CGUIDialogMediaFilter::SetPath(const std::string &path)
   }
 
   if (!m_dbUrl->FromString(path) ||
-     (video && m_dbUrl->GetType() != MEDIA::CONTENT::MOVIES && m_dbUrl->GetType() != MEDIA::CONTENT::TVSHOWS && m_dbUrl->GetType() != MEDIA::CONTENT::EPISODES && m_dbUrl->GetType() != MEDIA::CONTENT::MUSICVIDEOS) ||
-     (!video && m_dbUrl->GetType() != MEDIA::CONTENT::ARTISTS && m_dbUrl->GetType() != MEDIA::CONTENT::ALBUMS && m_dbUrl->GetType() != MEDIA::CONTENT::SONGS))
+      !(video ? IsVideoLibrary : IsMusicLibrary)(MediaTypeFromName(m_dbUrl->GetType())))
   {
     CLog::Log(LOGWARNING, "CGUIDialogMediaFilter::SetPath({}): invalid media type", path);
     return false;
@@ -606,9 +648,10 @@ bool CGUIDialogMediaFilter::SetPath(const std::string &path)
     m_dbUrl->RemoveOption("filter");
 
   if (video)
-    m_mediaType = ((CVideoDbUrl*)m_dbUrl)->GetItemType();
+    m_mediaType = static_cast<const CVideoDbUrl&>(*m_dbUrl).GetItemType();
   else
     m_mediaType = m_dbUrl->GetType();
+  m_type = MediaTypeFromName(m_mediaType);
 
   m_filter->SetType(m_mediaType);
   return true;
@@ -627,7 +670,7 @@ void CGUIDialogMediaFilter::UpdateControls()
     std::string label =
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(itFilter.second.label);
     BaseSettingControlPtr control = GetSettingControl(itFilter.second.setting->GetId());
-    if (control == NULL)
+    if (control == nullptr)
       continue;
 
     if (size <= 0 ||
@@ -645,7 +688,7 @@ void CGUIDialogMediaFilter::UpdateControls()
 
 void CGUIDialogMediaFilter::TriggerFilter() const
 {
-  if (m_filter == NULL)
+  if (m_filter == nullptr)
     return;
 
   CGUIMessage message(GUI_MSG_NOTIFY_ALL, GetID(), 0, GUI_MSG_FILTER_ITEMS, 10); // 10 for advanced
@@ -655,10 +698,7 @@ void CGUIDialogMediaFilter::TriggerFilter() const
 void CGUIDialogMediaFilter::Reset(bool filtersOnly /* = false */)
 {
   if (!filtersOnly)
-  {
-    delete m_dbUrl;
-    m_dbUrl = NULL;
-  }
+    m_dbUrl.reset();
 
   m_filters.clear();
 }
@@ -675,61 +715,77 @@ int CGUIDialogMediaFilter::GetItems(const Filter &filter, std::vector<std::strin
   if (it != tmpFilter.m_ruleCombination.GetRules().cend())
     tmpFilter.m_ruleCombination.RemoveRule(*it);
 
-  if (m_mediaType == MEDIA::CONTENT::MOVIES || m_mediaType == MEDIA::CONTENT::TVSHOWS || m_mediaType == MEDIA::CONTENT::EPISODES || m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
+  const std::string baseDir{m_dbUrl->ToString()};
+  std::set<std::string, std::less<>> playlists;
+  CDatabase::Filter dbfilter;
+
+  if (IsVideoLibrary(m_type))
   {
     CVideoDatabase videodb;
     if (!videodb.Open())
       return -1;
 
-    std::set<std::string, std::less<>> playlists;
-    CDatabase::Filter dbfilter;
     dbfilter.where = tmpFilter.GetWhereClause(videodb, playlists);
+    const VideoDbContentType type{VideoContentOf(m_type)};
 
-    VideoDbContentType type = VideoDbContentType::MOVIES;
-    if (m_mediaType == MEDIA::CONTENT::TVSHOWS)
-      type = VideoDbContentType::TVSHOWS;
-    else if (m_mediaType == MEDIA::CONTENT::EPISODES)
-      type = VideoDbContentType::EPISODES;
-    else if (m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
-      type = VideoDbContentType::MUSICVIDEOS;
-
-    if (filter.field == Field::GENRE)
-      videodb.GetGenresNav(m_dbUrl->ToString(), selectItems, type, dbfilter, countOnly);
-    else if (filter.field == Field::ACTOR || filter.field == Field::ARTIST)
-      videodb.GetActorsNav(m_dbUrl->ToString(), selectItems, type, dbfilter, countOnly);
-    else if (filter.field == Field::DIRECTOR)
-      videodb.GetDirectorsNav(m_dbUrl->ToString(), selectItems, type, dbfilter, countOnly);
-    else if (filter.field == Field::STUDIO)
-      videodb.GetStudiosNav(m_dbUrl->ToString(), selectItems, type, dbfilter, countOnly);
-    else if (filter.field == Field::ALBUM)
-      videodb.GetMusicVideoAlbumsNav(m_dbUrl->ToString(), selectItems, -1, dbfilter, countOnly);
-    else if (filter.field == Field::TAG)
-      videodb.GetTagsNav(m_dbUrl->ToString(), selectItems, type, dbfilter, countOnly);
+    switch (filter.field)
+    {
+      case Field::GENRE:
+        videodb.GetGenresNav(baseDir, selectItems, type, dbfilter, countOnly);
+        break;
+      case Field::ACTOR:
+      case Field::ARTIST:
+        videodb.GetActorsNav(baseDir, selectItems, type, dbfilter, countOnly);
+        break;
+      case Field::DIRECTOR:
+        videodb.GetDirectorsNav(baseDir, selectItems, type, dbfilter, countOnly);
+        break;
+      case Field::STUDIO:
+        videodb.GetStudiosNav(baseDir, selectItems, type, dbfilter, countOnly);
+        break;
+      case Field::ALBUM:
+        videodb.GetMusicVideoAlbumsNav(baseDir, selectItems, -1, dbfilter, countOnly);
+        break;
+      case Field::TAG:
+        videodb.GetTagsNav(baseDir, selectItems, type, dbfilter, countOnly);
+        break;
+      default:
+        break;
+    }
   }
-  else if (m_mediaType == MEDIA::CONTENT::ARTISTS || m_mediaType == MEDIA::CONTENT::ALBUMS || m_mediaType == MEDIA::CONTENT::SONGS)
+  else if (IsMusicLibrary(m_type))
   {
     CMusicDatabase musicdb;
     if (!musicdb.Open())
       return -1;
 
-    std::set<std::string, std::less<>> playlists;
-    CDatabase::Filter dbfilter;
     dbfilter.where = tmpFilter.GetWhereClause(musicdb, playlists);
 
-    if (filter.field == Field::GENRE)
-      musicdb.GetGenresNav(m_dbUrl->ToString(), selectItems, dbfilter, countOnly);
-    else if (filter.field == Field::ARTIST || filter.field == Field::ALBUM_ARTIST)
-      musicdb.GetArtistsNav(m_dbUrl->ToString(), selectItems, SortDescription(),
-                            m_mediaType == MEDIA::CONTENT::ALBUMS, -1, -1, -1, dbfilter, countOnly);
-    else if (filter.field == Field::ALBUM)
-      musicdb.GetAlbumsNav(m_dbUrl->ToString(), selectItems, SortDescription(), -1, -1, dbfilter,
-                           countOnly);
-    else if (filter.field == Field::ALBUM_TYPE)
-      musicdb.GetAlbumTypesNav(m_dbUrl->ToString(), selectItems, dbfilter, countOnly);
-    else if (filter.field == Field::MUSIC_LABEL)
-      musicdb.GetMusicLabelsNav(m_dbUrl->ToString(), selectItems, dbfilter, countOnly);
-    else if (filter.field == Field::SOURCE)
-      musicdb.GetSourcesNav(m_dbUrl->ToString(), selectItems, dbfilter, countOnly);
+    switch (filter.field)
+    {
+      case Field::GENRE:
+        musicdb.GetGenresNav(baseDir, selectItems, dbfilter, countOnly);
+        break;
+      case Field::ARTIST:
+      case Field::ALBUM_ARTIST:
+        musicdb.GetArtistsNav(baseDir, selectItems, SortDescription(), m_type == MediaType::ALBUM,
+                              -1, -1, -1, dbfilter, countOnly);
+        break;
+      case Field::ALBUM:
+        musicdb.GetAlbumsNav(baseDir, selectItems, SortDescription(), -1, -1, dbfilter, countOnly);
+        break;
+      case Field::ALBUM_TYPE:
+        musicdb.GetAlbumTypesNav(baseDir, selectItems, dbfilter, countOnly);
+        break;
+      case Field::MUSIC_LABEL:
+        musicdb.GetMusicLabelsNav(baseDir, selectItems, dbfilter, countOnly);
+        break;
+      case Field::SOURCE:
+        musicdb.GetSourcesNav(baseDir, selectItems, dbfilter, countOnly);
+        break;
+      default:
+        break;
+    }
   }
 
   int size = selectItems.Size();
@@ -797,107 +853,87 @@ void CGUIDialogMediaFilter::GetStringListOptions(const SettingConstPtr& setting,
 
 void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interval, int &max)
 {
-  if (filter.field == Field::USER_RATING &&
-      (m_mediaType == MEDIA::CONTENT::MOVIES || m_mediaType == MEDIA::CONTENT::TVSHOWS || m_mediaType == MEDIA::CONTENT::EPISODES ||
-       m_mediaType == MEDIA::CONTENT::MUSICVIDEOS || m_mediaType == MEDIA::CONTENT::ALBUMS || m_mediaType == MEDIA::CONTENT::SONGS))
-  {
-    min = 0;
-    interval = 1;
-    max = 10;
-  }
-  else if (filter.field == Field::YEAR)
-  {
-    min = 0;
-    interval = 1;
-    max = 0;
+  min = 0;
+  interval = 1;
+  max = 0;
 
-    if (m_mediaType == MEDIA::CONTENT::MOVIES || m_mediaType == MEDIA::CONTENT::TVSHOWS || m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
+  switch (filter.field)
+  {
+    case Field::USER_RATING:
+      max = 10;
+      break;
+
+    case Field::YEAR:
     {
       std::string table;
-      std::string year;
-      if (m_mediaType == MEDIA::CONTENT::MOVIES)
+      std::string select;
+      std::string where;
+      switch (m_type)
       {
-        table = "movie_view";
-        year = DatabaseUtils::GetField(Field::YEAR, MediaType::MOVIE, DatabaseQueryPart::WHERE);
+        case MediaType::MOVIE:
+          table = "movie_view";
+          select = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::WHERE);
+          break;
+        case MediaType::TV_SHOW:
+          table = "tvshow_view";
+          select = StringUtils::Format(
+              "strftime(\"%%Y\", {})",
+              DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::WHERE));
+          break;
+        case MediaType::MUSIC_VIDEO:
+          table = "musicvideo_view";
+          select = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::WHERE);
+          break;
+        case MediaType::ALBUM:
+          table = "albumview";
+          select = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::SELECT);
+          where = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::WHERE);
+          break;
+        case MediaType::SONG:
+          table = "songview";
+          select = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::SELECT);
+          where = DatabaseUtils::GetField(Field::YEAR, m_type, DatabaseQueryPart::WHERE);
+          break;
+        default:
+          return;
       }
-      else if (m_mediaType == MEDIA::CONTENT::TVSHOWS)
+
+      CDatabase::Filter yearFilter;
+      yearFilter.where = (where.empty() ? select : where) + " > 0";
+      GetMinMax(table, select, min, max, yearFilter);
+      break;
+    }
+
+    case Field::AIR_DATE:
+      if (m_type == MediaType::EPISODE)
       {
-        table = "tvshow_view";
-        year = StringUtils::Format(
-            "strftime(\"%%Y\", {})",
-            DatabaseUtils::GetField(Field::YEAR, MediaType::TV_SHOW, DatabaseQueryPart::WHERE));
+        const std::string name =
+            DatabaseUtils::GetField(Field::AIR_DATE, m_type, DatabaseQueryPart::SELECT);
+        GetMinMax("episode_view",
+                  StringUtils::Format("CAST(strftime(\"%%s\", {}) AS INTEGER)", name), min, max);
+        interval = 60 * 60 * 24 * 7; // 1 week
       }
-      else if (m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
-      {
-        table = "musicvideo_view";
-        year = DatabaseUtils::GetField(Field::YEAR, MediaType::MUSIC_VIDEO, DatabaseQueryPart::WHERE);
-      }
+      break;
 
-      CDatabase::Filter min_max_filter;
-      min_max_filter.where = year + " > 0";
-      GetMinMax(table, year, min, max, min_max_filter);
-    }
-    else if (m_mediaType == MEDIA::CONTENT::ALBUMS || m_mediaType == MEDIA::CONTENT::SONGS)
-    {
-      std::string table;
-      if (m_mediaType == MEDIA::CONTENT::ALBUMS)
-        table = "albumview";
-      else if (m_mediaType == MEDIA::CONTENT::SONGS)
-        table = "songview";
-      else
-        return;
+    case Field::TIME:
+      interval = 10;
+      if (m_type == MediaType::SONG)
+        GetMinMax("songview", "iDuration", min, max);
+      break;
 
-      const MediaType type{MediaTypeFromName(m_mediaType)};
+    case Field::PLAYCOUNT:
+      if (m_type == MediaType::SONG)
+        GetMinMax("songview", "iTimesPlayed", min, max);
+      break;
 
-      CDatabase::Filter filter;
-      filter.where = DatabaseUtils::GetField(Field::YEAR, type, DatabaseQueryPart::WHERE) + " > 0";
-      GetMinMax(table,
-                DatabaseUtils::GetField(Field::YEAR, type,
-                                        DatabaseQueryPart::SELECT),
-                min, max, filter);
-    }
-  }
-  else if (filter.field == Field::AIR_DATE)
-  {
-    min = 0;
-    interval = 1;
-    max = 0;
-
-    if (m_mediaType == MEDIA::CONTENT::EPISODES)
-    {
-      const std::string name = DatabaseUtils::GetField(
-          Field::AIR_DATE, MediaTypeFromName(m_mediaType), DatabaseQueryPart::SELECT);
-      const std::string field = StringUtils::Format("CAST(strftime(\"%%s\", {}) AS INTEGER)", name);
-
-      GetMinMax("episode_view", field, min, max);
-      interval = 60 * 60 * 24 * 7; // 1 week
-    }
-  }
-  else if (filter.field == Field::TIME)
-  {
-    min = 0;
-    interval = 10;
-    max = 0;
-
-    if (m_mediaType == MEDIA::CONTENT::SONGS)
-      GetMinMax("songview", "iDuration", min, max);
-  }
-  else if (filter.field == Field::PLAYCOUNT)
-  {
-    min = 0;
-    interval = 1;
-    max = 0;
-
-    if (m_mediaType == MEDIA::CONTENT::SONGS)
-      GetMinMax("songview", "iTimesPlayed", min, max);
+    default:
+      break;
   }
 }
 
 void CGUIDialogMediaFilter::GetRange(const Filter &filter, float &min, float &interval, float &max)
 {
-  if (filter.field == Field::RATING &&
-      (m_mediaType == MEDIA::CONTENT::MOVIES || m_mediaType == MEDIA::CONTENT::TVSHOWS || m_mediaType == MEDIA::CONTENT::EPISODES ||
-       m_mediaType == MEDIA::CONTENT::MUSICVIDEOS || m_mediaType == MEDIA::CONTENT::ALBUMS || m_mediaType == MEDIA::CONTENT::SONGS))
+  if (filter.field == Field::RATING)
   {
     min = 0.0f;
     interval = 0.1f;
@@ -910,48 +946,31 @@ bool CGUIDialogMediaFilter::GetMinMax(const std::string &table, const std::strin
   if (table.empty() || field.empty())
     return false;
 
-  CDatabase *db = NULL;
-  CDbUrl *dbUrl = NULL;
-  if (m_mediaType == MEDIA::CONTENT::MOVIES || m_mediaType == MEDIA::CONTENT::TVSHOWS || m_mediaType == MEDIA::CONTENT::EPISODES || m_mediaType == MEDIA::CONTENT::MUSICVIDEOS)
+  std::unique_ptr<CDatabase> db;
+  std::unique_ptr<CDbUrl> dbUrl;
+  if (IsVideoLibrary(m_type))
   {
-    CVideoDatabase *videodb = new CVideoDatabase();
+    auto videodb{std::make_unique<CVideoDatabase>()};
     if (!videodb->Open())
-    {
-      delete videodb;
       return false;
-    }
-
-    db = videodb;
-    dbUrl = new CVideoDbUrl();
+    db = std::move(videodb);
+    dbUrl = std::make_unique<CVideoDbUrl>();
   }
-  else if (m_mediaType == MEDIA::CONTENT::ARTISTS || m_mediaType == MEDIA::CONTENT::ALBUMS || m_mediaType == MEDIA::CONTENT::SONGS)
+  else if (IsMusicLibrary(m_type))
   {
-    CMusicDatabase *musicdb = new CMusicDatabase();
+    auto musicdb{std::make_unique<CMusicDatabase>()};
     if (!musicdb->Open())
-    {
-      delete musicdb;
       return false;
-    }
-
-    db = musicdb;
-    dbUrl = new CMusicDbUrl();
+    db = std::move(musicdb);
+    dbUrl = std::make_unique<CMusicDbUrl>();
   }
-
-  if (db == NULL || !db->IsOpen() || dbUrl == NULL)
-  {
-    delete db;
-    delete dbUrl;
+  else
     return false;
-  }
 
   CDatabase::Filter extFilter = filter;
   std::string strSQLExtra;
   if (!db->BuildSQL(m_dbUrl->ToString(), strSQLExtra, extFilter, strSQLExtra, *dbUrl))
-  {
-    delete db;
-    delete dbUrl;
     return false;
-  }
 
   const std::string prepField = db->PrepareSQL(field);
   const std::string strSQL = "SELECT %s FROM %s ";
@@ -960,16 +979,13 @@ bool CGUIDialogMediaFilter::GetMinMax(const std::string &table, const std::strin
       db->GetSingleValue(db->PrepareSQL(strSQL, ("MIN(" + prepField + ")").c_str(), table.c_str()) +
                          strSQLExtra)
           .c_str(),
-      NULL, 0));
+      nullptr, 0));
   max = static_cast<int>(strtol(
       db->GetSingleValue(db->PrepareSQL(strSQL, ("MAX(" + prepField + ")").c_str(), table.c_str()) +
                          strSQLExtra)
           .c_str(),
-      NULL, 0));
+      nullptr, 0));
 
   db->Close();
-  delete db;
-  delete dbUrl;
-
   return true;
 }

@@ -10,11 +10,13 @@
 
 #include "dbwrappers/Database.h"
 #include "dbwrappers/DatabaseQuery.h"
+#include "media/MediaType.h"
 #include "settings/dialogs/GUIDialogSettingsManualBase.h"
 #include "settings/lib/SettingType.h"
 #include "utils/DatabaseUtils.h"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -91,8 +93,9 @@ protected:
                             std::vector<StringSettingOption>& list,
                             std::string& current);
 
-  CDbUrl* m_dbUrl;
+  std::unique_ptr<CDbUrl> m_dbUrl;
   std::string m_mediaType;
-  KODI::PLAYLIST::CSmartPlaylist* m_filter;
+  KODI::MEDIA::MediaType m_type{KODI::MEDIA::MediaType::NONE};
+  KODI::PLAYLIST::CSmartPlaylist* m_filter{nullptr};
   std::map<std::string, Filter> m_filters;
 };

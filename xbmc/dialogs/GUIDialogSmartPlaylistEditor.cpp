@@ -74,17 +74,14 @@ static const translateType types[] = { { CGUIDialogSmartPlaylistEditor::TYPE_SON
                                      };
 
 CGUIDialogSmartPlaylistEditor::CGUIDialogSmartPlaylistEditor(void)
-    : CGUIDialog(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR, "SmartPlaylistEditor.xml")
+    : CGUIDialog(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR, "SmartPlaylistEditor.xml"),
+      m_ruleLabels(std::make_unique<CFileItemList>())
 {
   m_cancelled = false;
-  m_ruleLabels = new CFileItemList;
   m_loadType = KEEP_IN_MEMORY;
 }
 
-CGUIDialogSmartPlaylistEditor::~CGUIDialogSmartPlaylistEditor()
-{
-  delete m_ruleLabels;
-}
+CGUIDialogSmartPlaylistEditor::~CGUIDialogSmartPlaylistEditor() = default;
 
 bool CGUIDialogSmartPlaylistEditor::OnBack(int actionID)
 {
@@ -488,15 +485,15 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
   m_ruleLabels->Clear();
   for (const auto& rule : m_playlist.m_ruleCombination.GetRules())
   {
-    CFileItemPtr item(new CFileItem("", false));
+    auto item = std::make_shared<CFileItem>("", false);
     item->SetLabel(
         std::static_pointer_cast<PLAYLIST::CSmartPlaylistRule>(rule)->GetLocalizedRule());
     m_ruleLabels->Add(item);
   }
-  CFileItemPtr item(new CFileItem("", false));
+  auto item = std::make_shared<CFileItem>("", false);
   item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21423));
   m_ruleLabels->Add(item);
-  CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_RULE_LIST, 0, 0, m_ruleLabels);
+  CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_RULE_LIST, 0, 0, m_ruleLabels.get());
   OnMessage(msg);
   SendMessage(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_RULE_LIST, currentItem);
 
