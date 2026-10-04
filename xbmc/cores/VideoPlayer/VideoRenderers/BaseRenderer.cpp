@@ -460,8 +460,7 @@ void CBaseRenderer::SetViewMode(int viewMode)
   // and the source frame ratio
   float sourceFrameRatio = GetAspectRatio();
 
-  bool is43 =
-      (sourceFrameRatio < 8.f / (3.f * sqrt(3.f)) && mode == ViewModeNormal && !shapeStated);
+  bool is43 = (sourceFrameRatio < 8.f/(3.f*sqrt(3.f)) && mode == ViewModeNormal && !shapeStated);
   const int stretch43 = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
       CSettings::SETTING_VIDEOPLAYER_STRETCH43);
 
@@ -475,7 +474,8 @@ void CBaseRenderer::SetViewMode(int viewMode)
   CDisplaySettings::GetInstance().SetVerticalShift(0.0f);
   CDisplaySettings::GetInstance().SetNonLinearStretched(false);
 
-  if (mode == ViewModeZoom || (is43 && stretch43 == ViewModeZoom))
+  if (mode == ViewModeZoom ||
+       (is43 && stretch43 == ViewModeZoom))
   { // zoom image so no black bars
     CDisplaySettings::GetInstance().SetPixelRatio(1.0);
     // calculate the desired output ratio
@@ -498,7 +498,8 @@ void CBaseRenderer::SetViewMode(int viewMode)
     // fOutputFrameRatio = 4:3.
     CDisplaySettings::GetInstance().SetPixelRatio((4.0f / 3.0f) / sourceFrameRatio);
   }
-  else if (mode == ViewModeWideZoom || (is43 && stretch43 == ViewModeWideZoom))
+  else if (mode == ViewModeWideZoom ||
+           (is43 && stretch43 == ViewModeWideZoom))
   { // super zoom
     float stretchAmount = (screenWidth / screenHeight) * info.fPixelRatio / sourceFrameRatio;
     CDisplaySettings::GetInstance().SetPixelRatio(pow(stretchAmount, float(2.0/3.0)));
@@ -513,11 +514,10 @@ void CBaseRenderer::SetViewMode(int viewMode)
     // stretch to the limits of the 16:9 screen.
     // incorrect behaviour, but it's what the users want, so...
     CDisplaySettings::GetInstance().SetPixelRatio((screenWidth / screenHeight) * info.fPixelRatio / sourceFrameRatio);
-    bool nonlin =
-        (is43 && stretch43 == ViewModeStretch16x9Nonlin) || mode == ViewModeStretch16x9Nonlin;
+    bool nonlin = (is43 && stretch43 == ViewModeStretch16x9Nonlin) || mode == ViewModeStretch16x9Nonlin;
     CDisplaySettings::GetInstance().SetNonLinearStretched(nonlin);
   }
-  else if (mode == ViewModeOriginal)
+  else  if (mode == ViewModeOriginal)
   { // zoom image so that the height is the original size
     CDisplaySettings::GetInstance().SetPixelRatio(1.0);
     // get the size of the media file

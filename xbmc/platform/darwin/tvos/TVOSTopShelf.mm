@@ -180,9 +180,8 @@ void CTVOSTopShelf::SetTopShelfItems(CFileItemList& items, TVOSTopShelfItemsCate
             [&videoDb](const CFileItemPtr& videoItem)
             {
               int season = videoItem->GetVideoInfoTag()->m_iIdSeason;
-              return season > 0
-                         ? videoDb.GetArtForItem(season, KODI::MEDIA::MediaType::SEASON, "poster")
-                         : std::string{};
+              return season > 0 ? videoDb.GetArtForItem(season, KODI::MEDIA::MediaType::SEASON, "poster")
+                                : std::string{};
             },
             [](const CFileItemPtr& videoItem)
             {

@@ -16,18 +16,18 @@ class CVariant;
 
 namespace JSONRPC
 {
-class IJSONRPCAnnouncer : public ANNOUNCEMENT::IAnnouncer
-{
-public:
-  ~IJSONRPCAnnouncer() override = default;
+  class IJSONRPCAnnouncer : public ANNOUNCEMENT::IAnnouncer
+  {
+  public:
+    ~IJSONRPCAnnouncer() override = default;
 
-protected:
+  protected:
   //! \return the notification, or nothing when the announcement is not one clients receive
   static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
-                                           const std::string& sender,
-                                           const std::string& method,
-                                           const CVariant& data,
-                                           bool compactOutput);
+                                             const std::string& sender,
+                                             const std::string& method,
+                                             const CVariant& data,
+                                             bool compactOutput);
 
 private:
   /*!

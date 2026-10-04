@@ -218,8 +218,7 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
   }
 
   // video db items normally have info in the database
-  if (pItem->HasVideoInfoTag() &&
-      !pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean())
+  if (pItem->HasVideoInfoTag() && !pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean())
   {
     FillLibraryArt(*pItem);
 
@@ -265,8 +264,8 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
 
   const bool isLibraryItem = pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->m_iDbId > -1 &&
                              !pItem->GetVideoInfoTag()->m_type.empty();
-  const bool libraryArtFilled = pItem->HasVideoInfoTag() &&
-                                pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean();
+  const bool libraryArtFilled =
+      pItem->HasVideoInfoTag() && pItem->GetProperty(ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean();
   if (!isLibraryItem || !libraryArtFilled)
   {
     KODI::ART::Artwork artwork = pItem->GetArt();
@@ -501,8 +500,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       // For episodes and seasons, we want to set fanart for that of the show
       if (!item.HasArt("tvshow.fanart") && tag.m_iIdShow >= 0)
       {
-        const KODI::ART::Artwork& artmap =
-            GetArtFromCache(NameOf(MediaType::TV_SHOW), tag.m_iIdShow);
+        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MediaType::TV_SHOW), tag.m_iIdShow);
         if (!artmap.empty())
         {
           item.AppendArt(artmap, NameOf(MediaType::TV_SHOW));
@@ -513,8 +511,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
 
       if (mediaType == MediaType::EPISODE && !item.HasArt("season.poster") && tag.m_iSeason > -1)
       {
-        const KODI::ART::Artwork& artmap =
-            GetArtFromCache(NameOf(MediaType::SEASON), tag.m_iIdSeason);
+        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MediaType::SEASON), tag.m_iIdSeason);
         if (!artmap.empty())
           item.AppendArt(artmap, NameOf(MediaType::SEASON));
       }

@@ -599,7 +599,7 @@ std::vector<CMediaSource>& CGUIViewStateWindowVideoPlaylist::GetSources()
   m_sources.clear();
   //  Playlist share
   CMediaSource share;
-  share.strPath = XFILE::CPlaylistDirectory::PathOf(PLAYLIST::Video);
+  share.strPath= XFILE::CPlaylistDirectory::PathOf(PLAYLIST::Video);
   share.m_iDriveType = SourceType::LOCAL;
   m_sources.push_back(share);
 
@@ -631,8 +631,7 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
   AddSortMethod(SortBy::PLAYCOUNT, 567,
                 LABEL_MASKS("%T", "%V", "%T", "%V")); // Title, Playcount | Title, Playcount
 
-  const CViewState* viewState =
-      CViewStateSettings::GetInstance().Get(VIEW::STATE::VIDEO_NAV_TITLES);
+  const CViewState* viewState = CViewStateSettings::GetInstance().Get(VIEW::STATE::VIDEO_NAV_TITLES);
   if (PLAYLIST::IsSmartPlayList(items) || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%T", "%R", "%T", "%R"));  // Title, Rating | Title, Rating
   else

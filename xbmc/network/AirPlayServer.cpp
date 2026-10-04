@@ -863,8 +863,8 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
         {
           backupVolume();
           appVolume->SetVolume(volume);
-          appMessenger->PostMsg(TMSG_VOLUME_SHOW,
-                                oldVolume < volume ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN);
+          appMessenger->PostMsg(
+              TMSG_VOLUME_SHOW, oldVolume < volume ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN);
         }
       }
   }
@@ -978,7 +978,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
       location += "|User-Agent=" + userAgent;
 
       CFileItem fileToPlay(location, false);
-      fileToPlay.SetProperty(ITEM::PROPERTY::START_PERCENT, position * 100.0f);
+      fileToPlay.SetProperty(ITEM::PROPERTY::START_PERCENT, position*100.0f);
       ServerInstance->AnnounceToClients(EVENT_LOADING);
 
       CFileItemList *l = new CFileItemList; //don't delete,
@@ -1049,7 +1049,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
       else //if we are not playing and get the stop request - we just wanna stop picture streaming
       {
         appMessenger->SendMsg(TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
-                              static_cast<void*>(new CAction(ACTION_STOP)));
+                                                   static_cast<void*>(new CAction(ACTION_STOP)));
       }
     }
     ClearPhotoAssetCache();
@@ -1120,7 +1120,8 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
               CLog::Log(LOGWARNING, "AIRPLAY: Asset {} not found in our cache.", photoCacheId);
           }
           else
-            appMessenger->PostMsg(TMSG_PICTURE_SHOW, -1, -1, nullptr, tmpFileName);
+            appMessenger->PostMsg(TMSG_PICTURE_SHOW, -1, -1, nullptr,
+                                                       tmpFileName);
         }
         else
         {

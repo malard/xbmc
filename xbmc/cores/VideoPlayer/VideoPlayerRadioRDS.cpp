@@ -1395,8 +1395,8 @@ unsigned int CDVDRadioRDSData::DecodeEPPTransmitterInfo(const uint8_t* msgElemen
     if (!territory.has_value())
     {
       CLog::Log(LOGERROR, "Radio RDS - {} - invalid extended country region code:{:02X}{:02X}",
-                __FUNCTION__, codeHigh, codeLow);
-      return 7;
+                  __FUNCTION__, codeHigh, codeLow);
+        return 7;
     }
 
     // The United States, Canada, and Mexico use the RBDS standard
@@ -1439,9 +1439,10 @@ unsigned int CDVDRadioRDSData::DecodeSlowLabelingCodes(const uint8_t* msgElement
         const auto territory{KODI::RDS::Country(codeHigh, m_PI_CountryCode, codeLow)};
         if (!territory.has_value())
         {
-          CLog::Log(LOGERROR, "Radio RDS - {} - invalid extended country region code:{:02X}{:02X}",
-                    __FUNCTION__, codeHigh, codeLow);
-          return 4;
+          CLog::Log(LOGERROR,
+                      "Radio RDS - {} - invalid extended country region code:{:02X}{:02X}",
+                      __FUNCTION__, codeHigh, codeLow);
+            return 4;
         }
 
         m_currentInfoTag->SetCountry(*territory);

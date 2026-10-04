@@ -271,8 +271,8 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     break;
 
     case TMSG_SETVIDEORESOLUTION:
-      winSystem->GetGfxContext().SetVideoResolution(static_cast<RESOLUTION>(pMsg->param1),
-                                                    pMsg->param2 == 1);
+      winSystem->GetGfxContext().SetVideoResolution(
+          static_cast<RESOLUTION>(pMsg->param1), pMsg->param2 == 1);
       break;
 
     case TMSG_TOGGLEFULLSCREEN:
@@ -327,7 +327,6 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
 
       if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
         windowManager.PreviousWindow();
-
       appPower->ResetScreenSaver();
       appPower->WakeUpScreenSaverAndDPMS();
 
@@ -646,7 +645,9 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
         }
       }
 
-      const CFileItem ended{m_app.CurrentFileItem()};
+      const CFileItem ended{
+          m_app.CurrentFileItem()};
+
       const CPlaycountIncrementedHandler playCountIncrementedHandler{ended};
 
       m_app.ResetCurrentItem();

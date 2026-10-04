@@ -128,7 +128,6 @@ void CApplicationSettingsHandling::UnregisterSettings()
 
   settings->UnregisterSubSettings(this);
   settingsMgr->RemoveDynamicCondition("isplaying");
-
   settingsMgr->UnregisterCallback(components.GetComponent<CApplicationContentGeometry>().get());
 
   settingsMgr->UnregisterCallback(&appPlayer->GetSeekHandler());
@@ -160,8 +159,7 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
   if (settingId == CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN)
   {
     if (winSystem->GetGfxContext().IsFullScreenRoot())
-      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(),
-                                                    true);
+      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(), true);
   }
   else if (settingId == CSettings::SETTING_AUDIOOUTPUT_PASSTHROUGH)
   {

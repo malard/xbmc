@@ -445,8 +445,7 @@ void CHTTPPythonWsgiInvoker::addWsgiEnvironment(HTTPPythonRequest* request, void
     // wsgi.url_scheme
     const std::string scheme = HTTPRequestHandlerUtils::GetRequestScheme(
         request != nullptr ? request->connection : nullptr);
-    PyObject* pyValue =
-        PyUnicode_FromStringAndSize(scheme.c_str(), static_cast<Py_ssize_t>(scheme.size()));
+    PyObject* pyValue = PyUnicode_FromStringAndSize(scheme.c_str(), static_cast<Py_ssize_t>(scheme.size()));
     PyDict_SetItemString(pyEnviron, "wsgi.url_scheme", pyValue);
     Py_DECREF(pyValue);
   }

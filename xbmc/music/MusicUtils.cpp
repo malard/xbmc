@@ -153,7 +153,9 @@ public:
       loaded when the playlist is shown.
       */
     bool clearcache(false);
-    const auto playLists = CServiceBroker::GetPlayLists();
+    const auto playLists =
+        CServiceBroker::GetPlayLists();
+
     for (const auto& entry : playLists->GetPlayList(PLAYLIST::Audio).GetEntries())
     {
       if (HasSongExtraArtChanged(entry.item, mediaType, itemID, db))
@@ -273,8 +275,7 @@ void AddAvailableArtTypes(std::vector<std::string>& artTypes,
                           const CMusicInfoTag& tag,
                           CMusicDatabase& db)
 {
-  for (const auto& artType :
-       db.GetAvailableArtTypesForItem(tag.GetDatabaseId(), tag.GetMediaType()))
+  for (const auto& artType : db.GetAvailableArtTypesForItem(tag.GetDatabaseId(), tag.GetMediaType()))
   {
     if (find(artTypes.begin(), artTypes.end(), artType) == artTypes.end())
       artTypes.push_back(artType);
@@ -446,11 +447,9 @@ namespace
 class CAsyncGetItemsForPlaylist : public IRunnable, private PLAYLIST::IEntryRules
 {
 public:
-  CAsyncGetItemsForPlaylist(const std::shared_ptr<CFileItem>& item,
-                            CFileItemList& queuedItems,
+  CAsyncGetItemsForPlaylist(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems,
                             const std::shared_ptr<CFileItem>& startAt)
-    : m_item(item),
-      m_queuedItems(queuedItems),
+    : m_item(item), m_queuedItems(queuedItems),
       m_startAt(startAt)
   {
   }
@@ -531,8 +530,7 @@ SortDescription GetSortDescription(const CGUIViewState& state, const CFileItemLi
     return state.GetSortMethod(); // last resort
 }
 
-std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(
-    const std::shared_ptr<CFileItem>& folder)
+std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(const std::shared_ptr<CFileItem>& folder)
 {
   if (!MUSIC::IsMusicDb(*folder) || folder->IsParentFolder())
     return folder;
@@ -734,15 +732,14 @@ void QueueItem(const std::shared_ptr<CFileItem>& item, QueuePosition pos)
     ShowToastNotification(*item, 38083); // Added to playlist to play next
 }
 
-bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item,
-                         CFileItemList& queuedItems,
+bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems,
                          const std::shared_ptr<CFileItem>& startAt /* = nullptr */,
                          int* startPosition /* = nullptr */)
 {
   CAsyncGetItemsForPlaylist getItems(item, queuedItems, startAt);
   const bool done = CGUIDialogBusy::Wait(&getItems,
-                                         500, // 500ms before busy dialog appears
-                                         true); // can be cancelled
+                              500, // 500ms before busy dialog appears
+                              true); // can be cancelled
   if (startPosition)
     *startPosition = getItems.GetStartPosition();
   return done;
@@ -805,8 +802,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   if (item.IsFolder() &&
-      (MUSIC::IsMusicDb(item) ||
-       StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC)))
+      (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CMusicDatabaseDirectory::GetDirectoryParentType(item.GetPath());

@@ -126,6 +126,7 @@ static int PlayOffset(const std::vector<std::string>& params)
   }
   APPLICATION::NotifyIfNothingThere(playLists->PlayOffset(*type, std::atoi(offset.c_str())),
                                     APPLICATION::Direction::Forward);
+
   return 0;
 }
 
@@ -336,9 +337,7 @@ static int PlayerControl(const std::vector<std::string>& params)
   else if (StringUtils::StartsWithNoCase(params[0], "resumelivetv"))
   {
     const std::shared_ptr<const CFileItem> fileItem = g_application.CurrentFileItemPtr();
-    std::shared_ptr<PVR::CPVRChannel> channel = fileItem->HasPVRRecordingInfoTag()
-                                                    ? fileItem->GetPVRRecordingInfoTag()->Channel()
-                                                    : std::shared_ptr<PVR::CPVRChannel>();
+    std::shared_ptr<PVR::CPVRChannel> channel = fileItem->HasPVRRecordingInfoTag() ? fileItem->GetPVRRecordingInfoTag()->Channel() : std::shared_ptr<PVR::CPVRChannel>();
 
     if (channel)
     {
@@ -518,7 +517,8 @@ int PlayOrQueueMedia(const std::vector<std::string>& params,
     if (!items.IsEmpty()) // fall through on non expandable playlist
     {
       const bool containsMusic =
-          std::ranges::any_of(items, [](const auto& i) { return !VIDEO::IsVideo(*i); });
+          std::ranges::any_of(items, [](const auto& i)
+      { return !VIDEO::IsVideo(*i); });
       const PLAYLIST::Type type = namedType.value_or(PLAYLIST::TypeFor(items, item));
       const auto playLists = CServiceBroker::GetPlayLists();
 

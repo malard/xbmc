@@ -256,9 +256,10 @@ void CGUIDialogVideoBookmarks::OnRefreshList()
   {
     std::string bookmarkTime;
     if (m_bookmarks[i].type == CBookmark::EPISODE)
-      bookmarkTime = StringUtils::Format("{} {} {} {}", localizeStrings.Get(20373),
-                                         m_bookmarks[i].seasonNumber, localizeStrings.Get(20359),
-                                         m_bookmarks[i].episodeNumber);
+      bookmarkTime = StringUtils::Format(
+          "{} {} {} {}", localizeStrings.Get(20373),
+          m_bookmarks[i].seasonNumber, localizeStrings.Get(20359),
+          m_bookmarks[i].episodeNumber);
     else
       bookmarkTime = StringUtils::SecondsToTimeString((long)m_bookmarks[i].timeInSeconds, TIME_FORMAT_HH_MM_SS);
 

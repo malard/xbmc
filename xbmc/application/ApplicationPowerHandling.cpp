@@ -278,7 +278,8 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
     maybeDPMS = false;
   else if (!dpms || !dpms->IsSupported())
     maybeDPMS = false;
-  else if (settings->GetInt(CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) <= 0)
+  else if (settings->GetInt(
+               CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) <= 0)
     maybeDPMS = false;
 
   // whether the current state of the application should be regarded as active even when there is no
@@ -306,7 +307,8 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
 
   // Are we playing audio and screensaver is disabled globally for audio?
   else if (appPlayer && appPlayer->IsPlayingAudio() &&
-           settings->GetBool(CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
+           settings->GetBool(
+               CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
   {
     haveIdleActivity = true;
   }
@@ -352,12 +354,17 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
   float elapsed = m_screenSaverTimer.IsRunning() ? m_screenSaverTimer.GetElapsedSeconds() : 0.f;
 
   // DPMS has priority (it makes the screensaver not needed)
-  if (maybeDPMS && elapsed > settings->GetInt(CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) * 60)
+  if (maybeDPMS && elapsed > settings->GetInt(
+                                 CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) *
+                                 60)
   {
     ToggleDPMS(false);
     WakeUpScreenSaver();
   }
-  else if (maybeScreensaver && elapsed > settings->GetInt(CSettings::SETTING_SCREENSAVER_TIME) * 60)
+  else if (maybeScreensaver &&
+           elapsed > settings->GetInt(
+                         CSettings::SETTING_SCREENSAVER_TIME) *
+                         60)
   {
     ActivateScreenSaver();
   }

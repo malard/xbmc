@@ -2152,9 +2152,7 @@ bool CMusicDatabase::GetArtist(int idArtist, CArtist& artist, bool fetchAll /* =
   return TryGetArtist(idArtist, artist, fetchAll) == GetResult::Ok;
 }
 
-CMusicDatabase::GetResult CMusicDatabase::TryGetArtist(int idArtist,
-                                                       CArtist& artist,
-                                                       bool fetchAll /* = false */)
+CMusicDatabase::GetResult CMusicDatabase::TryGetArtist(int idArtist, CArtist& artist, bool fetchAll /* = false */)
 {
   try
   {
@@ -2388,8 +2386,7 @@ bool CMusicDatabase::AddArtistVideoLinks(const CArtist& artist)
             m_pDS2->close();
             strSQL2 = PrepareSQL("INSERT INTO art(media_id, media_type, type, url) "
                                  "VALUES (%d, '%s', '%s', '%s')",
-                                 songId, NameOf(MediaType::SONG).c_str(), "videothumb",
-                                 videoURL.thumbURL.c_str());
+                                 songId, NameOf(MediaType::SONG).c_str(), "videothumb", videoURL.thumbURL.c_str());
             m_pDS2->exec(strSQL2);
           }
           m_pDS2->close();
@@ -3616,8 +3613,7 @@ bool CMusicDatabase::SearchArtists(const std::string& search, CFileItemList& art
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(557)); // Artist
     while (!m_pDS->eof())
     {
-      std::string path =
-          StringUtils::Format("{}{}/", MUSIC::DB_PATH::ARTISTS, m_pDS->fv(0).get_asInt());
+      std::string path = StringUtils::Format("{}{}/", MUSIC::DB_PATH::ARTISTS, m_pDS->fv(0).get_asInt());
       auto pItem{std::make_shared<CFileItem>(path, true)};
       std::string label = StringUtils::Format("[{}] {}", artistLabel, m_pDS->fv(1).get_asString());
       pItem->SetLabel(label);
@@ -9577,7 +9573,8 @@ std::string CMusicDatabase::GetArtistsLastModified() const
   return GetSingleValue("SELECT MAX(dateModified) FROM artist");
 }
 
-unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs)
+unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter,
+                                              std::vector<int>& songIDs)
 {
   try
   {
@@ -11729,8 +11726,7 @@ bool CMusicDatabase::SetScraper(int id,
       { // Update info setting
         strSQL = "UPDATE infosetting SET strScraperPath = '%s', strSettings = '%s' "
                  "WHERE idSetting = %i";
-        strSQL = PrepareSQL(strSQL, scraper->ID().c_str(), scraper->GetPathSettings().c_str(),
-                            idSetting);
+        strSQL = PrepareSQL(strSQL, scraper->ID().c_str(), scraper->GetPathSettings().c_str(), idSetting);
         m_pDS->exec(strSQL);
       }
     }
@@ -12065,9 +12061,10 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                 if (!xmlDoc.SaveFile(nfoFile))
                 {
                   CLog::LogF(LOGERROR, "Album nfo export failed! ('{}')", nfoFile);
-                  CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                  CGUIDialogKaiToast::QueueNotification(
+                      CGUIDialogKaiToast::Error,
                                                         localizeStrings.Get(20302),
-                                                        CURL::GetRedacted(nfoFile));
+                      CURL::GetRedacted(nfoFile));
                   iFailCount++;
                 }
               }
@@ -12208,9 +12205,10 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                   if (!xmlDoc.SaveFile(nfoFile))
                   {
                     CLog::LogF(LOGERROR, "Artist nfo export failed! ('{}')", nfoFile);
-                    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                    CGUIDialogKaiToast::QueueNotification(
+                        CGUIDialogKaiToast::Error,
                                                           localizeStrings.Get(20302),
-                                                          CURL::GetRedacted(nfoFile));
+                        CURL::GetRedacted(nfoFile));
                     iFailCount++;
                   }
                 }
@@ -12275,7 +12273,8 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
 
   if (iFailCount > 0 && progressDialog)
     HELPERS::ShowOKDialogLines(
-        CVariant{20196}, CVariant{StringUtils::Format(localizeStrings.Get(15011), iFailCount)});
+        CVariant{20196},
+        CVariant{StringUtils::Format(localizeStrings.Get(15011), iFailCount)});
 }
 
 bool CMusicDatabase::ExportSongHistory(TiXmlNode* pNode, CGUIDialogProgress* progressDialog)
@@ -12959,9 +12958,9 @@ bool CMusicDatabase::GetArtForItem(
                                     NameOf(MediaType::ALBUM).c_str()),
                          false);
     if (artistId > 0)
-      filter.AppendWhere(PrepareSQL("media_id = %i AND media_type ='%s'", artistId,
-                                    NameOf(MediaType::ARTIST).c_str()),
-                         false);
+      filter.AppendWhere(
+          PrepareSQL("media_id = %i AND media_type ='%s'", artistId,
+                                    NameOf(MediaType::ARTIST).c_str()), false);
 
     strSQL = "SELECT DISTINCT art_id, media_id, media_type, type, '' as prefix, url, 0 as iorder "
              "FROM art";

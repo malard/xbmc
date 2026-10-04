@@ -2271,8 +2271,7 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
       // A transport stream can carry several ISO 639 language descriptors for one track, which
       // ffmpeg joins with commas ("deu,eng" for dual mono, or one entry per DVB subtitle page)
       const std::string_view language{langTag->value};
-      stream->language =
-          CLanguageTag::ParseStreamLanguage(std::string{language.substr(0, language.find(','))});
+      stream->language = CLanguageTag::ParseStreamLanguage(std::string{language.substr(0, language.find(','))});
       //! @todo ffmpeg does not read the Matroska v4 LanguageBCP47 element, which takes priority
       //! over Language when present, so every track is reported with the value of Language. The
       //! curly-brace tag in the title field is the interim way to state a track's real language.

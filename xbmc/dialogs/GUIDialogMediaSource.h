@@ -27,14 +27,13 @@ public:
   void OnDeinitWindow(int nextWindowID) override;
   bool OnBack(int actionID) override;
   static bool ShowAndAddMediaSource(KODI::MEDIA::MediaSection section);
-  static bool ShowAndEditMediaSource(KODI::MEDIA::MediaSection section, const CMediaSource& share);
-  static bool ShowAndEditMediaSource(KODI::MEDIA::MediaSection section, const std::string& share);
+  static bool ShowAndEditMediaSource(KODI::MEDIA::MediaSection section, const CMediaSource &share);
+  static bool ShowAndEditMediaSource(KODI::MEDIA::MediaSection section, const std::string &share);
 
   bool IsConfirmed() const { return m_confirmed; }
 
   void SetShare(const CMediaSource &share);
   void SetTypeOfMedia(KODI::MEDIA::MediaSection section, bool editNotAdd = false);
-
 protected:
   void OnPathBrowse(int item);
   void OnPath(int item);
@@ -46,9 +45,7 @@ protected:
   int GetSelectedItem();
   void HighlightItem(int item);
   std::string GetUniqueMediaSourceName();
-  static void OnMediaSourceChanged(KODI::MEDIA::MediaSection section,
-                                   const std::string& oldName,
-                                   const CMediaSource& share);
+  static void OnMediaSourceChanged(KODI::MEDIA::MediaSection section, const std::string& oldName, const CMediaSource& share);
 
   std::vector<std::string> GetPaths() const;
 

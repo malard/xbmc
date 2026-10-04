@@ -90,8 +90,7 @@ PlayListEntry CPlayList::MakeEntryLocked(const std::shared_ptr<CFileItem>& item)
   return entry;
 }
 
-EntryId CPlayList::InsertLocked(const std::shared_ptr<CFileItem>& item,
-                                int position,
+EntryId CPlayList::InsertLocked(const std::shared_ptr<CFileItem>& item, int position,
                                 Changes& changes)
 {
   const int size = static_cast<int>(m_entries.size());
@@ -869,7 +868,7 @@ EntryId CPlayList::Expand(EntryId expanded)
 
   // the factory fills in a stream's mime type, so it is given a copy
   const CFileItem probe(*item);
-  std::unique_ptr<CPlayListFile> playlist(CPlayListFactory::Create(probe));
+  std::unique_ptr<CPlayListFile> playlist (CPlayListFactory::Create(probe));
   if (playlist == nullptr)
     return NO_ENTRY;
 

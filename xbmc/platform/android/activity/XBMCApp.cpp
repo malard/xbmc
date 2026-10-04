@@ -1401,7 +1401,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0, nullptr, "", params);
+        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0,
+                                                   nullptr, "", params);
       }
       else if (targeturl.IsProtocol("musicdb")
                || (targeturl.IsProtocol("special") && targetFile.find("playlists/music") != std::string::npos))
@@ -1409,7 +1410,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0, nullptr, "", params);
+        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0,
+                                                   nullptr, "", params);
       }
     }
     else
@@ -1427,7 +1429,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         auto list = std::make_unique<CFileItemList>();
         list->Add(std::move(item));
 
-        appMessenger->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1, static_cast<void*>(list.release()));
+        appMessenger->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
+                                                   static_cast<void*>(list.release()));
       }
       else
       {
@@ -1450,7 +1453,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         RequestVisibleBehind(true);
       if (!(m_playback_state & PLAYBACK_STATE_PLAYING))
         appMessenger->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                              static_cast<void*>(new CAction(ACTION_PAUSE)));
+                                                   static_cast<void*>(new CAction(ACTION_PAUSE)));
     }
   }
 }

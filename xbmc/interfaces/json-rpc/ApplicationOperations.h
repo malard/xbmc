@@ -18,14 +18,14 @@ class CVariant;
 
 namespace JSONRPC
 {
-class CApplicationOperations : CFileItemHandler
-{
-public:
-  static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
+  class CApplicationOperations : CFileItemHandler
+  {
+  public:
+    static JSONRPC_STATUS GetProperties(const CVariant &parameterObject, CVariant &result);
 
-  static JSONRPC_STATUS SetLogLevel(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetLogLevel(const CVariant &parameterObject, CVariant &result);
 
-  static JSONRPC_STATUS Quit(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Quit(const CVariant &parameterObject, CVariant &result);
 
 protected:
   /*!
@@ -37,9 +37,8 @@ protected:
      \brief The log level an Application.LogLevel name stands for; nothing for an unknown name
      */
   static std::optional<int> LogLevelFromName(const std::string& name);
-
-private:
-  static JSONRPC_STATUS GetPropertyValue(const std::string& property, CVariant& result);
+  private:
+    static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
   static CVariant LogLevelValue();
 };
 } // namespace JSONRPC

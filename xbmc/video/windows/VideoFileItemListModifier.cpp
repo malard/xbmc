@@ -85,12 +85,9 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
       for (int i = 0; i < items.Size(); i++)
       {
         CFileItemPtr item = items[i];
-        watched +=
-            static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger());
-        unwatched += static_cast<int>(
-            item->GetProperty(KODI::ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger());
-        inprogress += static_cast<int>(
-            item->GetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES).asInteger());
+        watched += static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger());
+        unwatched += static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger());
+        inprogress += static_cast<int>(item->GetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES).asInteger());
       }
       KODI::VIDEO::UTILS::SetEpisodeCounts(*pItem, watched + unwatched, watched);
       pItem->SetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES, inprogress);

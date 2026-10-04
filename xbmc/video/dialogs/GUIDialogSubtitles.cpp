@@ -153,8 +153,7 @@ bool CGUIDialogSubtitles::OnMessage(CGUIMessage& message)
       int item = msg.GetParam1();
       if (item >= 0 && item < m_serviceItems->Size())
       {
-        SetService(
-            m_serviceItems->Get(item)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
+        SetService(m_serviceItems->Get(item)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
         Search();
       }
       return true;
@@ -473,9 +472,9 @@ void CGUIDialogSubtitles::OnSubtitleServiceContextMenu(int itemIdx)
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_SETTINGS:
     {
       AddonPtr addon;
-      if (CServiceBroker::GetAddonMgr().GetAddon(
-              service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), addon,
-              AddonType::SUBTITLE_MODULE, OnlyEnabled::CHOICE_YES))
+      if (CServiceBroker::GetAddonMgr().GetAddon(service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), addon,
+                                                 AddonType::SUBTITLE_MODULE,
+                                                 OnlyEnabled::CHOICE_YES))
       {
         CGUIDialogAddonSettings::ShowForAddon(addon);
       }
@@ -488,9 +487,8 @@ void CGUIDialogSubtitles::OnSubtitleServiceContextMenu(int itemIdx)
     }
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_DISABLE:
     {
-      CServiceBroker::GetAddonMgr().DisableAddon(
-          service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(),
-          AddonDisabledReason::USER);
+      CServiceBroker::GetAddonMgr().DisableAddon(service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(),
+                                                 AddonDisabledReason::USER);
       const bool currentActiveServiceWasDisabled =
           m_currentService == service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString();
       FillServices();

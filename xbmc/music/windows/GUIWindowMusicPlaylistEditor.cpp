@@ -187,8 +187,7 @@ bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory
   items.Clear();
   if (strDirectory.empty())
   { // root listing - list files:// and musicdb://
-    CFileItemPtr files(
-        new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
+    CFileItemPtr files(new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
     files->SetLabel(localizeStrings.Get(744));
     files->SetLabelPreformatted(true);
     files->SetIsShareOrDrive(true);
@@ -356,8 +355,7 @@ void CGUIWindowMusicPlaylistEditor::OnLoadPlaylist()
   // Prompt user for file to load from music playlists folder
   std::string playlist;
   if (CGUIDialogFileBrowser::ShowAndGetFile(
-          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC),
-          ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
+          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(656), playlist))
     LoadPlaylist(playlist);
 }

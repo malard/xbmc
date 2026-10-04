@@ -79,8 +79,7 @@ inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIP
      "The request parsed as JSON but is not a well-formed JSON-RPC 2.0 request object.", false},
     {MethodNotFound, "MethodNotFound", "Method not found.",
      "The requested method does not exist, the client lacks the permission to see it, or it is "
-     "not available over the transport the request arrived on.",
-     false},
+     "not available over the transport the request arrived on.", false},
     {InvalidParams, "InvalidParams", "Invalid params.",
      "The given parameters do not validate against the schema of the method. The \"data\" member "
      "names the offending parameter and the constraint it failed.",
@@ -98,8 +97,7 @@ inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIP
      "The requested item exists but cannot be provided at the moment.", false},
     {AccessDenied, "AccessDenied", "Access denied.",
      "What was asked for is locked on this installation: a path outside every source shared for "
-     "remote access, or a setting level the profile's settings lock keeps.",
-     false},
+     "remote access, or a setting level the profile's settings lock keeps.", false},
 }};
 
 /*!
@@ -372,8 +370,8 @@ inline const char* PermissionToString(const OperationPermission& permission)
       return "WriteSetting";
     default:
       return "Unknown";
+    }
   }
-}
 
 /*!
     \brief Returns the OperationPermission value for the given
@@ -383,44 +381,44 @@ inline const char* PermissionToString(const OperationPermission& permission)
     nothing for a string that is not the name of a permission
     */
 inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
-{
+  {
   if (permission.compare("ReadData") == 0)
     return ReadData;
   if (permission.compare("ControlPlayback") == 0)
-    return ControlPlayback;
-  if (permission.compare("ControlNotify") == 0)
-    return ControlNotify;
-  if (permission.compare("ControlPower") == 0)
-    return ControlPower;
-  if (permission.compare("UpdateData") == 0)
-    return UpdateData;
-  if (permission.compare("RemoveData") == 0)
-    return RemoveData;
-  if (permission.compare("Navigate") == 0)
-    return Navigate;
-  if (permission.compare("WriteFile") == 0)
-    return WriteFile;
-  if (permission.compare("ControlSystem") == 0)
-    return ControlSystem;
-  if (permission.compare("ControlGUI") == 0)
-    return ControlGUI;
-  if (permission.compare("ManageAddon") == 0)
-    return ManageAddon;
-  if (permission.compare("ExecuteAddon") == 0)
-    return ExecuteAddon;
-  if (permission.compare("ControlPVR") == 0)
-    return ControlPVR;
+      return ControlPlayback;
+    if (permission.compare("ControlNotify") == 0)
+      return ControlNotify;
+    if (permission.compare("ControlPower") == 0)
+      return ControlPower;
+    if (permission.compare("UpdateData") == 0)
+      return UpdateData;
+    if (permission.compare("RemoveData") == 0)
+      return RemoveData;
+    if (permission.compare("Navigate") == 0)
+      return Navigate;
+    if (permission.compare("WriteFile") == 0)
+      return WriteFile;
+    if (permission.compare("ControlSystem") == 0)
+      return ControlSystem;
+    if (permission.compare("ControlGUI") == 0)
+      return ControlGUI;
+    if (permission.compare("ManageAddon") == 0)
+      return ManageAddon;
+    if (permission.compare("ExecuteAddon") == 0)
+      return ExecuteAddon;
+    if (permission.compare("ControlPVR") == 0)
+      return ControlPVR;
   if (permission.compare("WriteSetting") == 0)
     return WriteSetting;
 
   return std::nullopt;
-}
+  }
 
-class CJSONRPCUtils
-{
-public:
-  static void NotifyItemUpdated();
-  static void NotifyItemUpdated(const std::shared_ptr<CFileItem>& item);
-  static void NotifyItemUpdated(const CVideoInfoTag& info, const KODI::ART::Artwork& artwork);
-};
+  class CJSONRPCUtils
+  {
+  public:
+    static void NotifyItemUpdated();
+    static void NotifyItemUpdated(const std::shared_ptr<CFileItem>& item);
+    static void NotifyItemUpdated(const CVideoInfoTag& info, const KODI::ART::Artwork& artwork);
+  };
 } // namespace JSONRPC

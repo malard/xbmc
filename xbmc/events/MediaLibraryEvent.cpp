@@ -66,23 +66,13 @@ std::optional<Destination> DestinationFor(MediaType type)
 }
 } // namespace
 
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
-                                       const std::string& mediaPath,
-                                       const CVariant& label,
-                                       const CVariant& description,
-                                       EventLevel level /* = EventLevel::Information */)
+CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, level),
     m_mediaType(mediaType),
     m_mediaPath(mediaPath)
 { }
 
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType,
-                                       const std::string& mediaPath,
-                                       const CVariant& label,
-                                       const CVariant& description,
-                                       const std::string& icon,
-                                       const CVariant& details,
-                                       EventLevel level /* = EventLevel::Information */)
+CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, const std::string& icon, const CVariant& details, EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, icon, details, level),
     m_mediaType(mediaType),
     m_mediaPath(mediaPath)

@@ -126,7 +126,7 @@ JSONRPC_STATUS CPlaylistOperations::ReadItems(std::string_view media,
   return nothingAdded;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant &parameterObject, CVariant &result)
 {
   result = CVariant(CVariant::VariantTypeArray);
   for (const PublishedPlayList& playList : PUBLISHED_PLAYLISTS)
@@ -139,11 +139,10 @@ JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
 {
   const auto playLists{CServiceBroker::GetPlayLists()};
   const PublishedPlayList* playList = FindPublished(parameterObject);
-
   for (auto it = parameterObject["properties"].begin_array();
        it != parameterObject["properties"].end_array(); ++it)
   {
@@ -180,10 +179,11 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObjec
       return InvalidParams;
     }
   }
+
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
 
@@ -215,10 +215,11 @@ JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CV
   }
 
   HandleFileItemList("id", true, "items", list, parameterObject, result);
+
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Add(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -276,7 +277,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant& parameterObject, CVarian
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -296,13 +297,13 @@ JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVar
   }
 
   CServiceBroker::GetPlayLists()->Insert(*playList->type, list,
-                                         static_cast<int>(parameterObject["position"].asInteger()));
+      static_cast<int>(parameterObject["position"].asInteger()));
   result["added"] = list.Size();
   result["unresolved"] = unresolved;
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -311,13 +312,13 @@ JSONRPC_STATUS CPlaylistOperations::SetShuffle(const CVariant& parameterObject, 
   const CVariant& shuffle = parameterObject["shuffle"];
   if (playList->type)
     return ApplyShuffle(*playList->type, shuffle);
-
   if (!CServiceBroker::GetSlideShowDelegator().IsPlaying())
     return Fail(result, FailedToExecute, Reason::NothingPlaying, PlayListTarget(*playList));
+
   return ShuffleSlideshow(shuffle, result);
 }
 
-JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::SetRepeat(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -350,15 +351,15 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const CVariant& parameterObject, CVari
   else if (playList)
   {
     //! @todo Stop should be a delegator method to avoid GUI coupling! Same goes for other player controls.
-    CServiceBroker::GetAppMessenger()->PostMsg(
-        TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
         TransferToMessenger(std::make_unique<CAction>(ACTION_STOP)));
     CServiceBroker::GetSlideShowDelegator().Reset();
   }
+
   return ACK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant &parameterObject, CVariant &result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)

@@ -137,6 +137,7 @@ public:
 
     // None, original and forced only name no language, so they are asked of the preference
     const CLanguagePreference& preference{CLanguage::GetInstance().SubtitlePreference()};
+
     m_isSubNone = preference.Is(CLanguagePreference::Kind::None);
     m_isPrefOriginal = preference.Is(CLanguagePreference::Kind::Original);
     m_isPrefForced = preference.Is(CLanguagePreference::Kind::ForcedOnly);
@@ -3659,7 +3660,8 @@ void CVideoPlayer::HandleMessages()
       const LiveGeometryUpdate update =
           std::static_pointer_cast<CDVDMsgType<LiveGeometryUpdate>>(pMsg)->m_value;
       IPlayerCallback* cb = &m_callback;
-      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update); });
+      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update);
+      });
     }
     else if (pMsg->IsType(CDVDMsg::PLAYER_ABORT))
     {
@@ -6180,11 +6182,9 @@ bool CVideoPlayer::SuspendPresentation(SuspendReason reason)
   if (held == 0)
   {
     if (m_VideoPlayerAudio->IsInited())
-      m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
-                                      1);
+      m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
     if (m_VideoPlayerVideo->IsInited())
-      m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
-                                      1);
+      m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
     m_clock.Pause(true);
   }
   return true;
@@ -6200,10 +6200,8 @@ bool CVideoPlayer::ResumePresentation(SuspendReason reason)
   m_suspendReasons = held & ~static_cast<unsigned>(reason);
   if (m_suspendReasons == 0)
   {
-    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false),
-                                    1);
-    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false),
-                                    1);
+    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
+    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
     m_clock.Pause(false);
   }
   return true;
@@ -6262,8 +6260,7 @@ void CVideoPlayer::ReleaseAudioFormatHold()
                                     .count()) /
                 1000.0,
             early ? "chain reported ready" : "timed out");
-  m_VideoPlayerAudio->SendMessage(
-      std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
+  m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
   ResumePresentation(SuspendReason::AUDIO_FORMAT_CHANGE);
   m_audioChainReady = false;
 
@@ -6340,8 +6337,8 @@ void CVideoPlayer::UpdateContentState()
       m_SelectionStreams.TypeIndexOf(StreamType::SUBTITLE, m_CurrentSubtitle.source,
                                      m_CurrentSubtitle.demuxerId, m_CurrentSubtitle.id);
 
-  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) &&
-      m_content.m_videoIndex == -1 && m_content.m_audioIndex == -1)
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) && m_content.m_videoIndex == -1 &&
+      m_content.m_audioIndex == -1)
   {
     std::shared_ptr<CDVDInputStreamNavigator> nav =
           std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream);
@@ -6367,8 +6364,7 @@ void CVideoPlayer::UpdateContentState()
            m_content.m_selectedSubtitleIndex < m_SelectionStreams.CountType(StreamType::SUBTITLE))
     m_content.m_subtitleIndex = m_content.m_selectedSubtitleIndex;
 
-  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) &&
-      m_State.menuType == MenuType::NATIVE)
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) && m_State.menuType == MenuType::NATIVE)
   {
     // Update settings with changes made in bluray menu
     CVideoSettings settings{m_processInfo->GetVideoSettings()};

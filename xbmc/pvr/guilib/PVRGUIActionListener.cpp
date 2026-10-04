@@ -378,7 +378,8 @@ void CPVRGUIActionListener::OnSettingAction(const std::shared_ptr<const CSetting
   {
     if (pvrManager.IsStarted())
     {
-      CGUIDialog* dialog = windowManager.GetDialog(WINDOW_DIALOG_PVR_CLIENT_PRIORITIES);
+      CGUIDialog* dialog = windowManager.GetDialog(
+          WINDOW_DIALOG_PVR_CLIENT_PRIORITIES);
       if (dialog)
       {
         dialog->Open();
@@ -419,7 +420,8 @@ void CPVRGUIActionListener::OnSettingAction(const std::shared_ptr<const CSetting
   else if (settingId == CSettings::SETTING_PVRMANAGER_ADDONS)
   {
     const std::vector<std::string> params{
-        std::string{KODI::ADDONS::DEFAULT_BINARY_ADDONS_SOURCE} + "kodi.pvrclient", "return"};
+        std::string{KODI::ADDONS::DEFAULT_BINARY_ADDONS_SOURCE} + "kodi.pvrclient",
+                                          "return"};
     windowManager.ActivateWindow(WINDOW_ADDON_BROWSER, params);
   }
   else if (settingId == CSettings::SETTING_PVRPOWERMANAGEMENT_DAILYWAKEUPTIME)

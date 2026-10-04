@@ -15,10 +15,10 @@ class CVariant;
 
 namespace JSONRPC
 {
-class CGUIOperations
-{
-public:
-  static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
+  class CGUIOperations
+  {
+  public:
+    static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
 
   static JSONRPC_STATUS ActivateWindow(const CVariant& parameterObject, CVariant& result);
 
@@ -32,16 +32,16 @@ public:
 
   static JSONRPC_STATUS GetInfoLabels(const CVariant& parameterObject, CVariant& result);
 
-  static JSONRPC_STATUS GetInfoBooleans(ITransportLayer* transport,
-                                        IClient* client,
-                                        const CVariant& parameterObject,
-                                        CVariant& result);
-  static JSONRPC_STATUS SetScreenAlignment(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetScreenAlignment(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetInfoBooleans(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
 
-private:
-  static JSONRPC_STATUS GetPropertyValue(const std::string& property, CVariant& result);
-  static CVariant GetStereoModeObjectFromGuiMode(const RenderStereoMode mode);
+    static JSONRPC_STATUS SetScreenAlignment(const CVariant &parameterObject, CVariant &result);
+
+    static JSONRPC_STATUS GetScreenAlignment(const CVariant& parameterObject,
+                                         CVariant& result);
+
+  private:
+    static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
+    static CVariant GetStereoModeObjectFromGuiMode(const RenderStereoMode mode);
 
   //! \brief The alignment tool's state as both methods answer with it.
   static CVariant GetScreenAlignmentState();

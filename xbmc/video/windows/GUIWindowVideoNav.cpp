@@ -132,8 +132,7 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
       m_rootDir.AllowNonLocalSources(false);
 
       SetProperty("flattened", settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN));
-      if (message.GetNumStringParams() &&
-          StringUtils::EqualsNoCase(message.GetStringParam(0), "Files") &&
+      if (message.GetNumStringParams() && StringUtils::EqualsNoCase(message.GetStringParam(0), "Files") &&
           CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO).empty())
       {
         message.SetStringParam("");
@@ -205,7 +204,7 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
       {
         if (!PARTYMODE::Toggle(PLAYLIST::Video))
         {
-          SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, false);
+          SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE,false);
           return false;
         }
         UpdateButtons();
@@ -414,8 +413,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         std::string label;
         if (items.GetLabel().empty() &&
             m_rootDir.IsSource(items.GetPath(),
-                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO),
-                               &label))
+                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO), &label))
           items.SetLabel(label);
         if (!items.IsSourcesPath() && !items.IsLibraryFolder())
           LoadVideoInfo(items, m_database);
@@ -463,8 +461,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
           for(int i = 0; i < items.Size(); i++)
           {
             const CFileItemPtr item = items.Get(i);
-            if (item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 &&
-                item->GetVideoInfoTag()->m_iSeason > 0)
+            if (item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 && item->GetVideoInfoTag()->m_iSeason > 0)
               count++;
           }
           bFlatten = (count < 2); // flatten if there is only 1 unwatched season (not counting specials)
@@ -598,7 +595,8 @@ void CGUIWindowVideoNav::UpdateButtons()
       StringUtils::StartsWith(m_vecItems->Get(m_vecItems->Size()-1)->GetPath(), "/-1/"))
       iItems--;
   }
-  std::string items = StringUtils::Format("{} {}", iItems, localizeStrings.Get(127));
+  std::string items = StringUtils::Format(
+      "{} {}", iItems, localizeStrings.Get(127));
   SET_CONTROL_LABEL(CONTROL_LABELFILES, items);
 
   // set the filter label
@@ -632,7 +630,7 @@ void CGUIWindowVideoNav::UpdateButtons()
 
   SET_CONTROL_SELECTED(GetID(), CONTROL_BTNSHOWALL, m_watchedMode != WatchedMode::ALL);
 
-  SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, PARTYMODE::IsRunning(PLAYLIST::Video));
+  SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, PARTYMODE::IsRunning(PLAYLIST::Video));
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_UPDATE_LIBRARY, !m_vecItems->IsAddonsPath() && !m_vecItems->IsPlugin() && !m_vecItems->IsScript());
 }
@@ -723,8 +721,7 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
     if (!pItem->IsPath(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
-        !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) &&
-        !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
+        !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) && !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
@@ -795,8 +792,7 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
-    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE &&
-        !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
@@ -1013,7 +1009,10 @@ bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 
     //Get the new title
     std::string strTag;
-    if (!CGUIKeyboardFactory::ShowAndGetInput(strTag, CVariant{localizeStrings.Get(20462)}, false))
+    if (!CGUIKeyboardFactory::ShowAndGetInput(
+            strTag,
+            CVariant{localizeStrings.Get(20462)},
+            false))
       return true;
 
     CVideoDatabase videodb;
@@ -1125,14 +1124,11 @@ bool CGUIWindowVideoNav::ApplyWatchedFilter(CFileItemList &items)
     if (item->HasVideoInfoTag() && (node == NodeType::TITLE_TVSHOWS || node == NodeType::SEASONS))
     {
       if (m_watchedMode == WatchedMode::UNWATCHED)
-        item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::WATCHED)
-        item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::ALL)
-        item->GetVideoInfoTag()->m_iEpisode =
-            (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
       item->SetProperty(ITEM::PROPERTY::NUM_EPISODES, item->GetVideoInfoTag()->m_iEpisode);
       listchanged = true;
     }

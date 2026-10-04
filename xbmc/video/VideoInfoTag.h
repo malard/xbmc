@@ -123,7 +123,6 @@ public:
   //! \brief The content rectangle in force for this item, resolved as the player resolves it.
   //! A default geometry when nothing was measured.
   KODI::VIDEO::GEOMETRY::EffectiveGeometry ResolveContentGeometry() const;
-
   bool IsEmpty() const;
 
   const std::string& GetPath() const

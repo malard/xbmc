@@ -131,8 +131,7 @@ public:
    * \return false if nothing could be played, or the user cancelled reading a playlist. An add-on
    * item that does not resolve is reported as a failed play.
    */
-  bool PlayMedia(const CFileItem& item,
-                 const std::string& player = "",
+  bool PlayMedia(const CFileItem& item, const std::string& player = "",
                  std::optional<KODI::PLAYLIST::Type> type = std::nullopt,
                  std::optional<int> position = std::nullopt);
 
@@ -151,8 +150,7 @@ public:
    * \brief Open a file in the player, as it stands: nothing is added to a playlist.
    * \param player The player to use; empty for the default.
    */
-  PlayResult PlayFile(const CFileItem& item,
-                      const std::string& player = "",
+  PlayResult PlayFile(const CFileItem& item, const std::string& player = "",
                       Reopen reopen = Reopen::No,
                       StartsRun startsRun = StartsRun::Yes);
   void StopPlaying();
@@ -178,7 +176,6 @@ public:
    * \return Whether it was showing and was left.
    */
   bool LeavePlaybackWindow(PlaybackWindow window);
-
   void Restart(bool bSamePosition = true);
   void DelayedPlayerRestart();
   void CheckDelayedPlayerRestart();

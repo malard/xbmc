@@ -128,8 +128,7 @@ namespace XBMCAddon
 
       // play current file in playlist
       CServiceBroker::GetAppMessenger()->SendMsg(
-          TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(m_playList),
-          CServiceBroker::GetPlayLists()->GetPlayList(m_playList).GetCurrentPosition());
+          TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(m_playList), CServiceBroker::GetPlayLists()->GetPlayList(m_playList).GetCurrentPosition());
     }
 
     void Player::playPlaylist(const PlayList* playlist, bool windowed, int startpos)

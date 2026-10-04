@@ -20,7 +20,7 @@ class CVariant;
 
 namespace JSONRPC
 {
-/*!
+  /*!
    \ingroup jsonrpc
    \brief JSON RPC handler
 
@@ -28,17 +28,17 @@ namespace JSONRPC
    JSON-RPC requests and answering with the appropriate
    JSON-RPC response (actual response or error message).
    */
-class CJSONRPC
-{
-public:
-  /*!
+  class CJSONRPC
+  {
+  public:
+    /*!
      \brief Initializes the JSON-RPC handler
      */
-  static void Initialize();
+    static void Initialize();
 
-  static void Cleanup();
+    static void Cleanup();
 
-  /*
+    /*
      \brief Handles an incoming JSON-RPC request
      \param inputString received JSON-RPC request
      \param transport Transport protocol on which the request arrived
@@ -51,42 +51,22 @@ public:
      in the request are checked for validity and completeness. If the request
      is valid and the requested method exists it is called and executed.
      */
-  static std::string MethodCall(const std::string& inputString,
-                                ITransportLayer* transport,
-                                IClient* client);
+    static std::string MethodCall(const std::string &inputString, ITransportLayer *transport, IClient *client);
 
-  static JSONRPC_STATUS Introspect(ITransportLayer* transport,
-                                   IClient* client,
-                                   const CVariant& parameterObject,
-                                   CVariant& result);
-  static JSONRPC_STATUS Version(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS Permission(ITransportLayer* transport,
-                                   IClient* client,
-                                   const CVariant& parameterObject,
-                                   CVariant& result);
-  static JSONRPC_STATUS Ping(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetConfiguration(ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result);
-  static JSONRPC_STATUS SetConfiguration(ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result);
-  static JSONRPC_STATUS NotifyAll(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Introspect(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS Version(const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS Permission(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS Ping(const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetConfiguration(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS SetConfiguration(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result);
+    static JSONRPC_STATUS NotifyAll(const CVariant& parameterObject, CVariant &result);
 
-private:
-  static bool HandleMethodCall(const CVariant& request,
-                               CVariant& response,
-                               ITransportLayer* transport,
-                               IClient* client);
-  static inline bool IsProperJSONRPC(const CVariant& inputroot);
+  private:
+    static bool HandleMethodCall(const CVariant& request, CVariant& response, ITransportLayer *transport, IClient *client);
+    static inline bool IsProperJSONRPC(const CVariant& inputroot);
 
-  inline static void BuildResponse(const CVariant& request,
-                                   JSONRPC_STATUS code,
-                                   const CVariant& result,
-                                   CVariant& response);
+    inline static void BuildResponse(const CVariant& request, JSONRPC_STATUS code, const CVariant& result, CVariant& response);
 
-  static bool m_initialized;
-};
+    static bool m_initialized;
+  };
 } // namespace JSONRPC

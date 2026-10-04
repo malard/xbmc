@@ -681,8 +681,7 @@ NPT_Result CUPnPRenderer::PlayMedia(const NPT_String& uri,
     item->SetProperty("no-ext-subs-scan", true);
     CFileItemList* l = new CFileItemList; //don't delete,
     l->Add(std::make_shared<CFileItem>(*item));
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
-                                               static_cast<void*>(l));
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1, static_cast<void*>(l));
   }
 
   // just return success because the play actions are asynchronous

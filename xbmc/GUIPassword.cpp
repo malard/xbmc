@@ -67,9 +67,11 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
     if (!g_passwordManager.bMasterUser) // Check if we are the MasterUser!
     {
       const KODI::UTILS::CLockInfo& lockInfo{pItem->GetLockInfo()};
-      if (0 != settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES) &&
+      if (0 != settings->GetInt(
+                   CSettings::SETTING_MASTERLOCK_MAXRETRIES) &&
           lockInfo.GetBadPasswordCount() >=
-              settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES))
+              settings->GetInt(
+                  CSettings::SETTING_MASTERLOCK_MAXRETRIES))
       {
         // user previously exhausted all retries, show access denied error
         HELPERS::ShowOKDialogText(CVariant{12345}, CVariant{12346});
@@ -91,8 +93,7 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
         lockInfo.ResetBadPasswordCount();
         lockInfo.SetState(LOCK_STATE_LOCK_BUT_UNLOCKED);
         g_passwordManager.LockSource(section, strLabel, false);
-        mediaSources.UpdateSource(section, strLabel, "badpwdcount",
-                                  std::to_string(lockInfo.GetBadPasswordCount()));
+        mediaSources.UpdateSource(section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
         mediaSources.Save();
 
         // a mediasource has been unlocked successfully
@@ -104,10 +105,10 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
       {
         // password entry failed
         KODI::UTILS::CLockInfo& lockInfo{pItem->GetLockInfo()};
-        if (0 != settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES))
+        if (0 != settings->GetInt(
+                     CSettings::SETTING_MASTERLOCK_MAXRETRIES))
           lockInfo.IncrementBadPasswordCount();
-        mediaSources.UpdateSource(section, strLabel, "badpwdcount",
-                                  std::to_string(lockInfo.GetBadPasswordCount()));
+        mediaSources.UpdateSource(section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
         mediaSources.Save();
         break;
       }

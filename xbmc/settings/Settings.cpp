@@ -389,60 +389,40 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller("refreshrates", CDisplaySettings::SettingOptionsRefreshRatesFiller);
 
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "regions",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "regions", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+                    std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsRegionsFiller(setting, list, current, g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsRegionsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "shortdateformats",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "shortdateformats", [](const std::shared_ptr<const CSetting>& setting,
+                             StringSettingOptions& list, std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsShortDateFormatsFiller(setting, list, current,
-                                                                        g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsShortDateFormatsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "longdateformats",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "longdateformats", [](const std::shared_ptr<const CSetting>& setting,
+                            StringSettingOptions& list, std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsLongDateFormatsFiller(setting, list, current,
-                                                                       g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsLongDateFormatsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "timeformats",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "timeformats", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+                        std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsTimeFormatsFiller(setting, list, current,
-                                                                   g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsTimeFormatsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "24hourclockformats",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "24hourclockformats", [](const std::shared_ptr<const CSetting>& setting,
+                               StringSettingOptions& list, std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptions24HourClockFormatsFiller(setting, list, current,
-                                                                          g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptions24HourClockFormatsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "speedunits",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "speedunits", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+                       std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsSpeedUnitsFiller(setting, list, current,
-                                                                  g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsSpeedUnitsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "temperatureunits",
-      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-         std::string& current)
+      "temperatureunits", [](const std::shared_ptr<const CSetting>& setting,
+                             StringSettingOptions& list, std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsTemperatureUnitsFiller(setting, list, current,
-                                                                        g_langInfo);
-      });
+        KODI::LANGUAGE::CLangInfo::SettingOptionsTemperatureUnitsFiller(setting, list, current, g_langInfo); });
   GetSettingsManager()->RegisterSettingOptionsFiller("rendermethods", CBaseRenderer::SettingOptionsRenderMethodsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("modes", CDisplaySettings::SettingOptionsModesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("resolutions", CDisplaySettings::SettingOptionsResolutionsFiller);
@@ -456,14 +436,11 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller("cmsgammamodes", CDisplaySettings::SettingOptionsCmsGammaModesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("videoseeksteps", CSeekHandler::SettingOptionsSeekStepsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("startupwindows", ADDON::CSkinInfo::SettingOptionsStartupWindowsFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller(
-      "audiostreamlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller("audiostreamlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsAudioStreamLanguagesFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller(
-      "subtitlestreamlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller("subtitlestreamlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsSubtitleStreamLanguagesFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller(
-      "subtitledownloadlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller("subtitledownloadlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skincolors", ADDON::CSkinInfo::SettingOptionsSkinColorsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skinfonts", ADDON::CSkinInfo::SettingOptionsSkinFontsFiller);
@@ -643,17 +620,17 @@ void CSettings::InitializeISettingCallbacks()
   GetSettingsManager()->RegisterCallback(&g_charsetConverter, {CSettings::SETTING_SUBTITLES_CHARSET,
                                                                CSettings::SETTING_LOCALE_CHARSET});
 
-  GetSettingsManager()->RegisterCallback(&KODI::LANGUAGE::CLanguageLoader::GetInstance(),
-                                         {CSettings::SETTING_LOCALE_LANGUAGE,
-                                          CSettings::SETTING_LOCALE_AUDIOLANGUAGE,
-                                          CSettings::SETTING_LOCALE_SUBTITLELANGUAGE});
+  GetSettingsManager()->RegisterCallback(
+      &KODI::LANGUAGE::CLanguageLoader::GetInstance(),
+      {CSettings::SETTING_LOCALE_LANGUAGE,
+                                          CSettings::SETTING_LOCALE_AUDIOLANGUAGE, CSettings::SETTING_LOCALE_SUBTITLELANGUAGE});
 
   GetSettingsManager()->RegisterCallback(
       &g_langInfo,
-      {CSettings::SETTING_LOCALE_COUNTRY, CSettings::SETTING_LOCALE_SHORTDATEFORMAT,
-       CSettings::SETTING_LOCALE_LONGDATEFORMAT, CSettings::SETTING_LOCALE_TIMEFORMAT,
-       CSettings::SETTING_LOCALE_USE24HOURCLOCK, CSettings::SETTING_LOCALE_TEMPERATUREUNIT,
-       CSettings::SETTING_LOCALE_SPEEDUNIT});
+      {CSettings::SETTING_LOCALE_COUNTRY,
+       CSettings::SETTING_LOCALE_SHORTDATEFORMAT, CSettings::SETTING_LOCALE_LONGDATEFORMAT,
+       CSettings::SETTING_LOCALE_TIMEFORMAT, CSettings::SETTING_LOCALE_USE24HOURCLOCK,
+       CSettings::SETTING_LOCALE_TEMPERATUREUNIT, CSettings::SETTING_LOCALE_SPEEDUNIT});
 
   GetSettingsManager()->RegisterCallback(&g_passwordManager,
                                          {CSettings::SETTING_MASTERLOCK_LOCKCODE});

@@ -529,11 +529,10 @@ void CPVRRecording::UpdatePath()
 {
   // The path is the recording's key into the video database, so it keeps the client's
   // programme title and episode name.
-  m_strFileNameAndPath =
-      CPVRRecordingsPath(m_bIsDeleted, m_bRadio, m_strDirectory, ProgrammeTitle(), m_iSeason,
-                         m_iEpisode, GetYear(), EpisodeName(), m_strChannelName, m_recordingTime,
-                         m_strRecordingId)
-          .AsString();
+  m_strFileNameAndPath = CPVRRecordingsPath(m_bIsDeleted, m_bRadio, m_strDirectory, ProgrammeTitle(),
+                                            m_iSeason, m_iEpisode, GetYear(), EpisodeName(),
+                                            m_strChannelName, m_recordingTime, m_strRecordingId)
+                             .AsString();
 }
 
 const CDateTime& CPVRRecording::RecordingTimeAsLocalTime() const

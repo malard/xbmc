@@ -255,6 +255,7 @@ NPT_String GetMimeType(const CFileItem& item, const PLT_HttpRequestContext* cont
     path = XFILE::CStackDirectory::GetFirstStackedFile(path);
 
   const NPT_String ext{LowerExtension(path).c_str()};
+
   NPT_String mime;
 
   if (!ext.IsEmpty())
@@ -380,14 +381,14 @@ NPT_Result PopulateObjectFromTag(CMusicInfoTag& tag,
     object.m_People.artists.Add(artist.c_str());
     object.m_People.artists.Add(artist.c_str(), "Performer");
   }
-  object.m_People.artists.Add(AlbumArtistOrArtist(tag).c_str(), "AlbumArtist");
+  object.m_People.artists.Add(AlbumArtistOrArtist(tag)
+          .c_str(),
+      "AlbumArtist");
   object.m_Creator = AlbumArtistOrArtist(tag).c_str();
   object.m_MiscInfo.original_track_number = tag.GetTrackNumber();
   if (tag.GetDatabaseId() >= 0)
   {
-    object.m_ReferenceID =
-        EncodeObjectId(StringUtils::Format("{}{}{}", MUSIC::DB_PATH::SONGS, tag.GetDatabaseId(),
-                                           URIUtils::GetExtension(tag.GetURL())));
+    object.m_ReferenceID = EncodeObjectId(StringUtils::Format("{}{}{}", MUSIC::DB_PATH::SONGS, tag.GetDatabaseId(), URIUtils::GetExtension(tag.GetURL())));
   }
   if (object.m_ReferenceID == object.m_ObjectID)
     object.m_ReferenceID = "";
@@ -417,24 +418,24 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
     {
       case MediaType::MUSIC_VIDEO:
         object.m_ObjectClass.type = "object.item.videoItem.musicVideoClip";
-        object.m_Creator =
-            StringUtils::Join(
-                tag.m_artist,
-                CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator)
-                .c_str();
+      object.m_Creator =
+          StringUtils::Join(
+              tag.m_artist,
+              CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator)
+              .c_str();
         AddAll(object.m_People.artists, tag.m_artist);
-        object.m_Affiliation.album = tag.m_strAlbum.c_str();
-        object.m_Title = tag.m_strTitle.c_str();
-        object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
-        object.m_ReferenceID = EncodeObjectId(
-            StringUtils::Format("{}{}", VIDEO::DB_PATH::MUSICVIDEO_TITLES, tag.m_iDbId));
+      object.m_Affiliation.album = tag.m_strAlbum.c_str();
+      object.m_Title = tag.m_strTitle.c_str();
+      object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
+      object.m_ReferenceID =
+          EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MUSICVIDEO_TITLES, tag.m_iDbId));
         break;
       case MediaType::MOVIE:
         object.m_ObjectClass.type = "object.item.videoItem.movie";
-        object.m_Title = tag.m_strTitle.c_str();
-        object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
-        object.m_ReferenceID =
-            EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MOVIE_TITLES, tag.m_iDbId));
+      object.m_Title = tag.m_strTitle.c_str();
+      object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
+      object.m_ReferenceID =
+          EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MOVIE_TITLES, tag.m_iDbId));
         break;
       case MediaType::TV_SHOW:
         object.m_Recorded.series_title = tag.m_strShowTitle.c_str();
@@ -460,14 +461,11 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
         object.m_Recorded.series_title = tag.m_strShowTitle.c_str();
         object.m_ObjectClass.type = "object.item.videoItem.videoBroadcast";
         object.m_Recorded.program_title =
-            StringUtils::Format("S{:02}E{:02} : {}", tag.m_iSeason, tag.m_iEpisode, tag.m_strTitle)
-                .c_str();
+            StringUtils::Format("S{:02}E{:02} : {}", tag.m_iSeason, tag.m_iEpisode, tag.m_strTitle).c_str();
         object.m_Recorded.episode_number = tag.m_iEpisode;
         object.m_Recorded.episode_season = tag.m_iSeason;
         object.m_Title = object.m_Recorded.series_title + " - " + object.m_Recorded.program_title;
-        object.m_ReferenceID =
-            EncodeObjectId(StringUtils::Format("{}{}/{}/{}", VIDEO::DB_PATH::TVSHOW_TITLES,
-                                               tag.m_iIdShow, tag.m_iSeason, tag.m_iDbId));
+        object.m_ReferenceID = EncodeObjectId(StringUtils::Format("{}{}/{}/{}", VIDEO::DB_PATH::TVSHOW_TITLES, tag.m_iIdShow, tag.m_iSeason, tag.m_iDbId));
         object.m_Date = tag.m_firstAired.GetAsW3CDate().c_str();
         break;
     }
@@ -489,6 +487,7 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
   object.m_XbmcInfo.user_rating = tag.m_iUserRating;
 
   AddAll(object.m_Affiliation.genres, tag.m_genre);
+
   for (const SActorInfo& actor : tag.m_cast)
     object.m_People.actors.Add(actor.strName.c_str(), actor.strRole.c_str());
   AddAll(object.m_People.directors, tag.m_director);
@@ -889,6 +888,7 @@ PLT_MediaObject* BuildObject(CFileItem& item,
                                       protocolInfo);
 
       const std::string ext{LowerExtension(subtitlePath)};
+
       NPT_String subtitle_uri = object->m_Resources[object->m_Resources.GetItemCount() - 1].m_Uri;
 
       // add subtitle to video resource (the first one) (for some devices)

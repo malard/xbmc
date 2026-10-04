@@ -537,13 +537,16 @@ TEST(TestDatabaseUtils, GetSelectFields)
   Fields fields;
   FieldList fieldlist;
 
-  EXPECT_FALSE(DatabaseUtils::GetSelectFields(fields, MediaType::ALBUM, fieldlist));
+  EXPECT_FALSE(DatabaseUtils::GetSelectFields(fields, MediaType::ALBUM,
+                                              fieldlist));
 
   fields = {
       Field::ID, Field::GENRE, Field::ALBUM, Field::ARTIST, Field::TITLE,
   };
-  EXPECT_FALSE(DatabaseUtils::GetSelectFields(fields, MediaType::NONE, fieldlist));
-  EXPECT_TRUE(DatabaseUtils::GetSelectFields(fields, MediaType::ALBUM, fieldlist));
+  EXPECT_FALSE(DatabaseUtils::GetSelectFields(fields, MediaType::NONE,
+                                              fieldlist));
+  EXPECT_TRUE(DatabaseUtils::GetSelectFields(fields, MediaType::ALBUM,
+                                             fieldlist));
   EXPECT_FALSE(fieldlist.empty());
 }
 

@@ -680,8 +680,7 @@ bool CPlayerGUIInfo::GetBool(bool& value,
       {
         if (item->HasProperty(KODI::ITEM::PROPERTY::PLAYLIST_ENTRY))
         {
-          const std::optional<PLAYLIST::Type> type =
-              PLAYLIST::TypeFromInt(item->GetProperty("playlisttype").asInteger32(-1));
+          const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromInt(item->GetProperty("playlisttype").asInteger32(-1));
           value =
               type && item->GetProperty(KODI::ITEM::PROPERTY::PLAYLIST_ENTRY).asUnsignedInteger() ==
                           m_playLists->GetPlayingEntry(*type);
@@ -698,8 +697,7 @@ bool CPlayerGUIInfo::GetBool(bool& value,
         {
           // the playing entry, or the playlist file it came from
           const std::string sourcePath = m_playLists->GetPlayingSourcePath();
-          value =
-              m_currentItem->IsSamePath(item) || (!sourcePath.empty() && item->IsPath(sourcePath));
+          value = m_currentItem->IsSamePath(item) || (!sourcePath.empty() && item->IsPath(sourcePath));
           return true;
         }
       }

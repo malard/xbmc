@@ -36,31 +36,31 @@ enum class ContentType;
 
 namespace JSONRPC
 {
-/*!
+  /*!
    \brief Possible value types of a parameter or return type
    */
-enum JSONSchemaType
-{
-  NullValue = 0x01,
-  StringValue = 0x02,
-  NumberValue = 0x04,
-  IntegerValue = 0x08,
-  BooleanValue = 0x10,
-  ArrayValue = 0x20,
-  ObjectValue = 0x40,
-  AnyValue = 0x80
-};
+  enum JSONSchemaType
+  {
+    NullValue = 0x01,
+    StringValue = 0x02,
+    NumberValue = 0x04,
+    IntegerValue = 0x08,
+    BooleanValue = 0x10,
+    ArrayValue = 0x20,
+    ObjectValue = 0x40,
+    AnyValue = 0x80
+  };
 
-/*!
+  /*!
    \ingroup jsonrpc
    \brief Helper class containing utility methods to handle
    json rpc method calls.*/
-class CJSONUtils
-{
+  class CJSONUtils
+  {
 protected:
   //! Empty when the value is not an array.
-  static std::set<std::string> FieldNames(const CVariant& properties)
-  {
+  static std::set<std::string> FieldNames(const CVariant & properties)
+    {
     std::set<std::string> fields;
     if (properties.isArray())
     {
@@ -77,57 +77,53 @@ protected:
     return FieldNames(parameterObject["properties"]);
   }
 
-  static void HandleLimits(
-      const CVariant& parameterObject, CVariant& result, int size, int& start, int& end)
-  {
-    if (size < 0)
-      size = 0;
+  static void HandleLimits(const CVariant &parameterObject, CVariant &result, int size, int &start, int &end)
+    {
+      if (size < 0)
+        size = 0;
 
-    start = static_cast<int>(parameterObject["limits"]["start"].asInteger());
-    end = static_cast<int>(parameterObject["limits"]["end"].asInteger());
-    end = (end <= 0 || end > size) ? size : end;
-    start = start > end ? end : start;
+      start = static_cast<int>(parameterObject["limits"]["start"].asInteger());
+      end   = static_cast<int>(parameterObject["limits"]["end"].asInteger());
+      end = (end <= 0 || end > size) ? size : end;
+      start = start > end ? end : start;
 
-    result["limits"]["start"] = start;
-    result["limits"]["end"] = end;
-    result["limits"]["total"] = size;
-  }
+      result["limits"]["start"] = start;
+      result["limits"]["end"]   = end;
+      result["limits"]["total"] = size;
+    }
 
-  static bool ParseSorting(const CVariant& parameterObject,
-                           SortBy& sortBy,
-                           SortOrder& sortOrder,
-                           SortAttribute& sortAttributes)
-  {
-    std::string method = parameterObject["sort"]["method"].asString();
-    std::string order = parameterObject["sort"]["order"].asString();
-    StringUtils::ToLower(method);
-    StringUtils::ToLower(order);
+    static bool ParseSorting(const CVariant &parameterObject, SortBy &sortBy, SortOrder &sortOrder, SortAttribute &sortAttributes)
+    {
+      std::string method = parameterObject["sort"]["method"].asString();
+      std::string order = parameterObject["sort"]["order"].asString();
+      StringUtils::ToLower(method);
+      StringUtils::ToLower(order);
 
-    // parse the sort attributes
-    sortAttributes = SortAttributeNone;
-    if (parameterObject["sort"]["ignoreArticle"].asBoolean())
-      sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeIgnoreArticle);
-    if (parameterObject["sort"]["useArtistSortName"].asBoolean())
-      sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeUseArtistSortName);
+      // parse the sort attributes
+      sortAttributes = SortAttributeNone;
+      if (parameterObject["sort"]["ignoreArticle"].asBoolean())
+        sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeIgnoreArticle);
+      if (parameterObject["sort"]["useArtistSortName"].asBoolean())
+        sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeUseArtistSortName);
 
-    // parse the sort order
-    sortOrder = SortUtils::SortOrderFromString(order);
-    if (sortOrder == SortOrder::NONE)
-      return false;
+      // parse the sort order
+      sortOrder = SortUtils::SortOrderFromString(order);
+      if (sortOrder == SortOrder::NONE)
+        return false;
 
-    // parse the sort method
-    sortBy = SortUtils::SortMethodFromString(method);
+      // parse the sort method
+      sortBy = SortUtils::SortMethodFromString(method);
 
-    return true;
-  }
+      return true;
+    }
 
-  static void ParseLimits(const CVariant& parameterObject, int& limitStart, int& limitEnd)
-  {
-    limitStart = static_cast<int>(parameterObject["limits"]["start"].asInteger());
-    limitEnd = static_cast<int>(parameterObject["limits"]["end"].asInteger());
-  }
+    static void ParseLimits(const CVariant &parameterObject, int &limitStart, int &limitEnd)
+    {
+      limitStart = static_cast<int>(parameterObject["limits"]["start"].asInteger());
+      limitEnd = static_cast<int>(parameterObject["limits"]["end"].asInteger());
+    }
 
-  /*!
+    /*!
      \brief Checks if the given object contains a parameter
      \param parameterObject Object to check for a parameter
      \param key Possible name of the parameter
@@ -138,15 +134,15 @@ protected:
      the given object is not an array) or for a parameter at the
      given position (if the given object is an array).
      */
-  static inline bool ParameterExists(const CVariant& parameterObject,
-                                     const std::string& key,
-                                     unsigned int position)
-  {
-    return IsValueMember(parameterObject, key) ||
-           (parameterObject.isArray() && parameterObject.size() > position);
-  }
+    static inline bool ParameterExists(const CVariant& parameterObject,
+                                       const std::string& key,
+                                       unsigned int position)
+    {
+      return IsValueMember(parameterObject, key) ||
+             (parameterObject.isArray() && parameterObject.size() > position);
+    }
 
-  /*!
+    /*!
      \brief Checks if the given object contains a value
      with the given key
      \param value Value to check for the member
@@ -154,12 +150,12 @@ protected:
      \return True if the given object contains a member with
      the given key otherwise false
      */
-  static inline bool IsValueMember(const CVariant& value, const std::string& key)
-  {
-    return value.isMember(key);
-  }
+    static inline bool IsValueMember(const CVariant& value, const std::string& key)
+    {
+      return value.isMember(key);
+    }
 
-  /*!
+    /*!
      \brief Returns the json value of a parameter
      \param parameterObject Object containing all provided parameters
      \param key Possible name of the parameter
@@ -171,14 +167,14 @@ protected:
      the given object is not an array) or of the parameter at the
      given position (if the given object is an array).
      */
-  static inline CVariant GetParameter(const CVariant& parameterObject,
-                                      const std::string& key,
-                                      unsigned int position)
-  {
-    return IsValueMember(parameterObject, key) ? parameterObject[key] : parameterObject[position];
-  }
+    static inline CVariant GetParameter(const CVariant& parameterObject,
+                                        const std::string& key,
+                                        unsigned int position)
+    {
+      return IsValueMember(parameterObject, key) ? parameterObject[key] : parameterObject[position];
+    }
 
-  /*!
+    /*!
      \brief Returns the json value of a parameter or the given
      default value
      \param parameterObject Object containing all provided parameters
@@ -193,104 +189,104 @@ protected:
      given position (if the given object is an array). If the
      parameter does not exist the given default value is returned.
      */
-  static inline CVariant GetParameter(const CVariant& parameterObject,
-                                      const std::string& key,
-                                      unsigned int position,
-                                      const CVariant& fallback)
-  {
-    return IsValueMember(parameterObject, key)
-               ? parameterObject[key]
-               : ((parameterObject.isArray() && parameterObject.size() > position)
-                      ? parameterObject[position]
-                      : fallback);
-  }
+    static inline CVariant GetParameter(const CVariant& parameterObject,
+                                        const std::string& key,
+                                        unsigned int position,
+                                        const CVariant& fallback)
+    {
+      return IsValueMember(parameterObject, key)
+                 ? parameterObject[key]
+                 : ((parameterObject.isArray() && parameterObject.size() > position)
+                        ? parameterObject[position]
+                        : fallback);
+    }
 
-  /*!
+    /*!
      \brief Returns the given json value as a string
      \param value Json value to convert to a string
      \param defaultValue Default string value
      \return String value of the given json value or the default value
      if the given json value is no string
      */
-  static inline std::string GetString(const CVariant& value, const char* defaultValue)
-  {
-    std::string str = defaultValue;
-    if (value.isString())
+    static inline std::string GetString(const CVariant &value, const char* defaultValue)
     {
-      str = value.asString();
+      std::string str = defaultValue;
+      if (value.isString())
+      {
+        str = value.asString();
+      }
+
+      return str;
     }
 
-    return str;
-  }
-
-  /*!
+    /*!
      \brief Returns a TransportLayerCapability value of the
      given string representation
      \param transport String representation of the TransportLayerCapability
      \return TransportLayerCapability value of the given string representation
      */
-  static inline TransportLayerCapability StringToTransportLayer(const std::string& transport)
-  {
-    if (transport.compare("Announcing") == 0)
-      return Announcing;
-    if (transport.compare("FileDownloadRedirect") == 0)
-      return FileDownloadRedirect;
+    static inline TransportLayerCapability StringToTransportLayer(const std::string& transport)
+    {
+      if (transport.compare("Announcing") == 0)
+        return Announcing;
+      if (transport.compare("FileDownloadRedirect") == 0)
+        return FileDownloadRedirect;
 
-    return Response;
-  }
+      return Response;
+    }
 
-  /*!
+    /*!
      \brief Returns a JSONSchemaType value for the given
      string representation
      \param valueType String representation of the JSONSchemaType
      \return JSONSchemaType value of the given string representation
      */
-  static inline JSONSchemaType StringToSchemaValueType(const std::string& valueType)
-  {
-    if (valueType.compare("null") == 0)
-      return NullValue;
-    if (valueType.compare("string") == 0)
-      return StringValue;
-    if (valueType.compare("number") == 0)
-      return NumberValue;
-    if (valueType.compare("integer") == 0)
-      return IntegerValue;
-    if (valueType.compare("boolean") == 0)
-      return BooleanValue;
-    if (valueType.compare("array") == 0)
-      return ArrayValue;
-    if (valueType.compare("object") == 0)
-      return ObjectValue;
+    static inline JSONSchemaType StringToSchemaValueType(const std::string& valueType)
+    {
+      if (valueType.compare("null") == 0)
+        return NullValue;
+      if (valueType.compare("string") == 0)
+        return StringValue;
+      if (valueType.compare("number") == 0)
+        return NumberValue;
+      if (valueType.compare("integer") == 0)
+        return IntegerValue;
+      if (valueType.compare("boolean") == 0)
+        return BooleanValue;
+      if (valueType.compare("array") == 0)
+        return ArrayValue;
+      if (valueType.compare("object") == 0)
+        return ObjectValue;
 
-    return AnyValue;
-  }
+      return AnyValue;
+    }
 
-  /*!
+    /*!
      \brief Returns a string representation for the
      given JSONSchemaType
      \param valueType Specific JSONSchemaType
      \return String representation of the given JSONSchemaType
      */
-  static inline std::string SchemaValueTypeToString(JSONSchemaType valueType)
-  {
-    std::vector<JSONSchemaType> types = std::vector<JSONSchemaType>();
-    for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
+    static inline std::string SchemaValueTypeToString(JSONSchemaType valueType)
     {
-      if (HasType(valueType, (JSONSchemaType)value))
-        types.push_back((JSONSchemaType)value);
-    }
-
-    std::string strType;
-    if (types.size() > 1)
-      strType.append("[");
-
-    for (unsigned int index = 0; index < types.size(); index++)
-    {
-      if (index > 0)
-        strType.append(", ");
-
-      switch (types.at(index))
+      std::vector<JSONSchemaType> types = std::vector<JSONSchemaType>();
+      for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
       {
+        if (HasType(valueType, (JSONSchemaType)value))
+          types.push_back((JSONSchemaType)value);
+      }
+
+      std::string strType;
+      if (types.size() > 1)
+        strType.append("[");
+
+      for (unsigned int index = 0; index < types.size(); index++)
+      {
+        if (index > 0)
+          strType.append(", ");
+
+        switch (types.at(index))
+        {
         case StringValue:
           strType.append("string");
           break;
@@ -317,41 +313,41 @@ protected:
           break;
         default:
           strType.append("unknown");
+        }
       }
+
+      if (types.size() > 1)
+        strType.append("]");
+
+      return strType;
     }
 
-    if (types.size() > 1)
-      strType.append("]");
-
-    return strType;
-  }
-
-  /*!
+    /*!
      \brief Converts the given json schema type into
      a json object
      \param valueTye json schema type(s)
      \param jsonObject json object into which the json schema type(s) are stored
      */
-  static inline void SchemaValueTypeToJson(JSONSchemaType valueType, CVariant& jsonObject)
-  {
-    jsonObject = CVariant(CVariant::VariantTypeArray);
-    for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
+    static inline void SchemaValueTypeToJson(JSONSchemaType valueType, CVariant &jsonObject)
     {
-      if (HasType(valueType, (JSONSchemaType)value))
-        jsonObject.append(SchemaValueTypeToString((JSONSchemaType)value));
+      jsonObject = CVariant(CVariant::VariantTypeArray);
+      for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
+      {
+        if (HasType(valueType, (JSONSchemaType)value))
+          jsonObject.append(SchemaValueTypeToString((JSONSchemaType)value));
+      }
+
+      if (jsonObject.size() == 1)
+      {
+        CVariant jsonType = jsonObject[0];
+        jsonObject = jsonType;
+      }
     }
 
-    if (jsonObject.size() == 1)
+    static inline const char *ValueTypeToString(CVariant::VariantType valueType)
     {
-      CVariant jsonType = jsonObject[0];
-      jsonObject = jsonType;
-    }
-  }
-
-  static inline const char* ValueTypeToString(CVariant::VariantType valueType)
-  {
-    switch (valueType)
-    {
+      switch (valueType)
+      {
       case CVariant::VariantTypeString:
         return "string";
       case CVariant::VariantTypeDouble:
@@ -370,78 +366,74 @@ protected:
         return "null";
       default:
         return "unknown";
-    }
+      }
   }
 
-  /*!
+    /*!
      \brief Checks if the given json value is of the given type
      \param value Json value to check
      \param valueType Expected type of the json value
      \return True if the given json value is of the given type otherwise false
     */
-  static inline bool IsType(const CVariant& value, JSONSchemaType valueType)
-  {
-    if (HasType(valueType, AnyValue))
-      return true;
-    if (HasType(valueType, StringValue) && value.isString())
-      return true;
-    if (HasType(valueType, NumberValue) &&
-        (value.isInteger() || value.isUnsignedInteger() || value.isDouble()))
-      return true;
-    if (HasType(valueType, IntegerValue) && (value.isInteger() || value.isUnsignedInteger()))
-      return true;
-    if (HasType(valueType, BooleanValue) && value.isBoolean())
-      return true;
-    if (HasType(valueType, ArrayValue) && value.isArray())
-      return true;
-    if (HasType(valueType, ObjectValue) && value.isObject())
-      return true;
+    static inline bool IsType(const CVariant &value, JSONSchemaType valueType)
+    {
+      if (HasType(valueType, AnyValue))
+        return true;
+      if (HasType(valueType, StringValue) && value.isString())
+        return true;
+      if (HasType(valueType, NumberValue) && (value.isInteger() || value.isUnsignedInteger() || value.isDouble()))
+        return true;
+      if (HasType(valueType, IntegerValue) && (value.isInteger() || value.isUnsignedInteger()))
+        return true;
+      if (HasType(valueType, BooleanValue) && value.isBoolean())
+        return true;
+      if (HasType(valueType, ArrayValue) && value.isArray())
+        return true;
+      if (HasType(valueType, ObjectValue) && value.isObject())
+        return true;
 
-    return value.isNull();
-  }
+      return value.isNull();
+    }
 
-  /*!
+    /*!
      \brief Sets the value of the given json value to the
      default value of the given type
      \param value Json value to be set
      \param valueType Type of the default value
      */
-  static inline void SetDefaultValue(CVariant& value, JSONSchemaType valueType)
-  {
-    switch (valueType)
+    static inline void SetDefaultValue(CVariant &value, JSONSchemaType valueType)
     {
-      case StringValue:
-        value = CVariant("");
-        break;
-      case NumberValue:
-        value = CVariant(CVariant::VariantTypeDouble);
-        break;
-      case IntegerValue:
-        value = CVariant(CVariant::VariantTypeInteger);
-        break;
-      case BooleanValue:
-        value = CVariant(CVariant::VariantTypeBoolean);
-        break;
-      case ArrayValue:
-        value = CVariant(CVariant::VariantTypeArray);
-        break;
-      case ObjectValue:
-        value = CVariant(CVariant::VariantTypeObject);
-        break;
-      default:
-        value = CVariant(CVariant::VariantTypeNull);
+      switch (valueType)
+      {
+        case StringValue:
+          value = CVariant("");
+          break;
+        case NumberValue:
+          value = CVariant(CVariant::VariantTypeDouble);
+          break;
+        case IntegerValue:
+          value = CVariant(CVariant::VariantTypeInteger);
+          break;
+        case BooleanValue:
+          value = CVariant(CVariant::VariantTypeBoolean);
+          break;
+        case ArrayValue:
+          value = CVariant(CVariant::VariantTypeArray);
+          break;
+        case ObjectValue:
+          value = CVariant(CVariant::VariantTypeObject);
+          break;
+        default:
+          value = CVariant(CVariant::VariantTypeNull);
+      }
     }
-  }
 
-  static inline bool HasType(JSONSchemaType typeObject, JSONSchemaType type)
-  {
-    return (typeObject & type) == type;
-  }
+    static inline bool HasType(JSONSchemaType typeObject, JSONSchemaType type) { return (typeObject & type) == type; }
 
-  static inline bool ParameterNotNull(const CVariant& parameterObject, const std::string& key)
-  {
-    return parameterObject.isMember(key) && !parameterObject[key].isNull();
-  }
+    static inline bool ParameterNotNull(const CVariant& parameterObject, const std::string& key)
+    {
+      return parameterObject.isMember(key) && !parameterObject[key].isNull();
+    }
 
   /*!
      \brief The answer to a library lookup
@@ -469,17 +461,15 @@ protected:
      \param jsonStringArray JSON object representing a string array
      \param stringArray String array where the values are copied into (cleared)
      */
-  static void CopyStringArray(const CVariant& jsonStringArray,
-                              std::vector<std::string>& stringArray)
-  {
-    if (!jsonStringArray.isArray())
-      return;
+    static void CopyStringArray(const CVariant &jsonStringArray, std::vector<std::string> &stringArray)
+    {
+      if (!jsonStringArray.isArray())
+        return;
 
-    stringArray.clear();
-    for (CVariant::const_iterator_array it = jsonStringArray.begin_array();
-         it != jsonStringArray.end_array(); ++it)
-      stringArray.push_back(it->asString());
-  }
+      stringArray.clear();
+      for (CVariant::const_iterator_array it = jsonStringArray.begin_array(); it != jsonStringArray.end_array(); ++it)
+        stringArray.push_back(it->asString());
+    }
 
   //! Copies the caller's value for \p key into \p target, if the caller gave one
   template<typename T>
@@ -505,7 +495,7 @@ protected:
 
   static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);
 
-  static void SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date);
+    static void SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date);
 
   /*!
      \brief Applies a caller's art edit: a value replaces its art type, a null removes it
@@ -528,26 +518,26 @@ protected:
                                        std::shared_ptr<ADDON::CScraper>& scraper,
                                        CVariant& result);
 
-  static bool GetXspFiltering(const std::string& type, const CVariant& filter, std::string& xsp)
-  {
-    if (type.empty() || !filter.isObject())
-      return false;
-
-    CVariant xspObj(CVariant::VariantTypeObject);
-    xspObj["type"] = type;
-
-    if (filter.isMember("field"))
+    static bool GetXspFiltering(const std::string &type, const CVariant &filter, std::string &xsp)
     {
-      xspObj["rules"]["and"] = CVariant(CVariant::VariantTypeArray);
-      xspObj["rules"]["and"].push_back(filter);
-    }
-    else
-      xspObj["rules"] = filter;
+      if (type.empty() || !filter.isObject())
+        return false;
 
-    KODI::PLAYLIST::CSmartPlaylist playlist;
-    return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
-  }
-};
+      CVariant xspObj(CVariant::VariantTypeObject);
+      xspObj["type"] = type;
+
+      if (filter.isMember("field"))
+      {
+        xspObj["rules"]["and"] = CVariant(CVariant::VariantTypeArray);
+        xspObj["rules"]["and"].push_back(filter);
+      }
+      else
+        xspObj["rules"] = filter;
+
+      KODI::PLAYLIST::CSmartPlaylist playlist;
+      return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
+    }
+  };
 
 /*!
    \brief Answers a GetProperties call, reading each property the caller names with \p getValue

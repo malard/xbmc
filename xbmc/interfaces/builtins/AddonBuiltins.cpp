@@ -124,7 +124,8 @@ static int RunAddon(const std::vector<std::string>& params)
     const std::string& addonid = params[0];
 
     AddonPtr addon;
-    if (addonMgr.GetAddon(addonid, addon, AddonType::PLUGIN, OnlyEnabled::CHOICE_YES))
+    if (addonMgr.GetAddon(addonid, addon, AddonType::PLUGIN,
+                                               OnlyEnabled::CHOICE_YES))
     {
       const auto plugin = std::dynamic_pointer_cast<CPluginSource>(addon);
       std::string urlParameters;
@@ -166,18 +167,22 @@ static int RunAddon(const std::vector<std::string>& params)
         cmd = StringUtils::Format("RunPlugin({})", StringUtils::Join(params, ","));
       CBuiltins::GetInstance().Execute(cmd);
     }
-    else if (addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT, OnlyEnabled::CHOICE_YES) ||
+    else if (addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT,
+                                                    OnlyEnabled::CHOICE_YES) ||
              addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT_WEATHER,
-                               OnlyEnabled::CHOICE_YES) ||
-             addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT_LYRICS, OnlyEnabled::CHOICE_YES) ||
-             addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT_LIBRARY, OnlyEnabled::CHOICE_YES))
+                                                    OnlyEnabled::CHOICE_YES) ||
+             addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT_LYRICS,
+                                                    OnlyEnabled::CHOICE_YES) ||
+             addonMgr.GetAddon(addonid, addon, AddonType::SCRIPT_LIBRARY,
+                                                    OnlyEnabled::CHOICE_YES))
     {
       // RunScript takes the vector as it stands. Routing it through a builtin string would
       // re-parse it with CUtil::SplitParams, which ends a parameter at any comma not inside
       // quotes.
       RunScript(params);
     }
-    else if (addonMgr.GetAddon(addonid, addon, AddonType::GAMEDLL, OnlyEnabled::CHOICE_YES))
+    else if (addonMgr.GetAddon(addonid, addon, AddonType::GAMEDLL,
+                                                    OnlyEnabled::CHOICE_YES))
     {
       CFileItem item;
 

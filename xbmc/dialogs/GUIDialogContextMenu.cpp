@@ -209,10 +209,7 @@ float CGUIDialogContextMenu::GetWidth() const
     return CGUIDialog::GetWidth();
 }
 
-bool CGUIDialogContextMenu::SourcesMenu(MediaSection section,
-                                        const CFileItemPtr& item,
-                                        float posX,
-                                        float posY)
+bool CGUIDialogContextMenu::SourcesMenu(MediaSection section, const CFileItemPtr& item, float posX, float posY)
 {
   //! @todo This should be callable even if we don't have any valid items
   if (!item)
@@ -256,9 +253,7 @@ bool ShowAndGetLock(CMediaSource& share, MediaSection section, MediaLockState st
 }
 } // unnamed namespace
 
-void CGUIDialogContextMenu::GetContextButtons(MediaSection section,
-                                              const CFileItemPtr& item,
-                                              CContextButtons& buttons)
+void CGUIDialogContextMenu::GetContextButtons(MediaSection section, const CFileItemPtr& item, CContextButtons &buttons)
 {
   // Add buttons to the ContextMenu that should be visible for both sources and autosourced items
   // Optical removable drives automatically have the static Eject button added (see CEjectDisk).
@@ -269,7 +264,7 @@ void CGUIDialogContextMenu::GetContextButtons(MediaSection section,
   }
 
   // Next, Add buttons to the ContextMenu that should ONLY be visible for sources and not autosourced items
-  CMediaSource* share = GetShare(section, item.get());
+  CMediaSource *share = GetShare(section, item.get());
 
   if (CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetCurrentProfile().canWriteSources() || g_passwordManager.bMasterUser)
   {
@@ -330,9 +325,7 @@ void CGUIDialogContextMenu::GetContextButtons(MediaSection section,
   }
 }
 
-bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
-                                            const CFileItemPtr& item,
-                                            CONTEXT_BUTTON button)
+bool CGUIDialogContextMenu::OnContextButton(MediaSection section, const CFileItemPtr& item, CONTEXT_BUTTON button)
 {
   auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
@@ -351,7 +344,7 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
   }
 
   // the rest of the operations require a valid share
-  CMediaSource* share = GetShare(section, item.get());
+  CMediaSource *share = GetShare(section, item.get());
   if (!share)
     return false;
 
@@ -377,11 +370,9 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
     }
     else
     {
-      if (!profileManager->GetCurrentProfile().canWriteSources() &&
-          !g_passwordManager.IsMasterLockUnlocked(false))
+      if (!profileManager->GetCurrentProfile().canWriteSources() && !g_passwordManager.IsMasterLockUnlocked(false))
         return false;
-      if (profileManager->GetCurrentProfile().canWriteSources() &&
-          !g_passwordManager.IsProfileLockUnlocked())
+      if (profileManager->GetCurrentProfile().canWriteSources() && !g_passwordManager.IsProfileLockUnlocked())
         return false;
     }
     // prompt user if they want to really delete the source
@@ -399,8 +390,7 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
     return true;
   }
   case CONTEXT_BUTTON_SET_DEFAULT:
-    if (profileManager->GetCurrentProfile().canWriteSources() &&
-        !g_passwordManager.IsProfileLockUnlocked())
+    if (profileManager->GetCurrentProfile().canWriteSources() && !g_passwordManager.IsProfileLockUnlocked())
       return false;
     else if (!g_passwordManager.IsMasterLockUnlocked(true))
       return false;
@@ -410,8 +400,7 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
     return true;
 
   case CONTEXT_BUTTON_CLEAR_DEFAULT:
-    if (profileManager->GetCurrentProfile().canWriteSources() &&
-        !g_passwordManager.IsProfileLockUnlocked())
+    if (profileManager->GetCurrentProfile().canWriteSources() && !g_passwordManager.IsProfileLockUnlocked())
       return false;
     else if (!g_passwordManager.IsMasterLockUnlocked(true))
       return false;
@@ -421,8 +410,7 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
 
   case CONTEXT_BUTTON_SET_THUMB:
     {
-      if (profileManager->GetCurrentProfile().canWriteSources() &&
-          !g_passwordManager.IsProfileLockUnlocked())
+      if (profileManager->GetCurrentProfile().canWriteSources() && !g_passwordManager.IsProfileLockUnlocked())
         return false;
       else if (!g_passwordManager.IsMasterLockUnlocked(true))
         return false;
@@ -463,8 +451,9 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
       std::string strThumb;
       std::vector<CMediaSource> shares;
       CServiceBroker::GetMediaManager().GetLocalDrives(shares);
-      if (!CGUIDialogFileBrowser::ShowAndGetImage(items, shares, localizeStrings.Get(1030),
-                                                  strThumb))
+      if (!CGUIDialogFileBrowser::ShowAndGetImage(
+              items, shares, localizeStrings.Get(1030),
+              strThumb))
         return false;
 
       if (strThumb == ART::CHOICE::CURRENT)
@@ -478,7 +467,7 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
 
       if (!share->m_ignore)
       {
-        mediaSources.UpdateSource(section, share->strName, "thumbnail", strThumb);
+        mediaSources.UpdateSource(section,share->strName,"thumbnail",strThumb);
         mediaSources.Save();
       }
       else if (!strThumb.empty())
@@ -587,14 +576,14 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
   return false;
 }
 
-CMediaSource* CGUIDialogContextMenu::GetShare(MediaSection section, const CFileItem* item)
+CMediaSource *CGUIDialogContextMenu::GetShare(MediaSection section, const CFileItem *item)
 {
   if (!item)
     return nullptr;
   std::vector<CMediaSource>& shares = CMediaSourceSettings::GetInstance().GetSources(section);
   for (unsigned int i = 0; i < shares.size(); i++)
   {
-    CMediaSource& testShare = shares.at(i);
+    CMediaSource &testShare = shares.at(i);
     if (URIUtils::IsDVD(testShare.strPath))
     {
       if (!item->IsDVD())
@@ -665,7 +654,7 @@ std::string CGUIDialogContextMenu::GetDefaultShareNameByType(MediaSection sectio
   return shares.at(iIndex).strName;
 }
 
-void CGUIDialogContextMenu::SetDefault(MediaSection section, const std::string& strDefault)
+void CGUIDialogContextMenu::SetDefault(MediaSection section, const std::string &strDefault)
 {
   CMediaSourceSettings::GetInstance().SetDefaultSource(section, strDefault);
   CMediaSourceSettings::GetInstance().Save();

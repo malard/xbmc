@@ -399,8 +399,8 @@ bool CVideoLibraryRefreshingJob::Work(CVideoDatabase &db)
         // ask the user to input a title to use
         if (!CGUIKeyboardFactory::ShowAndGetInput(
                 itemTitle,
-                localizeStrings.Get(scraper->Content() == ADDON::ContentType::TVSHOWS ? 20357
-                                                                                      : 16009),
+                localizeStrings.Get(
+                    scraper->Content() == ADDON::ContentType::TVSHOWS ? 20357 : 16009),
                 false))
           return false;
 

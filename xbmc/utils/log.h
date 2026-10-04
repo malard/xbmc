@@ -90,7 +90,6 @@ public:
    \brief The component with the given name, or 0 (LOG_COMPONENT_GENERAL) for an unknown one
    */
   static uint32_t GetComponentByName(std::string_view name);
-
   static void SettingOptionsLoggingComponentsFiller(const std::shared_ptr<const CSetting>& setting,
                                                     std::vector<IntegerSettingOption>& list,
                                                     int& current);

@@ -60,8 +60,7 @@ bool CGUIWindowPrograms::OnMessage(CGUIMessage& message)
 
       // is this the first time accessing this window?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
-        message.SetStringParam(
-            CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PROGRAMS));
+        message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PROGRAMS));
 
       return CGUIMediaWindow::OnMessage(message);
     }
@@ -98,8 +97,7 @@ void CGUIWindowPrograms::GetContextButtons(int itemNumber, CContextButtons &butt
   CFileItemPtr item = m_vecItems->Get(itemNumber);
   if (item)
   {
-    if (m_vecItems->IsVirtualDirectoryRoot() ||
-        m_vecItems->GetPath() == XFILE::CSourcesDirectory::PathOf(MediaSection::PROGRAMS))
+    if ( m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->GetPath() == XFILE::CSourcesDirectory::PathOf(MediaSection::PROGRAMS))
     {
       CGUIDialogContextMenu::GetContextButtons(MediaSection::PROGRAMS, item, buttons);
     }

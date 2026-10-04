@@ -656,9 +656,7 @@ public:
   int GetDiscsCount(const std::string& baseDir, const Filter& filter = Filter());
   int GetSongsCount(const Filter& filter = Filter());
   bool GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription& sorting) override;
-  int GetOrderFilter(KODI::MEDIA::MediaType type,
-                     const SortDescription& sorting,
-                     Filter& filter) const;
+  int GetOrderFilter(KODI::MEDIA::MediaType type, const SortDescription& sorting, Filter& filter) const;
 
   /////////////////////////////////////////////////
   // Party Mode
@@ -749,9 +747,7 @@ public:
   /*! \brief Sets each piece of \p art for a database item, carrying on past one that fails.
    \return false if any piece could not be set
    */
-  bool SetArtForItem(int mediaId,
-                     const std::string& mediaType,
-                     const KODI::ART::Artwork& art) override;
+  bool SetArtForItem(int mediaId, const std::string& mediaType, const KODI::ART::Artwork& art) override;
 
   /*! \brief Fetch all related art for a database item.
   Fetches multiple pieces of art for a database item including that for related media types

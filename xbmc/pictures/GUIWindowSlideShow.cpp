@@ -408,9 +408,9 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
   // if we haven't processed yet, we should mark the whole screen
   if (!HasProcessed())
   {
-    regions.emplace_back(CRect(0.0f, 0.0f,
-                               static_cast<float>(winSystem->GetGfxContext().GetWidth()),
-                               static_cast<float>(winSystem->GetGfxContext().GetHeight())));
+    regions.emplace_back(CRect(
+        0.0f, 0.0f, static_cast<float>(winSystem->GetGfxContext().GetWidth()),
+        static_cast<float>(winSystem->GetGfxContext().GetHeight())));
     MarkDirtyRegion();
   }
 
@@ -495,9 +495,9 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
 
   if (m_bErrorMessage)
   { // hack, just mark it all
-    regions.emplace_back(CRect(0.0f, 0.0f,
-                               static_cast<float>(winSystem->GetGfxContext().GetWidth()),
-                               static_cast<float>(winSystem->GetGfxContext().GetHeight())));
+    regions.emplace_back(CRect(
+        0.0f, 0.0f, static_cast<float>(winSystem->GetGfxContext().GetWidth()),
+        static_cast<float>(winSystem->GetGfxContext().GetHeight())));
     MarkDirtyRegion();
     return;
   }
@@ -688,8 +688,7 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
     MarkDirtyRegion();
   }
   CGUIWindow::Process(currentTime, regions);
-  m_renderRegion.SetRect(0, 0, (float)winSystem->GetGfxContext().GetWidth(),
-                         (float)winSystem->GetGfxContext().GetHeight());
+  m_renderRegion.SetRect(0, 0, (float)winSystem->GetGfxContext().GetWidth(), (float)winSystem->GetGfxContext().GetHeight());
 }
 
 void CGUIWindowSlideShow::Render()
@@ -1075,7 +1074,7 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
       }
       RunSlideShow(strFolder, bRecursive, bRandom, bNotRandom, beginSlidePath, !bPause);
     }
-    break;
+      break;
 
     case GUI_MSG_PLAYBACK_STOPPED:
       {

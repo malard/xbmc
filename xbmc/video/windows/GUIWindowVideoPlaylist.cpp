@@ -19,7 +19,8 @@
 using namespace KODI;
 using KODI::MEDIA::MediaSection;
 
-CGUIWindowVideoPlaylist::CGUIWindowVideoPlaylist() : CGUIWindowPlayList(PLAYLIST::Video)
+CGUIWindowVideoPlaylist::CGUIWindowVideoPlaylist()
+  : CGUIWindowPlayList(PLAYLIST::Video)
 {
 }
 
@@ -61,9 +62,7 @@ public:
                             int itemIndex,
                             const std::string& player)
     : VIDEO::GUILIB::CVideoPlayActionProcessor(item),
-      m_playLists(playLists),
-      m_itemIndex(itemIndex),
-      m_player(player)
+      m_playLists(playLists), m_itemIndex(itemIndex), m_player(player)
   {
   }
 

@@ -60,12 +60,12 @@ CGUIWindowScreenAlignment* GetScreenAlignmentWindow()
 }
 } // namespace
 
-JSONRPC_STATUS CGUIOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CGUIOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
-JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant &parameterObject, CVariant &result)
 {
   int iWindow = CWindowTranslator::TranslateWindow(parameterObject["window"].asString());
   if (iWindow != WINDOW_INVALID)
@@ -85,7 +85,7 @@ JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant& parameterObject, C
   return InvalidParams;
 }
 
-JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant &parameterObject, CVariant &result)
 {
   std::string image = parameterObject["image"].asString();
   std::string title = parameterObject["title"].asString();
@@ -105,15 +105,14 @@ JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant& parameterObject,
   return ACK;
 }
 
-JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant &parameterObject, CVariant &result)
 {
   if ((parameterObject["fullscreen"].isString() &&
        parameterObject["fullscreen"].asString().compare("toggle") == 0) ||
       (parameterObject["fullscreen"].isBoolean() &&
        parameterObject["fullscreen"].asBoolean() != g_application.IsFullScreen()))
   {
-    CServiceBroker::GetAppMessenger()->SendMsg(
-        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
         TransferToMessenger(std::make_unique<CAction>(ACTION_SHOW_GUI)));
   }
   else if (!parameterObject["fullscreen"].isBoolean() && !parameterObject["fullscreen"].isString())
@@ -122,15 +121,12 @@ JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant& parameterObject, CV
   return GetPropertyValue("fullscreen", result);
 }
 
-JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant& parameterObject,
-                                                   CVariant& result)
+JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant &parameterObject, CVariant &result)
 {
-  CAction action = CStereoscopicsManager::ConvertActionCommandToAction(
-      "SetStereoMode", parameterObject["mode"].asString());
+  CAction action = CStereoscopicsManager::ConvertActionCommandToAction("SetStereoMode", parameterObject["mode"].asString());
   if (action.GetID() != ACTION_NONE)
   {
-    CServiceBroker::GetAppMessenger()->SendMsg(
-        TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
         TransferToMessenger(std::make_unique<CAction>(action)));
     return ACK;
   }
@@ -138,8 +134,7 @@ JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant& parameterObje
   return InvalidParams;
 }
 
-JSONRPC_STATUS CGUIOperations::GetStereoscopicModes(const CVariant& parameterObject,
-                                                    CVariant& result)
+JSONRPC_STATUS CGUIOperations::GetStereoscopicModes(const CVariant &parameterObject, CVariant &result)
 {
   for (int i = static_cast<int>(RenderStereoMode::OFF);
        i < static_cast<int>(RenderStereoMode::COUNT); i++)
@@ -159,7 +154,8 @@ JSONRPC_STATUS CGUIOperations::ActivateScreenSaver(const CVariant& parameterObje
   return ACK;
 }
 
-JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject,
+                                              CVariant& result)
 {
   using KODI::RENDERING::CAPTURE::CaptureContent;
 
@@ -269,6 +265,7 @@ JSONRPC_STATUS CGUIOperations::GetScreenAlignment(const CVariant& parameterObjec
     return FailedToExecute;
 
   result = GetScreenAlignmentState();
+
   return OK;
 }
 
@@ -293,22 +290,21 @@ CVariant CGUIOperations::GetScreenAlignmentState()
   return state;
 }
 
-JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string& property, CVariant& result)
+JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string &property, CVariant &result)
 {
   auto& infoManager{CServiceBroker::GetGUI()->GetInfoManager()};
   if (property == "currentWindow")
   {
     result["label"] = infoManager.GetLabel(infoManager.TranslateString("System.CurrentWindow"),
-                                           INFO::DEFAULT_CONTEXT);
+        INFO::DEFAULT_CONTEXT);
     result["id"] = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog();
   }
   else if (property == "currentControl")
     result["label"] = infoManager.GetLabel(infoManager.TranslateString("System.CurrentControl"),
-                                           INFO::DEFAULT_CONTEXT);
+        INFO::DEFAULT_CONTEXT);
   else if (property == "skin")
   {
-    std::string skinId = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
-        CSettings::SETTING_LOOKANDFEEL_SKIN);
+    std::string skinId = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_LOOKANDFEEL_SKIN);
     AddonPtr addon;
     if (!CServiceBroker::GetAddonMgr().GetAddon(skinId, addon, AddonType::SKIN,
                                                 OnlyEnabled::CHOICE_YES))
@@ -325,8 +321,7 @@ JSONRPC_STATUS CGUIOperations::GetPropertyValue(const std::string& property, CVa
         g_application.IsInitialized() && CServiceBroker::GetGUI()->GetWindowManager().Initialized();
   else if (property == "stereoscopicMode")
   {
-    const CStereoscopicsManager& stereoscopicsManager =
-        CServiceBroker::GetGUI()->GetStereoscopicsManager();
+    const CStereoscopicsManager &stereoscopicsManager = CServiceBroker::GetGUI()->GetStereoscopicsManager();
 
     result = GetStereoModeObjectFromGuiMode(stereoscopicsManager.GetStereoMode());
   }
@@ -412,8 +407,7 @@ JSONRPC_STATUS CGUIOperations::GetInfoBooleans(ITransportLayer* transport,
 
 CVariant CGUIOperations::GetStereoModeObjectFromGuiMode(const RenderStereoMode mode)
 {
-  const CStereoscopicsManager& stereoscopicsManager =
-      CServiceBroker::GetGUI()->GetStereoscopicsManager();
+  const CStereoscopicsManager &stereoscopicsManager = CServiceBroker::GetGUI()->GetStereoscopicsManager();
 
   CVariant modeObj(CVariant::VariantTypeObject);
   modeObj["mode"] = stereoscopicsManager.ConvertGuiStereoModeToString(mode);

@@ -14,10 +14,10 @@ class CVariant;
 
 namespace JSONRPC
 {
-class CFavouritesOperations : public CJSONUtils
-{
-public:
-  static JSONRPC_STATUS GetFavourites(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS AddFavourite(const CVariant& parameterObject, CVariant& result);
-};
+  class CFavouritesOperations : public CJSONUtils
+  {
+  public:
+    static JSONRPC_STATUS GetFavourites(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS AddFavourite(const CVariant &parameterObject, CVariant &result);
+  };
 } // namespace JSONRPC

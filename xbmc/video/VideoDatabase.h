@@ -307,10 +307,7 @@ public:
                      CFileItem* item = nullptr,
                      int getDetails = VideoDbDetailsAll);
   bool GetSeasonInfo(const std::string& path, int season, CVideoInfoTag& details, CFileItem* item);
-  bool GetSeasonInfo(int idSeason,
-                     CVideoInfoTag& details,
-                     CFileItem* item = nullptr,
-                     bool allDetails = true);
+  bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, CFileItem* item = nullptr, bool allDetails = true);
   bool GetEpisodeBasicInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode  = -1);
   bool GetEpisodeInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idEpisode = -1, int getDetails = VideoDbDetailsAll);
   bool GetMusicVideoInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idMVideo = -1, int getDetails = VideoDbDetailsAll);
@@ -967,11 +964,7 @@ public:
   bool GetMusicVideosByWhere(const std::string &baseDir, const Filter &filter, CFileItemList& items, bool checkLocks = true, const SortDescription &sortDescription = SortDescription(), int getDetails = VideoDbDetailsNone);
 
   // retrieve sorted and limited items
-  bool GetSortedVideos(KODI::MEDIA::MediaType mediaType,
-                       const std::string& strBaseDir,
-                       const SortDescription& sortDescription,
-                       CFileItemList& items,
-                       const Filter& filter = Filter());
+  bool GetSortedVideos(KODI::MEDIA::MediaType mediaType, const std::string& strBaseDir, const SortDescription &sortDescription, CFileItemList& items, const Filter &filter = Filter());
 
   // retrieve a list of items
   bool GetItems(const std::string &strBaseDir, CFileItemList &items, const Filter &filter = Filter(), const SortDescription &sortDescription = SortDescription());
@@ -1045,9 +1038,9 @@ public:
   \param artType e.g. "thumb", "fanart", etc.
   \return list of URLs
   */
-  std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
-                                                             KODI::MEDIA::MediaType mediaType,
-                                                             const std::string& artType);
+  std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(
+    int mediaId,
+                                                             KODI::MEDIA::MediaType mediaType, const std::string& artType);
 
   int AddTag(const std::string &tag);
   void AddTagToItem(int idItem, int idTag, KODI::MEDIA::MediaType type);
@@ -1193,7 +1186,6 @@ public:
 protected:
   int AddNewMovie(CVideoInfoTag& details);
   int AddNewMusicVideo(CVideoInfoTag& details);
-
   int GetFileId(const CVideoInfoTag& details);
 
   /*! \brief Get the id of the file of this item and store it in the item
@@ -1219,9 +1211,7 @@ protected:
 
   int AddToTable(const std::string& table, const std::string& firstField, const std::string& secondField, const std::string& value);
   int UpdateRatings(int mediaId,
-                    KODI::MEDIA::MediaType mediaType,
-                    const RatingMap& values,
-                    const std::string& defaultRating);
+                    KODI::MEDIA::MediaType mediaType, const RatingMap& values, const std::string& defaultRating);
   int AddRatings(int mediaId,
                  KODI::MEDIA::MediaType mediaType,
                  const RatingMap& values,
@@ -1249,10 +1239,7 @@ protected:
 
   // link functions - these two do all the work
   void AddLinkToActor(int mediaId,
-                      KODI::MEDIA::MediaType mediaType,
-                      int actorId,
-                      const std::string& role,
-                      int order);
+                      KODI::MEDIA::MediaType mediaType, int actorId, const std::string &role, int order);
   void AddToLinkTable(int mediaId,
                       KODI::MEDIA::MediaType mediaType,
                       const std::string& table,
@@ -1265,23 +1252,15 @@ protected:
                            const char* foreignKey = nullptr);
 
   void AddLinksToItem(int mediaId,
-                      KODI::MEDIA::MediaType mediaType,
-                      const std::string& field,
-                      const std::vector<std::string>& values);
+                      KODI::MEDIA::MediaType mediaType, const std::string& field, const std::vector<std::string>& values);
   void UpdateLinksToItem(int mediaId,
-                         KODI::MEDIA::MediaType mediaType,
-                         const std::string& field,
-                         const std::vector<std::string>& values);
+                         KODI::MEDIA::MediaType mediaType, const std::string& field, const std::vector<std::string>& values);
   void AddActorLinksToItem(int mediaId,
-                           KODI::MEDIA::MediaType mediaType,
-                           const std::string& field,
-                           const std::vector<std::string>& values);
+                           KODI::MEDIA::MediaType mediaType, const std::string& field, const std::vector<std::string>& values);
   void UpdateActorLinksToItem(int mediaId,
-                              KODI::MEDIA::MediaType mediaType,
-                              const std::string& field,
-                              const std::vector<std::string>& values);
+                              KODI::MEDIA::MediaType mediaType, const std::string& field, const std::vector<std::string>& values);
 
-  void AddCast(int mediaId, KODI::MEDIA::MediaType mediaType, const std::vector<SActorInfo>& cast);
+  void AddCast(int mediaId, KODI::MEDIA::MediaType mediaType, const std::vector<SActorInfo> &cast);
 
   CVideoInfoTag GetDetailsForMovie(dbiplus::Dataset& pDS, int getDetails = VideoDbDetailsNone);
   CVideoInfoTag GetDetailsForMovie(const dbiplus::sql_record* const record, int getDetails = VideoDbDetailsNone);
@@ -1311,9 +1290,9 @@ protected:
                     VideoDbContentType idContent = VideoDbContentType::UNKNOWN,
                     const Filter& filter = Filter(),
                     bool countOnly = false);
-  void GetCast(int media_id, KODI::MEDIA::MediaType media_type, std::vector<SActorInfo>& cast);
-  void GetTags(int media_id, KODI::MEDIA::MediaType media_type, std::vector<std::string>& tags);
-  void GetRatings(int media_id, KODI::MEDIA::MediaType media_type, RatingMap& ratings);
+  void GetCast(int media_id, KODI::MEDIA::MediaType media_type, std::vector<SActorInfo> &cast);
+  void GetTags(int media_id, KODI::MEDIA::MediaType media_type, std::vector<std::string> &tags);
+  void GetRatings(int media_id, KODI::MEDIA::MediaType media_type, RatingMap &ratings);
   void GetUniqueIDs(int media_id, KODI::MEDIA::MediaType media_type, CVideoInfoTag& details);
 
   template<typename T>
@@ -1431,11 +1410,8 @@ private:
    */
   std::string GetSafeFile(const std::string &dir, const std::string &name) const;
 
-  std::vector<int> CleanMediaType(KODI::MEDIA::MediaType mediaType,
-                                  const std::string& cleanableFileIDs,
-                                  std::map<int, bool>& pathsDeleteDecisions,
-                                  std::string& deletedFileIDs,
-                                  bool silent);
+  std::vector<int> CleanMediaType(KODI::MEDIA::MediaType mediaType, const std::string &cleanableFileIDs,
+                                  std::map<int, bool> &pathsDeleteDecisions, std::string &deletedFileIDs, bool silent);
 
   static void AnnounceRemove(KODI::MEDIA::MediaType content, int id, bool scanning = false);
 

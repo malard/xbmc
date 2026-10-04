@@ -75,9 +75,7 @@ bool CGUIDialogBusy::Wait(IRunnable *runnable, unsigned int displaytime, bool al
   return true;
 }
 
-bool CGUIDialogBusy::WaitOnEvent(CEvent& event,
-                                 unsigned int displaytime /* = 100 */,
-                                 bool allowCancel /* = true */)
+bool CGUIDialogBusy::WaitOnEvent(CEvent &event, unsigned int displaytime /* = 100 */, bool allowCancel /* = true */)
 {
   return DoWaitOnEvent(event, displaytime, allowCancel, {}) == WaitResult::COMPLETED;
 }

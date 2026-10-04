@@ -410,8 +410,7 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
 
           // Use the stored cache file name
           if (hasCacheFilename)
-            items.RemoveDiscCacheCRC(
-                newItem->GetProperty(ITEM::PROPERTY::CACHE_FILENAME).asString());
+            items.RemoveDiscCacheCRC(newItem->GetProperty(ITEM::PROPERTY::CACHE_FILENAME).asString());
 
           if (hasParentPath)
             RemoveDiscCache(newItem->GetProperty(ITEM::PROPERTY::PARENT_PATH).asString());
@@ -680,7 +679,7 @@ void CGUIMediaWindow::SortItems(CFileItemList &items)
  *
  * This is based on the formatting provided by guiViewState.
  */
-void CGUIMediaWindow::FormatItemLabels(CFileItemList& items, const LABEL_MASKS& labelMasks)
+void CGUIMediaWindow::FormatItemLabels(CFileItemList &items, const LABEL_MASKS &labelMasks)
 {
   CLabelFormatter::FormatItemLabels(items, labelMasks);
 
@@ -1090,7 +1089,8 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     // execute the script
     CURL url(pItem->GetPath());
     AddonPtr addon;
-    if (addonMgr.GetAddon(url.GetHostName(), addon, AddonType::SCRIPT, OnlyEnabled::CHOICE_YES))
+    if (addonMgr.GetAddon(url.GetHostName(), addon, AddonType::SCRIPT,
+                                               OnlyEnabled::CHOICE_YES))
     {
       if (!CScriptInvocationManager::GetInstance().Stop(addon->LibPath()))
       {
@@ -1108,7 +1108,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
       const std::optional<KODI::MEDIA::MediaSection> lockSection{m_guiState->GetLockType()};
       if (profileManager->GetMasterProfile().getLockMode() != LockMode::EVERYONE)
         if (lockSection && !g_passwordManager.IsItemUnlocked(pItem.get(), *lockSection))
-          return true;
+            return true;
 
       if (!HaveDiscOrConnection(pItem->GetPath(), pItem->GetDriveType()))
         return true;

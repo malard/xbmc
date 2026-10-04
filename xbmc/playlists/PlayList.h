@@ -89,7 +89,6 @@ public:
 
   EntryId Add(const std::shared_ptr<CFileItem>& item);
   void Add(const CFileItemList& items);
-
   void Insert(const CFileItemList& items, int iPosition = -1);
   EntryId Insert(const std::shared_ptr<CFileItem>& item, int iPosition = -1);
 
@@ -265,6 +264,7 @@ private:
   EntryId InsertLocked(const std::shared_ptr<CFileItem>& item, int position, Changes& changes);
   void RemoveLocked(int position, Changes& changes);
   void RemoveIfLocked(const std::function<bool(const PlayListEntry&)>& remove, Changes& changes);
+
   void ClearLocked(Changes& changes);
   void MoveCurrentLocked(EntryId entry, Changes& changes);
   void MoveLocked(int from, int to, Changes& changes);

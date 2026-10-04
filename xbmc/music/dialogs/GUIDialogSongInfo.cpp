@@ -364,7 +364,8 @@ void CGUIDialogSongInfo::OnGetArt()
     CFileItemPtr item(new CFileItem(ART::CHOICE::CURRENT, false));
     item->SetArt(ART::TYPE::THUMB, m_song->GetArt(type));
     item->SetArt(ART::TYPE::ICON, "DefaultPicture.png");
-    item->SetLabel(localizeStrings.Get(13512)); //! @todo: label fallback art so user knows?
+    item->SetLabel(localizeStrings.Get(
+        13512)); //! @todo: label fallback art so user knows?
     items.Add(item);
   }
   else if (m_song->HasArt(ART::TYPE::THUMB))
@@ -433,7 +434,9 @@ void CGUIDialogSongInfo::OnGetArt()
   else  // Add parent folder of song
     CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_song);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
+  if (CGUIDialogFileBrowser::ShowAndGetImage(
+          items, sources, localizeStrings.Get(13511),
+          result) &&
       result != ART::CHOICE::CURRENT)
   {
     // User didn't choose the one they have, or the fallback image.

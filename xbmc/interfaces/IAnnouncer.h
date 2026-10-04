@@ -30,9 +30,8 @@ enum AnnouncementFlag
   Settings = 0x1000
 };
 
-const auto ANNOUNCE_ALL =
-    (Player | Playlist | GUI | System | VideoLibrary | AudioLibrary | Application | Input |
-     ANNOUNCEMENT::PVR | Other | Info | Sources | Settings);
+const auto ANNOUNCE_ALL = (Player | Playlist | GUI | System | VideoLibrary | AudioLibrary |
+                           Application | Input | ANNOUNCEMENT::PVR | Other | Info | Sources | Settings);
 
 /*!
     \brief Returns a string representation for the

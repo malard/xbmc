@@ -196,7 +196,8 @@ static void GenerateTypeListing(const CURL& path,
 {
   for (const auto& type : types)
   {
-    if (std::ranges::any_of(addons, [type](const AddonPtr& addon) { return addon->HasType(type); }))
+    if (std::ranges::any_of(addons, [type](const AddonPtr& addon)
+    { return addon->HasType(type); }))
       AddTypeCategory(path, type, items);
   }
 }
@@ -457,8 +458,7 @@ static void DependencyAddons(const CURL& path, CFileItemList &items)
     if (orphaned.contains(items[i]->GetProperty(ITEM::PROPERTY::ADDON_ID).asString()))
     {
       items[i]->SetProperty(
-          ITEM::PROPERTY::ADDON_STATUS,
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24995));
+          ITEM::PROPERTY::ADDON_STATUS, CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24995));
       items[i]->SetProperty("Addon.Orphaned", true);
     }
   }
@@ -468,7 +468,8 @@ static void OutdatedAddons(const CURL& path, CFileItemList &items)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   VECADDONS addons = CServiceBroker::GetAddonMgr().GetAvailableUpdates();
-  CAddonsDirectory::GenerateAddonListing(path, addons, items, localizeStrings.Get(24043));
+  CAddonsDirectory::GenerateAddonListing(
+      path, addons, items, localizeStrings.Get(24043));
 
   if (!items.IsEmpty())
   {
@@ -734,8 +735,7 @@ bool CAddonsDirectory::GetDirectory(const CURL& url, CFileItemList &items)
     if (type == AddonType::UNKNOWN)
       return false;
     return Browse(CURL(ADDONS::ALL + (type == AddonType::GAME ? std::string{CATEGORY_GAME_ADDONS}
-                                                              : CAddonInfo::TranslateType(type))),
-                  items);
+                                                              : CAddonInfo::TranslateType(type))), items);
   }
   else
   {
@@ -759,8 +759,7 @@ bool CAddonsDirectory::IsRepoDirectory(const CURL& url)
     return false;
 
   AddonPtr tmp;
-  return url.GetHostName() == ADDONS::EndpointOf(ADDONS::REPOS) ||
-         url.GetHostName() == ADDONS::EndpointOf(ADDONS::ALL) ||
+  return url.GetHostName() == ADDONS::EndpointOf(ADDONS::REPOS) || url.GetHostName() == ADDONS::EndpointOf(ADDONS::ALL) ||
          url.GetHostName() == ADDONS::EndpointOf(ADDONS::SEARCH) ||
          CServiceBroker::GetAddonMgr().GetAddon(url.GetHostName(), tmp, AddonType::REPOSITORY,
                                                 OnlyEnabled::CHOICE_YES);
@@ -785,7 +784,8 @@ void CAddonsDirectory::GenerateAddonListing(const CURL& path,
     itemPath.SetFileName(addon->ID());
     CFileItemPtr pItem = FileItemFromAddon(addon, itemPath.Get(), false);
 
-    bool installed = addonMgr.IsAddonInstalled(addon->ID(), addon->Origin(), addon->Version());
+    bool installed = addonMgr.IsAddonInstalled(addon->ID(), addon->Origin(),
+                                                                    addon->Version());
     bool disabled = addonMgr.IsAddonDisabled(addon->ID());
 
     bool isUpdate{false};

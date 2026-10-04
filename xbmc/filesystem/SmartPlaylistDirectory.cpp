@@ -80,7 +80,8 @@ namespace XFILE
     if (settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
       sorting.sortAttributes = (SortAttribute)(sorting.sortAttributes | SortAttributeIgnoreArticle);
     if (playlist.IsMusicType() &&
-        settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
+        settings->GetBool(
+                                      CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     items.SetSortIgnoreFolders((sorting.sortAttributes & SortAttributeIgnoreFolders) ==
@@ -215,8 +216,7 @@ namespace XFILE
       }
     }
 
-    if (playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS ||
-        playlist.GetType() == MEDIA::CONTENT::MIXED)
+    if (playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS || playlist.GetType() == MEDIA::CONTENT::MIXED)
     {
       CVideoDatabase db;
       if (db.Open())
@@ -297,12 +297,14 @@ namespace XFILE
       if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
           playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
-                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(
+                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
       else
         items.Sort(SortBy::LABEL, SortOrder::ASCENDING,
-                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(
+                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
     }
@@ -329,13 +331,9 @@ namespace XFILE
     CFileItemList list;
     bool filesExist = false;
     if (PLAYLIST::CSmartPlaylist::IsMusicType(playlistType))
-      filesExist =
-          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), list,
-                                   ".xsp", DIR_FLAG_DEFAULTS);
+      filesExist = CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), list, ".xsp", DIR_FLAG_DEFAULTS);
     else // all others are video
-      filesExist =
-          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), list,
-                                   ".xsp", DIR_FLAG_DEFAULTS);
+      filesExist = CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), list, ".xsp", DIR_FLAG_DEFAULTS);
     if (filesExist)
     {
       for (int i = 0; i < list.Size(); i++)

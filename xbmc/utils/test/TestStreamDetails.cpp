@@ -1044,8 +1044,7 @@ TEST(TestStreamDetails, PreferredAudio_OriginalLanguageFollowsTheFlag)
   preferences.preferOriginal = true;
 
   EXPECT_EQ(2, details.GetPreferredAudioStreamIndex(preferences));
-  EXPECT_EQ("jpn",
-            details.GetAudioLanguage(details.GetPreferredAudioStreamIndex(preferences)).AsIso6392B());
+  EXPECT_EQ("jpn", details.GetAudioLanguage(details.GetPreferredAudioStreamIndex(preferences)).AsIso6392B());
 
   // Without that preference the better stream is still the one described
   EXPECT_EQ(1, details.GetPreferredAudioStreamIndex(ForLanguage("")));

@@ -305,8 +305,7 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
 
   // Match visibility test of CMusicInfo::IsVisible
   if (VIDEO::IsVideoDb(*item) && item->HasVideoInfoTag() &&
-      (item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID) ||
-       item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID)))
+      (item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID) || item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID)))
   {
     // Music video artist or album (navigation by music > music video > artist))
     CGUIDialogMusicInfo::ShowFor(item.get());
@@ -402,6 +401,7 @@ void CGUIWindowMusicBase::OnQueueItem(int iItem, bool first)
     return;
 
   const auto item = m_vecItems->Get(iItem);
+
   MUSIC_UTILS::QueueItem(item, first ? MUSIC_UTILS::QueuePosition::POSITION_BEGIN
                                      : MUSIC_UTILS::QueuePosition::POSITION_END);
 
@@ -674,8 +674,7 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
       OnQueueItem(iItem);
       return true;
     }
-    CServiceBroker::GetPlayLists()->PlayItem(
-        m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, {.player = player});
+    CServiceBroker::GetPlayLists()->PlayItem(m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, {.player = player});
     return true;
   }
   return CGUIMediaWindow::OnPlayMedia(iItem, player);
@@ -745,7 +744,8 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     // We want to expand disc images when browsing in file view but not on library, smartplaylist
     // or node menu music windows
     if (!items.GetPath().empty() && !URIUtils::IsMusicDb(items.GetPath()) &&
-        !URIUtils::IsSpecial(items.GetPath()) && !URIUtils::IsLibraryFolder(items.GetPath()))
+        !URIUtils::IsSpecial(items.GetPath()) &&
+        !URIUtils::IsLibraryFolder(items.GetPath()))
       CDirectory::FilterFileDirectories(items, ".iso", true);
 
     CMusicThumbLoader loader;
@@ -795,7 +795,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
         (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC)) &&
         !items.Contains(ITEM::PLACEHOLDER::NEW_PLAYLIST))
     {
-      CFileItemPtr newPlaylist(new CFileItem(PARTYMODE::RulesPath(PLAYLIST::Audio), false));
+      CFileItemPtr newPlaylist(new CFileItem(PARTYMODE::RulesPath(PLAYLIST::Audio),false));
       newPlaylist->SetLabel(localizeStrings.Get(16035));
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");
@@ -824,10 +824,8 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     items.FilterCueItems();
 
     std::string label;
-    if (items.GetLabel().empty() &&
-        m_rootDir.IsSource(items.GetPath(),
-                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC),
-                           &label))
+    if (items.GetLabel().empty() && m_rootDir.IsSource(items.GetPath(),
+                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC), &label))
       items.SetLabel(label);
   }
 

@@ -27,8 +27,8 @@ public:
 TEST(TestI18nRegistryFile, Read)
 {
   // Examples of real records
-  CRegistryFile f(
-      XBMC_REF_FILE_PATH("xbmc/language/i18n/Bcp47Registry/test/test-language-subtag-registry.txt"));
+  CRegistryFile f(XBMC_REF_FILE_PATH(
+      "xbmc/language/i18n/Bcp47Registry/test/test-language-subtag-registry.txt"));
   EXPECT_TRUE(f.Load());
 }
 

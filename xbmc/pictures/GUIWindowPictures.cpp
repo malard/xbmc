@@ -107,8 +107,7 @@ bool CGUIWindowPictures::OnMessage(CGUIMessage& message)
     {
       // is this the first time accessing this window?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
-        message.SetStringParam(
-            CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PICTURES));
+        message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PICTURES));
 
       m_dlgProgress = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(WINDOW_DIALOG_PROGRESS);
     }
@@ -295,10 +294,8 @@ bool CGUIWindowPictures::GetDirectory(const std::string &strDirectory, CFileItem
     return false;
 
   std::string label;
-  if (items.GetLabel().empty() &&
-      m_rootDir.IsSource(items.GetPath(),
-                         &CMediaSourceSettings::GetInstance().GetSources(MediaSection::PICTURES),
-                         &label))
+  if (items.GetLabel().empty() && m_rootDir.IsSource(items.GetPath(),
+                         &CMediaSourceSettings::GetInstance().GetSources(MediaSection::PICTURES), &label))
     items.SetLabel(label);
 
   if (items.GetContent().empty() && !items.IsVirtualDirectoryRoot() && !items.IsPlugin())
@@ -453,8 +450,7 @@ void CGUIWindowPictures::GetContextButtons(int itemNumber, CContextButtons &butt
 
   if (item)
   {
-    if (m_vecItems->IsVirtualDirectoryRoot() ||
-        m_vecItems->GetPath() == CSourcesDirectory::PathOf(MediaSection::PICTURES))
+    if ( m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->GetPath() == CSourcesDirectory::PathOf(MediaSection::PICTURES))
     {
       CGUIDialogContextMenu::GetContextButtons(MediaSection::PICTURES, item, buttons);
     }
@@ -549,7 +545,7 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
   if (!pPlayList)
   {
     HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-    return; //hmmm unable to load playlist?
+    return ; //hmmm unable to load playlist?
   }
 
   const PLAYLIST::CPlayListFile& playlist = *pPlayList;

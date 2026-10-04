@@ -187,8 +187,7 @@ namespace XBMCAddon
       return CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_LOOKANDFEEL_SKIN);
     }
 
-    String getLanguage(int format /* = KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME */,
-                       bool region /*= false*/)
+    String getLanguage(int format /* = KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME */, bool region /*= false*/)
     {
       XBMC_TRACE;
       switch (format)
@@ -197,9 +196,9 @@ namespace XBMCAddon
         case KODI::LANGUAGE::CLanguageTag::ISO_NAME:
         case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
         case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
-          return KODI::LANGUAGE::DescribeLanguage(
-              static_cast<KODI::LANGUAGE::CLanguageTag::Notation>(format),
-              KODI::LANGUAGE::CLanguage::GetInstance(), g_langInfo, region);
+          return KODI::LANGUAGE::DescribeLanguage(static_cast<KODI::LANGUAGE::CLanguageTag::Notation>(format),
+              KODI::LANGUAGE::CLanguage::GetInstance(), g_langInfo,
+                                          region);
         default:
           return "";
       }
@@ -426,9 +425,8 @@ namespace XBMCAddon
       }
       else if (StringUtils::CompareNoCase(id, "meridiem") == 0)
       {
-        result = StringUtils::Format(
-            "{}/{}", g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::AM),
-            g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::PM));
+        result = StringUtils::Format("{}/{}", g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::AM),
+                                     g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::PM));
       }
 #ifdef TARGET_WINDOWS
       StringUtils::Replace(result, "%-", "%#"); //Convert to Windows format if required.
@@ -495,8 +493,8 @@ namespace XBMCAddon
         case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
         case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
           return tag->In(static_cast<KODI::LANGUAGE::CLanguageTag::Notation>(format));
-        default:
-          return "";
+      default:
+        return "";
       }
     }
 
@@ -566,18 +564,9 @@ namespace XBMCAddon
     int getLOGNONE() { return LOGNONE; }
 
     // language string formats
-    int getISO_639_1()
-    {
-      return KODI::LANGUAGE::CLanguageTag::ISO_639_1;
-    }
-    int getISO_639_2()
-    {
-      return KODI::LANGUAGE::CLanguageTag::ISO_639_2;
-    }
-    int getENGLISH_NAME()
-    {
-      return KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME;
-    }
+    int getISO_639_1() { return KODI::LANGUAGE::CLanguageTag::ISO_639_1; }
+    int getISO_639_2(){ return KODI::LANGUAGE::CLanguageTag::ISO_639_2; }
+    int getENGLISH_NAME() { return KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME; }
     int getISO_NAME()
     {
       return KODI::LANGUAGE::CLanguageTag::ISO_NAME;

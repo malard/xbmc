@@ -476,8 +476,8 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
     return false;
   const CFileItem& chosen{*items[0]};
 
-  const CFileItem& owner{
-      item->GetVideoInfoTag()->GetMediaType() == MediaType::VIDEO_VERSION ? *m_videoAsset : *item};
+  const CFileItem& owner{item->GetVideoInfoTag()->GetMediaType() == MediaType::VIDEO_VERSION ? *m_videoAsset
+                                                                                  : *item};
   const VideoAssetInfo existing{m_database.GetVideoVersionInfo(chosen.GetDynPath())};
   if (existing.m_idFile >= 0 && existing.m_mediaType == MediaType::MOVIE &&
       existing.m_idMedia == owner.GetVideoInfoTag()->m_iDbId &&
@@ -957,7 +957,8 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
 
         CGUIDialogOK::ShowAndGetInput(
             CVariant{40014},
-            StringUtils::Format(localizeStrings.Get(msgid), newAsset.m_assetTypeName));
+            StringUtils::Format(localizeStrings.Get(msgid),
+                newAsset.m_assetTypeName));
         return false;
       }
 
@@ -965,8 +966,9 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
 
       // The video is an extra, ask for confirmation of the asset type change
       if (newAsset.m_assetType == VideoAssetType::EXTRA &&
-          !CGUIDialogYesNo::ShowAndGetInput(CVariant{40014},
-                                            StringUtils::Format(localizeStrings.Get(40035))))
+          !CGUIDialogYesNo::ShowAndGetInput(
+              CVariant{40014},
+              StringUtils::Format(localizeStrings.Get(40035))))
       {
         return false;
       }
@@ -994,8 +996,9 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
         }
 
         if (!CGUIDialogYesNo::ShowAndGetInput(
-                CVariant{40014}, StringUtils::Format(localizeStrings.Get(msgid),
-                                                     newAsset.m_assetTypeName, videoTitle)))
+                CVariant{40014},
+                StringUtils::Format(localizeStrings.Get(msgid),
+                    newAsset.m_assetTypeName, videoTitle)))
         {
           return false;
         }

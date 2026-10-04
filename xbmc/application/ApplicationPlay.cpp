@@ -127,8 +127,7 @@ void CApplicationPlay::GetOptionsAndUpdateItem()
         path = videoInfoTagPath;
     }
     else if (m_item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL) &&
-             URIUtils::IsPlugin(
-                 m_item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
+             URIUtils::IsPlugin(m_item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString()))
     {
       path = m_item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     }
@@ -204,8 +203,7 @@ MenuDecision GetMenuDecisions(const CFileItem& item,
   const bool atStart{options.startpercent == 0.0 && options.starttime == 0.0};
 
   // See if choose (new) playlist has been selected from context menu
-  const bool forceSelectionAlways{
-      item.GetProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION).asBoolean(false)};
+  const bool forceSelectionAlways{item.GetProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION).asBoolean(false)};
 
   // If we already have a playlist but Choose Playlist has been selected on the context menu
   if (forceSelectionAlways && isBlurayPath)

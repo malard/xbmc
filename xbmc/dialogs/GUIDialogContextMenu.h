@@ -107,18 +107,11 @@ public:
   bool OnAction(const CAction& action) override;
   void SetPosition(float posX, float posY) override;
 
-  static bool SourcesMenu(KODI::MEDIA::MediaSection section,
-                          const CFileItemPtr& item,
-                          float posX,
-                          float posY);
+  static bool SourcesMenu(KODI::MEDIA::MediaSection section, const CFileItemPtr& item, float posX, float posY);
   static void SwitchMedia(KODI::MEDIA::MediaSection section, const std::string& strPath);
 
-  static void GetContextButtons(KODI::MEDIA::MediaSection section,
-                                const CFileItemPtr& item,
-                                CContextButtons& buttons);
-  static bool OnContextButton(KODI::MEDIA::MediaSection section,
-                              const CFileItemPtr& item,
-                              CONTEXT_BUTTON button);
+  static void GetContextButtons(KODI::MEDIA::MediaSection section, const CFileItemPtr& item, CContextButtons &buttons);
+  static bool OnContextButton(KODI::MEDIA::MediaSection section, const CFileItemPtr& item, CONTEXT_BUTTON button);
 
   /*! Show the context menu with the given choices and return the index of the selected item,
     or -1 if cancelled.
@@ -142,9 +135,9 @@ protected:
   void OnWindowLoaded() override;
   void OnDeinitWindow(int nextWindowID) override;
   static std::string GetDefaultShareNameByType(KODI::MEDIA::MediaSection section);
-  static void SetDefault(KODI::MEDIA::MediaSection section, const std::string& strDefault);
+  static void SetDefault(KODI::MEDIA::MediaSection section, const std::string &strDefault);
   static void ClearDefault(KODI::MEDIA::MediaSection section);
-  static CMediaSource* GetShare(KODI::MEDIA::MediaSection section, const CFileItem* item);
+  static CMediaSource *GetShare(KODI::MEDIA::MediaSection section, const CFileItem *item);
 
 private:
   float m_coordX, m_coordY;

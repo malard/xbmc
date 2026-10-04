@@ -61,8 +61,7 @@ bool CMusicThumbLoader::LoadItemCached(CFileItem* pItem)
   if (pItem->IsShareOrDrive())
     return false;
 
-  if (pItem->HasMusicInfoTag() &&
-      !pItem->GetProperty(KODI::ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean())
+  if (pItem->HasMusicInfoTag() && !pItem->GetProperty(KODI::ITEM::PROPERTY::LIBRARY_ART_FILLED).asBoolean())
   {
     if (FillLibraryArt(*pItem))
       return true;
@@ -106,8 +105,7 @@ bool CMusicThumbLoader::LoadItemLookup(CFileItem* pItem)
   if (pItem->IsShareOrDrive())
     return false;
 
-  if (pItem->HasMusicInfoTag() &&
-      pItem->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST) // No fallback for artist
+  if (pItem->HasMusicInfoTag() && pItem->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST) // No fallback for artist
     return false;
 
   if (pItem->HasVideoInfoTag())
@@ -167,7 +165,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
   std::vector<ArtForThumbLoader> art;
   CMusicInfoTag &tag = *item.GetMusicInfoTag();
   MediaType mediaType = tag.GetMediaType();
-  if (tag.GetDatabaseId() > -1 && (mediaType == MediaType::SONG || mediaType == MediaType::ALBUM ||
+  if (tag.GetDatabaseId() > -1 &&
+      (mediaType == MediaType::SONG || mediaType == MediaType::ALBUM ||
                                    mediaType == MediaType::ARTIST))
   {
     // Item in music library, fetch the art
@@ -181,7 +180,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
 
     m_musicDatabase->Close();
   }
-  else if (!tag.GetArtist().empty() && (tag.GetType().empty() || mediaType == MediaType::SONG))
+  else if (!tag.GetArtist().empty() &&
+           (tag.GetType().empty() || mediaType == MediaType::SONG))
   {
     /*
     Could be non-library song - has musictag but no ID or type (may have
@@ -196,7 +196,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
     song.SetArtistCredits(tag.GetArtist(), tag.GetMusicBrainzArtistHints(), tag.GetMusicBrainzArtistID());
     if (!song.artistCredits.empty())
     {
-      tag.SetType(MediaType::SONG); // Makes "Information" context menu visible
+      tag.SetType(MediaType::SONG);  // Makes "Information" context menu visible
       mediaType = MediaType::SONG;
       m_musicDatabase->Open();
       int iOrder = 0;

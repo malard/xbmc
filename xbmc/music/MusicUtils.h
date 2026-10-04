@@ -121,8 +121,7 @@ void QueueItem(const std::shared_ptr<CFileItem>& item, QueuePosition pos);
   \param startPosition [out] where the start landed in queuedItems, or -1 if nowhere
   \return true on success, false otherwise
   */
-bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item,
-                         CFileItemList& queuedItems,
+bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems,
                          const std::shared_ptr<CFileItem>& startAt = nullptr,
                          int* startPosition = nullptr);
 

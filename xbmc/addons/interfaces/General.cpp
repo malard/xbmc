@@ -106,9 +106,7 @@ char* Interface_General::get_language(void* kodiBase, int format, bool region)
       break;
   }
 
-  return strdup(KODI::LANGUAGE::DescribeLanguage(
-                    langFormat, KODI::LANGUAGE::CLanguage::GetInstance(), g_langInfo, region)
-                    .c_str());
+  return strdup(KODI::LANGUAGE::DescribeLanguage(langFormat, KODI::LANGUAGE::CLanguage::GetInstance(), g_langInfo, region).c_str());
 }
 
 bool Interface_General::queue_notification(void* kodiBase, int type, const char* header,
@@ -233,8 +231,7 @@ char* Interface_General::get_region(void* kodiBase, const char* id)
     StringUtils::Replace(result, "xx", "%p");
   }
   else if (StringUtils::CompareNoCase(id, "meridiem") == 0)
-    result = StringUtils::Format("{}/{}",
-                                 g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::AM),
+    result = StringUtils::Format("{}/{}", g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::AM),
                                  g_langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::PM));
   else
   {

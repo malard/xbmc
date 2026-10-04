@@ -372,7 +372,8 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
     if(genre == std::string::npos)
       strFilename = localizeStrings.Get(260);
     else
-      strFilename = localizeStrings.Get(260) + " - " + strFileNameAndPath.substr(genre + 1).c_str();
+      strFilename = localizeStrings.Get(260) + " - " +
+                    strFileNameAndPath.substr(genre + 1).c_str();
   }
 
   // Windows SMB Network (SMB)
@@ -1356,11 +1357,9 @@ std::string CUtil::TranslateSpecialSource(const std::string &strSpecial)
     else if (StringUtils::StartsWithNoCase(strSpecial, "$screenshots"))
       return URIUtils::AddFileToFolder("special://screenshots/", strSpecial.substr(12));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$musicplaylists"))
-      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC),
-                                       strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$videoplaylists"))
-      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO),
-                                       strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$cdrips"))
       return URIUtils::AddFileToFolder("special://cdrips/", strSpecial.substr(7));
     // this one will be removed post 2.0
@@ -1375,8 +1374,7 @@ namespace
 //! The folders holding the playlists of \p section: its own, and the mixed one
 std::vector<std::string> PlaylistsFoldersOf(KODI::MEDIA::MediaSection section)
 {
-  const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
-      CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
+  const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
   return {URIUtils::AddFileToFolder(path, section == KODI::MEDIA::MediaSection::MUSIC ? "music"
                                                                                       : "video"),
           URIUtils::AddFileToFolder(path, "mixed")};

@@ -589,7 +589,7 @@ void CGUIWindowFileManager::OnClick(int iList, int iItem)
     std::string strPath = pItem->GetPath();
     if (pItem->IsShareOrDrive())
     {
-      if (!g_passwordManager.IsItemUnlocked(pItem.get(), MediaSection::FILES))
+      if ( !g_passwordManager.IsItemUnlocked( pItem.get(), MediaSection::FILES) )
       {
         Refresh();
         return ;
@@ -627,7 +627,7 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
   {
     if (!g_application.PlayMedia(*pItem, player) && isPlayList)
       HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-    return;
+    return ;
   }
 #ifdef HAS_PYTHON
   if (pItem->IsPythonScript())
@@ -1244,8 +1244,7 @@ void CGUIWindowFileManager::SetInitialPath(const std::string &path)
   // otherwise, is this the first time accessing this window?
   else if (m_Directory[0]->GetPath() == "?")
   {
-    m_Directory[0]->SetPath(
-        strDestination = CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::FILES));
+    m_Directory[0]->SetPath(strDestination = CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::FILES));
     CLog::Log(LOGINFO, "Attempting to default to: {}", strDestination);
   }
   // try to open the destination path

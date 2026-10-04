@@ -213,7 +213,7 @@ std::string ByProgramCount(SortAttribute attributes, const SortItem &values)
   return std::to_string(values.at(Field::PROGRAM_COUNT).asInteger());
 }
 
-std::string ByPlaylistOrder(SortAttribute attributes, const SortItem& values)
+std::string ByPlaylistOrder(SortAttribute attributes, const SortItem &values)
 {
   return std::to_string(values.at(Field::PLAYLIST_ORDER).asInteger());
 }
@@ -862,7 +862,9 @@ const SqlSortFields& SqlSortFieldsOf(MediaType mediaType)
 }
 } // namespace
 
-void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, FieldList& fields)
+void SortUtils::GetFieldsForSQLSort(MediaType mediaType,
+                                    SortBy sortMethod,
+                                    FieldList& fields)
 {
   fields.clear();
   if (mediaType == MediaType::NONE)

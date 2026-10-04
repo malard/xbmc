@@ -23,7 +23,8 @@
 
 using namespace KODI;
 
-CGUIWindowMusicPlayList::CGUIWindowMusicPlayList() : CGUIWindowPlayList(PLAYLIST::Audio)
+CGUIWindowMusicPlayList::CGUIWindowMusicPlayList()
+  : CGUIWindowPlayList(PLAYLIST::Audio)
 {
   m_musicInfoLoader.SetObserver(this);
 }
@@ -53,6 +54,7 @@ void CGUIWindowMusicPlayList::StartLoadingItems()
 {
   m_musicInfoLoader.Load(*m_vecItems);
 }
+
 void CGUIWindowMusicPlayList::OnItemLoaded(CFileItem* pItem)
 {
   if (pItem->HasMusicInfoTag() && pItem->GetMusicInfoTag()->Loaded())
@@ -79,9 +81,7 @@ void CGUIWindowMusicPlayList::OnItemLoaded(CFileItem* pItem)
       // No music info, so show the file name
       std::string str;
       str = CUtil::GetTitleFromPath(pItem->GetPath());
-      str = StringUtils::Format(
-          "{:02}. {} ", pItem->GetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER).asInteger(),
-          str);
+      str = StringUtils::Format("{:02}. {} ", pItem->GetProperty(ITEM::PROPERTY::PLAYLIST_DISPLAY_ORDER).asInteger(), str);
       pItem->SetLabel(str);
     }
   }

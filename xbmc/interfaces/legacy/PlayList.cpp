@@ -35,9 +35,7 @@ namespace XBMCAddon
   } // namespace
 
   // a Python playlist wraps the Video or Audio playlist rather than owning one
-  PlayList::PlayList(int playList)
-    : m_type(TypeFromId(playList)),
-      pPlayList(&CServiceBroker::GetPlayLists()->GetPlayList(m_type))
+  PlayList::PlayList(int playList) : m_type(TypeFromId(playList)), pPlayList(&CServiceBroker::GetPlayLists()->GetPlayList(m_type))
   {
   }
 
@@ -142,6 +140,7 @@ namespace XBMCAddon
       const std::shared_ptr<CFileItem> item = (*pPlayList)[pos];
       if (!item)
         throw PlayListException("array out of bound");
+
       return new XBMCAddon::xbmcgui::ListItem(std::make_shared<CFileItem>(*item));
     }
   }

@@ -39,7 +39,7 @@ public:
    \param allowCancel whether the user can cancel the wait, defaults to true.
    \return true if the event completed, false if cancelled.
    */
-  static bool WaitOnEvent(CEvent& event, unsigned int displaytime = 100, bool allowCancel = true);
+  static bool WaitOnEvent(CEvent &event, unsigned int displaytime = 100, bool allowCancel = true);
 
   //! \brief How a wait on an event ended.
   enum class WaitResult

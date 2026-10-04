@@ -188,15 +188,17 @@ void CGUIDialogAddonInfo::UpdateControls(PerformButtonFocus performButtonFocus)
     return;
 
   const auto& itemAddonInfo = m_item->GetAddonInfo();
-  bool isInstalled = addonMgr.IsAddonInstalled(itemAddonInfo->ID(), itemAddonInfo->Origin(),
-                                               itemAddonInfo->Version());
-  m_addonEnabled = m_localAddon && !addonMgr.IsAddonDisabled(m_localAddon->ID());
-  bool canDisable = isInstalled && addonMgr.CanAddonBeDisabled(m_localAddon->ID());
+  bool isInstalled = addonMgr.IsAddonInstalled(
+      itemAddonInfo->ID(), itemAddonInfo->Origin(), itemAddonInfo->Version());
+  m_addonEnabled =
+      m_localAddon && !addonMgr.IsAddonDisabled(m_localAddon->ID());
+  bool canDisable =
+      isInstalled && addonMgr.CanAddonBeDisabled(m_localAddon->ID());
   bool canInstall = !isInstalled && itemAddonInfo->LifecycleState() != AddonLifecycleState::BROKEN;
   bool canUninstall = m_localAddon && addonMgr.CanUninstall(m_localAddon);
 
-  bool isUpdate =
-      (!isInstalled && addonMgr.IsAddonInstalled(itemAddonInfo->ID(), itemAddonInfo->Origin()));
+  bool isUpdate = (!isInstalled && addonMgr.IsAddonInstalled(
+                                       itemAddonInfo->ID(), itemAddonInfo->Origin()));
 
   bool showUpdateButton = m_localAddon && addonMgr.IsAutoUpdateable(m_localAddon->ID()) &&
                           m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean();
@@ -332,10 +334,9 @@ void CGUIDialogAddonInfo::OnUpdate()
 {
   const auto& itemAddonInfo = m_item->GetAddonInfo();
   const std::string& addonId = itemAddonInfo->ID();
-  const std::string& origin =
-      m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_ORIGIN).asString();
-  const CAddonVersion& version = static_cast<CAddonVersion>(
-      m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_VERSION).asString());
+  const std::string& origin = m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_ORIGIN).asString();
+  const CAddonVersion& version =
+      static_cast<CAddonVersion>(m_item->GetProperty(ITEM::PROPERTY::ADDON_VALID_UPDATE_VERSION).asString());
 
   Close();
   if (!m_depsInstalledWithAvailable.empty() &&
@@ -444,10 +445,10 @@ void CGUIDialogAddonInfo::OnToggleAutoUpdates()
     if (selected)
       addonMgr.RemoveAllUpdateRulesFromList(m_localAddon->ID());
     else
-      addonMgr.AddUpdateRuleToList(m_localAddon->ID(), AddonUpdateRule::USER_DISABLED_AUTO_UPDATE);
+      addonMgr.AddUpdateRuleToList(m_localAddon->ID(),
+                                                        AddonUpdateRule::USER_DISABLED_AUTO_UPDATE);
 
-    bool showUpdateButton =
-        (selected && m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean());
+    bool showUpdateButton = (selected && m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean());
 
     if (showUpdateButton)
     {
@@ -717,10 +718,13 @@ bool CGUIDialogAddonInfo::ShowDependencyList(Reactivate reactivate, EntryPoint e
               !CAddonRepos::IsFromOfficialRepo(infoAddon, CheckAddonPath::CHOICE_NO))
           {
             item->SetLabel2(StringUtils::Format(
-                localizeStrings.Get(messageId), it.m_depInfo.versionMin.asString(),
+                localizeStrings.Get(messageId),
+                it.m_depInfo.versionMin.asString(),
                 it.m_installed ? it.m_installed->Version().asString() : "",
                 it.m_available ? it.m_available->Version().asString() : "",
-                it.m_depInfo.optional ? localizeStrings.Get(24184) : ""));
+                it.m_depInfo.optional
+                    ? localizeStrings.Get(24184)
+                    : ""));
 
             item->SetArt(ART::TYPE::ICON, infoAddon->Icon());
             item->SetProperty("addon_id", it.m_depInfo.id);
@@ -731,7 +735,8 @@ bool CGUIDialogAddonInfo::ShowDependencyList(Reactivate reactivate, EntryPoint e
       else
       {
         auto item{std::make_shared<CFileItem>(it.m_depInfo.id)};
-        item->SetLabel2(localizeStrings.Get(10005)); // Not available
+        item->SetLabel2(localizeStrings.Get(
+            10005)); // Not available
         items.Add(std::move(item));
       }
     }

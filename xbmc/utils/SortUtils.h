@@ -224,9 +224,7 @@ public:
                               dbiplus::Dataset& dataset,
                               DatabaseResults& results);
 
-  static void GetFieldsForSQLSort(KODI::MEDIA::MediaType mediaType,
-                                  SortBy sortMethod,
-                                  FieldList& fields);
+  static void GetFieldsForSQLSort(KODI::MEDIA::MediaType mediaType, SortBy sortMethod, FieldList& fields);
   static const Fields& GetFieldsForSorting(SortBy sortBy);
   static std::string RemoveArticles(const std::string &label);
 

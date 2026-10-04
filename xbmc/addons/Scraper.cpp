@@ -1446,8 +1446,8 @@ bool CScraper::GetVideoDetailsUncached(XFILE::IHttpClient& fcurl,
 {
   CLog::LogF(LOGDEBUG,
              "Reading {} '{}' using {} scraper (file: '{}', content: '{}', version: '{}')",
-             fMovie ? MediaType::MOVIE : MediaType::EPISODE, scurl.GetFirstThumbUrl(), Name(),
-             Path(), Content(), Version().asString());
+             fMovie ? MediaType::MOVIE : MediaType::EPISODE, scurl.GetFirstThumbUrl(), Name(), Path(),
+             Content(), Version().asString());
 
   video.Reset();
 

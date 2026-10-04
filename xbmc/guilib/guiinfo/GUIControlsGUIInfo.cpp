@@ -132,12 +132,14 @@ bool CGUIControlsGUIInfo::GetLabel(std::string& value,
         {
           if (info.GetInfo() == CONTAINER_SORT_METHOD)
           {
-            value = localizeStrings.Get(viewState->GetSortMethodLabel());
+            value = localizeStrings.Get(
+                viewState->GetSortMethodLabel());
             return true;
           }
           else if (info.GetInfo() == CONTAINER_SORT_ORDER)
           {
-            value = localizeStrings.Get(viewState->GetSortOrderLabel());
+            value = localizeStrings.Get(
+                viewState->GetSortOrderLabel());
             return true;
           }
         }
@@ -352,7 +354,8 @@ bool CGUIControlsGUIInfo::GetLabel(std::string& value,
     case SYSTEM_PROGRESS_BAR:
     {
       const CGUIDialogProgress* bar{
-          windowManager.GetWindow<CGUIDialogProgress>(WINDOW_DIALOG_PROGRESS)};
+          windowManager.GetWindow<CGUIDialogProgress>(
+              WINDOW_DIALOG_PROGRESS)};
       if (bar && bar->IsDialogRunning())
         value = std::to_string(bar->GetPercentage());
       return true;
@@ -470,8 +473,7 @@ bool CGUIControlsGUIInfo::GetBool(bool& value,
       const CGUIMediaWindow* window{GUIINFO::GetMediaWindow(contextWindow)};
       if (window)
       {
-        value =
-            window->CurrentDirectory().GetProperty(KODI::ITEM::PROPERTY::IS_STACKED).asBoolean();
+        value = window->CurrentDirectory().GetProperty(KODI::ITEM::PROPERTY::IS_STACKED).asBoolean();
         return true;
       }
       break;
@@ -835,9 +837,11 @@ bool CGUIControlsGUIInfo::GetBool(bool& value,
     case SYSTEM_HAS_INPUT_HIDDEN:
     {
       const CGUIDialogNumeric* pNumeric{
-          windowManager.GetWindow<CGUIDialogNumeric>(WINDOW_DIALOG_NUMERIC)};
+          windowManager.GetWindow<CGUIDialogNumeric>(
+              WINDOW_DIALOG_NUMERIC)};
       const CGUIDialogKeyboardGeneric* pKeyboard{
-          windowManager.GetWindow<CGUIDialogKeyboardGeneric>(WINDOW_DIALOG_KEYBOARD)};
+          windowManager.GetWindow<CGUIDialogKeyboardGeneric>(
+              WINDOW_DIALOG_KEYBOARD)};
 
       if (pNumeric && pNumeric->IsActive())
         value = pNumeric->IsInputHidden();

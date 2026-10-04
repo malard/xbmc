@@ -22,8 +22,7 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObject,
-                                                    CVariant& result)
+JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant &parameterObject, CVariant &result)
 {
   CFileItemList favourites;
   CServiceBroker::GetFavouritesService().GetAll(favourites);
@@ -35,6 +34,7 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
   for (const auto& item : favourites)
   {
     CVariant object;
+
     const CFavouritesURL url(item->GetPath());
     if (!url.IsValid())
       continue;
@@ -88,17 +88,14 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
   return OK;
 }
 
-JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObject,
-                                                   CVariant& result)
+JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant &parameterObject, CVariant &result)
 {
   std::string type = parameterObject["type"].asString();
 
   if (type.compare("unknown") == 0)
     return InvalidParams;
 
-  if ((type.compare("media") == 0 || type.compare("script") == 0 ||
-       type.compare("androidApp") == 0) &&
-      !ParameterNotNull(parameterObject, "path"))
+  if ((type.compare("media") == 0 || type.compare("script") == 0 || type.compare("androidApp") == 0) && !ParameterNotNull(parameterObject, "path"))
   {
     result["method"] = "Favourites.AddFavourite";
     result["stack"]["message"] = "Missing parameter";
@@ -148,7 +145,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
     return InvalidParams;
 
   item.SetLabel(title);
-  if (ParameterNotNull(parameterObject, "thumbnail"))
+  if (ParameterNotNull(parameterObject,"thumbnail"))
     item.SetArt(KODI::ART::TYPE::THUMB, parameterObject["thumbnail"].asString());
 
   if (CServiceBroker::GetFavouritesService().AddOrRemove(item, contextWindow))

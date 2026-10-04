@@ -71,7 +71,8 @@ bool IsAccessible(const std::string& file)
 }
 } // namespace
 
-CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest& request) : CHTTPFileHandler(request)
+CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest &request)
+  : CHTTPFileHandler(request)
 {
   std::string file;
   int responseStatus = MHD_HTTP_BAD_REQUEST;
@@ -79,6 +80,7 @@ CHTTPVfsHandler::CHTTPVfsHandler(const HTTPRequest& request) : CHTTPFileHandler(
   if (m_request.pathUrl.size() > VFS_ROOT.size())
   {
     file = m_request.pathUrl.substr(VFS_ROOT.size());
+
     if (!CFileUtils::Exists(file))
       responseStatus = MHD_HTTP_NOT_FOUND;
     else if (IsAccessible(file))

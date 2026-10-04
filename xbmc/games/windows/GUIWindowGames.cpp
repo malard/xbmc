@@ -59,8 +59,7 @@ bool CGUIWindowGames::OnMessage(CGUIMessage& message)
 
       // Is this the first time the window is opened?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
-        message.SetStringParam(
-            CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::GAMES));
+        message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::GAMES));
 
       m_dlgProgress = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(
           WINDOW_DIALOG_PROGRESS);
@@ -390,8 +389,9 @@ bool CGUIWindowGames::PlayGame(const CFileItem& item)
 
   // a playlist of games plays on the Video playlist; anything else lets the item choose
   const int playlist = PLAYLIST::IsPlayList(item) ? static_cast<int>(PLAYLIST::Video) : -1;
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_APPLICATION_PLAY_MEDIA, playlist, -1,
-                                             new CFileItem(itemCopy), "");
+
+  CServiceBroker::GetAppMessenger()->PostMsg(
+      TMSG_APPLICATION_PLAY_MEDIA, playlist, -1, new CFileItem(itemCopy), "");
   return true;
 }
 

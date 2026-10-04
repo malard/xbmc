@@ -210,8 +210,7 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   }
 
   timeout.Set(timeout.GetInitialTimeoutValue());
-  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->SetAVTransportURI(uri, metadata), timeout),
-                         failed_setavtransporturi);
+  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->SetAVTransportURI(uri, metadata), timeout), failed_setavtransporturi);
 
   {
     std::unique_lock lock(m_queueSection);
@@ -295,6 +294,7 @@ bool CUPnPPlayer::OpenFile(const CFileItem& file, const CPlayerOptions& options)
   if (file.GetPath().empty())
   {
     PLT_TransportInfo transport;
+
     NPT_CHECK_LABEL_SEVERE(m_delegate->QueryTransport(timeout, transport), failed);
 
     /* make sure the attached player is actually playing */
@@ -347,7 +347,9 @@ bool CUPnPPlayer::QueueNextFile(const CFileItem& file)
   std::string uri, metadata;
   CUPnPPlayerController::CAction* action = nullptr;
 
-  NPT_CHECK_POINTER_LABEL_SEVERE(m_delegate, failed);
+  NPT_CHECK_POINTER_LABEL_SEVERE(
+      m_delegate,
+      failed);
   if (!BuildResource(file, uri, metadata))
     goto failed;
 

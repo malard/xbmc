@@ -240,8 +240,7 @@ void CGUIDialogVideoManager::Refresh()
 
 void CGUIDialogVideoManager::SetVideoAsset(const std::shared_ptr<CFileItem>& item)
 {
-  if (!item || !item->HasVideoInfoTag() ||
-      item->GetVideoInfoTag()->GetMediaType() != MediaType::MOVIE)
+  if (!item || !item->HasVideoInfoTag() || item->GetVideoInfoTag()->GetMediaType() != MediaType::MOVIE)
   {
     CLog::LogF(LOGERROR, "Unexpected video item!");
     return;

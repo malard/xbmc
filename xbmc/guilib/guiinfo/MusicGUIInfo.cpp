@@ -471,8 +471,7 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
       {
         if (fallback)
           *fallback = "DefaultAlbumCover.png";
-        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
-                                               : "DefaultAlbumCover.png";
+        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB) : "DefaultAlbumCover.png";
         return true;
       }
       break;
@@ -593,9 +592,9 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
                               item.GetMusicInfoTag()->SetLoaded();
                             }
                             if (!item.HasArt(ART::TYPE::THUMB))
-                            {
-                              CMusicThumbLoader loader;
-                              loader.LoadItem(&item);
+    {
+      CMusicThumbLoader loader;
+      loader.LoadItem(&item);
                             }
                           });
 
@@ -685,7 +684,9 @@ bool CMusicGUIInfo::GetBool(bool& value,
         value = m_playLists->HasEntry(PLAYLIST::Audio, index);
         return true;
       }
-      value = (index >= 0 && index < m_playLists->GetPlayList(PLAYLIST::Audio).Size());
+      value =
+          (index >= 0 &&
+           index < m_playLists->GetPlayList(PLAYLIST::Audio).Size());
       return true;
     }
     case MUSICPLAYER_ISMULTIDISC:

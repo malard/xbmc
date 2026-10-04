@@ -26,8 +26,7 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant& parameterObject,
-                                                     CVariant& result)
+JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
@@ -42,8 +41,7 @@ constexpr std::array<std::pair<int, const char*>, 4> LOG_LEVEL_NAMES{{
 }};
 } // unnamed namespace
 
-JSONRPC_STATUS CApplicationOperations::SetLogLevel(const CVariant& parameterObject,
-                                                   CVariant& result)
+JSONRPC_STATUS CApplicationOperations::SetLogLevel(const CVariant &parameterObject, CVariant &result)
 {
   const CVariant& levelParam{parameterObject["level"]};
   const CVariant& componentsParam{parameterObject["components"]};
@@ -125,14 +123,13 @@ CVariant CApplicationOperations::LogLevelValue()
   return value;
 }
 
-JSONRPC_STATUS CApplicationOperations::Quit(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CApplicationOperations::Quit(const CVariant &parameterObject, CVariant &result)
 {
   CServiceBroker::GetAppMessenger()->PostMsg(TMSG_QUIT);
   return ACK;
 }
 
-JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string& property,
-                                                        CVariant& result)
+JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string &property, CVariant &result)
 {
   if (property == "name")
     result = CCompileInfo::GetAppName();

@@ -756,8 +756,7 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
             else
             {
               streaming = false;
-              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming,
-                                                  sizeof(bool));
+              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming, sizeof(bool));
             }
           }
           stream->m_paused = true;
@@ -3674,14 +3673,13 @@ void CActiveAE::FlushStream(CActiveAEStream *stream)
   }
 }
 
-void CActiveAE::PauseStream(CActiveAEStream* stream, bool pause, bool keepOutput)
+void CActiveAE::PauseStream(CActiveAEStream *stream, bool pause, bool keepOutput)
 {
   //! @todo pause sink, needs api change
   if (pause)
   {
     MsgStreamPause msg{stream, keepOutput};
-    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM, &msg,
-                                 sizeof(MsgStreamPause));
+    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM, &msg, sizeof(MsgStreamPause));
   }
   else
     m_controlPort.SendOutMessage(CActiveAEControlProtocol::RESUMESTREAM,

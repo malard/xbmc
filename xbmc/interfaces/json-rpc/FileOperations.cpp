@@ -46,7 +46,7 @@ namespace
 {
 //! A directory that cannot be listed is missing when one above it can be; otherwise its source
 //! is out of reach.
-bool IsMissing(const std::string& directory)
+bool IsMissing(const std::string & directory)
 {
   std::string parent;
   for (std::string current = directory;
@@ -71,7 +71,7 @@ JSONRPC_STATUS CheckFile(const CVariant& parameterObject, CVariant& result)
 }
 } // namespace
 
-JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::GetSources(const CVariant &parameterObject, CVariant &result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -108,7 +108,7 @@ JSONRPC_STATUS CFileOperations::GetSources(const CVariant& parameterObject, CVar
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant &parameterObject, CVariant &result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -160,15 +160,15 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
           (section == MediaSection::MUSIC && item->HasMusicInfoTag()) ||
           (section == MediaSection::PICTURES && item->HasPictureInfoTag()) ||
           (section == MediaSection::FILES && !enrichFromLibrary) ||
-          URIUtils::IsUPnP(items.GetPath()))
-        filteredFiles.Add(item);
+           URIUtils::IsUPnP(items.GetPath()))
+          filteredFiles.Add(item);
       else
       {
         CFileItemPtr fileItem(new CFileItem());
         if (FillFileItem(item, fileItem, section, parameterObject))
-          filteredFiles.Add(fileItem);
+            filteredFiles.Add(fileItem);
         else
-          filteredFiles.Add(item);
+            filteredFiles.Add(item);
       }
     }
 
@@ -206,7 +206,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
               Target("directory", parameterObject["directory"]));
 }
 
-JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant &parameterObject, CVariant &result)
 {
   const std::string file = parameterObject["file"].asString();
   if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
@@ -225,8 +225,7 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, 
     item = std::make_shared<CFileItem>(file, false);
 
   if (!URIUtils::IsUPnP(file))
-    FillFileItem(item, item, MediaSectionFromName(parameterObject["media"].asString()),
-                 parameterObject);
+    FillFileItem(item, item, MediaSectionFromName(parameterObject["media"].asString()), parameterObject);
 
   // Check if the "properties" list exists
   // and make sure it contains the "file"
@@ -250,12 +249,11 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, 
     param["properties"].append("file");
   param["properties"].append("fileType");
 
-  HandleFileItem("id", true, "fileDetails", item, parameterObject, param["properties"], result,
-                 false);
+  HandleFileItem("id", true, "fileDetails", item, parameterObject, param["properties"], result, false);
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant &parameterObject, CVariant &result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -301,14 +299,10 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
   return ACK;
 }
 
-JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
-                                                IClient* client,
-                                                const CVariant& parameterObject,
-                                                CVariant& result)
+JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
 {
   std::string protocol;
-  if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"],
-                                 protocol))
+  if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))
   {
     result["protocol"] = protocol;
     return OK;
@@ -392,11 +386,11 @@ bool CFileOperations::FillFileItem(
   return status;
 }
 
-bool CFileOperations::FillFileItemList(const CVariant& parameterObject, CFileItemList& list)
+bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileItemList &list)
 {
   if (parameterObject.isMember("directory"))
   {
-    std::string media = parameterObject["media"].asString();
+    std::string media =  parameterObject["media"].asString();
     StringUtils::ToLower(media);
 
     std::string strPath = parameterObject["directory"].asString();
@@ -404,9 +398,7 @@ bool CFileOperations::FillFileItemList(const CVariant& parameterObject, CFileIte
     {
       CFileItemList items;
       const MediaSection section{MediaSectionFromName(media).value_or(MediaSection::FILES)};
-      const std::vector<std::string>& regexps{CServiceBroker::GetSettingsComponent()
-                                                  ->GetAdvancedSettings()
-                                                  ->GetExcludeFromListingRegExps(section)};
+      const std::vector<std::string>& regexps{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->GetExcludeFromListingRegExps(section)};
       const std::string extensions{
           CServiceBroker::GetFileExtensionProvider().GetMediaExtensions(section)};
 

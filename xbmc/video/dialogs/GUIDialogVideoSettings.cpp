@@ -492,7 +492,6 @@ void CGUIDialogVideoSettings::InitializeSettings()
 
   // general settings
   AddButton(groupSaveAsDefault, SETTING_VIDEO_MAKE_DEFAULT, 12376, SettingLevel::Basic);
-
   AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, CalibrationSetting()->GetLevel());
 }
 

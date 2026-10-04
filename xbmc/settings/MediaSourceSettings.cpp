@@ -429,6 +429,7 @@ void CMediaSourceSettings::GetSources(const tinyxml2::XMLNode* rootElement,
   sources = {};
 
   const std::string tagName{KODI::MEDIA::NameOf(section)};
+
   const tinyxml2::XMLElement* childElement = rootElement->FirstChildElement(tagName.c_str());
   if (!childElement)
   {
@@ -473,8 +474,7 @@ bool CMediaSourceSettings::SetSources(tinyxml2::XMLNode* root,
                                       const SectionSources& sources) const
 {
   tinyxml2::XMLDocument* doc = root->GetDocument();
-  tinyxml2::XMLElement* newElement =
-      doc->NewElement(std::string{KODI::MEDIA::NameOf(section)}.c_str());
+  tinyxml2::XMLElement* newElement = doc->NewElement(std::string{KODI::MEDIA::NameOf(section)}.c_str());
   tinyxml2::XMLNode* sectionNode = root->InsertEndChild(newElement);
 
   if (!sectionNode)

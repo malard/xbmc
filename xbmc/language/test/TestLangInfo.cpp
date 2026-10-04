@@ -21,10 +21,7 @@ class CLangInfoTest : public KODI::LANGUAGE::CLangInfo
 {
 public:
   //! Read the region profiles a pack ships, as the loader does
-  bool LoadLang(const std::string& language)
-  {
-    return Load(KODI::LANGUAGE::CLanguageLoader::GetLanguageInfoPath(language));
-  }
+  bool LoadLang(const std::string& language) { return Load(KODI::LANGUAGE::CLanguageLoader::GetLanguageInfoPath(language)); }
 
   using CLangInfo::PlatformLocaleName;
 };
@@ -102,6 +99,7 @@ TEST(TestLangInfo, RegionalDateFormatsAreTheRegions)
   CLangInfoTest langInfo;
 
   langInfo.SetShortDateFormat("regional");
+
   langInfo.SetLongDateFormat("regional");
 
   EXPECT_EQ(langInfo.GetShortDateFormat(), "DD/MM/YYYY");

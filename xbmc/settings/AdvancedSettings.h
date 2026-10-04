@@ -254,7 +254,6 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     //! own.
     const std::vector<std::string>& GetExcludeFromListingRegExps(
         KODI::MEDIA::MediaSection section) const;
-
     std::vector<std::string> m_videoExcludeFromListingRegExps;
     std::vector<std::string> m_allExcludeFromScanRegExps;
     std::vector<std::string> m_moviesExcludeFromScanRegExps;

@@ -76,7 +76,8 @@ public:
         CApplicationPlayLists::ExpandToEntries(m_item, *this, m_startAt, m_queuedItems);
   }
 
-  int GetStartPosition() const { return m_startPosition.value_or(-1); }
+  int GetStartPosition() const { return m_startPosition.value_or(-1);
+  }
 
 private:
   std::shared_ptr<CFileItem> Redirect(const std::shared_ptr<CFileItem>& folder) override;
@@ -151,8 +152,7 @@ SortDescription GetSortDescription(const CGUIViewState& state, const CFileItemLi
     return state.GetSortMethod(); // last resort
 }
 
-std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(
-    const std::shared_ptr<CFileItem>& folder)
+std::shared_ptr<CFileItem> CAsyncGetItemsForPlaylist::Redirect(const std::shared_ptr<CFileItem>& folder)
 {
   if (folder->IsPlugin())
     return folder;
@@ -343,9 +343,10 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
 
 namespace KODI::VIDEO::UTILS
 {
-void PlayItem(const std::shared_ptr<CFileItem>& item,
-              const std::string& player,
-              ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
+void PlayItem(
+    const std::shared_ptr<CFileItem>& item,
+    const std::string& player,
+    ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
 {
   if (item->IsFolder() && !item->IsPlugin())
   {
@@ -419,8 +420,8 @@ bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item,
 {
   CAsyncGetItemsForPlaylist getItems(item, queuedItems, mode, startAt);
   const bool done = CGUIDialogBusy::Wait(&getItems,
-                                         500, // 500ms before busy dialog appears
-                                         true); // can be cancelled
+                              500, // 500ms before busy dialog appears
+                              true); // can be cancelled
   if (startPosition)
     *startPosition = getItems.GetStartPosition();
   return done;
@@ -434,7 +435,8 @@ bool IsNonExistingUserPartyModePlaylist(const CFileItem& item)
     return false;
 
   const std::string& path{item.GetPath()};
-  return path == PARTYMODE::RulesPath(PLAYLIST::Video) && !CFileUtils::Exists(path);
+  return path == PARTYMODE::RulesPath(PLAYLIST::Video) &&
+          !CFileUtils::Exists(path);
 }
 
 bool IsEmptyVideoItem(const CFileItem& item)
@@ -460,8 +462,7 @@ bool IsItemPlayable(const CFileItem& item)
     return true;
 
   // Exclude all music library items
-  if (MUSIC::IsMusicDb(item) ||
-      StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC))
+  if (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::MUSIC))
     return false;
 
   // Exclude add-ons
@@ -491,8 +492,8 @@ bool IsItemPlayable(const CFileItem& item)
   if (IsNonExistingUserPartyModePlaylist(item))
     return false;
 
-  if (item.IsFolder() && (IsVideoDb(item) || StringUtils::StartsWithNoCase(
-                                                 item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO)))
+  if (item.IsFolder() &&
+      (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), MEDIA::LIBRARY_PATH::VIDEO)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CVideoDatabaseDirectory::GetDirectoryParentType(item.GetPath());

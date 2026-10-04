@@ -348,9 +348,8 @@ int DatabaseUtils::GetFieldIndex(Field field, MediaType mediaType)
   return column ? column->index : -1;
 }
 
-bool DatabaseUtils::GetSelectFields(const Fields& fields,
-                                    MediaType mediaType,
-                                    FieldList& selectFields)
+bool DatabaseUtils::GetSelectFields(const Fields &fields,
+                                    MediaType mediaType, FieldList &selectFields)
 {
   if (mediaType == MediaType::NONE || fields.empty())
     return false;
@@ -363,7 +362,7 @@ bool DatabaseUtils::GetSelectFields(const Fields& fields,
     case MediaType::EPISODE:
       sortFields.insert(Field::TITLE);
       sortFields.insert(Field::SEASON);
-      sortFields.insert(Field::EPISODE_NUMBER);
+    sortFields.insert(Field::EPISODE_NUMBER);
       break;
     case MediaType::SONG:
       sortFields.insert(Field::TITLE);

@@ -169,7 +169,8 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
     if (!bSwitchToFullscreen)
     {
       recording = pvrManager.Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
-      bSwitchToFullscreen = recording && pvrManager.PlaybackState()->IsPlayingRecording(recording);
+      bSwitchToFullscreen =
+          recording && pvrManager.PlaybackState()->IsPlayingRecording(recording);
     }
 
     if (bSwitchToFullscreen)
@@ -181,9 +182,9 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
     }
   }
 
-  ParentalCheckResult result = channel
-                                   ? pvrManager.Get<PVR::GUI::Parental>().CheckParentalLock(channel)
-                                   : ParentalCheckResult::FAILED;
+  ParentalCheckResult result =
+      channel ? pvrManager.Get<PVR::GUI::Parental>().CheckParentalLock(channel)
+              : ParentalCheckResult::FAILED;
   if (result == ParentalCheckResult::SUCCESS)
   {
     // switch to channel or if recording present, ask whether to switch or play recording...
@@ -232,20 +233,25 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
       return false;
 
     auto itemToPlay{std::make_unique<CFileItem>(groupMember)};
-    pvrManager.PlaybackState()->StartPlayback(itemToPlay,
-                                              ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
+    pvrManager.PlaybackState()->StartPlayback(
+        itemToPlay, ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM);
     CheckAndSwitchToFullscreen(bFullscreen);
     return true;
   }
   else if (result == ParentalCheckResult::FAILED)
   {
     const std::string channelName =
-        channel ? channel->ChannelName() : localizeStrings.Get(19029); // Channel
+        channel
+            ? channel->ChannelName()
+            : localizeStrings.Get(19029); // Channel
     // CHANNELNAME could not be played.
-    const std::string msg = StringUtils::Format(localizeStrings.Get(19035), channelName);
+    const std::string msg =
+        StringUtils::Format(localizeStrings.Get(19035),
+                            channelName);
 
-    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, localizeStrings.Get(19166),
-                                          msg); // PVR information
+    CGUIDialogKaiToast::QueueNotification(
+        CGUIDialogKaiToast::Error, localizeStrings.Get(19166),
+        msg); // PVR information
   }
 
   return false;

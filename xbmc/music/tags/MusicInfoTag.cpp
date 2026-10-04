@@ -972,18 +972,17 @@ void CMusicInfoTag::Serialize(CVariant& value) const
     contributor["artistId"] = role.GetArtistId();
     value["contributors"].push_back(contributor);
   }
-  value["displayComposer"] = GetArtistStringForRole("composer"); //TCOM
+  value["displayComposer"] = GetArtistStringForRole("composer");   //TCOM
   value["displayConductor"] = GetArtistStringForRole("conductor"); //TPE3
   value["displayOrchestra"] = GetArtistStringForRole("orchestra");
-  value["displayLyricist"] = GetArtistStringForRole("lyricist"); //TEXT
+  value["displayLyricist"] = GetArtistStringForRole("lyricist");   //TEXT
   value["mood"] = StringUtils::Split(m_strMood, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
   value["recordlabel"] = m_strRecordLabel;
   value["rating"] = m_Rating;
   value["userRating"] = m_Userrating;
   value["votes"] = m_Votes;
   value["playCount"] = m_iTimesPlayed;
-  value["lastPlayed"] =
-      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["lastPlayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
   value["dateAdded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
   value["dateNew"] = m_dateNew.IsValid() ? m_dateNew.GetAsDBDateTime() : StringUtils::Empty;
   value["dateModified"] =

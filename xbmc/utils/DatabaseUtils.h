@@ -179,13 +179,11 @@ public:
   static VideoDbContentType VideoContentTypeFromMediaType(KODI::MEDIA::MediaType mediaType);
 
   static std::string GetField(Field field,
-                              KODI::MEDIA::MediaType mediaType,
-                              DatabaseQueryPart queryPart);
+                              KODI::MEDIA::MediaType mediaType, DatabaseQueryPart queryPart);
   static int GetField(Field field, KODI::MEDIA::MediaType mediaType);
   static int GetFieldIndex(Field field, KODI::MEDIA::MediaType mediaType);
-  static bool GetSelectFields(const Fields& fields,
-                              KODI::MEDIA::MediaType mediaType,
-                              FieldList& selectFields);
+  static bool GetSelectFields(const Fields &fields,
+                              KODI::MEDIA::MediaType mediaType, FieldList &selectFields);
 
   static bool GetFieldValue(const dbiplus::field_value &fieldValue, CVariant &variantValue);
   static bool GetDatabaseResults(KODI::MEDIA::MediaType mediaType,

@@ -134,12 +134,14 @@ JSONRPC_STATUS CPVROperations::FindTimer(const std::string& key,
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetProperties(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetProperties(const CVariant& parameterObject,
+                                             CVariant& result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
-JSONRPC_STATUS CPVROperations::GetChannelGroups(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetChannelGroups(const CVariant& parameterObject,
+                                                CVariant& result)
 {
   const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer{
       Started(CServiceBroker::GetPVRManager().ChannelGroups())};
@@ -172,6 +174,7 @@ JSONRPC_STATUS CPVROperations::GetChannelGroupDetails(const CVariant& parameterO
 
   const std::shared_ptr<const CPVRChannelGroup> channelGroup{
       ChannelGroupFrom(*channelGroupContainer, parameterObject["channelGroupId"])};
+
   if (!channelGroup)
     return Fail(result, NotFound, Reason::NoSuchItem,
                 Target("channelGroupId", parameterObject["channelGroupId"]));
@@ -181,7 +184,8 @@ JSONRPC_STATUS CPVROperations::GetChannelGroupDetails(const CVariant& parameterO
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject,
+                                           CVariant& result)
 {
   const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer{
       Started(CServiceBroker::GetPVRManager().ChannelGroups())};
@@ -190,6 +194,7 @@ JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVar
 
   const std::shared_ptr<const CPVRChannelGroup> channelGroup{
       ChannelGroupFrom(*channelGroupContainer, parameterObject["channelGroupId"])};
+
   if (!channelGroup)
     return Fail(result, NotFound, Reason::NoSuchItem,
                 Target("channelGroupId", parameterObject["channelGroupId"]));
@@ -206,7 +211,8 @@ JSONRPC_STATUS CPVROperations::GetChannels(const CVariant& parameterObject, CVar
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetChannelDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetChannelDetails(const CVariant& parameterObject,
+                                                 CVariant& result)
 {
   std::shared_ptr<CPVRChannel> channel;
   if (const JSONRPC_STATUS status =
@@ -226,7 +232,8 @@ JSONRPC_STATUS CPVROperations::GetChannelDetails(const CVariant& parameterObject
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetClients(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetClients(const CVariant& parameterObject,
+                                          CVariant& result)
 {
   if (!PvrStarted())
     return Fail(result, FailedToExecute, Reason::PvrNotStarted);
@@ -244,13 +251,15 @@ JSONRPC_STATUS CPVROperations::GetClients(const CVariant& parameterObject, CVari
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject,
+                                             CVariant& result)
 {
   if (!PvrStarted())
     return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
   CDateTime start;
   CDateTime end;
+
   const JSONRPC_STATUS rangeStatus{ParseTimeRange(parameterObject, false, start, end)};
   if (rangeStatus != OK)
     return rangeStatus;
@@ -278,7 +287,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject, CV
 }
 
 JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& parameterObject,
-                                                           CVariant& result)
+                                                   CVariant& result)
 {
   const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer{
       Started(CServiceBroker::GetPVRManager().ChannelGroups())};
@@ -287,6 +296,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& param
 
   CDateTime start;
   CDateTime end;
+
   const JSONRPC_STATUS rangeStatus{ParseTimeRange(parameterObject, true, start, end)};
   if (rangeStatus != OK)
     return rangeStatus;
@@ -330,6 +340,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastDetails(const CVariant& parameterObje
                                                    CVariant& result)
 {
   std::shared_ptr<CPVREpgInfoTag> epgTag;
+
   if (const JSONRPC_STATUS status =
           FindBroadcast("broadcastId", parameterObject["broadcastId"], epgTag, result);
       status != OK)
@@ -345,6 +356,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcastIsPlayable(const CVariant& parameterO
                                                       CVariant& result)
 {
   std::shared_ptr<CPVREpgInfoTag> epgTag;
+
   if (const JSONRPC_STATUS status =
           FindBroadcast("broadcastId", parameterObject["broadcastId"], epgTag, result);
       status != OK)
@@ -400,7 +412,8 @@ JSONRPC_STATUS CPVROperations::GetPlayableBroadcasts(const CVariant& parameterOb
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::Record(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::Record(const CVariant& parameterObject,
+                                      CVariant& result)
 {
   auto& pvrManager{CServiceBroker::GetPVRManager()};
   if (!PvrStarted())
@@ -440,14 +453,16 @@ JSONRPC_STATUS CPVROperations::Record(const CVariant& parameterObject, CVariant&
 
   if (toggle)
   {
-    if (!pvrManager.Get<PVR::GUI::Timers>().SetRecordingOnChannel(pChannel, !isRecording))
+    if (!pvrManager.Get<PVR::GUI::Timers>().SetRecordingOnChannel(
+            pChannel, !isRecording))
       return Fail(result, FailedToExecute, Reason::BackendRefused);
   }
 
   return ACK;
 }
 
-JSONRPC_STATUS CPVROperations::Scan(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::Scan(const CVariant& parameterObject,
+                                    CVariant& result)
 {
   if (!PvrStarted())
     return Fail(result, FailedToExecute, Reason::PvrNotStarted);
@@ -526,7 +541,8 @@ void CPVROperations::FillChannelGroupDetails(
   }
 }
 
-JSONRPC_STATUS CPVROperations::GetTimers(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetTimers(const CVariant& parameterObject,
+                                         CVariant& result)
 {
   const std::shared_ptr<const CPVRTimers> timers{Started(CServiceBroker::GetPVRManager().Timers())};
   if (!timers)
@@ -544,7 +560,8 @@ JSONRPC_STATUS CPVROperations::GetTimers(const CVariant& parameterObject, CVaria
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::GetTimerDetails(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetTimerDetails(const CVariant& parameterObject,
+                                               CVariant& result)
 {
   std::shared_ptr<CPVRTimerInfoTag> timer;
   if (const JSONRPC_STATUS status = FindTimer("timerId", parameterObject["timerId"], timer, result);
@@ -557,10 +574,12 @@ JSONRPC_STATUS CPVROperations::GetTimerDetails(const CVariant& parameterObject, 
   return OK;
 }
 
-JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject,
+                                        CVariant& result)
 {
   auto& pvrManager{CServiceBroker::GetPVRManager()};
   std::shared_ptr<CPVREpgInfoTag> epgTag;
+
   if (const JSONRPC_STATUS status =
           FindBroadcast("broadcastId", parameterObject["broadcastId"], epgTag, result);
       status != OK)
@@ -581,24 +600,26 @@ JSONRPC_STATUS CPVROperations::AddTimer(const CVariant& parameterObject, CVarian
   return Fail(result, FailedToExecute, Reason::BackendRefused);
 }
 
-JSONRPC_STATUS CPVROperations::DeleteTimer(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::DeleteTimer(const CVariant& parameterObject,
+                                           CVariant& result)
 {
   std::shared_ptr<CPVRTimerInfoTag> timer;
   if (const JSONRPC_STATUS status = FindTimer("timerId", parameterObject["timerId"], timer, result);
       status != OK)
     return status;
 
-  if (CServiceBroker::GetPVRManager().Timers()->DeleteTimer(timer, timer->IsRecording(), false) ==
-      TimerOperationResult::OK)
+  if (CServiceBroker::GetPVRManager().Timers()->DeleteTimer(timer, timer->IsRecording(), false) == TimerOperationResult::OK)
     return ACK;
 
   return Fail(result, FailedToExecute, Reason::BackendRefused);
 }
 
-JSONRPC_STATUS CPVROperations::ToggleTimer(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::ToggleTimer(const CVariant& parameterObject,
+                                           CVariant& result)
 {
   auto& pvrManager{CServiceBroker::GetPVRManager()};
   std::shared_ptr<CPVREpgInfoTag> epgTag;
+
   if (const JSONRPC_STATUS status =
           FindBroadcast("broadcastId", parameterObject["broadcastId"], epgTag, result);
       status != OK)
@@ -635,7 +656,8 @@ JSONRPC_STATUS CPVROperations::ToggleTimer(const CVariant& parameterObject, CVar
   return Fail(result, FailedToExecute, Reason::BackendRefused);
 }
 
-JSONRPC_STATUS CPVROperations::GetRecordings(const CVariant& parameterObject, CVariant& result)
+JSONRPC_STATUS CPVROperations::GetRecordings(const CVariant& parameterObject,
+                                             CVariant& result)
 {
   const std::shared_ptr<const CPVRRecordings> recordings{
       Started(CServiceBroker::GetPVRManager().Recordings())};

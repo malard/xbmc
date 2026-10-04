@@ -20,24 +20,22 @@ class CVariant;
 
 namespace JSONRPC
 {
-class CFileOperations : public CFileItemHandler
-{
-public:
-  static JSONRPC_STATUS GetSources(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetDirectory(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS GetFileDetails(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetFileDetails(const CVariant& parameterObject, CVariant& result);
+  class CFileOperations : public CFileItemHandler
+  {
+  public:
+    static JSONRPC_STATUS GetSources(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetDirectory(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetFileDetails(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS SetFileDetails(const CVariant &parameterObject, CVariant &result);
 
-  static JSONRPC_STATUS PrepareDownload(ITransportLayer* transport,
-                                        IClient* client,
-                                        const CVariant& parameterObject,
-                                        CVariant& result);
+    static JSONRPC_STATUS PrepareDownload(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
 
-  static bool FillFileItem(const std::shared_ptr<CFileItem>& originalItem,
-                           std::shared_ptr<CFileItem>& item,
+    static bool FillFileItem(
+        const std::shared_ptr<CFileItem>& originalItem,
+        std::shared_ptr<CFileItem>& item,
                            std::optional<KODI::MEDIA::MediaSection> section = {},
-                           const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
-  static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
-  static bool NeedsLibraryLookup(const CVariant& parameterObject);
-};
+        const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
+    static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
+    static bool NeedsLibraryLookup(const CVariant& parameterObject);
+  };
 } // namespace JSONRPC

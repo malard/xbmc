@@ -432,8 +432,7 @@ bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
         if (m_album.idAlbum >= 0)
         {
           // Play album
-          const std::string path =
-              StringUtils::Format("{}{}", MUSIC::DB_PATH::ALBUMS, m_album.idAlbum);
+          const std::string path = StringUtils::Format("{}{}", MUSIC::DB_PATH::ALBUMS, m_album.idAlbum);
           OnPlayItem(std::make_shared<CFileItem>(path, m_album));
           return true;
         }
@@ -921,7 +920,9 @@ void CGUIDialogMusicInfo::OnGetArt()
       CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC));
   CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_item);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
+  if (CGUIDialogFileBrowser::ShowAndGetImage(
+          items, sources, localizeStrings.Get(13511),
+          result) &&
       result != ART::CHOICE::CURRENT)
   {
     // User didn't choose the one they have.
@@ -1023,13 +1024,11 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(
-        pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MediaType::ARTIST);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MediaType::ARTIST);
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(
-        pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MediaType::ALBUM);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MediaType::ALBUM);
   }
   else
     return; // nothing to do
@@ -1043,7 +1042,7 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
       {
         pDlgMusicInfo->Open();
         if (pItem->GetMusicInfoTag()->GetMediaType() == MediaType::ALBUM &&
-            pDlgMusicInfo->HasUpdatedUserrating())
+          pDlgMusicInfo->HasUpdatedUserrating())
         {
           auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
           if (window)
