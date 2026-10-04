@@ -595,8 +595,7 @@ void CGUIWindowVideoNav::UpdateButtons()
       StringUtils::StartsWith(m_vecItems->Get(m_vecItems->Size()-1)->GetPath(), "/-1/"))
       iItems--;
   }
-  std::string items = StringUtils::Format(
-      "{} {}", iItems, localizeStrings.Get(127));
+  std::string items = StringUtils::Format("{} {}", iItems, localizeStrings.Get(127));
   SET_CONTROL_LABEL(CONTROL_LABELFILES, items);
 
   // set the filter label
@@ -1009,10 +1008,7 @@ bool CGUIWindowVideoNav::OnClick(int iItem, const std::string &player)
 
     //Get the new title
     std::string strTag;
-    if (!CGUIKeyboardFactory::ShowAndGetInput(
-            strTag,
-            CVariant{localizeStrings.Get(20462)},
-            false))
+    if (!CGUIKeyboardFactory::ShowAndGetInput(strTag, CVariant{localizeStrings.Get(20462)}, false))
       return true;
 
     CVideoDatabase videodb;

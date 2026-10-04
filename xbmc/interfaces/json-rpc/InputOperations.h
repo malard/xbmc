@@ -20,8 +20,7 @@ namespace JSONRPC
     static JSONRPC_STATUS SendText(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS ExecuteAction(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS ButtonEvent(const CVariant& parameterObject,
-                                      CVariant& result);
+    static JSONRPC_STATUS ButtonEvent(const CVariant& parameterObject, CVariant& result);
 
     static JSONRPC_STATUS Left(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS Right(const CVariant &parameterObject, CVariant &result);

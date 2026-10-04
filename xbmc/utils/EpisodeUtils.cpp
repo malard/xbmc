@@ -451,8 +451,7 @@ std::string CEpisodeUtils::GetEpisodesLabel(const CFileItem& item)
       if (singleSeason)
       {
         if (endEpisode == startEpisode)
-          labels.push_back(StringUtils::Format(localizeStrings.Get(BASE),
-              startEpisode));
+          labels.push_back(StringUtils::Format(localizeStrings.Get(BASE), startEpisode));
         else
           labels.push_back(StringUtils::Format(localizeStrings.Get(BASE + RANGE),
               startEpisode, endEpisode));
@@ -475,8 +474,7 @@ std::string CEpisodeUtils::GetEpisodesLabel(const CFileItem& item)
 
   // Generate label
   using namespace KODI::LANGUAGE::I18N;
-  const auto fmt =
-      CListFormatter::CreateInstance(localizeStrings);
+  const auto fmt = CListFormatter::CreateInstance(localizeStrings);
   const std::string label{fmt.Format(labels)};
 
   return label;

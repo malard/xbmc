@@ -171,9 +171,7 @@ public:
 
   //! Connections stop answering at stallAt: the first only, or every one
   CStallingFileCacheSource(int64_t stallAt, bool everyConnection, int failingConnection)
-    : m_stallAt(stallAt),
-      m_everyConnection(everyConnection),
-      m_failingConnection(failingConnection)
+    : m_stallAt(stallAt), m_everyConnection(everyConnection), m_failingConnection(failingConnection)
   {
   }
 

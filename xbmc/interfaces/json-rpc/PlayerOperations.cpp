@@ -476,8 +476,7 @@ JSONRPC_STATUS CPlayerOperations::Stop(const CVariant &parameterObject, CVariant
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::GetAudioDelay(const CVariant& parameterObject,
-                                                CVariant& result)
+JSONRPC_STATUS CPlayerOperations::GetAudioDelay(const CVariant& parameterObject, CVariant& result)
 {
   const auto appPlayer = AppPlayer();
   result["offset"] = appPlayer->GetVideoSettings().m_AudioDelay;
@@ -596,8 +595,7 @@ JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant &parameterObject, CVar
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetTempo(const CVariant& parameterObject,
-                                           CVariant& result)
+JSONRPC_STATUS CPlayerOperations::SetTempo(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
       parameterObject, result,
@@ -1162,8 +1160,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant &parameterObject, CVariant
     if (!groupMember)
       return InvalidParams;
 
-    if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(
-            CFileItem(groupMember)))
+    if (!pvrManager.Get<PVR::GUI::Playback>().PlayMedia(CFileItem(groupMember)))
       return Fail(result, FailedToExecute, Reason::PlaybackRefused);
 
     return ACK;
@@ -1687,8 +1684,7 @@ JSONRPC_STATUS CPlayerOperations::ForEachOnList(
 
 bool CPlayerOperations::IsAnythingPlaying()
 {
-  return AppPlayer()->IsPlaying() ||
-      CServiceBroker::GetPlayLists()->IsSlideShowRunning();
+  return AppPlayer()->IsPlaying() || CServiceBroker::GetPlayLists()->IsSlideShowRunning();
 }
 
 std::optional<PLAYLIST::Type> CPlayerOperations::GetPlayList(PlayerType player,
@@ -1985,8 +1981,7 @@ std::shared_ptr<CPVREpgInfoTag> CPlayerOperations::GetCurrentEpg()
   return currentChannel->GetEPGNow();
 }
 
-JSONRPC_STATUS CPlayerOperations::GetChapters(const CVariant& parameterObject,
-                                              CVariant& result)
+JSONRPC_STATUS CPlayerOperations::GetChapters(const CVariant& parameterObject, CVariant& result)
 {
   const auto appPlayer = AppPlayer();
 

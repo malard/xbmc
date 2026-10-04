@@ -169,8 +169,7 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
     if (!bSwitchToFullscreen)
     {
       recording = pvrManager.Recordings()->GetRecordingForEpgTag(channel->GetEPGNow());
-      bSwitchToFullscreen =
-          recording && pvrManager.PlaybackState()->IsPlayingRecording(recording);
+      bSwitchToFullscreen = recording && pvrManager.PlaybackState()->IsPlayingRecording(recording);
     }
 
     if (bSwitchToFullscreen)
@@ -245,9 +244,7 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
             ? channel->ChannelName()
             : localizeStrings.Get(19029); // Channel
     // CHANNELNAME could not be played.
-    const std::string msg =
-        StringUtils::Format(localizeStrings.Get(19035),
-                            channelName);
+    const std::string msg = StringUtils::Format(localizeStrings.Get(19035), channelName);
 
     CGUIDialogKaiToast::QueueNotification(
         CGUIDialogKaiToast::Error, localizeStrings.Get(19166),

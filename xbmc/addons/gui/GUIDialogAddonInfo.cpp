@@ -190,10 +190,8 @@ void CGUIDialogAddonInfo::UpdateControls(PerformButtonFocus performButtonFocus)
   const auto& itemAddonInfo = m_item->GetAddonInfo();
   bool isInstalled = addonMgr.IsAddonInstalled(
       itemAddonInfo->ID(), itemAddonInfo->Origin(), itemAddonInfo->Version());
-  m_addonEnabled =
-      m_localAddon && !addonMgr.IsAddonDisabled(m_localAddon->ID());
-  bool canDisable =
-      isInstalled && addonMgr.CanAddonBeDisabled(m_localAddon->ID());
+  m_addonEnabled = m_localAddon && !addonMgr.IsAddonDisabled(m_localAddon->ID());
+  bool canDisable = isInstalled && addonMgr.CanAddonBeDisabled(m_localAddon->ID());
   bool canInstall = !isInstalled && itemAddonInfo->LifecycleState() != AddonLifecycleState::BROKEN;
   bool canUninstall = m_localAddon && addonMgr.CanUninstall(m_localAddon);
 
@@ -445,8 +443,7 @@ void CGUIDialogAddonInfo::OnToggleAutoUpdates()
     if (selected)
       addonMgr.RemoveAllUpdateRulesFromList(m_localAddon->ID());
     else
-      addonMgr.AddUpdateRuleToList(m_localAddon->ID(),
-                                                        AddonUpdateRule::USER_DISABLED_AUTO_UPDATE);
+      addonMgr.AddUpdateRuleToList(m_localAddon->ID(), AddonUpdateRule::USER_DISABLED_AUTO_UPDATE);
 
     bool showUpdateButton = (selected && m_item->GetProperty(ITEM::PROPERTY::ADDON_HAS_UPDATE).asBoolean());
 

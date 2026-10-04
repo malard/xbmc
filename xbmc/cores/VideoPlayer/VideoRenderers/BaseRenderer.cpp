@@ -474,8 +474,7 @@ void CBaseRenderer::SetViewMode(int viewMode)
   CDisplaySettings::GetInstance().SetVerticalShift(0.0f);
   CDisplaySettings::GetInstance().SetNonLinearStretched(false);
 
-  if (mode == ViewModeZoom ||
-       (is43 && stretch43 == ViewModeZoom))
+  if (mode == ViewModeZoom || (is43 && stretch43 == ViewModeZoom))
   { // zoom image so no black bars
     CDisplaySettings::GetInstance().SetPixelRatio(1.0);
     // calculate the desired output ratio
@@ -498,8 +497,7 @@ void CBaseRenderer::SetViewMode(int viewMode)
     // fOutputFrameRatio = 4:3.
     CDisplaySettings::GetInstance().SetPixelRatio((4.0f / 3.0f) / sourceFrameRatio);
   }
-  else if (mode == ViewModeWideZoom ||
-           (is43 && stretch43 == ViewModeWideZoom))
+  else if (mode == ViewModeWideZoom || (is43 && stretch43 == ViewModeWideZoom))
   { // super zoom
     float stretchAmount = (screenWidth / screenHeight) * info.fPixelRatio / sourceFrameRatio;
     CDisplaySettings::GetInstance().SetPixelRatio(pow(stretchAmount, float(2.0/3.0)));

@@ -180,8 +180,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
 
     m_musicDatabase->Close();
   }
-  else if (!tag.GetArtist().empty() &&
-           (tag.GetType().empty() || mediaType == MediaType::SONG))
+  else if (!tag.GetArtist().empty() && (tag.GetType().empty() || mediaType == MediaType::SONG))
   {
     /*
     Could be non-library song - has musictag but no ID or type (may have

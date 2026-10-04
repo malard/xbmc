@@ -468,8 +468,7 @@ static void OutdatedAddons(const CURL& path, CFileItemList &items)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   VECADDONS addons = CServiceBroker::GetAddonMgr().GetAvailableUpdates();
-  CAddonsDirectory::GenerateAddonListing(
-      path, addons, items, localizeStrings.Get(24043));
+  CAddonsDirectory::GenerateAddonListing(path, addons, items, localizeStrings.Get(24043));
 
   if (!items.IsEmpty())
   {
@@ -784,8 +783,7 @@ void CAddonsDirectory::GenerateAddonListing(const CURL& path,
     itemPath.SetFileName(addon->ID());
     CFileItemPtr pItem = FileItemFromAddon(addon, itemPath.Get(), false);
 
-    bool installed = addonMgr.IsAddonInstalled(addon->ID(), addon->Origin(),
-                                                                    addon->Version());
+    bool installed = addonMgr.IsAddonInstalled(addon->ID(), addon->Origin(), addon->Version());
     bool disabled = addonMgr.IsAddonDisabled(addon->ID());
 
     bool isUpdate{false};

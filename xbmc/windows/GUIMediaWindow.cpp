@@ -1089,8 +1089,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     // execute the script
     CURL url(pItem->GetPath());
     AddonPtr addon;
-    if (addonMgr.GetAddon(url.GetHostName(), addon, AddonType::SCRIPT,
-                                               OnlyEnabled::CHOICE_YES))
+    if (addonMgr.GetAddon(url.GetHostName(), addon, AddonType::SCRIPT, OnlyEnabled::CHOICE_YES))
     {
       if (!CScriptInvocationManager::GetInstance().Stop(addon->LibPath()))
       {

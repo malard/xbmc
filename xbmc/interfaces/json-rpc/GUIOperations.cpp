@@ -154,8 +154,7 @@ JSONRPC_STATUS CGUIOperations::ActivateScreenSaver(const CVariant& parameterObje
   return ACK;
 }
 
-JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject,
-                                              CVariant& result)
+JSONRPC_STATUS CGUIOperations::TakeScreenshot(const CVariant& parameterObject, CVariant& result)
 {
   using KODI::RENDERING::CAPTURE::CaptureContent;
 

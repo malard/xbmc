@@ -42,12 +42,9 @@ namespace JSONRPC
     static JSONRPC_STATUS SetSettingValue(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS ResetSettingValue(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS GetSkinSettings(const CVariant& parameterObject,
-                                          CVariant& result);
-    static JSONRPC_STATUS GetSkinSettingValue(const CVariant& parameterObject,
-                                              CVariant& result);
-    static JSONRPC_STATUS SetSkinSettingValue(const CVariant& parameterObject,
-                                              CVariant& result);
+    static JSONRPC_STATUS GetSkinSettings(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetSkinSettingValue(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetSkinSettingValue(const CVariant& parameterObject, CVariant& result);
 
   private:
   static bool SerializeISetting(const std::shared_ptr<const ISetting>& setting, CVariant& obj);

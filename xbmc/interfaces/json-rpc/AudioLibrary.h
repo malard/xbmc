@@ -77,8 +77,7 @@ class CAudioLibrary : public CFileItemHandler
     static JSONRPC_STATUS GetAdditionalSongDetails(const CVariant& parameterObject,
                                                    const CFileItemList& items,
                                                    CMusicDatabase& musicdatabase);
-    static JSONRPC_STATUS RefreshArtist(const CVariant& parameterObject,
-                                        CVariant& result);
+    static JSONRPC_STATUS RefreshArtist(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS RefreshAlbum(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetInfoProvider(const CVariant& parameterObject, CVariant& result);
 

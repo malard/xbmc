@@ -435,8 +435,7 @@ bool IsNonExistingUserPartyModePlaylist(const CFileItem& item)
     return false;
 
   const std::string& path{item.GetPath()};
-  return path == PARTYMODE::RulesPath(PLAYLIST::Video) &&
-          !CFileUtils::Exists(path);
+  return path == PARTYMODE::RulesPath(PLAYLIST::Video) && !CFileUtils::Exists(path);
 }
 
 bool IsEmptyVideoItem(const CFileItem& item)

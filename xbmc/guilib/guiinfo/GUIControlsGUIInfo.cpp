@@ -132,14 +132,12 @@ bool CGUIControlsGUIInfo::GetLabel(std::string& value,
         {
           if (info.GetInfo() == CONTAINER_SORT_METHOD)
           {
-            value = localizeStrings.Get(
-                viewState->GetSortMethodLabel());
+            value = localizeStrings.Get(viewState->GetSortMethodLabel());
             return true;
           }
           else if (info.GetInfo() == CONTAINER_SORT_ORDER)
           {
-            value = localizeStrings.Get(
-                viewState->GetSortOrderLabel());
+            value = localizeStrings.Get(viewState->GetSortOrderLabel());
             return true;
           }
         }

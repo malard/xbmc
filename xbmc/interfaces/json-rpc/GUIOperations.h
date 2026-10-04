@@ -36,8 +36,7 @@ namespace JSONRPC
 
     static JSONRPC_STATUS SetScreenAlignment(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS GetScreenAlignment(const CVariant& parameterObject,
-                                         CVariant& result);
+    static JSONRPC_STATUS GetScreenAlignment(const CVariant& parameterObject, CVariant& result);
 
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);

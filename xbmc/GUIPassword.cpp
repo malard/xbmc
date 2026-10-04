@@ -105,8 +105,7 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
       {
         // password entry failed
         KODI::UTILS::CLockInfo& lockInfo{pItem->GetLockInfo()};
-        if (0 != settings->GetInt(
-                     CSettings::SETTING_MASTERLOCK_MAXRETRIES))
+        if (0 != settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES))
           lockInfo.IncrementBadPasswordCount();
         mediaSources.UpdateSource(section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
         mediaSources.Save();

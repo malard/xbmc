@@ -2082,14 +2082,11 @@ std::shared_ptr<CFileItem> GenerateEpisodeItem(const CURL& url,
       buf = localizeStrings.Get(21350); /* Special */
     else
       /* Special xx - title */
-      buf = StringUtils::Format(localizeStrings.Get(21348), episode.iEpisode,
-          episode.strTitle);
+      buf = StringUtils::Format(localizeStrings.Get(21348), episode.iEpisode, episode.strTitle);
   }
   else
     /* Episode xx - title */
-    buf =
-        StringUtils::Format(localizeStrings.Get(21349),
-                            episode.iEpisode, episode.strTitle);
+    buf = StringUtils::Format(localizeStrings.Get(21349), episode.iEpisode, episode.strTitle);
   item->SetTitle(buf);
   item->SetLabel(buf);
 

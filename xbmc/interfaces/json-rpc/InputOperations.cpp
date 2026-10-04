@@ -93,8 +93,7 @@ JSONRPC_STATUS CInputOperations::ExecuteAction(const CVariant &parameterObject, 
   return SendAction(action);
 }
 
-JSONRPC_STATUS CInputOperations::ButtonEvent(const CVariant& parameterObject,
-                                             CVariant& result)
+JSONRPC_STATUS CInputOperations::ButtonEvent(const CVariant& parameterObject, CVariant& result)
 {
   std::string button = parameterObject["button"].asString();
   std::string keymap = parameterObject["keymap"].asString();

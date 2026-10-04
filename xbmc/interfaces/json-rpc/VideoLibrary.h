@@ -73,8 +73,7 @@ class CVideoLibrary : public CFileItemHandler
     static JSONRPC_STATUS RemoveMusicVideo(const CVariant &parameterObject, CVariant &result);
 
     static JSONRPC_STATUS Scan(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSourceContent(const CVariant& parameterObject,
-                                           CVariant& result);
+    static JSONRPC_STATUS SetSourceContent(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS Export(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS Clean(const CVariant &parameterObject, CVariant &result);
 

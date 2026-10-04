@@ -328,9 +328,7 @@ void CPeripheralBus::GetDirectory(const std::string& strPath, CFileItemList& ite
     {
       std::string strVersion(peripheral->GetVersionInfo());
       if (!strVersion.empty())
-        strDetails = StringUtils::Format(
-            "{} {}", localizeStrings.Get(24051),
-            strVersion);
+        strDetails = StringUtils::Format("{} {}", localizeStrings.Get(24051), strVersion);
     }
 
     peripheralFile->SetProperty("version", strVersion);

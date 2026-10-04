@@ -124,8 +124,7 @@ static int RunAddon(const std::vector<std::string>& params)
     const std::string& addonid = params[0];
 
     AddonPtr addon;
-    if (addonMgr.GetAddon(addonid, addon, AddonType::PLUGIN,
-                                               OnlyEnabled::CHOICE_YES))
+    if (addonMgr.GetAddon(addonid, addon, AddonType::PLUGIN, OnlyEnabled::CHOICE_YES))
     {
       const auto plugin = std::dynamic_pointer_cast<CPluginSource>(addon);
       std::string urlParameters;
@@ -181,8 +180,7 @@ static int RunAddon(const std::vector<std::string>& params)
       // quotes.
       RunScript(params);
     }
-    else if (addonMgr.GetAddon(addonid, addon, AddonType::GAMEDLL,
-                                                    OnlyEnabled::CHOICE_YES))
+    else if (addonMgr.GetAddon(addonid, addon, AddonType::GAMEDLL, OnlyEnabled::CHOICE_YES))
     {
       CFileItem item;
 

@@ -326,8 +326,7 @@ CGUIViewStateMusicDatabase::CGUIViewStateMusicDatabase(const CFileItemList& item
                     LABEL_MASKS("%T - %A", "%r")); // Title - Artist, UserRating
       AddSortMethod(SortBy::YEAR, 562, LABEL_MASKS("%T - %A", "%Y")); // Title, Artist, Year
       // original release date  (singles can be re-released)
-      if (!settings->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+      if (!settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
         AddSortMethod(SortBy::ORIG_DATE, 38079,
                       LABEL_MASKS("%T - %A", "%e")); // Title, Artist, Original Date
       AddSortMethod(SortBy::DATE_ADDED, 570,
@@ -366,8 +365,7 @@ CGUIViewStateMusicDatabase::CGUIViewStateMusicDatabase(const CFileItemList& item
                     LABEL_MASKS("%T - %A", "%r")); // Title - Artist, UserRating
       AddSortMethod(SortBy::YEAR, 562, LABEL_MASKS("%T - %A", "%Y")); // Title, Artist, Year
       // original release date
-      if (!settings->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+      if (!settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
         AddSortMethod(SortBy::ORIG_DATE, 38079,
                       LABEL_MASKS("%T - %A", "%e")); // Title, Artist, Original Date
       AddSortMethod(SortBy::DATE_ADDED, 570,
@@ -474,8 +472,7 @@ CGUIViewStateMusicSmartPlaylist::CGUIViewStateMusicSmartPlaylist(const CFileItem
                   LABEL_MASKS("%T - %A", "%a")); // Title - Artist, DateAdded | empty, empty
     AddSortMethod(SortBy::PLAYCOUNT, 567,
                   LABEL_MASKS("%T - %A", "%V")); // Title - Artist, PlayCount
-    if (!settings->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
       AddSortMethod(SortBy::ORIG_DATE, 38079,
                     LABEL_MASKS("%T - %A", "%e")); // Title - Artist, original date, empty, empty
     AddSortMethod(SortBy::BPM, 38080,
@@ -583,8 +580,7 @@ CGUIViewStateWindowMusicNav::CGUIViewStateWindowMusicNav(const CFileItemList& it
   {
     // the first item after the parent folder, if one is shown
     const int firstItem{settings->GetBool(CSettings::SETTING_FILELISTS_SHOWPARENTDIRITEMS) ? 1 : 0};
-    if (VIDEO::IsVideoDb(items) &&
-        items.Size() > firstItem)
+    if (VIDEO::IsVideoDb(items) && items.Size() > firstItem)
     {
       XFILE::VIDEODATABASEDIRECTORY::CQueryParams params;
       XFILE::CVideoDatabaseDirectory::GetQueryParams(items[firstItem]->GetPath(), params);

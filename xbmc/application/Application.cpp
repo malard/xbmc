@@ -1474,8 +1474,7 @@ void CApplication::FrameMove(bool processEvents, bool processGUI)
     // Dirty-driven skip: on paths with a persistent framebuffer (D2P plane or
     // HDR GUI compositing FBO), skip Render when no controls dirtied themselves
     // this frame. The persistence keeps the previous OSD on screen for free.
-    if (!m_skipGuiRender && appPlayer->IsRenderingVideoLayer() &&
-        !windowManager.HasDirtyRegions())
+    if (!m_skipGuiRender && appPlayer->IsRenderingVideoLayer() && !windowManager.HasDirtyRegions())
       m_skipGuiRender = true;
     windowManager.FrameMove();
   }

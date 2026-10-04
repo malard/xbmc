@@ -385,8 +385,7 @@ public:
       "videoscreen.contentgeometryleadin";
   static constexpr auto SETTING_VIDEOSCREEN_CONTENTGEOMETRYLEADOUT =
       "videoscreen.contentgeometryleadout";
-  static constexpr auto SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY =
-      "videoscreen.livecontentgeometry";
+  static constexpr auto SETTING_VIDEOSCREEN_LIVECONTENTGEOMETRY = "videoscreen.livecontentgeometry";
   static constexpr auto SETTING_VIDEOSCREEN_LIVEGEOMETRYNARROW = "videoscreen.livegeometrynarrow";
   static constexpr auto SETTING_VIDEOSCREEN_SCREENALIGNMENT = "videoscreen.screenalignment";
 

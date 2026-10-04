@@ -735,13 +735,11 @@ bool CSettingsOperations::SerializeSettingControl(
   {
     const auto spinner = std::static_pointer_cast<const CSettingControlSpinner>(control);
     if (spinner->GetFormatLabel() >= 0)
-      obj["formatLabel"] = Localize(
-          spinner->GetFormatLabel());
+      obj["formatLabel"] = Localize(spinner->GetFormatLabel());
     else if (!spinner->GetFormatString().empty() && spinner->GetFormatString() != "{:d}")
       obj["formatLabel"] = spinner->GetFormatString();
     if (spinner->GetMinimumLabel() >= 0)
-      obj["minimumLabel"] = Localize(
-          spinner->GetMinimumLabel());
+      obj["minimumLabel"] = Localize(spinner->GetMinimumLabel());
   }
   else if (type == "edit")
   {
@@ -771,8 +769,7 @@ bool CSettingsOperations::SerializeSettingControl(
       obj["heading"] = Localize(slider->GetHeading());
     obj["popup"] = slider->UsePopup();
     if (slider->GetFormatLabel() >= 0)
-      obj["formatLabel"] = Localize(
-          slider->GetFormatLabel());
+      obj["formatLabel"] = Localize(slider->GetFormatLabel());
     else
       obj["formatLabel"] = slider->GetFormatString();
   }
@@ -784,8 +781,7 @@ bool CSettingsOperations::SerializeSettingControl(
     else
       obj["formatLabel"] = "";
     if (range->GetValueFormatLabel() >= 0)
-      obj["formatValue"] = Localize(
-          range->GetValueFormatLabel());
+      obj["formatValue"] = Localize(range->GetValueFormatLabel());
     else
       obj["formatValue"] = range->GetValueFormat();
   }

@@ -40,8 +40,7 @@ JSONRPC_STATUS CProfilesOperations::GetProfiles(const CVariant &parameterObject,
 
   for (CVariant::const_iterator_array propertyiter = parameterObject["properties"].begin_array(); propertyiter != parameterObject["properties"].end_array(); ++propertyiter)
   {
-    if (propertyiter->isString() &&
-        propertyiter->asString() == "lockMode")
+    if (propertyiter->isString() && propertyiter->asString() == "lockMode")
     {
       for (CVariant::iterator_array profileiter = result["profiles"].begin_array(); profileiter != result["profiles"].end_array(); ++profileiter)
       {

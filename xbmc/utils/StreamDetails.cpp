@@ -180,9 +180,7 @@ CStreamDetailSubtitle::CStreamDetailSubtitle() :
 }
 
 CStreamDetailSubtitle::CStreamDetailSubtitle(const SubtitleStreamInfo& info, Source source)
-  : CStreamDetail(CStreamDetail::SUBTITLE),
-    m_language(info.language),
-    m_flags(info.flags)
+  : CStreamDetail(CStreamDetail::SUBTITLE), m_language(info.language), m_flags(info.flags)
 {
   m_source = source;
 }

@@ -153,8 +153,7 @@ public:
       loaded when the playlist is shown.
       */
     bool clearcache(false);
-    const auto playLists =
-        CServiceBroker::GetPlayLists();
+    const auto playLists = CServiceBroker::GetPlayLists();
 
     for (const auto& entry : playLists->GetPlayList(PLAYLIST::Audio).GetEntries())
     {
@@ -449,8 +448,7 @@ class CAsyncGetItemsForPlaylist : public IRunnable, private PLAYLIST::IEntryRule
 public:
   CAsyncGetItemsForPlaylist(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems,
                             const std::shared_ptr<CFileItem>& startAt)
-    : m_item(item), m_queuedItems(queuedItems),
-      m_startAt(startAt)
+    : m_item(item), m_queuedItems(queuedItems), m_startAt(startAt)
   {
   }
 

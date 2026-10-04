@@ -9573,8 +9573,7 @@ std::string CMusicDatabase::GetArtistsLastModified() const
   return GetSingleValue("SELECT MAX(dateModified) FROM artist");
 }
 
-unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter,
-                                              std::vector<int>& songIDs)
+unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs)
 {
   try
   {

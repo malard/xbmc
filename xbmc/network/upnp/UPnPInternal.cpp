@@ -381,9 +381,7 @@ NPT_Result PopulateObjectFromTag(CMusicInfoTag& tag,
     object.m_People.artists.Add(artist.c_str());
     object.m_People.artists.Add(artist.c_str(), "Performer");
   }
-  object.m_People.artists.Add(AlbumArtistOrArtist(tag)
-          .c_str(),
-      "AlbumArtist");
+  object.m_People.artists.Add(AlbumArtistOrArtist(tag).c_str(), "AlbumArtist");
   object.m_Creator = AlbumArtistOrArtist(tag).c_str();
   object.m_MiscInfo.original_track_number = tag.GetTrackNumber();
   if (tag.GetDatabaseId() >= 0)

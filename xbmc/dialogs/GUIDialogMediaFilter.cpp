@@ -850,9 +850,7 @@ void CGUIDialogMediaFilter::GetRange(const Filter &filter, int &min, int &interv
       const MediaType type{MediaTypeFromName(m_mediaType)};
 
       CDatabase::Filter filter;
-      filter.where = DatabaseUtils::GetField(Field::YEAR, type,
-                                             DatabaseQueryPart::WHERE) +
-                     " > 0";
+      filter.where = DatabaseUtils::GetField(Field::YEAR, type, DatabaseQueryPart::WHERE) + " > 0";
       GetMinMax(table,
                 DatabaseUtils::GetField(Field::YEAR, type,
                                         DatabaseQueryPart::SELECT),

@@ -375,13 +375,11 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         break;
       case VIDEOPLAYER_STUDIO:
       case LISTITEM_STUDIO:
-        value = StringUtils::Join(
-            tag->m_studio, advancedSettings->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_studio, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_COUNTRY:
       case LISTITEM_COUNTRY:
-        value = StringUtils::Join(
-            tag->m_country, advancedSettings->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_country, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_MPAA:
       case LISTITEM_MPAA:
@@ -405,8 +403,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         return true;
       case VIDEOPLAYER_ARTIST:
       case LISTITEM_ARTIST:
-        value = StringUtils::Join(
-            tag->m_artist, advancedSettings->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_artist, advancedSettings->m_videoItemSeparator);
         return true;
       case VIDEOPLAYER_ALBUM:
       case LISTITEM_ALBUM:
@@ -482,8 +479,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         value = tag->m_strStatus;
         return true;
       case LISTITEM_TAG:
-        value = StringUtils::Join(
-            tag->m_tags, advancedSettings->m_videoItemSeparator);
+        value = StringUtils::Join(tag->m_tags, advancedSettings->m_videoItemSeparator);
         return true;
       case LISTITEM_SET:
         value = tag->m_set.GetTitle();

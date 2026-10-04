@@ -149,8 +149,7 @@ bool CFileItemHandler::GetField(const std::string& field,
       }
       else if (field == "isRecording")
       {
-        result[field] = pvrManager.Timers()->IsRecordingOnChannel(
-            *item->GetPVRChannelInfoTag());
+        result[field] = pvrManager.Timers()->IsRecordingOnChannel(*item->GetPVRChannelInfoTag());
         return true;
       }
       else if (field == "broadcastNow" || field == "broadcastNext")

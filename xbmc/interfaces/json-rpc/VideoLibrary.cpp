@@ -873,8 +873,7 @@ JSONRPC_STATUS CVideoLibrary::Scan(const CVariant &parameterObject, CVariant &re
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::SetSourceContent(const CVariant& parameterObject,
-                                               CVariant& result)
+JSONRPC_STATUS CVideoLibrary::SetSourceContent(const CVariant& parameterObject, CVariant& result)
 {
   ParsedSetSourceContent parsed;
   const JSONRPC_STATUS status = ParseSetSourceContentParams(parameterObject, parsed);

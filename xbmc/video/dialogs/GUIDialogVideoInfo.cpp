@@ -1087,8 +1087,7 @@ int CGUIDialogVideoInfo::ManageVideoItem(const std::shared_ptr<CFileItem>& item)
     buttons.Add(CONTEXT_BUTTON_MANAGE_VIDEOVERSIONS, 40001); // Manage versions
   }
 
-  if (type == MediaType::EPISODE &&
-      item->GetVideoInfoTag()->m_iBookmarkId > 0)
+  if (type == MediaType::EPISODE && item->GetVideoInfoTag()->m_iBookmarkId > 0)
     buttons.Add(CONTEXT_BUTTON_UNLINK_BOOKMARK, 20405);
 
   if (type == MediaType::VIDEO_COLLECTION || (type == MediaType::MOVIE) || type == MediaType::TV_SHOW ||
@@ -1620,8 +1619,7 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
     return false;
 
   dialog->Reset();
-  dialog->SetHeading(
-      CVariant{localizeStrings.Get(20466)});
+  dialog->SetHeading(CVariant{localizeStrings.Get(20466)});
   dialog->SetItems(listItems);
   if (currentSetId >= 0)
   {
@@ -1918,8 +1916,7 @@ bool CGUIDialogVideoInfo::ManageVideoItemArtwork(const std::shared_ptr<CFileItem
   const std::vector<std::string> remoteArt = asyncArtHandler.GetRemoteArt();
   for (size_t i = 0; i < remoteArt.size(); ++i)
   {
-    const auto itemRemote =
-        std::make_shared<CFileItem>(ART::CHOICE::RemoteOf(i), false);
+    const auto itemRemote = std::make_shared<CFileItem>(ART::CHOICE::RemoteOf(i), false);
     itemRemote->SetArt(ART::TYPE::THUMB, remoteArt[i]);
     itemRemote->SetArt(ART::TYPE::ICON, "DefaultPicture.png");
     itemRemote->SetLabel(localizeStrings.Get(13513));

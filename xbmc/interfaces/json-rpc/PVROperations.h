@@ -37,15 +37,12 @@ namespace JSONRPC
     static JSONRPC_STATUS GetChannelGroupDetails(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetChannels(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetChannelDetails(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetClients(const CVariant& parameterObject,
-                                     CVariant& result);
+    static JSONRPC_STATUS GetClients(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetBroadcasts(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetBroadcastsByChannelGroup(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetBroadcastDetails(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetBroadcastIsPlayable(const CVariant& parameterObject,
-                                                 CVariant& result);
-    static JSONRPC_STATUS GetPlayableBroadcasts(const CVariant& parameterObject,
-                                                CVariant& result);
+    static JSONRPC_STATUS GetBroadcastIsPlayable(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetPlayableBroadcasts(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetTimers(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetTimerDetails(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetRecordings(const CVariant &parameterObject, CVariant &result);

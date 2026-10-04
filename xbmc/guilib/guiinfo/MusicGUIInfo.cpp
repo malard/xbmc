@@ -684,9 +684,7 @@ bool CMusicGUIInfo::GetBool(bool& value,
         value = m_playLists->HasEntry(PLAYLIST::Audio, index);
         return true;
       }
-      value =
-          (index >= 0 &&
-           index < m_playLists->GetPlayList(PLAYLIST::Audio).Size());
+      value = (index >= 0 && index < m_playLists->GetPlayList(PLAYLIST::Audio).Size());
       return true;
     }
     case MUSICPLAYER_ISMULTIDISC:

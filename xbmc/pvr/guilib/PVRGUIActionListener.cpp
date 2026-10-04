@@ -378,8 +378,7 @@ void CPVRGUIActionListener::OnSettingAction(const std::shared_ptr<const CSetting
   {
     if (pvrManager.IsStarted())
     {
-      CGUIDialog* dialog = windowManager.GetDialog(
-          WINDOW_DIALOG_PVR_CLIENT_PRIORITIES);
+      CGUIDialog* dialog = windowManager.GetDialog(WINDOW_DIALOG_PVR_CLIENT_PRIORITIES);
       if (dialog)
       {
         dialog->Open();

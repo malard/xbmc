@@ -338,8 +338,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
     case NodeType::TITLE_MOVIES:
       if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::MOVIE_TITLES))
       {
-        if (settings->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMovies.png";
         return "DefaultMovieTitle.png";
       }
@@ -347,8 +346,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
     case NodeType::TITLE_TVSHOWS:
       if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::TVSHOW_TITLES))
       {
-        if (settings->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultTVShows.png";
         return "DefaultTVShowTitle.png";
       }
@@ -356,8 +354,7 @@ std::string CVideoDatabaseDirectory::GetIcon(const std::string &strDirectory)
     case NodeType::TITLE_MUSICVIDEOS:
       if (URIUtils::PathEquals(path, KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES))
       {
-        if (settings->GetBool(
-                CSettings::SETTING_MYVIDEOS_FLATTEN))
+        if (settings->GetBool(CSettings::SETTING_MYVIDEOS_FLATTEN))
           return "DefaultMusicVideos.png";
         return "DefaultMusicVideoTitle.png";
       }

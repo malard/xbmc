@@ -1120,8 +1120,7 @@ int CAirPlayServer::CTCPClient::ProcessRequest( std::string& responseHeader,
               CLog::Log(LOGWARNING, "AIRPLAY: Asset {} not found in our cache.", photoCacheId);
           }
           else
-            appMessenger->PostMsg(TMSG_PICTURE_SHOW, -1, -1, nullptr,
-                                                       tmpFileName);
+            appMessenger->PostMsg(TMSG_PICTURE_SHOW, -1, -1, nullptr, tmpFileName);
         }
         else
         {

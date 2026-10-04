@@ -399,8 +399,7 @@ void CFileCache::Process()
       if (!cacheReachEOF || !m_sourcePositionValid)
       {
         // A source closed by a failed reconnect is reopened rather than sought
-        const int64_t sourceSeekResult = m_sourceOpen
-                                             ? m_source->Seek(cacheMaxPos, SEEK_SET)
+        const int64_t sourceSeekResult = m_sourceOpen ? m_source->Seek(cacheMaxPos, SEEK_SET)
                                              : (ReopenSource(cacheMaxPos) ? cacheMaxPos : -1);
         const DWORD sourceSeekError = GetLastError();
         if (sourceSeekResult != cacheMaxPos)

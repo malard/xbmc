@@ -372,8 +372,7 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
     if(genre == std::string::npos)
       strFilename = localizeStrings.Get(260);
     else
-      strFilename = localizeStrings.Get(260) + " - " +
-                    strFileNameAndPath.substr(genre + 1).c_str();
+      strFilename = localizeStrings.Get(260) + " - " + strFileNameAndPath.substr(genre + 1).c_str();
   }
 
   // Windows SMB Network (SMB)

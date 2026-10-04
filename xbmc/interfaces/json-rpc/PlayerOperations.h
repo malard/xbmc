@@ -52,14 +52,11 @@ namespace JSONRPC
 
     static JSONRPC_STATUS PlayPause(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS Stop(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetAudioDelay(const CVariant& parameterObject,
-                                        CVariant& result);
+    static JSONRPC_STATUS GetAudioDelay(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS SetAudioDelay(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS NotifyAudioChainReady(const CVariant& parameterObject,
-                                        CVariant& result);
+  static JSONRPC_STATUS NotifyAudioChainReady(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS SetSpeed(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetTempo(const CVariant& parameterObject,
-                                   CVariant& result);
+    static JSONRPC_STATUS SetTempo(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS Seek(const CVariant &parameterObject, CVariant &result);
 
     static JSONRPC_STATUS Move(const CVariant &parameterObject, CVariant &result);
@@ -81,8 +78,7 @@ namespace JSONRPC
     static JSONRPC_STATUS SetSubtitle(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS SetVideoStream(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS GetChapters(const CVariant& parameterObject,
-                                      CVariant& result);
+    static JSONRPC_STATUS GetChapters(const CVariant& parameterObject, CVariant& result);
 
 protected:
   //! Lists a directory as a slideshow would: pictures apart from the playable media, which stays

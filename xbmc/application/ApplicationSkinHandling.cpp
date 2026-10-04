@@ -100,8 +100,7 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
       windowManager.ActivateWindow(WINDOW_HOME);
       previousRenderingState = RENDERING_STATE::VIDEO;
     }
-    else if (windowManager.GetActiveWindow() ==
-             WINDOW_FULLSCREEN_GAME)
+    else if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_GAME)
     {
       windowManager.ActivateWindow(WINDOW_HOME);
       previousRenderingState = RENDERING_STATE::GAME;
@@ -186,10 +185,8 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
       CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>().get());
   windowManager.AddMsgTarget(m_msgCb);
   windowManager.AddMsgTarget(&g_fontManager);
-  windowManager.AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetTextureCallbackManager());
-  windowManager.AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetStereoscopicsManager());
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetTextureCallbackManager());
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetStereoscopicsManager());
   windowManager.SetCallback(*m_wCb);
 
   //! @todo should be done by GUIComponents

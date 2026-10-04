@@ -347,9 +347,7 @@ bool CUPnPPlayer::QueueNextFile(const CFileItem& file)
   std::string uri, metadata;
   CUPnPPlayerController::CAction* action = nullptr;
 
-  NPT_CHECK_POINTER_LABEL_SEVERE(
-      m_delegate,
-      failed);
+  NPT_CHECK_POINTER_LABEL_SEVERE(m_delegate, failed);
   if (!BuildResource(file, uri, metadata))
     goto failed;
 

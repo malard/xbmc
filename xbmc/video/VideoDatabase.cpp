@@ -2398,8 +2398,7 @@ CVideoDatabase::GetResult CVideoDatabase::TryGetSetInfo(int idSet, CVideoInfoTag
     if (items.Size() == 0)
       return GetResult::NotFound;
 
-    if (items.Size() != 1 ||
-        !items[0]->HasVideoInfoTag())
+    if (items.Size() != 1 || !items[0]->HasVideoInfoTag())
       return GetResult::Error;
 
     details = *(items[0]->GetVideoInfoTag());

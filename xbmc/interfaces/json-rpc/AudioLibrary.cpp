@@ -1127,8 +1127,7 @@ JSONRPC_STATUS CAudioLibrary::GetAdditionalSongDetails(const CVariant& parameter
   return OK;
 }
 
-JSONRPC_STATUS CAudioLibrary::RefreshArtist(const CVariant& parameterObject,
-                                            CVariant& result)
+JSONRPC_STATUS CAudioLibrary::RefreshArtist(const CVariant& parameterObject, CVariant& result)
 {
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -1150,8 +1149,7 @@ JSONRPC_STATUS CAudioLibrary::RefreshArtist(const CVariant& parameterObject,
   return ACK;
 }
 
-JSONRPC_STATUS CAudioLibrary::RefreshAlbum(const CVariant& parameterObject,
-                                           CVariant& result)
+JSONRPC_STATUS CAudioLibrary::RefreshAlbum(const CVariant& parameterObject, CVariant& result)
 {
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
