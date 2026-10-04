@@ -749,8 +749,11 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
           if (!stream->m_paused && m_streams.size() == 1)
           {
             FlushEngine();
-            // Kept output leaves STREAMING set, so the sink keeps the wire alive
-            if (!pauseMsg->keepOutput)
+            // Kept output leaves STREAMING set, so the sink keeps the wire alive. The filler repeats
+            // the last burst, so it is armed only into a gap this stream alone left.
+            if (pauseMsg->keepOutput)
+              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
+            else
             {
               streaming = false;
               m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming,
@@ -758,8 +761,6 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
             }
           }
           stream->m_paused = true;
-          if (pauseMsg->keepOutput)
-            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
           return;
         case CActiveAEControlProtocol::RESUMESTREAM:
           stream = *(CActiveAEStream**)msg->data;
