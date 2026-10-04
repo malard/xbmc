@@ -144,6 +144,11 @@ public:
    */
   bool OnPlaybackAction(const CAction& action);
 
+  /*!
+   \brief Handle the HDR toggle and tone map cycling, which depend on whether video is playing.
+   \return true if \p action was one of them and has been handled
+   */
+  bool OnVideoDisplayAction(const CAction& action);
   void OnNothingToQueueNotify();
   void Pause();
   bool QueueNextFile(const CFileItem &file);
