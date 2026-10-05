@@ -212,7 +212,8 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
     {
       m_unreadableLogged = true;
       CLog::LogF(LOGINFO, "live content geometry: frames not readable ({})",
-                 PixelFormatName(picture.pixelFormat));
+                 PixelFormatName(picture.videoBuffer ? picture.videoBuffer->GetFormat()
+                                                     : picture.pixelFormat));
     }
     SetState("unavailable: decoded frames are not readable");
     return false;
