@@ -1215,8 +1215,11 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant &parameterObject, CVariant
 
   if (list.Size() == 1 && URIUtils::IsPVRRecording(list[0]->GetPath()))
   {
+    if (!pvrManager.IsStarted())
+      return Fail(result, FailedToExecute, Reason::PvrNotStarted);
+
     const std::shared_ptr<const CPVRRecordings> recordingsContainer{pvrManager.Recordings()};
-    if (!pvrManager.IsStarted() || !recordingsContainer)
+    if (!recordingsContainer)
       return Fail(result, FailedToExecute, Reason::PvrNotStarted);
 
     std::shared_ptr<CPVRRecording> recording{list[0]->GetPVRRecordingInfoTag()};
