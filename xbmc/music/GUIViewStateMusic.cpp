@@ -23,7 +23,6 @@
 #include "playlists/PlayListFileItemClassify.h"
 #include "playlists/PlayListTypes.h"
 #include "settings/AdvancedSettings.h"
-#include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
