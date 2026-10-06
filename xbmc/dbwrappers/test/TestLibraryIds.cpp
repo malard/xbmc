@@ -189,8 +189,8 @@ TEST_F(TestMusicLibraryIds, ANewDatabaseNeverReusesAnId)
 TEST(TestLibraryIdsMigration, TheVideoUpgradeKeepsRowsAndStopsIdReuse)
 {
   ExpectTheUpgradeStopsIdReuse<CVideoDatabase>(&CAdvancedSettings::m_databaseVideo,
-                                               "MyVideosLibraryIds", 149, VIDEO_TABLES,
-                                               RestateVideo149);
+                                               "MyVideosLibraryIds", 150, VIDEO_TABLES,
+                                               RestateVideo150);
 }
 
 TEST(TestLibraryIdsMigration, TheMusicUpgradeKeepsRowsAndStopsIdReuse)

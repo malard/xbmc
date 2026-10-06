@@ -1430,6 +1430,11 @@ void CVideoDatabase::UpdateTables(int iVersion)
 
   if (iVersion < 150)
   {
+    m_pDS->exec("ALTER TABLE `sets` ADD strSortSet TEXT");
+  }
+
+  if (iVersion < 151)
+  {
     KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
 
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredAspect float");
@@ -1444,5 +1449,5 @@ void CVideoDatabase::UpdateTables(int iVersion)
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 150;
+  return 151;
 }

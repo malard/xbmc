@@ -165,7 +165,7 @@ void CVideoDatabaseDDL::CreateTables(CDatabase& db)
   CLog::Log(LOGINFO, "create sets table");
   db.ExecuteQuery("CREATE TABLE `sets` ( idSet integer primary key AUTOINCREMENT, strSet text, "
                   "strOverview text, "
-                  "strOriginalSet text)");
+                  "strOriginalSet text, strSortSet text)");
 
   CLog::Log(LOGINFO, "create seasons table");
   db.ExecuteQuery(
@@ -585,6 +585,7 @@ void CVideoDatabaseDDL::CreateViews(CDatabase& db)
       "  `sets`.`strSet` AS strSet,"
       "  `sets`.`strOverview` AS strSetOverview,"
       "  `sets`.`strOriginalSet` as strOriginalSet,"
+      "  `sets`.`strSortSet` AS strSetSortTitle,"
       "  files.strFileName AS strFileName,"
       "  path.strPath AS strPath,"
       "  files.playCount AS playCount,"

@@ -2586,7 +2586,8 @@
         "fanart",
         "thumbnail",
         "art",
-        "plot"
+        "plot",
+        "sortTitle"
       ]
     }
   },
@@ -3368,6 +3369,9 @@
       },
       "plot": {
         "type": "string"
+      },
+      "sortTitle": {
+        "type": "string"
       }
     },
     "required": [
@@ -3385,6 +3389,9 @@
         "$ref": "#/$defs/Optional.Media.Artwork.Set"
       },
       "plot": {
+        "$ref": "#/$defs/Optional.String"
+      },
+      "sortTitle": {
         "$ref": "#/$defs/Optional.String"
       }
     },

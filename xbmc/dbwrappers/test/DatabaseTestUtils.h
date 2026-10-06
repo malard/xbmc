@@ -56,13 +56,13 @@ inline bool UpgradeThroughManager(DatabaseSettings CAdvancedSettings::* slot,
 }
 
 /*!
- * \brief Restates the tables the 150 video upgrade changes as 149 defined them, so that upgrade can
+ * \brief Restates the tables the 151 video upgrade changes as 150 defined them, so that upgrade can
  * run over a database Connect() built at the current schema.
  *
- * Restated rather than derived from the current tables, so a column added to the 150 upgrade and
+ * Restated rather than derived from the current tables, so a column added to the 151 upgrade and
  * not taken back out here cannot abort the upgrade on a duplicate.
  */
-inline void RestateVideo149(CDatabase& db)
+inline void RestateVideo150(CDatabase& db)
 {
   ASSERT_TRUE(db.ExecuteQuery("DROP TABLE contentgeometry"));
   ASSERT_TRUE(db.ExecuteQuery("DROP TABLE settings"));

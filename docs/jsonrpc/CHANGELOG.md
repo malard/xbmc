@@ -203,7 +203,7 @@ Properties and types:
 - `List.Item.Base`: `stationname`; `List.Fields.All`: `episodename`, `episodepart`
 - `PVR.Details.Broadcast`: `season`, `episode`, `parentalratingcode`, `parentalratingicon`,
   `parentalratingsource`; `PVR.Details.Recording`: those and `parentalrating`
-- `Video.Details.TVShow`: `status`, `trailer`
+- `Video.Details.TVShow`: `status`, `trailer`; `Video.Details.MovieSet`: `sortTitle`
 - `Textures.Details.Texture`: `lastlibrarycheck`
 - `Files.Media`: `games`
 - `Video.Item.Details`, `Video.Item.Fields`, `Video.Item.Changes` and the `Audio.Item` equivalents:
@@ -229,7 +229,7 @@ Properties and types:
 - A removed library item's id is never given to another item: `movieId`, `tvShowId`, `seasonId`,
   `episodeId`, `musicVideoId`, `setId`, video `genreId` and `tagId`, `artistId`, `albumId`,
   `songId`, music `genreId`, `roleId` and `sourceId`. Ids removed before the upgrade to MyVideos
-  150 and MyMusic 85 are not remembered.
+  151 and MyMusic 85 are not remembered.
 
 ### Fixed
 
