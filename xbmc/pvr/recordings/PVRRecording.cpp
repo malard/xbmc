@@ -24,6 +24,7 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/MathUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -201,9 +202,9 @@ void CPVRRecording::Serialize(CVariant& value) const
   if (!value.isMember("art"))
     value["art"] = CVariant(CVariant::VariantTypeObject);
   if (!ThumbnailPath().empty())
-    value["art"]["thumb"] = ThumbnailPath();
+    value["art"][KODI::ART::TYPE::THUMB] = ThumbnailPath();
   if (!FanartPath().empty())
-    value["art"]["fanart"] = FanartPath();
+    value["art"][KODI::ART::TYPE::FANART] = FanartPath();
 
   value["clientId"] = m_iClientId;
 }

@@ -132,7 +132,7 @@ bool CRecentlyAddedJob::UpdateVideo()
       std::string seasonThumb;
       if (item->GetVideoInfoTag()->m_iIdSeason > 0)
         seasonThumb = videodatabase.GetArtForItem(item->GetVideoInfoTag()->m_iIdSeason,
-                                                  MediaType::SEASON, "thumb");
+                                                  MediaType::SEASON, KODI::ART::TYPE::THUMB);
 
       home->SetProperty("LatestEpisode." + value + ".Thumb"         , item->GetArt(KODI::ART::TYPE::THUMB));
       home->SetProperty("LatestEpisode." + value + ".ShowThumb"     , item->GetArt("tvshow.thumb"));
@@ -293,9 +293,11 @@ bool CRecentlyAddedJob::UpdateMusic()
       {
         for (const auto& artitem : art)
         {
-          if (artitem.mediaType == NameOf(MediaType::ALBUM) && artitem.artType == "thumb")
+          if (artitem.mediaType == NameOf(MediaType::ALBUM) &&
+              artitem.artType == KODI::ART::TYPE::THUMB)
             strThumb = artitem.url;
-          else if (artitem.mediaType == NameOf(MediaType::ARTIST) && artitem.artType == "fanart")
+          else if (artitem.mediaType == NameOf(MediaType::ARTIST) &&
+                   artitem.artType == KODI::ART::TYPE::FANART)
             strFanart = artitem.url;
         }
       }

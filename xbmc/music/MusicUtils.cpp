@@ -311,11 +311,11 @@ bool FillArtTypesList(CFileItem& musicitem, CFileItemList& artlist)
     // Localise the names of common types of art
     if (type == ART::TYPE::BANNER)
       artitem->SetLabel(localizeStrings.Get(20020));
-    else if (type == "fanart")
+    else if (type == ART::TYPE::FANART)
       artitem->SetLabel(localizeStrings.Get(20445));
-    else if (type == "poster")
+    else if (type == ART::TYPE::POSTER)
       artitem->SetLabel(localizeStrings.Get(20021));
-    else if (type == "thumb")
+    else if (type == ART::TYPE::THUMB)
       artitem->SetLabel(localizeStrings.Get(21371));
     else
       artitem->SetLabel(type);
@@ -410,7 +410,7 @@ std::vector<std::string> GetArtTypesToScan(MediaType mediaType)
   // Get default types of art that are to be automatically fetched during scanning
   if (mediaType == MediaType::ARTIST)
   {
-    arttypes = {"thumb", "fanart"};
+    arttypes = {ART::TYPE::THUMB, ART::TYPE::FANART};
     for (auto& artType : CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(
              CSettings::SETTING_MUSICLIBRARY_ARTISTART_WHITELIST))
     {
@@ -420,7 +420,7 @@ std::vector<std::string> GetArtTypesToScan(MediaType mediaType)
   }
   else if (mediaType == MediaType::ALBUM)
   {
-    arttypes = {"thumb"};
+    arttypes = {ART::TYPE::THUMB};
     for (auto& artType : CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(
              CSettings::SETTING_MUSICLIBRARY_ALBUMART_WHITELIST))
     {
