@@ -271,12 +271,8 @@ bool CGUIWindowMusicNav::ManageInfoProvider(const CFileItemPtr& item)
         if (CGUIDialogYesNo::ShowAndGetInput(CVariant{ 20195 }, msgctxt)) // Change information provider, confirm for all shown
         {
           // Set scraper for all items on current view.
-          std::string strPath = MUSIC::DB_PATH::ROOT;
-          if (content == ADDON::ContentType::ARTISTS)
-            strPath += "artists";
-          else
-            strPath += "albums";
-          URIUtils::AddSlashAtEnd(strPath);
+          std::string strPath = content == ADDON::ContentType::ARTISTS ? MUSIC::DB_PATH::ARTISTS
+                                                                       : MUSIC::DB_PATH::ALBUMS;
           // Items on view could be limited by navigation criteria, smart playlist rules or a filter.
           // Get these options, except ID, from item path
           CURL musicUrl(item->GetPath());  //Use CURL, as CMusicDbUrl removes "filter" option
