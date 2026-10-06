@@ -4551,8 +4551,7 @@
         "$ref": "#/$defs/Library.Id"
       },
       "title": {
-        "type": "string",
-        "description": "Title of the recorded item itself. For a recorded episode this is the episode's own name and showTitle carries the show; for anything else it is the programme title and showTitle is empty."
+        "type": "string"
       },
       "plot": {
         "type": "string"
@@ -4636,8 +4635,7 @@
         "description": "Part number of a multi-part episode. Zero when the episode is not in parts."
       },
       "showTitle": {
-        "type": "string",
-        "description": "Title of the show this recording is an episode of. Empty when the recording is not of an episode."
+        "type": "string"
       },
       "titleExtraInfo": {
         "type": "string",

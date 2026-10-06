@@ -196,7 +196,7 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item) const
       bool bPlayRecording = CGUIDialogYesNo::ShowAndGetInput(
           CVariant{19687}, // "Play recording"
           CVariant{""}, CVariant{12021}, // "Play from beginning"
-          CVariant{recording->ProgrammeTitle()}, bCancel, CVariant{19000}, // "Switch to channel"
+          CVariant{recording->m_strTitle}, bCancel, CVariant{19000}, // "Switch to channel"
           CVariant{19687}, // "Play recording"
           0); // no autoclose
       if (bCancel)

@@ -57,12 +57,6 @@ private:
   std::string m_strRecordingId; /*!< unique ID of the recording on the client */
 };
 
-/*!
- * @brief A recording made by a PVR backend.
- *
- * m_strTitle and m_strShowTitle keep their CVideoInfoTag meaning; the programme title and
- * episode name a PVR client supplies are read back through ProgrammeTitle() and EpisodeName().
- */
 class CPVRRecording final : public CVideoInfoTag
 {
 public:
@@ -369,22 +363,10 @@ public:
   const std::string& FanartPath() const { return m_fanartPath.GetLocalImage(); }
 
   /*!
-   * @brief Retrieve the title of the programme this recording is of
-   * @note For a recorded episode this is the show, not the episode's own name
-   */
-  const std::string& ProgrammeTitle() const;
-
-  /*!
-   * @brief Set the title of the programme this recording is of
-   * @param title The title
-   */
-  void SetProgrammeTitle(std::string_view title);
-
-  /*!
    * @brief Retrieve the recording Episode Name
    * @note Returns an empty string if no Episode Name was provided by the PVR client
    */
-  std::string EpisodeName() const;
+  const std::string& EpisodeName() const { return m_strShowTitle; }
 
   /*!
    * @brief check whether this recording is currently in progress

@@ -62,19 +62,12 @@ CPVRRecording::CPVRRecording(const PVR_RECORDING& recording, unsigned int iClien
 
   if (recording.strRecordingId)
     m_strRecordingId = recording.strRecordingId;
-  const std::string_view title{recording.strTitle ? recording.strTitle : ""};
-  const std::string_view episodeName{recording.strEpisodeName ? recording.strEpisodeName : ""};
-  if (episodeName.empty())
-  {
-    m_strTitle = title;
-  }
-  else
-  {
-    m_strTitle = episodeName;
-    m_strShowTitle = title;
-  }
+  if (recording.strTitle)
+    m_strTitle = recording.strTitle;
   if (recording.strTitleExtraInfo)
     m_titleExtraInfo = recording.strTitleExtraInfo;
+  if (recording.strEpisodeName)
+    m_strShowTitle = recording.strEpisodeName;
   m_iSeason = recording.iSeriesNumber;
   m_iEpisode = recording.iEpisodeNumber;
   m_episodePartNumber = recording.iEpisodePartNumber;
@@ -277,7 +270,7 @@ bool CPVRRecording::Undelete() const
 
 bool CPVRRecording::Rename(std::string_view strNewName)
 {
-  SetProgrammeTitle(strNewName);
+  m_strTitle = strNewName;
   const std::shared_ptr<CPVRClient> client = CServiceBroker::GetPVRManager().GetClient(m_iClientId);
   return client && (client->RenameRecording(*this) == PVR_ERROR_NO_ERROR);
 }
@@ -498,39 +491,19 @@ void CPVRRecording::Update(const CPVRRecording& tag, const CPVRClient& client)
     size_t pos = strTitle.rfind('/');
     strTitle.erase(0, pos + 1);
     strEpisode.erase(0, strShow.size());
-    m_strShowTitle = strTitle;
+    m_strTitle = strTitle;
     pos = strEpisode.find('-');
     strEpisode.erase(0, pos + 2);
-    m_strTitle = strEpisode;
+    m_strShowTitle = strEpisode;
   }
 
   UpdatePath();
 }
 
-const std::string& CPVRRecording::ProgrammeTitle() const
-{
-  return m_strShowTitle.empty() ? m_strTitle : m_strShowTitle;
-}
-
-void CPVRRecording::SetProgrammeTitle(std::string_view title)
-{
-  if (m_strShowTitle.empty())
-    m_strTitle = title;
-  else
-    m_strShowTitle = title;
-}
-
-std::string CPVRRecording::EpisodeName() const
-{
-  return m_strShowTitle.empty() ? std::string{} : m_strTitle;
-}
-
 void CPVRRecording::UpdatePath()
 {
-  // The path is the recording's key into the video database, so it keeps the client's
-  // programme title and episode name.
-  m_strFileNameAndPath = CPVRRecordingsPath(m_bIsDeleted, m_bRadio, m_strDirectory, ProgrammeTitle(),
-                                            m_iSeason, m_iEpisode, GetYear(), EpisodeName(),
+  m_strFileNameAndPath = CPVRRecordingsPath(m_bIsDeleted, m_bRadio, m_strDirectory, m_strTitle,
+                                            m_iSeason, m_iEpisode, GetYear(), m_strShowTitle,
                                             m_strChannelName, m_recordingTime, m_strRecordingId)
                              .AsString();
 }
