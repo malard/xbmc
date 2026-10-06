@@ -69,6 +69,22 @@ namespace
 {
 constexpr size_t maxBufferLength = 64 * 1024;
 
+// A send to a peer that has gone, or to a socket Disconnect() has shut down, must fail with an
+// error rather than raise SIGPIPE, which ends the process unless something else ignores it.
+#if defined(MSG_NOSIGNAL)
+constexpr int SEND_FLAGS = MSG_NOSIGNAL;
+#else
+constexpr int SEND_FLAGS = 0;
+#endif
+
+void SuppressSigPipe([[maybe_unused]] SOCKET socket)
+{
+#if defined(SO_NOSIGPIPE)
+  int on = 1;
+  setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+#endif
+}
+
 bool SetNonBlocking(SOCKET socket)
 {
 #if defined(TARGET_WINDOWS)
@@ -281,6 +297,7 @@ void CTCPServer::Process()
             CLog::Log(LOGINFO, "JSONRPC Server: New connection added");
             if (!SetNonBlocking(newconnection->m_socket))
               CLog::Log(LOGWARNING, "JSONRPC Server: Could not make the connection non-blocking");
+            SuppressSigPipe(newconnection->m_socket);
             m_connections.push_back(std::move(newconnection));
           }
         }
@@ -629,7 +646,7 @@ void CTCPServer::CTCPClient::Send(const char *data, unsigned int size)
   unsigned int sent = 0;
   while (sent < size)
   {
-    const auto written = send(m_socket, data + sent, size - sent, 0);
+    const auto written = send(m_socket, data + sent, size - sent, SEND_FLAGS);
     if (written > 0)
     {
       sent += static_cast<unsigned int>(written);
@@ -656,7 +673,7 @@ bool CTCPServer::CTCPClient::WaitUntilWritable()
     const int result =
         select(static_cast<int>(m_socket) + 1, nullptr, &writable, nullptr, &timeout);
     if (result != 0)
-      return result > 0;
+      return result > 0 && !m_disconnecting;
   }
   return false;
 }
