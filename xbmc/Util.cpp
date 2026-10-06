@@ -2301,8 +2301,8 @@ ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string
   if (info.flag == 0)
     info.flag = StreamFlags::FLAG_NONE;
 
-  CLog::Log(LOGDEBUG, "{} - Language = '{}' / Name = '{}' / Flag = '{}' from {}", __FUNCTION__,
-            info.language.ToString(), info.name, info.flag, CURL::GetRedacted(associatedFile));
+  CLog::LogF(LOGDEBUG, "Language = '{}' / Name = '{}' / Flag = '{}' from {}",
+             info.language.ToString(), info.name, info.flag, CURL::GetRedacted(associatedFile));
 
   return info;
 }

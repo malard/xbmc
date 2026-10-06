@@ -151,11 +151,11 @@ std::unique_ptr<CCacheStrategy> CFileCache::ForStreams(std::unique_ptr<CCacheStr
 void CFileCache::SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize)
 {
   if (m_flags & READ_MULTI_STREAM)
-    CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using double memory cache each sized {} bytes",
-              __FUNCTION__, m_sourcePath, cacheSize);
+    CLog::LogF(LOGDEBUG, "<{}> using double memory cache each sized {} bytes", m_sourcePath,
+               cacheSize);
   else
-    CLog::Log(LOGDEBUG, "CFileCache::{} - <{}> using single memory cache sized {} bytes",
-              __FUNCTION__, m_sourcePath, cacheSize);
+    CLog::LogF(LOGDEBUG, "<{}> using single memory cache sized {} bytes", m_sourcePath,
+               cacheSize);
 
   m_pCache = std::move(cache);
   m_forwardCacheSize = ForwardCacheSize(cacheSize);

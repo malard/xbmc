@@ -36,8 +36,7 @@ bool CPlayListFile::Load(const std::string& strFileName)
 
   if (file.GetLength() > 1024 * 1024)
   {
-    CLog::Log(LOGWARNING, "{} - File is larger than 1 MB, most likely not a playlist",
-              __FUNCTION__);
+    CLog::LogF(LOGWARNING, "File is larger than 1 MB, most likely not a playlist");
     return false;
   }
 
