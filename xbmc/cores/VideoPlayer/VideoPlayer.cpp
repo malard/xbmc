@@ -925,11 +925,6 @@ void CVideoPlayer::OnStartup()
   m_CurrentRadioRDS.Clear();
   m_CurrentAudioID3.Clear();
 
-  {
-    std::unique_lock lock(m_content.m_section);
-    m_content.m_selectedSubtitleIndex = -1;
-  }
-
   UTILS::FONT::ClearTemporaryFonts();
 }
 
@@ -1433,6 +1428,10 @@ void CVideoPlayer::CheckBetterStream(CCurrentStream& current, CDemuxStream* stre
 
 void CVideoPlayer::Prepare()
 {
+  // A file opened in place reaches here without OnStartup, so the previous item's selection
+  // must be forgotten before its streams open.
+  ForgetSubtitleSelection();
+
   CFFmpegLog::SetLogLevel(1);
   SetPlaySpeed(DVD_PLAYSPEED_NORMAL);
   m_processInfo->SetSpeed(1.0);
@@ -1607,6 +1606,12 @@ void CVideoPlayer::Prepare()
   UpdatePlayState(0);
 
   SetCaching(CACHESTATE_FLUSH);
+}
+
+void CVideoPlayer::ForgetSubtitleSelection()
+{
+  std::unique_lock lock(m_content.m_section);
+  m_content.m_selectedSubtitleIndex = -1;
 }
 
 void CVideoPlayer::Process()
