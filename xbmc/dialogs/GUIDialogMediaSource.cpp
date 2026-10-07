@@ -193,7 +193,8 @@ std::string CGUIDialogMediaSource::GetUniqueMediaSourceName()
   // Get unique source name for this media type
   unsigned int i, j = 2;
   bool bConfirmed = false;
-  const std::vector<CMediaSource>& shares = CMediaSourceSettings::GetInstance().GetSources(m_section);
+  const std::vector<CMediaSource>& shares =
+      CMediaSourceSettings::GetInstance().GetSources(m_section);
   std::string strName = m_name;
   while (!bConfirmed)
   {
@@ -211,7 +212,9 @@ std::string CGUIDialogMediaSource::GetUniqueMediaSourceName()
   return strName;
 }
 
-void CGUIDialogMediaSource::OnMediaSourceChanged(MediaSection section, const std::string& oldName, const CMediaSource& share)
+void CGUIDialogMediaSource::OnMediaSourceChanged(MediaSection section,
+                                                 const std::string& oldName,
+                                                 const CMediaSource& share)
 {
   // Processing once media source added/edited - library scraping and scanning
   if (!StringUtils::StartsWithNoCase(share.strPath, "rss://") &&
@@ -260,7 +263,8 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
 #if defined(TARGET_WINDOWS_STORE)
     // add the default UWP music directory
     std::string path;
-    if (XFILE::CWinLibraryDirectory::GetStoragePath("music", path) && !path.empty() && CDirectory::Exists(path))
+    if (XFILE::CWinLibraryDirectory::GetStoragePath("music", path) && !path.empty() &&
+        CDirectory::Exists(path))
     {
       share1.strPath = path;
       share1.strName = localizeStrings.Get(20245);
@@ -317,7 +321,8 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
 #if defined(TARGET_WINDOWS_STORE)
     // add the default UWP music directory
     std::string path;
-    if (XFILE::CWinLibraryDirectory::GetStoragePath("video", path) && !path.empty() && CDirectory::Exists(path))
+    if (XFILE::CWinLibraryDirectory::GetStoragePath("video", path) && !path.empty() &&
+        CDirectory::Exists(path))
     {
       share1.strPath = path;
       share1.strName = localizeStrings.Get(20246);
@@ -374,7 +379,8 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
 #if defined(TARGET_WINDOWS_STORE)
     // add the default UWP music directory
     std::string path;
-    if (XFILE::CWinLibraryDirectory::GetStoragePath("pictures", path) && !path.empty() && CDirectory::Exists(path))
+    if (XFILE::CWinLibraryDirectory::GetStoragePath("pictures", path) && !path.empty() &&
+        CDirectory::Exists(path))
     {
       share1.strPath = path;
       share1.strName = localizeStrings.Get(20247);
@@ -472,8 +478,7 @@ void CGUIDialogMediaSource::UpdateButtons()
     return;
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_OK, !m_paths->Get(0)->GetPath().empty() && !m_name.empty());
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_PATH_ADD,
-                              !m_paths->Get(0)->GetPath().empty() &&
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_PATH_ADD, !m_paths->Get(0)->GetPath().empty() &&
                                                     m_section != MediaSection::FILES);
   CONTROL_ENABLE_ON_CONDITION(CONTROL_PATH_REMOVE, m_paths->Size() > 1);
   // name

@@ -243,9 +243,10 @@ void CVideoPlayActionProcessor::Play(const std::string& player)
     item->SetFolder(false);
   }
 
-  const ContentUtils::PlayMode mode{item->GetProperty(ITEM::PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM).asBoolean()
-                                        ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
-                                        : ContentUtils::PlayMode::PLAY_ONLY_THIS};
+  const ContentUtils::PlayMode mode{
+      item->GetProperty(ITEM::PROPERTY::CHECK_AUTOPLAY_NEXT_ITEM).asBoolean()
+          ? ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM
+          : ContentUtils::PlayMode::PLAY_ONLY_THIS};
   VIDEO::UTILS::PlayItem(item, player, mode);
 }
 

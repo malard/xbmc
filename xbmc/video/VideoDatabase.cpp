@@ -489,7 +489,8 @@ bool CVideoDatabase::GetPathsForCleaning(const std::string& directory,
     if (content.empty())
       return true;
     if (byDirectory && content == MEDIA::CONTENT::TVSHOWS)
-      return pathContent == MEDIA::CONTENT::TVSHOWS || pathContent == MEDIA::CONTENT::SEASONS || pathContent == MEDIA::CONTENT::EPISODES;
+      return pathContent == MEDIA::CONTENT::TVSHOWS || pathContent == MEDIA::CONTENT::SEASONS ||
+             pathContent == MEDIA::CONTENT::EPISODES;
     return pathContent == content;
   };
 
@@ -6429,7 +6430,8 @@ bool CVideoDatabase::GetPlayCounts(const std::string &strPath, CFileItemList &it
     {
       if (!item || item->IsFolder())
         continue;
-      const bool pluginItem{hasPlugin && item->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean()};
+      const bool pluginItem{hasPlugin &&
+                            item->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean()};
       const CURL itemUrl(item->GetPath());
       bool archiveItem{!pluginItem && URIUtils::IsArchive(itemUrl) &&
                        !itemUrl.GetFileName().empty()};

@@ -305,7 +305,8 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
 
   // Match visibility test of CMusicInfo::IsVisible
   if (VIDEO::IsVideoDb(*item) && item->HasVideoInfoTag() &&
-      (item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID) || item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID)))
+      (item->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID) ||
+       item->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID)))
   {
     // Music video artist or album (navigation by music > music video > artist))
     CGUIDialogMusicInfo::ShowFor(item.get());
@@ -824,8 +825,10 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     items.FilterCueItems();
 
     std::string label;
-    if (items.GetLabel().empty() && m_rootDir.IsSource(items.GetPath(),
-                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC), &label))
+    if (items.GetLabel().empty() &&
+        m_rootDir.IsSource(items.GetPath(),
+                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC),
+                           &label))
       items.SetLabel(label);
   }
 

@@ -107,7 +107,8 @@ bool CGUIWindowPictures::OnMessage(CGUIMessage& message)
     {
       // is this the first time accessing this window?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().empty())
-        message.SetStringParam(CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PICTURES));
+        message.SetStringParam(
+            CMediaSourceSettings::GetInstance().GetDefaultSource(MediaSection::PICTURES));
 
       m_dlgProgress = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(WINDOW_DIALOG_PROGRESS);
     }
@@ -294,8 +295,10 @@ bool CGUIWindowPictures::GetDirectory(const std::string &strDirectory, CFileItem
     return false;
 
   std::string label;
-  if (items.GetLabel().empty() && m_rootDir.IsSource(items.GetPath(),
-                         &CMediaSourceSettings::GetInstance().GetSources(MediaSection::PICTURES), &label))
+  if (items.GetLabel().empty() &&
+      m_rootDir.IsSource(items.GetPath(),
+                         &CMediaSourceSettings::GetInstance().GetSources(MediaSection::PICTURES),
+                         &label))
     items.SetLabel(label);
 
   if (items.GetContent().empty() && !items.IsVirtualDirectoryRoot() && !items.IsPlugin())

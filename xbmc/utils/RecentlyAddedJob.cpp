@@ -82,9 +82,9 @@ bool CRecentlyAddedJob::UpdateVideo()
       if (!item->HasArt(KODI::ART::TYPE::THUMB))
         loader.LoadItem(item.get());
 
-      home->SetProperty("LatestMovie." + value + ".Thumb"       , item->GetArt(KODI::ART::TYPE::THUMB));
-      home->SetProperty("LatestMovie." + value + ".Fanart"      , item->GetArt(KODI::ART::TYPE::FANART));
-      home->SetProperty("LatestMovie." + value + ".Poster"      , item->GetArt(KODI::ART::TYPE::POSTER));
+      home->SetProperty("LatestMovie." + value + ".Thumb", item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestMovie." + value + ".Fanart", item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestMovie." + value + ".Poster", item->GetArt(KODI::ART::TYPE::POSTER));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -134,10 +134,11 @@ bool CRecentlyAddedJob::UpdateVideo()
         seasonThumb = videodatabase.GetArtForItem(item->GetVideoInfoTag()->m_iIdSeason,
                                                   MediaType::SEASON, KODI::ART::TYPE::THUMB);
 
-      home->SetProperty("LatestEpisode." + value + ".Thumb"         , item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestEpisode." + value + ".Thumb", item->GetArt(KODI::ART::TYPE::THUMB));
       home->SetProperty("LatestEpisode." + value + ".ShowThumb"     , item->GetArt("tvshow.thumb"));
       home->SetProperty("LatestEpisode." + value + ".SeasonThumb"   , seasonThumb);
-      home->SetProperty("LatestEpisode." + value + ".Fanart"        , item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestEpisode." + value + ".Fanart",
+                        item->GetArt(KODI::ART::TYPE::FANART));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -183,8 +184,10 @@ bool CRecentlyAddedJob::UpdateVideo()
       if (!item->HasArt(KODI::ART::TYPE::THUMB))
         loader.LoadItem(item.get());
 
-      home->SetProperty("LatestMusicVideo." + value + ".Thumb"       , item->GetArt(KODI::ART::TYPE::THUMB));
-      home->SetProperty("LatestMusicVideo." + value + ".Fanart"      , item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestMusicVideo." + value + ".Thumb",
+                        item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestMusicVideo." + value + ".Fanart",
+                        item->GetArt(KODI::ART::TYPE::FANART));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -302,7 +305,8 @@ bool CRecentlyAddedJob::UpdateMusic()
         }
       }
 
-      std::string strDBpath = StringUtils::Format("{}{}/", KODI::MUSIC::DB_PATH::ALBUMS, album.idAlbum);
+      std::string strDBpath =
+          StringUtils::Format("{}{}/", KODI::MUSIC::DB_PATH::ALBUMS, album.idAlbum);
 
       home->SetProperty("LatestAlbum." + value + ".Title"   , album.strAlbum);
       home->SetProperty("LatestAlbum." + value + ".Year"    , album.strReleaseDate);

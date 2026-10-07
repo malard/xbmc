@@ -434,7 +434,8 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
           // for tvshows and seasons, iEpisode and playCount are
           // invalid
           item->SetFolder(true);
-          item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
+          item->GetVideoInfoTag()->m_iEpisode =
+              (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
           item->GetVideoInfoTag()->SetPlayCount(
               static_cast<int>(item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger()));
         }
@@ -1108,8 +1109,8 @@ NPT_Result CUPnPServer::OnSearchContainer(PLT_ActionReference& action,
     else if (album.GetLength() > 0)
     {
       // all tracks by album name
-      std::string strPath =
-          StringUtils::Format("{}{}/", MUSIC::DB_PATH::ALBUMS, database.GetAlbumByName((const char*)album));
+      std::string strPath = StringUtils::Format("{}{}/", MUSIC::DB_PATH::ALBUMS,
+                                                database.GetAlbumByName((const char*)album));
 
       return OnBrowseDirectChildren(action, strPath.c_str(), filter, starting_index,
                                     requested_count, sort_criteria, context);
@@ -1164,8 +1165,8 @@ NPT_Result CUPnPServer::OnSearchContainer(PLT_ActionReference& action,
     {
       CMusicDatabase database;
       database.Open();
-      std::string strPath =
-          StringUtils::Format("{}{}/", MUSIC::DB_PATH::GENRES, database.GetGenreByName((const char*)genre));
+      std::string strPath = StringUtils::Format("{}{}/", MUSIC::DB_PATH::GENRES,
+                                                database.GetGenreByName((const char*)genre));
       return OnBrowseDirectChildren(action, strPath.c_str(), filter, starting_index,
                                     requested_count, sort_criteria, context);
     }

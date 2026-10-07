@@ -413,7 +413,8 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         std::string label;
         if (items.GetLabel().empty() &&
             m_rootDir.IsSource(items.GetPath(),
-                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO), &label))
+                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO),
+                               &label))
           items.SetLabel(label);
         if (!items.IsSourcesPath() && !items.IsLibraryFolder())
           LoadVideoInfo(items, m_database);
@@ -461,7 +462,8 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
           for(int i = 0; i < items.Size(); i++)
           {
             const CFileItemPtr item = items.Get(i);
-            if (item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 && item->GetVideoInfoTag()->m_iSeason > 0)
+            if (item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger() != 0 &&
+                item->GetVideoInfoTag()->m_iSeason > 0)
               count++;
           }
           bFlatten = (count < 2); // flatten if there is only 1 unwatched season (not counting specials)
@@ -1120,11 +1122,14 @@ bool CGUIWindowVideoNav::ApplyWatchedFilter(CFileItemList &items)
     if (item->HasVideoInfoTag() && (node == NodeType::TITLE_TVSHOWS || node == NodeType::SEASONS))
     {
       if (m_watchedMode == WatchedMode::UNWATCHED)
-        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode =
+            (int)item->GetProperty(ITEM::PROPERTY::UNWATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::WATCHED)
-        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode =
+            (int)item->GetProperty(ITEM::PROPERTY::WATCHED_EPISODES).asInteger();
       if (m_watchedMode == WatchedMode::ALL)
-        item->GetVideoInfoTag()->m_iEpisode = (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
+        item->GetVideoInfoTag()->m_iEpisode =
+            (int)item->GetProperty(ITEM::PROPERTY::TOTAL_EPISODES).asInteger();
       item->SetProperty(ITEM::PROPERTY::NUM_EPISODES, item->GetVideoInfoTag()->m_iEpisode);
       listchanged = true;
     }

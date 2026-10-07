@@ -46,7 +46,9 @@ protected:
   int GetSelectedItem();
   void HighlightItem(int item);
   std::string GetUniqueMediaSourceName();
-  static void OnMediaSourceChanged(KODI::MEDIA::MediaSection section, const std::string& oldName, const CMediaSource& share);
+  static void OnMediaSourceChanged(KODI::MEDIA::MediaSection section,
+                                   const std::string& oldName,
+                                   const CMediaSource& share);
 
   std::vector<std::string> GetPaths() const;
 

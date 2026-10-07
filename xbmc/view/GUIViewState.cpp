@@ -80,8 +80,7 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
   if (PLAYLIST::IsSmartPlayList(items) || url.IsProtocol("upnp") || items.IsLibraryFolder())
   {
     if (items.GetContent() == MEDIA::CONTENT::SONGS ||
-        items.GetContent() == MEDIA::CONTENT::ALBUMS ||
-        items.GetContent() == MEDIA::CONTENT::MIXED)
+        items.GetContent() == MEDIA::CONTENT::ALBUMS || items.GetContent() == MEDIA::CONTENT::MIXED)
       return new CGUIViewStateMusicSmartPlaylist(items);
     else if (items.GetContent() == MEDIA::CONTENT::MUSICVIDEOS)
       return new CGUIViewStateVideoMusicVideos(items);
@@ -460,7 +459,8 @@ std::vector<CMediaSource>& CGUIViewState::GetSources()
 
 void CGUIViewState::AddLiveTVSources()
 {
-  std::vector<CMediaSource>& sources = CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO);
+  std::vector<CMediaSource>& sources =
+      CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO);
   for (std::vector<CMediaSource>::iterator it = sources.begin(); it != sources.end(); ++it)
   {
     if (URIUtils::IsLiveTV((*it).strPath))

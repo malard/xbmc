@@ -161,8 +161,9 @@ bool CAutoSwitch::ByFolderThumbPercentage(bool hideParentDirItems, int percent, 
   if (fileCount > 0.25f * numItems)
     return false;
 
-  const int numThumbs = std::ranges::count_if(
-      vecItems, [](const auto& item) { return item->IsFolder() && item->HasArt(KODI::ART::TYPE::THUMB); });
+  const int numThumbs =
+      std::ranges::count_if(vecItems, [](const auto& item)
+                            { return item->IsFolder() && item->HasArt(KODI::ART::TYPE::THUMB); });
   return numThumbs >= 0.01f * percent * (numItems - fileCount);
 }
 
@@ -177,7 +178,8 @@ float CAutoSwitch::MetadataPercentage(const CFileItemList &vecItems)
                                 --total;
 
                               return item->HasMusicInfoTag() || item->HasVideoInfoTag() ||
-                                     item->HasPictureInfoTag() || item->HasProperty(KODI::ITEM::PROPERTY::ADDON_ID);
+                                     item->HasPictureInfoTag() ||
+                                     item->HasProperty(KODI::ITEM::PROPERTY::ADDON_ID);
                             });
   return total != 0 ? count / total : 0.0f;
 }
