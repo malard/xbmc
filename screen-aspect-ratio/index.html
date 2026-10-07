@@ -634,8 +634,8 @@ footer {
       <div class="fact"><dt>Introduced in</dt><dd>Kodi v22</dd></div>
       <div class="fact"><dt>Settings level</dt><dd>Advanced</dd></div>
       <div class="fact"><dt>Settings path</dt><dd>System &rsaquo; Screen &amp; Aspect Ratio</dd></div>
-      <div class="fact"><dt>JSON-RPC</dt><dd>14.0.0</dd></div>
-      <div class="fact"><dt>xbmc.python</dt><dd>3.0.3</dd></div>
+      <div class="fact"><dt>JSON-RPC</dt><dd>14.1.0</dd></div>
+      <div class="fact"><dt>xbmc.python</dt><dd>3.1.1</dd></div>
     </dl>
   </div>
 </header>
@@ -885,7 +885,8 @@ footer {
     <hr class="sec-rule">
 
     <p>
-      With <b>Detect content aspect ratio</b> on, Kodi samples each video at a number of points
+      With <b>Detect content aspect ratio</b> and <b>Measure titles away from playback</b> on, Kodi
+      samples each video at a number of points
       across its runtime, decodes a frame at each, and finds the lit rectangle within it. The
       result is stored against the file in the video library, so it is measured once and read
       thereafter.
@@ -946,10 +947,11 @@ footer {
 
     <h3>What can and cannot be measured</h3>
     <p>
-      Local and network files only. Discs and disc images cannot be sampled. Sampling costs roughly
-      half a second per point for an episode and a second for a film, which is why the whole feature
-      is off by default and why measuring during a library scan is a separate opt-in — it turns a
-      scan of a large library from minutes into hours.
+      Local and network files, and Blu-ray titles, under the same local-or-LAN rule. DVDs and
+      internet streams are skipped. Sampling costs roughly half a second per point for an episode
+      and a second for a film, which is why measuring away from playback is a separate opt-in — it
+      turns a scan of a large library from minutes into hours. Without it, the shape is whatever
+      live detection reads while the title plays.
     </p>
   </section>
 
@@ -965,24 +967,26 @@ footer {
     </p>
 
     <p>
-      The two work together rather than competing: what was measured before playback still decides
-      how far the picture may open, and live detection only moves it <em>within</em> that. The scan
-      owns what is stored; live detection is serve-only and never writes back.
+      Live detection decides what is drawn. A measurement taken before playback names the ratio in
+      the library and tells a masking system the widest shape the title reaches before the first
+      frame; without one, the masking opens as wider content appears. The scan owns what is stored;
+      live detection is serve-only and never writes back.
     </p>
 
-    <h3>Asymmetric confirmation</h3>
+    <h3>Confirmation</h3>
     <p>
-      Growing and shrinking are not the same risk, and are not treated the same way. A
-      <b>larger</b> picture is reported on the frame it appears, because nothing is at risk. A
-      <b>smaller</b> one must persist for a few frames first, because reporting it wrongly crops
-      real picture — and a shot that happens to be dark along its edges reads smaller than it is.
-      Setting the confirmation window to one frame reports both immediately.
+      By default a change in either direction is reported on the next frame. A <b>smaller</b>
+      picture can be made to persist for a few frames first, for a room where a shot that is dark
+      along its edges would otherwise crop real picture; a <b>larger</b> one is always reported on
+      the frame it appears. A shape composed inside the picture already being served — an insert,
+      a pillarboxed shot — is composition, not a change, and is never reported.
     </p>
 
     <div class="note caution">
       <span class="note-label">Constraint</span>
       <p>
-        Live detection reads frames from <b>software-decoded local and network sources only</b>.
+        Live detection reads every frame the player decodes: in software, through DXVA on Windows
+        and through VideoToolbox on Apple platforms. Other hardware decoders are not read yet.
         Turn it off if a video processor already tracks the picture in real time, or if you would
         rather the picture never changed size mid-film.
       </p>
@@ -1108,14 +1112,15 @@ footer {
       <div class="setting-body">
         <h4>Fill the unused area around the OSD with</h4>
         <p>
-          What is drawn in the part of the screen the OSD leaves uncovered while it keeps its
-          original aspect ratio. A backdrop that fades toward the edges can read better than a hard
-          black border.
+          What is drawn in the part of the screen the OSD leaves uncovered. A room with masking can be
+          told the interface's shape instead, so the masking closes to it and there is no uncovered
+          part to fill.
         </p>
         <ul class="opts">
           <li><span class="opt-label">Skin default</span><span>Whatever the skin itself asks for, or black when it asks for nothing.</span></li>
           <li><span class="opt-label">A colour</span><span>Set by <code>videoscreen.guisurroundcolour</code>, default a dark grey <code>FF1A1A1A</code>.</span></li>
           <li><span class="opt-label">An image</span><span>Set by <code>videoscreen.guisurroundimage</code>. Fitted at its own aspect ratio, never stretched.</span></li>
+          <li><span class="opt-label">Report the interface's shape</span><span>The interface's shape is reported, so masking can close to it and there is no uncovered part to fill.</span></li>
         </ul>
         <p style="font-size:0.9rem;color:var(--muted);">
           Only enabled while <b>Maintain original OSD aspect ratio</b> is on. A skin can declare its
@@ -1135,8 +1140,7 @@ footer {
       <div class="setting-body">
         <h4>Lay the OSD out against</h4>
         <p>
-          Where the on-screen display, menus and dialogues are laid out while a video is playing or
-          paused. <em>The picture</em> keeps them inside the picture as it is drawn, so on a masked
+          Where the OSD and menus are laid out during playback. <em>The picture</em> keeps them inside the picture as it is drawn, so on a masked
           screen or with an anamorphic lens nothing lands on the mask. On an ordinary screen the
           black bars are visible and are usable space, so leave this at <em>The whole screen</em>.
         </p>
@@ -1174,10 +1178,7 @@ footer {
       <div class="setting-body">
         <h4>Detect content aspect ratio</h4>
         <p>
-          Measure the picture area of each video ahead of playback, so that black bars coded into
-          the file are known rather than guessed and can be followed by screen masking or projector
-          lens control. Sampling a file takes several seconds, so this is off by default. Local and
-          network files only; discs and disc images cannot be sampled.
+          Measure the picture area of each video. DVDs and internet streams are skipped.
         </p>
         <p style="font-size:0.9rem;color:var(--muted);">
           This is the master switch for the group — everything below is disabled until it is on.
@@ -1192,11 +1193,11 @@ footer {
         <span class="default">default <b>Off</b></span>
       </div>
       <div class="setting-body">
-        <h4>Measure while scanning the library</h4>
+        <h4>Measure titles away from playback</h4>
         <p>
-          Measure each item as the library scan adds it, rather than leaving it to the background
-          scan afterwards. Every item is then complete as soon as it appears, but a scan of a large
-          library takes hours instead of minutes.
+          Sample a title to find its picture area: before it plays, as a library scan adds it, and in
+          the background afterwards. Measuring a whole library takes hours. With this off, the shape
+          is whatever live detection reads from the picture while it plays.
         </p>
       </div>
     </div>
@@ -1210,10 +1211,8 @@ footer {
       <div class="setting-body">
         <h4>Samples per video</h4>
         <p>
-          How many points across each video to measure. Deciding that a title changes shape partway
-          through depends on catching more than one of its sections, so more samples find more of
-          them, at the cost of a slower scan. Sampling one point takes around half a second for an
-          episode and around a second for a film.
+          How many points across each video to measure. More samples find more shapes, and scan
+          slower.
         </p>
       </div>
     </div>
@@ -1227,9 +1226,7 @@ footer {
       <div class="setting-body">
         <h4>Ignore at the start of each video</h4>
         <p>
-          Runtime to leave unmeasured at the beginning of each video. Studio logos and service
-          idents are often a different shape from the title itself, and measuring one is how a
-          widescreen film gets recorded as full frame.
+          Runtime to leave unmeasured at the start of each video, past the idents and logos.
         </p>
       </div>
     </div>
@@ -1243,10 +1240,7 @@ footer {
       <div class="setting-body">
         <h4>Ignore at the end of each video</h4>
         <p>
-          Runtime to leave unmeasured at the end of each video. A credit roll is frequently full
-          frame on a widescreen title, and credits over black describe the text rather than any
-          picture. Raise this for a library of films with long credits; lower it to measure titles
-          whose closing minutes are genuinely a different shape.
+          Runtime to leave unmeasured at the end of each video, past the credits.
         </p>
       </div>
     </div>
@@ -1260,10 +1254,7 @@ footer {
       <div class="setting-body">
         <h4>Rescale the picture as its aspect ratio changes</h4>
         <p>
-          Reads every frame while a file plays and fits the picture to the shape actually on screen,
-          so a title that changes shape partway through follows it from the frame it changes on.
-          What was measured before playback still decides how far the picture can open; this only
-          moves it within that. Reads frames from software-decoded local and network sources only.
+          Reads every frame while a file plays and fits the picture to the shape on screen.
         </p>
       </div>
     </div>
@@ -1272,49 +1263,12 @@ footer {
       <div class="setting-meta">
         <span class="chip exp">Expert</span>
         <span class="setting-id">videoscreen.livegeometrynarrow</span>
-        <span class="default">default <b>3 frames</b> &#183; 1&ndash;10</span>
+        <span class="default">default <b>The next frame</b> &#183; 1&ndash;10</span>
       </div>
       <div class="setting-body">
         <h4>Confirm a smaller picture for</h4>
         <p>
-          Frames a smaller picture must persist for before it is reported. A larger picture is
-          reported on the frame it appears, because nothing is at risk; a smaller one crops real
-          picture if it is wrong, and a shot that is dark along its edges reads smaller than it is.
-          <em>The next frame</em> reports both immediately.
-        </p>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-meta">
-        <span class="chip exp">Expert</span>
-        <span class="setting-id">videoscreen.livegeometryleadin</span>
-        <span class="default">default <b>1 min</b> &#183; 0&ndash;15</span>
-      </div>
-      <div class="setting-body">
-        <h4>Ignore at the start of playback</h4>
-        <p>
-          Runtime at the beginning of a title during which live readings are not taken, judged on
-          playback position. Idents and studio logos are often a different shape from the title, so
-          the picture would be rescaled to a shape the film is not in before the film has begun.
-          Sources with no duration have no position for the window to be relative to, and are not
-          excluded.
-        </p>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-meta">
-        <span class="chip exp">Expert</span>
-        <span class="setting-id">videoscreen.livegeometryleadout</span>
-        <span class="default">default <b>1 min</b> &#183; 0&ndash;15</span>
-      </div>
-      <div class="setting-body">
-        <h4>Ignore at the end of playback</h4>
-        <p>
-          Runtime at the end of a title during which live readings are not taken. A credit roll is
-          frequently full frame on a widescreen title, and rescaling the picture to it as the film
-          ends is a change nothing on screen explains.
+          Frames a smaller picture must persist for before it is reported.
         </p>
       </div>
     </div>
@@ -1328,8 +1282,7 @@ footer {
       <div class="setting-body">
         <h4>Scan library for content aspect ratios</h4>
         <p>
-          Measure every video that has no measurement yet, including any that could not be read on a
-          previous attempt. Runs in the background and pauses while anything is playing.
+          Measure every video that has no measurement yet. Runs in the background.
         </p>
       </div>
     </div>
@@ -1559,7 +1512,7 @@ geometry = xbmc.Player().getContentGeometry()
 
     <p>
       This is the surface a masking controller, a lens automation or a room processor actually
-      drives. It is a JSON-RPC <b>14.0.0</b> addition.
+      drives. It is part of JSON-RPC <b>14.1.0</b>.
     </p>
 
     <h3>Reading</h3>
@@ -1689,7 +1642,7 @@ geometry = xbmc.Player().getContentGeometry()
           </tr>
           <tr>
             <td><b>Hardware decoding</b></td>
-            <td>Live detection needs software-decoded frames, so it does not operate on a hardware-decoded stream. Scan-time measurement is unaffected.</td>
+            <td>Live detection reads software-decoded, DXVA and VideoToolbox frames. Other hardware decoders, including Android's MediaCodec, are not read, so live detection does not operate on them. Measurement away from playback is unaffected.</td>
           </tr>
           <tr>
             <td><b>Stereoscopic content</b></td>
@@ -1742,7 +1695,7 @@ geometry = xbmc.Player().getContentGeometry()
       settings references. This is an independently written reference, not a Team Kodi publication.
     </p>
     <p>
-      Setting descriptions are quoted from the on-screen help text, so what is written here is what
+      Setting descriptions start from the on-screen help text, so what is written here matches what
       the viewer reads in Settings.
     </p>
   </div>
