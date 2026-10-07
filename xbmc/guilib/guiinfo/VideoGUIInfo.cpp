@@ -34,6 +34,7 @@
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
 #include "utils/AspectRatioVocabulary.h"
+#include "utils/DefaultArt.h"
 #include "utils/StreamDetails.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -733,7 +734,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
           *fallback = "DefaultVideoCover.png";
 
         value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
-                                               : "DefaultVideoCover.png";
+                                               : ART::DEFAULT::VIDEO_COVER;
         return true;
       }
       break;

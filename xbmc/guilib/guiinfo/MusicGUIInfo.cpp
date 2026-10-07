@@ -29,6 +29,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
+#include "utils/DefaultArt.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -472,7 +473,7 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
         if (fallback)
           *fallback = "DefaultAlbumCover.png";
         value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
-                                               : "DefaultAlbumCover.png";
+                                               : ART::DEFAULT::ALBUM_COVER;
         return true;
       }
       break;
@@ -602,7 +603,7 @@ bool CMusicGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
   if (info.GetInfo() == MUSICPLAYER_COVER)
   {
     value = playlistItem->HasArt(ART::TYPE::THUMB) ? playlistItem->GetArt(ART::TYPE::THUMB)
-                                                   : "DefaultAlbumCover.png";
+                                                   : ART::DEFAULT::ALBUM_COVER;
     return true;
   }
 

@@ -32,6 +32,7 @@
 #include "settings/SettingsComponent.h"
 #include "settings/lib/SettingSection.h"
 #include "settings/lib/SettingsManager.h"
+#include "utils/DefaultArt.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -46,7 +47,7 @@ namespace
 constexpr int CONTROL_BTN_LEVELS = 20;
 
 // Fallback icon shown when no add-on icon is available
-constexpr const char* DEFAULT_ADDON_ICON = "DefaultAddon.png";
+constexpr const char* DEFAULT_ADDON_ICON = ART::DEFAULT::ADDON;
 } // namespace
 
 CGUIDialogAddonSettings::CGUIDialogAddonSettings()

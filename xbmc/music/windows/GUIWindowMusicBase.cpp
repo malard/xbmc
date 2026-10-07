@@ -29,6 +29,7 @@
 #include "playlists/PlayListFileItemClassify.h"
 #include "utils/ArtTypes.h"
 #include "utils/ContentNames.h"
+#include "utils/DefaultArt.h"
 #include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "video/VideoFileItemClassify.h"
@@ -799,13 +800,13 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
       CFileItemPtr newPlaylist(new CFileItem(PARTYMODE::RulesPath(PLAYLIST::Audio),false));
       newPlaylist->SetLabel(localizeStrings.Get(16035));
       newPlaylist->SetLabelPreformatted(true);
-      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, ART::DEFAULT::PARTY_MODE);
       newPlaylist->SetFolder(true);
       items.Add(newPlaylist);
 
       newPlaylist = std::make_shared<CFileItem>(ITEM::PLACEHOLDER::NEW_PLAYLIST, false);
       newPlaylist->SetLabel(localizeStrings.Get(525));
-      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, ART::DEFAULT::ADD_SOURCE);
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);
       newPlaylist->SetCanQueue(false);
@@ -814,7 +815,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
       newPlaylist = std::make_shared<CFileItem>(
           std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "music", false);
       newPlaylist->SetLabel(localizeStrings.Get(21437));
-      newPlaylist->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
+      newPlaylist->SetArt(ART::TYPE::ICON, ART::DEFAULT::ADD_SOURCE);
       newPlaylist->SetLabelPreformatted(true);
       newPlaylist->SetSpecialSort(SortSpecial::BOTTOM);
       newPlaylist->SetCanQueue(false);
