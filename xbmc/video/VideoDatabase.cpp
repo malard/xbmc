@@ -7342,7 +7342,6 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
     }
 
     if (!strArtist.empty())
-      // change displayed path from eg /23 to /Artist
       items.SetProperty(ITEM::PROPERTY::CUSTOM_TITLE,strArtist);
 
     return true;
