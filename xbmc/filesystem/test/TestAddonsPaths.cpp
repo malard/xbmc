@@ -19,7 +19,6 @@ using ADDON::AddonType;
 using ADDON::CAddonInfo;
 using KODI::MEDIA::MediaSection;
 
-// CAddonsDirectory tells its nodes apart by host name, which EndpointOf must give
 TEST(TestAddonsPaths, EndpointIsTheHostName)
 {
   for (const char* path :
