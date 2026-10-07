@@ -3508,7 +3508,7 @@
         </setting>
         <setting id="videoscreen.livegeometrynarrow" type="integer" parent="videoscreen.livecontentgeometry" label="40853" help="40854">
           <level>3</level>
-          <default>3</default>
+          <default>1</default>
           <constraints>
             <minimum label="40860">1</minimum>
             <step>1</step>
