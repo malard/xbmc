@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GetPath and GetDynPath</title>
+<style>
+:root {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+
+  --serif: Constantia, Cambria, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+
+  --measure: 70ch;
+  --rail: 14.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #0D1013;
+    --surface: #151A1F;
+    --sunk:    #10151A;
+    --ink:     #E4E9ED;
+    --muted:   #8B96A2;
+    --rule:    #252D35;
+    --rule-firm:#38434E;
+    --accent:  #3FB4BE;
+    --accent-soft: #10333A;
+    --lit:     #E0B45C;
+    --lit-soft:#3A2F17;
+    --warn:    #D2854E;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0D1013;
+  --surface: #151A1F;
+  --sunk:    #10151A;
+  --ink:     #E4E9ED;
+  --muted:   #8B96A2;
+  --rule:    #252D35;
+  --rule-firm:#38434E;
+  --accent:  #3FB4BE;
+  --accent-soft: #10333A;
+  --lit:     #E0B45C;
+  --lit-soft:#3A2F17;
+  --warn:    #D2854E;
+}
+:root[data-theme="light"] {
+  --ground:  #EDEFF1;
+  --surface: #FFFFFF;
+  --sunk:    #E4E8EB;
+  --ink:     #131920;
+  --muted:   #5A6672;
+  --rule:    #D3D9DE;
+  --rule-firm:#B6BFC7;
+  --accent:  #0B6E78;
+  --accent-soft: #DCEDEF;
+  --lit:     #B9862B;
+  --lit-soft:#F2E4C4;
+  --warn:    #A9522A;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.masthead-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2.75rem 2rem 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+}
+.eyebrow .dot { color: var(--rule-firm); }
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin: 0;
+}
+.standfirst {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0;
+}
+.factbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2.2rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+.fact { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.3rem 0; }
+.fact dt {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fact dd { margin: 0; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- summary band ---------- */
+
+.band { border-bottom: 1px solid var(--rule); background: var(--sunk); }
+.band-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.9rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.5rem 2.5rem;
+}
+.tldr h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.tldr p, .tldr ul { max-width: 46ch; }
+.tldr p { margin: 0; font-size: 0.97rem; }
+.tldr ul { margin: 0; padding-left: 1.1rem; font-size: 0.92rem; }
+.tldr li { margin-bottom: 0.3rem; }
+.tldr li:last-child { margin-bottom: 0; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 3.25rem;
+  align-items: start;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2.25rem 0;
+  border-right: 1px solid var(--rule);
+}
+.rail h2 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.8rem;
+  font-weight: 600;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.rail li { counter-increment: toc; }
+.rail a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 2rem;
+  font-size: 0.855rem;
+  line-height: 1.3;
+  color: var(--muted);
+  text-decoration: none;
+  position: relative;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+}
+.rail a::before {
+  content: counter(toc, decimal-leading-zero);
+  position: absolute;
+  left: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--rule-firm);
+}
+.rail a:hover { color: var(--ink); }
+.rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rail a.here { color: var(--accent); border-left-color: var(--accent); }
+.rail a.here::before { color: var(--accent); }
+
+/* ---------- content ---------- */
+
+.content { padding: 2.25rem 0 0; min-width: 0; }
+section { margin: 0 0 3rem; scroll-margin-top: 1.5rem; }
+
+h2.sec {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.3rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+h2.sec .num {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  flex: none;
+}
+.sec-rule { border: 0; border-top: 1px solid var(--rule-firm); margin: 0 0 1.35rem; }
+
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 1.9rem 0 0.55rem;
+}
+
+p, ul, ol.prose { max-width: var(--measure); }
+p { margin: 0 0 0.9rem; }
+ul.prose, ol.prose { margin: 0 0 1rem; padding-left: 1.15rem; }
+ul.prose li, ol.prose li { margin-bottom: 0.35rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+code, .mono { font-family: var(--mono); font-size: 0.875em; }
+p code, li code, td code {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  padding: 0.05em 0.32em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.lead { font-size: 1.05rem; line-height: 1.55; color: var(--ink); max-width: 62ch; }
+
+/* ---------- notes ---------- */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1rem;
+  margin: 1.1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: var(--measure);
+}
+.note.caution { border-left-color: var(--warn); background: var(--lit-soft); }
+.note p { margin: 0 0 0.5rem; max-width: none; }
+.note p:last-child { margin: 0; }
+.note-label {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.note.caution .note-label { color: var(--warn); }
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 34rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--sunk);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.m, th.m { font-family: var(--mono); font-size: 0.79rem; white-space: nowrap; }
+td.w { min-width: 10rem; }
+.chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--rule-firm);
+  color: var(--muted);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chip.brk { border-color: var(--warn); color: var(--warn); }
+.chip.ok { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- code ---------- */
+
+pre {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule-firm);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: 1rem 0 1.35rem;
+  tab-size: 2;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; white-space: pre; }
+.c-com { color: var(--muted); font-style: italic; }
+
+/* ---------- figures ---------- */
+
+figure {
+  margin: 1.35rem 0 1.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 1.2rem;
+  max-width: var(--measure);
+}
+figure svg { display: block; width: 100%; height: auto; }
+
+/* ---------- footer ---------- */
+
+footer { border-top: 1px solid var(--rule); background: var(--surface); padding: 2rem 2rem 3rem; }
+.footer-inner { max-width: 76rem; margin: 0 auto; font-size: 0.83rem; color: var(--muted); }
+.footer-inner p { max-width: 60ch; margin: 0; }
+
+/* ---------- theme toggle ---------- */
+
+.toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--rule-firm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.toggle:hover { color: var(--ink); border-color: var(--accent); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rail {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding: 1.35rem 0;
+  }
+  .rail ol { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
+  .rail a { padding-left: 1.6rem; border-left: 0; }
+}
+@media (max-width: 40rem) {
+  .masthead-inner, .band-inner, .shell, footer { padding-left: 1.15rem; padding-right: 1.15rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">
+      <span>Kodi&nbsp;v23</span><span class="dot">/</span>
+      <span>Design discussion</span>
+    </div>
+    <h1>GetPath and GetDynPath</h1>
+    <p class="standfirst">The dynamic path holds whichever resolution step last wrote to it, and falls back to the item path without saying so. Call sites ask four different questions of two accessors, and recent fixes move them back and forth between the two.</p>
+
+    <dl class="factbar">
+      <div class="fact"><dt>Status</dt><dd>Open for discussion</dd></div>
+      <div class="fact"><dt>Measured on</dt><dd>master <code>c25d72466b</code></dd></div>
+      <div class="fact"><dt>Callers</dt><dd>1,571 GetPath / 276 GetDynPath</dd></div>
+      <div class="fact"><dt>Writers</dt><dd>46 SetDynPath</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="band">
+  <div class="band-inner">
+
+    <div class="tldr">
+      <h2>Plainly</h2>
+      <p>A library item, a plugin item or a Blu-ray has a name it is listed under and a different thing that is actually played. Kodi keeps the second in one undocumented field, and each place that needs "the file" has to guess which of the two to read. The guesses keep getting changed, and each change fixes one kind of item.</p>
+    </div>
+
+    <div class="tldr">
+      <h2>Substance</h2>
+      <ul>
+        <li><code>m_strDynPath</code> has no documented meaning; its writers give it eight different ones.</li>
+        <li><code>GetDynPath()</code> returns <code>m_strPath</code> when the field is empty, so a wrong choice never fails visibly.</li>
+        <li>Callers need four answers: what to open, where the file is, what the library knows it as, what to show.</li>
+        <li>Six recent PRs change call sites in both directions, each tested against one producer.</li>
+      </ul>
+    </div>
+
+    <div class="tldr">
+      <h2>Where to look</h2>
+      <ul>
+        <li><a href="#holds">&sect;02</a> &mdash; what the field holds, by producer.</li>
+        <li><a href="#questions">&sect;03</a> &mdash; the four questions.</li>
+        <li><a href="#options">&sect;06</a> &mdash; the options to discuss.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#today">The two accessors</a></li>
+      <li><a href="#holds">What the field holds</a></li>
+      <li><a href="#questions">What callers need</a></li>
+      <li><a href="#recent">Recent changes</a></li>
+      <li><a href="#through">How bugs get through</a></li>
+      <li><a href="#options">Options</a></li>
+      <li><a href="#scope">Not in scope</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+  <section id="today">
+    <h2 class="sec"><span class="num">01</span>The two accessors</h2>
+    <hr class="sec-rule">
+    <p class="lead"><code>GetPath()</code> is the item's identity. <code>GetDynPath()</code> is <code>m_strDynPath</code> if set, otherwise <code>m_strPath</code>.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Member</th><th>Documented as</th></tr></thead>
+      <tbody>
+        <tr><td class="m">m_strPath</td><td>"complete path to item" (<code>FileItem.h:589</code>)</td></tr>
+        <tr><td class="m">m_strDynPath</td><td>nothing (<code>FileItem.h:590</code>)</td></tr>
+        <tr><td class="m">GetDynPath()</td><td>nothing; falls back to <code>m_strPath</code> (<code>FileItem.cpp:1759</code>)</td></tr>
+        <tr><td class="m">HasDynPath()</td><td>nothing; the only way to tell "resolved" from "fell back"</td></tr>
+      </tbody>
+    </table></div>
+    <p><code>GetURL()</code> and <code>GetDynURL()</code> (xbmc/xbmc#27085) are parsed views of the same two strings and carry the same ambiguity.</p>
+  </section>
+
+  <section id="holds">
+    <h2 class="sec"><span class="num">02</span>What the field holds</h2>
+    <hr class="sec-rule">
+    <p class="lead">Each producer writes the next step of its own resolution. Steps stack on one item, and the field keeps only the last.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Item</th><th>GetPath()</th><th>Dynamic path set to</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>Library listing</td><td><code>videodb://...</code></td><td>the media file</td><td class="m">VideoDatabase.cpp:8439, 8690, 9696, 13293; VideoDatabaseDirectory.cpp:118</td></tr>
+        <tr><td>Plugin</td><td><code>plugin://...</code></td><td>the resolved URL</td><td class="m">PluginDirectory.cpp:152</td></tr>
+        <tr><td>Internet stream</td><td>the URL</td><td>the URL after redirects</td><td class="m">DVDFactoryInputStream.cpp:155</td></tr>
+        <tr><td>Blu-ray</td><td>the disc or folder</td><td>a <code>bluray://</code> menu or playlist</td><td class="m">ApplicationPlay.cpp:248; DVDInputStream.cpp:263; BlurayDirectory.cpp:609</td></tr>
+        <tr><td>Stack</td><td>a part</td><td>the <code>stack://</code> path</td><td class="m">VideoInfoScanner.cpp:1219, 1306</td></tr>
+        <tr><td>ISO, DVD drive</td><td>the image or drive</td><td>a host name or device path</td><td class="m">ISO9660Directory.cpp:95; DVDDirectory.cpp:26</td></tr>
+        <tr><td>UPnP</td><td>the object</td><td>the resource URI</td><td class="m">UPnPInternal.cpp:1395</td></tr>
+        <tr><td>NFO export</td><td>the episode</td><td>the <code>.nfo</code> being written, ahead of <code>GetLocalArt()</code></td><td class="m">VideoDatabase.cpp:11890</td></tr>
+        <tr><td>Reset</td><td>&mdash;</td><td><code>""</code>, so reads fall back to the path</td><td class="m">ApplicationPlayerCallback.cpp:151; DVDInputStream.cpp:205</td></tr>
+      </tbody>
+    </table></div>
+    <p>A widget item goes from <code>videodb://</code> to the file; a Blu-ray in a stack goes from the stack to a playlist. After either, nothing records the earlier steps.</p>
+  </section>
+
+  <section id="questions">
+    <h2 class="sec"><span class="num">03</span>What callers need</h2>
+    <hr class="sec-rule">
+    <p class="lead">Call sites ask four questions. Two accessors answer them.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Question</th><th>Used for</th><th>Right answer</th></tr></thead>
+      <tbody>
+        <tr><td>What does the player open?</td><td>input streams, redirects, Blu-ray navigation</td><td>the last resolution step</td></tr>
+        <tr><td>Where is the file?</td><td>subtitles, NFO and art beside it, 3D name, thumbnails</td><td>the real file; never <code>videodb://</code>, <code>bluray://</code> or a resolved stream URL</td></tr>
+        <tr><td>What does the library know it as?</td><td>bookmarks, video settings, stream details, play counts</td><td>the path the database stores</td></tr>
+        <tr><td>What does the user see?</td><td>labels, logs</td><td>usually neither</td></tr>
+      </tbody>
+    </table></div>
+    <p>For a plain file all four answers are the same string, which is why most call sites work whichever accessor they use.</p>
+  </section>
+
+  <section id="recent">
+    <h2 class="sec"><span class="num">04</span>Recent changes</h2>
+    <hr class="sec-rule">
+    <p class="lead">Each fix is right for the producer that showed the bug.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>PR</th><th>Call site</th><th>Direction</th><th>Producer it fixed</th></tr></thead>
+      <tbody>
+        <tr><td class="m">#29584</td><td>3D detection from the name</td><td>to GetDynPath</td><td>library item from a widget</td></tr>
+        <tr><td class="m">#29190</td><td>generated video thumbnails</td><td>to GetDynPath</td><td>library item</td></tr>
+        <tr><td class="m">#28288</td><td>Blu-ray playlist file name</td><td>to GetDynPath</td><td>plugin and <code>.strm</code></td></tr>
+        <tr><td class="m">#29393</td><td>RetroPlayer open, savestates</td><td>to GetDynPath</td><td>plugin game</td></tr>
+        <tr><td class="m">#28874</td><td>merging item info</td><td>keep the field</td><td>any; a merge dropped it</td></tr>
+        <tr><td class="m">#28077 (open)</td><td>subtitle anchor</td><td>to GetPath</td><td><code>.strm</code></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note caution"><span class="note-label">By reading</span><p>After #29584, 3D detection matches the regular expressions against whatever the field holds. For a library file that is the file name. For a plugin it is the resolved URL, and for a Blu-ray played through a playlist it is a <code>bluray://</code> path. Not reproduced in a running Kodi.</p></div>
+  </section>
+
+  <section id="through">
+    <h2 class="sec"><span class="num">05</span>How bugs get through</h2>
+    <hr class="sec-rule">
+    <ul>
+      <li><strong>The fallback hides the choice.</strong> Reading the wrong accessor returns the other path rather than nothing, so tests built on a plain file pass either way.</li>
+      <li><strong>One field, many meanings.</strong> Section&nbsp;02 lists eight. A change is tested against the producer in the report, not against the other seven.</li>
+      <li><strong>Layers overwrite each other.</strong> Code that needs an earlier step, such as the real file behind a Blu-ray playlist, can no longer get it.</li>
+      <li><strong>Copies can drop it.</strong> Any copy or merge that misses the field reverts the item to its listing path; #28874 fixed one.</li>
+      <li><strong>It is used as scratch.</strong> The NFO export points it at a file that is never played.</li>
+    </ul>
+  </section>
+
+  <section id="options">
+    <h2 class="sec"><span class="num">06</span>Options</h2>
+    <hr class="sec-rule">
+    <p class="lead">For discussion. None is decided.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th></th><th>Option</th><th>Cost</th><th>Leaves open</th></tr></thead>
+      <tbody>
+        <tr><td class="m">A</td><td>Document <code>m_strDynPath</code> as "what the player opens", and stop using it as scratch.</td><td>Small.</td><td>Callers asking "where is the file" still have no accessor.</td></tr>
+        <tr><td class="m">B</td><td>Add accessors per question: one for the file on disk, one for the library identity. <code>GetDynPath()</code> keeps "what to open".</td><td>Each producer must set the file it resolved from; 276 call sites to sort into one of three.</td><td>How each producer records its file; whether the fallback stays.</td></tr>
+        <tr><td class="m">C</td><td>Record the resolution as a chain of steps on the item, with accessors that pick a step by kind.</td><td>Largest; every producer and copy path changes.</td><td>Whether the extra state is worth it beyond B.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><span class="note-label">Open</span><p>Whether <code>GetDynPath()</code> should keep falling back to the item path, or callers should test <code>HasDynPath()</code>. Whether a stack or a Blu-ray playlist counts as "the file" for subtitles and art.</p></div>
+  </section>
+
+  <section id="scope">
+    <h2 class="sec"><span class="num">07</span>Not in scope</h2>
+    <hr class="sec-rule">
+    <ul>
+      <li>Database path storage. The <code>files</code> and <code>path</code> tables stay as they are; section&nbsp;03 only names which of them a caller should read.</li>
+      <li>Music. The same field is set in two music sites; the video cases are where the reports come from.</li>
+      <li>Reverting any merged change. Section&nbsp;04 records direction, not error.</li>
+    </ul>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p>Not a Team Kodi publication.</p>
+  </div>
+</footer>
+
+<button class="toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme">Theme</button>
+
+<script>
+(function () {
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var root = document.documentElement;
+    var current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var sections = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 120) { best = i; }
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () { mark(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  mark();
+})();
+</script>
+
+</body>
+</html>
