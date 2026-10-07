@@ -49,7 +49,6 @@ namespace
 
 constexpr const char* PRESETS_ADDON_NAME = "game.shader.presets";
 constexpr const char* ICON_VIDEO = "";
-constexpr const char* ICON_GET_MORE = ART::DEFAULT::ADD_SOURCE;
 
 struct ScalingMethodProperties
 {
@@ -250,7 +249,7 @@ void CDialogGameVideoFilter::InitGetMoreButton()
   {
     auto item = std::make_shared<CFileItem>(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21452)); // "Get more..."
-    item->SetArt(ART::TYPE::ICON, ICON_GET_MORE);
+    item->SetArt(ART::TYPE::ICON, ART::DEFAULT::ADD_SOURCE);
     m_items.Add(std::move(item));
   }
 }
