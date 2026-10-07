@@ -292,7 +292,6 @@ void CAdvancedSettings::Initialize()
   m_videoIgnorePercentAtEnd   = 8.0f;
   m_videoContentGeometryVariesShare = 0.10f;
   m_videoContentGeometryReductionWidth = 960;
-  m_videoContentGeometryLiveRepublishes = false;
   m_videoPlayCountMinimumPercent = 90.0f;
   m_videoVDPAUScaling = -1;
   m_videoNonLinStretchRatio = 0.5f;
@@ -775,8 +774,6 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
                        0.0f, 1.0f);
     XMLUtils::GetInt(pElement, "contentgeometryreductionwidth",
                      m_videoContentGeometryReductionWidth, 120, 3840);
-    XMLUtils::GetBoolean(pElement, "contentgeometryliverepublishes",
-                         m_videoContentGeometryLiveRepublishes);
 
     XMLUtils::GetBoolean(pElement, "usetimeseeking", m_videoUseTimeSeeking);
     XMLUtils::GetBoolean(pElement, "smoothpercenttotimeseeking", m_videoSmoothPercentToTimeSeeking);

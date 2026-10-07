@@ -194,10 +194,6 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
 
     //! \brief Width of the reduced copy live geometry reads a hardware-decoded picture through.
     int m_videoContentGeometryReductionWidth;
-
-    //! \brief Whether a live reading may narrow the published shape as well as widen it. Off
-    //! by default.
-    bool m_videoContentGeometryLiveRepublishes;
     float m_audioApplyDrc;
     unsigned int m_maxPassthroughOffSyncDuration = 50; // when 50 ms off adjust
     bool m_AllowMultiChannelFloat = false; // Android only switch to be removed in v22

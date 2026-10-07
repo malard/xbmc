@@ -15,7 +15,6 @@
 #include "application/PlaybackAnnouncer.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
 #include "cores/VideoSettings.h"
-#include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
@@ -191,7 +190,6 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
     m_overrides = m_pending;
     m_pending = {};
 
-    SeedLiveRatchetLocked();
     m_haveStream = false;
     m_current = AtRestGeometry();
 
@@ -263,35 +261,18 @@ void CApplicationContentGeometry::RefreshOsdPlacement()
 
 void CApplicationContentGeometry::SetLive(const CRectInt& rect, bool varies)
 {
-  bool republish{true};
   {
     std::unique_lock lock(m_section);
 
-    const float par{PixelAspectRatio(m_inputs.stream)};
-    const float reading{rect.Height() > 0 ? static_cast<float>(rect.Width()) * par /
-                                                static_cast<float>(rect.Height())
-                                          : 0.0f};
-    const bool always{CServiceBroker::GetSettingsComponent()
-                          ->GetAdvancedSettings()
-                          ->m_videoContentGeometryLiveRepublishes};
-    if (always || LiveReadingWidens(reading, m_livePublishedAspect))
-      m_livePublishedAspect = reading;
-    else
-      republish = false;
-
-    if (republish)
-    {
-      m_inputs.live = {};
-      m_inputs.live.rect = rect;
-      m_inputs.live.varies =
-          varies || (m_inputs.cached.HasRecord() && m_inputs.cached.record.Varies());
-      m_inputs.live.hasReading = true;
-      m_inputs.hasLive = true;
-    }
+    m_inputs.live = {};
+    m_inputs.live.rect = rect;
+    m_inputs.live.varies =
+        varies || (m_inputs.cached.HasRecord() && m_inputs.cached.record.Varies());
+    m_inputs.live.hasReading = true;
+    m_inputs.hasLive = true;
   }
 
-  if (republish)
-    Refresh();
+  Refresh();
 }
 
 void CApplicationContentGeometry::ClearLive()
@@ -300,8 +281,6 @@ void CApplicationContentGeometry::ClearLive()
     std::unique_lock lock(m_section);
     m_inputs.live = {};
     m_inputs.hasLive = false;
-
-    SeedLiveRatchetLocked();
   }
 
   Refresh();
@@ -413,7 +392,6 @@ void CApplicationContentGeometry::Clear()
     m_overrides = {};
     m_pending = {};
 
-    m_livePublishedAspect = 0.0f;
     m_haveStream = false;
 
     m_drawn = {};
@@ -454,11 +432,6 @@ CApplicationContentGeometry::RenderInputs CApplicationContentGeometry::GetRender
 float CApplicationContentGeometry::MaskAspectLocked() const
 {
   return m_inputs.cached.HasRecord() ? WidestAspect(m_inputs.cached.record) : 0.0f;
-}
-
-void CApplicationContentGeometry::SeedLiveRatchetLocked()
-{
-  m_livePublishedAspect = MaskAspectLocked();
 }
 
 float CApplicationContentGeometry::DetectedAspect() const

@@ -103,12 +103,9 @@ private:
   //! \brief Publish \p geometry, announcing it only when it differs from what is already out.
   void Set(const KODI::VIDEO::GEOMETRY::EffectiveGeometry& geometry);
 
-  //! \brief The widest ratio the stored measurement holds, which the mask opens to and the
-  //! live ratchet starts from. Zero when nothing was measured.
+  //! \brief The widest ratio the stored measurement holds, which the mask opens to. Zero when
+  //! nothing was measured.
   float MaskAspectLocked() const;
-
-  //! \brief Set the widen-only floor to the widest shape the stored measurement found.
-  void SeedLiveRatchetLocked();
 
   //! \brief Carry a moved raster to the layout; nothing when it is already in force.
   void ApplyRaster();
@@ -135,10 +132,6 @@ private:
   KODI::VIDEO::GEOMETRY::GeometryOverrides m_pending;
 
   bool m_haveStream{false};
-
-  //! \brief The floor a live reading must clear to be served, as a display ratio. Seeded from
-  //! the stored measurement and raised by a wider reading; zero when nothing is known.
-  float m_livePublishedAspect{0.0f};
 
   //! \brief Where the OSD is laid out, mirrored out of the settings because the layout asks
   //! for it every frame. Refreshed by OnSettingChanged().
