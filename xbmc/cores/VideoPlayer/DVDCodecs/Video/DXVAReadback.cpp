@@ -259,6 +259,9 @@ ReductionResult CSurfaceReadback::Reduce(ID3D11Resource* surface,
   }
 
   m_deviceContext->CopyResource(m_staging[m_writeSlot].Get(), m_target.Get());
+  // Submitted only at the render thread's next present otherwise, which runs frames behind the
+  // decoder, so the slot read next time would never have been copied.
+  m_deviceContext->Flush();
   m_filled[m_writeSlot] = true;
   m_writeSlot = (m_writeSlot + 1) % STAGING_SLOTS;
 

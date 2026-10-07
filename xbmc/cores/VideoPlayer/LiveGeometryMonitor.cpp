@@ -204,7 +204,10 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
   }
 
   if (!reduced && result == ReductionResult::Pending)
+  {
+    SetState("waiting for the readback");
     return false;
+  }
 
   if (!reduced)
   {
