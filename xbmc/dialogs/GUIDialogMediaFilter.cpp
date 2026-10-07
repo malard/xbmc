@@ -744,7 +744,7 @@ int CGUIDialogMediaFilter::GetItems(const Filter &filter, std::vector<std::strin
         videodb.GetStudiosNav(baseDir, selectItems, type, dbfilter, countOnly);
         break;
       case Field::ALBUM:
-        videodb.GetMusicVideoAlbumsNav(baseDir, selectItems, -1, dbfilter, countOnly);
+        videodb.GetMusicVideoAlbumsNav(baseDir, selectItems, dbfilter, countOnly);
         break;
       case Field::TAG:
         videodb.GetTagsNav(baseDir, selectItems, type, dbfilter, countOnly);

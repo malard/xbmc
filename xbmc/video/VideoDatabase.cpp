@@ -7187,7 +7187,7 @@ bool CVideoDatabase::GetSetsByWhere(const std::string& strBaseDir, const Filter 
   return false;
 }
 
-bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFileItemList& items, int idArtist /* = -1 */, const Filter &filter /* = Filter() */, bool countOnly /* = false */)
+bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFileItemList& items, const Filter &filter /* = Filter() */, bool countOnly /* = false */)
 {
   try
   {
@@ -7215,9 +7215,6 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
     if (StringUtils::EndsWith(strBaseDir,"albums/"))
       extFilter.AppendWhere(PrepareSQL("musicvideo_view.c%02d != ''", VIDEODB_ID_MUSICVIDEO_ALBUM));
 
-    if (idArtist > -1)
-      videoUrl.AddOption("artistid", idArtist);
-
     extFilter.AppendGroup(PrepareSQL(" CASE WHEN musicvideo_view.c09 !='' THEN musicvideo_view.c09 "
                                      "ELSE musicvideo_view.c00 END"));
 
@@ -7244,10 +7241,6 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
     */
     if (iRowsFound <= 0)
       return iRowsFound == 0;
-
-    std::string strArtist;
-    if (idArtist> -1)
-      strArtist = m_pDS->fv("actor.name").get_asString();
 
     if (countOnly)
     {
@@ -7303,7 +7296,6 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
                 m_pDS->fv("path.strPath").get_asString(),
                 CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO)))
         {
-          pItem->GetVideoInfoTag()->m_artist.emplace_back(strArtist);
           pItem->GetVideoInfoTag()->m_iDbId = idMVideo;
           items.Add(pItem);
           idMVideoList.emplace_back(idMVideo);
@@ -7340,9 +7332,6 @@ bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFile
         idData.pop_front();
       }
     }
-
-    if (!strArtist.empty())
-      items.SetProperty(ITEM::PROPERTY::CUSTOM_TITLE,strArtist);
 
     return true;
   }
@@ -8158,7 +8147,7 @@ bool CVideoDatabase::GetItems(const std::string& strBaseDir,
     return GetActorsNav(strBaseDir, items, mediaType, filter);
   else if (StringUtils::EqualsNoCase(itemType, MEDIA::CONTENT::ALBUMS) &&
            mediaType == VideoDbContentType::MUSICVIDEOS)
-    return GetMusicVideoAlbumsNav(strBaseDir, items, -1, filter);
+    return GetMusicVideoAlbumsNav(strBaseDir, items, filter);
 
   return false;
 }
