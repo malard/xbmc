@@ -24,7 +24,6 @@
 #include "video/geometry/GeometryTransforms.h"
 
 #include <algorithm>
-#include <chrono>
 
 extern "C"
 {
@@ -38,6 +37,9 @@ namespace
 
 //! \brief How often the settings store is consulted.
 constexpr int64_t SETTINGS_REFRESH_MS = 1000;
+
+//! \brief Width of the reduced copy a hardware-decoded picture is read through.
+constexpr unsigned int REDUCTION_WIDTH = 960;
 
 //! \brief Tolerates formats FFmpeg cannot name.
 const char* PixelFormatName(AVPixelFormat format)
@@ -73,8 +75,6 @@ void CLiveGeometryMonitor::OnStreamOpened()
   m_stereoMode.clear();
   m_unreadableLogged = false;
   m_reducedLogged = false;
-  m_reduceTotalMs = 0.0;
-  m_reduceCount = 0;
   SetState("waiting for a frame");
 }
 
@@ -157,9 +157,8 @@ CRectInt CLiveGeometryMonitor::OnPicture(const VideoPicture& picture,
   {
     if (reduced)
     {
-      SetState(StringUtils::Format("{} (from {}x{} reductions, avg {:.2f} ms)",
-                                   m_selector.Describe(), m_reduction.width, m_reduction.height,
-                                   m_reduceCount > 0 ? m_reduceTotalMs / m_reduceCount : 0.0));
+      SetState(StringUtils::Format("{} (from {}x{} reductions)", m_selector.Describe(),
+                                   m_reduction.width, m_reduction.height));
     }
     else
     {
@@ -190,17 +189,10 @@ bool CLiveGeometryMonitor::AcquireFrame(const VideoPicture& picture,
   ReductionResult result = ReductionResult::Unsupported;
   if (picture.videoBuffer)
   {
-    const auto reduceStart = std::chrono::steady_clock::now();
     result = picture.videoBuffer->ReduceForAnalysis(m_reduction, picture.iWidth, picture.iHeight,
-                                                    m_settings.reductionWidth);
+                                                    REDUCTION_WIDTH);
     if (result == ReductionResult::Produced)
-    {
-      m_reduceTotalMs +=
-          std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - reduceStart)
-              .count();
-      ++m_reduceCount;
       reduced = CVideoFileGeometry::BuildGeometryFrameRef(m_reduction, picture, hints, frame);
-    }
   }
 
   if (!reduced && result == ReductionResult::Pending)

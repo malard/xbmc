@@ -108,10 +108,6 @@ private:
   //! allocated once for the stream.
   KODI::VIDEO::GEOMETRY::ReducedFrame m_reduction;
 
-  //! \brief What producing the reductions has cost, for the debug overlay.
-  double m_reduceTotalMs{0.0};
-  uint64_t m_reduceCount{0};
-
   mutable CCriticalSection m_section; //!< guards m_state, read by the render thread
   std::string m_state;
 

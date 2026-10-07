@@ -47,10 +47,6 @@ struct LiveGeometrySettings
   bool enabled{false};
 
   LiveSelectorParams selector;
-
-  //! \brief Width of the reduced copy a hardware-decoded picture is read through. Settable in
-  //! advancedsettings.xml.
-  unsigned int reductionWidth{960};
 };
 
 LiveGeometrySettings LiveGeometryFromSettings();
