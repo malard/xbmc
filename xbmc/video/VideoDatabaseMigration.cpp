@@ -17,6 +17,7 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "VideoDatabase.h"
+#include "VideoDatabaseDDL.h"
 #include "dbwrappers/dataset.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "language/i18n/TableLanguageCodes.h"
@@ -1433,9 +1434,18 @@ void CVideoDatabase::UpdateTables(int iVersion)
   {
     m_pDS->exec("ALTER TABLE `sets` ADD strSortSet TEXT");
   }
+
+  if (iVersion < 151)
+  {
+    KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
+
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredAspect float");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredOn text");
+    m_pDS->exec("ALTER TABLE settings ADD COLUMN DetectedWhenDeclared float");
+  }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 150;
+  return 151;
 }
