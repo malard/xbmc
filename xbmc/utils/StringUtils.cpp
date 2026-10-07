@@ -36,6 +36,7 @@
 #include "language/Language.h"
 #include "language/LanguageTag.h"
 #include "language/i18n/Collation.h"
+#include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/RegExp.h"
@@ -438,7 +439,7 @@ void StringUtils::ToCapitalize(std::string& str) noexcept
 
 void StringUtils::ToCapitalize(std::wstring& str) noexcept
 {
-  const std::locale& loc = g_langInfo.GetSystemLocale();
+  const std::locale& loc = CServiceBroker::GetResourcesComponent().GetLangInfo().GetSystemLocale();
   bool isFirstLetter = true;
   for (std::wstring::iterator it = str.begin(); it < str.end(); ++it)
   {
@@ -1085,6 +1086,7 @@ static wchar_t GetCollationWeight(const wchar_t& r)
 // See also the equivalent StringUtils::AlphaNumericCollation() for UFT8 data
 int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_view right) noexcept
 {
+  auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   auto l{left.cbegin()};
   auto r{right.cbegin()};
   while (l != left.end() && r != right.end())
@@ -1141,7 +1143,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
         continue;
       }
     }
-    if (!g_langInfo.UseLocaleCollation())
+    if (!langInfo.UseLocaleCollation())
     {
       // Apply case sensitive accent folding collation to non-ascii chars.
       // This mimics utf8_general_ci collation, and provides simple collation of LATIN-1 chars
@@ -1159,7 +1161,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
 
     if (lc != rc)
     {
-      if (!g_langInfo.UseLocaleCollation())
+      if (!langInfo.UseLocaleCollation())
       {
         // Compare unicode (having applied accent folding collation to non-ascii chars).
         int i = wcsncmp(&lc, &rc, 1);
@@ -1170,7 +1172,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
         // Fetch collation facet from locale to do comparison of wide char although on some
         // platforms this is not language specific but just compares unicode
         const std::collate<wchar_t>& coll =
-            std::use_facet<std::collate<wchar_t>>(g_langInfo.GetSystemLocale());
+            std::use_facet<std::collate<wchar_t>>(langInfo.GetSystemLocale());
         int cmp_res = coll.compare(&lc, &lc + 1, &rc, &rc + 1);
         if (cmp_res != 0)
           return cmp_res;
@@ -1250,6 +1252,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
                                        int nKey2,
                                        const void* pKey2) noexcept
 {
+  auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   // Get exact matches of shorter text to start of larger test fast
   int n = std::min(nKey1, nKey2);
   int r = memcmp(pKey1, pKey2, n);
@@ -1326,7 +1329,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
     i += bytes;
     rc = UTF8ToUnicode(&zB[j], nKey2 - j, bytes);
     j += bytes;
-    if (!g_langInfo.UseLocaleCollation())
+    if (!langInfo.UseLocaleCollation())
     {
       // Apply case sensitive accent folding collation to non-ascii chars.
       // This mimics utf8_general_ci collation, and provides simple collation of LATIN-1 chars
@@ -1344,7 +1347,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
 
     if (lc != rc)
     {
-      if (!g_langInfo.UseLocaleCollation() || (lc <= 128 && rc <= 128))
+      if (!langInfo.UseLocaleCollation() || (lc <= 128 && rc <= 128))
         // Compare unicode (having applied accent folding collation to non-ascii chars).
         return static_cast<int>(lc) - static_cast<int>(rc);
       else
@@ -1352,7 +1355,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
         // Fetch collation facet from locale to do comparison of wide char although on some
         // platforms this is not language specific but just compares unicode
         const std::collate<wchar_t>& coll =
-            std::use_facet<std::collate<wchar_t>>(g_langInfo.GetSystemLocale());
+            std::use_facet<std::collate<wchar_t>>(langInfo.GetSystemLocale());
         int cmp_res = coll.compare(&lc, &lc + 1, &rc, &rc + 1);
         if (cmp_res != 0)
           return cmp_res;
@@ -1941,7 +1944,7 @@ bool StringUtils::Contains(std::string_view str,
 
 const std::locale& StringUtils::GetOriginalLocale() noexcept
 {
-  return g_langInfo.GetOriginalLocale();
+  return CServiceBroker::GetResourcesComponent().GetLangInfo().GetOriginalLocale();
 }
 
 std::string StringUtils::CreateFromCString(const char* cstr)

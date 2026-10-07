@@ -11,7 +11,6 @@
 #include "language/Territory.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
-#include "utils/GlobalsHandling.h"
 #include "utils/Speed.h"
 #include "utils/Temperature.h"
 
@@ -231,6 +230,3 @@ protected:
   CSpeed::Unit m_speedUnit;
 };
 } // namespace KODI::LANGUAGE
-
-XBMC_GLOBAL_REF(KODI::LANGUAGE::CLangInfo, g_langInfo);
-#define g_langInfo XBMC_GLOBAL_USE(KODI::LANGUAGE::CLangInfo)
