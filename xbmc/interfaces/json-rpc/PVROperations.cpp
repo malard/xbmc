@@ -281,7 +281,7 @@ JSONRPC_STATUS CPVROperations::GetBroadcasts(const CVariant& parameterObject, CV
 }
 
 JSONRPC_STATUS CPVROperations::GetBroadcastsByChannelGroup(const CVariant& parameterObject,
-                                                   CVariant& result)
+                                                           CVariant& result)
 {
   const std::shared_ptr<const CPVRChannelGroupsContainer> channelGroupContainer{
       Started(CServiceBroker::GetPVRManager().ChannelGroups())};

@@ -156,8 +156,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 
         CGUIDialogOK::ShowAndGetInput(
             CVariant{40015},
-            StringUtils::Format(localizeStrings.Get(msgid),
-                newAsset.m_assetTypeName));
+            StringUtils::Format(localizeStrings.Get(msgid), newAsset.m_assetTypeName));
         return false;
       }
 
@@ -165,9 +164,8 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 
       // The video is a version, ask for confirmation of the asset type change
       if (newAsset.m_assetType == VideoAssetType::VERSION &&
-          !CGUIDialogYesNo::ShowAndGetInput(
-              CVariant{40015},
-              StringUtils::Format(localizeStrings.Get(40036))))
+          !CGUIDialogYesNo::ShowAndGetInput(CVariant{40015},
+                                            StringUtils::Format(localizeStrings.Get(40036))))
       {
         return false;
       }

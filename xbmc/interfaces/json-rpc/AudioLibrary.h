@@ -128,8 +128,8 @@ private:
      */
   static JSONRPC_STATUS Query(AudioKind kind,
                               Listing listing,
-                                       const CVariant& parameterObject,
-                                       CVariant& result);
+                              const CVariant& parameterObject,
+                              CVariant& result);
 
   //! Answers the \p fields of the item of \p kind with \p id
   static JSONRPC_STATUS ReadItem(AudioKind kind,

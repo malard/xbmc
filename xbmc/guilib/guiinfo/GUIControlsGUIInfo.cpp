@@ -352,8 +352,7 @@ bool CGUIControlsGUIInfo::GetLabel(std::string& value,
     case SYSTEM_PROGRESS_BAR:
     {
       const CGUIDialogProgress* bar{
-          windowManager.GetWindow<CGUIDialogProgress>(
-              WINDOW_DIALOG_PROGRESS)};
+          windowManager.GetWindow<CGUIDialogProgress>(WINDOW_DIALOG_PROGRESS)};
       if (bar && bar->IsDialogRunning())
         value = std::to_string(bar->GetPercentage());
       return true;

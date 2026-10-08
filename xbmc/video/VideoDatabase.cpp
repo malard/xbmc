@@ -1745,9 +1745,8 @@ int CVideoDatabase::AddActor(const std::string& name, const std::string& thumbUR
   return -1;
 }
 
-
-
-void CVideoDatabase::AddLinkToActor(int mediaId, MediaType mediaType, int actorId, const std::string &role, int order)
+void CVideoDatabase::AddLinkToActor(
+    int mediaId, MediaType mediaType, int actorId, const std::string& role, int order)
 {
   std::string sql = PrepareSQL("SELECT 1 FROM actor_link WHERE actor_id=%i AND "
                                "media_id=%i AND media_type='%s' AND role='%s'",
@@ -12848,11 +12847,10 @@ bool CVideoDatabase::GetFilter(CDbUrl &videoUrl, Filter &filter, SortDescription
       return false;
 
     // check if the filter playlist matches the item type
-    if (xsp.GetType() == itemType ||
-       (xsp.GetGroup() == itemType && !xsp.IsGroupMixed()) ||
+    if (xsp.GetType() == itemType || (xsp.GetGroup() == itemType && !xsp.IsGroupMixed()) ||
         // handle episode listings with videodb://tvshows/titles/ which get the rest
         // of the path (season and episodeid) appended later
-       (xsp.GetType() == MEDIA::CONTENT::EPISODES && itemType == MEDIA::CONTENT::TVSHOWS))
+        (xsp.GetType() == MEDIA::CONTENT::EPISODES && itemType == MEDIA::CONTENT::TVSHOWS))
     {
       std::set<std::string, std::less<>> playlists;
       filter.AppendWhere(xsp.GetWhereClause(*this, playlists));

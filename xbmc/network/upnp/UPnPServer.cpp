@@ -1218,7 +1218,7 @@ NPT_Result CUPnPServer::OnSearchContainer(PLT_ActionReference& action,
     CFileItemList items;
     if (!database.GetSeasonsByWhere(
             StringUtils::Format("{}-1/?local", VIDEO::DB_PATH::TVSHOW_TITLES), CDatabase::Filter(),
-                                    items, true))
+            items, true))
     {
       action->SetError(800, "Internal Error");
       return NPT_SUCCESS;

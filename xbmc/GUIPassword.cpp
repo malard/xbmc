@@ -66,11 +66,9 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
     if (!g_passwordManager.bMasterUser) // Check if we are the MasterUser!
     {
       const KODI::UTILS::CLockInfo& lockInfo{pItem->GetLockInfo()};
-      if (0 != settings->GetInt(
-                   CSettings::SETTING_MASTERLOCK_MAXRETRIES) &&
+      if (0 != settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES) &&
           lockInfo.GetBadPasswordCount() >=
-              settings->GetInt(
-                  CSettings::SETTING_MASTERLOCK_MAXRETRIES))
+              settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES))
       {
         // user previously exhausted all retries, show access denied error
         HELPERS::ShowOKDialogText(CVariant{12345}, CVariant{12346});

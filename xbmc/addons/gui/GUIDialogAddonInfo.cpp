@@ -718,13 +718,10 @@ bool CGUIDialogAddonInfo::ShowDependencyList(Reactivate reactivate, EntryPoint e
               !CAddonRepos::IsFromOfficialRepo(infoAddon, CheckAddonPath::CHOICE_NO))
           {
             item->SetLabel2(StringUtils::Format(
-                localizeStrings.Get(messageId),
-                it.m_depInfo.versionMin.asString(),
+                localizeStrings.Get(messageId), it.m_depInfo.versionMin.asString(),
                 it.m_installed ? it.m_installed->Version().asString() : "",
                 it.m_available ? it.m_available->Version().asString() : "",
-                it.m_depInfo.optional
-                    ? localizeStrings.Get(24184)
-                    : ""));
+                it.m_depInfo.optional ? localizeStrings.Get(24184) : ""));
 
             item->SetArt(ART::TYPE::ICON, infoAddon->Icon());
             item->SetProperty("addon_id", it.m_depInfo.id);

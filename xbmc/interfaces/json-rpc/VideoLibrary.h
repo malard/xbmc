@@ -48,40 +48,39 @@ class CVideoLibrary : public CFileItemHandler
 
   //! A list method: the query over \p Kind with the listing \p From
   template<VideoKind Kind, Listing From = Listing::All>
-  static JSONRPC_STATUS List(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetItemProperties(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetItemProperties(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS AddItem(const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS AddItem(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetGenres(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetTags(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetTags(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Refresh(const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS Refresh(const CVariant& parameterObject, CVariant& result);
 
   // Deprecated in favour of Refresh, which also reaches movie sets and seasons
-  static JSONRPC_STATUS RefreshMovie(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshTVShow(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshEpisode(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshMusicVideo(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS RefreshContentGeometry(const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS RefreshMovie(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshTVShow(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshEpisode(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshMusicVideo(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshContentGeometry(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS RemoveMovie(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveTVShow(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveEpisode(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveMusicVideo(const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS RemoveMovie(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveTVShow(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveEpisode(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveMusicVideo(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Scan(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSourceContent(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS Export(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Clean(const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS Scan(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetSourceContent(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS Export(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS Clean(const CVariant& parameterObject, CVariant& result);
 
-    static bool FillFileItem(
-        const std::string& strFilename,
-        std::shared_ptr<CFileItem>& item,
-        const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
-    static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+  static bool FillFileItem(const std::string& strFilename,
+                           std::shared_ptr<CFileItem>& item,
+                           const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
+  static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
 
 protected:
   //! Adds the files table's playback state to an item that already says what it is.

@@ -80,8 +80,7 @@ namespace XFILE
     if (settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
       sorting.sortAttributes = (SortAttribute)(sorting.sortAttributes | SortAttributeIgnoreArticle);
     if (playlist.IsMusicType() &&
-        settings->GetBool(
-                                      CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
+        settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     items.SetSortIgnoreFolders((sorting.sortAttributes & SortAttributeIgnoreFolders) ==
@@ -298,14 +297,12 @@ namespace XFILE
       if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
           playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
-                   settings->GetBool(
-                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
       else
         items.Sort(SortBy::LABEL, SortOrder::ASCENDING,
-                   settings->GetBool(
-                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
     }

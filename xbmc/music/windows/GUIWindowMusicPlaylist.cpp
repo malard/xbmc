@@ -23,8 +23,7 @@
 
 using namespace KODI;
 
-CGUIWindowMusicPlayList::CGUIWindowMusicPlayList()
-  : CGUIWindowPlayList(PLAYLIST::Audio)
+CGUIWindowMusicPlayList::CGUIWindowMusicPlayList() : CGUIWindowPlayList(PLAYLIST::Audio)
 {
   m_musicInfoLoader.SetObserver(this);
 }

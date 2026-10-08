@@ -88,8 +88,7 @@ JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant &parameterObject, CVa
     return InternalError;
 
   CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (CVariant::const_iterator_array it = names.begin_array();
-       it != names.end_array(); ++it)
+  for (CVariant::const_iterator_array it = names.begin_array(); it != names.end_array(); ++it)
   {
     const std::string propertyName = it->asString();
     CVariant property;

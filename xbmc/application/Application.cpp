@@ -218,7 +218,6 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
 
 using namespace std::chrono_literals;
 
-
 namespace
 {
 std::optional<CApplication::PlaybackWindow> AsPlaybackWindow(int window)
@@ -616,12 +615,10 @@ bool CApplication::Initialize()
 
   const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
-  profileManager->GetEventLog().Add(EventPtr(new CNotificationEvent(
-      StringUtils::Format(localizeStrings.Get(177),
-                          g_sysinfo.GetAppName()),
-      StringUtils::Format(localizeStrings.Get(178),
-                          g_sysinfo.GetAppName()),
-      "special://xbmc/media/icon256x256.png", EventLevel::Basic)));
+  profileManager->GetEventLog().Add(EventPtr(
+      new CNotificationEvent(StringUtils::Format(localizeStrings.Get(177), g_sysinfo.GetAppName()),
+                             StringUtils::Format(localizeStrings.Get(178), g_sysinfo.GetAppName()),
+                             "special://xbmc/media/icon256x256.png", EventLevel::Basic)));
 
   m_ServiceManager->GetNetwork().WaitForNet();
 
@@ -1977,7 +1974,7 @@ void CApplication::PlaybackCleanup()
   const bool nothingFollows = !CServiceBroker::GetPlayLists()->GetPlayingType();
   const CFileItem& playing = CurrentFileItem();
   const bool discGone = (MUSIC::IsCDDA(playing) || playing.IsOnDVD()) &&
-      !CServiceBroker::GetMediaManager().IsDiscInDrive();
+                        !CServiceBroker::GetMediaManager().IsDiscInDrive();
   if (!appPlayer->IsPlayingAudio() && (nothingFollows || discGone) &&
       LeavePlaybackWindow(PlaybackWindow::Visualisation))
   {

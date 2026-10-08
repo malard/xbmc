@@ -929,10 +929,9 @@ JSONRPC_STATUS JSONSchemaTypeDefinition::Check(const CVariant& value,
       CLog::Log(LOGDEBUG, "JSONRPC: Value does not lay between minimum and maximum in type {}",
                 name);
       if (value.isDouble())
-        errorMessage =
-            StringUtils::Format(
+        errorMessage = StringUtils::Format(
             "Value between {:f} (inclusive) and {:f} (inclusive) expected but {:f} received",
-                                minimum, maximum, numberValue);
+            minimum, maximum, numberValue);
       else
         errorMessage = StringUtils::Format(
             "Value between {} (inclusive) and {} (inclusive) expected but {} received",

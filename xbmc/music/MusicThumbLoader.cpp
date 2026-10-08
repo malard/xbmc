@@ -166,8 +166,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
   std::vector<ArtForThumbLoader> art;
   CMusicInfoTag &tag = *item.GetMusicInfoTag();
   MediaType mediaType = tag.GetMediaType();
-  if (tag.GetDatabaseId() > -1 &&
-      (mediaType == MediaType::SONG || mediaType == MediaType::ALBUM ||
+  if (tag.GetDatabaseId() > -1 && (mediaType == MediaType::SONG || mediaType == MediaType::ALBUM ||
                                    mediaType == MediaType::ARTIST))
   {
     // Item in music library, fetch the art

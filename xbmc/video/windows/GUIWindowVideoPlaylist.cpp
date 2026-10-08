@@ -19,8 +19,7 @@
 using namespace KODI;
 using KODI::MEDIA::MediaSection;
 
-CGUIWindowVideoPlaylist::CGUIWindowVideoPlaylist()
-  : CGUIWindowPlayList(PLAYLIST::Video)
+CGUIWindowVideoPlaylist::CGUIWindowVideoPlaylist() : CGUIWindowPlayList(PLAYLIST::Video)
 {
 }
 

@@ -76,8 +76,7 @@ public:
         CApplicationPlayLists::ExpandToEntries(m_item, *this, m_startAt, m_queuedItems);
   }
 
-  int GetStartPosition() const { return m_startPosition.value_or(-1);
-  }
+  int GetStartPosition() const { return m_startPosition.value_or(-1); }
 
 private:
   std::shared_ptr<CFileItem> Redirect(const std::shared_ptr<CFileItem>& folder) override;
@@ -343,10 +342,9 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
 
 namespace KODI::VIDEO::UTILS
 {
-void PlayItem(
-    const std::shared_ptr<CFileItem>& item,
-    const std::string& player,
-    ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
+void PlayItem(const std::shared_ptr<CFileItem>& item,
+              const std::string& player,
+              ContentUtils::PlayMode mode /* = ContentUtils::PlayMode::CHECK_AUTO_PLAY_NEXT_ITEM */)
 {
   if (item->IsFolder() && !item->IsPlugin())
   {
@@ -420,8 +418,8 @@ bool GetItemsForPlayList(const std::shared_ptr<CFileItem>& item,
 {
   CAsyncGetItemsForPlaylist getItems(item, queuedItems, mode, startAt);
   const bool done = CGUIDialogBusy::Wait(&getItems,
-                              500, // 500ms before busy dialog appears
-                              true); // can be cancelled
+                                         500, // 500ms before busy dialog appears
+                                         true); // can be cancelled
   if (startPosition)
     *startPosition = getItems.GetStartPosition();
   return done;

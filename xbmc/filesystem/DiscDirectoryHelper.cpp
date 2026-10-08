@@ -2095,8 +2095,7 @@ std::shared_ptr<CFileItem> GenerateEpisodeItem(const CURL& url,
       "{0:s} - {1:s}: {2:s}\r\n{3:s}: {4:s}", GetTitleWithName(playlist, names),
       localizeStrings.Get(180) /* Duration */,
       StringUtils::SecondsToTimeString(static_cast<int>(duration.count() / 1000)),
-      localizeStrings.Get(24026) /* Languages */,
-      langs));
+      localizeStrings.Get(24026) /* Languages */, langs));
   item->SetSize(0);
   item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO);
 
@@ -2340,8 +2339,7 @@ std::shared_ptr<CFileItem> GenerateAllEpisodesItem(const CURL& url,
       "{0:s}{1:s}: {2:s}\r\n{3:s}: {4:s}", GetNamePrefix(playlist, names),
       localizeStrings.Get(180) /* Duration */,
       StringUtils::SecondsToTimeString(static_cast<int>(duration.count() / 1000)),
-      localizeStrings.Get(24026) /* Languages */,
-      langs));
+      localizeStrings.Get(24026) /* Languages */, langs));
   item->SetSize(0);
   item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO);
 

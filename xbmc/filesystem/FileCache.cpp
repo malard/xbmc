@@ -154,8 +154,7 @@ void CFileCache::SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t ca
     CLog::LogF(LOGDEBUG, "<{}> using double memory cache each sized {} bytes", m_sourcePath,
                cacheSize);
   else
-    CLog::LogF(LOGDEBUG, "<{}> using single memory cache sized {} bytes", m_sourcePath,
-               cacheSize);
+    CLog::LogF(LOGDEBUG, "<{}> using single memory cache sized {} bytes", m_sourcePath, cacheSize);
 
   m_pCache = std::move(cache);
   m_forwardCacheSize = ForwardCacheSize(cacheSize);

@@ -484,7 +484,7 @@ JSONRPC_STATUS CPlayerOperations::GetAudioDelay(const CVariant& parameterObject,
 }
 
 JSONRPC_STATUS CPlayerOperations::NotifyAudioChainReady(const CVariant& parameterObject,
-                                                CVariant& result)
+                                                        CVariant& result)
 {
   AppPlayer()->NotifyAudioChainReady();
   return ACK;
@@ -1843,13 +1843,12 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
        [](PlayerType player, const PlayList&) -> Value
        {
          const auto appPlayer = AppPlayer();
-        if (player != Picture && appPlayer->IsExternalPlaying())
+         if (player != Picture && appPlayer->IsExternalPlaying())
            return "external";
          if (player != Picture && appPlayer->IsRemotePlaying())
            return "remote";
          return "internal";
-      }
-    },
+       }},
       {"cachePercentage",
        [](PlayerType player, const PlayList&) -> Value
        {

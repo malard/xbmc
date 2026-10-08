@@ -184,13 +184,11 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
         const RESOLUTION_INFO& resInfo = winSystem->GetGfxContext().GetResInfo();
 
         if (winSystem->IsFullScreen())
-          value = StringUtils::Format(
-              "{}x{} @ {:.2f} Hz - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
-              resInfo.fRefreshRate,
+          value = StringUtils::Format("{}x{} @ {:.2f} Hz - {}", resInfo.iScreenWidth,
+                                      resInfo.iScreenHeight, resInfo.fRefreshRate,
                                       localizeStrings.Get(244));
         else
-          value = StringUtils::Format(
-              "{}x{} - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
+          value = StringUtils::Format("{}x{} - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
                                       localizeStrings.Get(242));
       }
       else
@@ -267,10 +265,10 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
         double fTime = g_alarmClock.GetRemaining("shutdowntimer");
         if (fTime > 60.0)
           value = StringUtils::Format(localizeStrings.Get(13213),
-              g_alarmClock.GetRemaining("shutdowntimer") / 60.0);
+                                      g_alarmClock.GetRemaining("shutdowntimer") / 60.0);
         else
           value = StringUtils::Format(localizeStrings.Get(13214),
-              g_alarmClock.GetRemaining("shutdowntimer"));
+                                      g_alarmClock.GetRemaining("shutdowntimer"));
       }
       return true;
     case SYSTEM_PROFILENAME:

@@ -365,8 +365,7 @@ void CGUIDialogSongInfo::OnGetArt()
     CFileItemPtr item(new CFileItem(ART::CHOICE::CURRENT, false));
     item->SetArt(ART::TYPE::THUMB, m_song->GetArt(type));
     item->SetArt(ART::TYPE::ICON, ART::DEFAULT::PICTURE);
-    item->SetLabel(localizeStrings.Get(
-        13512)); //! @todo: label fallback art so user knows?
+    item->SetLabel(localizeStrings.Get(13512)); //! @todo: label fallback art so user knows?
     items.Add(item);
   }
   else if (m_song->HasArt(ART::TYPE::THUMB))

@@ -197,8 +197,7 @@ static void GenerateTypeListing(const CURL& path,
 {
   for (const auto& type : types)
   {
-    if (std::ranges::any_of(addons, [type](const AddonPtr& addon)
-    { return addon->HasType(type); }))
+    if (std::ranges::any_of(addons, [type](const AddonPtr& addon) { return addon->HasType(type); }))
       AddTypeCategory(path, type, items);
   }
 }

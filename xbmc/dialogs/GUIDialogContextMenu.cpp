@@ -458,9 +458,8 @@ bool CGUIDialogContextMenu::OnContextButton(MediaSection section,
       std::string strThumb;
       std::vector<CMediaSource> shares;
       CServiceBroker::GetMediaManager().GetLocalDrives(shares);
-      if (!CGUIDialogFileBrowser::ShowAndGetImage(
-              items, shares, localizeStrings.Get(1030),
-              strThumb))
+      if (!CGUIDialogFileBrowser::ShowAndGetImage(items, shares, localizeStrings.Get(1030),
+                                                  strThumb))
         return false;
 
       if (strThumb == ART::CHOICE::CURRENT)
