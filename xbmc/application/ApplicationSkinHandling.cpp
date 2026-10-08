@@ -536,9 +536,9 @@ void CApplicationSkinHandling::ProcessPendingSkinReload()
   ReloadSkin(confirm);
 }
 
-bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
+void CApplicationSkinHandling::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  const std::string& settingId = setting.GetId();
+  const std::string& settingId = setting->GetId();
 
   if (settingId == CSettings::SETTING_LOOKANDFEEL_SKIN ||
       settingId == CSettings::SETTING_LOOKANDFEEL_FONT ||
@@ -550,7 +550,7 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
     // result in multiple skin reloads. Therefore we manually specify to ignore specific settings
     // which are going to be changed.
     if (m_ignoreSkinSettingChanges)
-      return true;
+      return;
 
     // if the skin changes and the current color/theme/font is not the default one, reset
     // the it to the default value
@@ -591,8 +591,8 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
       m_ignoreSkinSettingChanges = true;
 
       // we also need to adjust the skin color theme and fontset
-      std::string theme = static_cast<const CSettingString&>(setting).GetValue();
-      if (setting.IsDefault() || StringUtils::EqualsNoCase(theme, "Textures.xbt"))
+      std::string theme = static_cast<const CSettingString&>(*setting).GetValue();
+      if (setting->IsDefault() || StringUtils::EqualsNoCase(theme, "Textures.xbt"))
       {
         skinColorsSetting->Reset();
         skinFontSetting->Reset();
@@ -622,10 +622,6 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_WINDOW_RESIZE);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
   }
-  else
-    return false;
-
-  return true;
 }
 
 void CApplicationSkinHandling::ProcessSkin() const
