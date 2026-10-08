@@ -88,6 +88,11 @@ const char* NameOf(EVENT::INPUT::Requested::Kind kind)
   return "keyboard";
 }
 
+std::string ListNameOf(const std::optional<KODI::PLAYLIST::Type>& list)
+{
+  return std::string{list ? KODI::PLAYLIST::NameOf(*list) : KODI::PLAYLIST::PICTURE_NAME};
+}
+
 CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
 {
   CVariant properties(CVariant::VariantTypeObject);
@@ -97,10 +102,6 @@ CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
     properties["muted"] = *changed.muted;
   if (changed.partyMode)
     properties["partyMode"] = *changed.partyMode;
-  if (changed.shuffled)
-    properties["shuffled"] = *changed.shuffled;
-  if (changed.repeat)
-    properties["repeat"] = *changed.repeat;
   if (changed.subtitleEnabled)
     properties["subtitleEnabled"] = *changed.subtitleEnabled;
   if (changed.currentSubtitle)
@@ -177,31 +178,32 @@ CVariant LegacyDataOfEvent(const PlaylistEvent& event)
   return std::visit(Overloaded{[](const Add& e)
                                {
                                  CVariant data;
-                                 data["playlist"] = e.playList;
+                                 data["playlist"] = ListNameOf(e.playList);
                                  data["position"] = e.position;
                                  return data;
                                },
                                [](const Remove& e)
                                {
                                  CVariant data;
-                                 data["playlist"] = e.playList;
+                                 data["playlist"] = ListNameOf(e.playList);
                                  data["position"] = e.position;
                                  return data;
                                },
                                [](const Clear& e)
                                {
                                  CVariant data;
-                                 data["playlist"] = e.playList;
+                                 data["playlist"] = ListNameOf(e.playList);
                                  return data;
                                },
                                [](const PropertiesChanged& e)
                                {
                                  CVariant data;
-                                 data["playlist"] = e.playList;
+                                 data["playlist"] = ListNameOf(e.playList);
                                  if (e.shuffled)
                                    data["properties"]["shuffled"] = *e.shuffled;
                                  if (e.repeat)
-                                   data["properties"]["repeat"] = *e.repeat;
+                                   data["properties"]["repeat"] =
+                                       std::string{KODI::PLAYLIST::NameOf(*e.repeat)};
                                  return data;
                                }},
                     static_cast<const PlaylistEvent::variant&>(event));

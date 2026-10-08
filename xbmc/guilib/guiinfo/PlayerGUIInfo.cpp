@@ -418,7 +418,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     {
       const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
       value = localizeStrings.Get(CApplicationPlayLists::RepeatLabel(
-          type ? m_playLists->GetRepeat(*type) : CApplicationPlayLists::Repeat::Off,
+          type ? m_playLists->GetRepeat(*type) : KODI::PLAYLIST::Repeat::Off,
           CApplicationPlayLists::RepeatWording::State));
       return true;
     }
@@ -654,13 +654,13 @@ bool CPlayerGUIInfo::GetBool(bool& value,
     case PLAYLIST_ISREPEAT:
     {
       const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
-      value = type && m_playLists->GetRepeat(*type) == CApplicationPlayLists::Repeat::All;
+      value = type && m_playLists->GetRepeat(*type) == KODI::PLAYLIST::Repeat::All;
       return true;
     }
     case PLAYLIST_ISREPEATONE:
     {
       const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
-      value = type && m_playLists->GetRepeat(*type) == CApplicationPlayLists::Repeat::One;
+      value = type && m_playLists->GetRepeat(*type) == KODI::PLAYLIST::Repeat::One;
       return true;
     }
 

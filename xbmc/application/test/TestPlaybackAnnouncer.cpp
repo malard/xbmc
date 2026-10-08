@@ -191,7 +191,7 @@ TEST_F(TestPlaybackAnnouncer, ShuffleAndRepeatAreAnnouncedOnTheirPlayListOnly)
   CApplicationPlayLists::IObserver& observer = m_announcer;
 
   observer.OnShuffled(PLAYLIST::Audio, true);
-  observer.OnRepeat(PLAYLIST::Audio, CApplicationPlayLists::Repeat::All);
+  observer.OnRepeat(PLAYLIST::Audio, PLAYLIST::Repeat::All);
   m_announcer.OnSlideShowShuffled();
 
   int onPlayList = 0;

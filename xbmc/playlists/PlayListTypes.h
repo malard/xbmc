@@ -65,6 +65,41 @@ inline std::optional<Type> TypeFromName(std::string_view name)
 }
 
 /*!
+ * \brief The three states of the repeat button, composed from the playlist's repeat of the
+ * current entry and its wrap.
+ */
+enum class Repeat
+{
+  Off,
+  One,
+  All
+};
+
+//! A repeat state's name in the interfaces: "off", "one" or "all".
+constexpr std::string_view NameOf(Repeat repeat)
+{
+  switch (repeat)
+  {
+    case Repeat::One:
+      return "one";
+    case Repeat::All:
+      return "all";
+    case Repeat::Off:
+      break;
+  }
+  return "off";
+}
+
+//! \return The repeat state a name names, if it names one.
+inline std::optional<Repeat> RepeatFromName(std::string_view name)
+{
+  for (const Repeat repeat : {Repeat::Off, Repeat::One, Repeat::All})
+    if (name == NameOf(repeat))
+      return repeat;
+  return std::nullopt;
+}
+
+/*!
  * \brief Identifies one entry of one playlist. Never reused within that playlist, so a stale id
  * resolves to nothing rather than to a different entry.
  */

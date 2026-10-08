@@ -11,6 +11,7 @@
 #include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
 #include "media/MediaType.h"
+#include "playlists/PlayListTypes.h"
 #include "utils/Variant.h"
 
 #include <chrono>
@@ -142,8 +143,6 @@ struct PropertiesChanged
   std::optional<int> volume;
   std::optional<bool> muted;
   std::optional<bool> partyMode;
-  std::optional<bool> shuffled;
-  std::optional<std::string> repeat;
   std::optional<bool> subtitleEnabled;
   //! The streams as JSON-RPC describes them.
   std::optional<CVariant> currentSubtitle;
@@ -227,13 +226,14 @@ struct PlayerEvent : std::variant<EVENT::PLAYER::Play,
   static constexpr AnnouncementFlag FLAG = Player;
 };
 
+//! A playlist event's list is a playlist, or empty for the slideshow's pictures.
 namespace EVENT::PLAYLIST
 {
 struct Add
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_ADD;
 
-  std::string playList;
+  std::optional<KODI::PLAYLIST::Type> playList;
   int position{-1};
   std::shared_ptr<const CFileItem> item;
 };
@@ -242,7 +242,7 @@ struct Remove
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REMOVE;
 
-  std::string playList;
+  std::optional<KODI::PLAYLIST::Type> playList;
   int position{-1};
 };
 
@@ -250,7 +250,7 @@ struct Clear
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CLEAR;
 
-  std::string playList;
+  std::optional<KODI::PLAYLIST::Type> playList;
 };
 
 //! The properties of a playlist that changed; only those given changed.
@@ -258,9 +258,9 @@ struct PropertiesChanged
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
 
-  std::string playList;
+  std::optional<KODI::PLAYLIST::Type> playList;
   std::optional<bool> shuffled;
-  std::optional<std::string> repeat;
+  std::optional<KODI::PLAYLIST::Repeat> repeat;
 };
 } // namespace EVENT::PLAYLIST
 

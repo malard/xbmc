@@ -40,15 +40,15 @@ JSONRPC_STATUS ApplyRepeat(PLAYLIST::Type type, const CVariant& repeat)
 {
   const auto playLists = CServiceBroker::GetPlayLists();
   const std::string wanted = repeat.asString();
-  const CApplicationPlayLists::Repeat before = playLists->GetRepeat(type);
+  const PLAYLIST::Repeat before = playLists->GetRepeat(type);
 
   CServiceBroker::GetAppMessenger()->SendMsg(TMSG_PLAYLISTPLAYER_REPEAT, static_cast<int>(type), -1,
                                              nullptr, wanted);
 
-  const CApplicationPlayLists::Repeat after = playLists->GetRepeat(type);
+  const PLAYLIST::Repeat after = playLists->GetRepeat(type);
   if (wanted == "cycle")
     return after == before ? FailedToExecute : ACK;
-  return CApplicationPlayLists::ParseRepeat(wanted) == after ? ACK : FailedToExecute;
+  return PLAYLIST::RepeatFromName(wanted) == after ? ACK : FailedToExecute;
 }
 
 JSONRPC_STATUS ShuffleSlideshow(const CVariant& shuffle, CVariant& result)

@@ -61,7 +61,6 @@ int CPlayListsMessageHandler::GetMessageMask()
 void CPlayListsMessageHandler::OnApplicationMessage(ThreadMessage* pMsg)
 {
   using Persist = CApplicationPlayLists::Persist;
-  using Repeat = CApplicationPlayLists::Repeat;
 
   switch (pMsg->dwMessage)
   {
@@ -100,7 +99,7 @@ void CPlayListsMessageHandler::OnApplicationMessage(ThreadMessage* pMsg)
     case TMSG_PLAYLISTPLAYER_REPEAT:
     {
       const std::optional<Type> type = TypeFromInt(pMsg->param1);
-      const std::optional<Repeat> repeat = CApplicationPlayLists::ParseRepeat(pMsg->strParam);
+      const std::optional<PLAYLIST::Repeat> repeat = PLAYLIST::RepeatFromName(pMsg->strParam);
       if (type && repeat)
         m_playLists.SetRepeat(*type, *repeat, Persist::Yes);
       else if (type && pMsg->strParam == "cycle")
@@ -121,7 +120,7 @@ void CPlayListsMessageHandler::OnApplicationMessage(ThreadMessage* pMsg)
       {
         WakeScreen();
         m_playLists.PlayFrom(*type, PositionFromInt(pMsg->param2));
-        if (const std::optional<Repeat> repeat = CApplicationPlayLists::ParseRepeat(pMsg->strParam);
+        if (const std::optional<PLAYLIST::Repeat> repeat = PLAYLIST::RepeatFromName(pMsg->strParam);
             repeat)
           m_playLists.SetRepeat(*type, *repeat, Persist::No);
       }
@@ -172,7 +171,6 @@ void CPlayListsMessageHandler::OnPlayItem(ThreadMessage* pMsg)
 void CPlayListsMessageHandler::OnPlayItems(ThreadMessage* pMsg)
 {
   using Persist = CApplicationPlayLists::Persist;
-  using Repeat = CApplicationPlayLists::Repeat;
 
   const std::unique_ptr<CFileItemList> list{static_cast<CFileItemList*>(pMsg->lpVoid)};
   if (!list || list->IsEmpty())
@@ -186,8 +184,8 @@ void CPlayListsMessageHandler::OnPlayItems(ThreadMessage* pMsg)
     if (list->HasProperty("shuffled") && list->GetProperty("shuffled").isBoolean())
       m_playLists.SetShuffle(type, list->GetProperty("shuffled").asBoolean(), Persist::No);
     play();
-    if (const std::optional<Repeat> repeat =
-            CApplicationPlayLists::ParseRepeat(list->GetProperty("repeat").asString());
+    if (const std::optional<PLAYLIST::Repeat> repeat =
+            PLAYLIST::RepeatFromName(list->GetProperty("repeat").asString());
         repeat)
       m_playLists.SetRepeat(type, *repeat, Persist::No);
   };

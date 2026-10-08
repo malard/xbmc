@@ -150,13 +150,19 @@ TEST(TestAnnouncementEvents, PlayerOtherData)
 TEST(TestAnnouncementEvents, PlaylistData)
 {
   using namespace EVENT::PLAYLIST;
-  ExpectData(PlaylistEvent{Add{"video", 3, nullptr}}, R"({"playlist":"video","position":3})");
-  ExpectData(PlaylistEvent{Remove{"audio", 0}}, R"({"playlist":"audio","position":0})");
-  ExpectData(PlaylistEvent{Clear{"picture"}}, R"({"playlist":"picture"})");
-  ExpectData(PlaylistEvent{PropertiesChanged{"audio", true, std::nullopt}},
+  using KODI::PLAYLIST::Repeat;
+  using KODI::PLAYLIST::Type;
+  ExpectData(PlaylistEvent{Add{Type::Video, 3, nullptr}}, R"({"playlist":"video","position":3})");
+  ExpectData(PlaylistEvent{Remove{Type::Audio, 0}}, R"({"playlist":"audio","position":0})");
+  ExpectData(PlaylistEvent{Clear{std::nullopt}}, R"({"playlist":"picture"})");
+  ExpectData(PlaylistEvent{PropertiesChanged{Type::Audio, true, std::nullopt}},
              R"({"playlist":"audio","properties":{"shuffled":true}})");
-  ExpectData(PlaylistEvent{PropertiesChanged{"video", std::nullopt, "all"}},
+  ExpectData(PlaylistEvent{PropertiesChanged{Type::Video, std::nullopt, Repeat::All}},
              R"({"playlist":"video","properties":{"repeat":"all"}})");
+  ExpectData(PlaylistEvent{PropertiesChanged{Type::Audio, std::nullopt, Repeat::One}},
+             R"({"playlist":"audio","properties":{"repeat":"one"}})");
+  ExpectData(PlaylistEvent{PropertiesChanged{Type::Audio, std::nullopt, Repeat::Off}},
+             R"({"playlist":"audio","properties":{"repeat":"off"}})");
 }
 
 TEST(TestAnnouncementEvents, GUIEvents)

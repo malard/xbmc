@@ -56,17 +56,6 @@ public:
     Failed
   };
 
-  /*!
-   * \brief The three states of the repeat button, composed from the playlist's repeat of the
-   * current entry and its wrap.
-   */
-  enum class Repeat
-  {
-    Off,
-    One,
-    All
-  };
-
   enum class Persist
   {
     No,
@@ -98,7 +87,7 @@ public:
     virtual void OnListChanged(KODI::PLAYLIST::Type type,
                                const KODI::PLAYLIST::PlayListChange& change) = 0;
     virtual void OnShuffled(KODI::PLAYLIST::Type type, bool shuffled) = 0;
-    virtual void OnRepeat(KODI::PLAYLIST::Type type, Repeat repeat) = 0;
+    virtual void OnRepeat(KODI::PLAYLIST::Type type, KODI::PLAYLIST::Repeat repeat) = 0;
     //! Whether a feed is playing changed.
     virtual void OnFeed(bool playing) = 0;
     virtual void OnFailed(const std::shared_ptr<const CFileItem>& item, FailReason reason) = 0;
@@ -431,8 +420,8 @@ public:
   void SetShuffle(KODI::PLAYLIST::Type type, bool shuffle, Persist persist);
   bool IsShuffled(KODI::PLAYLIST::Type type) const;
 
-  void SetRepeat(KODI::PLAYLIST::Type type, Repeat repeat, Persist persist);
-  Repeat GetRepeat(KODI::PLAYLIST::Type type) const;
+  void SetRepeat(KODI::PLAYLIST::Type type, KODI::PLAYLIST::Repeat repeat, Persist persist);
+  KODI::PLAYLIST::Repeat GetRepeat(KODI::PLAYLIST::Type type) const;
 
   void ToggleShuffle(KODI::PLAYLIST::Type type, Persist persist);
 
@@ -453,7 +442,7 @@ public:
    */
   bool PlayFeed(KODI::PLAYLIST::Type type,
                 std::shared_ptr<KODI::PLAYLIST::IFeed> feed,
-                Repeat repeat);
+                KODI::PLAYLIST::Repeat repeat);
 
   //! The playlist that has a feed, if one does.
   std::optional<KODI::PLAYLIST::Type> GetFedType() const;
@@ -468,16 +457,6 @@ public:
   //! How many items the feed has not placed yet; -1 while there is no feed.
   int GetFeedLeft() const;
 
-  /*!
-   * \return The published name of a repeat state: "off", "one" or "all".
-   */
-  static std::string_view RepeatName(Repeat repeat);
-
-  /*!
-   * \return The repeat state a published name names, if it names one.
-   */
-  static std::optional<Repeat> ParseRepeat(std::string_view name);
-
   //! How a repeat state is written: on its own ("One"), or with the setting's name ("Repeat: One").
   enum class RepeatWording
   {
@@ -486,7 +465,7 @@ public:
   };
 
   //! \return The id of the string for a repeat state.
-  static uint32_t RepeatLabel(Repeat repeat, RepeatWording wording);
+  static uint32_t RepeatLabel(KODI::PLAYLIST::Repeat repeat, RepeatWording wording);
 
   void ClearPlayLists();
 
@@ -602,7 +581,8 @@ private:
 
   mutable CCriticalSection m_critSection;
   std::optional<KODI::PLAYLIST::Type> m_playingType;
-  std::array<Repeat, 2> m_reportedRepeat{Repeat::Off, Repeat::Off};
+  std::array<KODI::PLAYLIST::Repeat, 2> m_reportedRepeat{KODI::PLAYLIST::Repeat::Off,
+                                                         KODI::PLAYLIST::Repeat::Off};
   //! Set while SetRepeat() composes the state, so its intermediate steps are not reported.
   std::atomic<bool> m_composingRepeat{false};
   //! Set while PlayFeed() swaps feeds, so the change is reported once, when it is done.

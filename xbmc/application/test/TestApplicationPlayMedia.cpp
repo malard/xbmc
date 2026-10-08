@@ -31,7 +31,7 @@ public:
   void OnStarted(const std::shared_ptr<CFileItem>& started) override {}
   void OnListChanged(PLAYLIST::Type type, const PLAYLIST::PlayListChange& change) override {}
   void OnShuffled(PLAYLIST::Type type, bool shuffled) override {}
-  void OnRepeat(PLAYLIST::Type type, CApplicationPlayLists::Repeat repeat) override {}
+  void OnRepeat(PLAYLIST::Type type, PLAYLIST::Repeat repeat) override {}
   void OnFeed(bool playing) override {}
   void OnFailed(const std::shared_ptr<const CFileItem>& item,
                 CApplicationPlayLists::FailReason reason) override

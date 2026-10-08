@@ -91,7 +91,7 @@ TEST(TestApplicationPlayLists, BothPlayListsAlwaysExist)
 
 TEST(TestApplicationPlayLists, TheRepeatStateIsReadFromTheMarkAndTheWrap)
 {
-  using enum CApplicationPlayLists::Repeat;
+  using enum PLAYLIST::Repeat;
   CTestPlayLists playLists;
   FillVideo(playLists);
   CPlayList& playList = playLists.EditPlayList(PLAYLIST::Video);
@@ -140,11 +140,10 @@ TEST(TestApplicationPlayLists, APlayListIsPlayingFromTheMomentItIsChosen)
 
 TEST(TestApplicationPlayLists, RepeatNamesReadBackAsTheirState)
 {
-  using enum CApplicationPlayLists::Repeat;
-  for (const CApplicationPlayLists::Repeat repeat : {Off, One, All})
-    EXPECT_EQ(repeat,
-              CApplicationPlayLists::ParseRepeat(CApplicationPlayLists::RepeatName(repeat)));
-  EXPECT_FALSE(CApplicationPlayLists::ParseRepeat("cycle").has_value());
+  using enum PLAYLIST::Repeat;
+  for (const PLAYLIST::Repeat repeat : {Off, One, All})
+    EXPECT_EQ(repeat, PLAYLIST::RepeatFromName(PLAYLIST::NameOf(repeat)));
+  EXPECT_FALSE(PLAYLIST::RepeatFromName("cycle").has_value());
 }
 
 TEST(TestApplicationPlayLists, TheEntryBeingPlayedCannotBeRemoved)
@@ -326,7 +325,7 @@ TEST(TestApplicationPlayLists, RepeatOneAskedForWithAPlayIsOnForTheRun)
   message.strParam = "one";
   CPlayListsMessageHandler(playLists).OnApplicationMessage(&message);
 
-  EXPECT_EQ(CApplicationPlayLists::Repeat::One, playLists.GetRepeat(PLAYLIST::Audio));
+  EXPECT_EQ(PLAYLIST::Repeat::One, playLists.GetRepeat(PLAYLIST::Audio));
   EXPECT_EQ(1, playLists.GetPlayList(PLAYLIST::Audio).GetCurrentPosition());
 }
 
@@ -395,7 +394,7 @@ TEST(TestApplicationPlayLists, ThePlayingEntryIsOnlyThePlayingPlayLists)
 
 TEST(TestApplicationPlayLists, RepeatCyclesOffAllOne)
 {
-  using enum CApplicationPlayLists::Repeat;
+  using enum PLAYLIST::Repeat;
   using enum CApplicationPlayLists::Persist;
   CTestPlayLists playLists;
   FillVideo(playLists);
@@ -712,7 +711,7 @@ TEST(TestApplicationPlayLists, StartingOrRestartingAFeedReportsItOnce)
     void OnStarted(const std::shared_ptr<CFileItem>&) override {}
     void OnListChanged(PLAYLIST::Type, const PLAYLIST::PlayListChange&) override {}
     void OnShuffled(PLAYLIST::Type, bool) override {}
-    void OnRepeat(PLAYLIST::Type, CApplicationPlayLists::Repeat) override {}
+    void OnRepeat(PLAYLIST::Type, PLAYLIST::Repeat) override {}
     void OnFeed(bool playing) override { feeds.push_back(playing); }
     void OnFailed(const std::shared_ptr<const CFileItem>&, CApplicationPlayLists::FailReason) override
     {
@@ -721,12 +720,12 @@ TEST(TestApplicationPlayLists, StartingOrRestartingAFeedReportsItOnce)
 
   CTestPlayLists playLists;
   playLists.SetObserver(&observer);
-  ASSERT_TRUE(playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50),
-                                 CApplicationPlayLists::Repeat::All));
+  ASSERT_TRUE(
+      playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50), PLAYLIST::Repeat::All));
   EXPECT_EQ(std::vector<bool>{true}, observer.feeds);
 
-  ASSERT_TRUE(playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50),
-                                 CApplicationPlayLists::Repeat::All));
+  ASSERT_TRUE(
+      playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50), PLAYLIST::Repeat::All));
   EXPECT_EQ((std::vector<bool>{true, true}), observer.feeds) << "a restart is not off then on";
   playLists.SetObserver(nullptr);
 }
@@ -735,8 +734,8 @@ TEST(TestApplicationPlayLists, StartingAFeedOnThePlayingPlayListLeavesTheScreenA
 {
   CTestPlayLists playLists;
   ASSERT_TRUE(playLists.PlayItems(PLAYLIST::Audio, *Items({"/music/one.flac"})));
-  ASSERT_TRUE(playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50),
-                                 CApplicationPlayLists::Repeat::All));
+  ASSERT_TRUE(
+      playLists.PlayFeed(PLAYLIST::Audio, std::make_shared<CFakeFeed>(50), PLAYLIST::Repeat::All));
   EXPECT_EQ(KODI::APPLICATION::StartsRun::No, playLists.m_startsRun.back());
 }
 
@@ -786,12 +785,11 @@ TEST(TestApplicationPlayLists, DroppingTheFeedBringsBackTheSavedShuffleAndRepeat
   CTestPlayLists playLists;
   StartFed(playLists, 50);
   playLists.SetShuffle(PLAYLIST::Audio, true, CApplicationPlayLists::Persist::No);
-  playLists.SetRepeat(PLAYLIST::Audio, CApplicationPlayLists::Repeat::All,
-                      CApplicationPlayLists::Persist::No);
+  playLists.SetRepeat(PLAYLIST::Audio, PLAYLIST::Repeat::All, CApplicationPlayLists::Persist::No);
 
   playLists.DropFeed();
   EXPECT_FALSE(playLists.IsShuffled(PLAYLIST::Audio));
-  EXPECT_EQ(CApplicationPlayLists::Repeat::Off, playLists.GetRepeat(PLAYLIST::Audio));
+  EXPECT_EQ(PLAYLIST::Repeat::Off, playLists.GetRepeat(PLAYLIST::Audio));
 }
 
 TEST(TestApplicationPlayLists, ReplacingAFedPlayListDropsTheFeed)

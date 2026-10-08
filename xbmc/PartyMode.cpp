@@ -198,7 +198,7 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
 
   // a party carries on past the end of its feed
   const bool playing =
-      CServiceBroker::GetPlayLists()->PlayFeed(playList, feed, CApplicationPlayLists::Repeat::All);
+      CServiceBroker::GetPlayLists()->PlayFeed(playList, feed, PLAYLIST::Repeat::All);
   dialog->Close();
   if (!playing)
     return Fail(16031, "nothing could be placed");

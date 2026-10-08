@@ -103,10 +103,9 @@ std::shared_ptr<CApplicationContentGeometry> ContentGeometryComponent()
   return CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
 }
 
-CApplicationPlayLists::Repeat ParseRepeat(const CVariant& repeat)
+PLAYLIST::Repeat ParseRepeat(const CVariant& repeat)
 {
-  return CApplicationPlayLists::ParseRepeat(repeat.asString())
-      .value_or(CApplicationPlayLists::Repeat::Off);
+  return PLAYLIST::RepeatFromName(repeat.asString()).value_or(PLAYLIST::Repeat::Off);
 }
 
 bool IsReachable(const CFileItem& item)
@@ -1053,9 +1052,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant &parameterObject, CVariant
         CServiceBroker::GetPlayLists()->SetShuffle(*type, optionShuffled.asBoolean(),
                                                    CApplicationPlayLists::Persist::No);
       const std::string repeat =
-          optionRepeat.isNull()
-              ? ""
-              : std::string(CApplicationPlayLists::RepeatName(ParseRepeat(optionRepeat)));
+          optionRepeat.isNull() ? "" : std::string(PLAYLIST::NameOf(ParseRepeat(optionRepeat)));
       CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(*type),
                                                    playlistStartPosition, nullptr, repeat);
       return ACK;

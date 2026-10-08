@@ -145,12 +145,6 @@ void CPlaybackAnnouncer::Announce(PlayerProperty property, const CVariant& value
     case PartyMode:
       changed.partyMode = value.asBoolean();
       break;
-    case Shuffled:
-      changed.shuffled = value.asBoolean();
-      break;
-    case Repeat:
-      changed.repeat = value.asString();
-      break;
     case SubtitleEnabled:
       changed.subtitleEnabled = value.asBoolean();
       break;
@@ -206,24 +200,24 @@ void CPlaybackAnnouncer::OnContentGeometryChanged(CVariant data) const
 
 void CPlaybackAnnouncer::OnSlideShowShuffled() const
 {
-  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
-      std::string{PLAYLIST::PICTURE_NAME}, true, std::nullopt}});
+  m_sink(PlaylistEvent{
+      ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{std::nullopt, true, std::nullopt}});
 }
 
 void CPlaybackAnnouncer::OnSlideShowListChanged(const PlayListChange& change) const
 {
-  PublishListChange(PLAYLIST::PICTURE_NAME, change);
+  PublishListChange(std::nullopt, change);
 }
 
 void CPlaybackAnnouncer::OnListChanged(Type type, const PlayListChange& change)
 {
-  PublishListChange(PLAYLIST::NameOf(type), change);
+  PublishListChange(type, change);
 }
 
 void CPlaybackAnnouncer::OnShuffled(Type type, bool shuffled)
 {
-  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
-      std::string{PLAYLIST::NameOf(type)}, shuffled, std::nullopt}});
+  m_sink(PlaylistEvent{
+      ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{type, shuffled, std::nullopt}});
 }
 
 void CPlaybackAnnouncer::OnFeed(bool playing)
@@ -256,27 +250,26 @@ void CPlaybackAnnouncer::OnFailed(const std::shared_ptr<const CFileItem>& item,
   m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{item, announced}});
 }
 
-void CPlaybackAnnouncer::OnRepeat(Type type, CApplicationPlayLists::Repeat repeat)
+void CPlaybackAnnouncer::OnRepeat(Type type, PLAYLIST::Repeat repeat)
 {
-  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
-      std::string{PLAYLIST::NameOf(type)}, std::nullopt,
-      std::string{CApplicationPlayLists::RepeatName(repeat)}}});
+  m_sink(
+      PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{type, std::nullopt, repeat}});
 }
 
-void CPlaybackAnnouncer::PublishListChange(std::string_view playList,
+void CPlaybackAnnouncer::PublishListChange(std::optional<PLAYLIST::Type> playList,
                                            const PlayListChange& change) const
 {
   using namespace ANNOUNCEMENT::EVENT::PLAYLIST;
   switch (change.type)
   {
     case PlayListChange::Type::Added:
-      m_sink(PlaylistEvent{Add{std::string{playList}, change.position, change.item}});
+      m_sink(PlaylistEvent{Add{playList, change.position, change.item}});
       break;
     case PlayListChange::Type::Removed:
-      m_sink(PlaylistEvent{Remove{std::string{playList}, change.position}});
+      m_sink(PlaylistEvent{Remove{playList, change.position}});
       break;
     case PlayListChange::Type::Cleared:
-      m_sink(PlaylistEvent{Clear{std::string{playList}}});
+      m_sink(PlaylistEvent{Clear{playList}});
       break;
     case PlayListChange::Type::Moved:
     case PlayListChange::Type::Shuffled:

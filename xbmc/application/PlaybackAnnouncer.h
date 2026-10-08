@@ -15,8 +15,8 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
-#include <string_view>
 
 class CFileItem;
 class CVariant;
@@ -37,8 +37,6 @@ public:
   enum class PlayerProperty
   {
     PartyMode,
-    Shuffled,
-    Repeat,
     SubtitleEnabled,
     CurrentSubtitle,
     CurrentAudioStream,
@@ -98,13 +96,13 @@ public:
   void OnListChanged(KODI::PLAYLIST::Type type,
                      const KODI::PLAYLIST::PlayListChange& change) override;
   void OnShuffled(KODI::PLAYLIST::Type type, bool shuffled) override;
-  void OnRepeat(KODI::PLAYLIST::Type type, CApplicationPlayLists::Repeat repeat) override;
+  void OnRepeat(KODI::PLAYLIST::Type type, KODI::PLAYLIST::Repeat repeat) override;
   void OnFeed(bool playing) override;
   void OnFailed(const std::shared_ptr<const CFileItem>& item,
                 CApplicationPlayLists::FailReason reason) override;
 
 private:
-  void PublishListChange(std::string_view playList,
+  void PublishListChange(std::optional<KODI::PLAYLIST::Type> playList,
                          const KODI::PLAYLIST::PlayListChange& change) const;
 
   std::shared_ptr<CApplicationPlayLists> m_playLists;

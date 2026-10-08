@@ -1057,29 +1057,6 @@ void CApplicationPlayLists::CycleRepeat(Type type, Persist persist)
   SetRepeat(type, next, persist);
 }
 
-std::string_view CApplicationPlayLists::RepeatName(Repeat repeat)
-{
-  switch (repeat)
-  {
-    case Repeat::One:
-      return "one";
-    case Repeat::All:
-      return "all";
-    case Repeat::Off:
-      break;
-  }
-  return "off";
-}
-
-std::optional<CApplicationPlayLists::Repeat> CApplicationPlayLists::ParseRepeat(
-    std::string_view name)
-{
-  for (const Repeat repeat : {Repeat::Off, Repeat::One, Repeat::All})
-    if (name == RepeatName(repeat))
-      return repeat;
-  return std::nullopt;
-}
-
 uint32_t CApplicationPlayLists::RepeatLabel(Repeat repeat, RepeatWording wording)
 {
   // in the order of Repeat: Off, One, All
@@ -1110,7 +1087,7 @@ void CApplicationPlayLists::SetRepeat(Type type, Repeat repeat, Persist persist)
   CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 }
 
-CApplicationPlayLists::Repeat CApplicationPlayLists::GetRepeat(Type type) const
+Repeat CApplicationPlayLists::GetRepeat(Type type) const
 {
   const CPlayList& playList = GetPlayList(type);
   if (playList.IsRepeatCurrent())

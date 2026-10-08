@@ -63,7 +63,7 @@ namespace
 void NotifyPlayOrder(const CApplicationPlayLists& playLists,
                      PLAYLIST::Type type,
                      bool wasShuffled,
-                     CApplicationPlayLists::Repeat wasRepeat)
+                     PLAYLIST::Repeat wasRepeat)
 {
   constexpr int STRING_PLAYLIST = 559;
   constexpr int STRING_SHUFFLE = 191;
@@ -78,7 +78,7 @@ void NotifyPlayOrder(const CApplicationPlayLists& playLists,
         StringUtils::Format("{}: {}", localize(STRING_SHUFFLE),
                             localize(shuffled ? STRING_ALL : STRING_OFF)));
 
-  if (const CApplicationPlayLists::Repeat repeat = playLists.GetRepeat(type); repeat != wasRepeat)
+  if (const PLAYLIST::Repeat repeat = playLists.GetRepeat(type); repeat != wasRepeat)
     CGUIDialogKaiToast::QueueNotification(
         CGUIDialogKaiToast::Info, localize(STRING_PLAYLIST),
         localize(CApplicationPlayLists::RepeatLabel(
@@ -308,7 +308,7 @@ static int PlayerControl(const std::vector<std::string>& params)
 
     const bool notify = params.size() == 2 && StringUtils::EqualsNoCase(params[1], "notify");
     const bool shuffled = playLists->IsShuffled(*type);
-    const CApplicationPlayLists::Repeat repeated = playLists->GetRepeat(*type);
+    const PLAYLIST::Repeat repeated = playLists->GetRepeat(*type);
     // what follows the verb: on or off for random, off, one or all for repeat; anything else
     // toggles random or cycles repeat
     const std::string_view state = std::string_view{paramlow}.substr(6);
@@ -321,8 +321,7 @@ static int PlayerControl(const std::vector<std::string>& params)
       else
         playLists->ToggleShuffle(*type, persist);
     }
-    else if (const std::optional<CApplicationPlayLists::Repeat> repeat =
-                 CApplicationPlayLists::ParseRepeat(state))
+    else if (const std::optional<PLAYLIST::Repeat> repeat = PLAYLIST::RepeatFromName(state))
     {
       playLists->SetRepeat(*type, *repeat, persist);
     }
