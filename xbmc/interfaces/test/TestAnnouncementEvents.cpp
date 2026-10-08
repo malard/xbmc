@@ -28,10 +28,8 @@ using namespace std::chrono_literals;
  */
 namespace
 {
-using EVENT::PLAYER::Players;
-
-constexpr Players VIDEO{.video = true, .audio = false};
-constexpr Players VIDEO_AND_AUDIO{.video = true, .audio = true};
+constexpr auto VIDEO = KODI::MEDIA::Streams::Video;
+constexpr auto VIDEO_AND_AUDIO = KODI::MEDIA::Streams::VideoAndAudio;
 
 //! Compared as JSON text, the form Python receives; the parser reads numbers as unsigned.
 void ExpectData(const Announcement& announcement, const std::string& expected)
@@ -63,6 +61,8 @@ TEST(TestAnnouncementEvents, PlayerTransportData)
   using namespace EVENT::PLAYER;
   ExpectData(PlayerEvent{Play{nullptr, 1, VIDEO_AND_AUDIO}},
              R"({"player":{"speed":1,"players":["video","audio"]}})");
+  ExpectData(PlayerEvent{Play{nullptr, 1, KODI::MEDIA::Streams::Audio}},
+             R"({"player":{"speed":1,"players":["audio"]}})");
   ExpectData(PlayerEvent{AVStart{nullptr, VIDEO}}, R"({"player":{"speed":1,"players":["video"]}})");
   ExpectData(PlayerEvent{AVChange{nullptr, VIDEO}},
              R"({"player":{"speed":1,"players":["video"]}})");
@@ -110,13 +110,13 @@ TEST(TestAnnouncementEvents, PlayerPropertiesData)
   ExpectData(PlayerEvent{muted}, R"({"properties":{"muted":true}})");
 
   PropertiesChanged subtitles;
-  subtitles.players = VIDEO_AND_AUDIO;
+  subtitles.streams = VIDEO_AND_AUDIO;
   subtitles.subtitleEnabled = false;
   ExpectData(PlayerEvent{subtitles},
              R"({"properties":{"subtitleEnabled":false},"player":{"players":["video","audio"]}})");
 
   PropertiesChanged stream;
-  stream.players = VIDEO;
+  stream.streams = VIDEO;
   CVariant audio;
   audio["index"] = 1;
   audio["language"] = "eng";
@@ -126,7 +126,7 @@ TEST(TestAnnouncementEvents, PlayerPropertiesData)
                  "player":{"players":["video"]}})");
 
   PropertiesChanged partyMode;
-  partyMode.players = VIDEO;
+  partyMode.streams = VIDEO;
   partyMode.partyMode = true;
   ExpectData(PlayerEvent{partyMode},
              R"({"properties":{"partyMode":true},"player":{"players":["video"]}})");

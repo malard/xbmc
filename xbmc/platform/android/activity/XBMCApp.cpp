@@ -283,11 +283,11 @@ namespace
 // started outside the playlists, from what the player has opened.
 std::pair<bool, bool> PlayingVideoAndAudio()
 {
-  using KODI::PLAYLIST::Holds;
   const auto& components = CServiceBroker::GetAppComponents();
   const auto playLists = CServiceBroker::GetPlayLists();
-  if (const std::optional<Holds> holds = playLists->GetPlayingHolds(); holds)
-    return {*holds != Holds::Audio, *holds != Holds::Video || playLists->IsAudioFollowingVideo()};
+  if (const std::optional<KODI::MEDIA::Streams> streams = playLists->GetPlayingStreams(); streams)
+    return {KODI::MEDIA::HasVideo(*streams),
+            KODI::MEDIA::HasAudio(*streams) || playLists->IsAudioFollowingVideo()};
 
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   return {appPlayer->HasVideo(), appPlayer->HasAudio()};

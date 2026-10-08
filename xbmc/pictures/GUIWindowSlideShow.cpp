@@ -171,14 +171,14 @@ CGUIWindowSlideShow::~CGUIWindowSlideShow()
 void CGUIWindowSlideShow::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
   namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
-  std::optional<std::pair<const CFileItem*, PLAYER::Players>> started;
+  std::optional<std::pair<const CFileItem*, KODI::MEDIA::Streams>> started;
   if (const auto* play = std::get_if<PLAYER::Play>(&event))
-    started.emplace(play->item.get(), play->players);
+    started.emplace(play->item.get(), play->streams);
   else if (const auto* resume = std::get_if<PLAYER::Resume>(&event))
-    started.emplace(resume->item.get(), resume->players);
+    started.emplace(resume->item.get(), resume->streams);
 
   // video playback takes over the screen from the slideshow
-  if (started && started->second.video && !PLAYER::IsPicture(started->first))
+  if (started && KODI::MEDIA::HasVideo(started->second) && !PLAYER::IsPicture(started->first))
     Close();
 }
 

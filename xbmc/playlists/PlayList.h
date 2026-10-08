@@ -10,6 +10,7 @@
 
 #include "PlayListFeed.h"
 #include "PlayListTypes.h"
+#include "media/MediaStreams.h"
 #include "threads/CriticalSection.h"
 
 #include <deque>
@@ -36,7 +37,7 @@ struct PlayListEntry
   EntryId id{NO_ENTRY};
   std::shared_ptr<CFileItem> item;
   //! What the item holds, or none if the item does not say.
-  std::optional<Holds> holds;
+  std::optional<MEDIA::Streams> streams;
   bool playable{true};
 };
 
@@ -147,7 +148,7 @@ public:
   EntryId GetEntryId(int position) const;
   int GetPosition(EntryId entry) const;
   std::shared_ptr<CFileItem> GetItem(EntryId entry) const;
-  std::optional<Holds> GetHolds(EntryId entry) const;
+  std::optional<MEDIA::Streams> GetStreams(EntryId entry) const;
 
   /*!
    * \return The entries in list order, taken at once, so another thread's edit cannot land midway.

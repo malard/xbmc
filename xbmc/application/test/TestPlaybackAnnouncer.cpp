@@ -68,17 +68,15 @@ protected:
 
 const CVariant AUDIO{std::vector<std::string>{"audio"}};
 const CVariant VIDEO{std::vector<std::string>{"video"}};
-constexpr ANNOUNCEMENT::EVENT::PLAYER::Players HOLDS_AUDIO{.video = false, .audio = true};
-constexpr ANNOUNCEMENT::EVENT::PLAYER::Players HOLDS_VIDEO_AND_AUDIO{.video = true, .audio = true};
 } // namespace
 
 TEST_F(TestPlaybackAnnouncer, AStartingEntryHoldsWhatItsPlayListClaims)
 {
   m_playLists->SetPlayingType(PLAYLIST::Audio);
-  EXPECT_EQ(HOLDS_AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(MEDIA::Streams::Audio, m_announcer.GetStreams(nullptr, true));
 
   m_playLists->SetPlayingType(PLAYLIST::Video);
-  EXPECT_EQ(HOLDS_VIDEO_AND_AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(MEDIA::Streams::VideoAndAudio, m_announcer.GetStreams(nullptr, true));
 }
 
 TEST_F(TestPlaybackAnnouncer, ASongOnTheVideoPlayListStartsAsAudio)
@@ -88,7 +86,7 @@ TEST_F(TestPlaybackAnnouncer, ASongOnTheVideoPlayListStartsAsAudio)
   playList.SetCurrent(playList.Add(std::make_shared<CFileItem>("/music/song.flac", false)));
   m_playLists->SetPlayingType(PLAYLIST::Video);
 
-  EXPECT_EQ(HOLDS_AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(MEDIA::Streams::Audio, m_announcer.GetStreams(nullptr, true));
 }
 
 TEST_F(TestPlaybackAnnouncer, WhatStartedIsACopyOfWhatThePlayerReports)

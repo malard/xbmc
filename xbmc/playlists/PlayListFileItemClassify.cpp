@@ -64,20 +64,20 @@ Type TypeFor(const CFileItemList& entries, const CFileItem& source)
 
 Type TypeFor(const CFileItem& item)
 {
-  return HoldsOf(item) == Holds::Audio ? Audio : Video;
+  return StreamsOf(item) == MEDIA::Streams::Audio ? Audio : Video;
 }
 
-std::optional<Holds> HoldsOf(const CFileItem& item)
+std::optional<MEDIA::Streams> StreamsOf(const CFileItem& item)
 {
   // a PVR item answers from its tag: a radio channel or recording can carry a video stream
   if (item.IsPVRChannel() || item.IsPVRRecording() || item.IsEPG())
-    return PVR::CPVRItem(item).IsRadio() ? Holds::Audio : Holds::VideoAndAudio;
+    return PVR::CPVRItem(item).IsRadio() ? MEDIA::Streams::Audio : MEDIA::Streams::VideoAndAudio;
   if (item.IsPicture())
-    return Holds::Video;
+    return MEDIA::Streams::Video;
   if (VIDEO::IsVideo(item) || item.HasGameInfoTag())
-    return Holds::VideoAndAudio;
+    return MEDIA::Streams::VideoAndAudio;
   if (MUSIC::IsAudio(item))
-    return Holds::Audio;
+    return MEDIA::Streams::Audio;
   return std::nullopt;
 }
 

@@ -68,9 +68,9 @@ public:
    * \param claimed Answer what the entry claims rather than what the player renders, as when it
    * starts: the playlist it is on and whether Audio follows it; a channel by whether it is radio.
    * Otherwise the player answers, once it renders anything.
-   * \return What the playback holds.
+   * \return The kinds of stream the playback carries.
    */
-  ANNOUNCEMENT::EVENT::PLAYER::Players GetPlayers(const CFileItem* item, bool claimed) const;
+  KODI::MEDIA::Streams GetStreams(const CFileItem* item, bool claimed) const;
 
   /*!
    * \brief Publish a change to a property of what is playing. Nothing is published while nothing

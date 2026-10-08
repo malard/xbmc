@@ -125,16 +125,6 @@ enum class Wrap
   ToStart
 };
 
-/*!
- * \brief What an entry holds, recorded once when it is placed.
- */
-enum class Holds
-{
-  Audio,
-  Video,
-  VideoAndAudio
-};
-
 } // namespace KODI::PLAYLIST
 
 template<>

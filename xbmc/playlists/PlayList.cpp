@@ -86,7 +86,7 @@ PlayListEntry CPlayList::MakeEntryLocked(const std::shared_ptr<CFileItem>& item)
 
   PlayListEntry entry;
   entry.item = std::move(owned);
-  entry.holds = HoldsOf(*entry.item);
+  entry.streams = StreamsOf(*entry.item);
   return entry;
 }
 
@@ -353,11 +353,11 @@ std::shared_ptr<CFileItem> CPlayList::GetItem(EntryId entry) const
   return position < 0 ? nullptr : m_entries[position].item;
 }
 
-std::optional<Holds> CPlayList::GetHolds(EntryId entry) const
+std::optional<MEDIA::Streams> CPlayList::GetStreams(EntryId entry) const
 {
   std::unique_lock lock(m_critSection);
   const int position = FindLocked(entry);
-  return position < 0 ? std::nullopt : m_entries[position].holds;
+  return position < 0 ? std::nullopt : m_entries[position].streams;
 }
 
 EntryId CPlayList::GetCurrent() const

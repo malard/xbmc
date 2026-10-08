@@ -11,6 +11,7 @@
 #include "application/IApplicationComponent.h"
 #include "application/PlaybackOptions.h"
 #include "guilib/IMsgTargetCallback.h"
+#include "media/MediaStreams.h"
 #include "playlists/PlayListTypes.h"
 #include "threads/CriticalSection.h"
 
@@ -164,7 +165,7 @@ public:
   bool IsPlayingAsAudio() const;
 
   //! What the playing playlist's current entry holds, or nothing when no playlist is playing.
-  std::optional<KODI::PLAYLIST::Holds> GetPlayingHolds() const;
+  std::optional<KODI::MEDIA::Streams> GetPlayingStreams() const;
 
   /*!
    * \return Whether an item starting now plays as audio: what the playing entry holds or, when
@@ -176,7 +177,7 @@ public:
    * \return What an entry holds, as recorded when it was placed, or what its playlist claims when
    * the item did not say.
    */
-  KODI::PLAYLIST::Holds GetHolds(KODI::PLAYLIST::Type type, KODI::PLAYLIST::EntryId entry) const;
+  KODI::MEDIA::Streams GetStreams(KODI::PLAYLIST::Type type, KODI::PLAYLIST::EntryId entry) const;
 
   /*!
    * \return While the player is working through this playlist, the position in list order of the

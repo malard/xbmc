@@ -229,7 +229,7 @@ TEST_F(TestAnnouncementManager, ATypedEventReachesListenersAsItselfAndAsData)
   CTypedAnnouncer announcer;
   m_manager.AddAnnouncer(&announcer, Player);
   const auto item = std::make_shared<CFileItem>("/music/song.flac", false);
-  m_manager.Announce(PlayerEvent{EVENT::PLAYER::Play{item, 1, {.video = false, .audio = true}}});
+  m_manager.Announce(PlayerEvent{EVENT::PLAYER::Play{item, 1, KODI::MEDIA::Streams::Audio}});
   ASSERT_TRUE(announcer.m_typed.Wait(TIMEOUT));
   ASSERT_TRUE(announcer.m_legacy.Wait(TIMEOUT));
   m_manager.RemoveAnnouncer(&announcer);

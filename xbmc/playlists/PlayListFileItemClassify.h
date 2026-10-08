@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "media/MediaStreams.h"
 #include "playlists/PlayListTypes.h"
 
 #include <optional>
@@ -45,7 +46,7 @@ Type TypeFor(const CFileItem& item);
  * \brief What an item holds: a channel's is whether it is radio or TV, a picture holds video only,
  * a video or a game video and audio, and audio only audio; nothing when it is none of these.
  */
-std::optional<Holds> HoldsOf(const CFileItem& item);
+std::optional<MEDIA::Streams> StreamsOf(const CFileItem& item);
 
 //! \brief Whether an item neither is nor contains a playlist entry: the parent item or an archive.
 bool YieldsNoEntries(const CFileItem& item);

@@ -10,6 +10,7 @@
 
 #include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
+#include "media/MediaStreams.h"
 #include "media/MediaType.h"
 #include "playlists/PlayListTypes.h"
 #include "utils/Variant.h"
@@ -36,22 +37,13 @@ namespace ANNOUNCEMENT
 
 namespace EVENT::PLAYER
 {
-//! What a playback holds.
-struct Players
-{
-  bool video{false};
-  bool audio{false};
-
-  bool operator==(const Players&) const = default;
-};
-
 struct Play
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PLAY;
 
   std::shared_ptr<const CFileItem> item;
   int speed{1};
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct AVStart
@@ -59,7 +51,7 @@ struct AVStart
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_AV_START;
 
   std::shared_ptr<const CFileItem> item;
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct AVChange
@@ -67,7 +59,7 @@ struct AVChange
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_AV_CHANGE;
 
   std::shared_ptr<const CFileItem> item;
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct Pause
@@ -75,7 +67,7 @@ struct Pause
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PAUSE;
 
   std::shared_ptr<const CFileItem> item;
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct Resume
@@ -83,7 +75,7 @@ struct Resume
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_RESUME;
 
   std::shared_ptr<const CFileItem> item;
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct SpeedChanged
@@ -92,7 +84,7 @@ struct SpeedChanged
 
   std::shared_ptr<const CFileItem> item;
   int speed{1};
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct Seek
@@ -103,7 +95,7 @@ struct Seek
   int speed{1};
   std::chrono::milliseconds time{0};
   std::chrono::milliseconds seekOffset{0};
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct Stop
@@ -114,7 +106,7 @@ struct Stop
   //! The playback reached its end, rather than being stopped.
   bool end{false};
   //! Given for the slideshow only.
-  std::optional<Players> players;
+  std::optional<KODI::MEDIA::Streams> streams;
 };
 
 struct PlaybackFailed
@@ -139,7 +131,7 @@ struct PropertiesChanged
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
 
-  std::optional<Players> players;
+  std::optional<KODI::MEDIA::Streams> streams;
   std::optional<int> volume;
   std::optional<bool> muted;
   std::optional<bool> partyMode;
@@ -156,7 +148,7 @@ struct ContentGeometryChange
 
   //! The geometry as JSON-RPC describes it.
   CVariant geometry;
-  Players players;
+  KODI::MEDIA::Streams streams{};
 };
 
 struct Commercial

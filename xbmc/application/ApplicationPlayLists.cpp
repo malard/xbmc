@@ -197,23 +197,23 @@ void CApplicationPlayLists::ChangePlayingType(std::optional<Type> type)
   m_playingType = type;
 }
 
-Holds CApplicationPlayLists::GetHolds(Type type, EntryId entry) const
+MEDIA::Streams CApplicationPlayLists::GetStreams(Type type, EntryId entry) const
 {
-  return GetPlayList(type).GetHolds(entry).value_or(type == PLAYLIST::Video ? Holds::VideoAndAudio
-                                                                            : Holds::Audio);
+  return GetPlayList(type).GetStreams(entry).value_or(
+      type == PLAYLIST::Video ? MEDIA::Streams::VideoAndAudio : MEDIA::Streams::Audio);
 }
 
 bool CApplicationPlayLists::IsPlayingAsAudio() const
 {
-  if (const std::optional<Holds> holds = GetPlayingHolds(); holds)
-    return *holds == Holds::Audio;
+  if (const std::optional<MEDIA::Streams> streams = GetPlayingStreams(); streams)
+    return *streams == MEDIA::Streams::Audio;
   return m_playback->IsPlayingAudio();
 }
 
-std::optional<Holds> CApplicationPlayLists::GetPlayingHolds() const
+std::optional<MEDIA::Streams> CApplicationPlayLists::GetPlayingStreams() const
 {
   if (const std::optional<Type> type = GetPlayingType(); type)
-    return GetHolds(*type, GetPlayList(*type).GetCurrent());
+    return GetStreams(*type, GetPlayList(*type).GetCurrent());
   return std::nullopt;
 }
 
@@ -224,7 +224,7 @@ bool CApplicationPlayLists::IsStartingAsAudio(const CFileItem& item) const
   {
     const EntryId current = GetPlayList(*type).GetCurrent();
     if (const auto entry = GetPlayList(*type).GetItem(current); entry && entry->IsSamePath(&item))
-      return GetHolds(*type, current) == Holds::Audio;
+      return GetStreams(*type, current) == MEDIA::Streams::Audio;
   }
   return TypeFor(item) == PLAYLIST::Audio;
 }
@@ -341,7 +341,7 @@ bool CApplicationPlayLists::OnMessage(CGUIMessage& message)
         {
           const EntryId current = GetPlayList(PLAYLIST::Video).GetCurrent();
           m_audioFollowsVideo =
-              current != NO_ENTRY && GetHolds(PLAYLIST::Video, current) != Holds::Video;
+              current != NO_ENTRY && GetStreams(PLAYLIST::Video, current) != MEDIA::Streams::Video;
         }
       }
       if (IObserver* observer = m_observer; observer)
@@ -949,8 +949,9 @@ void CApplicationPlayLists::QueueNextEntry()
   const std::shared_ptr<CFileItem> nextItem = type ? GetPlayList(*type).GetItem(next) : nullptr;
 
   // the player only moves on by itself to the same kind of media
-  const Holds playing = m_playback->IsPlayingVideo() ? Holds::VideoAndAudio : Holds::Audio;
-  if (!nextItem || GetHolds(*type, next) != playing)
+  const MEDIA::Streams playing =
+      m_playback->IsPlayingVideo() ? MEDIA::Streams::VideoAndAudio : MEDIA::Streams::Audio;
+  if (!nextItem || GetStreams(*type, next) != playing)
   {
     m_playback->NothingToQueue();
     return;

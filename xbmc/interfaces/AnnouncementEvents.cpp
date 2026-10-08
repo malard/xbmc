@@ -26,21 +26,21 @@ struct Overloaded : Ts...
   using Ts::operator()...;
 };
 
-CVariant PlayersOf(const EVENT::PLAYER::Players& players)
+CVariant PlayersOf(KODI::MEDIA::Streams streams)
 {
   CVariant list(CVariant::VariantTypeArray);
-  if (players.video)
+  if (KODI::MEDIA::HasVideo(streams))
     list.push_back("video");
-  if (players.audio)
+  if (KODI::MEDIA::HasAudio(streams))
     list.push_back("audio");
   return list;
 }
 
-CVariant SpeedAndPlayers(int speed, const EVENT::PLAYER::Players& players)
+CVariant SpeedAndPlayers(int speed, KODI::MEDIA::Streams streams)
 {
   CVariant data;
   data["player"]["speed"] = speed;
-  data["player"]["players"] = PlayersOf(players);
+  data["player"]["players"] = PlayersOf(streams);
   return data;
 }
 
@@ -117,15 +117,15 @@ CVariant LegacyDataOfEvent(const PlayerEvent& event)
 {
   using namespace EVENT::PLAYER;
   return std::visit(
-      Overloaded{[](const Play& e) { return SpeedAndPlayers(e.speed, e.players); },
-                 [](const AVStart& e) { return SpeedAndPlayers(1, e.players); },
-                 [](const AVChange& e) { return SpeedAndPlayers(1, e.players); },
-                 [](const Pause& e) { return SpeedAndPlayers(0, e.players); },
-                 [](const Resume& e) { return SpeedAndPlayers(1, e.players); },
-                 [](const SpeedChanged& e) { return SpeedAndPlayers(e.speed, e.players); },
+      Overloaded{[](const Play& e) { return SpeedAndPlayers(e.speed, e.streams); },
+                 [](const AVStart& e) { return SpeedAndPlayers(1, e.streams); },
+                 [](const AVChange& e) { return SpeedAndPlayers(1, e.streams); },
+                 [](const Pause& e) { return SpeedAndPlayers(0, e.streams); },
+                 [](const Resume& e) { return SpeedAndPlayers(1, e.streams); },
+                 [](const SpeedChanged& e) { return SpeedAndPlayers(e.speed, e.streams); },
                  [](const Seek& e)
                  {
-                   CVariant data = SpeedAndPlayers(e.speed, e.players);
+                   CVariant data = SpeedAndPlayers(e.speed, e.streams);
                    KODI::INTERFACES::MillisecondsToTimeObject(static_cast<int>(e.time.count()),
                                                               data["player"]["time"]);
                    KODI::INTERFACES::MillisecondsToTimeObject(
@@ -135,8 +135,8 @@ CVariant LegacyDataOfEvent(const PlayerEvent& event)
                  [](const Stop& e)
                  {
                    CVariant data(CVariant::VariantTypeObject);
-                   if (e.players)
-                     data["player"]["players"] = PlayersOf(*e.players);
+                   if (e.streams)
+                     data["player"]["players"] = PlayersOf(*e.streams);
                    data["end"] = e.end;
                    return data;
                  },
@@ -153,14 +153,14 @@ CVariant LegacyDataOfEvent(const PlayerEvent& event)
                  {
                    CVariant data(CVariant::VariantTypeObject);
                    data["properties"] = PropertiesOf(e);
-                   if (e.players)
-                     data["player"]["players"] = PlayersOf(*e.players);
+                   if (e.streams)
+                     data["player"]["players"] = PlayersOf(*e.streams);
                    return data;
                  },
                  [](const ContentGeometryChange& e)
                  {
                    CVariant data = e.geometry;
-                   data["player"]["players"] = PlayersOf(e.players);
+                   data["player"]["players"] = PlayersOf(e.streams);
                    return data;
                  },
                  [](const Commercial& e) { return CVariant{e.time}; },

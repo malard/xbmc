@@ -28,11 +28,10 @@ using namespace KODI;
 using namespace KODI::PLAYLIST;
 using ANNOUNCEMENT::PlayerEvent;
 using ANNOUNCEMENT::PlaylistEvent;
-using ANNOUNCEMENT::EVENT::PLAYER::Players;
 
 namespace
 {
-constexpr Players SLIDESHOW_PLAYERS{.video = true, .audio = false};
+constexpr MEDIA::Streams SLIDESHOW_STREAMS{MEDIA::Streams::Video};
 
 void PublishToAnnouncementManager(const ANNOUNCEMENT::Announcement& announcement)
 {
@@ -62,19 +61,19 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
   switch (message.GetMessage())
   {
     case GUI_MSG_PLAYBACK_AVSTARTED:
-      m_sink(PlayerEvent{AVStart{item, GetPlayers(item.get(), false)}});
+      m_sink(PlayerEvent{AVStart{item, GetStreams(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_AVCHANGE:
-      m_sink(PlayerEvent{AVChange{item, GetPlayers(item.get(), false)}});
+      m_sink(PlayerEvent{AVChange{item, GetStreams(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_PAUSED:
-      m_sink(PlayerEvent{Pause{item, GetPlayers(item.get(), false)}});
+      m_sink(PlayerEvent{Pause{item, GetStreams(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_RESUMED:
-      m_sink(PlayerEvent{Resume{item, GetPlayers(item.get(), false)}});
+      m_sink(PlayerEvent{Resume{item, GetStreams(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_SPEED_CHANGED:
-      m_sink(PlayerEvent{SpeedChanged{item, message.GetParam1(), GetPlayers(item.get(), false)}});
+      m_sink(PlayerEvent{SpeedChanged{item, message.GetParam1(), GetStreams(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_SEEKED:
     {
@@ -82,7 +81,7 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
       m_sink(PlayerEvent{Seek{item, static_cast<int>(appPlayer->GetPlaySpeed()),
                               std::chrono::milliseconds{message.GetParam1AsI64()},
                               std::chrono::milliseconds{message.GetParam2AsI64()},
-                              GetPlayers(item.get(), false)}});
+                              GetStreams(item.get(), false)}});
       break;
     }
     case GUI_MSG_PLAYBACK_STOPPED:
@@ -100,34 +99,24 @@ void CPlaybackAnnouncer::OnStarted(const std::shared_ptr<CFileItem>& started)
   if (!started)
     return;
   m_sink(
-      PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Play{started, 1, GetPlayers(started.get(), true)}});
+      PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Play{started, 1, GetStreams(started.get(), true)}});
 }
 
-Players CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) const
+MEDIA::Streams CPlaybackAnnouncer::GetStreams(const CFileItem* item, bool claimed) const
 {
-  Players players;
+  using enum MEDIA::Streams;
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
   if (!claimed && (appPlayer->HasVideo() || appPlayer->HasAudio()))
   {
-    players.video = appPlayer->HasVideo();
-    players.audio = appPlayer->HasAudio();
+    if (!appPlayer->HasVideo())
+      return Audio;
+    return appPlayer->HasAudio() ? VideoAndAudio : Video;
   }
-  else if (item && item->HasPVRChannelInfoTag())
-  {
-    players.audio = true;
-    players.video = !item->GetPVRChannelInfoTag()->IsRadio();
-  }
-  else if (const std::optional<Holds> holds = m_playLists->GetPlayingHolds(); holds)
-  {
-    players.video = *holds != Holds::Audio;
-    players.audio = *holds != Holds::Video;
-  }
-  else
-  {
-    players.audio = true;
-    players.video = !m_playLists->IsPlayingAsAudio();
-  }
-  return players;
+  if (item && item->HasPVRChannelInfoTag())
+    return item->GetPVRChannelInfoTag()->IsRadio() ? Audio : VideoAndAudio;
+  if (const std::optional<MEDIA::Streams> streams = m_playLists->GetPlayingStreams(); streams)
+    return *streams;
+  return m_playLists->IsPlayingAsAudio() ? Audio : VideoAndAudio;
 }
 
 void CPlaybackAnnouncer::Announce(PlayerProperty property, const CVariant& value) const
@@ -138,7 +127,7 @@ void CPlaybackAnnouncer::Announce(PlayerProperty property, const CVariant& value
     return;
 
   ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged changed;
-  changed.players = GetPlayers(nullptr, false);
+  changed.streams = GetStreams(nullptr, false);
   using enum PlayerProperty;
   switch (property)
   {
@@ -179,15 +168,15 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
   {
     case SlideShowEvent::Play:
       m_playLists->SetSlideShowRunning(true);
-      m_sink(PlayerEvent{Play{announced, running ? 1 : 0, SLIDESHOW_PLAYERS}});
+      m_sink(PlayerEvent{Play{announced, running ? 1 : 0, SLIDESHOW_STREAMS}});
       break;
     case SlideShowEvent::Pause:
       m_playLists->SetSlideShowRunning(true);
-      m_sink(PlayerEvent{Pause{announced, SLIDESHOW_PLAYERS}});
+      m_sink(PlayerEvent{Pause{announced, SLIDESHOW_STREAMS}});
       break;
     case SlideShowEvent::Stop:
       m_playLists->SetSlideShowRunning(false);
-      m_sink(PlayerEvent{Stop{announced, true, SLIDESHOW_PLAYERS}});
+      m_sink(PlayerEvent{Stop{announced, true, SLIDESHOW_STREAMS}});
       break;
   }
 }
@@ -195,7 +184,7 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
 void CPlaybackAnnouncer::OnContentGeometryChanged(CVariant data) const
 {
   m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ContentGeometryChange{
-      std::move(data), GetPlayers(nullptr, false)}});
+      std::move(data), GetStreams(nullptr, false)}});
 }
 
 void CPlaybackAnnouncer::OnSlideShowShuffled() const

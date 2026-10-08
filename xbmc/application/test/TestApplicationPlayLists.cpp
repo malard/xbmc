@@ -563,23 +563,24 @@ TEST(TestApplicationPlayLists, ASongOnTheVideoPlayListIsStillAudio)
   playLists.SetPlayingType(PLAYLIST::Video);
 
   EXPECT_TRUE(playLists.IsPlayingAsAudio());
-  EXPECT_EQ(Holds::VideoAndAudio, playLists.GetHolds(PLAYLIST::Video, playList.GetEntryId(0)));
+  EXPECT_EQ(MEDIA::Streams::VideoAndAudio,
+            playLists.GetStreams(PLAYLIST::Video, playList.GetEntryId(0)));
 }
 
 TEST(TestApplicationPlayLists, WhatPlaysIsWhatThePlayingEntryHolds)
 {
   CTestPlayLists playLists;
-  EXPECT_FALSE(playLists.GetPlayingHolds().has_value());
+  EXPECT_FALSE(playLists.GetPlayingStreams().has_value());
 
   CPlayList& playList = playLists.EditPlayList(PLAYLIST::Video);
   const EntryId film = playList.Add(std::make_shared<CFileItem>("/video/film.mkv", false));
   const EntryId song = playList.Add(std::make_shared<CFileItem>("/music/song.flac", false));
   playList.SetCurrent(film);
   playLists.SetPlayingType(PLAYLIST::Video);
-  EXPECT_EQ(Holds::VideoAndAudio, playLists.GetPlayingHolds());
+  EXPECT_EQ(MEDIA::Streams::VideoAndAudio, playLists.GetPlayingStreams());
 
   playList.SetCurrent(song);
-  EXPECT_EQ(Holds::Audio, playLists.GetPlayingHolds());
+  EXPECT_EQ(MEDIA::Streams::Audio, playLists.GetPlayingStreams());
 }
 
 TEST(TestApplicationPlayLists, AnItemThatSaysNothingHoldsWhatItsPlayListClaims)
@@ -587,7 +588,7 @@ TEST(TestApplicationPlayLists, AnItemThatSaysNothingHoldsWhatItsPlayListClaims)
   CTestPlayLists playLists;
   const EntryId entry = playLists.EditPlayList(PLAYLIST::Audio)
                             .Add(std::make_shared<CFileItem>("plugin://plugin.audio.x/1", false));
-  EXPECT_EQ(Holds::Audio, playLists.GetHolds(PLAYLIST::Audio, entry));
+  EXPECT_EQ(MEDIA::Streams::Audio, playLists.GetStreams(PLAYLIST::Audio, entry));
 }
 TEST(TestApplicationPlayLists, OnlyWhatCanPlayBecomesAnEntry)
 {
