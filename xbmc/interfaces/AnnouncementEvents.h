@@ -633,6 +633,13 @@ CVariant EventDataOf(const Announcement& announcement);
 CVariant NotificationDataOf(const Announcement& announcement);
 
 /*!
+ * \brief The announcement with its item's library details loaded, when the item has no database
+ * id and the library knows it by its path. The item description NotificationDataOf() gives
+ * reads them, so the lookup is done once per announcement rather than once per caller.
+ */
+Announcement WithLibraryDetails(Announcement announcement);
+
+/*!
  * \brief The announcement with its item replaced by \p item.
  */
 Announcement WithItem(Announcement announcement, std::shared_ptr<const CFileItem> item);

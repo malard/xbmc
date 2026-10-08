@@ -12,6 +12,7 @@
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/Variant.h"
+#include "video/VideoInfoTag.h"
 
 #include <chrono>
 #include <memory>
@@ -326,6 +327,19 @@ TEST(TestAnnouncementEvents, InfoSourcesAndSettingsEvents)
              R"({"level":"advanced"})");
   ExpectData(SettingsEvent{EVENT::SETTINGS::LevelChanged{SettingLevel::Basic}},
              R"({"level":"basic"})");
+}
+
+TEST(TestAnnouncementEvents, AnItemTheLibraryAlreadyNamesIsNotLookedUp)
+{
+  CVideoInfoTag tag;
+  tag.m_iDbId = 7;
+  tag.SetMediaType(KODI::MEDIA::TYPE::MOVIE);
+  const auto movie = std::make_shared<CFileItem>(tag);
+  movie->SetPath("/movies/film.mkv");
+  const Announcement announcement{PlayerEvent{EVENT::PLAYER::Play{movie, 1, VIDEO}}};
+
+  EXPECT_EQ(movie, ItemOf(WithLibraryDetails(announcement)));
+  EXPECT_EQ(nullptr, ItemOf(WithLibraryDetails(PlayerEvent{EVENT::PLAYER::Menu{}})));
 }
 
 TEST(TestAnnouncementEvents, AnItemCanBeReplaced)

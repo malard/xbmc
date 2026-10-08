@@ -326,34 +326,10 @@ void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
 
 void CopyVideoTagInfoToObject(const CFileItem& item, CVariant& object)
 {
-  CVideoInfoTag tag = *item.GetVideoInfoTag();
+  const CVideoInfoTag& tag = *item.GetVideoInfoTag();
 
   auto& objItem = object["item"];
-  int id = tag.GetDatabaseId();
-
-  //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty())
-  {
-    CVideoDatabase videodatabase;
-    if (videodatabase.Open())
-    {
-      std::string videoInfoTagPath = tag.m_strFileNameAndPath;
-      std::string path;
-      if (StringUtils::StartsWith(videoInfoTagPath, "removable://"))
-        path = videoInfoTagPath;
-      else
-        path = item.GetPath();
-      if (videodatabase.LoadVideoInfo(path, tag))
-        id = tag.GetDatabaseId();
-
-      videodatabase.Close();
-    }
-    else
-    {
-      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
-                  "Unable to open video database. Can not load video tag for announcement!");
-    }
-  }
+  const int id = tag.GetDatabaseId();
 
   if (!tag.m_type.empty())
     objItem["type"] = tag.m_type;
@@ -401,33 +377,11 @@ void CopyVideoTagInfoToObject(const CFileItem& item, CVariant& object)
 
 void CopyMusicTagInfoToObject(const CFileItem& item, CVariant& object)
 {
-  MUSIC_INFO::CMusicInfoTag tag = *item.GetMusicInfoTag();
+  const MUSIC_INFO::CMusicInfoTag& tag = *item.GetMusicInfoTag();
 
   auto& objItem = object["item"];
-  int id = tag.GetDatabaseId();
+  const int id = tag.GetDatabaseId();
   objItem["type"] = KODI::MEDIA::NameOf(KODI::MEDIA::TYPE::SONG);
-
-  //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty())
-  {
-    CMusicDatabase musicdatabase;
-    if (musicdatabase.Open())
-    {
-      CSong song;
-      if (musicdatabase.GetSongByFileName(item.GetPath(), song, item.GetStartOffset()))
-      {
-        tag.SetSong(song);
-        id = tag.GetDatabaseId();
-      }
-
-      musicdatabase.Close();
-    }
-    else
-    {
-      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
-                  "Unable to open music database. Can not load song tag for announcement!");
-    }
-  }
 
   if (id <= 0)
   {
@@ -565,6 +519,61 @@ CVariant NotificationDataOf(const Announcement& announcement)
   const std::shared_ptr<const CFileItem> item = ItemOf(announcement);
   return item ? CreateDataObjectFromItem(*item, EventDataOf(announcement))
               : EventDataOf(announcement);
+}
+
+Announcement WithLibraryDetails(Announcement announcement)
+{
+  const std::shared_ptr<const CFileItem> item = ItemOf(announcement);
+  if (!item || item->GetPath().empty() || item->HasPVRChannelInfoTag())
+    return announcement;
+
+  //! @todo Can be removed once this is properly handled when starting playback of a file
+  if (item->HasVideoInfoTag() && !item->HasPVRRecordingInfoTag())
+  {
+    if (item->GetVideoInfoTag()->GetDatabaseId() > 0)
+      return announcement;
+
+    CVideoDatabase videodatabase;
+    if (!videodatabase.Open())
+    {
+      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
+                  "Unable to open video database. Can not load video tag for announcement!");
+      return announcement;
+    }
+    CVideoInfoTag tag = *item->GetVideoInfoTag();
+    const std::string path = StringUtils::StartsWith(tag.m_strFileNameAndPath, "removable://")
+                                 ? tag.m_strFileNameAndPath
+                                 : item->GetPath();
+    if (!videodatabase.LoadVideoInfo(path, tag))
+      return announcement;
+
+    auto loaded = std::make_shared<CFileItem>(*item);
+    *loaded->GetVideoInfoTag() = std::move(tag);
+    return WithItem(std::move(announcement), std::move(loaded));
+  }
+
+  if (item->HasMusicInfoTag())
+  {
+    if (item->GetMusicInfoTag()->GetDatabaseId() > 0)
+      return announcement;
+
+    CMusicDatabase musicdatabase;
+    if (!musicdatabase.Open())
+    {
+      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
+                  "Unable to open music database. Can not load song tag for announcement!");
+      return announcement;
+    }
+    CSong song;
+    if (!musicdatabase.GetSongByFileName(item->GetPath(), song, item->GetStartOffset()))
+      return announcement;
+
+    auto loaded = std::make_shared<CFileItem>(*item);
+    loaded->GetMusicInfoTag()->SetSong(song);
+    return WithItem(std::move(announcement), std::move(loaded));
+  }
+
+  return announcement;
 }
 
 Announcement WithItem(Announcement announcement, std::shared_ptr<const CFileItem> item)

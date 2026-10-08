@@ -205,11 +205,11 @@ void CAnnouncementManager::Process()
     std::unique_lock lock(m_queueCritSection);
     if (!m_announcementQueue.empty())
     {
-      const Announcement announcement = std::move(m_announcementQueue.front());
+      Announcement announcement = std::move(m_announcementQueue.front());
       m_announcementQueue.pop_front();
       {
         CSingleExit ex(m_queueCritSection);
-        DoAnnounce(announcement);
+        DoAnnounce(WithLibraryDetails(std::move(announcement)));
       }
     }
     else
