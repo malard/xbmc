@@ -66,7 +66,6 @@ void CApplicationSettingsHandling::RegisterSettings()
                                           CSettings::SETTING_MUSICPLAYER_REPLAYGAINNOGAINPREAMP,
                                           CSettings::SETTING_MUSICPLAYER_REPLAYGAINTYPE,
                                           CSettings::SETTING_MUSICPLAYER_REPLAYGAINAVOIDCLIPPING,
-                                          CSettings::SETTING_SCRAPERS_MUSICVIDEOSDEFAULT,
                                           CSettings::SETTING_SCREENSAVER_MODE,
                                           CSettings::SETTING_SCREENSAVER_PREVIEW,
                                           CSettings::SETTING_SCREENSAVER_SETTINGS,
@@ -74,10 +73,6 @@ void CApplicationSettingsHandling::RegisterSettings()
                                           CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION,
                                           CSettings::SETTING_VIDEOSCREEN_SCREENALIGNMENT,
                                           CSettings::SETTING_VIDEOSCREEN_CALIBRATIONALIGNMENT,
-                                          CSettings::SETTING_VIDEOPLAYER_USEMEDIACODEC,
-                                          CSettings::SETTING_VIDEOPLAYER_USEMEDIACODECSURFACE,
-                                          CSettings::SETTING_VIDEOPLAYER_USEDECODERFILTER,
-                                          CSettings::SETTING_AUDIOOUTPUT_VOLUMESTEPS,
                                           CSettings::SETTING_SOURCE_VIDEOS,
                                           CSettings::SETTING_SOURCE_MUSIC,
                                           CSettings::SETTING_SOURCE_PICTURES,
@@ -137,7 +132,6 @@ void CApplicationSettingsHandling::UnregisterSettings()
 
 void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
   if (!setting)
     return;
 
@@ -158,6 +152,7 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
 
   if (settingId == CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN)
   {
+    CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
     if (winSystem->GetGfxContext().IsFullScreenRoot())
       winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(), true);
   }
@@ -236,7 +231,6 @@ void CApplicationSettingsHandling::ApplyRasterSettings()
 
 void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const CSetting>& setting)
 {
-  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   if (!setting)
     return;
 
@@ -245,6 +239,7 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
   if (appPower->OnSettingAction(*setting))
     return;
 
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOOKANDFEEL_SKINSETTINGS)
     windowManager.ActivateWindow(WINDOW_SKIN_SETTINGS);
