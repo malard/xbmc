@@ -129,7 +129,7 @@ std::vector<std::string> GenresOf(const PLT_MediaObject& object)
   return StringsOf(genres);
 }
 
-const std::string& AlbumArtistOrArtist(const CMusicInfoTag& tag)
+std::string AlbumArtistOrArtist(const CMusicInfoTag& tag)
 {
   return tag.GetAlbumArtistString().empty() ? tag.GetArtistString() : tag.GetAlbumArtistString();
 }

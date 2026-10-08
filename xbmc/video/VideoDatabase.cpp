@@ -13550,8 +13550,6 @@ bool CVideoDatabase::AddVideoAsset(VideoDbContentType itemType,
   if (itemType != VideoDbContentType::MOVIES)
     return false;
 
-  MediaType mediaType = DatabaseUtils::MediaTypeFromVideoContentType(itemType);
-
   int idFile;
   if (item.HasVideoInfoTag())
   {
@@ -13655,13 +13653,7 @@ bool CVideoDatabase::GetVideoVersionsNav(const std::string& strBaseDir,
   if (!m_pDB || !m_pDS)
     return false;
 
-  MediaType mediaType;
-
-  if (idContent == VideoDbContentType::MOVIES)
-  {
-    mediaType = MediaType::MOVIE;
-  }
-  else
+  if (idContent != VideoDbContentType::MOVIES)
     return false;
 
   CVideoDbUrl videoUrl;
@@ -13712,13 +13704,7 @@ bool CVideoDatabase::GetVideoVersionTypes(VideoDbContentType idContent,
   if (!m_pDB || !m_pDS)
     return false;
 
-  MediaType mediaType;
-
-  if (idContent == VideoDbContentType::MOVIES)
-  {
-    mediaType = MediaType::MOVIE;
-  }
-  else
+  if (idContent != VideoDbContentType::MOVIES)
     return false;
 
   try
@@ -13763,11 +13749,7 @@ bool CVideoDatabase::IsValidVideoAssetType(int typeId,
   if (!m_pDB)
     return false;
 
-  MediaType mediaType;
-
-  if (idContent == VideoDbContentType::MOVIES)
-    mediaType = MediaType::MOVIE;
-  else
+  if (idContent != VideoDbContentType::MOVIES)
     return false;
 
   const std::string query =
