@@ -79,7 +79,8 @@ namespace XFILE
     if (settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
       sorting.sortAttributes = (SortAttribute)(sorting.sortAttributes | SortAttributeIgnoreArticle);
     if (playlist.IsMusicType() &&
-        settings->GetBool(CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
+        settings->GetBool(
+                                      CSettings::SETTING_MUSICLIBRARY_USEARTISTSORTNAME))
       sorting.sortAttributes =
           static_cast<SortAttribute>(sorting.sortAttributes | SortAttributeUseArtistSortName);
     items.SetSortIgnoreFolders((sorting.sortAttributes & SortAttributeIgnoreFolders) ==
@@ -88,8 +89,7 @@ namespace XFILE
     std::string option = !filter ? "xsp" : "filter";
     std::string group = playlist.GetGroup();
     bool isGrouped = !group.empty() &&
-                     PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE &&
-                     !playlist.IsGroupMixed();
+                     PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE && !playlist.IsGroupMixed();
 
     // get all virtual folders and add them to the item list
     playlist.GetVirtualFolders(virtualFolders);
@@ -300,12 +300,14 @@ namespace XFILE
           PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) == Field::ACTOR &&
           playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
-                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(
+                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
       else
         items.Sort(SortBy::LABEL, SortOrder::ASCENDING,
-                   settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                   settings->GetBool(
+                       CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
                        ? SortAttributeIgnoreArticle
                        : SortAttributeNone);
     }

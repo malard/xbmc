@@ -1746,8 +1746,9 @@ int CVideoDatabase::AddActor(const std::string& name, const std::string& thumbUR
   return -1;
 }
 
-void CVideoDatabase::AddLinkToActor(
-    int mediaId, MEDIA::TYPE mediaType, int actorId, const std::string& role, int order)
+
+
+void CVideoDatabase::AddLinkToActor(int mediaId, MEDIA::TYPE mediaType, int actorId, const std::string &role, int order)
 {
   std::string sql = PrepareSQL("SELECT 1 FROM actor_link WHERE actor_id=%i AND "
                                "media_id=%i AND media_type='%s' AND role='%s'",
@@ -4635,8 +4636,7 @@ void CVideoDatabase::GetSameVideoItems(const CFileItem& item,
         for (const auto& [type, value] : tag->GetUniqueIDs())
         {
           // A nondefault 'unknown' id does not identify the kind of id
-          if (!value.empty() &&
-              (type != VIDEO::UNIQUE_ID::UNKNOWN || type == tag->GetDefaultUniqueID()))
+          if (!value.empty() && (type != VIDEO::UNIQUE_ID::UNKNOWN || type == tag->GetDefaultUniqueID()))
             conditions.emplace_back(
                 PrepareSQL("(value = '%s' AND type = '%s')", value.c_str(), type.c_str()));
         }
@@ -6013,8 +6013,7 @@ std::vector<CScraperUrl::SUrlEntry> GetBasicItemAvailableArt(int mediaId,
   for (auto urlEntry : tag.m_strPictureURL.GetUrls())
   {
     if (urlEntry.m_aspect.empty())
-      urlEntry.m_aspect =
-          tag.GetMediaType() == MEDIA::TYPE::EPISODE ? ART::TYPE::THUMB : ART::TYPE::POSTER;
+      urlEntry.m_aspect = tag.GetMediaType() == MEDIA::TYPE::EPISODE ? ART::TYPE::THUMB : ART::TYPE::POSTER;
     if ((urlEntry.m_aspect == artType ||
          (artType.empty() && !StringUtils::StartsWith(urlEntry.m_aspect, "set."))) &&
         urlEntry.m_type == CScraperUrl::UrlType::General)
@@ -6706,8 +6705,7 @@ CDateTime CVideoDatabase::SetPlayCount(const CFileItem& item, int count, const C
       // Only provide the play count if it has actually changed
       if (item.GetVideoInfoTag()->GetPlayCount() != count)
         update.playCount = count;
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::VideoLibraryEvent{std::move(update)});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{std::move(update)});
     }
 
     return lastPlayed;
@@ -10280,8 +10278,7 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
 
     auto start = std::chrono::steady_clock::now();
     CLog::Log(LOGINFO, "Starting videodatabase cleanup ..");
-    CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanStarted{}});
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanStarted{}});
 
     if (handle)
     {
@@ -10409,8 +10406,7 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
           {
             progress->Close();
             m_pDS2->close();
-            CServiceBroker::GetAnnouncementManager()->Announce(
-                ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
+            CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
             return;
           }
         }
@@ -10945,8 +10941,7 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
   if (progress)
     progress->Close();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
 }
 
 std::vector<int> CVideoDatabase::CleanMediaType(MEDIA::TYPE mediaType, const std::string &cleanableFileIDs,
@@ -11319,8 +11314,7 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
             XMLUtils::SetInt(&part, "playlist", playlist);
             stackNode.InsertEndChild(part);
           }
-          movie.Save(pMain, VIDEO::NFO_ROOT::MOVIE, singleFile,
-                     parts.empty() ? nullptr : &stackNode);
+          movie.Save(pMain, VIDEO::NFO_ROOT::MOVIE, singleFile, parts.empty() ? nullptr : &stackNode);
         }
         else
           movie.Save(pMain, VIDEO::NFO_ROOT::MOVIE, singleFile);
@@ -11922,8 +11916,7 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
       if (iFailCount > 0)
         exported.failCount = iFailCount;
     }
-    CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::VideoLibraryEvent{std::move(exported)});
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{std::move(exported)});
   }
   catch (...)
   {
@@ -12494,8 +12487,7 @@ std::string CVideoDatabase::GetSafeFile(const std::string &dir, const std::strin
 
 void CVideoDatabase::AnnounceRemove(MEDIA::TYPE content, int id, bool scanning /* = false */)
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Remove{content, id, scanning}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Remove{content, id, scanning}});
 }
 
 void CVideoDatabase::AnnounceUpdate(MEDIA::TYPE content, int id)
@@ -12848,10 +12840,11 @@ bool CVideoDatabase::GetFilter(CDbUrl &videoUrl, Filter &filter, SortDescription
       return false;
 
     // check if the filter playlist matches the item type
-    if (xsp.GetType() == itemType || (xsp.GetGroup() == itemType && !xsp.IsGroupMixed()) ||
+    if (xsp.GetType() == itemType ||
+       (xsp.GetGroup() == itemType && !xsp.IsGroupMixed()) ||
         // handle episode listings with videodb://tvshows/titles/ which get the rest
         // of the path (season and episodeid) appended later
-        (xsp.GetType() == MEDIA::CONTENT::EPISODES && itemType == MEDIA::CONTENT::TVSHOWS))
+       (xsp.GetType() == MEDIA::CONTENT::EPISODES && itemType == MEDIA::CONTENT::TVSHOWS))
     {
       std::set<std::string, std::less<>> playlists;
       filter.AppendWhere(xsp.GetWhereClause(*this, playlists));

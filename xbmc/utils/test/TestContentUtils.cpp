@@ -18,7 +18,6 @@
 
 #include <gtest/gtest.h>
 
-
 namespace
 {
 constexpr const char* MOVIE_PATH{"/movies/Movie (2007)/Movie (2007).bluray.iso"};

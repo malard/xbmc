@@ -91,10 +91,8 @@ const std::map<std::string, std::vector<std::string>> artTypeDefaults = {
     {NameOf(MEDIA::TYPE::MOVIE), {ART::TYPE::POSTER, ART::TYPE::FANART}},
     {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), {ART::TYPE::POSTER, ART::TYPE::FANART}},
     {NameOf(MEDIA::TYPE::MUSIC_VIDEO), {ART::TYPE::POSTER, ART::TYPE::FANART}},
-    {NameOf(MEDIA::TYPE::VIDEO_VERSION),
-     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
-    {NameOf(MEDIA::TYPE::NONE),
-     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::VIDEO_VERSION), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::NONE), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
 };
 
 const std::vector<std::string> artTypeDefaultsFallback = {};

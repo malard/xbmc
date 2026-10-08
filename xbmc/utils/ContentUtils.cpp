@@ -14,7 +14,6 @@
 #include "video/Bookmark.h"
 #include "video/VideoInfoTag.h"
 
-
 namespace
 {
 bool PrefersPoster(const CFileItem& item)

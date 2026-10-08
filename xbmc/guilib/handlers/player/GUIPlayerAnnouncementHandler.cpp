@@ -52,7 +52,8 @@ void CGUIPlayerAnnouncementHandler::OnPlayerEvent(const ANNOUNCEMENT::PlayerEven
   else if (const auto* skip = std::get_if<PLAYER::ToggleSkipCommercials>(&event))
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(25011),
-                                          localizeStrings.Get(skip->skip ? 25013 : 25012));
+                                          localizeStrings.Get(skip->skip ? 25013
+                                                                                          : 25012));
   }
   else if (std::holds_alternative<PLAYER::ProcessInfo>(event))
   {

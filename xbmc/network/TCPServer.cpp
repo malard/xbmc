@@ -344,8 +344,7 @@ void CTCPServer::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
   }
 
   std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(
-      announcement,
-      CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
+      announcement, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
   if (str.empty())
     return;
 
@@ -817,7 +816,7 @@ void CTCPServer::WaitForWorkers(std::chrono::milliseconds timeout)
   m_workersDone.wait_for(lock, timeout, [this] { return m_activeWorkers == 0; });
 }
 
-void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, int length)
+void CTCPServer::CTCPClient::PushBuffer(CTCPServer *host, const char *buffer, int length)
 {
   bool inObject = false;
   bool inString = false;
@@ -1002,7 +1001,7 @@ void CTCPServer::CWebSocketClient::PushBuffer(CTCPServer *host, const char *buff
     {
       if ((msg = m_websocket->Handle(buf, len, send)) != NULL && msg->IsComplete())
       {
-        std::vector<const CWebSocketFrame*> frames = msg->GetFrames();
+        std::vector<const CWebSocketFrame *> frames = msg->GetFrames();
         if (send)
         {
           for (unsigned int index = 0; index < frames.size(); index++)
@@ -1042,11 +1041,10 @@ void CTCPServer::CWebSocketClient::Disconnect()
   // A sender blocked on a peer that has stopped reading holds m_critSection, so the close frame is
   // only sent when nothing is sending; the socket is shut down either way.
   std::unique_lock lock(m_critSection, std::try_to_lock);
-  if (lock.owns_lock() && m_websocket->GetState() != WebSocketStateClosed &&
-      m_websocket->GetState() != WebSocketStateNotConnected)
+  if (lock.owns_lock() && m_websocket->GetState() != WebSocketStateClosed && m_websocket->GetState() != WebSocketStateNotConnected)
   {
     // Already framed, so it bypasses Send(), which would wrap it in a text frame
-    const CWebSocketFrame* closeFrame = m_websocket->Close();
+    const CWebSocketFrame *closeFrame = m_websocket->Close();
     if (closeFrame)
       CTCPClient::Send(closeFrame->GetFrameData(),
                        static_cast<unsigned int>(closeFrame->GetFrameLength()));

@@ -695,9 +695,7 @@ void CWinEventsWin10::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
       auto dispatcher = CoreApplication::MainView().Dispatcher();
       if (dispatcher)
       {
-        dispatcher.RunAsync(CoreDispatcherPriority::Normal,
-                            DispatchedHandler(
-                                [status, speed]
+        dispatcher.RunAsync(CoreDispatcherPriority::Normal, DispatchedHandler([status, speed]
                                 {
                                   auto smtc = SystemMediaTransportControls::GetForCurrentView();
                                   if (!smtc)

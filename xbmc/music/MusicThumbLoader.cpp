@@ -165,7 +165,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
   std::vector<ArtForThumbLoader> art;
   CMusicInfoTag &tag = *item.GetMusicInfoTag();
   KODI::MEDIA::TYPE mediaType = tag.GetMediaType();
-  if (tag.GetDatabaseId() > -1 && (mediaType == KODI::MEDIA::TYPE::SONG || mediaType == KODI::MEDIA::TYPE::ALBUM ||
+  if (tag.GetDatabaseId() > -1 &&
+      (mediaType == KODI::MEDIA::TYPE::SONG || mediaType == KODI::MEDIA::TYPE::ALBUM ||
                                    mediaType == KODI::MEDIA::TYPE::ARTIST))
   {
     // Item in music library, fetch the art
@@ -179,7 +180,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
 
     m_musicDatabase->Close();
   }
-  else if (!tag.GetArtist().empty() && (tag.GetType().empty() || mediaType == KODI::MEDIA::TYPE::SONG))
+  else if (!tag.GetArtist().empty() &&
+           (tag.GetType().empty() || mediaType == KODI::MEDIA::TYPE::SONG))
   {
     /*
     Could be non-library song - has musictag but no ID or type (may have
@@ -323,8 +325,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
       // For songs prefer primary song artist over primary albumartist fanart as fallback fanart
       if (artitem.prefix == "artist" && artitem.artType == KODI::ART::TYPE::FANART)
         fanartfallback = artname;
-      if (artitem.prefix == "albumartist" && artitem.artType == KODI::ART::TYPE::FANART &&
-          fanartfallback.empty())
+      if (artitem.prefix == "albumartist" && artitem.artType == KODI::ART::TYPE::FANART && fanartfallback.empty())
         fanartfallback = artname;
     }
     if (!fanartfallback.empty())

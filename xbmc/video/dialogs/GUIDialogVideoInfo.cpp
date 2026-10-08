@@ -631,8 +631,9 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20338) + "] ",
-                                                 items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(
+      movies, "[" + localizeStrings.Get(20338) + "] ",
+      items);
 
   db.GetTvShowsByActor(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -642,8 +643,9 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20364) + "] ",
-                                                 items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(
+      movies, "[" + localizeStrings.Get(20364) + "] ",
+      items);
 
   db.GetEpisodesByActor(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -651,8 +653,9 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
     std::string label = movies[i]->GetVideoInfoTag()->m_strTitle + " (" +  movies[i]->GetVideoInfoTag()->m_strShowTitle + ")";
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20359) + "] ",
-                                                 items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(
+      movies, "[" + localizeStrings.Get(20359) + "] ",
+      items);
 
   db.GetMusicVideosByArtist(strSearch, movies);
   for (int i = 0; i < movies.Size(); ++i)
@@ -662,8 +665,9 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       label += StringUtils::Format(" ({})", movies[i]->GetVideoInfoTag()->GetYear());
     movies[i]->SetLabel(label);
   }
-  CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(20391) + "] ",
-                                                 items);
+  CGUIWindowVideoBase::AppendAndClearSearchItems(
+      movies, "[" + localizeStrings.Get(20391) + "] ",
+      items);
   db.Close();
 
   // Search for music albums by artist with name matching search string
@@ -678,8 +682,10 @@ void CGUIDialogVideoInfo::DoSearch(std::string& strSearch, CFileItemList& items)
       // Set type so that video thumbloader handles album art
       movies[i]->GetVideoInfoTag()->SetMediaType(MEDIA::TYPE::ALBUM);
     }
-    CGUIWindowVideoBase::AppendAndClearSearchItems(movies, "[" + localizeStrings.Get(36918) + "] ",
-                                                   items);
+    CGUIWindowVideoBase::AppendAndClearSearchItems(
+        movies,
+        "[" + localizeStrings.Get(36918) + "] ",
+        items);
   }
   music_database.Close();
 }
@@ -1633,8 +1639,10 @@ bool CGUIDialogVideoInfo::GetSetForMovie(const CFileItem* movieItem,
   if (dialog->IsButtonPressed())
   { // creating new set
     std::string newSetTitle;
-    if (!CGUIKeyboardFactory::ShowAndGetInput(newSetTitle, CVariant{localizeStrings.Get(20468)},
-                                              false))
+    if (!CGUIKeyboardFactory::ShowAndGetInput(
+            newSetTitle,
+            CVariant{localizeStrings.Get(20468)},
+            false))
       return false;
     int idSet = videodb.AddSet(newSetTitle);
     KODI::ART::Artwork movieArt;

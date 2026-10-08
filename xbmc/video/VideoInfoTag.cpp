@@ -169,8 +169,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
 
   // we start with a <tag> tag
   TiXmlElement movieElement(tag.c_str());
-  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE ||
-      tag == NFO_ROOT::MUSIC_VIDEO)
+  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE || tag == NFO_ROOT::MUSIC_VIDEO)
     movieElement.SetAttribute("version", 0);
   TiXmlNode *movie = node->InsertEndChild(movieElement);
 
@@ -1238,8 +1237,7 @@ bool CVideoInfoTag::HasConflictingUniqueID(const CVideoInfoTag& other) const
                              [&other](const auto& id)
                              {
                                const auto it{other.m_uniqueIDs.find(id.first)};
-                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
-                                      !id.second.empty() &&
+                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN && !id.second.empty() &&
                                       it != other.m_uniqueIDs.end() && !it->second.empty() &&
                                       it->second != id.second;
                              });

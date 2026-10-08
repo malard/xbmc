@@ -652,8 +652,7 @@ bool CGUIWindowVideoBase::OnSelect(int iItem)
 
   const std::string path{item->GetPath()};
   if (!item->IsFolder() && path != ITEM::PLACEHOLDER::ADD_SOURCE &&
-      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) &&
-        !URIUtils::IsPlugin(path)) ||
+      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) && !URIUtils::IsPlugin(path)) ||
        (URIUtils::IsPlugin(path) &&
         item->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean(false))))
   {

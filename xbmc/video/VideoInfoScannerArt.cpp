@@ -245,8 +245,7 @@ ArtPriority PriorityOfArtType(std::string_view artType)
   if (artType.starts_with(ART::TYPE::FANART))
     return ArtPriority::BACKGROUND;
 
-  if (artType == ART::TYPE::POSTER || artType == ART::TYPE::THUMB || artType == ART::TYPE::BANNER ||
-      artType == "keyart")
+  if (artType == ART::TYPE::POSTER || artType == ART::TYPE::THUMB || artType == ART::TYPE::BANNER || artType == "keyart")
     return ArtPriority::LIST;
 
   return ArtPriority::DETAIL;

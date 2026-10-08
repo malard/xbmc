@@ -95,8 +95,7 @@ void CGUIDialogNumeric::OnInitWindow()
 
   requested.value = GetOutputString();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::InputEvent{std::move(requested)});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::InputEvent{std::move(requested)});
 }
 
 void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
@@ -104,8 +103,7 @@ void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
   // call base class
   CGUIDialog::OnDeinitWindow(nextWindowID);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
 }
 
 bool CGUIDialogNumeric::OnAction(const CAction &action)
@@ -220,16 +218,16 @@ bool CGUIDialogNumeric::OnMessage(CGUIMessage& message)
       {
         case CONTROL_PREVIOUS:
           OnPrevious();
-          return true;
+        return true;
         case CONTROL_NEXT:
           OnNext();
-          return true;
+        return true;
         case CONTROL_BACKSPACE:
           OnBackSpace();
-          return true;
+        return true;
         case CONTROL_ENTER:
           OnOK();
-          return true;
+        return true;
         default:
           break;
       }
@@ -259,74 +257,74 @@ void CGUIDialogNumeric::OnBackSpace()
     case INPUT_NUMBER:
     case INPUT_PASSWORD:
       // just go back one character
-      if (!m_number.empty())
-        m_number.erase(m_number.length() - 1);
+    if (!m_number.empty())
+      m_number.erase(m_number.length() - 1);
       break;
 
     case INPUT_IP_ADDRESS:
       if (m_ip[m_block])
-        m_ip[m_block] /= 10;
-      else if (m_block)
-      {
-        --m_block;
-        m_dirty = false;
-      }
+      m_ip[m_block] /= 10;
+    else if (m_block)
+    {
+      --m_block;
+      m_dirty = false;
+    }
       break;
 
     case INPUT_TIME:
       if (m_block == 0)
-        m_datetime.hour /= 10;
-      else if (m_datetime.minute)
+      m_datetime.hour /= 10;
+    else if (m_datetime.minute)
+      m_datetime.minute /= 10;
+    else
+    {
+      m_block = 0;
+      m_dirty = false;
+    }
+      break;
+
+    case INPUT_TIME_SECONDS:
+      if (m_block == 0)
+      m_datetime.hour /= 10;
+    else if (m_block == 1)
+    {
+      if (m_datetime.minute)
         m_datetime.minute /= 10;
       else
       {
         m_block = 0;
         m_dirty = false;
       }
+    }
+    else if (m_datetime.second)
+      m_datetime.second /= 10;
+    else
+    {
+      m_block = 0;
+      m_dirty = false;
+    }
       break;
 
-    case INPUT_TIME_SECONDS:
+    case INPUT_DATE:
       if (m_block == 0)
-        m_datetime.hour /= 10;
-      else if (m_block == 1)
-      {
-        if (m_datetime.minute)
-          m_datetime.minute /= 10;
-        else
-        {
-          m_block = 0;
-          m_dirty = false;
-        }
-      }
-      else if (m_datetime.second)
-        m_datetime.second /= 10;
+      m_datetime.day /= 10;
+    else if (m_block == 1)
+    {
+      if (m_datetime.month)
+        m_datetime.month /= 10;
       else
       {
         m_block = 0;
         m_dirty = false;
       }
-      break;
-
-    case INPUT_DATE:
-      if (m_block == 0)
-        m_datetime.day /= 10;
-      else if (m_block == 1)
-      {
-        if (m_datetime.month)
-          m_datetime.month /= 10;
-        else
-        {
-          m_block = 0;
-          m_dirty = false;
-        }
-      }
-      else if (m_datetime.year) // m_block == 2
-        m_datetime.year /= 10;
-      else
-      {
-        m_block = 1;
-        m_dirty = false;
-      }
+    }
+    else if (m_datetime.year) // m_block == 2
+      m_datetime.year /= 10;
+    else
+    {
+      m_block = 1;
+      m_dirty = false;
+    }
       break;
   }
 }
@@ -365,25 +363,25 @@ void CGUIDialogNumeric::FrameMove()
       break;
     case INPUT_TIME:
       strLabel = StringUtils::Format("{:2}:{:02}", m_datetime.hour, m_datetime.minute);
-      start = m_block * 3;
-      end = m_block * 3 + 2;
+    start = m_block * 3;
+    end = m_block * 3 + 2;
       break;
     case INPUT_TIME_SECONDS:
       strLabel = StringUtils::Format("{:2}:{:02}:{:02}", m_datetime.hour, m_datetime.minute,
-                                     m_datetime.second);
-      start = m_block * 3;
-      end = m_block * 3 + 2;
+                                   m_datetime.second);
+    start = m_block * 3;
+    end = m_block * 3 + 2;
       break;
     case INPUT_DATE:
       strLabel =
-          StringUtils::Format("{:2}/{:2}/{:4}", m_datetime.day, m_datetime.month, m_datetime.year);
-      start = m_block * 3;
-      end = m_block == 2 ? m_block * 3 + 4 : m_block * 3 + 2;
+        StringUtils::Format("{:2}/{:2}/{:4}", m_datetime.day, m_datetime.month, m_datetime.year);
+    start = m_block * 3;
+    end = m_block == 2 ? m_block * 3 + 4 : m_block * 3 + 2;
       break;
     case INPUT_IP_ADDRESS:
       strLabel = StringUtils::Format("{:3}.{:3}.{:3}.{:3}", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
-      start = m_block * 4;
-      end = m_block * 4 + 3;
+    start = m_block * 4;
+    end = m_block * 4 + 3;
       break;
   }
   CGUILabelControl *pLabel = dynamic_cast<CGUILabelControl *>(GetControl(CONTROL_INPUT_LABEL));

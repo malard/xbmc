@@ -85,7 +85,8 @@ const char* audio_containers[] = {MUSIC::DB_PATH::GENRES,
 
 const char* video_containers[] = {
     MEDIA::LIBRARY_PATH::MOVIE_TITLES, MEDIA::LIBRARY_PATH::TVSHOW_TITLES,
-    VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES, VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES};
+                                  VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES,
+                                  VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES};
 
 /*----------------------------------------------------------------------
 |   CUPnPServer::CUPnPServer
@@ -1224,7 +1225,7 @@ NPT_Result CUPnPServer::OnSearchContainer(PLT_ActionReference& action,
     CFileItemList items;
     if (!database.GetSeasonsByWhere(
             StringUtils::Format("{}-1/?local", VIDEO::DB_PATH::TVSHOW_TITLES), CDatabase::Filter(),
-            items, true))
+                                    items, true))
     {
       action->SetError(800, "Internal Error");
       return NPT_SUCCESS;

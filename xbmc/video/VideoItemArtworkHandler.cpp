@@ -89,8 +89,7 @@ std::string CVideoItemArtworkHandler::GetCurrentArt() const
   std::string currentArt;
   if (m_item->HasArt(m_artType))
     currentArt = m_item->GetArt(m_artType);
-  else if (m_item->HasArt(ART::TYPE::THUMB) &&
-           (m_artType == ART::TYPE::POSTER || m_artType == ART::TYPE::BANNER))
+  else if (m_item->HasArt(ART::TYPE::THUMB) && (m_artType == ART::TYPE::POSTER || m_artType == ART::TYPE::BANNER))
     currentArt = m_item->GetArt(ART::TYPE::THUMB);
 
   return currentArt;

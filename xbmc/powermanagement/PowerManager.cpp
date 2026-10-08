@@ -145,8 +145,7 @@ bool CPowerManager::Reboot()
 
   if (success)
   {
-    CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Restart{}});
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Restart{}});
 
     CGUIDialogBusyNoCancel* dialog =
         CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(
@@ -193,8 +192,7 @@ void CPowerManager::ProcessEvents()
 
 void CPowerManager::OnSleep()
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Sleep{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Sleep{}});
 
   CGUIDialogBusyNoCancel* dialog =
       CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(
@@ -254,8 +252,7 @@ void CPowerManager::OnWake()
   CServiceBroker::GetPVRManager().OnWake();
   RestorePlayerState();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Wake{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Wake{}});
 }
 
 void CPowerManager::OnLowBattery()
@@ -266,8 +263,7 @@ void CPowerManager::OnLowBattery()
       CGUIDialogKaiToast::Warning,
       CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13050), "");
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::LowBattery{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::LowBattery{}});
 }
 
 void CPowerManager::StorePlayerState()

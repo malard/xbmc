@@ -139,7 +139,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
       // genres, years and studios belong to the show
       if (field == Field::GENRE || field == Field::YEAR || field == Field::STUDIO)
         type = VideoDbContentType::TVSHOWS;
-      basePath = VIDEO::DB_PATH::TVSHOWS;
+    basePath = VIDEO::DB_PATH::TVSHOWS;
       break;
     default:
       type = VideoDbContentType::MOVIES;
@@ -219,7 +219,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::ACTOR:
     {
-      videodatabase.GetActorsNav(basePath + "actors/", items, type);
+      videodatabase.GetActorsNav(basePath + "actors/",items,type);
       iLabel = 20337;
       break;
     }
@@ -303,13 +303,11 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
       //       think there's any decent way to deal with this, as the infinite loop may be an arbitrary
       //       number of playlists deep, eg playlist1 -> playlist2 -> playlist3 ... -> playlistn -> playlist1
       if (video)
-        XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::VIDEO), items, ".xsp",
-                                        XFILE::DIR_FLAG_NO_FILE_DIRS);
+        XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::VIDEO), items, ".xsp", XFILE::DIR_FLAG_NO_FILE_DIRS);
       if (music)
       {
         CFileItemList items2;
-        XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::MUSIC), items2, ".xsp",
-                                        XFILE::DIR_FLAG_NO_FILE_DIRS);
+        XFILE::CDirectory::GetDirectory(CUtil::PlaylistsPathOf(MediaSection::MUSIC), items2, ".xsp", XFILE::DIR_FLAG_NO_FILE_DIRS);
         items.Append(items2);
       }
 
@@ -344,7 +342,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
       {
         std::vector<CMediaSource> sources2 =
             CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO);
-        sources.insert(sources.end(), sources2.begin(), sources2.end());
+        sources.insert(sources.end(),sources2.begin(),sources2.end());
       }
       CServiceBroker::GetMediaManager().GetLocalDrives(sources);
 
@@ -380,7 +378,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     default:
       //! @todo Add browseability in here.
-      assert(false);
+    assert(false);
       break;
   }
 

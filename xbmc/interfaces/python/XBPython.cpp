@@ -176,9 +176,8 @@ void XBPython::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
           CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact))
     OnNotification(
         ANNOUNCEMENT::SenderOf(announcement),
-        std::string(ANNOUNCEMENT::AnnouncementFlagToString(ANNOUNCEMENT::FlagOf(announcement))) +
-            "." + ANNOUNCEMENT::MessageOf(announcement),
-        jsonData);
+                   std::string(ANNOUNCEMENT::AnnouncementFlagToString(ANNOUNCEMENT::FlagOf(announcement))) + "." + ANNOUNCEMENT::MessageOf(announcement),
+                   jsonData);
 }
 
 // message all registered callbacks that we started playing

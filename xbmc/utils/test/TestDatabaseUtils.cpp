@@ -19,7 +19,6 @@
 
 #include <gtest/gtest.h>
 
-
 class TestDatabaseUtilsHelper
 {
 public:

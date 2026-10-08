@@ -103,15 +103,13 @@ constexpr size_t MIN_FULL_SEARCH_LENGTH = 3;
 
 void AnnounceRemove(MEDIA::TYPE content, int id)
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Remove{
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Remove{
           content, id, CMusicLibraryQueue::GetInstance().IsScanningLibrary()}});
 }
 
 void AnnounceUpdate(MEDIA::TYPE content, int id, bool added = false)
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
           .type = content,
           .id = id,
           .transaction = CMusicLibraryQueue::GetInstance().IsScanningLibrary(),
@@ -4678,8 +4676,7 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   std::chrono::seconds duration;
   auto time = std::chrono::steady_clock::now();
   CLog::Log(LOGINFO, "Starting musicdatabase cleanup ...");
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanStarted{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanStarted{}});
 
   BeginTransaction();
   SetLibraryLastCleaned();
@@ -4820,8 +4817,7 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   duration =
       std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - time);
   CLog::Log(LOGINFO, "Cleaning musicdatabase done. Operation took {}s", duration.count());
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
 
   if (!Compress(false))
   {
@@ -4833,8 +4829,7 @@ error:
   RollbackTransaction();
   // Recreate DELETE triggers on song_artist and album_artist
   CreateRemovedLinkTriggers();
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
   return ret;
 }
 
@@ -12061,9 +12056,10 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                 if (!xmlDoc.SaveFile(nfoFile))
                 {
                   CLog::LogF(LOGERROR, "Album nfo export failed! ('{}')", nfoFile);
-                  CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                  CGUIDialogKaiToast::QueueNotification(
+                      CGUIDialogKaiToast::Error,
                                                         localizeStrings.Get(20302),
-                                                        CURL::GetRedacted(nfoFile));
+                      CURL::GetRedacted(nfoFile));
                   iFailCount++;
                 }
               }
@@ -12204,9 +12200,10 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
                   if (!xmlDoc.SaveFile(nfoFile))
                   {
                     CLog::LogF(LOGERROR, "Artist nfo export failed! ('{}')", nfoFile);
-                    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error,
+                    CGUIDialogKaiToast::QueueNotification(
+                        CGUIDialogKaiToast::Error,
                                                           localizeStrings.Get(20302),
-                                                          CURL::GetRedacted(nfoFile));
+                        CURL::GetRedacted(nfoFile));
                     iFailCount++;
                   }
                 }
@@ -12255,8 +12252,7 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
       ANNOUNCEMENT::EVENT::LIBRARY::Export exported{.file = xmlFile};
       if (iFailCount > 0)
         exported.failCount = iFailCount;
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::AudioLibraryEvent{std::move(exported)});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{std::move(exported)});
     }
   }
   catch (...)
@@ -12270,7 +12266,8 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
 
   if (iFailCount > 0 && progressDialog)
     HELPERS::ShowOKDialogLines(
-        CVariant{20196}, CVariant{StringUtils::Format(localizeStrings.Get(15011), iFailCount)});
+        CVariant{20196},
+        CVariant{StringUtils::Format(localizeStrings.Get(15011), iFailCount)});
 }
 
 bool CMusicDatabase::ExportSongHistory(TiXmlNode* pNode, CGUIDialogProgress* progressDialog)

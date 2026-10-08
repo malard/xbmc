@@ -924,7 +924,9 @@ void CGUIDialogMusicInfo::OnGetArt()
       CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC));
   CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_item);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
+  if (CGUIDialogFileBrowser::ShowAndGetImage(
+          items, sources, localizeStrings.Get(13511),
+          result) &&
       result != ART::CHOICE::CURRENT)
   {
     // User didn't choose the one they have.
@@ -1026,11 +1028,13 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MEDIA::TYPE::ARTIST);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(
+        pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MEDIA::TYPE::ARTIST);
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MEDIA::TYPE::ALBUM);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(
+        pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MEDIA::TYPE::ALBUM);
   }
   else
     return; // nothing to do

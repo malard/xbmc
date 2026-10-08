@@ -785,8 +785,7 @@ public:
   \param mediaType the type of media, which corresponds to the table the item resides in (artist/album).
   \return the types of art e.g. "thumb", "fanart", etc.
   */
-  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId,
-                                                       KODI::MEDIA::TYPE mediaType);
+  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, KODI::MEDIA::TYPE mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.

@@ -238,8 +238,7 @@ void CGUIDialogKeyboardGeneric::OnInitWindow()
   SET_CONTROL_LABEL(CTL_LABEL_HZLIST, "");
 
   using Kind = ANNOUNCEMENT::EVENT::INPUT::Requested::Kind;
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Requested{
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Requested{
           !m_hiddenInput ? Kind::Keyboard : Kind::Password, m_strHeading, GetText()}});
 }
 
@@ -577,8 +576,7 @@ void CGUIDialogKeyboardGeneric::OnDeinitWindow(int nextWindowID)
   // reset the heading (we don't always have this)
   m_strHeading = "";
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
 }
 
 void CGUIDialogKeyboardGeneric::MoveCursor(int iAmount)

@@ -342,9 +342,7 @@ public:
   {
     return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
   }
-  std::string GetArtForItem(int mediaId,
-                            KODI::MEDIA::TYPE mediaType,
-                            const std::string& artType)
+  std::string GetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, const std::string& artType)
   {
     return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
   }

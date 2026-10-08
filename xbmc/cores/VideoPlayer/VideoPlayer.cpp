@@ -811,7 +811,6 @@ CVideoPlayer::CVideoPlayer(IPlayerCallback& callback)
   m_processInfo->SetFrameAdvance(false);
 
   CreatePlayers();
-
   m_error = false;
   m_bCloseRequest = false;
   if (auto system = CServiceBroker::GetWinSystem(); system != nullptr)
@@ -2184,8 +2183,7 @@ void CVideoPlayer::HandlePlaySpeed()
     {
       if (cache.level < 0.0)
       {
-        CServiceBroker::GetAnnouncementManager()->Announce(
-            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::SourceSlow{}});
+        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::SourceSlow{}});
         SetCaching(CACHESTATE_INIT);
       }
       // Note: Previously used cache.level >= 1 would keep video stalled
@@ -3664,7 +3662,8 @@ void CVideoPlayer::HandleMessages()
       const LiveGeometryUpdate update =
           std::static_pointer_cast<CDVDMsgType<LiveGeometryUpdate>>(pMsg)->m_value;
       IPlayerCallback* cb = &m_callback;
-      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update); });
+      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update);
+      });
     }
     else if (pMsg->IsType(CDVDMsg::PLAYER_ABORT))
     {
@@ -4880,16 +4879,14 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray menu not supported (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayMenuError{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayMenuError{}});
     }
     break;
     case BD_EVENT_ENC_ERROR:
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray the disc/file is encrypted and can't be played (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayEncryptedError{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayEncryptedError{}});
     }
     break;
     case BD_EVENT_DISCONTINUITY:
@@ -5051,8 +5048,7 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
       {
         CLog::Log(LOGDEBUG, "DVDNAV_ERROR");
         m_dvd.state = DVDSTATE_NORMAL;
-        CServiceBroker::GetAnnouncementManager()->Announce(
-            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{}});
+        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{}});
       }
       break;
     default:
@@ -5122,8 +5118,7 @@ bool CVideoPlayer::OnAction(const CAction &action)
           }
 
           // Let everyone know that we've gone to the menu
-          CServiceBroker::GetAnnouncementManager()->Announce(
-              ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Menu{}});
+          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Menu{}});
         }
         return true;
       }
@@ -5285,7 +5280,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
         break;
     case ACTION_TOGGLE_COMMSKIP:
       m_SkipCommercials = !m_SkipCommercials;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::PlayerEvent{
           ANNOUNCEMENT::EVENT::PLAYER::ToggleSkipCommercials{m_SkipCommercials}});
       break;
 
@@ -5297,8 +5293,7 @@ bool CVideoPlayer::OnAction(const CAction &action)
       break;
 
     case ACTION_PLAYER_PROCESS_INFO:
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ProcessInfo{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ProcessInfo{}});
       return true;
   }
 

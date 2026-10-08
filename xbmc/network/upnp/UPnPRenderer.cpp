@@ -247,6 +247,7 @@ NPT_Result CUPnPRenderer::ProcessHttpGetRequest(NPT_HttpRequest& request,
 void CUPnPRenderer::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
   namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+
   NPT_AutoLock lock(m_state);
   PLT_Service *avt, *rct;
 

@@ -83,8 +83,7 @@ static int NotifyAll(const std::vector<std::string>& params)
     }
   }
 
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::OtherEvent{params[0], params[1], std::move(data)});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::OtherEvent{params[0], params[1], std::move(data)});
 
   return 0;
 }
