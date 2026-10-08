@@ -388,10 +388,11 @@ struct Update
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_UPDATE;
 
-  //! When given, it names the item, and type and id are not used.
-  std::shared_ptr<const CFileItem> item{};
   KODI::MEDIA::TYPE type{KODI::MEDIA::TYPE::NONE};
   int id{-1};
+  //! The item itself, when the sender has it: the data JSON-RPC and Python are given then
+  //! describes it under "item" in place of the type and id.
+  std::shared_ptr<const CFileItem> item{};
   bool transaction{false};
   bool added{false};
   std::optional<int> playCount{};

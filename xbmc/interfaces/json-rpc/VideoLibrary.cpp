@@ -483,7 +483,10 @@ JSONRPC_STATUS CVideoLibrary::AddItem(const CVariant& parameterObject, CVariant&
   added.GetVideoInfoTag()->SetMediaType(traits->type);
   CServiceBroker::GetAnnouncementManager()->Announce(
       ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
-          .item = std::make_shared<CFileItem>(added), .added = true}});
+          .type = traits->type,
+          .id = id,
+          .item = std::make_shared<CFileItem>(added),
+          .added = true}});
   return OK;
 }
 

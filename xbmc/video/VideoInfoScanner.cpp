@@ -2388,7 +2388,9 @@ CVideoInfoScanner::~CVideoInfoScanner()
     m_database.Close();
 
     CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
-        ANNOUNCEMENT::EVENT::LIBRARY::Update{.item = std::make_shared<CFileItem>(*pItem),
+        ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = movieDetails.GetMediaType(),
+                                             .id = movieDetails.m_iDbId,
+                                             .item = std::make_shared<CFileItem>(*pItem),
                                              .transaction = m_bRunning,
                                              .added = true}});
     return lResult;

@@ -543,16 +543,8 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
     // handle both updates & removals
     if (const auto* update = std::get_if<LIBRARY::Update>(&event))
     {
-      if (update->item && update->item->HasVideoInfoTag())
-      {
-        item_id = update->item->GetVideoInfoTag()->m_iDbId;
-        item_type = update->item->GetVideoInfoTag()->GetMediaType();
-      }
-      else
-      {
-        item_id = update->id;
-        item_type = update->type;
-      }
+      item_id = update->id;
+      item_type = update->type;
     }
     else if (const auto* remove = std::get_if<LIBRARY::Remove>(&event))
     {

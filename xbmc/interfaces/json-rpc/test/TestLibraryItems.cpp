@@ -18,11 +18,14 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
 
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -228,8 +231,23 @@ public:
     if (message == DRAINED)
       m_drained = true;
     else if (message == "OnUpdate")
+    {
       m_updates.push_back(ANNOUNCEMENT::NotificationDataOf(announcement));
+      const ANNOUNCEMENT::LibraryEvent* library{
+          std::get_if<ANNOUNCEMENT::VideoLibraryEvent>(&announcement)};
+      if (!library)
+        library = std::get_if<ANNOUNCEMENT::AudioLibraryEvent>(&announcement);
+      if (const auto* update = std::get_if<ANNOUNCEMENT::EVENT::LIBRARY::Update>(library))
+        m_named.emplace_back(update->type, update->id);
+    }
     m_arrived.notify_all();
+  }
+
+  //! Whether an update arrived that names the item of \p type with \p id by its own fields
+  bool Named(KODI::MEDIA::TYPE type, int id)
+  {
+    std::unique_lock lock(m_lock);
+    return std::ranges::find(m_named, std::pair{type, id}) != m_named.end();
   }
 
   //! The updates announced about the item of \p kind with \p id, once all announced so far arrived
@@ -259,6 +277,7 @@ private:
   std::mutex m_lock;
   std::condition_variable m_arrived;
   std::vector<CVariant> m_updates;
+  std::vector<std::pair<KODI::MEDIA::TYPE, int>> m_named;
   bool m_drained{false};
 };
 } // unnamed namespace
@@ -629,6 +648,7 @@ TEST_F(TestLibraryItemsInDatabase, AMusicVideoIsAddedAndAnnouncedAsAdded)
   const std::vector<CVariant> updates{listener.UpdatesTo("musicvideo", id)};
   ASSERT_EQ(1u, updates.size());
   EXPECT_TRUE(updates[0]["added"].asBoolean());
+  EXPECT_TRUE(listener.Named(KODI::MEDIA::TYPE::MUSIC_VIDEO, id));
 
   m_videos.DeleteMusicVideo(id);
 }

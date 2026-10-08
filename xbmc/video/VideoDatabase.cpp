@@ -6742,6 +6742,8 @@ CDateTime CVideoDatabase::SetPlayCount(const CFileItem& item, int count, const C
     if (m_announceUpdates && item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iDbId > 0)
     {
       ANNOUNCEMENT::EVENT::LIBRARY::Update update{
+          .type = item.GetVideoInfoTag()->GetMediaType(),
+          .id = item.GetVideoInfoTag()->m_iDbId,
           .item = std::make_shared<CFileItem>(item),
           .transaction = CVideoLibraryQueue::GetInstance().IsScanningLibrary()};
       // Only provide the play count if it has actually changed
