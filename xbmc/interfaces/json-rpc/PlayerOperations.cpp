@@ -975,37 +975,6 @@ JSONRPC_STATUS CPlayerOperations::GetViewMode(const CVariant& parameterObject, C
   return OK;
 }
 
-JSONRPC_STATUS CPlayerOperations::SetDeclaredAspectRatio(const CVariant &parameterObject, CVariant &result)
-{
-  const auto appPlayer = AppPlayer();
-
-  if (!appPlayer || !appPlayer->IsPlayingVideo())
-    return Fail(result, FailedToExecute,
-                appPlayer && appPlayer->IsPlaying() ? Reason::NotApplicable
-                                                    : Reason::NothingPlaying);
-
-  const CVariant& ratio = parameterObject["aspectRatio"];
-
-  if (ratio.isString())
-  {
-    if (ratio.asString() != "auto")
-      return InvalidParams;
-
-    ContentGeometryComponent()->ApplyDeclaredAspect(*appPlayer, 0.0f);
-    return ACK;
-  }
-
-  // Anything further than the tolerance from a ratio Kodi knows is a bad request.
-  const std::optional<KODI::UTILS::AspectRatioEntry> entry =
-      KODI::UTILS::CAspectRatioVocabulary::Match(static_cast<float>(ratio.asDouble()),
-                                                 KODI::UTILS::AspectRatioUse::Declare);
-  if (!entry)
-    return InvalidParams;
-
-  ContentGeometryComponent()->ApplyDeclaredAspect(*appPlayer, entry->ratio);
-  return ACK;
-}
-
 JSONRPC_STATUS CPlayerOperations::GetDeclaredAspectRatio(const CVariant& parameterObject,
                                                          CVariant& result)
 {

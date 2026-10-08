@@ -1231,44 +1231,6 @@
     "errors": [],
     "reasons": {}
   },
-  "Player.SetDeclaredAspectRatio": {
-    "type": "method",
-    "description": "Declare the aspect ratio of the content being played, overriding what is detected. Pass \"auto\" to withdraw a declaration",
-    "transport": "Response",
-    "permission": "ControlPlayback",
-    "params": [
-      {
-        "name": "aspectRatio",
-        "required": true,
-        "schema": {
-          "anyOf": [
-            {
-              "type": "number",
-              "description": "Display aspect ratio. Normalised to the nearest ratio Kodi recognises; a value close to none of them is rejected"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "auto"
-              ],
-              "description": "Withdraw the declaration and return to detection"
-            }
-          ]
-        }
-      }
-    ],
-    "returns": "string",
-    "errors": [
-      "InvalidParams",
-      "FailedToExecute"
-    ],
-    "reasons": {
-      "FailedToExecute": [
-        "nothing-playing",
-        "not-applicable"
-      ]
-    }
-  },
   "Player.GetDeclaredAspectRatio": {
     "type": "method",
     "description": "Get the aspect ratio declared for the content being played, if any",

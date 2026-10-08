@@ -129,7 +129,7 @@ Methods:
 - `GUI.SetScreenAlignment`, `GUI.GetScreenAlignment`
 - `Player.GetChapters`
 - `Player.SetGeometry`, `Player.GetGeometry`, and `geometry` on `Player.Open`
-- `Player.SetDeclaredAspectRatio`, `Player.GetDeclaredAspectRatio`
+- `Player.GetDeclaredAspectRatio`
 - `Player.NotifyAudioChainReady`
 - `Player.SetProperties`, `Player.VolumeUp`, `Player.VolumeDown`
 - `Playlist.SetShuffle`, `Playlist.SetRepeat`

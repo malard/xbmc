@@ -65,7 +65,6 @@ namespace JSONRPC
     static JSONRPC_STATUS GetViewMode(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetGeometry(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetGeometry(const CVariant& parameterObject, CVariant& result);
-  static JSONRPC_STATUS SetDeclaredAspectRatio(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetDeclaredAspectRatio(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS Rotate(const CVariant &parameterObject, CVariant &result);
 

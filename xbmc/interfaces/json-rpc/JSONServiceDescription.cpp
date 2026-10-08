@@ -97,7 +97,6 @@ JsonRpcMethodMap CJSONServiceDescription::m_methodMaps[] = {
   { "Player.SetGeometry",                           CPlayerOperations::SetGeometry },
   { "Player.GetGeometry",                           CPlayerOperations::GetGeometry },
   { "Player.GetViewMode",                           CPlayerOperations::GetViewMode },
-  { "Player.SetDeclaredAspectRatio",                CPlayerOperations::SetDeclaredAspectRatio },
   { "Player.GetDeclaredAspectRatio",                CPlayerOperations::GetDeclaredAspectRatio },
   { "Player.Rotate",                                CPlayerOperations::Rotate },
 

@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-class CApplicationPlayer;
-
 //! \brief The content rectangle in force, resolved once for the OSD, subtitle placement and
 //! external controllers.
 class CApplicationContentGeometry : public IApplicationComponent, public ISettingCallback
@@ -91,13 +89,6 @@ public:
   };
 
   RenderInputs GetRenderInputs() const;
-
-  //! \brief The ratio the measurement alone gives, ignoring any declaration. Zero when nothing
-  //! was measured.
-  float DetectedAspect() const;
-
-  //! \brief Declare \p ratio for the playing file, or withdraw it for zero.
-  void ApplyDeclaredAspect(CApplicationPlayer& player, float ratio);
 
 private:
   //! \brief Publish \p geometry, announcing it only when it differs from what is already out.
