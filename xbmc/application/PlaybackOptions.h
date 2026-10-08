@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace KODI::APPLICATION
 {
 
@@ -24,6 +26,24 @@ enum class StartsRun
 {
   No,
   Yes
+};
+
+//! What a failed playlist entry moves on to.
+enum class OnFail
+{
+  Next,
+  Previous
+};
+
+//! How a playlist play starts.
+struct PlayOptions
+{
+  //! The player to use; empty for the default.
+  std::string player{};
+  Reopen reopen{Reopen::No};
+  OnFail onFail{OnFail::Next};
+  //! Play in list order: the shuffle is turned off, and stays off.
+  bool inOrder{false};
 };
 
 } // namespace KODI::APPLICATION

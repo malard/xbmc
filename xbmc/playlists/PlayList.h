@@ -62,7 +62,7 @@ struct PlayListChange
   Type type;
   EntryId entry{NO_ENTRY};
   int position{-1};
-  std::shared_ptr<CFileItem> item;
+  std::shared_ptr<CFileItem> item{};
 };
 
 /*!

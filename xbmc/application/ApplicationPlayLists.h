@@ -222,23 +222,10 @@ public:
 
   bool IsAudioFollowingVideo() const;
 
-  //! What a failed entry moves on to.
-  enum class OnFail
-  {
-    Next,
-    Previous
-  };
-
-  //! How a play starts.
-  struct PlayOptions
-  {
-    //! The player to use; empty for the default.
-    std::string player;
-    KODI::APPLICATION::Reopen reopen{KODI::APPLICATION::Reopen::No};
-    OnFail onFail{OnFail::Next};
-    //! Play in list order: the shuffle is turned off, and stays off.
-    bool inOrder{false};
-  };
+  // Declared outside the class: a nested aggregate's default member initializers cannot be used
+  // by this class's own "= {}" default arguments.
+  using OnFail = KODI::APPLICATION::OnFail;
+  using PlayOptions = KODI::APPLICATION::PlayOptions;
 
   /*!
    * \brief The player, as the playlists use it; tests stand in for the application here.
