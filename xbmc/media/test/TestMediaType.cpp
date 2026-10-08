@@ -14,18 +14,18 @@ using namespace KODI::MEDIA;
 
 namespace
 {
-constexpr MediaType FIRST{MediaType::MUSIC};
-constexpr MediaType LAST{MediaType::VIDEO_VERSION};
+constexpr KODI::MEDIA::TYPE FIRST{KODI::MEDIA::TYPE::MUSIC};
+constexpr KODI::MEDIA::TYPE LAST{KODI::MEDIA::TYPE::VIDEO_VERSION};
 
-MediaType Next(MediaType type)
+KODI::MEDIA::TYPE Next(KODI::MEDIA::TYPE type)
 {
-  return static_cast<MediaType>(static_cast<int>(type) + 1);
+  return static_cast<KODI::MEDIA::TYPE>(static_cast<int>(type) + 1);
 }
 } // namespace
 
 TEST(TestMediaType, EveryTypeReadsBackFromItsNames)
 {
-  for (MediaType type{FIRST}; type <= LAST; type = Next(type))
+  for (KODI::MEDIA::TYPE type{FIRST}; type <= LAST; type = Next(type))
   {
     EXPECT_FALSE(NameOf(type).empty());
     EXPECT_EQ(MediaTypeFromName(NameOf(type)), type) << NameOf(type);
@@ -35,43 +35,43 @@ TEST(TestMediaType, EveryTypeReadsBackFromItsNames)
 
 TEST(TestMediaType, NamesAreTheStoredSpellings)
 {
-  EXPECT_EQ(NameOf(MediaType::VIDEO_COLLECTION), "set");
-  EXPECT_EQ(PluralNameOf(MediaType::VIDEO_COLLECTION), "sets");
-  EXPECT_EQ(NameOf(MediaType::TV_SHOW), "tvshow");
-  EXPECT_EQ(PluralNameOf(MediaType::MUSIC), "music");
-  EXPECT_EQ(NameOf(MediaType::NONE), "");
+  EXPECT_EQ(NameOf(KODI::MEDIA::TYPE::VIDEO_COLLECTION), "set");
+  EXPECT_EQ(PluralNameOf(KODI::MEDIA::TYPE::VIDEO_COLLECTION), "sets");
+  EXPECT_EQ(NameOf(KODI::MEDIA::TYPE::TV_SHOW), "tvshow");
+  EXPECT_EQ(PluralNameOf(KODI::MEDIA::TYPE::MUSIC), "music");
+  EXPECT_EQ(NameOf(KODI::MEDIA::TYPE::NONE), "");
 }
 
 TEST(TestMediaType, AFacetOrUnknownNameIsNoType)
 {
-  EXPECT_EQ(MediaTypeFromName(""), MediaType::NONE);
-  EXPECT_EQ(MediaTypeFromName("genre"), MediaType::NONE);
-  EXPECT_EQ(MediaTypeFromName("actor"), MediaType::NONE);
-  EXPECT_EQ(MediaTypeFromName("year"), MediaType::NONE);
+  EXPECT_EQ(MediaTypeFromName(""), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeFromName("genre"), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeFromName("actor"), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeFromName("year"), KODI::MEDIA::TYPE::NONE);
 }
 
 TEST(TestMediaType, ANameIsReadInAnyCase)
 {
-  EXPECT_EQ(MediaTypeFromName("Movie"), MediaType::MOVIE);
-  EXPECT_EQ(MediaTypeFromName("TVSHOWS"), MediaType::TV_SHOW);
+  EXPECT_EQ(MediaTypeFromName("Movie"), KODI::MEDIA::TYPE::MOVIE);
+  EXPECT_EQ(MediaTypeFromName("TVSHOWS"), KODI::MEDIA::TYPE::TV_SHOW);
 }
 
 TEST(TestMediaType, OnlyTheStoredNameIsTheTypeExactly)
 {
-  for (MediaType type{FIRST}; type <= LAST; type = Next(type))
+  for (KODI::MEDIA::TYPE type{FIRST}; type <= LAST; type = Next(type))
     EXPECT_EQ(MediaTypeOf(NameOf(type)), type) << NameOf(type);
-  EXPECT_EQ(MediaTypeOf("movies"), MediaType::NONE);
-  EXPECT_EQ(MediaTypeOf("Movie"), MediaType::NONE);
-  EXPECT_EQ(MediaTypeOf("genre"), MediaType::NONE);
-  EXPECT_EQ(MediaTypeOf(""), MediaType::NONE);
+  EXPECT_EQ(MediaTypeOf("movies"), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeOf("Movie"), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeOf("genre"), KODI::MEDIA::TYPE::NONE);
+  EXPECT_EQ(MediaTypeOf(""), KODI::MEDIA::TYPE::NONE);
 }
 
 TEST(TestMediaType, ContainersHoldOtherItems)
 {
-  EXPECT_TRUE(IsContainer(MediaType::ALBUM));
-  EXPECT_TRUE(IsContainer(MediaType::TV_SHOW));
-  EXPECT_TRUE(IsContainer(MediaType::VIDEO_COLLECTION));
-  EXPECT_FALSE(IsContainer(MediaType::MOVIE));
-  EXPECT_FALSE(IsContainer(MediaType::SONG));
-  EXPECT_FALSE(IsContainer(MediaType::NONE));
+  EXPECT_TRUE(IsContainer(KODI::MEDIA::TYPE::ALBUM));
+  EXPECT_TRUE(IsContainer(KODI::MEDIA::TYPE::TV_SHOW));
+  EXPECT_TRUE(IsContainer(KODI::MEDIA::TYPE::VIDEO_COLLECTION));
+  EXPECT_FALSE(IsContainer(KODI::MEDIA::TYPE::MOVIE));
+  EXPECT_FALSE(IsContainer(KODI::MEDIA::TYPE::SONG));
+  EXPECT_FALSE(IsContainer(KODI::MEDIA::TYPE::NONE));
 }

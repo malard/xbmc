@@ -134,8 +134,8 @@ public:
   bool HasStreamDetails() const;
 
   //! \brief The media type m_type names, NONE where it names a node such as a genre, or is spelled otherwise.
-  KODI::MEDIA::MediaType GetMediaType() const;
-  void SetMediaType(KODI::MEDIA::MediaType type);
+  KODI::MEDIA::TYPE GetMediaType() const;
+  void SetMediaType(KODI::MEDIA::TYPE type);
   bool HasNFOStreamDetails() const;
 
   //! \brief Whether a measured content rectangle is attached. Independent of HasStreamDetails():

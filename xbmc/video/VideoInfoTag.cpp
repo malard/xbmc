@@ -1750,12 +1750,12 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
     SetOriginalLanguage(value);
 }
 
-KODI::MEDIA::MediaType CVideoInfoTag::GetMediaType() const
+KODI::MEDIA::TYPE CVideoInfoTag::GetMediaType() const
 {
   return KODI::MEDIA::MediaTypeOf(m_type);
 }
 
-void CVideoInfoTag::SetMediaType(KODI::MEDIA::MediaType type)
+void CVideoInfoTag::SetMediaType(KODI::MEDIA::TYPE type)
 {
   m_type = KODI::MEDIA::NameOf(type);
 }

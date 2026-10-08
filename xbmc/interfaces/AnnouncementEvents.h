@@ -390,7 +390,7 @@ struct Update
 
   //! When given, it names the item, and type and id are not used.
   std::shared_ptr<const CFileItem> item{};
-  KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
+  KODI::MEDIA::TYPE type{KODI::MEDIA::TYPE::NONE};
   int id{-1};
   bool transaction{false};
   bool added{false};
@@ -403,7 +403,7 @@ struct Remove
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REMOVE;
 
-  KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
+  KODI::MEDIA::TYPE type{KODI::MEDIA::TYPE::NONE};
   int id{-1};
   bool transaction{false};
 };

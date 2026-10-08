@@ -502,17 +502,16 @@ TEST_F(TestVideoDatabase, GetItemsForPathReturnsArchivedMoviesWithCollapsedPaths
 // The id column and the table NameOf() gives must name the same table
 TEST(TestVideoDatabaseContent, ContentNamesItsTableAndIdColumn)
 {
-  using KODI::MEDIA::MediaType;
-  const auto check = [](VideoDbContentType content, MediaType type, std::string_view idColumn)
+  const auto check = [](VideoDbContentType content, KODI::MEDIA::TYPE type, std::string_view idColumn)
   {
     EXPECT_EQ(DatabaseUtils::MediaTypeFromVideoContentType(content), type);
     EXPECT_EQ(CVideoDatabase::IdColumnOf(type), idColumn);
   };
-  check(VideoDbContentType::MOVIES, MediaType::MOVIE, "idMovie");
-  check(VideoDbContentType::TVSHOWS, MediaType::TV_SHOW, "idShow");
-  check(VideoDbContentType::EPISODES, MediaType::EPISODE, "idEpisode");
-  check(VideoDbContentType::MUSICVIDEOS, MediaType::MUSIC_VIDEO, "idMVideo");
-  check(VideoDbContentType::MOVIE_SETS, MediaType::VIDEO_COLLECTION, "");
+  check(VideoDbContentType::MOVIES, KODI::MEDIA::TYPE::MOVIE, "idMovie");
+  check(VideoDbContentType::TVSHOWS, KODI::MEDIA::TYPE::TV_SHOW, "idShow");
+  check(VideoDbContentType::EPISODES, KODI::MEDIA::TYPE::EPISODE, "idEpisode");
+  check(VideoDbContentType::MUSICVIDEOS, KODI::MEDIA::TYPE::MUSIC_VIDEO, "idMVideo");
+  check(VideoDbContentType::MOVIE_SETS, KODI::MEDIA::TYPE::VIDEO_COLLECTION, "");
 }
 
 TEST_F(TestVideoDatabase, ToStoredPathAddsTheTrailingSeparator)

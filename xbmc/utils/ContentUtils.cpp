@@ -14,7 +14,6 @@
 #include "video/Bookmark.h"
 #include "video/VideoInfoTag.h"
 
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -25,10 +24,10 @@ bool PrefersPoster(const CFileItem& item)
 
   switch (item.GetVideoInfoTag()->GetMediaType())
   {
-    case MediaType::MOVIE:
-    case MediaType::TV_SHOW:
-    case MediaType::SEASON:
-    case MediaType::VIDEO_COLLECTION:
+    case KODI::MEDIA::TYPE::MOVIE:
+    case KODI::MEDIA::TYPE::TV_SHOW:
+    case KODI::MEDIA::TYPE::SEASON:
+    case KODI::MEDIA::TYPE::VIDEO_COLLECTION:
       return true;
     default:
       return false;

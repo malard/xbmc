@@ -67,7 +67,6 @@ using namespace ANNOUNCEMENT;
 using namespace KODI;
 using namespace KODI::VIDEO;
 using namespace XFILE;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeOf;
 using KODI::UTILITY::CDigest;
 
@@ -371,7 +370,7 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
         }
 
         // all items apart from songs (artists, albums, etc) are folders
-        if (!item->HasMusicInfoTag() || item->GetMusicInfoTag()->GetMediaType() != MediaType::SONG)
+        if (!item->HasMusicInfoTag() || item->GetMusicInfoTag()->GetMediaType() != MEDIA::TYPE::SONG)
         {
           item->SetFolder(true);
         }
@@ -428,8 +427,8 @@ PLT_MediaObject* CUPnPServer::Build(const std::shared_ptr<CFileItem>& item,
           }
         }
 
-        const MediaType type = item->GetVideoInfoTag()->GetMediaType();
-        if (type == MediaType::TV_SHOW || type == MediaType::SEASON)
+        const MEDIA::TYPE type = item->GetVideoInfoTag()->GetMediaType();
+        if (type == MEDIA::TYPE::TV_SHOW || type == MEDIA::TYPE::SEASON)
         {
           // for tvshows and seasons, iEpisode and playCount are
           // invalid
@@ -527,7 +526,7 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
 {
   namespace LIBRARY = EVENT::LIBRARY;
   int item_id;
-  MediaType item_type{MediaType::NONE};
+  MEDIA::TYPE item_type{MEDIA::TYPE::NONE};
 
   if (std::holds_alternative<LIBRARY::ScanStarted>(event))
   {
@@ -567,7 +566,7 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
     {
       switch (item_type)
       {
-        case MediaType::EPISODE:
+        case MEDIA::TYPE::EPISODE:
         {
           CVideoDatabase db;
           if (!db.Open())
@@ -579,15 +578,15 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
           UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES);
           break;
         }
-        case MediaType::TV_SHOW:
+        case MEDIA::TYPE::TV_SHOW:
           UpdateContainer(MEDIA::LIBRARY_PATH::TVSHOW_TITLES);
         UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES);
           break;
-        case MediaType::MOVIE:
+        case MEDIA::TYPE::MOVIE:
           UpdateContainer(MEDIA::LIBRARY_PATH::MOVIE_TITLES);
         UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES);
           break;
-        case MediaType::MUSIC_VIDEO:
+        case MEDIA::TYPE::MUSIC_VIDEO:
           UpdateContainer(MEDIA::LIBRARY_PATH::MUSICVIDEO_TITLES);
         UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS);
           break;
@@ -595,7 +594,7 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
           break;
       }
     }
-    else if (flag == AudioLibrary && item_type == MediaType::SONG)
+    else if (flag == AudioLibrary && item_type == MEDIA::TYPE::SONG)
     {
       // we also update the 'songs' container is maybe a performance drop too
       // high? would need to check if slow clients even cache at all anyway

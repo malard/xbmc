@@ -66,7 +66,6 @@ using namespace KODI::MESSAGING;
 
 namespace CONTENT = KODI::MEDIA::CONTENT;
 using KODI::MEDIA::MediaSection;
-using KODI::MEDIA::MediaType;
 
 #define CONTROL_BTN_REFRESH      6
 #define CONTROL_USERRATING       7
@@ -98,7 +97,7 @@ public:
     CMusicDatabase database;
     database.Open();
     // May only have partially populated music item, so fetch all artist or album data from db
-    if (tag.GetMediaType() == MediaType::ARTIST)
+    if (tag.GetMediaType() == MEDIA::TYPE::ARTIST)
     {
       int artistId = tag.GetDatabaseId();
       CArtist artist;
@@ -242,7 +241,7 @@ public:
     CGUIDialogProgress* dlgProgress = GetProgressDialog();
     CMusicDatabase database;
     database.Open();
-    if (tag.GetMediaType() == MediaType::ARTIST)
+    if (tag.GetMediaType() == MEDIA::TYPE::ARTIST)
     {
       ADDON::ScraperPtr scraper;
       if (!database.GetScraper(m_artist.idArtist, ADDON::ContentType::ARTISTS, scraper))
@@ -719,7 +718,7 @@ CFileItemPtr CGUIDialogMusicInfo::GetCurrentListItem(int offset)
 
 std::string CGUIDialogMusicInfo::GetContent()
 {
-  if (m_item->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST)
+  if (m_item->GetMusicInfoTag()->GetMediaType() == MEDIA::TYPE::ARTIST)
     return CONTENT::ARTISTS;
   else
     return CONTENT::ALBUMS;
@@ -734,12 +733,12 @@ void CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(std::vector<CMediaSour
   itemDir = item.GetPath();
   if (item.HasMusicInfoTag())
   {
-    const MediaType type = item.GetMusicInfoTag()->GetMediaType();
-    if (type == MediaType::SONG)
+    const MEDIA::TYPE type = item.GetMusicInfoTag()->GetMediaType();
+    if (type == MEDIA::TYPE::SONG)
       itemDir = URIUtils::GetParentPath(item.GetMusicInfoTag()->GetURL());
 
     // For artist add Artist Info Folder path to browser sources
-    if (type == MediaType::ARTIST)
+    if (type == MEDIA::TYPE::ARTIST)
     {
       artistFolder = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_MUSICLIBRARY_ARTISTSFOLDER);
       if (!artistFolder.empty() && artistFolder.compare(itemDir) == 0)
@@ -1017,9 +1016,9 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
       CQueryParams params;
       CDirectoryNode::GetDatabaseInfo(pItem->GetPath(), params);
       if (params.GetArtistId() > 0)
-        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetArtistId(), MediaType::ARTIST);
+        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetArtistId(), MEDIA::TYPE::ARTIST);
       else if (params.GetAlbumId() > 0)
-        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MediaType::ALBUM);
+        pItem->GetMusicInfoTag()->SetDatabaseId(params.GetAlbumId(), MEDIA::TYPE::ALBUM);
       else
         return; // nothing to do
     }
@@ -1027,11 +1026,11 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ARTIST_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MediaType::ARTIST);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ARTIST_MUSICID).asInteger32(), MEDIA::TYPE::ARTIST);
   }
   else if (pItem->HasProperty(ITEM::PROPERTY::ALBUM_MUSICID))
   {
-    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MediaType::ALBUM);
+    musicitem.GetMusicInfoTag()->SetDatabaseId(pItem->GetProperty(ITEM::PROPERTY::ALBUM_MUSICID).asInteger32(), MEDIA::TYPE::ALBUM);
   }
   else
     return; // nothing to do
@@ -1044,7 +1043,7 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
       if (pDlgMusicInfo->SetItem(&musicitem))
       {
         pDlgMusicInfo->Open();
-        if (pItem->GetMusicInfoTag()->GetMediaType() == MediaType::ALBUM &&
+        if (pItem->GetMusicInfoTag()->GetMediaType() == MEDIA::TYPE::ALBUM &&
           pDlgMusicInfo->HasUpdatedUserrating())
         {
           auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);

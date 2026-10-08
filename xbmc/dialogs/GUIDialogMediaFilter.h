@@ -44,7 +44,7 @@ public:
 
   struct Filter
   {
-    KODI::MEDIA::MediaType mediaType;
+    KODI::MEDIA::TYPE mediaType;
     Field field;
     uint32_t label;
     SettingType settingType;
@@ -95,7 +95,7 @@ protected:
 
   std::unique_ptr<CDbUrl> m_dbUrl;
   std::string m_mediaType;
-  KODI::MEDIA::MediaType m_type{KODI::MEDIA::MediaType::NONE};
+  KODI::MEDIA::TYPE m_type{KODI::MEDIA::TYPE::NONE};
   KODI::PLAYLIST::CSmartPlaylist* m_filter{nullptr};
   std::map<std::string, Filter> m_filters;
 };

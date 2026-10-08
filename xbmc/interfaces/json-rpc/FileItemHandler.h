@@ -55,7 +55,7 @@ struct LibraryKind
   using Kind = K;
 
   Kind kind;
-  KODI::MEDIA::MediaType type; //!< the media type, whose name the kind goes by on the wire
+  KODI::MEDIA::TYPE type; //!< the media type, whose name the kind goes by on the wire
   const char* id;
   const char* fields;
   const char* settable;
@@ -80,7 +80,7 @@ public:
   }
 
   //! Whether the library holds items of \p type
-  bool Holds(KODI::MEDIA::MediaType type) const
+  bool Holds(KODI::MEDIA::TYPE type) const
   {
     return std::ranges::find(m_kinds, type, &Traits::type) != m_kinds.end();
   }
@@ -136,7 +136,7 @@ public:
 
   //! Refuses \p parameter, which means nothing for the kind the caller named
   static JSONRPC_STATUS RefuseForKind(const char* parameter,
-                                      KODI::MEDIA::MediaType kind,
+                                      KODI::MEDIA::TYPE kind,
                                       CVariant& errorData);
 
 protected:
@@ -204,7 +204,7 @@ protected:
 
   //! Announces the \p names of the item of \p kind with \p id changed, to the values in \p item
   static void AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
-                             KODI::MEDIA::MediaType kind,
+                             KODI::MEDIA::TYPE kind,
                              int id,
                              const CVariant& names,
                              const CVariant& item);

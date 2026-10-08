@@ -43,7 +43,6 @@
 using enum CDatabaseQueryRule::FieldType;
 using enum CDatabaseQueryRule::SearchOperator;
 using namespace XFILE;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 
 namespace KODI::PLAYLIST
@@ -787,7 +786,7 @@ std::string CSmartPlaylistRule::FormatParameter(const std::string &operatorStrin
 }
 
 std::string CSmartPlaylistRule::FormatLinkQuery(const char *field, const char *table,
-                                                MediaType mediaType, const std::string& mediaField, const std::string& parameter)
+                                                MEDIA::TYPE mediaType, const std::string& mediaField, const std::string& parameter)
 {
   // NOTE: no need for a PrepareSQL here, as the parameter has already been formatted
   return StringUtils::Format(
@@ -985,28 +984,28 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     table = "movie_view";
 
     if (m_field == static_cast<int>(Field::GENRE))
-      query = negate + FormatLinkQuery("genre", "genre", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("genre", "genre", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::DIRECTOR))
-      query = negate + FormatLinkQuery("director", "actor", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("director", "actor", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::ACTOR))
-      query = negate + FormatLinkQuery("actor", "actor", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("actor", "actor", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::WRITER))
-      query = negate + FormatLinkQuery("writer", "actor", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("writer", "actor", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::STUDIO))
-      query = negate + FormatLinkQuery("studio", "studio", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("studio", "studio", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::COUNTRY))
-      query = negate + FormatLinkQuery("country", "country", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("country", "country", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::LAST_PLAYED) ||
              m_field == static_cast<int>(Field::DATE_ADDED))
       query = FormatNullableDate(GetField(m_field, strType), m_operator, parameter);
     else if (m_field == static_cast<int>(Field::TAG))
-      query = negate + FormatLinkQuery("tag", "tag", MediaType::MOVIE,
+      query = negate + FormatLinkQuery("tag", "tag", MEDIA::TYPE::MOVIE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
   }
   else if (strType == MEDIA::CONTENT::MUSICVIDEOS)
@@ -1014,23 +1013,23 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     table = "musicvideo_view";
 
     if (m_field == static_cast<int>(Field::GENRE))
-      query = negate + FormatLinkQuery("genre", "genre", MediaType::MUSIC_VIDEO,
+      query = negate + FormatLinkQuery("genre", "genre", MEDIA::TYPE::MUSIC_VIDEO,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::ARTIST) ||
              m_field == static_cast<int>(Field::ALBUM_ARTIST))
-      query = negate + FormatLinkQuery("actor", "actor", MediaType::MUSIC_VIDEO,
+      query = negate + FormatLinkQuery("actor", "actor", MEDIA::TYPE::MUSIC_VIDEO,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::STUDIO))
-      query = negate + FormatLinkQuery("studio", "studio", MediaType::MUSIC_VIDEO,
+      query = negate + FormatLinkQuery("studio", "studio", MEDIA::TYPE::MUSIC_VIDEO,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::DIRECTOR))
-      query = negate + FormatLinkQuery("director", "actor", MediaType::MUSIC_VIDEO,
+      query = negate + FormatLinkQuery("director", "actor", MEDIA::TYPE::MUSIC_VIDEO,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::LAST_PLAYED) ||
              m_field == static_cast<int>(Field::DATE_ADDED))
       query = FormatNullableDate(GetField(m_field, strType), m_operator, parameter);
     else if (m_field == static_cast<int>(Field::TAG))
-      query = negate + FormatLinkQuery("tag", "tag", MediaType::MUSIC_VIDEO,
+      query = negate + FormatLinkQuery("tag", "tag", MEDIA::TYPE::MUSIC_VIDEO,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
   }
   else if (strType == MEDIA::CONTENT::TVSHOWS)
@@ -1038,16 +1037,16 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     table = "tvshow_view";
 
     if (m_field == static_cast<int>(Field::GENRE))
-      query = negate + FormatLinkQuery("genre", "genre", MediaType::TV_SHOW,
+      query = negate + FormatLinkQuery("genre", "genre", MEDIA::TYPE::TV_SHOW,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::DIRECTOR))
-      query = negate + FormatLinkQuery("director", "actor", MediaType::TV_SHOW,
+      query = negate + FormatLinkQuery("director", "actor", MEDIA::TYPE::TV_SHOW,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::ACTOR))
-      query = negate + FormatLinkQuery("actor", "actor", MediaType::TV_SHOW,
+      query = negate + FormatLinkQuery("actor", "actor", MEDIA::TYPE::TV_SHOW,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::STUDIO))
-      query = negate + FormatLinkQuery("studio", "studio", MediaType::TV_SHOW,
+      query = negate + FormatLinkQuery("studio", "studio", MEDIA::TYPE::TV_SHOW,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::MPAA))
       query = negate + " (" + GetField(m_field, strType) + parameter + ")";
@@ -1060,7 +1059,7 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
               GetField(static_cast<int>(Field::NUMBER_OF_WATCHED_EPISODES), strType) +
               ", 0) > 0 THEN 0 ELSE 1 END " + parameter;
     else if (m_field == static_cast<int>(Field::TAG))
-      query = negate + FormatLinkQuery("tag", "tag", MediaType::TV_SHOW,
+      query = negate + FormatLinkQuery("tag", "tag", MEDIA::TYPE::TV_SHOW,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
   }
   else if (strType == MEDIA::CONTENT::EPISODES)
@@ -1068,23 +1067,23 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     table = "episode_view";
 
     if (m_field == static_cast<int>(Field::GENRE))
-      query = negate + FormatLinkQuery("genre", "genre", MediaType::TV_SHOW, (table + ".idShow").c_str(), parameter);
+      query = negate + FormatLinkQuery("genre", "genre", MEDIA::TYPE::TV_SHOW, (table + ".idShow").c_str(), parameter);
     else if (m_field == static_cast<int>(Field::TAG))
-      query = negate + FormatLinkQuery("tag", "tag", MediaType::TV_SHOW, (table + ".idShow").c_str(), parameter);
+      query = negate + FormatLinkQuery("tag", "tag", MEDIA::TYPE::TV_SHOW, (table + ".idShow").c_str(), parameter);
     else if (m_field == static_cast<int>(Field::DIRECTOR))
-      query = negate + FormatLinkQuery("director", "actor", MediaType::EPISODE,
+      query = negate + FormatLinkQuery("director", "actor", MEDIA::TYPE::EPISODE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::ACTOR))
-      query = negate + FormatLinkQuery("actor", "actor", MediaType::EPISODE,
+      query = negate + FormatLinkQuery("actor", "actor", MEDIA::TYPE::EPISODE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::WRITER))
-      query = negate + FormatLinkQuery("writer", "actor", MediaType::EPISODE,
+      query = negate + FormatLinkQuery("writer", "actor", MEDIA::TYPE::EPISODE,
                                        GetField(static_cast<int>(Field::ID), strType), parameter);
     else if (m_field == static_cast<int>(Field::LAST_PLAYED) ||
              m_field == static_cast<int>(Field::DATE_ADDED))
       query = FormatNullableDate(GetField(m_field, strType), m_operator, parameter);
     else if (m_field == static_cast<int>(Field::STUDIO))
-      query = negate + FormatLinkQuery("studio", "studio", MediaType::TV_SHOW, (table + ".idShow").c_str(), parameter);
+      query = negate + FormatLinkQuery("studio", "studio", MEDIA::TYPE::TV_SHOW, (table + ".idShow").c_str(), parameter);
     else if (m_field == static_cast<int>(Field::MPAA))
       query = negate + " (" + GetField(m_field, strType) +  parameter + ")";
   }

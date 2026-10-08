@@ -21,7 +21,6 @@
 #include <optional>
 #include <string>
 
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -31,48 +30,48 @@ struct Destination
   std::string root;
 };
 
-std::optional<Destination> DestinationFor(MediaType type)
+std::optional<Destination> DestinationFor(KODI::MEDIA::TYPE type)
 {
   switch (type)
   {
-    case MediaType::VIDEO:
+    case KODI::MEDIA::TYPE::VIDEO:
       return Destination{WINDOW_VIDEO_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)};
-    case MediaType::MOVIE:
+    case KODI::MEDIA::TYPE::MOVIE:
       return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_TITLES};
-    case MediaType::VIDEO_COLLECTION:
+    case KODI::MEDIA::TYPE::VIDEO_COLLECTION:
       return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_SETS};
-    case MediaType::MUSIC_VIDEO:
+    case KODI::MEDIA::TYPE::MUSIC_VIDEO:
       return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES};
-    case MediaType::TV_SHOW:
-    case MediaType::SEASON:
+    case KODI::MEDIA::TYPE::TV_SHOW:
+    case KODI::MEDIA::TYPE::SEASON:
       return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
-    case MediaType::EPISODE:
+    case KODI::MEDIA::TYPE::EPISODE:
       return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
-    case MediaType::MUSIC:
+    case KODI::MEDIA::TYPE::MUSIC:
       return Destination{WINDOW_MUSIC_NAV,
                          XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC)};
-    case MediaType::ARTIST:
+    case KODI::MEDIA::TYPE::ARTIST:
       return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ARTISTS};
-    case MediaType::ALBUM:
+    case KODI::MEDIA::TYPE::ALBUM:
       return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ALBUMS};
-    case MediaType::SONG:
+    case KODI::MEDIA::TYPE::SONG:
       return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::SONGS};
-    case MediaType::NONE:
-    case MediaType::VIDEO_VERSION:
+    case KODI::MEDIA::TYPE::NONE:
+    case KODI::MEDIA::TYPE::VIDEO_VERSION:
       break;
   }
   return {};
 }
 } // namespace
 
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, EventLevel level /* = EventLevel::Information */)
+CMediaLibraryEvent::CMediaLibraryEvent(KODI::MEDIA::TYPE mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, level),
     m_mediaType(mediaType),
     m_mediaPath(mediaPath)
 { }
 
-CMediaLibraryEvent::CMediaLibraryEvent(MediaType mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, const std::string& icon, const CVariant& details, EventLevel level /* = EventLevel::Information */)
+CMediaLibraryEvent::CMediaLibraryEvent(KODI::MEDIA::TYPE mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, const std::string& icon, const CVariant& details, EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, icon, details, level),
     m_mediaType(mediaType),
     m_mediaPath(mediaPath)

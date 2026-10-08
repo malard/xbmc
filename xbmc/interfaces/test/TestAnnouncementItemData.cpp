@@ -19,7 +19,6 @@
 #include <gtest/gtest.h>
 
 using namespace ANNOUNCEMENT;
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -33,7 +32,7 @@ TEST(TestAnnouncementItemData, AnEpisodeCarriesItsShowTitleInCamelCase)
 {
   // No database id, so the details travel with the item rather than being left to a lookup.
   CVideoInfoTag tag;
-  tag.SetMediaType(MediaType::EPISODE);
+  tag.SetMediaType(KODI::MEDIA::TYPE::EPISODE);
   tag.m_strTitle = "Pilot";
   tag.m_strShowTitle = "The Show";
   tag.m_iSeason = 1;

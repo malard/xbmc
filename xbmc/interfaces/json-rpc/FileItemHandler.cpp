@@ -57,7 +57,6 @@
 using namespace MUSIC_INFO;
 using namespace JSONRPC;
 using namespace XFILE;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::NameOf;
 
 namespace
@@ -464,16 +463,16 @@ void CFileItemHandler::HandleFileItem(const char* ID,
           object["type"] = "recording";
         else if (item->HasMusicInfoTag())
         {
-          const MediaType type = item->GetMusicInfoTag()->GetMediaType();
-          if (type == MediaType::ALBUM || type == MediaType::SONG || type == MediaType::ARTIST)
+          const KODI::MEDIA::TYPE type = item->GetMusicInfoTag()->GetMediaType();
+          if (type == KODI::MEDIA::TYPE::ALBUM || type == KODI::MEDIA::TYPE::SONG || type == KODI::MEDIA::TYPE::ARTIST)
             object["type"] = NameOf(type);
           else if (!item->IsFolder())
-            object["type"] = NameOf(MediaType::SONG);
+            object["type"] = NameOf(KODI::MEDIA::TYPE::SONG);
         }
         else if (item->HasVideoInfoTag() && !item->GetVideoInfoTag()->m_type.empty())
         {
-          const MediaType type = item->GetVideoInfoTag()->GetMediaType();
-          if (type == MediaType::MOVIE || type == MediaType::TV_SHOW || type == MediaType::EPISODE || type == MediaType::MUSIC_VIDEO)
+          const KODI::MEDIA::TYPE type = item->GetVideoInfoTag()->GetMediaType();
+          if (type == KODI::MEDIA::TYPE::MOVIE || type == KODI::MEDIA::TYPE::TV_SHOW || type == KODI::MEDIA::TYPE::EPISODE || type == KODI::MEDIA::TYPE::MUSIC_VIDEO)
             object["type"] = NameOf(type);
         }
         else if (item->HasPictureInfoTag())
@@ -643,7 +642,7 @@ JSONRPC_STATUS CFileItemHandler::CheckAgainstType(const char* type,
 }
 
 JSONRPC_STATUS CFileItemHandler::RefuseForKind(const char* parameter,
-                                               KODI::MEDIA::MediaType kind,
+                                               KODI::MEDIA::TYPE kind,
                                                CVariant& errorData)
 {
   errorData = CVariant(CVariant::VariantTypeObject);
@@ -693,7 +692,7 @@ CVariant CFileItemHandler::ReadableNames(const CVariant& values, const char* fie
 }
 
 void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
-                                      MediaType kind,
+                                      KODI::MEDIA::TYPE kind,
                                       int id,
                                       const CVariant& names,
                                       const CVariant& item)

@@ -39,7 +39,6 @@
 #define PROPERTY_GROUP_MIXED        "group.mixed"
 
 using namespace KODI;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 using KODI::MEDIA::PluralNameOf;
 
@@ -114,14 +113,14 @@ namespace XFILE
       CVideoDatabase db;
       if (db.Open())
       {
-        MediaType mediaType = MediaTypeFromName(playlist.GetType());
+        MEDIA::TYPE mediaType = MediaTypeFromName(playlist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
         {
-          if (mediaType == MediaType::TV_SHOW || mediaType == MediaType::EPISODE)
+          if (mediaType == MEDIA::TYPE::TV_SHOW || mediaType == MEDIA::TYPE::EPISODE)
             baseDir = VIDEO::DB_PATH::TVSHOWS;
-          else if (mediaType == MediaType::MOVIE)
+          else if (mediaType == MEDIA::TYPE::MOVIE)
             baseDir = VIDEO::DB_PATH::MOVIES;
           else
             return false;
@@ -132,7 +131,7 @@ namespace XFILE
             baseDir += group;
           URIUtils::AddSlashAtEnd(baseDir);
 
-          if (mediaType == MediaType::EPISODE)
+          if (mediaType == MEDIA::TYPE::EPISODE)
             baseDir += "-1/-1/";
         }
 
@@ -159,7 +158,7 @@ namespace XFILE
 
         // if we retrieve a list of episodes and we didn't receive
         // a pre-defined base path, we need to fix it
-        if (strBaseDir.empty() && mediaType == MediaType::EPISODE && !isGrouped)
+        if (strBaseDir.empty() && mediaType == MEDIA::TYPE::EPISODE && !isGrouped)
           videoUrl.AppendPath("-1/-1/");
         items.SetProperty(PROPERTY_PATH_DB, videoUrl.ToString());
       }
@@ -173,7 +172,7 @@ namespace XFILE
         if (playlist.GetType() == MEDIA::CONTENT::MIXED || playlist.GetType().empty())
           plist.SetType(MEDIA::CONTENT::SONGS);
 
-        MediaType mediaType = MediaTypeFromName(plist.GetType());
+        MEDIA::TYPE mediaType = MediaTypeFromName(plist.GetType());
 
         std::string baseDir = strBaseDir;
         if (strBaseDir.empty())
@@ -181,8 +180,8 @@ namespace XFILE
           baseDir = MUSIC::DB_PATH::ROOT;
           if (!isGrouped)
           {
-            if (mediaType != MediaType::ARTIST && mediaType != MediaType::ALBUM &&
-                mediaType != MediaType::SONG)
+            if (mediaType != MEDIA::TYPE::ARTIST && mediaType != MEDIA::TYPE::ALBUM &&
+                mediaType != MEDIA::TYPE::SONG)
               return false;
             baseDir += PluralNameOf(mediaType);
           }

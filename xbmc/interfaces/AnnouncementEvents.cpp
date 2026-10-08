@@ -405,7 +405,7 @@ void CopyMusicTagInfoToObject(const CFileItem& item, CVariant& object)
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
-  objItem["type"] = KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::SONG);
+  objItem["type"] = KODI::MEDIA::NameOf(KODI::MEDIA::TYPE::SONG);
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
   if (id <= 0 && !item.GetPath().empty())

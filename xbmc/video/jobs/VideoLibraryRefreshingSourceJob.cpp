@@ -37,7 +37,6 @@
 #include <vector>
 
 using namespace XFILE;
-using KODI::MEDIA::MediaType;
 
 CVideoLibraryRefreshingSourceJob::CVideoLibraryRefreshingSourceJob(std::string sourcePath)
   : CVideoLibraryProgressJob(nullptr),
@@ -147,9 +146,9 @@ bool CVideoLibraryRefreshingSourceJob::Work(CVideoDatabase& db)
     // default version, or removed this one
     CVideoInfoTag tag;
     bool found{false};
-    if (listed.GetMediaType() == MediaType::MOVIE)
+    if (listed.GetMediaType() == KODI::MEDIA::TYPE::MOVIE)
       found = db.GetMovieInfo({}, tag, listed.m_iDbId);
-    else if (listed.GetMediaType() == MediaType::TV_SHOW)
+    else if (listed.GetMediaType() == KODI::MEDIA::TYPE::TV_SHOW)
       found = db.GetTvShowInfo({}, tag, listed.m_iDbId);
     else
       found = db.GetMusicVideoInfo({}, tag, listed.m_iDbId);

@@ -220,13 +220,12 @@ TEST(TestAnnouncementEvents, LibraryEventsKeepTheirMessages)
 TEST(TestAnnouncementEvents, LibraryUpdateData)
 {
   using namespace EVENT::LIBRARY;
-  using KODI::MEDIA::MediaType;
-  ExpectData(VideoLibraryEvent{Update{.type = MediaType::MOVIE, .id = 7}},
+  ExpectData(VideoLibraryEvent{Update{.type = KODI::MEDIA::TYPE::MOVIE, .id = 7}},
              R"({"type":"movie","id":7})");
   ExpectData(AudioLibraryEvent{Update{
-                 .type = MediaType::SONG, .id = 2, .transaction = true, .added = true}},
+                 .type = KODI::MEDIA::TYPE::SONG, .id = 2, .transaction = true, .added = true}},
              R"({"type":"song","id":2,"transaction":true,"added":true})");
-  ExpectData(VideoLibraryEvent{Update{.type = MediaType::NONE, .id = -1}},
+  ExpectData(VideoLibraryEvent{Update{.type = KODI::MEDIA::TYPE::NONE, .id = -1}},
              R"({"type":"","id":-1})");
 
   // An item names itself; the announcement manager adds it to the data.
@@ -237,17 +236,16 @@ TEST(TestAnnouncementEvents, LibraryUpdateData)
 
   CVariant properties;
   properties["title"] = "Film";
-  ExpectData(AudioLibraryEvent{Update{.type = MediaType::ALBUM, .id = 4, .properties = properties}},
+  ExpectData(AudioLibraryEvent{Update{.type = KODI::MEDIA::TYPE::ALBUM, .id = 4, .properties = properties}},
              R"({"type":"album","id":4,"properties":{"title":"Film"}})");
 }
 
 TEST(TestAnnouncementEvents, LibraryRemoveAndExportData)
 {
   using namespace EVENT::LIBRARY;
-  using KODI::MEDIA::MediaType;
-  ExpectData(VideoLibraryEvent{Remove{MediaType::EPISODE, 5, false}},
+  ExpectData(VideoLibraryEvent{Remove{KODI::MEDIA::TYPE::EPISODE, 5, false}},
              R"({"type":"episode","id":5})");
-  ExpectData(AudioLibraryEvent{Remove{MediaType::ARTIST, 9, true}},
+  ExpectData(AudioLibraryEvent{Remove{KODI::MEDIA::TYPE::ARTIST, 9, true}},
              R"({"type":"artist","id":9,"transaction":true})");
 
   ExpectData(VideoLibraryEvent{Export{"/export/", "/export/videodb.xml", 3}},

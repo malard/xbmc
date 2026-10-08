@@ -39,7 +39,6 @@
 using enum CDatabaseQueryRule::FieldType;
 using namespace KODI;
 using KODI::MEDIA::MediaSection;
-using KODI::MEDIA::MediaType;
 
 #define CONTROL_FIELD           15
 #define CONTROL_OPERATOR        16
@@ -113,30 +112,30 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
   videodatabase.Open();
 
   Field field{static_cast<Field>(m_rule.m_field)};
-  const MediaType mediaType{MEDIA::MediaTypeFromName(m_type)};
+  const MEDIA::TYPE mediaType{MEDIA::MediaTypeFromName(m_type)};
   const bool music{PLAYLIST::CSmartPlaylist::IsMusicType(m_type)};
   const bool video{PLAYLIST::CSmartPlaylist::IsVideoType(m_type)};
   const bool mixed{m_type == MEDIA::CONTENT::MIXED};
-  const bool musicVideos{mixed || mediaType == MediaType::MUSIC_VIDEO};
-  const bool songs{mixed || mediaType == MediaType::SONG};
+  const bool musicVideos{mixed || mediaType == MEDIA::TYPE::MUSIC_VIDEO};
+  const bool songs{mixed || mediaType == MEDIA::TYPE::SONG};
 
   std::string basePath{music ? MUSIC::DB_PATH::ROOT : VIDEO::DB_PATH::ROOT};
   VideoDbContentType type{DatabaseUtils::VideoContentTypeFromMediaType(mediaType)};
   switch (mediaType)
   {
-    case MediaType::MOVIE:
+    case MEDIA::TYPE::MOVIE:
       basePath = VIDEO::DB_PATH::MOVIES;
       break;
-    case MediaType::TV_SHOW:
+    case MEDIA::TYPE::TV_SHOW:
       basePath = VIDEO::DB_PATH::TVSHOWS;
       // a show's title is what the tv show title field browses
       if (field == Field::TITLE)
         field = Field::TVSHOW_TITLE;
       break;
-    case MediaType::MUSIC_VIDEO:
+    case MEDIA::TYPE::MUSIC_VIDEO:
       basePath = VIDEO::DB_PATH::MUSICVIDEOS;
       break;
-    case MediaType::EPISODE:
+    case MEDIA::TYPE::EPISODE:
       // genres, years and studios belong to the show
       if (field == Field::GENRE || field == Field::YEAR || field == Field::STUDIO)
         type = VideoDbContentType::TVSHOWS;
@@ -177,7 +176,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     }
     case Field::ROLE:
     {
-      if (mixed || mediaType == MediaType::ARTIST)
+      if (mixed || mediaType == MEDIA::TYPE::ARTIST)
       {
         database.GetRolesNav(MUSIC::DB_PATH::SONGS, items);
         iLabel = 38033;
@@ -274,12 +273,12 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
         database.GetSongsNav(MUSIC::DB_PATH::SONGS, items, SortDescription(), -1, -1, -1);
         iLabel = 134;
       }
-      if (mediaType == MediaType::MOVIE)
+      if (mediaType == MEDIA::TYPE::MOVIE)
       {
         videodatabase.GetMoviesNav(basePath + "titles/", items);
         iLabel = 20342;
       }
-      if (mediaType == MediaType::EPISODE)
+      if (mediaType == MEDIA::TYPE::EPISODE)
       {
         videodatabase.GetEpisodesNav(basePath + "titles/-1/-1/", items);
         // we need to replace the db label (<season>x<episode> <title>) with the title only
@@ -369,7 +368,7 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     {
       // an episode's tags are its show's
       const VideoDbContentType tagType{
-          mediaType == MediaType::EPISODE
+          mediaType == MEDIA::TYPE::EPISODE
               ? VideoDbContentType::TVSHOWS
               : DatabaseUtils::VideoContentTypeFromMediaType(mediaType)};
       if (tagType == VideoDbContentType::UNKNOWN)

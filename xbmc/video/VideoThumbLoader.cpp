@@ -45,7 +45,6 @@
 
 using namespace KODI;
 using namespace XFILE;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::NameOf;
 
 CVideoThumbLoader::CVideoThumbLoader() : CThumbLoader()
@@ -86,15 +85,15 @@ std::vector<std::string> GetSettingListAsString(const std::string& settingID)
 }
 
 const std::map<std::string, std::vector<std::string>> artTypeDefaults = {
-    {NameOf(MediaType::EPISODE), {ART::TYPE::THUMB}},
-    {NameOf(MediaType::TV_SHOW), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
-    {NameOf(MediaType::SEASON), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
-    {NameOf(MediaType::MOVIE), {ART::TYPE::POSTER, ART::TYPE::FANART}},
-    {NameOf(MediaType::VIDEO_COLLECTION), {ART::TYPE::POSTER, ART::TYPE::FANART}},
-    {NameOf(MediaType::MUSIC_VIDEO), {ART::TYPE::POSTER, ART::TYPE::FANART}},
-    {NameOf(MediaType::VIDEO_VERSION),
+    {NameOf(MEDIA::TYPE::EPISODE), {ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::TV_SHOW), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
+    {NameOf(MEDIA::TYPE::SEASON), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
+    {NameOf(MEDIA::TYPE::MOVIE), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::MUSIC_VIDEO), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::VIDEO_VERSION),
      {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
-    {NameOf(MediaType::NONE),
+    {NameOf(MEDIA::TYPE::NONE),
      {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
 };
 
@@ -109,13 +108,13 @@ const std::vector<std::string>& GetArtTypeDefault(const std::string& mediaType)
 }
 
 const std::map<std::string, std::string> artTypeSettings = {
-    {NameOf(MediaType::EPISODE), CSettings::SETTING_VIDEOLIBRARY_EPISODEART_WHITELIST},
-    {NameOf(MediaType::TV_SHOW), CSettings::SETTING_VIDEOLIBRARY_TVSHOWART_WHITELIST},
-    {NameOf(MediaType::SEASON), CSettings::SETTING_VIDEOLIBRARY_TVSHOWART_WHITELIST},
-    {NameOf(MediaType::MOVIE), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
-    {NameOf(MediaType::VIDEO_COLLECTION), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
-    {NameOf(MediaType::MUSIC_VIDEO), CSettings::SETTING_VIDEOLIBRARY_MUSICVIDEOART_WHITELIST},
-    {NameOf(MediaType::VIDEO_VERSION), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
+    {NameOf(MEDIA::TYPE::EPISODE), CSettings::SETTING_VIDEOLIBRARY_EPISODEART_WHITELIST},
+    {NameOf(MEDIA::TYPE::TV_SHOW), CSettings::SETTING_VIDEOLIBRARY_TVSHOWART_WHITELIST},
+    {NameOf(MEDIA::TYPE::SEASON), CSettings::SETTING_VIDEOLIBRARY_TVSHOWART_WHITELIST},
+    {NameOf(MEDIA::TYPE::MOVIE), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
+    {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
+    {NameOf(MEDIA::TYPE::MUSIC_VIDEO), CSettings::SETTING_VIDEOLIBRARY_MUSICVIDEOART_WHITELIST},
+    {NameOf(MEDIA::TYPE::VIDEO_VERSION), CSettings::SETTING_VIDEOLIBRARY_MOVIEART_WHITELIST},
 };
 
 //! Whether an item of \p tag's type has no art but what the library holds for it
@@ -126,11 +125,11 @@ bool HasOnlyLibraryArt(const CVideoInfoTag& tag)
 
   switch (tag.GetMediaType())
   {
-    case MediaType::MOVIE:
-    case MediaType::TV_SHOW:
-    case MediaType::EPISODE:
-    case MediaType::MUSIC_VIDEO:
-    case MediaType::VIDEO_VERSION:
+    case MEDIA::TYPE::MOVIE:
+    case MEDIA::TYPE::TV_SHOW:
+    case MEDIA::TYPE::EPISODE:
+    case MEDIA::TYPE::MUSIC_VIDEO:
+    case MEDIA::TYPE::VIDEO_VERSION:
       return false;
     default:
       return true;
@@ -385,11 +384,11 @@ int CVideoThumbLoader::SetDetailsForItem(CVideoInfoTag& details, const KODI::ART
 
   switch (details.GetMediaType())
   {
-    case MediaType::MOVIE:
+    case MEDIA::TYPE::MOVIE:
       return m_videoDatabase->SetDetailsForMovie(details, artwork, id);
-    case MediaType::VIDEO_COLLECTION:
+    case MEDIA::TYPE::VIDEO_COLLECTION:
       return m_videoDatabase->SetDetailsForMovieSet(details, artwork, id);
-    case MediaType::TV_SHOW:
+    case MEDIA::TYPE::TV_SHOW:
     {
       KODI::ART::SeasonsArtwork seasonArtwork;
       if (!m_videoDatabase->UpdateDetailsForTvShow(id, details, artwork, seasonArtwork))
@@ -397,11 +396,11 @@ int CVideoThumbLoader::SetDetailsForItem(CVideoInfoTag& details, const KODI::ART
 
       return id;
     }
-    case MediaType::SEASON:
+    case MEDIA::TYPE::SEASON:
       return m_videoDatabase->SetDetailsForSeason(details, artwork, details.m_iIdShow, id);
-    case MediaType::EPISODE:
+    case MEDIA::TYPE::EPISODE:
       return m_videoDatabase->SetDetailsForEpisode(details, artwork, details.m_iIdShow, id);
-    case MediaType::MUSIC_VIDEO:
+    case MEDIA::TYPE::MUSIC_VIDEO:
       return m_videoDatabase->SetDetailsForMusicVideo(details, artwork, id);
     default:
       return -1;
@@ -415,7 +414,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
   // Video item can be an album - either a 
   // a) search result with full details including music library album id, or 
   // b) musicvideo album that needs matching to a music album, storing id as well as fetch art.
-  if (tag.GetMediaType() == MediaType::ALBUM)
+  if (tag.GetMediaType() == MEDIA::TYPE::ALBUM)
   {
     int idAlbum = -1;
     if (item.HasMusicInfoTag()) // Album is a search result
@@ -423,7 +422,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     CMusicDatabase database;
     database.Open();
     if (idAlbum < 0 && !tag.m_strAlbum.empty() &&
-        item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ALBUM))
+        item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MEDIA::TYPE::ALBUM))
     {
       // Musicvideo album - try to match album in music db on artist(s) and album name.
       // Get review if available and save the matching music library album id.
@@ -439,12 +438,12 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       }
     }
     // Get album art only (not related artist art)
-    if (database.GetArtForItem(idAlbum, MediaType::ALBUM, artwork))
+    if (database.GetArtForItem(idAlbum, MEDIA::TYPE::ALBUM, artwork))
       item.SetArt(artwork);
     database.Close();
   }
   else if (tag.m_type == KODI::VIDEO::DB_TABLE::ACTOR && !tag.m_artist.empty() &&
-           item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MediaType::ARTIST))
+           item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MEDIA::TYPE::ARTIST))
   {
     // Try to match artist in music db on name, get bio if available and fetch artist art
     // Save the matching music library artist id.
@@ -458,7 +457,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       tag.m_strPlot = artist.strBiography;
       item.SetProperty(ITEM::PROPERTY::ARTIST_MUSICID, idArtist);
     }
-    if (database.GetArtForItem(idArtist, MediaType::ARTIST, artwork))
+    if (database.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artwork))
       item.SetArt(artwork);
     database.Close();
   }
@@ -485,46 +484,46 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       item.AppendArt(artwork);
     }
     else if (tag.m_type == KODI::VIDEO::DB_TABLE::ACTOR && !tag.m_artist.empty() &&
-             item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MediaType::ARTIST))
+             item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MEDIA::TYPE::ARTIST))
     {
       // Fallback to music library for actors without art
       //! @todo Is m_artist set other than musicvideo? Remove this fallback if not.
       CMusicDatabase database;
       database.Open();
       int idArtist = database.GetArtistByName(item.GetLabel());
-      if (database.GetArtForItem(idArtist, MediaType::ARTIST, artwork))
+      if (database.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artwork))
         item.SetArt(artwork);
       database.Close();
     }
 
-    const MediaType mediaType = tag.GetMediaType();
-    if (mediaType == MediaType::EPISODE || mediaType == MediaType::SEASON)
+    const MEDIA::TYPE mediaType = tag.GetMediaType();
+    if (mediaType == MEDIA::TYPE::EPISODE || mediaType == MEDIA::TYPE::SEASON)
     {
       // For episodes and seasons, we want to set fanart for that of the show
       if (!item.HasArt("tvshow.fanart") && tag.m_iIdShow >= 0)
       {
-        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MediaType::TV_SHOW), tag.m_iIdShow);
+        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MEDIA::TYPE::TV_SHOW), tag.m_iIdShow);
         if (!artmap.empty())
         {
-          item.AppendArt(artmap, NameOf(MediaType::TV_SHOW));
+          item.AppendArt(artmap, NameOf(MEDIA::TYPE::TV_SHOW));
           item.SetArtFallback(ART::TYPE::FANART, "tvshow.fanart");
           item.SetArtFallback("tvshow.thumb", "tvshow.poster");
         }
       }
 
-      if (mediaType == MediaType::EPISODE && !item.HasArt("season.poster") && tag.m_iSeason > -1)
+      if (mediaType == MEDIA::TYPE::EPISODE && !item.HasArt("season.poster") && tag.m_iSeason > -1)
       {
-        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MediaType::SEASON), tag.m_iIdSeason);
+        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MEDIA::TYPE::SEASON), tag.m_iIdSeason);
         if (!artmap.empty())
-          item.AppendArt(artmap, NameOf(MediaType::SEASON));
+          item.AppendArt(artmap, NameOf(MEDIA::TYPE::SEASON));
       }
     }
-    else if (mediaType == MediaType::MOVIE && tag.m_set.GetID() >= 0 && !item.HasArt("set.fanart"))
+    else if (mediaType == MEDIA::TYPE::MOVIE && tag.m_set.GetID() >= 0 && !item.HasArt("set.fanart"))
     {
       const KODI::ART::Artwork& artmap =
-          GetArtFromCache(NameOf(MediaType::VIDEO_COLLECTION), tag.m_set.GetID());
+          GetArtFromCache(NameOf(MEDIA::TYPE::VIDEO_COLLECTION), tag.m_set.GetID());
       if (!artmap.empty())
-        item.AppendArt(artmap, NameOf(MediaType::VIDEO_COLLECTION));
+        item.AppendArt(artmap, NameOf(MEDIA::TYPE::VIDEO_COLLECTION));
     }
     m_videoDatabase->Close();
   }

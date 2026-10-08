@@ -93,7 +93,6 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
 
 using namespace std::chrono_literals;
 using KODI::MEDIA::MediaSection;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::NameOf;
 
 #define CONTROL_BTNVIEWASICONS  2
@@ -315,7 +314,7 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
   }
 
   if (VIDEO::IsVideo(*item) && item->HasVideoInfoTag() &&
-      item->GetVideoInfoTag()->GetMediaType() == MediaType::MUSIC_VIDEO)
+      item->GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::MUSIC_VIDEO)
   { // Music video on a mixed current playlist or navigation by music > music video > artist > video
     CGUIDialogVideoInfo::ShowFor(*item);
     return;
@@ -332,9 +331,9 @@ void CGUIWindowMusicBase::OnItemInfo(int iItem)
     return;
   switch (item->GetMusicInfoTag()->GetMediaType())
   {
-    case MediaType::SONG:
-    case MediaType::ALBUM:
-    case MediaType::ARTIST:
+    case MEDIA::TYPE::SONG:
+    case MEDIA::TYPE::ALBUM:
+    case MEDIA::TYPE::ARTIST:
       CGUIDialogMusicInfo::ShowFor(item.get());
       break;
     default:
@@ -769,9 +768,9 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     }
     if (artfound)
     {
-      std::string dirType = NameOf(MediaType::ARTIST);
+      std::string dirType = NameOf(MEDIA::TYPE::ARTIST);
       if (params.GetAlbumId() > 0)
-        dirType = NameOf(MediaType::ALBUM);
+        dirType = NameOf(MEDIA::TYPE::ALBUM);
       KODI::ART::Artwork artmap;
       for (auto artitem : art)
       {
@@ -782,7 +781,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
           artname = artitem.mediaType + "." + artitem.artType;
         else
         {
-          if (dirType == NameOf(MediaType::ALBUM))
+          if (dirType == NameOf(MEDIA::TYPE::ALBUM))
             StringUtils::Replace(artitem.prefix, "albumartist", "artist");
           artname = artitem.prefix + "." + artitem.artType;
         }

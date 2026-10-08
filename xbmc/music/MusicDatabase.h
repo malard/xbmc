@@ -656,7 +656,7 @@ public:
   int GetDiscsCount(const std::string& baseDir, const Filter& filter = Filter());
   int GetSongsCount(const Filter& filter = Filter());
   bool GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription& sorting) override;
-  int GetOrderFilter(KODI::MEDIA::MediaType type, const SortDescription& sorting, Filter& filter) const;
+  int GetOrderFilter(KODI::MEDIA::TYPE type, const SortDescription& sorting, Filter& filter) const;
 
   /////////////////////////////////////////////////
   // Party Mode
@@ -736,7 +736,7 @@ public:
   void SetPropertiesForFileItem(CFileItem& item);
   static void SetPropertiesFromArtist(CFileItem& item, const CArtist& artist);
   static void SetPropertiesFromAlbum(CFileItem& item, const CAlbum& album);
-  void SetItemUpdated(int mediaId, KODI::MEDIA::MediaType mediaType);
+  void SetItemUpdated(int mediaId, KODI::MEDIA::TYPE mediaType);
 
   /////////////////////////////////////////////////
   // Art
@@ -786,7 +786,7 @@ public:
   \return the types of art e.g. "thumb", "fanart", etc.
   */
   std::vector<std::string> GetAvailableArtTypesForItem(int mediaId,
-                                                       KODI::MEDIA::MediaType mediaType);
+                                                       KODI::MEDIA::TYPE mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.
@@ -796,7 +796,7 @@ public:
   \return list of URLs
   */
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
-                                                             KODI::MEDIA::MediaType mediaType,
+                                                             KODI::MEDIA::TYPE mediaType,
                                                              const std::string& artType);
 
   /////////////////////////////////////////////////

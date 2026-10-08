@@ -40,7 +40,6 @@
 #include <ranges>
 #include <vector>
 
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 
 namespace KODI::VIDEO::UTILS
@@ -180,18 +179,18 @@ bool IsAutoPlayNextItem(const std::string& content)
   int settingValue = CSettings::SETTING_AUTOPLAYNEXT_UNCATEGORIZED;
   switch (MediaTypeFromName(content))
   {
-    case MediaType::MOVIE:
-    case MediaType::VIDEO_COLLECTION:
+    case MEDIA::TYPE::MOVIE:
+    case MEDIA::TYPE::VIDEO_COLLECTION:
       settingValue = CSettings::SETTING_AUTOPLAYNEXT_MOVIES;
       break;
-    case MediaType::SEASON:
-    case MediaType::EPISODE:
+    case MEDIA::TYPE::SEASON:
+    case MEDIA::TYPE::EPISODE:
       settingValue = CSettings::SETTING_AUTOPLAYNEXT_EPISODES;
       break;
-    case MediaType::MUSIC_VIDEO:
+    case MEDIA::TYPE::MUSIC_VIDEO:
       settingValue = CSettings::SETTING_AUTOPLAYNEXT_MUSICVIDEOS;
       break;
-    case MediaType::TV_SHOW:
+    case MEDIA::TYPE::TV_SHOW:
       settingValue = CSettings::SETTING_AUTOPLAYNEXT_TVSHOWS;
       break;
     default:
@@ -218,10 +217,10 @@ bool IsPlotHidden(const CVideoInfoTag& tag)
 
   switch (tag.GetMediaType())
   {
-    case MediaType::MOVIE:
+    case MEDIA::TYPE::MOVIE:
       return !CSettingUtils::FindIntInList(setting,
                                            CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_MOVIES);
-    case MediaType::EPISODE:
+    case MEDIA::TYPE::EPISODE:
       return !CSettingUtils::FindIntInList(
           setting, CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_TVSHOWEPISODES);
     default:

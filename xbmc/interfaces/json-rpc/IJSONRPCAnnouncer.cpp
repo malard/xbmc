@@ -95,7 +95,7 @@ bool IJSONRPCAnnouncer::AsItemNotification(ANNOUNCEMENT::AnnouncementFlag flag,
   const CVariant& item = data.isMember("item") ? data["item"] : data;
   const int64_t id = item["id"].asInteger(-1);
   const std::string kind = item["type"].asString();
-  const KODI::MEDIA::MediaType type = KODI::MEDIA::MediaTypeOf(kind);
+  const KODI::MEDIA::TYPE type = KODI::MEDIA::MediaTypeOf(kind);
   const bool isKind = flag == ANNOUNCEMENT::VideoLibrary ? CVideoLibrary::IsItemKind(type)
                                                          : CAudioLibrary::IsItemKind(type);
   if (id <= 0 || !isKind)

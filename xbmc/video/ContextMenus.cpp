@@ -40,12 +40,11 @@
 #include <utility>
 
 using namespace KODI;
-using KODI::MEDIA::MediaType;
 
 namespace CONTEXTMENU
 {
 
-CVideoInfoBase::CVideoInfoBase(MediaType mediaType)
+CVideoInfoBase::CVideoInfoBase(MEDIA::TYPE mediaType)
   : CStaticContextMenuAction(19033), m_mediaType(std::move(mediaType))
 {
 }
@@ -461,7 +460,7 @@ bool CVideoPlayAndQueue::Execute(const std::shared_ptr<CFileItem>& item) const
 bool CTVShowScanForNewContent::IsVisible(const CFileItem& item) const
 {
   return !item.IsParentFolder() && item.HasVideoInfoTag() &&
-         item.GetVideoInfoTag()->GetMediaType() == MediaType::TV_SHOW;
+         item.GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::TV_SHOW;
 }
 
 bool CTVShowScanForNewContent::Execute(const std::shared_ptr<CFileItem>& item) const

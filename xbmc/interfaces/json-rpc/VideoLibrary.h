@@ -42,7 +42,7 @@ class CVideoLibrary : public CFileItemHandler
   {
   public:
   //! Whether the library holds items of \p type
-  static bool IsItemKind(KODI::MEDIA::MediaType type);
+  static bool IsItemKind(KODI::MEDIA::TYPE type);
 
   //! The query over one kind's items
   static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
@@ -198,7 +198,7 @@ public:
                                              CVideoDatabase& videodatabase,
                                              CVariant& result);
 
-  static int RequiresAdditionalDetails(KODI::MEDIA::MediaType mediaType, const CVariant &parameterObject);
+  static int RequiresAdditionalDetails(KODI::MEDIA::TYPE mediaType, const CVariant &parameterObject);
     static JSONRPC_STATUS HandleItems(const char *idProperty, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool limit = true);
     static JSONRPC_STATUS RemoveVideo(const CVariant &parameterObject);
 

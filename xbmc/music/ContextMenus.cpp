@@ -26,9 +26,8 @@
 
 using namespace CONTEXTMENU;
 using namespace KODI;
-using KODI::MEDIA::MediaType;
 
-CMusicInfoBase::CMusicInfoBase(MediaType mediaType)
+CMusicInfoBase::CMusicInfoBase(MEDIA::TYPE mediaType)
   : CStaticContextMenuAction(19033), m_mediaType(std::move(mediaType))
 {
 }
@@ -36,9 +35,9 @@ CMusicInfoBase::CMusicInfoBase(MediaType mediaType)
 bool CMusicInfoBase::IsVisible(const CFileItem& item) const
 {
   return (item.HasMusicInfoTag() && item.GetMusicInfoTag()->GetMediaType() == m_mediaType) ||
-         (m_mediaType == MediaType::ARTIST && VIDEO::IsVideoDb(item) &&
+         (m_mediaType == MEDIA::TYPE::ARTIST && VIDEO::IsVideoDb(item) &&
           item.HasProperty(ITEM::PROPERTY::ARTIST_MUSICID)) ||
-         (m_mediaType == MediaType::ALBUM && VIDEO::IsVideoDb(item) &&
+         (m_mediaType == MEDIA::TYPE::ALBUM && VIDEO::IsVideoDb(item) &&
           item.HasProperty(ITEM::PROPERTY::ALBUM_MUSICID));
 }
 

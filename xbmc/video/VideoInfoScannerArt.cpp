@@ -44,7 +44,6 @@
 
 using namespace XFILE;
 using namespace ADDON;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::NameOf;
 
 namespace
@@ -111,11 +110,11 @@ std::string ContentToMediaType(ContentType content, bool folder)
   {
     using enum ContentType;
     case MOVIES:
-      return NameOf(MediaType::MOVIE);
+      return NameOf(KODI::MEDIA::TYPE::MOVIE);
     case MUSICVIDEOS:
-      return NameOf(MediaType::MUSIC_VIDEO);
+      return NameOf(KODI::MEDIA::TYPE::MUSIC_VIDEO);
     case TVSHOWS:
-      return folder ? NameOf(MediaType::TV_SHOW) : NameOf(MediaType::EPISODE);
+      return folder ? NameOf(KODI::MEDIA::TYPE::TV_SHOW) : NameOf(KODI::MEDIA::TYPE::EPISODE);
     default:
       return "";
   }
@@ -279,7 +278,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
   std::vector<std::string> movieSetArtTypes;
   if (moviePartOfSet)
   {
-    movieSetArtTypes = CVideoThumbLoader::GetArtTypes(MediaType::VIDEO_COLLECTION);
+    movieSetArtTypes = CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION);
     for (const std::string& artType : movieSetArtTypes)
       artTypes.push_back("set." + artType);
   }
@@ -373,7 +372,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
     std::string aspect = url.m_aspect;
     if (aspect.empty())
       // Backward compatibility with Kodi 11 Eden NFO files
-      aspect = mediaType == NameOf(MediaType::EPISODE) ? ART::TYPE::THUMB : ART::TYPE::POSTER;
+      aspect = mediaType == NameOf(MEDIA::TYPE::EPISODE) ? ART::TYPE::THUMB : ART::TYPE::POSTER;
 
     if ((addAll || CVideoThumbLoader::IsArtTypeInWhitelist(aspect, artTypes, exactName)) &&
         !art.contains(aspect))

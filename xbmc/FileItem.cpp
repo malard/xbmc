@@ -89,7 +89,6 @@ using namespace MUSIC_INFO;
 using namespace PVR;
 using namespace GAME;
 using KODI::MEDIA::IsContainer;
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -1281,7 +1280,7 @@ bool IsSameLibraryItem(const CFileItem& item, const CFileItem& other)
       }};
 
   // For a version its db id is a file id
-  if (myTag.GetMediaType() == MediaType::VIDEO_VERSION)
+  if (myTag.GetMediaType() == MEDIA::TYPE::VIDEO_VERSION)
   {
     if (myTag.m_iFileId == -1 || otherTag.m_iFileId == -1)
       return myTag.m_iFileId == otherTag.m_iFileId && myTag.m_iDbId == otherTag.m_iDbId;
@@ -1907,7 +1906,7 @@ std::string CFileItem::GetThumbHideIfUnwatched(const CFileItem* item) const
   const std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
       CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
           CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
-  if (setting && item->HasVideoInfoTag() && item->GetVideoInfoTag()->GetMediaType() == MediaType::EPISODE &&
+  if (setting && item->HasVideoInfoTag() && item->GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::EPISODE &&
       item->GetVideoInfoTag()->GetPlayCount() == 0 &&
       !CSettingUtils::FindIntInList(setting,
                                     CSettings::VIDEOLIBRARY_THUMB_SHOW_UNWATCHED_EPISODE) &&
@@ -2444,14 +2443,14 @@ VideoDbContentType CFileItem::GetVideoContentType() const
     const auto& tag{GetVideoInfoTag()};
     switch (tag->GetMediaType())
     {
-      case MediaType::TV_SHOW:
+      case MEDIA::TYPE::TV_SHOW:
         type = TVSHOWS;
         break;
-      case MediaType::EPISODE:
+      case MEDIA::TYPE::EPISODE:
         return EPISODES;
-      case MediaType::MUSIC_VIDEO:
+      case MEDIA::TYPE::MUSIC_VIDEO:
         return MUSICVIDEOS;
-      case MediaType::ALBUM:
+      case MEDIA::TYPE::ALBUM:
         return MUSICALBUMS;
       default:
         break;

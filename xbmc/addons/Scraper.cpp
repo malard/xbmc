@@ -56,7 +56,6 @@ using namespace KODI;
 using namespace MUSIC_GRABBER;
 
 namespace CONTENT = KODI::MEDIA::CONTENT;
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -1451,7 +1450,7 @@ bool CScraper::GetVideoDetailsUncached(XFILE::IHttpClient& fcurl,
 {
   CLog::LogF(LOGDEBUG,
              "Reading {} '{}' using {} scraper (file: '{}', content: '{}', version: '{}')",
-             fMovie ? MediaType::MOVIE : MediaType::EPISODE, scurl.GetFirstThumbUrl(), Name(), Path(),
+             fMovie ? MEDIA::TYPE::MOVIE : MEDIA::TYPE::EPISODE, scurl.GetFirstThumbUrl(), Name(), Path(),
              Content(), Version().asString());
 
   video.Reset();

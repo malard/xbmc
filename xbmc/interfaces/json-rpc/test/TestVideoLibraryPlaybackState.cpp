@@ -14,7 +14,6 @@
 #include <gtest/gtest.h>
 
 using namespace JSONRPC;
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -43,7 +42,7 @@ CVideoInfoTag FileRow()
 CVideoInfoTag PluginDescription()
 {
   CVideoInfoTag details;
-  details.SetMediaType(MediaType::EPISODE);
+  details.SetMediaType(KODI::MEDIA::TYPE::EPISODE);
   details.m_strTitle = "Extraterrestrial Girl";
   details.m_strShowTitle = "Planetes";
   details.m_iSeason = 1;
@@ -58,7 +57,7 @@ TEST(TestVideoLibraryPlaybackState, KeepsTheDescriptionItIsAppliedTo)
   CVideoInfoTag details = PluginDescription();
   CTestVideoLibrary::ApplyPlaybackState(FileRow(), details);
 
-  EXPECT_EQ(MediaType::EPISODE, details.GetMediaType());
+  EXPECT_EQ(KODI::MEDIA::TYPE::EPISODE, details.GetMediaType());
   EXPECT_EQ("Extraterrestrial Girl", details.m_strTitle);
   EXPECT_EQ("Planetes", details.m_strShowTitle);
   EXPECT_EQ(1, details.m_iSeason);
@@ -107,7 +106,7 @@ namespace
 CVideoInfoTag Show(int playCount, const char* lastPlayed)
 {
   CVideoInfoTag show;
-  show.SetMediaType(MediaType::TV_SHOW);
+  show.SetMediaType(KODI::MEDIA::TYPE::TV_SHOW);
   show.SetPlayCount(playCount);
   show.m_lastPlayed.SetFromDBDateTime(lastPlayed);
   return show;
@@ -116,7 +115,7 @@ CVideoInfoTag Show(int playCount, const char* lastPlayed)
 CVideoInfoTag Episode(int playCount, const char* lastPlayed)
 {
   CVideoInfoTag episode;
-  episode.SetMediaType(MediaType::EPISODE);
+  episode.SetMediaType(KODI::MEDIA::TYPE::EPISODE);
   episode.SetPlayCount(playCount);
   if (lastPlayed)
     episode.m_lastPlayed.SetFromDBDateTime(lastPlayed);

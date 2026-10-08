@@ -159,7 +159,7 @@ const std::string &CMusicInfoTag::GetType() const
   return m_type;
 }
 
-KODI::MEDIA::MediaType CMusicInfoTag::GetMediaType() const
+KODI::MEDIA::TYPE CMusicInfoTag::GetMediaType() const
 {
   return KODI::MEDIA::MediaTypeOf(m_type);
 }
@@ -462,7 +462,7 @@ void CMusicInfoTag::SetDatabaseId(int id, std::string_view type)
   m_type = type;
 }
 
-void CMusicInfoTag::SetDatabaseId(int id, KODI::MEDIA::MediaType type)
+void CMusicInfoTag::SetDatabaseId(int id, KODI::MEDIA::TYPE type)
 {
   SetDatabaseId(id, KODI::MEDIA::NameOf(type));
 }
@@ -781,7 +781,7 @@ void CMusicInfoTag::SetType(std::string_view mediaType)
   m_type = mediaType;
 }
 
-void CMusicInfoTag::SetType(KODI::MEDIA::MediaType mediaType)
+void CMusicInfoTag::SetType(KODI::MEDIA::TYPE mediaType)
 {
   m_type = KODI::MEDIA::NameOf(mediaType);
 }
@@ -821,7 +821,7 @@ void CMusicInfoTag::SetArtist(const CArtist& artist)
   SetDateAdded(artist.dateAdded);
   SetDateUpdated(artist.dateUpdated);
   SetDateNew(artist.dateNew);
-  SetDatabaseId(artist.idArtist, KODI::MEDIA::MediaType::ARTIST);
+  SetDatabaseId(artist.idArtist, KODI::MEDIA::TYPE::ARTIST);
 
   SetLoaded();
 }
@@ -860,7 +860,7 @@ void CMusicInfoTag::SetAlbum(const CAlbum& album)
   SetDateUpdated(album.dateUpdated);
   SetDateNew(album.dateNew);
   SetPlayCount(album.iTimesPlayed);
-  SetDatabaseId(album.idAlbum, KODI::MEDIA::MediaType::ALBUM);
+  SetDatabaseId(album.idAlbum, KODI::MEDIA::TYPE::ALBUM);
   SetLastPlayed(album.lastPlayed);
   SetTotalDiscs(album.iTotalDiscs);
   SetDuration(album.iAlbumDuration);
@@ -911,7 +911,7 @@ void CMusicInfoTag::SetSong(const CSong& song)
   SetMood(song.strMood);
   SetCompilation(song.bCompilation);
   SetAlbumId(song.idAlbum);
-  SetDatabaseId(song.idSong, KODI::MEDIA::MediaType::SONG);
+  SetDatabaseId(song.idSong, KODI::MEDIA::TYPE::SONG);
   SetBPM(song.iBPM);
   SetBitRate(song.iBitRate);
   SetSampleRate(song.iSampleRate);
@@ -930,7 +930,7 @@ void CMusicInfoTag::Serialize(CVariant& value) const
 {
   value["url"] = m_strURL;
   value["title"] = m_strTitle;
-  if (GetMediaType() == KODI::MEDIA::MediaType::ARTIST && m_artist.size() == 1)
+  if (GetMediaType() == KODI::MEDIA::TYPE::ARTIST && m_artist.size() == 1)
     value["artist"] = m_artist[0];
   else
     value["artist"] = m_artist;
@@ -993,10 +993,10 @@ void CMusicInfoTag::Serialize(CVariant& value) const
   value["compilation"] = m_bCompilation;
   switch (GetMediaType())
   {
-    case KODI::MEDIA::MediaType::ALBUM:
+    case KODI::MEDIA::TYPE::ALBUM:
       value["releaseType"] = AudioType::ToString(m_albumReleaseType);
       break;
-    case KODI::MEDIA::MediaType::SONG:
+    case KODI::MEDIA::TYPE::SONG:
       value["albumReleaseType"] = AudioType::ToString(m_albumReleaseType);
       break;
     default:

@@ -41,7 +41,7 @@ class CAudioLibrary : public CFileItemHandler
     static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
 
   //! Whether the library holds items of \p type
-  static bool IsItemKind(KODI::MEDIA::MediaType type);
+  static bool IsItemKind(KODI::MEDIA::TYPE type);
 
   //! The query over one kind's items
   static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
@@ -156,7 +156,7 @@ private:
   static void FillListArt(CVariant& list,
                           const std::set<std::string, std::less<>>& fields,
                           const char* idName,
-                          KODI::MEDIA::MediaType mediaType);
+                          KODI::MEDIA::TYPE mediaType);
 
   //! Narrows \p url to the artists in the role the caller's filter names, or to every role
   static void ApplyRoleFilter(const CVariant& parameterObject, CMusicDbUrl& url);

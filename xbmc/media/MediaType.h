@@ -15,7 +15,7 @@ namespace KODI::MEDIA
 {
 
 //! \brief What a library item is.
-enum class MediaType
+enum class TYPE
 {
   NONE,
   MUSIC,
@@ -33,27 +33,27 @@ enum class MediaType
 };
 
 //! \brief The name a type is stored and exposed under, e.g. "movie". Empty for NONE.
-const std::string& NameOf(MediaType type);
+const std::string& NameOf(TYPE type);
 
 //! \brief Formats as its name, for fmt.
-inline const std::string& format_as(MediaType type)
+inline const std::string& format_as(TYPE type)
 {
   return NameOf(type);
 }
 
 //! \brief The plural name, e.g. "movies", and "sets" for a video collection. Empty for NONE.
-const std::string& PluralNameOf(MediaType type);
+const std::string& PluralNameOf(TYPE type);
 
 //! \brief The type \p name gives, singular or plural, in any case. NONE for any other text.
-MediaType MediaTypeFromName(std::string_view name);
+TYPE MediaTypeFromName(std::string_view name);
 
 //! \brief The type whose stored name is exactly \p name. NONE for any other text.
-MediaType MediaTypeOf(std::string_view name);
+TYPE MediaTypeOf(std::string_view name);
 
 //! \brief Whether an item of this type holds other items, as an album holds songs.
-bool IsContainer(MediaType type);
+bool IsContainer(TYPE type);
 
 //! \brief The localized name as a heading, e.g. "Movie". Empty for NONE.
-std::string GetCapitalLocalization(MediaType type);
+std::string GetCapitalLocalization(TYPE type);
 
 } // namespace KODI::MEDIA

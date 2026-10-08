@@ -67,7 +67,6 @@ using namespace VIDEODATABASEDIRECTORY;
 using namespace KODI;
 using namespace KODI::MESSAGING;
 using KODI::MEDIA::MediaSection;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 using KODI::MEDIA::NameOf;
 
@@ -528,10 +527,10 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
             seasonID = items[firstIndex]->GetVideoInfoTag()->m_iIdSeason;
 
           KODI::ART::Artwork seasonArt;
-          if (seasonID > -1 && m_database.GetArtForItem(seasonID, MediaType::SEASON, seasonArt) &&
+          if (seasonID > -1 && m_database.GetArtForItem(seasonID, MEDIA::TYPE::SEASON, seasonArt) &&
               !seasonArt.empty())
           {
-            items.AppendArt(seasonArt, NameOf(MediaType::SEASON));
+            items.AppendArt(seasonArt, NameOf(MEDIA::TYPE::SEASON));
             // set an art fallback for "thumb"
             if (items.HasArt("season.poster"))
               items.SetArtFallback(ART::TYPE::THUMB, "season.poster");
@@ -545,10 +544,10 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         if (params.GetSetId() > 0)
         {
           KODI::ART::Artwork setArt;
-          if (m_database.GetArtForItem(params.GetSetId(), MediaType::VIDEO_COLLECTION, setArt) &&
+          if (m_database.GetArtForItem(params.GetSetId(), MEDIA::TYPE::VIDEO_COLLECTION, setArt) &&
               !setArt.empty())
           {
-            items.AppendArt(setArt, NameOf(MediaType::VIDEO_COLLECTION));
+            items.AppendArt(setArt, NameOf(MEDIA::TYPE::VIDEO_COLLECTION));
             items.SetArtFallback(ART::TYPE::FANART, "set.fanart");
             if (items.HasArt("set.poster"))
               items.SetArtFallback(ART::TYPE::THUMB, "set.poster");
@@ -852,10 +851,10 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
         if (!CVideoLibraryQueue::GetInstance().IsScanningLibrary() && VIDEO::IsVideoDb(*item) &&
             item->HasVideoInfoTag())
         {
-          const MediaType type = item->GetVideoInfoTag()->GetMediaType();
-          if (type == MediaType::MOVIE || type == MediaType::TV_SHOW || type == MediaType::SEASON ||
-              type == MediaType::EPISODE || type == MediaType::MUSIC_VIDEO ||
-              type == MediaType::VIDEO_COLLECTION ||
+          const MEDIA::TYPE type = item->GetVideoInfoTag()->GetMediaType();
+          if (type == MEDIA::TYPE::MOVIE || type == MEDIA::TYPE::TV_SHOW || type == MEDIA::TYPE::SEASON ||
+              type == MEDIA::TYPE::EPISODE || type == MEDIA::TYPE::MUSIC_VIDEO ||
+              type == MEDIA::TYPE::VIDEO_COLLECTION ||
               item->GetVideoInfoTag()->m_type == KODI::VIDEO::DB_TABLE::TAG)
             buttons.Add(CONTEXT_BUTTON_EDIT, 16106);
         }

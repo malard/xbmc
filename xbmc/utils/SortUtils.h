@@ -220,11 +220,11 @@ public:
   static void Sort(const SortDescription &sortDescription, DatabaseResults& items);
   static void Sort(const SortDescription &sortDescription, SortItems& items);
   static bool SortFromDataset(const SortDescription& sortDescription,
-                              KODI::MEDIA::MediaType mediaType,
+                              KODI::MEDIA::TYPE mediaType,
                               dbiplus::Dataset& dataset,
                               DatabaseResults& results);
 
-  static void GetFieldsForSQLSort(KODI::MEDIA::MediaType mediaType, SortBy sortMethod, FieldList& fields);
+  static void GetFieldsForSQLSort(KODI::MEDIA::TYPE mediaType, SortBy sortMethod, FieldList& fields);
   static const Fields& GetFieldsForSorting(SortBy sortBy);
   static std::string RemoveArticles(const std::string &label);
 

@@ -57,7 +57,7 @@ public:
    \sa GetLocalArt
    */
   static std::vector<std::string> GetArtTypes(const std::string &type);
-  static std::vector<std::string> GetArtTypes(KODI::MEDIA::MediaType type)
+  static std::vector<std::string> GetArtTypes(KODI::MEDIA::TYPE type)
   {
     return GetArtTypes(KODI::MEDIA::NameOf(type));
   }

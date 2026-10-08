@@ -24,7 +24,7 @@ namespace
 {
 struct MediaTypeInfo
 {
-  MediaType type;
+  TYPE type;
   std::string_view name;
   std::string_view plural;
   bool container;
@@ -33,22 +33,22 @@ struct MediaTypeInfo
 
 // clang-format off
 constexpr std::array<MediaTypeInfo, 12> MEDIA_TYPES{{
-    {MediaType::MUSIC,            "music",        "music",              true,    249},
-    {MediaType::ARTIST,           "artist",       CONTENT::ARTISTS,     true,    557},
-    {MediaType::ALBUM,            "album",        CONTENT::ALBUMS,      true,    558},
-    {MediaType::SONG,             "song",         CONTENT::SONGS,       false,   179},
-    {MediaType::VIDEO,            "video",        "videos",             true,    291},
-    {MediaType::VIDEO_COLLECTION, "set",          CONTENT::SETS,        true,  20141},
-    {MediaType::MUSIC_VIDEO,      "musicvideo",   CONTENT::MUSICVIDEOS, false, 20391},
-    {MediaType::MOVIE,            "movie",        CONTENT::MOVIES,      false, 20338},
-    {MediaType::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902},
-    {MediaType::SEASON,           "season",       CONTENT::SEASONS,     true,  20373},
-    {MediaType::EPISODE,          "episode",      CONTENT::EPISODES,    false, 20359},
-    {MediaType::VIDEO_VERSION,    "videoversion", CONTENT::VIDEOVERSIONS, false, 40012},
+    {TYPE::MUSIC,            "music",        "music",              true,    249},
+    {TYPE::ARTIST,           "artist",       CONTENT::ARTISTS,     true,    557},
+    {TYPE::ALBUM,            "album",        CONTENT::ALBUMS,      true,    558},
+    {TYPE::SONG,             "song",         CONTENT::SONGS,       false,   179},
+    {TYPE::VIDEO,            "video",        "videos",             true,    291},
+    {TYPE::VIDEO_COLLECTION, "set",          CONTENT::SETS,        true,  20141},
+    {TYPE::MUSIC_VIDEO,      "musicvideo",   CONTENT::MUSICVIDEOS, false, 20391},
+    {TYPE::MOVIE,            "movie",        CONTENT::MOVIES,      false, 20338},
+    {TYPE::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902},
+    {TYPE::SEASON,           "season",       CONTENT::SEASONS,     true,  20373},
+    {TYPE::EPISODE,          "episode",      CONTENT::EPISODES,    false, 20359},
+    {TYPE::VIDEO_VERSION,    "videoversion", CONTENT::VIDEOVERSIONS, false, 40012},
 }};
 // clang-format on
 
-const MediaTypeInfo* Find(MediaType type)
+const MediaTypeInfo* Find(TYPE type)
 {
   const auto it = std::ranges::find(MEDIA_TYPES, type, &MediaTypeInfo::type);
   return it != MEDIA_TYPES.end() ? &*it : nullptr;
@@ -56,7 +56,7 @@ const MediaTypeInfo* Find(MediaType type)
 
 //! Every type's Field as a string, indexed by type, so a name can be handed out by reference.
 template<std::string_view MediaTypeInfo::* Field>
-const std::string& Text(MediaType type)
+const std::string& Text(TYPE type)
 {
   static const std::array<std::string, MEDIA_TYPES.size() + 1> texts = []
   {
@@ -70,17 +70,17 @@ const std::string& Text(MediaType type)
 
 } // namespace
 
-const std::string& NameOf(MediaType type)
+const std::string& NameOf(TYPE type)
 {
   return Text<&MediaTypeInfo::name>(type);
 }
 
-const std::string& PluralNameOf(MediaType type)
+const std::string& PluralNameOf(TYPE type)
 {
   return Text<&MediaTypeInfo::plural>(type);
 }
 
-MediaType MediaTypeFromName(std::string_view name)
+TYPE MediaTypeFromName(std::string_view name)
 {
   const auto it = std::ranges::find_if(MEDIA_TYPES,
                                        [name](const MediaTypeInfo& info)
@@ -88,22 +88,22 @@ MediaType MediaTypeFromName(std::string_view name)
                                          return StringUtils::EqualsNoCase(name, info.name) ||
                                                 StringUtils::EqualsNoCase(name, info.plural);
                                        });
-  return it != MEDIA_TYPES.end() ? it->type : MediaType::NONE;
+  return it != MEDIA_TYPES.end() ? it->type : TYPE::NONE;
 }
 
-MediaType MediaTypeOf(std::string_view name)
+TYPE MediaTypeOf(std::string_view name)
 {
   const auto it = std::ranges::find(MEDIA_TYPES, name, &MediaTypeInfo::name);
-  return it != MEDIA_TYPES.end() ? it->type : MediaType::NONE;
+  return it != MEDIA_TYPES.end() ? it->type : TYPE::NONE;
 }
 
-bool IsContainer(MediaType type)
+bool IsContainer(TYPE type)
 {
   const MediaTypeInfo* info = Find(type);
   return info && info->container;
 }
 
-std::string GetCapitalLocalization(MediaType type)
+std::string GetCapitalLocalization(TYPE type)
 {
   const MediaTypeInfo* info = Find(type);
   if (!info)

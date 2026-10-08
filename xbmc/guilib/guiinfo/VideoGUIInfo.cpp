@@ -53,7 +53,6 @@
 using namespace KODI::GUILIB;
 using namespace KODI::GUILIB::GUIINFO;
 using namespace KODI;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::PluralNameOf;
 
 CVideoGUIInfo::CVideoGUIInfo()
@@ -958,7 +957,7 @@ bool CVideoGUIInfo::GetBool(bool& value,
       // LISTITEM_*
       /////////////////////////////////////////////////////////////////////////////////////////////
       case LISTITEM_IS_COLLECTION:
-        value = tag->GetMediaType() == MediaType::VIDEO_COLLECTION;
+        value = tag->GetMediaType() == MEDIA::TYPE::VIDEO_COLLECTION;
         return true;
       case LISTITEM_ISVIDEOEXTRA:
         value = (tag->GetAssetInfo().GetType() == VideoAssetType::EXTRA);
@@ -967,7 +966,7 @@ bool CVideoGUIInfo::GetBool(bool& value,
         value = tag->HasVideoExtras();
         return true;
       case LISTITEM_ISDEFAULTVIDEOVERSION_NAME:
-        value = tag->GetMediaType() == MediaType::MOVIE &&
+        value = tag->GetMediaType() == MEDIA::TYPE::MOVIE &&
                 tag->GetAssetInfo().GetId() == VIDEO_VERSION_ID_DEFAULT;
         return true;
       default:
@@ -988,11 +987,11 @@ bool CVideoGUIInfo::GetBool(bool& value,
       std::string_view strContent = "files";
       if (tag)
       {
-        switch (const MediaType type = tag->GetMediaType())
+        switch (const MEDIA::TYPE type = tag->GetMediaType())
         {
-          case MediaType::MOVIE:
-          case MediaType::EPISODE:
-          case MediaType::MUSIC_VIDEO:
+          case MEDIA::TYPE::MOVIE:
+          case MEDIA::TYPE::EPISODE:
+          case MEDIA::TYPE::MUSIC_VIDEO:
             strContent = PluralNameOf(type);
             break;
           default:

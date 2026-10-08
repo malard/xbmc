@@ -25,7 +25,6 @@
 #include <gtest/gtest.h>
 
 using namespace JSONRPC;
-using KODI::MEDIA::MediaType;
 
 namespace
 {
@@ -81,7 +80,7 @@ private:
 std::shared_ptr<CFileItem> MakeMovie()
 {
   CVideoInfoTag movie;
-  movie.SetMediaType(MediaType::MOVIE);
+  movie.SetMediaType(KODI::MEDIA::TYPE::MOVIE);
   movie.m_iDbId = 42;
   movie.m_strTitle = "Easter Parade";
   movie.m_strFileNameAndPath = DEFAULT_VERSION;
@@ -110,7 +109,7 @@ std::shared_ptr<CFileItem> MakeSet()
 {
   auto item{std::make_shared<CFileItem>("Easter Parade Collection")};
   item->GetVideoInfoTag()->m_iDbId = 7;
-  item->GetVideoInfoTag()->SetMediaType(MediaType::VIDEO_COLLECTION);
+  item->GetVideoInfoTag()->SetMediaType(KODI::MEDIA::TYPE::VIDEO_COLLECTION);
   item->SetPath(SET_FOLDER);
   item->SetFolder(true);
 

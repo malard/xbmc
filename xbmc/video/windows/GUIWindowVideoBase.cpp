@@ -91,7 +91,6 @@ using namespace ADDON;
 using namespace KODI;
 using namespace PVR;
 using namespace KODI::MESSAGING;
-using KODI::MEDIA::MediaType;
 
 #define CONTROL_BTNVIEWASICONS     2
 #define CONTROL_BTNSORTBY          3
@@ -239,7 +238,7 @@ bool CGUIWindowVideoBase::OnItemInfo(const CFileItem& fileItem)
     return KODI::UTILS::GUILIB::CGUIContentUtils::ShowInfoForItem(fileItem);
 
   // Video version
-  if (fileItem.HasVideoInfoTag() && fileItem.GetVideoInfoTag()->GetMediaType() == MediaType::VIDEO_VERSION)
+  if (fileItem.HasVideoInfoTag() && fileItem.GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::VIDEO_VERSION)
     return false;
 
   // Movie set
@@ -290,7 +289,7 @@ bool CGUIWindowVideoBase::OnItemInfo(const CFileItem& fileItem)
   if ((VIDEO::IsVideoDb(item) && item.HasVideoInfoTag()) ||
       (item.HasVideoInfoTag() && item.GetVideoInfoTag()->m_iDbId != -1))
   {
-    if (item.GetVideoInfoTag()->GetMediaType() == MediaType::SEASON)
+    if (item.GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::SEASON)
     { // clear out the art - we're really grabbing the info on the show here
       item.ClearArt();
       item.GetVideoInfoTag()->m_iDbId = item.GetVideoInfoTag()->m_iIdShow;
@@ -404,7 +403,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
       if (item->IsFolder())
       {
         const CVideoInfoTag* videoTag = item->GetVideoInfoTag();
-        if (videoTag && videoTag->GetMediaType() == MediaType::SEASON && videoTag->m_iSeason != -1)
+        if (videoTag && videoTag->GetMediaType() == MEDIA::TYPE::SEASON && videoTag->m_iSeason != -1)
           bHasInfo = m_database.GetSeasonInfo(videoTag->m_iIdSeason, movieDetails);
         if (!bHasInfo)
           bHasInfo = m_database.GetTvShowInfo(item->GetPath(), movieDetails, dbId);

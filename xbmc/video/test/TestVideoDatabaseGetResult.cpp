@@ -70,12 +70,11 @@ TEST_F(VideoDatabaseGetResultTest, BoolOverloadsStillReportFalseForMissingRows)
 
 TEST_F(VideoDatabaseGetResultTest, MissingItemOfEveryKindIsNotFound)
 {
-  using KODI::MEDIA::MediaType;
   CVideoInfoTag details;
 
-  for (const MediaType type :
-       {MediaType::MOVIE, MediaType::VIDEO_COLLECTION, MediaType::TV_SHOW, MediaType::SEASON,
-        MediaType::EPISODE, MediaType::MUSIC_VIDEO, MediaType::SONG})
+  for (const KODI::MEDIA::TYPE type :
+       {KODI::MEDIA::TYPE::MOVIE, KODI::MEDIA::TYPE::VIDEO_COLLECTION, KODI::MEDIA::TYPE::TV_SHOW, KODI::MEDIA::TYPE::SEASON,
+        KODI::MEDIA::TYPE::EPISODE, KODI::MEDIA::TYPE::MUSIC_VIDEO, KODI::MEDIA::TYPE::SONG})
     EXPECT_EQ(m_db.TryGetDetailsByTypeAndId(type, MISSING_ID, details), GetResult::NotFound)
         << KODI::MEDIA::NameOf(type);
 }

@@ -58,7 +58,7 @@ public:
   int GetDatabaseId() const;
   const std::string &GetType() const;
   //! \brief The media type GetType() names, NONE where it names a node such as a genre, or is spelled otherwise.
-  KODI::MEDIA::MediaType GetMediaType() const;
+  KODI::MEDIA::TYPE GetMediaType() const;
   const std::string& GetDiscSubtitle() const;
   int GetBPM() const;
   std::string GetYearString() const;
@@ -115,7 +115,7 @@ public:
   void SetOriginalDate(std::string_view strOriginalDate);
   void SetReleaseDate(std::string_view strReleaseDate);
   void SetDatabaseId(int id, std::string_view type);
-  void SetDatabaseId(int id, KODI::MEDIA::MediaType type);
+  void SetDatabaseId(int id, KODI::MEDIA::TYPE type);
   void SetTrackNumber(int iTrack);
   void SetDiscNumber(int iDiscNumber);
   void SetTrackAndDiscNumber(int iTrackAndDisc);
@@ -156,7 +156,7 @@ public:
   void SetReplayGain(const ReplayGain& aGain);
   void SetAlbumReleaseType(AudioType::Type releaseType);
   void SetType(std::string_view mediaType);
-  void SetType(KODI::MEDIA::MediaType mediaType);
+  void SetType(KODI::MEDIA::TYPE mediaType);
   void SetDiscSubtitle(std::string_view strDiscSubtitle);
   void SetTotalDiscs(int iDiscTotal);
   void SetBPM(int iBPM);

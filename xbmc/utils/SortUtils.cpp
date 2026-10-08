@@ -20,7 +20,6 @@
 #include <array>
 #include <limits>
 
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::NameOf;
 
 std::string ArrayToString(SortAttribute attributes, const CVariant &variant, const std::string &separator = " / ")
@@ -353,7 +352,7 @@ std::string ByEpisodeNumber(SortAttribute attributes, const SortItem &values)
 
   std::string title;
   if (values.contains(Field::MEDIA_TYPE) &&
-      values.at(Field::MEDIA_TYPE).asString() == NameOf(MediaType::MOVIE))
+      values.at(Field::MEDIA_TYPE).asString() == NameOf(KODI::MEDIA::TYPE::MOVIE))
     title = BySortTitle(attributes, values);
   if (title.empty())
     title = ByLabel(attributes, values);
@@ -845,16 +844,16 @@ const SqlSortFields ARTIST_SORT_FIELDS{
     {SortBy::DATE_ADDED, {Field::DATE_ADDED}},
 };
 
-const SqlSortFields& SqlSortFieldsOf(MediaType mediaType)
+const SqlSortFields& SqlSortFieldsOf(KODI::MEDIA::TYPE mediaType)
 {
   static const SqlSortFields none;
   switch (mediaType)
   {
-    case MediaType::ALBUM:
+    case KODI::MEDIA::TYPE::ALBUM:
       return ALBUM_SORT_FIELDS;
-    case MediaType::SONG:
+    case KODI::MEDIA::TYPE::SONG:
       return SONG_SORT_FIELDS;
-    case MediaType::ARTIST:
+    case KODI::MEDIA::TYPE::ARTIST:
       return ARTIST_SORT_FIELDS;
     default:
       return none;
@@ -862,10 +861,10 @@ const SqlSortFields& SqlSortFieldsOf(MediaType mediaType)
 }
 } // namespace
 
-void SortUtils::GetFieldsForSQLSort(MediaType mediaType, SortBy sortMethod, FieldList& fields)
+void SortUtils::GetFieldsForSQLSort(KODI::MEDIA::TYPE mediaType, SortBy sortMethod, FieldList& fields)
 {
   fields.clear();
-  if (mediaType == MediaType::NONE)
+  if (mediaType == KODI::MEDIA::TYPE::NONE)
     return;
 
   const SqlSortFields& sortFields{SqlSortFieldsOf(mediaType)};
@@ -967,7 +966,7 @@ void SortUtils::Sort(const SortDescription &sortDescription, SortItems& items)
 }
 
 bool SortUtils::SortFromDataset(const SortDescription& sortDescription,
-                                MediaType mediaType,
+                                KODI::MEDIA::TYPE mediaType,
                                 dbiplus::Dataset& dataset,
                                 DatabaseResults& results)
 {

@@ -82,7 +82,6 @@ using namespace ADDON;
 using namespace KODI::MESSAGING;
 using namespace KODI;
 
-using KODI::MEDIA::MediaType;
 using KODI::MESSAGING::HELPERS::DialogResponse;
 using KODI::UTILITY::CDigest;
 
@@ -777,7 +776,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
       // Now look for art
       // Look for local art files first
       const std::vector<std::string> movieSetArtTypes =
-          CVideoThumbLoader::GetArtTypes(MediaType::VIDEO_COLLECTION);
+          CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION);
       ART::AddLocalItemArtwork(movieSetArt, movieSetArtTypes, movieSetInfoPath, true, false, true);
 
       // If art specified in set.nfo use that next
@@ -891,11 +890,11 @@ CVideoInfoScanner::~CVideoInfoScanner()
                   "No information found for item '{}', it won't be added to the library.",
                   CURL::GetRedacted(pItem->GetPath()));
 
-        MediaType mediaType = MediaType::MOVIE;
+        MEDIA::TYPE mediaType = MEDIA::TYPE::MOVIE;
         if (info2->Content() == ContentType::TVSHOWS)
-          mediaType = MediaType::TV_SHOW;
+          mediaType = MEDIA::TYPE::TV_SHOW;
         else if (info2->Content() == ContentType::MUSICVIDEOS)
-          mediaType = MediaType::MUSIC_VIDEO;
+          mediaType = MEDIA::TYPE::MUSIC_VIDEO;
 
         auto eventLog = CServiceBroker::GetEventLog();
         if (eventLog)
@@ -946,7 +945,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
                                                                  CGUIDialogProgress* pDlgProgress)
   {
     const bool isSeason =
-        pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->GetMediaType() == MediaType::SEASON;
+        pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::SEASON;
 
     int idTvShow = -1;
     std::string strPath = pItem->GetPath();
@@ -1792,14 +1791,14 @@ CVideoInfoScanner::~CVideoInfoScanner()
                 ? CVideoInfoScannerArt::UseRemoteArtWithLocalScraper::NO
                 : CVideoInfoScannerArt::UseRemoteArtWithLocalScraper::YES};
         CVideoInfoScannerArt::GetSeasonThumbs(
-            showInfo, seasonArt, CVideoThumbLoader::GetArtTypes(MediaType::SEASON),
+            showInfo, seasonArt, CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::SEASON),
             useLocal && !item->IsPlugin(), useRemoteArt, &m_regexpCache);
         for (const auto& [season, art] : seasonArt)
         {
           m_art.Cache(art);
 
           const int seasonID{m_database.AddSeason(static_cast<int>(showID), season)};
-          m_database.SetArtForItem(seasonID, MediaType::SEASON, art);
+          m_database.SetArtForItem(seasonID, MEDIA::TYPE::SEASON, art);
         }
       }
     }
@@ -2102,7 +2101,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
     // Assume art in set
     if (idSet > 0)
-      return m_database.SetArtForItem(idSet, MediaType::VIDEO_COLLECTION, set.GetArt());
+      return m_database.SetArtForItem(idSet, MEDIA::TYPE::VIDEO_COLLECTION, set.GetArt());
 
     return false;
   }
@@ -2272,7 +2271,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
             {
               // Create set, then add movie to the set
               const int idSet{m_database.AddSet(movieDetails.m_strTitle)};
-              m_database.SetArtForItem(idSet, MediaType::VIDEO_COLLECTION, art);
+              m_database.SetArtForItem(idSet, MEDIA::TYPE::VIDEO_COLLECTION, art);
               movieDetails.SetSet(movieDetails.m_strTitle);
             }
           }
@@ -2286,7 +2285,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
       lResult = m_database.SetDetailsForMovie(movieDetails, art);
       movieDetails.m_iDbId = lResult;
-      movieDetails.SetMediaType(MediaType::MOVIE);
+      movieDetails.SetMediaType(MEDIA::TYPE::MOVIE);
 
       // setup links to shows if the linked shows are in the db
       for (unsigned int i=0; i < movieDetails.m_showLink.size(); ++i)
@@ -2339,7 +2338,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
         if (!libraryImport)
         {
           CVideoInfoScannerArt::GetSeasonThumbs(
-              movieDetails, seasonArt, CVideoThumbLoader::GetArtTypes(MediaType::SEASON),
+              movieDetails, seasonArt, CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::SEASON),
               useLocal && !pItem->IsPlugin(), useRemoteArt, &m_regexpCache);
           for (const auto& seasonArtwork : seasonArt | std::views::values)
             m_art.Cache(seasonArtwork);
@@ -2347,7 +2346,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
         lResult = m_database.SetDetailsForTvShow(multipath, movieDetails, art, seasonArt);
         movieDetails.m_iDbId = lResult;
-        movieDetails.SetMediaType(MediaType::TV_SHOW);
+        movieDetails.SetMediaType(MEDIA::TYPE::TV_SHOW);
       }
       else
       {
@@ -2357,7 +2356,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
         int idEpisode = m_database.AddNewEpisode(idShow, movieDetails);
         lResult = m_database.SetDetailsForEpisode(movieDetails, art, idShow, idEpisode);
         movieDetails.m_iDbId = lResult;
-        movieDetails.SetMediaType(MediaType::EPISODE);
+        movieDetails.SetMediaType(MEDIA::TYPE::EPISODE);
         movieDetails.m_strShowTitle = showInfo ? showInfo->m_strTitle : "";
         if (movieDetails.m_EpBookmark.timeInSeconds > 0)
         {
@@ -2372,7 +2371,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
     {
       lResult = m_database.SetDetailsForMusicVideo(movieDetails, art);
       movieDetails.m_iDbId = lResult;
-      movieDetails.SetMediaType(MediaType::MUSIC_VIDEO);
+      movieDetails.SetMediaType(MEDIA::TYPE::MUSIC_VIDEO);
     }
 
     if (!pItem->IsFolder())

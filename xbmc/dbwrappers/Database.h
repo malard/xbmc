@@ -328,28 +328,28 @@ public:
 
   //! \brief The art functions above, for an item whose table is a media type.
   bool SetArtForItem(int mediaId,
-                     KODI::MEDIA::MediaType mediaType,
+                     KODI::MEDIA::TYPE mediaType,
                      const std::string& artType,
                      const std::string& url)
   {
     return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
   }
-  bool SetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, const KODI::ART::Artwork& art)
+  bool SetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, const KODI::ART::Artwork& art)
   {
     return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
   }
-  bool GetArtForItem(int mediaId, KODI::MEDIA::MediaType mediaType, KODI::ART::Artwork& art)
+  bool GetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, KODI::ART::Artwork& art)
   {
     return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
   }
   std::string GetArtForItem(int mediaId,
-                            KODI::MEDIA::MediaType mediaType,
+                            KODI::MEDIA::TYPE mediaType,
                             const std::string& artType)
   {
     return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
   }
   bool RemoveArtForItem(int mediaId,
-                        KODI::MEDIA::MediaType mediaType,
+                        KODI::MEDIA::TYPE mediaType,
                         const std::set<std::string, std::less<>>& artTypes)
   {
     return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);

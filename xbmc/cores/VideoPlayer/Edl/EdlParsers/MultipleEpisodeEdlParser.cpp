@@ -20,7 +20,6 @@
 
 using namespace EDL;
 using namespace std::chrono_literals;
-using KODI::MEDIA::MediaType;
 
 bool CMultipleEpisodeEdlParser::CanParse(const CFileItem& item) const
 {
@@ -28,7 +27,7 @@ bool CMultipleEpisodeEdlParser::CanParse(const CFileItem& item) const
     return false;
 
   const CVideoInfoTag* tag{item.GetVideoInfoTag()};
-  if (tag->GetMediaType() != MediaType::EPISODE)
+  if (tag->GetMediaType() != KODI::MEDIA::TYPE::EPISODE)
     return false;
   if (tag->m_iIdShow <= 0 || tag->m_iFileId <= 0)
     return false;

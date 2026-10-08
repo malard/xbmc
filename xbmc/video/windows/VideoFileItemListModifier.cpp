@@ -27,7 +27,6 @@
 
 using namespace KODI::VIDEO;
 using namespace XFILE::VIDEODATABASEDIRECTORY;
-using KODI::MEDIA::MediaType;
 
 bool CVideoFileItemListModifier::CanModify(const CFileItemList &items) const
 {
@@ -104,7 +103,7 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         for (int i = 1; i < items.Size(); i++)
         {
           if (items[i]->HasVideoInfoTag() &&
-              items[i]->GetVideoInfoTag()->GetMediaType() == MediaType::SEASON &&
+              items[i]->GetVideoInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::SEASON &&
               items[i]->GetVideoInfoTag()->m_iSeason > 0)
           {
             *pItem->GetVideoInfoTag() = *items[i]->GetVideoInfoTag();
@@ -124,7 +123,7 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         pItem->GetVideoInfoTag()->m_iDbId = db.GetSeasonId(pItem->GetVideoInfoTag()->m_iIdShow, -1);
         db.Close();
       }
-      pItem->GetVideoInfoTag()->SetMediaType(MediaType::SEASON);
+      pItem->GetVideoInfoTag()->SetMediaType(KODI::MEDIA::TYPE::SEASON);
   }
   break;
   case NodeType::MUSICVIDEOS_ALBUM:

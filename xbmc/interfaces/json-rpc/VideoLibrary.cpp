@@ -44,7 +44,6 @@ namespace UPDATED_DETAIL = KODI::VIDEO::UPDATED_DETAIL;
 namespace
 {
 using FilterField = CFileItemHandler::FilterField;
-using KODI::MEDIA::MediaType;
 using KODI::MEDIA::MediaTypeFromName;
 
 constexpr FilterField MOVIE_FILTERS[] = {FilterField::Number("genreId", "genreid"),
@@ -82,32 +81,32 @@ struct KindTraits : LibraryKind<VideoKind>
 };
 
 constexpr KindTraits KIND_TABLE[] = {
-    {{VideoKind::Movie, MediaType::MOVIE, "movieId", "Video.Fields.Movie",
+    {{VideoKind::Movie, KODI::MEDIA::TYPE::MOVIE, "movieId", "Video.Fields.Movie",
       "Video.Details.Movie.Set"},
      "Video.Filter.Movies",
      KODI::MEDIA::CONTENT::MOVIES,
      MOVIE_FILTERS},
-    {{VideoKind::Set, MediaType::VIDEO_COLLECTION, "setId", "Video.Fields.MovieSet",
+    {{VideoKind::Set, KODI::MEDIA::TYPE::VIDEO_COLLECTION, "setId", "Video.Fields.MovieSet",
       "Video.Details.MovieSet.Set"},
      nullptr,
      "",
      NO_FILTERS},
-    {{VideoKind::TVShow, MediaType::TV_SHOW, "tvShowId", "Video.Fields.TVShow",
+    {{VideoKind::TVShow, KODI::MEDIA::TYPE::TV_SHOW, "tvShowId", "Video.Fields.TVShow",
       "Video.Details.TVShow.Set"},
      "Video.Filter.TVShows",
      KODI::MEDIA::CONTENT::TVSHOWS,
      TVSHOW_FILTERS},
-    {{VideoKind::Season, MediaType::SEASON, "seasonId", "Video.Fields.Season",
+    {{VideoKind::Season, KODI::MEDIA::TYPE::SEASON, "seasonId", "Video.Fields.Season",
       "Video.Details.Season.Set"},
      nullptr,
      "",
      NO_FILTERS},
-    {{VideoKind::Episode, MediaType::EPISODE, "episodeId", "Video.Fields.Episode",
+    {{VideoKind::Episode, KODI::MEDIA::TYPE::EPISODE, "episodeId", "Video.Fields.Episode",
       "Video.Details.Episode.Set"},
      "Video.Filter.Episodes",
      KODI::MEDIA::CONTENT::EPISODES,
      EPISODE_FILTERS},
-    {{VideoKind::MusicVideo, MediaType::MUSIC_VIDEO, "musicVideoId", "Video.Fields.MusicVideo",
+    {{VideoKind::MusicVideo, KODI::MEDIA::TYPE::MUSIC_VIDEO, "musicVideoId", "Video.Fields.MusicVideo",
       "Video.Details.MusicVideo.Set"},
      "Video.Filter.MusicVideos",
      KODI::MEDIA::CONTENT::MUSICVIDEOS,
@@ -158,7 +157,7 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
 }
 } // unnamed namespace
 
-bool CVideoLibrary::IsItemKind(MediaType type)
+bool CVideoLibrary::IsItemKind(KODI::MEDIA::TYPE type)
 {
   return KINDS.Holds(type);
 }
@@ -540,18 +539,18 @@ enum class Facet
 };
 
 //! The content a genre or tag listing of \p type reads, and the path of that listing
-std::optional<std::pair<VideoDbContentType, std::string>> FacetListing(MediaType type, Facet facet)
+std::optional<std::pair<VideoDbContentType, std::string>> FacetListing(KODI::MEDIA::TYPE type, Facet facet)
 {
   const bool genres{facet == Facet::GENRES};
   switch (type)
   {
-    case MediaType::MOVIE:
+    case KODI::MEDIA::TYPE::MOVIE:
       return {{VideoDbContentType::MOVIES,
                genres ? KODI::VIDEO::DB_PATH::MOVIE_GENRES : KODI::VIDEO::DB_PATH::MOVIE_TAGS}};
-    case MediaType::TV_SHOW:
+    case KODI::MEDIA::TYPE::TV_SHOW:
       return {{VideoDbContentType::TVSHOWS,
                genres ? KODI::VIDEO::DB_PATH::TVSHOW_GENRES : KODI::VIDEO::DB_PATH::TVSHOW_TAGS}};
-    case MediaType::MUSIC_VIDEO:
+    case KODI::MEDIA::TYPE::MUSIC_VIDEO:
       return {{VideoDbContentType::MUSICVIDEOS, genres ? KODI::VIDEO::DB_PATH::MUSICVIDEO_GENRES
                                                        : KODI::VIDEO::DB_PATH::MUSICVIDEO_TAGS}};
     default:
@@ -654,7 +653,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id, const CVariant & properti
 
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
-  videodatabase.RemoveTagsFromItem(id, MediaType::TV_SHOW);
+  videodatabase.RemoveTagsFromItem(id, KODI::MEDIA::TYPE::TV_SHOW);
 
   if (!videodatabase.UpdateDetailsForTvShow(id, infos, edit.artwork, seasonArt))
     return InternalError;
@@ -741,7 +740,7 @@ JSONRPC_STATUS CVideoLibrary::SetMusicVideoDetails(int id,
 {
   // we need to manually remove tags/taglinks for now because they aren't replaced
   // due to scrapers not supporting them
-  videodatabase.RemoveTagsFromItem(id, MediaType::MUSIC_VIDEO);
+  videodatabase.RemoveTagsFromItem(id, KODI::MEDIA::TYPE::MUSIC_VIDEO);
 
   if (videodatabase.SetDetailsForMusicVideo(infos, edit.artwork, id) <= 0)
     return InternalError;
@@ -1108,9 +1107,9 @@ bool CVideoLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
   return success;
 }
 
-int CVideoLibrary::RequiresAdditionalDetails(MediaType mediaType, const CVariant &parameterObject)
+int CVideoLibrary::RequiresAdditionalDetails(KODI::MEDIA::TYPE mediaType, const CVariant &parameterObject)
 {
-  if (mediaType != MediaType::MOVIE && mediaType != MediaType::TV_SHOW && mediaType != MediaType::EPISODE && mediaType != MediaType::MUSIC_VIDEO)
+  if (mediaType != KODI::MEDIA::TYPE::MOVIE && mediaType != KODI::MEDIA::TYPE::TV_SHOW && mediaType != KODI::MEDIA::TYPE::EPISODE && mediaType != KODI::MEDIA::TYPE::MUSIC_VIDEO)
     return VideoDbDetailsNone;
 
   return GetDetailsFromJsonParameters(parameterObject);
