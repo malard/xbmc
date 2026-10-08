@@ -306,8 +306,7 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
 
   // Are we playing audio and screensaver is disabled globally for audio?
   else if (appPlayer && appPlayer->IsPlayingAudio() &&
-           settings->GetBool(
-               CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
+           settings->GetBool(CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
   {
     haveIdleActivity = true;
   }

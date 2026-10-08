@@ -619,10 +619,8 @@ bool CApplication::Initialize()
   const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
   profileManager->GetEventLog().Add(EventPtr(new CNotificationEvent(
-      StringUtils::Format(localizeStrings.Get(177),
-                          g_sysinfo.GetAppName()),
-      StringUtils::Format(localizeStrings.Get(178),
-                          g_sysinfo.GetAppName()),
+      StringUtils::Format(localizeStrings.Get(177), g_sysinfo.GetAppName()),
+      StringUtils::Format(localizeStrings.Get(178), g_sysinfo.GetAppName()),
       "special://xbmc/media/icon256x256.png", EventLevel::Basic)));
 
   m_ServiceManager->GetNetwork().WaitForNet();
