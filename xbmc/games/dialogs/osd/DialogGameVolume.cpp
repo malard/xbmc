@@ -19,12 +19,12 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/Variant.h"
 
 #include <cmath>
+#include <variant>
 
 using namespace KODI;
 using namespace GAME;
@@ -110,15 +110,12 @@ bool CDialogGameVolume::IsShown() const
   return m_active;
 }
 
-void CDialogGameVolume::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                 const std::string& sender,
-                                 const std::string& message,
-                                 const CVariant& data)
+void CDialogGameVolume::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
-  if (message == ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED &&
-      data["properties"].isMember("volume"))
+  const auto* changed = std::get_if<ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged>(&event);
+  if (changed && changed->volume)
   {
-    const float volumePercent = static_cast<float>(data["properties"]["volume"].asDouble());
+    const float volumePercent = static_cast<float>(*changed->volume);
 
     if (std::fabs(volumePercent - m_volumePercent) > 0.1f)
     {

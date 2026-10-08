@@ -9,6 +9,7 @@
 #pragma once
 
 #include "IAnnouncer.h"
+#include "interfaces/AnnouncementEvents.h"
 #include "threads/Condition.h"
 #include "threads/CriticalSection.h"
 #include "threads/Event.h"
@@ -17,6 +18,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 class CFileItem;
@@ -58,6 +60,12 @@ namespace ANNOUNCEMENT
                   const std::shared_ptr<const CFileItem>& item,
                   const CVariant& data);
 
+    /*!
+     * \brief Announce a typed event. Its item is copied now, and listeners receive the copy.
+     */
+    void Announce(const Announcement& announcement);
+    void Announce(const Announcement& announcement, const std::string& sender);
+
     // The sender is not related to the application name.
     // Also it's part of Kodi's API - changing it will break
     // a big number of python addons and third party json consumers.
@@ -73,7 +81,8 @@ namespace ANNOUNCEMENT
     void DoAnnounce(AnnouncementFlag flag,
                     const std::string& sender,
                     const std::string& message,
-                    const CVariant& data);
+                    const CVariant& data,
+                    const Announcement* announcement = nullptr);
 
     struct CAnnounceData
     {
@@ -82,6 +91,7 @@ namespace ANNOUNCEMENT
       std::string message;
       std::shared_ptr<CFileItem> item;
       CVariant data;
+      std::optional<Announcement> announcement;
     };
     std::list<CAnnounceData> m_announcementQueue;
     CEvent m_queueEvent;

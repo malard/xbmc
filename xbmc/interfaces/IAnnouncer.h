@@ -74,14 +74,26 @@ inline const char* AnnouncementFlagToString(const AnnouncementFlag& notification
   }
 }
 
+struct PlayerEvent;
+struct PlaylistEvent;
+
   class IAnnouncer
   {
   public:
     IAnnouncer() = default;
     virtual ~IAnnouncer() = default;
+
+    /*!
+     * \brief Every announcement, as JSON-RPC and Python receive it.
+     */
     virtual void Announce(AnnouncementFlag flag,
                           const std::string& sender,
                           const std::string& message,
-                          const CVariant& data) = 0;
+                          const CVariant& data)
+    {
+    }
+
+    virtual void OnPlayerEvent(const PlayerEvent& event) {}
+    virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
   };
 }

@@ -15,64 +15,30 @@
 #include "application/ApplicationPlayer.h"
 #include "guilib/GUIMessage.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
-#include "interfaces/PlaybackValues.h"
 #include "pictures/PictureInfoTag.h"
 #include "playlists/PlayList.h"
 #include "pvr/channels/PVRChannel.h"
 #include "utils/Variant.h"
 #include "video/VideoFileItemClassify.h"
 
+#include <chrono>
 #include <utility>
 
 using namespace KODI;
 using namespace KODI::PLAYLIST;
+using ANNOUNCEMENT::PlayerEvent;
+using ANNOUNCEMENT::PlaylistEvent;
+using ANNOUNCEMENT::EVENT::PLAYER::Players;
 
 namespace
 {
-std::string PropertyName(CPlaybackAnnouncer::PlayerProperty property)
-{
-  using enum CPlaybackAnnouncer::PlayerProperty;
-  switch (property)
-  {
-    case PartyMode:
-      return "partyMode";
-    case Shuffled:
-      return "shuffled";
-    case Repeat:
-      return "repeat";
-    case SubtitleEnabled:
-      return "subtitleEnabled";
-    case CurrentSubtitle:
-      return "currentSubtitle";
-    case CurrentAudioStream:
-      return "currentAudioStream";
-    case CurrentVideoStream:
-      return "currentVideoStream";
-  }
-  return {};
-}
+constexpr Players SLIDESHOW_PLAYERS{.video = true, .audio = false};
 
-CVariant Speed(int speed)
-{
-  CVariant data;
-  data["player"]["speed"] = speed;
-  return data;
-}
-
-CVariant SlideShowPlayers()
-{
-  return CVariant(std::vector<std::string>{"video"});
-}
-
-void PublishToAnnouncementManager(ANNOUNCEMENT::AnnouncementFlag flag,
-                                  const std::string& message,
-                                  const std::shared_ptr<const CFileItem>& item,
-                                  const CVariant& data)
+void PublishToAnnouncementManager(const ANNOUNCEMENT::Announcement& announcement)
 {
   const auto announcer = CServiceBroker::GetAnnouncementManager();
   if (announcer)
-    announcer->Announce(flag, message, item, data);
+    announcer->Announce(announcement);
 }
 } // namespace
 
@@ -91,43 +57,38 @@ CPlaybackAnnouncer::~CPlaybackAnnouncer()
 
 bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
 {
+  using namespace ANNOUNCEMENT::EVENT::PLAYER;
   const std::shared_ptr<const CFileItem> item = m_playLists->GetCurrentItem();
   switch (message.GetMessage())
   {
     case GUI_MSG_PLAYBACK_AVSTARTED:
-      Publish(ANNOUNCEMENT::MESSAGE::ON_AV_START, item, Speed(1));
+      m_sink(PlayerEvent{AVStart{item, GetPlayers(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_AVCHANGE:
-      Publish(ANNOUNCEMENT::MESSAGE::ON_AV_CHANGE, item, Speed(1));
+      m_sink(PlayerEvent{AVChange{item, GetPlayers(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_PAUSED:
-      Publish(ANNOUNCEMENT::MESSAGE::ON_PAUSE, item, Speed(0));
+      m_sink(PlayerEvent{Pause{item, GetPlayers(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_RESUMED:
-      Publish(ANNOUNCEMENT::MESSAGE::ON_RESUME, item, Speed(1));
+      m_sink(PlayerEvent{Resume{item, GetPlayers(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_SPEED_CHANGED:
-      Publish(ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED, item, Speed(message.GetParam1()));
+      m_sink(PlayerEvent{SpeedChanged{item, message.GetParam1(), GetPlayers(item.get(), false)}});
       break;
     case GUI_MSG_PLAYBACK_SEEKED:
     {
       const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
-      CVariant data = Speed(static_cast<int>(appPlayer->GetPlaySpeed()));
-      INTERFACES::MillisecondsToTimeObject(static_cast<int>(message.GetParam1AsI64()),
-                                           data["player"]["time"]);
-      INTERFACES::MillisecondsToTimeObject(static_cast<int>(message.GetParam2AsI64()),
-                                           data["player"]["seekoffset"]);
-      Publish(ANNOUNCEMENT::MESSAGE::ON_SEEK, item, data);
+      m_sink(PlayerEvent{Seek{item, static_cast<int>(appPlayer->GetPlaySpeed()),
+                              std::chrono::milliseconds{message.GetParam1AsI64()},
+                              std::chrono::milliseconds{message.GetParam2AsI64()},
+                              GetPlayers(item.get(), false)}});
       break;
     }
     case GUI_MSG_PLAYBACK_STOPPED:
     case GUI_MSG_PLAYBACK_ENDED:
-    {
-      CVariant data(CVariant::VariantTypeObject);
-      data["end"] = message.GetMessage() == GUI_MSG_PLAYBACK_ENDED;
-      m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_STOP, item, data);
+      m_sink(PlayerEvent{Stop{item, message.GetMessage() == GUI_MSG_PLAYBACK_ENDED, std::nullopt}});
       break;
-    }
     default:
       break;
   }
@@ -138,42 +99,34 @@ void CPlaybackAnnouncer::OnStarted(const std::shared_ptr<CFileItem>& started)
 {
   if (!started)
     return;
-  CVariant data = Speed(1);
-  data["player"]["players"] = GetPlayers(started.get(), true);
-  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAY, started, data);
+  m_sink(
+      PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Play{started, 1, GetPlayers(started.get(), true)}});
 }
 
-CVariant CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) const
+Players CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) const
 {
-  bool video = false;
-  bool audio = false;
+  Players players;
   const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
   if (!claimed && (appPlayer->HasVideo() || appPlayer->HasAudio()))
   {
-    video = appPlayer->HasVideo();
-    audio = appPlayer->HasAudio();
+    players.video = appPlayer->HasVideo();
+    players.audio = appPlayer->HasAudio();
   }
   else if (item && item->HasPVRChannelInfoTag())
   {
-    audio = true;
-    video = !item->GetPVRChannelInfoTag()->IsRadio();
+    players.audio = true;
+    players.video = !item->GetPVRChannelInfoTag()->IsRadio();
   }
   else if (const std::optional<Holds> holds = m_playLists->GetPlayingHolds(); holds)
   {
-    video = *holds != Holds::Audio;
-    audio = *holds != Holds::Video;
+    players.video = *holds != Holds::Audio;
+    players.audio = *holds != Holds::Video;
   }
   else
   {
-    audio = true;
-    video = !m_playLists->IsPlayingAsAudio();
+    players.audio = true;
+    players.video = !m_playLists->IsPlayingAsAudio();
   }
-
-  CVariant players(CVariant::VariantTypeArray);
-  if (video)
-    players.push_back("video");
-  if (audio)
-    players.push_back("audio");
   return players;
 }
 
@@ -181,34 +134,43 @@ void CPlaybackAnnouncer::Announce(PlayerProperty property, const CVariant& value
 {
   if (!CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->IsPlaying())
     return;
-  PublishProperty(GetPlayers(nullptr, false), property, value);
+  if (value.isNull())
+    return;
+
+  ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged changed;
+  changed.players = GetPlayers(nullptr, false);
+  using enum PlayerProperty;
+  switch (property)
+  {
+    case PartyMode:
+      changed.partyMode = value.asBoolean();
+      break;
+    case Shuffled:
+      changed.shuffled = value.asBoolean();
+      break;
+    case Repeat:
+      changed.repeat = value.asString();
+      break;
+    case SubtitleEnabled:
+      changed.subtitleEnabled = value.asBoolean();
+      break;
+    case CurrentSubtitle:
+      changed.currentSubtitle = value;
+      break;
+    case CurrentAudioStream:
+      changed.currentAudioStream = value;
+      break;
+    case CurrentVideoStream:
+      changed.currentVideoStream = value;
+      break;
+  }
+  m_sink(PlayerEvent{std::move(changed)});
 }
 
 void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
                                      const std::shared_ptr<const CFileItem>& slide,
                                      bool running)
 {
-  CVariant data;
-  data["player"]["players"] = SlideShowPlayers();
-  std::string message;
-  switch (event)
-  {
-    case SlideShowEvent::Play:
-      m_playLists->SetSlideShowRunning(true);
-      data["player"]["speed"] = running ? 1 : 0;
-      message = ANNOUNCEMENT::MESSAGE::ON_PLAY;
-      break;
-    case SlideShowEvent::Pause:
-      m_playLists->SetSlideShowRunning(true);
-      data["player"]["speed"] = 0;
-      message = ANNOUNCEMENT::MESSAGE::ON_PAUSE;
-      break;
-    case SlideShowEvent::Stop:
-      m_playLists->SetSlideShowRunning(false);
-      data["end"] = true;
-      message = ANNOUNCEMENT::MESSAGE::ON_STOP;
-      break;
-  }
   // a slide is announced as a picture even before its tag has been read
   std::shared_ptr<const CFileItem> announced = slide;
   if (slide && !slide->HasPictureInfoTag() && !VIDEO::IsVideo(*slide))
@@ -217,17 +179,35 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
     tagged->GetPictureInfoTag();
     announced = std::move(tagged);
   }
-  m_sink(ANNOUNCEMENT::Player, message, announced, data);
+
+  using namespace ANNOUNCEMENT::EVENT::PLAYER;
+  switch (event)
+  {
+    case SlideShowEvent::Play:
+      m_playLists->SetSlideShowRunning(true);
+      m_sink(PlayerEvent{Play{announced, running ? 1 : 0, SLIDESHOW_PLAYERS}});
+      break;
+    case SlideShowEvent::Pause:
+      m_playLists->SetSlideShowRunning(true);
+      m_sink(PlayerEvent{Pause{announced, SLIDESHOW_PLAYERS}});
+      break;
+    case SlideShowEvent::Stop:
+      m_playLists->SetSlideShowRunning(false);
+      m_sink(PlayerEvent{Stop{announced, true, SLIDESHOW_PLAYERS}});
+      break;
+  }
 }
 
 void CPlaybackAnnouncer::OnContentGeometryChanged(CVariant data) const
 {
-  Publish(ANNOUNCEMENT::MESSAGE::ON_CONTENT_GEOMETRY_CHANGE, nullptr, std::move(data));
+  m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ContentGeometryChange{
+      std::move(data), GetPlayers(nullptr, false)}});
 }
 
 void CPlaybackAnnouncer::OnSlideShowShuffled() const
 {
-  PublishPlayListProperty(PLAYLIST::PICTURE_NAME, PlayerProperty::Shuffled, true);
+  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
+      std::string{PLAYLIST::PICTURE_NAME}, true, std::nullopt}});
 }
 
 void CPlaybackAnnouncer::OnSlideShowListChanged(const PlayListChange& change) const
@@ -242,7 +222,8 @@ void CPlaybackAnnouncer::OnListChanged(Type type, const PlayListChange& change)
 
 void CPlaybackAnnouncer::OnShuffled(Type type, bool shuffled)
 {
-  PublishPlayListProperty(PLAYLIST::NameOf(type), PlayerProperty::Shuffled, shuffled);
+  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
+      std::string{PLAYLIST::NameOf(type)}, shuffled, std::nullopt}});
 }
 
 void CPlaybackAnnouncer::OnFeed(bool playing)
@@ -254,79 +235,48 @@ void CPlaybackAnnouncer::OnFeed(bool playing)
 void CPlaybackAnnouncer::OnFailed(const std::shared_ptr<const CFileItem>& item,
                                   CApplicationPlayLists::FailReason reason)
 {
-  using enum CApplicationPlayLists::FailReason;
-  CVariant data{CVariant::VariantTypeObject};
+  using Reason = ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed::Reason;
+  Reason announced = Reason::None;
   switch (reason)
   {
+    using enum CApplicationPlayLists::FailReason;
     case Unplayable:
-      data["reason"] = "unplayable";
+      announced = Reason::Unplayable;
       break;
     case Unresolved:
-      data["reason"] = "unresolved";
+      announced = Reason::Unresolved;
       break;
     case Locked:
-      data["reason"] = "locked";
+      announced = Reason::Locked;
       break;
     case Error:
-      data["reason"] = "error";
+      announced = Reason::Error;
       break;
   }
-  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED, item, data);
+  m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{item, announced}});
 }
 
 void CPlaybackAnnouncer::OnRepeat(Type type, CApplicationPlayLists::Repeat repeat)
 {
-  const std::string name{CApplicationPlayLists::RepeatName(repeat)};
-  PublishPlayListProperty(PLAYLIST::NameOf(type), PlayerProperty::Repeat, name);
-}
-
-void CPlaybackAnnouncer::Publish(const std::string& message,
-                                 const std::shared_ptr<const CFileItem>& item,
-                                 CVariant data) const
-{
-  data["player"]["players"] = GetPlayers(item.get(), false);
-  m_sink(ANNOUNCEMENT::Player, message, item, data);
-}
-
-void CPlaybackAnnouncer::PublishProperty(const CVariant& players,
-                                         PlayerProperty property,
-                                         const CVariant& value) const
-{
-  if (value.isNull())
-    return;
-  CVariant data;
-  data["properties"][PropertyName(property)] = value;
-  data["player"]["players"] = players;
-  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED, nullptr, data);
-}
-
-void CPlaybackAnnouncer::PublishPlayListProperty(std::string_view playList,
-                                                 PlayerProperty property,
-                                                 const CVariant& value) const
-{
-  CVariant data;
-  data["playlist"] = std::string{playList};
-  data["properties"][PropertyName(property)] = value;
-  m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED, nullptr, data);
+  m_sink(PlaylistEvent{ANNOUNCEMENT::EVENT::PLAYLIST::PropertiesChanged{
+      std::string{PLAYLIST::NameOf(type)}, std::nullopt,
+      std::string{CApplicationPlayLists::RepeatName(repeat)}}});
 }
 
 void CPlaybackAnnouncer::PublishListChange(std::string_view playList,
                                            const PlayListChange& change) const
 {
-  CVariant data;
-  data["playlist"] = std::string{playList};
+  using namespace ANNOUNCEMENT::EVENT::PLAYLIST;
   switch (change.type)
   {
     case PlayListChange::Type::Added:
-      data["position"] = change.position;
-      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_ADD, change.item, data);
+      m_sink(PlaylistEvent{Add{std::string{playList}, change.position, change.item}});
       break;
     case PlayListChange::Type::Removed:
-      data["position"] = change.position;
-      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_REMOVE, nullptr, data);
+      m_sink(PlaylistEvent{Remove{std::string{playList}, change.position}});
       break;
     case PlayListChange::Type::Cleared:
-      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_CLEAR, nullptr, data);
+      m_sink(PlaylistEvent{Clear{std::string{playList}}});
       break;
     case PlayListChange::Type::Moved:
     case PlayListChange::Type::Shuffled:

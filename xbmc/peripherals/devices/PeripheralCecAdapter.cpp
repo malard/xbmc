@@ -34,6 +34,7 @@
 #include "utils/log.h"
 
 #include <mutex>
+#include <variant>
 
 #include <libcec/cec.h>
 
@@ -228,16 +229,19 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
         ActivateSource();
     }
   }
-  else if (flag == ANNOUNCEMENT::Player && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == ANNOUNCEMENT::MESSAGE::ON_STOP)
+}
+
+void CPeripheralCecAdapter::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
+{
+  namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+  if (std::holds_alternative<PLAYER::Stop>(event))
   {
     std::unique_lock lock(m_critSection);
     m_preventActivateSourceOnPlay = CDateTime::GetCurrentDateTime();
     m_bOnPlayReceived = false;
   }
-  else if (flag == ANNOUNCEMENT::Player && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           (message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
-            message == ANNOUNCEMENT::MESSAGE::ON_RESUME))
+  else if (std::holds_alternative<PLAYER::Play>(event) ||
+           std::holds_alternative<PLAYER::Resume>(event))
   {
     // activate the source when playback started, and the option is enabled
     bool bActivateSource(false);

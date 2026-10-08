@@ -1,4 +1,5 @@
-set(SOURCES TestAnnouncementItemData.cpp
+set(SOURCES TestAnnouncementEvents.cpp
+            TestAnnouncementItemData.cpp
             TestAnnouncementManager.cpp
             TestPlayerBuiltins.cpp)
 

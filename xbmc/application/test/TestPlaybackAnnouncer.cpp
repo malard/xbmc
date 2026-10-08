@@ -56,25 +56,29 @@ protected:
 
   std::shared_ptr<CTestPlayLists> m_playLists = std::make_shared<CTestPlayLists>();
   std::vector<Published> m_published;
-  CPlaybackAnnouncer m_announcer{m_playLists, [this](ANNOUNCEMENT::AnnouncementFlag flag,
-                                                     const std::string& message,
-                                                     const std::shared_ptr<const CFileItem>& item,
-                                                     const CVariant& data)
-                                 { m_published.push_back({flag, message, item, data}); }};
+  // What JSON-RPC and Python are given for each announcement.
+  CPlaybackAnnouncer m_announcer{
+      m_playLists, [this](const ANNOUNCEMENT::Announcement& announcement)
+      {
+        m_published.push_back(
+            {ANNOUNCEMENT::FlagOf(announcement), ANNOUNCEMENT::MessageOf(announcement),
+             ANNOUNCEMENT::ItemOf(announcement), ANNOUNCEMENT::LegacyDataOf(announcement)});
+      }};
 };
 
 const CVariant AUDIO{std::vector<std::string>{"audio"}};
 const CVariant VIDEO{std::vector<std::string>{"video"}};
-const CVariant VIDEO_AND_AUDIO{std::vector<std::string>{"video", "audio"}};
+constexpr ANNOUNCEMENT::EVENT::PLAYER::Players HOLDS_AUDIO{.video = false, .audio = true};
+constexpr ANNOUNCEMENT::EVENT::PLAYER::Players HOLDS_VIDEO_AND_AUDIO{.video = true, .audio = true};
 } // namespace
 
 TEST_F(TestPlaybackAnnouncer, AStartingEntryHoldsWhatItsPlayListClaims)
 {
   m_playLists->SetPlayingType(PLAYLIST::Audio);
-  EXPECT_EQ(AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(HOLDS_AUDIO, m_announcer.GetPlayers(nullptr, true));
 
   m_playLists->SetPlayingType(PLAYLIST::Video);
-  EXPECT_EQ(VIDEO_AND_AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(HOLDS_VIDEO_AND_AUDIO, m_announcer.GetPlayers(nullptr, true));
 }
 
 TEST_F(TestPlaybackAnnouncer, ASongOnTheVideoPlayListStartsAsAudio)
@@ -84,7 +88,7 @@ TEST_F(TestPlaybackAnnouncer, ASongOnTheVideoPlayListStartsAsAudio)
   playList.SetCurrent(playList.Add(std::make_shared<CFileItem>("/music/song.flac", false)));
   m_playLists->SetPlayingType(PLAYLIST::Video);
 
-  EXPECT_EQ(AUDIO, m_announcer.GetPlayers(nullptr, true));
+  EXPECT_EQ(HOLDS_AUDIO, m_announcer.GetPlayers(nullptr, true));
 }
 
 TEST_F(TestPlaybackAnnouncer, WhatStartedIsACopyOfWhatThePlayerReports)

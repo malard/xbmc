@@ -91,10 +91,7 @@ public:
   int GetDirection() const override { return m_iDirection; }
 
   // implementation of IAnnouncer
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override;
+  void OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event) override;
 
   bool OnMessage(CGUIMessage& message) override;
   EVENT_RESULT OnMouseEvent(const CPoint& point, const KODI::MOUSE::CMouseEvent& event) override;

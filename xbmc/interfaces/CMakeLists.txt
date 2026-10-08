@@ -1,7 +1,9 @@
-set(SOURCES AnnouncementManager.cpp
+set(SOURCES AnnouncementEvents.cpp
+            AnnouncementManager.cpp
             PlaybackValues.cpp)
 
-set(HEADERS AnnouncementManager.h
+set(HEADERS AnnouncementEvents.h
+            AnnouncementManager.h
             AnnouncementMessages.h
             IAnnouncer.h
             PlaybackValues.h)

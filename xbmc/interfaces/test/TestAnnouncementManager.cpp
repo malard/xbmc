@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "FileItem.h"
 #include "interfaces/AnnouncementManager.h"
 #include "threads/Event.h"
 #include "utils/Variant.h"
@@ -192,4 +193,69 @@ TEST(TestAnnouncementManagerFailure, RemovingAnAnnouncerWhoseCallThrewDoesNotWai
     FAIL() << "RemoveAnnouncer is still waiting on a call that threw";
   }
   remover.join();
+}
+
+namespace
+{
+class CTypedAnnouncer : public IAnnouncer
+{
+public:
+  void OnPlayerEvent(const PlayerEvent& event) override
+  {
+    m_event = event;
+    m_typed.Set();
+  }
+
+  void Announce(AnnouncementFlag flag,
+                const std::string& sender,
+                const std::string& message,
+                const CVariant& data) override
+  {
+    m_message = message;
+    m_data = data;
+    m_legacy.Set();
+  }
+
+  PlayerEvent m_event;
+  CEvent m_typed;
+  std::string m_message;
+  CVariant m_data;
+  CEvent m_legacy;
+};
+} // namespace
+
+TEST_F(TestAnnouncementManager, ATypedEventReachesListenersAsItselfAndAsData)
+{
+  CTypedAnnouncer announcer;
+  m_manager.AddAnnouncer(&announcer, Player);
+  const auto item = std::make_shared<CFileItem>("/music/song.flac", false);
+  m_manager.Announce(PlayerEvent{EVENT::PLAYER::Play{item, 1, {.video = false, .audio = true}}});
+  ASSERT_TRUE(announcer.m_typed.Wait(TIMEOUT));
+  ASSERT_TRUE(announcer.m_legacy.Wait(TIMEOUT));
+  m_manager.RemoveAnnouncer(&announcer);
+  m_manager.Deinitialize();
+
+  const auto* play = std::get_if<EVENT::PLAYER::Play>(&announcer.m_event);
+  ASSERT_NE(nullptr, play);
+  ASSERT_NE(nullptr, play->item);
+  EXPECT_NE(item, play->item) << "a listener must receive the copy taken when it was announced";
+  EXPECT_EQ("/music/song.flac", play->item->GetPath());
+
+  EXPECT_EQ("OnPlay", announcer.m_message);
+  EXPECT_EQ(1, announcer.m_data["player"]["speed"].asInteger());
+  EXPECT_TRUE(announcer.m_data["item"].isMember("type"));
+}
+
+TEST_F(TestAnnouncementManager, ATypedEventIsNotDeliveredForAnotherFlag)
+{
+  CTypedAnnouncer announcer;
+  m_manager.AddAnnouncer(&announcer, Playlist);
+  m_manager.Announce(PlayerEvent{EVENT::PLAYER::Menu{}});
+  m_manager.Announce(Playlist, "Marker");
+  ASSERT_TRUE(announcer.m_legacy.Wait(TIMEOUT));
+  m_manager.RemoveAnnouncer(&announcer);
+  m_manager.Deinitialize();
+
+  EXPECT_FALSE(announcer.m_typed.Wait(0ms));
+  EXPECT_EQ("Marker", announcer.m_message);
 }

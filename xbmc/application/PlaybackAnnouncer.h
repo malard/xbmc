@@ -11,7 +11,7 @@
 #include "application/ApplicationPlayLists.h"
 #include "application/IApplicationComponent.h"
 #include "guilib/IMsgTargetCallback.h"
-#include "interfaces/IAnnouncer.h"
+#include "interfaces/AnnouncementEvents.h"
 
 #include <functional>
 #include <memory>
@@ -55,10 +55,7 @@ public:
     Stop
   };
 
-  using Sink = std::function<void(ANNOUNCEMENT::AnnouncementFlag flag,
-                                  const std::string& message,
-                                  const std::shared_ptr<const CFileItem>& item,
-                                  const CVariant& data)>;
+  using Sink = std::function<void(const ANNOUNCEMENT::Announcement& announcement)>;
 
   /*!
    * \param sink Where notifications go; the announcement manager when none is given.
@@ -73,9 +70,9 @@ public:
    * \param claimed Answer what the entry claims rather than what the player renders, as when it
    * starts: the playlist it is on and whether Audio follows it; a channel by whether it is radio.
    * Otherwise the player answers, once it renders anything.
-   * \return What the playback holds, as Player notifications list it: "video", "audio" or both.
+   * \return What the playback holds.
    */
-  CVariant GetPlayers(const CFileItem* item, bool claimed) const;
+  ANNOUNCEMENT::EVENT::PLAYER::Players GetPlayers(const CFileItem* item, bool claimed) const;
 
   /*!
    * \brief Publish a change to a property of what is playing. Nothing is published while nothing
@@ -107,16 +104,6 @@ public:
                 CApplicationPlayLists::FailReason reason) override;
 
 private:
-  void Publish(const std::string& message,
-               const std::shared_ptr<const CFileItem>& item,
-               CVariant data) const;
-  void PublishProperty(const CVariant& players,
-                       PlayerProperty property,
-                       const CVariant& value) const;
-  //! A playlist's shuffle or repeat changed, whether or not it is the one playing.
-  void PublishPlayListProperty(std::string_view playList,
-                               PlayerProperty property,
-                               const CVariant& value) const;
   void PublishListChange(std::string_view playList,
                          const KODI::PLAYLIST::PlayListChange& change) const;
 

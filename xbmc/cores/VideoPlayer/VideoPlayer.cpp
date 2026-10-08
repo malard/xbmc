@@ -49,7 +49,6 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobQueue.h"
 #include "language/Language.h"
 #include "messaging/ApplicationMessenger.h"
@@ -1568,10 +1567,9 @@ void CVideoPlayer::Prepare()
                     __FUNCTION__, starttime.count());
         }
 
-        CVariant announcement(
-            StringUtils::SecondsToTimeString(edit->end.count(), TIME_FORMAT_MM_SS));
         CServiceBroker::GetAnnouncementManager()->Announce(
-            ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL, announcement);
+            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Commercial{
+                StringUtils::SecondsToTimeString(edit->end.count(), TIME_FORMAT_MM_SS)}});
       }
     }
   }
@@ -2186,7 +2184,8 @@ void CVideoPlayer::HandlePlaySpeed()
     {
       if (cache.level < 0.0)
       {
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "SourceSlow");
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::SourceSlow{}});
         SetCaching(CACHESTATE_INIT);
       }
       // Note: Previously used cache.level >= 1 would keep video stalled
@@ -2924,11 +2923,10 @@ void CVideoPlayer::CheckAutoSceneSkip()
     // total cut time grows.
     if (m_playSpeed >= 0 && m_Edl.GetLastEditTime() != seek && correctClock < edit->end - 1s)
     {
-      CVariant announcement{StringUtils::SecondsToTimeString(
-          std::chrono::duration_cast<std::chrono::seconds>(edit->end - edit->start).count(),
-          TIME_FORMAT_MM_SS)};
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL, announcement);
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{
+          ANNOUNCEMENT::EVENT::PLAYER::Commercial{StringUtils::SecondsToTimeString(
+              std::chrono::duration_cast<std::chrono::seconds>(edit->end - edit->start).count(),
+              TIME_FORMAT_MM_SS)}});
 
       // use resolved seek target, not edit->start, to also suppress
       // adjacent commercial breaks encountered while seeking
@@ -4883,7 +4881,7 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray menu not supported (DVDSTATE_NORMAL)");
       CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_BLURAY_MENU_ERROR);
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayMenuError{}});
     }
     break;
     case BD_EVENT_ENC_ERROR:
@@ -4891,7 +4889,7 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray the disc/file is encrypted and can't be played (DVDSTATE_NORMAL)");
       CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_BLURAY_ENCRYPTED_ERROR);
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayEncryptedError{}});
     }
     break;
     case BD_EVENT_DISCONTINUITY:
@@ -5054,7 +5052,7 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
         CLog::Log(LOGDEBUG, "DVDNAV_ERROR");
         m_dvd.state = DVDSTATE_NORMAL;
         CServiceBroker::GetAnnouncementManager()->Announce(
-            ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED);
+            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{}});
       }
       break;
     default:
@@ -5124,8 +5122,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
           }
 
           // Let everyone know that we've gone to the menu
-          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
-                                                             ANNOUNCEMENT::MESSAGE::ON_MENU);
+          CServiceBroker::GetAnnouncementManager()->Announce(
+              ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Menu{}});
         }
         return true;
       }
@@ -5287,9 +5285,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
         break;
     case ACTION_TOGGLE_COMMSKIP:
       m_SkipCommercials = !m_SkipCommercials;
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_TOGGLE_SKIP_COMMERCIALS,
-          CVariant{m_SkipCommercials});
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{
+          ANNOUNCEMENT::EVENT::PLAYER::ToggleSkipCommercials{m_SkipCommercials}});
       break;
 
     case ACTION_PLAYER_DEBUG:
@@ -5300,8 +5297,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
       break;
 
     case ACTION_PLAYER_PROCESS_INFO:
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
-                                                         ANNOUNCEMENT::MESSAGE::ON_PROCESS_INFO);
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ProcessInfo{}});
       return true;
   }
 

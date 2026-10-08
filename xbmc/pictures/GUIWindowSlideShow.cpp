@@ -30,7 +30,6 @@
 #include "input/actions/ActionIDs.h"
 #include "input/mouse/MouseEvent.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "pictures/GUIViewStatePictures.h"
 #include "pictures/PictureThumbLoader.h"
 #include "pictures/SlideShowDelegator.h"
@@ -53,6 +52,9 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
+#include <utility>
+#include <variant>
 
 using namespace KODI;
 using namespace KODI::VIDEO;
@@ -166,19 +168,18 @@ CGUIWindowSlideShow::~CGUIWindowSlideShow()
   CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
 }
 
-void CGUIWindowSlideShow::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                   const std::string& sender,
-                                   const std::string& message,
-                                   const CVariant& data)
+void CGUIWindowSlideShow::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
-  if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
-  {
-    const CVariant& players = data["player"]["players"];
-    if (data["item"]["type"].asString() != "picture" &&
-        std::find(players.begin_array(), players.end_array(), CVariant("video")) !=
-            players.end_array())
-      Close();
-  }
+  namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+  std::optional<std::pair<const CFileItem*, PLAYER::Players>> started;
+  if (const auto* play = std::get_if<PLAYER::Play>(&event))
+    started.emplace(play->item.get(), play->players);
+  else if (const auto* resume = std::get_if<PLAYER::Resume>(&event))
+    started.emplace(resume->item.get(), resume->players);
+
+  // video playback takes over the screen from the slideshow
+  if (started && started->second.video && !PLAYER::IsPicture(started->first))
+    Close();
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerPlay(const CFileItemPtr& item)

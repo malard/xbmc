@@ -107,6 +107,7 @@ public:
                 const std::string& sender,
                 const std::string& message,
                 const CVariant& data) override;
+  void OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event) override;
 
   // audio control
   bool HasAudioControl(void);

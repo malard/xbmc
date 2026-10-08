@@ -52,6 +52,7 @@
 #include <memory>
 #include <mutex>
 #include <utility>
+#include <variant>
 
 using namespace XFILE;
 using namespace KODI;
@@ -82,6 +83,15 @@ private:
   CSubscriber() = delete;
 
   // IAnnouncer implementation
+  void OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event) override
+  {
+    namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+    if (std::holds_alternative<PLAYER::Play>(event) ||
+        std::holds_alternative<PLAYER::Resume>(event) ||
+        std::holds_alternative<PLAYER::Stop>(event))
+      OnEventPublished(Topic::PLAYER);
+  }
+
   void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                 const std::string& sender,
                 const std::string& message,
@@ -93,13 +103,7 @@ private:
     if (flag & ANNOUNCEMENT::AudioLibrary && OnEventPublished(Topic::AUDIO_LIBRARY))
       return;
 
-    if (flag & ANNOUNCEMENT::Player)
-    {
-      if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
-          message == ANNOUNCEMENT::MESSAGE::ON_RESUME || message == ANNOUNCEMENT::MESSAGE::ON_STOP)
-        OnEventPublished(Topic::PLAYER);
-    }
-    else
+    if (!(flag & ANNOUNCEMENT::Player))
     {
       // if we're in a database transaction, don't bother doing anything just yet
       if (data.isMember("transaction") && data["transaction"].asBoolean())

@@ -62,5 +62,6 @@ inline constexpr char ON_TOGGLE_SKIP_COMMERCIALS[] = "OnToggleSkipCommercials";
 inline constexpr char ON_UPDATE[] = "OnUpdate";
 inline constexpr char ON_UPDATED[] = "OnUpdated";
 inline constexpr char ON_WAKE[] = "OnWake";
+inline constexpr char SOURCE_SLOW[] = "SourceSlow";
 
 } // namespace ANNOUNCEMENT::MESSAGE

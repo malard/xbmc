@@ -22,9 +22,9 @@
 
 #include <memory>
 #include <mutex>
+#include <type_traits>
+#include <variant>
 #include <vector>
-
-#define LOOKUP_PROPERTY "database-lookup"
 
 using namespace ANNOUNCEMENT;
 using namespace KODI;
@@ -47,15 +47,15 @@ void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
   objItem["id"] = channel.ChannelID();
 }
 
-void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
+void CopyVideoTagInfoToObject(const CFileItem& item, CVariant& object)
 {
-  CVideoInfoTag& tag = *item.GetVideoInfoTag();
+  CVideoInfoTag tag = *item.GetVideoInfoTag();
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty() && item.GetProperty(LOOKUP_PROPERTY).asBoolean(true))
+  if (id <= 0 && !item.GetPath().empty())
   {
     CVideoDatabase videodatabase;
     if (videodatabase.Open())
@@ -86,9 +86,6 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
 
   if (id <= 0)
   {
-    //! @todo Can be removed once this is properly handled when starting playback of a file
-    item.SetProperty(LOOKUP_PROPERTY, false);
-
     std::string title = tag.m_strTitle;
     if (title.empty())
       title = item.GetLabel();
@@ -125,16 +122,16 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
   }
 }
 
-void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
+void CopyMusicTagInfoToObject(const CFileItem& item, CVariant& object)
 {
-  MUSIC_INFO::CMusicInfoTag& tag = *item.GetMusicInfoTag();
+  MUSIC_INFO::CMusicInfoTag tag = *item.GetMusicInfoTag();
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
   objItem["type"] = NameOf(MediaType::SONG);
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty() && item.GetProperty(LOOKUP_PROPERTY).asBoolean(true))
+  if (id <= 0 && !item.GetPath().empty())
   {
     CMusicDatabase musicdatabase;
     if (musicdatabase.Open())
@@ -157,9 +154,6 @@ void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
 
   if (id <= 0)
   {
-    //! @todo Can be removed once this is properly handled when starting playback of a file
-    item.SetProperty(LOOKUP_PROPERTY, false);
-
     objItem["title"] = tag.GetTitle();
     if (objItem["title"].empty())
       objItem["title"] = item.GetLabel();
@@ -177,7 +171,7 @@ void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
   }
 }
 
-CVariant CreateDataObjectFromItem(CFileItem& item, const CVariant& data)
+CVariant CreateDataObjectFromItem(const CFileItem& item, const CVariant& data)
 {
   CVariant object;
   if (data.isNull() || data.isObject())
@@ -335,10 +329,39 @@ void CAnnouncementManager::Announce(AnnouncementFlag flag,
   m_queueEvent.Set();
 }
 
+void CAnnouncementManager::Announce(const Announcement& announcement)
+{
+  Announce(announcement, ANNOUNCEMENT_SENDER);
+}
+
+void CAnnouncementManager::Announce(const Announcement& announcement, const std::string& sender)
+{
+  CAnnounceData queued;
+  queued.flag = FlagOf(announcement);
+  queued.sender = sender;
+  queued.message = MessageOf(announcement);
+  queued.data = LegacyDataOf(announcement);
+  if (const auto item = ItemOf(announcement); item)
+  {
+    auto copy = std::make_shared<CFileItem>(*item);
+    queued.item = copy;
+    queued.announcement = WithItem(announcement, std::move(copy));
+  }
+  else
+    queued.announcement = announcement;
+
+  {
+    std::unique_lock lock(m_queueCritSection);
+    m_announcementQueue.push_back(std::move(queued));
+  }
+  m_queueEvent.Set();
+}
+
 void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
                                       const std::string& sender,
                                       const std::string& message,
-                                      const CVariant& data)
+                                      const CVariant& data,
+                                      const Announcement* announcement /* = nullptr */)
 {
   CLog::LogFC(LOGWARNING, LOGANNOUNCE, "CAnnouncementManager - Announcement: {} from {}", message,
               sender);
@@ -363,6 +386,17 @@ void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
     try
     {
       CSingleExit unlock(m_announcersCritSection);
+      if (announcement)
+        std::visit(
+            [announcer](const auto& event)
+            {
+              using Event = std::decay_t<decltype(event)>;
+              if constexpr (std::is_same_v<Event, PlayerEvent>)
+                announcer->OnPlayerEvent(event);
+              else if constexpr (std::is_same_v<Event, PlaylistEvent>)
+                announcer->OnPlaylistEvent(event);
+            },
+            static_cast<const Announcement::variant&>(*announcement));
       announcer->Announce(flag, sender, message, data);
     }
     catch (...)
@@ -402,8 +436,11 @@ void CAnnouncementManager::Process()
       m_announcementQueue.pop_front();
       {
         CSingleExit ex(m_queueCritSection);
-        DoAnnounce(announcement.flag, announcement.sender, announcement.message, announcement.item,
-                   announcement.data);
+        const CVariant data = announcement.item
+                                  ? CreateDataObjectFromItem(*announcement.item, announcement.data)
+                                  : announcement.data;
+        DoAnnounce(announcement.flag, announcement.sender, announcement.message, data,
+                   announcement.announcement ? &*announcement.announcement : nullptr);
       }
     }
     else
