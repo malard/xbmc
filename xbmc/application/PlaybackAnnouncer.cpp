@@ -119,34 +119,12 @@ MEDIA::Streams CPlaybackAnnouncer::GetStreams(const CFileItem* item, bool claime
   return m_playLists->IsPlayingAsAudio() ? Audio : VideoAndAudio;
 }
 
-void CPlaybackAnnouncer::Announce(PlayerProperty property, const CVariant& value) const
+void CPlaybackAnnouncer::Announce(ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged changed) const
 {
   if (!CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->IsPlaying())
     return;
-  if (value.isNull())
-    return;
 
-  ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged changed;
   changed.streams = GetStreams(nullptr, false);
-  using enum PlayerProperty;
-  switch (property)
-  {
-    case PartyMode:
-      changed.partyMode = value.asBoolean();
-      break;
-    case SubtitleEnabled:
-      changed.subtitleEnabled = value.asBoolean();
-      break;
-    case CurrentSubtitle:
-      changed.currentSubtitle = value;
-      break;
-    case CurrentAudioStream:
-      changed.currentAudioStream = value;
-      break;
-    case CurrentVideoStream:
-      changed.currentVideoStream = value;
-      break;
-  }
   m_sink(PlayerEvent{std::move(changed)});
 }
 
@@ -212,7 +190,7 @@ void CPlaybackAnnouncer::OnShuffled(Type type, bool shuffled)
 void CPlaybackAnnouncer::OnFeed(bool playing)
 {
   // what skins and remotes call party mode
-  Announce(PlayerProperty::PartyMode, playing);
+  Announce(ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.partyMode = playing});
 }
 
 void CPlaybackAnnouncer::OnFailed(const std::shared_ptr<const CFileItem>& item,

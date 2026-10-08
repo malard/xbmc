@@ -123,15 +123,15 @@ struct PropertiesChanged
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
 
-  std::optional<KODI::MEDIA::Streams> streams;
-  std::optional<int> volume;
-  std::optional<bool> muted;
-  std::optional<bool> partyMode;
-  std::optional<bool> subtitleEnabled;
+  std::optional<KODI::MEDIA::Streams> streams{};
+  std::optional<int> volume{};
+  std::optional<bool> muted{};
+  std::optional<bool> partyMode{};
+  std::optional<bool> subtitleEnabled{};
   //! The streams as JSON-RPC describes them.
-  std::optional<CVariant> currentSubtitle;
-  std::optional<CVariant> currentAudioStream;
-  std::optional<CVariant> currentVideoStream;
+  std::optional<CVariant> currentSubtitle{};
+  std::optional<CVariant> currentAudioStream{};
+  std::optional<CVariant> currentVideoStream{};
 };
 
 struct ContentGeometryChange

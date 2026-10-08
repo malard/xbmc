@@ -32,18 +32,6 @@ class CPlaybackAnnouncer : public IApplicationComponent,
 {
 public:
   /*!
-   * \brief A property of what is playing that changed.
-   */
-  enum class PlayerProperty
-  {
-    PartyMode,
-    SubtitleEnabled,
-    CurrentSubtitle,
-    CurrentAudioStream,
-    CurrentVideoStream
-  };
-
-  /*!
    * \brief A transition of the picture slideshow.
    */
   enum class SlideShowEvent
@@ -73,10 +61,10 @@ public:
   KODI::MEDIA::Streams GetStreams(const CFileItem* item, bool claimed) const;
 
   /*!
-   * \brief Publish a change to a property of what is playing. Nothing is published while nothing
-   * plays.
+   * \brief Publish a change to properties of what is playing, with the streams it carries.
+   * Nothing is published while nothing plays.
    */
-  void Announce(PlayerProperty property, const CVariant& value) const;
+  void Announce(ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged changed) const;
 
   //! Publish Player.OnContentGeometryChange, carrying the players as every Player notification does.
   void OnContentGeometryChanged(CVariant data) const;

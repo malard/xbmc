@@ -526,27 +526,28 @@ void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 void CApplicationPlayerCallback::OnSubtitleVisibilityChanged(bool visible)
 {
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
-      CPlaybackAnnouncer::PlayerProperty::SubtitleEnabled, visible);
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.subtitleEnabled = visible});
 }
 
 void CApplicationPlayerCallback::OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info)
 {
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
-      CPlaybackAnnouncer::PlayerProperty::CurrentSubtitle, INTERFACES::StreamToObject(index, info));
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentSubtitle =
+                                                         INTERFACES::StreamToObject(index, info)});
 }
 
 void CApplicationPlayerCallback::OnAudioStreamChanged(int index, const AudioStreamInfo& info)
 {
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
-      CPlaybackAnnouncer::PlayerProperty::CurrentAudioStream,
-      INTERFACES::StreamToObject(index, info));
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentAudioStream =
+                                                         INTERFACES::StreamToObject(index, info)});
 }
 
 void CApplicationPlayerCallback::OnVideoStreamChanged(int index, const VideoStreamInfo& info)
 {
   CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
-      CPlaybackAnnouncer::PlayerProperty::CurrentVideoStream,
-      INTERFACES::StreamToObject(index, info));
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentVideoStream =
+                                                         INTERFACES::StreamToObject(index, info)});
 }
 
 void CApplicationPlayerCallback::OnContentGeometryChanged(const LiveGeometryUpdate& update)
