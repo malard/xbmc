@@ -640,8 +640,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
         }
       }
 
-      const CFileItem ended{
-          m_app.CurrentFileItem()};
+      const CFileItem ended{m_app.CurrentFileItem()};
 
       const CPlaycountIncrementedHandler playCountIncrementedHandler{ended};
 
