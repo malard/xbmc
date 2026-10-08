@@ -975,16 +975,15 @@ bool CGUIDialogMediaFilter::GetMinMax(const std::string &table, const std::strin
   const std::string prepField = db->PrepareSQL(field);
   const std::string strSQL = "SELECT %s FROM %s ";
 
-  min = static_cast<int>(strtol(
-      db->GetSingleValue(db->PrepareSQL(strSQL, ("MIN(" + prepField + ")").c_str(), table.c_str()) +
-                         strSQLExtra)
-          .c_str(),
-      nullptr, 0));
-  max = static_cast<int>(strtol(
-      db->GetSingleValue(db->PrepareSQL(strSQL, ("MAX(" + prepField + ")").c_str(), table.c_str()) +
-                         strSQLExtra)
-          .c_str(),
-      nullptr, 0));
+  const auto aggregate = [&](const std::string& function)
+  {
+    const std::string sql =
+        db->PrepareSQL(strSQL, (function + "(" + prepField + ")").c_str(), table.c_str()) +
+        strSQLExtra;
+    return static_cast<int>(strtol(db->GetSingleValue(sql).c_str(), nullptr, 0));
+  };
+  min = aggregate("MIN");
+  max = aggregate("MAX");
 
   db->Close();
   return true;
