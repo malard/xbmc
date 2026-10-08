@@ -27,6 +27,7 @@
 #include "playlists/SmartPlayList.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -35,6 +36,8 @@
 
 using namespace KODI;
 using namespace JSONRPC;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 
 bool CJSONRPC::m_initialized = false;
 
@@ -65,31 +68,31 @@ void CJSONRPC::Initialize()
   CJSONServiceDescription::AddEnum("List.Filter.Operators", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("movies", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::MOVIES, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Movies", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("tvshows", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::TVSHOWS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.TVShows", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("episodes", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::EPISODES, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Episodes", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("musicvideos", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::MUSICVIDEOS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.MusicVideos", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("artists", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::ARTISTS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Artists", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("albums", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::ALBUMS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Albums", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("songs", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::SONGS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Songs", smartplaylistList);
 
   smartplaylistList.clear();

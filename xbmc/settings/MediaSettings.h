@@ -15,6 +15,7 @@
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
 #include "threads/CriticalSection.h"
+#include "utils/ContentNames.h"
 
 #include <map>
 #include <string>
@@ -129,9 +130,9 @@ private:
 
   using WatchedModes = std::map<std::string, WatchedMode, std::less<>>;
   WatchedModes m_watchedModes{{"files", WatchedMode::ALL},
-                              {"movies", WatchedMode::ALL},
-                              {"tvshows", WatchedMode::ALL},
-                              {"musicvideos", WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::MOVIES, WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::TVSHOWS, WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::MUSICVIDEOS, WatchedMode::ALL},
                               {"recordings", WatchedMode::ALL}};
 
   bool m_musicPlaylistRepeat{false};

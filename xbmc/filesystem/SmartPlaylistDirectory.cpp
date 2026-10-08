@@ -88,7 +88,9 @@ namespace XFILE
 
     std::string option = !filter ? "xsp" : "filter";
     std::string group = playlist.GetGroup();
-    bool isGrouped = !group.empty() && !StringUtils::EqualsNoCase(group, "none") && !playlist.IsGroupMixed();
+    bool isGrouped = !group.empty() &&
+                     PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE &&
+                     !playlist.IsGroupMixed();
 
     // get all virtual folders and add them to the item list
     playlist.GetVirtualFolders(virtualFolders);
@@ -244,9 +246,10 @@ namespace XFILE
         // adjust the group in case we're retrieving a grouped playlist
         // based on artists. This is needed because the video library
         // is using the actorslink table for artists.
-        if (isGrouped && group == "artists")
+        if (isGrouped &&
+            PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) == Field::ARTIST)
         {
-          group = "actors";
+          group = PLAYLIST::CSmartPlaylistRule::TranslateGroup(Field::ACTOR);
           mvidPlaylist.SetGroup(group);
         }
 
@@ -294,7 +297,8 @@ namespace XFILE
     // sort grouped list by label unless random was specified for musicvideo artists
     if (items.Size() > 1 && !group.empty())
     {
-      if (playlist.GetOrder() == SortBy::RANDOM && group == "actors" &&
+      if (playlist.GetOrder() == SortBy::RANDOM &&
+          PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) == Field::ACTOR &&
           playlist.GetType() == MEDIA::CONTENT::MUSICVIDEOS)
         items.Sort(SortBy::RANDOM, SortOrder::ASCENDING,
                    settings->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)

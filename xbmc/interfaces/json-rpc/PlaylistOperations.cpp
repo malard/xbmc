@@ -44,13 +44,13 @@ struct PublishedPlayList
 {
   std::string_view name; // Playlist.Name, which is also its Playlist.Type
   std::optional<PLAYLIST::Type> type;
-  std::string_view media; // the "media" an item added to it is read as
+  KODI::MEDIA::MediaSection media; // the "media" an item added to it is read as
 };
 
 constexpr std::array<PublishedPlayList, 3> PUBLISHED_PLAYLISTS{{
-    {"audio", PLAYLIST::Audio, "music"},
-    {"video", PLAYLIST::Video, "video"},
-    {"picture", std::nullopt, "pictures"},
+    {PLAYLIST::NameOf(PLAYLIST::Audio), PLAYLIST::Audio, KODI::MEDIA::MediaSection::MUSIC},
+    {PLAYLIST::NameOf(PLAYLIST::Video), PLAYLIST::Video, KODI::MEDIA::MediaSection::VIDEO},
+    {PLAYLIST::PICTURE_NAME, std::nullopt, KODI::MEDIA::MediaSection::PICTURES},
 }};
 
 const PublishedPlayList* FindPublished(const CVariant& parameterObject)
@@ -60,14 +60,15 @@ const PublishedPlayList* FindPublished(const CVariant& parameterObject)
   return it == PUBLISHED_PLAYLISTS.end() ? nullptr : &*it;
 }
 
-bool IsMediaAccepted(std::string_view media, const CVariant& item)
+bool IsMediaAccepted(KODI::MEDIA::MediaSection media, const CVariant& item)
 {
   if (!item.isMember("media"))
     return true;
-  const std::string requested = item["media"].asString();
+  using enum KODI::MEDIA::MediaSection;
+  const auto requested = KODI::MEDIA::MediaSectionFromName(item["media"].asString());
   // the slideshow shows video as well as pictures
-  return requested == "files" || requested == media ||
-         (media == "pictures" && requested == "video");
+  return requested &&
+         (*requested == FILES || *requested == media || (media == PICTURES && *requested == VIDEO));
 }
 
 CVariant UnresolvedEntry(const CVariant& item, const CVariant& diagnosis)
@@ -84,7 +85,7 @@ CVariant PlayListTarget(const PublishedPlayList& playList)
 }
 } // namespace
 
-JSONRPC_STATUS CPlaylistOperations::ReadItems(std::string_view media,
+JSONRPC_STATUS CPlaylistOperations::ReadItems(KODI::MEDIA::MediaSection media,
                                               const CVariant& itemParam,
                                               CFileItemList& items,
                                               CVariant& unresolved,
@@ -104,7 +105,7 @@ JSONRPC_STATUS CPlaylistOperations::ReadItems(std::string_view media,
     bool resolved = false;
     if (IsMediaAccepted(media, item))
     {
-      item["media"] = std::string{media};
+      item["media"] = std::string{KODI::MEDIA::NameOf(media)};
       // FillFileItemList reports a non-empty list, not whether this item resolved
       const int before = items.Size();
       FillFileItemList(item, items);

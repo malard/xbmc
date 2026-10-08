@@ -226,12 +226,12 @@ void CPlaybackAnnouncer::OnContentGeometryChanged(CVariant data) const
 
 void CPlaybackAnnouncer::OnSlideShowShuffled() const
 {
-  PublishPlayListProperty("picture", PlayerProperty::Shuffled, true);
+  PublishPlayListProperty(PLAYLIST::PICTURE_NAME, PlayerProperty::Shuffled, true);
 }
 
 void CPlaybackAnnouncer::OnSlideShowListChanged(const PlayListChange& change) const
 {
-  PublishListChange("picture", change);
+  PublishListChange(PLAYLIST::PICTURE_NAME, change);
 }
 
 void CPlaybackAnnouncer::OnListChanged(Type type, const PlayListChange& change)

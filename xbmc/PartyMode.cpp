@@ -24,6 +24,7 @@
 #include "playlists/SmartPlayList.h"
 #include "profiles/ProfileManager.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -39,6 +40,8 @@
 using namespace KODI;
 using namespace KODI::MESSAGING;
 
+namespace CONTENT = KODI::MEDIA::CONTENT;
+
 namespace
 {
 using PARTYMODE::Library;
@@ -53,9 +56,10 @@ std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
                                               const std::string& content)
 {
   const bool songs =
-      StringUtils::EqualsNoCase(content, "songs") || StringUtils::EqualsNoCase(content, "mixed");
-  const bool musicVideos = StringUtils::EqualsNoCase(content, "musicvideos") ||
-                           StringUtils::EqualsNoCase(content, "mixed");
+      StringUtils::EqualsNoCase(content, CONTENT::SONGS) ||
+      StringUtils::EqualsNoCase(content, CONTENT::MIXED);
+  const bool musicVideos = StringUtils::EqualsNoCase(content, CONTENT::MUSICVIDEOS) ||
+                           StringUtils::EqualsNoCase(content, CONTENT::MIXED);
 
   std::vector<Match> matches;
   if (songs)
@@ -67,7 +71,7 @@ std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
     if (rules)
     {
       std::set<std::string, std::less<>> playlists;
-      rules->SetType("songs");
+      rules->SetType(CONTENT::SONGS);
       filter = rules->GetWhereClause(db, playlists);
     }
     CLog::LogF(LOGINFO, "song filter [{}]", filter);
@@ -86,7 +90,7 @@ std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
     if (rules)
     {
       std::set<std::string, std::less<>> playlists;
-      rules->SetType("musicvideos");
+      rules->SetType(CONTENT::MUSICVIDEOS);
       filter = rules->GetWhereClause(db, playlists);
     }
     CLog::LogF(LOGINFO, "music video filter [{}]", filter);
@@ -154,7 +158,8 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
   const PLAYLIST::Type playList =
       named.value_or(rulesLoaded ? rules.GetPlayListType() : PLAYLIST::Audio);
   const bool isVideo = playList == PLAYLIST::Video;
-  const std::string content = rulesLoaded ? rules.GetType() : (isVideo ? "musicvideos" : "songs");
+  const std::string content =
+      rulesLoaded ? rules.GetType() : (isVideo ? CONTENT::MUSICVIDEOS : CONTENT::SONGS);
 
   CGUIDialogProgress* dialog =
       CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(

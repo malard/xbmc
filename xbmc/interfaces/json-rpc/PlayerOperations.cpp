@@ -1061,7 +1061,7 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant &parameterObject, CVariant
       return ACK;
     }
 
-    if (named.asString() != "picture")
+    if (named.asString() != PLAYLIST::PICTURE_NAME)
       return InvalidParams;
 
     std::string firstPicturePath;
@@ -1567,7 +1567,7 @@ std::vector<PlayerType> CPlayerOperations::GetTargets(const CVariant& playlist)
   const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(playlist.asString());
   if (named == PLAYLIST::Audio)
     return {Audio};
-  if (playlist.asString() == "picture")
+  if (playlist.asString() == PLAYLIST::PICTURE_NAME)
     return {Picture};
 
   const auto playLists = CServiceBroker::GetPlayLists();
@@ -1602,7 +1602,7 @@ JSONRPC_STATUS CPlayerOperations::ForEachTarget(
   const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
   const bool idle = named ? playLists->GetPlayingType() != named &&
                                 !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
-                          : name == "picture" && !playLists->IsSlideShowRunning();
+                          : name == PLAYLIST::PICTURE_NAME && !playLists->IsSlideShowRunning();
   if (idle)
     return Fail(result, FailedToExecute, Reason::NothingPlaying,
                 Target("playlist", parameterObject["playlist"]));
@@ -1642,7 +1642,8 @@ JSONRPC_STATUS CPlayerOperations::ForEachOnList(
         const std::optional<PLAYLIST::Type> playList =
             GetPlayList(player, parameterObject["playlist"]);
         failure["target"] =
-            Target("playlist", playList ? std::string{PLAYLIST::NameOf(*playList)} : "picture");
+            Target("playlist", playList ? std::string{PLAYLIST::NameOf(*playList)}
+                                        : std::string{PLAYLIST::PICTURE_NAME});
       }
     }
     result = std::move(answered);
@@ -1826,7 +1827,9 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player, const std:
          return g_application.GetCachePercentage();
        }},
       {"playlist", [](PlayerType, const PlayList& playList) -> Value
-       { return playList ? std::string{PLAYLIST::NameOf(*playList)} : "picture"; }},
+       {
+         return std::string{playList ? PLAYLIST::NameOf(*playList) : PLAYLIST::PICTURE_NAME};
+       }},
       {"position", position},
       {"displayOrder",
        [](PlayerType player, const PlayList& playList) -> Value

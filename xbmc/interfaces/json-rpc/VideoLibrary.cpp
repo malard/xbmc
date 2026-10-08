@@ -20,6 +20,7 @@
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "utils/ArtTypes.h"
+#include "utils/ContentNames.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -84,7 +85,7 @@ constexpr KindTraits KIND_TABLE[] = {
     {{VideoKind::Movie, MediaType::MOVIE, "movieId", "Video.Fields.Movie",
       "Video.Details.Movie.Set"},
      "Video.Filter.Movies",
-     "movies",
+     KODI::MEDIA::CONTENT::MOVIES,
      MOVIE_FILTERS},
     {{VideoKind::Set, MediaType::VIDEO_COLLECTION, "setId", "Video.Fields.MovieSet",
       "Video.Details.MovieSet.Set"},
@@ -94,7 +95,7 @@ constexpr KindTraits KIND_TABLE[] = {
     {{VideoKind::TVShow, MediaType::TV_SHOW, "tvShowId", "Video.Fields.TVShow",
       "Video.Details.TVShow.Set"},
      "Video.Filter.TVShows",
-     "tvshows",
+     KODI::MEDIA::CONTENT::TVSHOWS,
      TVSHOW_FILTERS},
     {{VideoKind::Season, MediaType::SEASON, "seasonId", "Video.Fields.Season",
       "Video.Details.Season.Set"},
@@ -104,12 +105,12 @@ constexpr KindTraits KIND_TABLE[] = {
     {{VideoKind::Episode, MediaType::EPISODE, "episodeId", "Video.Fields.Episode",
       "Video.Details.Episode.Set"},
      "Video.Filter.Episodes",
-     "episodes",
+     KODI::MEDIA::CONTENT::EPISODES,
      EPISODE_FILTERS},
     {{VideoKind::MusicVideo, MediaType::MUSIC_VIDEO, "musicVideoId", "Video.Fields.MusicVideo",
       "Video.Details.MusicVideo.Set"},
      "Video.Filter.MusicVideos",
-     "musicvideos",
+     KODI::MEDIA::CONTENT::MUSICVIDEOS,
      MUSICVIDEO_FILTERS},
 };
 

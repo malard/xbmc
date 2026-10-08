@@ -48,6 +48,7 @@
 #include "storage/MediaManager.h"
 #include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/DefaultArt.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
@@ -62,6 +63,8 @@ using namespace MUSIC_INFO;
 using namespace MUSICDATABASEDIRECTORY;
 using namespace KODI;
 using namespace KODI::MESSAGING;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
 
@@ -717,9 +720,9 @@ CFileItemPtr CGUIDialogMusicInfo::GetCurrentListItem(int offset)
 std::string CGUIDialogMusicInfo::GetContent()
 {
   if (m_item->GetMusicInfoTag()->GetMediaType() == MediaType::ARTIST)
-    return "artists";
+    return CONTENT::ARTISTS;
   else
-    return "albums";
+    return CONTENT::ALBUMS;
 }
 
 void CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(std::vector<CMediaSource>& sources,
@@ -1046,7 +1049,7 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
         {
           auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
           if (window)
-            window->RefreshContent("albums");
+            window->RefreshContent(CONTENT::ALBUMS);
         }
       }
     }

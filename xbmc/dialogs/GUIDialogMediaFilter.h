@@ -44,7 +44,7 @@ public:
 
   struct Filter
   {
-    std::string mediaType;
+    KODI::MEDIA::MediaType mediaType;
     Field field;
     uint32_t label;
     SettingType settingType;

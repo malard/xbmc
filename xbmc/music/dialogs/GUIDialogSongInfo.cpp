@@ -35,10 +35,13 @@
 #include "storage/MediaManager.h"
 #include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/DefaultArt.h"
 #include "utils/FileUtils.h"
 
 using namespace KODI;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaType;
 
@@ -328,7 +331,7 @@ CFileItemPtr CGUIDialogSongInfo::GetCurrentListItem(int offset)
 
 std::string CGUIDialogSongInfo::GetContent()
 {
-  return "songs";
+  return CONTENT::SONGS;
 }
 
 /*
@@ -521,7 +524,7 @@ void CGUIDialogSongInfo::ShowFor(CFileItem* pItem)
       {
         auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
         if (window)
-          window->RefreshContent("songs");
+          window->RefreshContent(CONTENT::SONGS);
       }
     }
   }

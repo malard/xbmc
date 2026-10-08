@@ -43,6 +43,7 @@
 #include "music/dialogs/GUIDialogMusicInfo.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/SmartPlayList.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -934,7 +935,8 @@ bool CGUIWindowVideoBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
           PLAYLIST::IsSmartPlayList(*m_vecItems->Get(itemNumber))
               ? m_vecItems->Get(itemNumber)->GetPath()
               : m_vecItems->GetPath(); // save path as activatewindow will destroy our items
-      if (CGUIDialogSmartPlaylistEditor::EditPlaylist(playlist, "video"))
+      if (CGUIDialogSmartPlaylistEditor::EditPlaylist(playlist,
+                                                      CGUIDialogSmartPlaylistEditor::Mode::VIDEO))
         Refresh(true); // need to update
       return true;
     }
@@ -1180,7 +1182,7 @@ void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)
     mixed = items.GetProperty(PROPERTY_GROUP_MIXED).asBoolean();
 
   // group == "none" completely suppresses any grouping
-  if (!StringUtils::EqualsNoCase(group, "none"))
+  if (PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE)
   {
     CQueryParams params;
     CVideoDatabaseDirectory dir;
@@ -1190,7 +1192,7 @@ void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)
     if (items.GetContent() == MEDIA::CONTENT::MOVIES && params.GetSetId() <= 0 &&
         params.GetVideoVersionId() < 0 && nodeType == NodeType::TITLE_MOVIES &&
         (settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_GROUPMOVIESETS) ||
-         (StringUtils::EqualsNoCase(group, "sets") && mixed)))
+         (PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) == Field::SET && mixed)))
     {
       CFileItemList groupedItems;
       GroupAttribute groupAttributes = settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_GROUPSINGLEITEMSETS) ? GroupAttributeNone : GroupAttributeIgnoreSingleItems;

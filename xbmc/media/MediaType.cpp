@@ -44,7 +44,7 @@ constexpr std::array<MediaTypeInfo, 12> MEDIA_TYPES{{
     {MediaType::TV_SHOW,          "tvshow",       CONTENT::TVSHOWS,     true,  36902},
     {MediaType::SEASON,           "season",       CONTENT::SEASONS,     true,  20373},
     {MediaType::EPISODE,          "episode",      CONTENT::EPISODES,    false, 20359},
-    {MediaType::VIDEO_VERSION,    "videoversion", "videoversions",      false, 40012},
+    {MediaType::VIDEO_VERSION,    "videoversion", CONTENT::VIDEOVERSIONS, false, 40012},
 }};
 // clang-format on
 

@@ -34,6 +34,8 @@
 #include <string_view>
 #include <vector>
 
+namespace NFO_ROOT = KODI::VIDEO::NFO_ROOT;
+
 namespace
 {
 /*!
@@ -127,7 +129,7 @@ void CVideoInfoTag::Reset()
   m_iEpisode = -1;
   m_iIdUniqueID = -1;
   m_uniqueIDs.clear();
-  m_strDefaultUniqueID = "unknown";
+  m_strDefaultUniqueID = KODI::VIDEO::UNIQUE_ID::UNKNOWN;
   m_iSpecialSortSeason = -1;
   m_iSpecialSortEpisode = -1;
   m_strDefaultRating = "default";
@@ -167,7 +169,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
 
   // we start with a <tag> tag
   TiXmlElement movieElement(tag.c_str());
-  if (tag == "movie" || tag == "tvshow" || tag == "episodedetails" || tag == "musicvideo")
+  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE ||
+      tag == NFO_ROOT::MUSIC_VIDEO)
     movieElement.SetAttribute("version", 0);
   TiXmlNode *movie = node->InsertEndChild(movieElement);
 
@@ -216,14 +219,14 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   }
 
   XMLUtils::SetInt(movie, "top250", m_iTop250);
-  if (tag == "episodedetails" || tag == "tvshow")
+  if (tag == NFO_ROOT::EPISODE || tag == NFO_ROOT::TV_SHOW)
   {
     XMLUtils::SetInt(movie, "season", m_iSeason);
     XMLUtils::SetInt(movie, "episode", m_iEpisode);
     XMLUtils::SetInt(movie, "displayseason",m_iSpecialSortSeason);
     XMLUtils::SetInt(movie, "displayepisode",m_iSpecialSortEpisode);
   }
-  if (tag == "musicvideo")
+  if (tag == NFO_ROOT::MUSIC_VIDEO)
   {
     XMLUtils::SetInt(movie, "track", m_iTrack);
     XMLUtils::SetString(movie, "album", m_strAlbum);
@@ -410,7 +413,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   {
     const std::string& lang{GetOriginalLanguage().ToString()};
 
-    if (!lang.empty() && (tag == "movie" || tag == "tvshow"))
+    if (!lang.empty() && (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW))
       XMLUtils::SetString(movie, "originallanguage", lang);
   }
 
@@ -1235,7 +1238,8 @@ bool CVideoInfoTag::HasConflictingUniqueID(const CVideoInfoTag& other) const
                              [&other](const auto& id)
                              {
                                const auto it{other.m_uniqueIDs.find(id.first)};
-                               return id.first != "unknown" && !id.second.empty() &&
+                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
+                                      !id.second.empty() &&
                                       it != other.m_uniqueIDs.end() && !it->second.empty() &&
                                       it->second != id.second;
                              });
@@ -1398,7 +1402,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
         else
           SetUniqueID(uniqueid->FirstChild()->ValueStr());
         bool isDefault;
-        if (m_strDefaultUniqueID == "unknown" &&
+        if (m_strDefaultUniqueID == KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
             (uniqueid->QueryBoolAttribute("default", &isDefault) == TIXML_SUCCESS) && isDefault)
         {
           m_strDefaultUniqueID = value;

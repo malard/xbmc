@@ -21,6 +21,16 @@ class CGUIDialogSmartPlaylistEditor :
 public:
   enum PLAYLIST_TYPE { TYPE_SONGS = 1, TYPE_ALBUMS, TYPE_ARTISTS, TYPE_MIXED, TYPE_MUSICVIDEOS, TYPE_MOVIES, TYPE_TVSHOWS, TYPE_EPISODES };
 
+  //! \brief Which playlist types the editor offers.
+  enum class Mode
+  {
+    NONE,
+    MUSIC,
+    VIDEO,
+    PARTY_MUSIC,
+    PARTY_VIDEO,
+  };
+
   CGUIDialogSmartPlaylistEditor(void);
   ~CGUIDialogSmartPlaylistEditor(void) override;
   bool OnMessage(CGUIMessage& message) override;
@@ -28,7 +38,8 @@ public:
   void OnInitWindow() override;
   void OnDeinitWindow(int nextWindowID) override;
 
-  static bool EditPlaylist(const std::string &path, const std::string &type = "");
+  static bool EditPlaylist(const std::string& path, Mode mode = Mode::NONE);
+  //! \param type "music" or "video", as a new smart playlist placeholder path ends
   static bool NewPlaylist(const std::string &type);
 
 protected:
@@ -51,7 +62,7 @@ protected:
   void UpdateRuleControlButtons();
   int GetSelectedItem();
   void HighlightItem(int item);
-  std::vector<PLAYLIST_TYPE> GetAllowedTypes(const std::string& mode);
+  std::vector<PLAYLIST_TYPE> GetAllowedTypes(Mode mode);
   PLAYLIST_TYPE ConvertType(const std::string &type);
   std::string ConvertType(PLAYLIST_TYPE type);
   std::string GetLocalizedType(PLAYLIST_TYPE type);
@@ -63,5 +74,5 @@ protected:
 
   std::string m_path;
   bool m_cancelled;
-  std::string m_mode;  // mode we're in (partymode etc.)
+  Mode m_mode{Mode::NONE};
 };

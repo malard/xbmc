@@ -44,6 +44,9 @@ constexpr std::string_view NameOf(Type type)
   return type == Video ? "video" : "audio";
 }
 
+//! The name the interfaces give the slideshow's list, which is not a Type.
+constexpr std::string_view PICTURE_NAME = "picture";
+
 /*!
  * \return The playlist a name names, ignoring case: "video", or "audio" or "music".
  */

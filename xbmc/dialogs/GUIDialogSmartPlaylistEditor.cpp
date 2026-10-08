@@ -163,16 +163,16 @@ bool CGUIDialogSmartPlaylistEditor::OnMessage(CGUIMessage& message)
           m_path = startupList;
 
           if (party == 1)
-            m_mode = "partymusic";
+            m_mode = Mode::PARTY_MUSIC;
           else if (party == 2)
-            m_mode = "partyvideo";
+            m_mode = Mode::PARTY_VIDEO;
           else
           {
             PLAYLIST_TYPE type = ConvertType(m_playlist.GetType());
             if (type == TYPE_SONGS || type == TYPE_ALBUMS || type == TYPE_ARTISTS)
-              m_mode = "music";
+              m_mode = Mode::MUSIC;
             else
-              m_mode = "video";
+              m_mode = Mode::VIDEO;
           }
         }
         else
@@ -450,7 +450,7 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
 {
   CONTROL_ENABLE(CONTROL_OK); // always enabled since we can have no rules -> match everything (as we do with default partymode playlists)
 
-  if (m_mode == "partyvideo" || m_mode == "partymusic")
+  if (m_mode == Mode::PARTY_VIDEO || m_mode == Mode::PARTY_MUSIC)
   {
     SET_CONTROL_LABEL2(CONTROL_NAME,
                        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16035));
@@ -642,27 +642,27 @@ void CGUIDialogSmartPlaylistEditor::HighlightItem(int item)
   OnMessage(msg);
 }
 
-std::vector<CGUIDialogSmartPlaylistEditor::PLAYLIST_TYPE> CGUIDialogSmartPlaylistEditor::GetAllowedTypes(const std::string& mode)
+std::vector<CGUIDialogSmartPlaylistEditor::PLAYLIST_TYPE> CGUIDialogSmartPlaylistEditor::GetAllowedTypes(Mode mode)
 {
   std::vector<PLAYLIST_TYPE> allowedTypes;
-  if (mode == "partymusic")
+  if (mode == Mode::PARTY_MUSIC)
   {
     allowedTypes.push_back(TYPE_SONGS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "partyvideo")
+  else if (mode == Mode::PARTY_VIDEO)
   {
     allowedTypes.push_back(TYPE_MUSICVIDEOS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "music")
+  else if (mode == Mode::MUSIC)
   { // music types + mixed
     allowedTypes.push_back(TYPE_SONGS);
     allowedTypes.push_back(TYPE_ALBUMS);
     allowedTypes.push_back(TYPE_ARTISTS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "video")
+  else if (mode == Mode::VIDEO)
   { // general category for videos
     allowedTypes.push_back(TYPE_MOVIES);
     allowedTypes.push_back(TYPE_TVSHOWS);
@@ -702,32 +702,32 @@ bool CGUIDialogSmartPlaylistEditor::NewPlaylist(const std::string &type)
 
   editor->m_path = "";
   editor->m_playlist = PLAYLIST::CSmartPlaylist();
-  editor->m_mode = type;
+  editor->m_mode = type == "music" ? Mode::MUSIC : type == "video" ? Mode::VIDEO : Mode::NONE;
   editor->Initialize();
   editor->Open();
   return !editor->m_cancelled;
 }
 
-bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string &path, const std::string &type)
+bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string& path, Mode mode)
 {
   CGUIDialogSmartPlaylistEditor *editor = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSmartPlaylistEditor>(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR);
   if (!editor) return false;
 
-  editor->m_mode = type;
+  editor->m_mode = mode;
   if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Audio)))
-    editor->m_mode = "partymusic";
+    editor->m_mode = Mode::PARTY_MUSIC;
   if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Video)))
-    editor->m_mode = "partyvideo";
+    editor->m_mode = Mode::PARTY_VIDEO;
 
   PLAYLIST::CSmartPlaylist playlist;
   bool loaded(playlist.Load(path));
   if (!loaded)
   { // failed to load
-    if (!StringUtils::StartsWithNoCase(editor->m_mode, "party"))
+    if (editor->m_mode != Mode::PARTY_MUSIC && editor->m_mode != Mode::PARTY_VIDEO)
       return false; // only edit normal playlists that exist
     // party mode playlists can be edited even if they don't exist
-    playlist.SetType(editor->m_mode == "partymusic" ? MEDIA::CONTENT::SONGS
-                                                    : MEDIA::CONTENT::MUSICVIDEOS);
+    playlist.SetType(editor->m_mode == Mode::PARTY_MUSIC ? MEDIA::CONTENT::SONGS
+                                                         : MEDIA::CONTENT::MUSICVIDEOS);
   }
 
   editor->m_playlist = playlist;

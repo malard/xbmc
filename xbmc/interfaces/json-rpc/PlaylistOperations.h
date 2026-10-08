@@ -10,6 +10,7 @@
 
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
+#include "media/MediaSection.h"
 
 #include <string_view>
 
@@ -41,7 +42,7 @@ namespace JSONRPC
      * \return The status of the call if it adds nothing: the first item whose reference has gone,
      * else the first that was malformed
      */
-  static JSONRPC_STATUS ReadItems(std::string_view media,
+  static JSONRPC_STATUS ReadItems(KODI::MEDIA::MediaSection media,
                                      const CVariant& itemParam,
                                      CFileItemList& items,
                                   CVariant& unresolved,

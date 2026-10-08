@@ -31,6 +31,7 @@
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -135,18 +136,18 @@ struct KindTraits : LibraryKind<AudioKind>
 constexpr KindTraits KIND_TABLE[] = {
     {{AudioKind::Artist, MediaType::ARTIST, "artistId", "Audio.Fields.Artist",
       "Audio.Details.Artist.Set"},
-     "artists",
+     KODI::MEDIA::CONTENT::ARTISTS,
      KODI::MUSIC::DB_PATH::ARTISTS,
      "Audio.Filter.Artists",
      ARTIST_FILTERS},
     {{AudioKind::Album, MediaType::ALBUM, "albumId", "Audio.Fields.Album",
       "Audio.Details.Album.Set"},
-     "albums",
+     KODI::MEDIA::CONTENT::ALBUMS,
      KODI::MUSIC::DB_PATH::ALBUMS,
      "Audio.Filter.Albums",
      ALBUM_FILTERS},
     {{AudioKind::Song, MediaType::SONG, "songId", "Audio.Fields.Song", "Audio.Details.Song.Set"},
-     "songs",
+     KODI::MEDIA::CONTENT::SONGS,
      KODI::MUSIC::DB_PATH::SONGS,
      "Audio.Filter.Songs",
      SONG_FILTERS},
@@ -1184,13 +1185,13 @@ bool CAudioLibrary::ResolveInfoProviderView(const std::string& path,
   // the same listing are handled the same way from here on.
   std::string listing;
   std::string singleItem;
-  if (StringUtils::EqualsNoCase(musicUrl.GetType(), "artists"))
+  if (StringUtils::EqualsNoCase(musicUrl.GetType(), KODI::MEDIA::CONTENT::ARTISTS))
   {
     content = ADDON::ContentType::ARTISTS;
     listing = KODI::MUSIC::DB_PATH::ARTISTS;
     singleItem = "artistid";
   }
-  else if (StringUtils::EqualsNoCase(musicUrl.GetType(), "albums"))
+  else if (StringUtils::EqualsNoCase(musicUrl.GetType(), KODI::MEDIA::CONTENT::ALBUMS))
   {
     content = ADDON::ContentType::ALBUMS;
     listing = KODI::MUSIC::DB_PATH::ALBUMS;
