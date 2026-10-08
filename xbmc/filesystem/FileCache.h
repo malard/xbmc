@@ -18,6 +18,8 @@
 #include <chrono>
 #include <memory>
 
+class TestFileCache;
+
 using namespace std::chrono_literals;
 
 namespace XFILE
@@ -110,6 +112,10 @@ public:
     size_t CacheSizeForRate(uint32_t bytesPerSecond) const;
     //! Grows a default-sized memory cache once the content's rate is known
     void GrowCacheForRate(uint32_t bytesPerSecond);
+
+    // Allow the EOF regression test to observe seek waiters without exposing
+    // the events
+    friend class ::TestFileCache;
 
     std::unique_ptr<CCacheStrategy> m_pCache;
     std::atomic<int> m_seekPossible{0};
