@@ -197,53 +197,34 @@ CXBMCApp::~CXBMCApp()
 {
 }
 
-void CXBMCApp::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                        const std::string& sender,
-                        const std::string& message,
-                        const CVariant& data)
+void CXBMCApp::OnInputEvent(const ANNOUNCEMENT::InputEvent& event)
 {
-  if (sender != CAnnouncementManager::ANNOUNCEMENT_SENDER)
-    return;
+  CAndroidKey::SetHandleSearchKeys(
+      std::holds_alternative<ANNOUNCEMENT::EVENT::INPUT::Requested>(event));
+}
 
-  if (flag & Input)
+void CXBMCApp::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
+{
+  namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+  if (std::holds_alternative<PLAYER::Play>(event) || std::holds_alternative<PLAYER::Resume>(event))
+    OnPlayBackStarted();
+  else if (std::holds_alternative<PLAYER::Pause>(event))
+    OnPlayBackPaused();
+  else if (std::holds_alternative<PLAYER::Stop>(event))
+    OnPlayBackStopped();
+  else if (std::holds_alternative<PLAYER::Seek>(event) ||
+           std::holds_alternative<PLAYER::SpeedChanged>(event) ||
+           std::holds_alternative<PLAYER::AVStart>(event))
   {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED)
-      CAndroidKey::SetHandleSearchKeys(true);
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED)
-      CAndroidKey::SetHandleSearchKeys(false);
+    m_mediaSessionUpdated = false;
+    UpdateSessionState();
   }
-  else if (flag & Player)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
-      OnPlayBackStarted();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE)
-      OnPlayBackPaused();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_STOP)
-      OnPlayBackStopped();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SEEK)
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_AV_START)
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-  }
-  else if (flag & Info)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_CHANGED)
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionMetadata();
-    }
-  }
+}
+
+void CXBMCApp::OnInfoEvent(const ANNOUNCEMENT::InfoEvent&)
+{
+  m_mediaSessionUpdated = false;
+  UpdateSessionMetadata();
 }
 
 void CXBMCApp::onStart()

@@ -166,19 +166,19 @@ void XBPython::OnGUIEvent(const ANNOUNCEMENT::GUIEvent& event)
     OnDPMSActivated();
 }
 
-void XBPython::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                        const std::string& sender,
-                        const std::string& message,
-                        const CVariant& data)
+void XBPython::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
 {
+  IAnnouncer::OnAnnouncement(announcement);
+
   std::string jsonData;
   if (CJSONVariantWriter::Write(
-          data, jsonData,
+          ANNOUNCEMENT::NotificationDataOf(announcement), jsonData,
           CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact))
-    OnNotification(sender,
-                   std::string(ANNOUNCEMENT::AnnouncementFlagToString(flag)) + "." +
-                       std::string(message),
-                   jsonData);
+    OnNotification(
+        ANNOUNCEMENT::SenderOf(announcement),
+        std::string(ANNOUNCEMENT::AnnouncementFlagToString(ANNOUNCEMENT::FlagOf(announcement))) +
+            "." + ANNOUNCEMENT::MessageOf(announcement),
+        jsonData);
 }
 
 // message all registered callbacks that we started playing

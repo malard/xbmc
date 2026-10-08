@@ -588,6 +588,16 @@ struct SettingsEvent : std::variant<EVENT::SETTINGS::LevelChanged>
   static constexpr AnnouncementFlag FLAG = Settings;
 };
 
+//! \brief An announcement whose sender names it and its data, as JSONRPC.NotifyAll sends.
+struct OtherEvent
+{
+  static constexpr AnnouncementFlag FLAG = Other;
+
+  std::string sender;
+  std::string message;
+  CVariant data;
+};
+
 struct Announcement : std::variant<PlayerEvent,
                                    PlaylistEvent,
                                    GUIEvent,
@@ -598,21 +608,29 @@ struct Announcement : std::variant<PlayerEvent,
                                    PVREvent,
                                    InfoEvent,
                                    SourcesEvent,
-                                   SettingsEvent>
+                                   SettingsEvent,
+                                   OtherEvent>
 {
   using variant::variant;
 };
 
 AnnouncementFlag FlagOf(const Announcement& announcement);
 const char* MessageOf(const Announcement& announcement);
+//! \brief Who announced it: the announcement manager, or for Other whoever sent it.
+const std::string& SenderOf(const Announcement& announcement);
 std::shared_ptr<const CFileItem> ItemOf(const Announcement& announcement);
 
 /*!
- * \brief The data JSON-RPC and Python have been given for this announcement, before the item is
- * added to it. Python add-ons read it as it is, so nothing in it may move, be renamed, be
- * removed or change type.
+ * \brief The event's own fields as the data JSON-RPC and Python are given, without its item.
  */
-CVariant LegacyDataOf(const Announcement& announcement);
+CVariant EventDataOf(const Announcement& announcement);
+
+/*!
+ * \brief The data JSON-RPC and Python are given: the event's fields and, under "item", what its
+ * item is. Python add-ons read it as it is, so nothing in it may move, be renamed, be removed or
+ * change type.
+ */
+CVariant NotificationDataOf(const Announcement& announcement);
 
 /*!
  * \brief The announcement with its item replaced by \p item.

@@ -9,16 +9,8 @@
 #include "AnnouncementManager.h"
 
 #include "FileItem.h"
-#include "music/MusicDatabase.h"
-#include "music/tags/MusicInfoTag.h"
-#include "pvr/channels/PVRChannel.h"
 #include "threads/SingleLock.h"
-#include "utils/DatabaseUtils.h"
-#include "utils/StringUtils.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
-#include "video/VideoFileItemClassify.h"
 
 #include <memory>
 #include <mutex>
@@ -26,186 +18,11 @@
 #include <vector>
 
 using namespace ANNOUNCEMENT;
-using namespace KODI;
-using KODI::MEDIA::MediaType;
-using KODI::MEDIA::NameOf;
 
 const std::string CAnnouncementManager::ANNOUNCEMENT_SENDER = "xbmc";
 
 namespace
 {
-
-void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
-{
-  auto& objItem = object["item"];
-
-  objItem["type"] = "channel";
-  objItem["title"] = channel.ChannelName();
-  objItem["channelType"] = channel.IsRadio() ? "radio" : "tv";
-
-  objItem["id"] = channel.ChannelID();
-}
-
-void CopyVideoTagInfoToObject(const CFileItem& item, CVariant& object)
-{
-  CVideoInfoTag tag = *item.GetVideoInfoTag();
-
-  auto& objItem = object["item"];
-  int id = tag.GetDatabaseId();
-
-  //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty())
-  {
-    CVideoDatabase videodatabase;
-    if (videodatabase.Open())
-    {
-      std::string videoInfoTagPath = tag.m_strFileNameAndPath;
-      std::string path;
-      if (StringUtils::StartsWith(videoInfoTagPath, "removable://"))
-        path = videoInfoTagPath;
-      else
-        path = item.GetPath();
-      if (videodatabase.LoadVideoInfo(path, tag))
-        id = tag.GetDatabaseId();
-
-      videodatabase.Close();
-    }
-    else
-    {
-      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
-                  "Unable to open video database. Can not load video tag for announcement!");
-    }
-  }
-
-  if (!tag.m_type.empty())
-    objItem["type"] = tag.m_type;
-  else
-    objItem["type"] =
-        NameOf(DatabaseUtils::MediaTypeFromVideoContentType(item.GetVideoContentType()));
-
-  if (id <= 0)
-  {
-    std::string title = tag.m_strTitle;
-    if (title.empty())
-      title = item.GetLabel();
-    objItem["title"] = title;
-
-    using enum VideoDbContentType;
-    switch (item.GetVideoContentType())
-    {
-      case MOVIES:
-        if (tag.HasYear())
-          objItem["year"] = tag.GetYear();
-        break;
-      case EPISODES:
-        if (tag.m_iEpisode >= 0)
-          objItem["episode"] = tag.m_iEpisode;
-        if (tag.m_iSeason >= 0)
-          objItem["season"] = tag.m_iSeason;
-        if (!tag.m_strShowTitle.empty())
-          objItem["showTitle"] = tag.m_strShowTitle;
-        break;
-      case MUSICVIDEOS:
-        if (!tag.m_strAlbum.empty())
-          objItem["album"] = tag.m_strAlbum;
-        if (!tag.m_artist.empty())
-          objItem["artist"] = StringUtils::Join(tag.m_artist, " / ");
-        break;
-      default:
-        break;
-    }
-  }
-  else
-  {
-    objItem["id"] = id;
-  }
-}
-
-void CopyMusicTagInfoToObject(const CFileItem& item, CVariant& object)
-{
-  MUSIC_INFO::CMusicInfoTag tag = *item.GetMusicInfoTag();
-
-  auto& objItem = object["item"];
-  int id = tag.GetDatabaseId();
-  objItem["type"] = NameOf(MediaType::SONG);
-
-  //! @todo Can be removed once this is properly handled when starting playback of a file
-  if (id <= 0 && !item.GetPath().empty())
-  {
-    CMusicDatabase musicdatabase;
-    if (musicdatabase.Open())
-    {
-      CSong song;
-      if (musicdatabase.GetSongByFileName(item.GetPath(), song, item.GetStartOffset()))
-      {
-        tag.SetSong(song);
-        id = tag.GetDatabaseId();
-      }
-
-      musicdatabase.Close();
-    }
-    else
-    {
-      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
-                  "Unable to open music database. Can not load song tag for announcement!");
-    }
-  }
-
-  if (id <= 0)
-  {
-    objItem["title"] = tag.GetTitle();
-    if (objItem["title"].empty())
-      objItem["title"] = item.GetLabel();
-
-    if (tag.GetTrackNumber() > 0)
-      objItem["track"] = tag.GetTrackNumber();
-    if (!tag.GetAlbum().empty())
-      objItem["album"] = tag.GetAlbum();
-    if (!tag.GetArtist().empty())
-      objItem["artist"] = tag.GetArtist();
-  }
-  else
-  {
-    objItem["id"] = id;
-  }
-}
-
-CVariant CreateDataObjectFromItem(const CFileItem& item, const CVariant& data)
-{
-  CVariant object;
-  if (data.isNull() || data.isObject())
-    object = data;
-  else
-    object = CVariant::VariantTypeObject;
-
-  if (item.HasPVRChannelInfoTag())
-  {
-    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), object);
-  }
-  else if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
-  {
-    CopyVideoTagInfoToObject(item, object);
-  }
-  else if (item.HasMusicInfoTag())
-  {
-    CopyMusicTagInfoToObject(item, object);
-  }
-  else if (VIDEO::IsVideo(item))
-  {
-    // video item but has no video info tag.
-    object["item"]["type"] = "movie";
-    object["item"]["title"] = item.GetLabel();
-  }
-  else if (item.HasPictureInfoTag())
-  {
-    object["item"]["type"] = "picture";
-    object["item"]["file"] = item.GetPath();
-  }
-  else
-    object["item"]["type"] = "unknown";
-
-  return object;
-}
 
 void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::PlayerEvent& event)
 {
@@ -262,7 +79,18 @@ void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SettingsEvent& event)
   announcer.OnSettingsEvent(event);
 }
 
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::OtherEvent& event)
+{
+  announcer.OnOtherEvent(event);
+}
+
 } // unnamed namespace
+
+void IAnnouncer::OnAnnouncement(const Announcement& announcement)
+{
+  std::visit([this](const auto& event) { Deliver(*this, event); },
+             static_cast<const Announcement::variant&>(announcement));
+}
 
 CAnnouncementManager::CAnnouncementManager() : CThread("Announce")
 {
@@ -315,94 +143,11 @@ void CAnnouncementManager::RemoveAnnouncer(IAnnouncer *listener)
     m_announced.wait(lock, [this, listener] { return m_announcing != listener; });
 }
 
-void CAnnouncementManager::Announce(AnnouncementFlag flag, const std::string& message)
-{
-  CVariant data;
-  Announce(flag, ANNOUNCEMENT_SENDER, message, CFileItemPtr(), data);
-}
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& message,
-                                    const CVariant& data)
-{
-  Announce(flag, ANNOUNCEMENT_SENDER, message, CFileItemPtr(), data);
-}
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& message,
-                                    const std::shared_ptr<const CFileItem>& item)
-{
-  CVariant data;
-  Announce(flag, ANNOUNCEMENT_SENDER, message, item, data);
-}
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& message,
-                                    const std::shared_ptr<const CFileItem>& item,
-                                    const CVariant& data)
-{
-  Announce(flag, ANNOUNCEMENT_SENDER, message, item, data);
-}
-
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& sender,
-                                    const std::string& message)
-{
-  CVariant data;
-  Announce(flag, sender, message, CFileItemPtr(), data);
-}
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& sender,
-                                    const std::string& message,
-                                    const CVariant& data)
-{
-  Announce(flag, sender, message, CFileItemPtr(), data);
-}
-
-void CAnnouncementManager::Announce(AnnouncementFlag flag,
-                                    const std::string& sender,
-                                    const std::string& message,
-                                    const std::shared_ptr<const CFileItem>& item,
-                                    const CVariant& data)
-{
-  CAnnounceData announcement;
-  announcement.flag = flag;
-  announcement.sender = sender;
-  announcement.message = message;
-  announcement.data = data;
-
-  if (item != nullptr)
-    announcement.item = std::make_shared<CFileItem>(*item);
-
-  {
-    std::unique_lock lock(m_queueCritSection);
-    m_announcementQueue.push_back(announcement);
-  }
-  m_queueEvent.Set();
-}
-
 void CAnnouncementManager::Announce(const Announcement& announcement)
 {
-  Announce(announcement, ANNOUNCEMENT_SENDER);
-}
-
-void CAnnouncementManager::Announce(const Announcement& announcement, const std::string& sender)
-{
-  CAnnounceData queued;
-  queued.flag = FlagOf(announcement);
-  queued.sender = sender;
-  queued.message = MessageOf(announcement);
-  queued.data = LegacyDataOf(announcement);
+  Announcement queued = announcement;
   if (const auto item = ItemOf(announcement); item)
-  {
-    auto copy = std::make_shared<CFileItem>(*item);
-    queued.item = copy;
-    queued.announcement = WithItem(announcement, std::move(copy));
-  }
-  else
-    queued.announcement = announcement;
+    queued = WithItem(announcement, std::make_shared<CFileItem>(*item));
 
   {
     std::unique_lock lock(m_queueCritSection);
@@ -411,15 +156,12 @@ void CAnnouncementManager::Announce(const Announcement& announcement, const std:
   m_queueEvent.Set();
 }
 
-void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
-                                      const std::string& sender,
-                                      const std::string& message,
-                                      const CVariant& data,
-                                      const Announcement* announcement /* = nullptr */)
+void CAnnouncementManager::DoAnnounce(const Announcement& announcement)
 {
-  CLog::LogFC(LOGWARNING, LOGANNOUNCE, "CAnnouncementManager - Announcement: {} from {}", message,
-              sender);
+  CLog::LogFC(LOGWARNING, LOGANNOUNCE, "CAnnouncementManager - Announcement: {} from {}",
+              MessageOf(announcement), SenderOf(announcement));
 
+  const AnnouncementFlag flag = FlagOf(announcement);
   std::unique_lock lock(m_announcersCritSection);
 
   std::vector<IAnnouncer*> announcers;
@@ -440,10 +182,7 @@ void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
     try
     {
       CSingleExit unlock(m_announcersCritSection);
-      if (announcement)
-        std::visit([announcer](const auto& event) { Deliver(*announcer, event); },
-                   static_cast<const Announcement::variant&>(*announcement));
-      announcer->Announce(flag, sender, message, data);
+      announcer->OnAnnouncement(announcement);
     }
     catch (...)
     {
@@ -457,18 +196,6 @@ void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
   }
 }
 
-void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
-                                      const std::string& sender,
-                                      const std::string& message,
-                                      const std::shared_ptr<CFileItem>& item,
-                                      const CVariant& data)
-{
-  if (item == nullptr)
-    DoAnnounce(flag, sender, message, data);
-  else
-    DoAnnounce(flag, sender, message, CreateDataObjectFromItem(*item, data));
-}
-
 void CAnnouncementManager::Process()
 {
   SetPriority(ThreadPriority::LOWEST);
@@ -478,15 +205,11 @@ void CAnnouncementManager::Process()
     std::unique_lock lock(m_queueCritSection);
     if (!m_announcementQueue.empty())
     {
-      auto announcement = m_announcementQueue.front();
+      const Announcement announcement = std::move(m_announcementQueue.front());
       m_announcementQueue.pop_front();
       {
         CSingleExit ex(m_queueCritSection);
-        const CVariant data = announcement.item
-                                  ? CreateDataObjectFromItem(*announcement.item, announcement.data)
-                                  : announcement.data;
-        DoAnnounce(announcement.flag, announcement.sender, announcement.message, data,
-                   announcement.announcement ? &*announcement.announcement : nullptr);
+        DoAnnounce(announcement);
       }
     }
     else

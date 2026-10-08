@@ -10,7 +10,6 @@
 
 #include <string>
 
-class CVariant;
 namespace ANNOUNCEMENT
 {
 enum AnnouncementFlag
@@ -86,6 +85,8 @@ struct PVREvent;
 struct InfoEvent;
 struct SourcesEvent;
 struct SettingsEvent;
+struct OtherEvent;
+struct Announcement;
 
   class IAnnouncer
   {
@@ -94,14 +95,10 @@ struct SettingsEvent;
     virtual ~IAnnouncer() = default;
 
     /*!
-     * \brief Every announcement, as JSON-RPC and Python receive it.
+     * \brief Every announcement of the flags the announcer was added for. Each goes to the
+     * handler for its flag unless this is overridden.
      */
-    virtual void Announce(AnnouncementFlag flag,
-                          const std::string& sender,
-                          const std::string& message,
-                          const CVariant& data)
-    {
-    }
+    virtual void OnAnnouncement(const Announcement& announcement);
 
     virtual void OnPlayerEvent(const PlayerEvent& event) {}
     virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
@@ -114,5 +111,6 @@ struct SettingsEvent;
     virtual void OnInfoEvent(const InfoEvent& event) {}
     virtual void OnSourcesEvent(const SourcesEvent& event) {}
     virtual void OnSettingsEvent(const SettingsEvent& event) {}
+    virtual void OnOtherEvent(const OtherEvent& event) {}
   };
 }

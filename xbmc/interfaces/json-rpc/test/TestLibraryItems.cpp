@@ -221,23 +221,22 @@ public:
 
   ~CUpdateListener() override { m_announcements->RemoveAnnouncer(this); }
 
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement) override
   {
+    const std::string message = ANNOUNCEMENT::MessageOf(announcement);
     std::unique_lock lock(m_lock);
     if (message == DRAINED)
       m_drained = true;
     else if (message == "OnUpdate")
-      m_updates.push_back(data);
+      m_updates.push_back(ANNOUNCEMENT::NotificationDataOf(announcement));
     m_arrived.notify_all();
   }
 
   //! The updates announced about the item of \p kind with \p id, once all announced so far arrived
   std::vector<CVariant> UpdatesTo(const std::string& kind, int id)
   {
-    m_announcements->Announce(ANNOUNCEMENT::Other, DRAINED);
+    m_announcements->Announce(ANNOUNCEMENT::OtherEvent{
+        ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER, DRAINED, {}});
 
     std::unique_lock lock(m_lock);
     m_arrived.wait_for(lock, std::chrono::seconds(5), [this] { return m_drained; });

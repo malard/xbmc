@@ -7,8 +7,7 @@
  */
 
 #include "FileItem.h"
-#include "interfaces/AnnouncementManager.h"
-#include "interfaces/IAnnouncer.h"
+#include "interfaces/AnnouncementEvents.h"
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroupMember.h"
 #include "utils/Variant.h"
@@ -24,36 +23,9 @@ using KODI::MEDIA::MediaType;
 
 namespace
 {
-//! Announces synchronously, bypassing the queue thread.
-class CTestAnnouncementManager : public CAnnouncementManager
-{
-public:
-  using CAnnouncementManager::DoAnnounce;
-};
-
-class CCapturingAnnouncer : public IAnnouncer
-{
-public:
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
-  {
-    m_data = data;
-  }
-
-  CVariant m_data;
-};
-
 CVariant ItemDataFor(const std::shared_ptr<CFileItem>& item)
 {
-  CTestAnnouncementManager manager;
-  CCapturingAnnouncer announcer;
-  manager.AddAnnouncer(&announcer);
-  manager.DoAnnounce(Player, CAnnouncementManager::ANNOUNCEMENT_SENDER, "OnPlay", item,
-                     CVariant::VariantTypeObject);
-  manager.RemoveAnnouncer(&announcer);
-  return announcer.m_data["item"];
+  return NotificationDataOf(PlayerEvent{EVENT::PLAYER::Play{item, 1, {}}})["item"];
 }
 } // unnamed namespace
 

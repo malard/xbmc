@@ -9,8 +9,16 @@
 #include "AnnouncementEvents.h"
 
 #include "FileItem.h"
+#include "interfaces/AnnouncementManager.h"
 #include "interfaces/PlaybackValues.h"
+#include "music/MusicDatabase.h"
+#include "music/tags/MusicInfoTag.h"
+#include "pvr/channels/PVRChannel.h"
 #include "settings/lib/SettingLevel.h"
+#include "utils/DatabaseUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/log.h"
+#include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
 
 #include <type_traits>
@@ -44,7 +52,7 @@ CVariant SpeedAndPlayers(int speed, KODI::MEDIA::Streams streams)
   return data;
 }
 
-const char* NameOf(EVENT::INPUT::Requested::Kind kind)
+const char* KindNameOf(EVENT::INPUT::Requested::Kind kind)
 {
   using enum EVENT::INPUT::Requested::Kind;
   switch (kind)
@@ -94,7 +102,7 @@ CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
   return properties;
 }
 
-CVariant LegacyDataOfEvent(const PlayerEvent& event)
+CVariant DataOfEvent(const PlayerEvent& event)
 {
   using namespace EVENT::PLAYER;
   return std::visit(
@@ -152,7 +160,7 @@ CVariant LegacyDataOfEvent(const PlayerEvent& event)
       static_cast<const PlayerEvent::variant&>(event));
 }
 
-CVariant LegacyDataOfEvent(const PlaylistEvent& event)
+CVariant DataOfEvent(const PlaylistEvent& event)
 {
   using namespace EVENT::PLAYLIST;
   return std::visit(Overloaded{[](const Add& e)
@@ -189,7 +197,7 @@ CVariant LegacyDataOfEvent(const PlaylistEvent& event)
                     static_cast<const PlaylistEvent::variant&>(event));
 }
 
-CVariant LegacyDataOfEvent(const GUIEvent& event)
+CVariant DataOfEvent(const GUIEvent& event)
 {
   if (const auto* deactivated = std::get_if<EVENT::GUI::ScreensaverDeactivated>(&event))
   {
@@ -200,7 +208,7 @@ CVariant LegacyDataOfEvent(const GUIEvent& event)
   return CVariant{};
 }
 
-CVariant LegacyDataOfEvent(const SystemEvent& event)
+CVariant DataOfEvent(const SystemEvent& event)
 {
   if (const auto* quit = std::get_if<EVENT::SYSTEM::Quit>(&event))
   {
@@ -211,7 +219,7 @@ CVariant LegacyDataOfEvent(const SystemEvent& event)
   return CVariant{};
 }
 
-CVariant LegacyDataOfEvent(const LibraryEvent& event)
+CVariant DataOfEvent(const LibraryEvent& event)
 {
   using namespace EVENT::LIBRARY;
   CVariant data;
@@ -250,12 +258,12 @@ CVariant LegacyDataOfEvent(const LibraryEvent& event)
   return data;
 }
 
-CVariant LegacyDataOfEvent(const InputEvent& event)
+CVariant DataOfEvent(const InputEvent& event)
 {
   CVariant data;
   if (const auto* requested = std::get_if<EVENT::INPUT::Requested>(&event))
   {
-    data["type"] = NameOf(requested->kind);
+    data["type"] = KindNameOf(requested->kind);
     if (requested->title)
       data["title"] = *requested->title;
     data["value"] = requested->value;
@@ -263,7 +271,7 @@ CVariant LegacyDataOfEvent(const InputEvent& event)
   return data;
 }
 
-CVariant LegacyDataOfEvent(const PVREvent& event)
+CVariant DataOfEvent(const PVREvent& event)
 {
   using namespace EVENT::PVR;
   CVariant data(CVariant::VariantTypeObject);
@@ -282,22 +290,199 @@ CVariant LegacyDataOfEvent(const PVREvent& event)
   return data;
 }
 
-CVariant LegacyDataOfEvent(const InfoEvent&)
+CVariant DataOfEvent(const InfoEvent&)
 {
   return CVariant{};
 }
 
-CVariant LegacyDataOfEvent(const SourcesEvent& event)
+CVariant DataOfEvent(const SourcesEvent& event)
 {
   return std::visit([](const auto& e) { return CVariant{e.path}; },
                     static_cast<const SourcesEvent::variant&>(event));
 }
 
-CVariant LegacyDataOfEvent(const SettingsEvent& event)
+CVariant DataOfEvent(const SettingsEvent& event)
 {
   CVariant data(CVariant::VariantTypeObject);
   data["level"] = SettingLevelToString(std::get<EVENT::SETTINGS::LevelChanged>(event).level);
   return data;
+}
+
+CVariant DataOfEvent(const OtherEvent& event)
+{
+  return event.data;
+}
+
+void CopyPVRTagInfoToObject(const PVR::CPVRChannel& channel, CVariant& object)
+{
+  auto& objItem = object["item"];
+
+  objItem["type"] = "channel";
+  objItem["title"] = channel.ChannelName();
+  objItem["channelType"] = channel.IsRadio() ? "radio" : "tv";
+
+  objItem["id"] = channel.ChannelID();
+}
+
+void CopyVideoTagInfoToObject(const CFileItem& item, CVariant& object)
+{
+  CVideoInfoTag tag = *item.GetVideoInfoTag();
+
+  auto& objItem = object["item"];
+  int id = tag.GetDatabaseId();
+
+  //! @todo Can be removed once this is properly handled when starting playback of a file
+  if (id <= 0 && !item.GetPath().empty())
+  {
+    CVideoDatabase videodatabase;
+    if (videodatabase.Open())
+    {
+      std::string videoInfoTagPath = tag.m_strFileNameAndPath;
+      std::string path;
+      if (StringUtils::StartsWith(videoInfoTagPath, "removable://"))
+        path = videoInfoTagPath;
+      else
+        path = item.GetPath();
+      if (videodatabase.LoadVideoInfo(path, tag))
+        id = tag.GetDatabaseId();
+
+      videodatabase.Close();
+    }
+    else
+    {
+      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
+                  "Unable to open video database. Can not load video tag for announcement!");
+    }
+  }
+
+  if (!tag.m_type.empty())
+    objItem["type"] = tag.m_type;
+  else
+    objItem["type"] =
+        NameOf(DatabaseUtils::MediaTypeFromVideoContentType(item.GetVideoContentType()));
+
+  if (id <= 0)
+  {
+    std::string title = tag.m_strTitle;
+    if (title.empty())
+      title = item.GetLabel();
+    objItem["title"] = title;
+
+    using enum VideoDbContentType;
+    switch (item.GetVideoContentType())
+    {
+      case MOVIES:
+        if (tag.HasYear())
+          objItem["year"] = tag.GetYear();
+        break;
+      case EPISODES:
+        if (tag.m_iEpisode >= 0)
+          objItem["episode"] = tag.m_iEpisode;
+        if (tag.m_iSeason >= 0)
+          objItem["season"] = tag.m_iSeason;
+        if (!tag.m_strShowTitle.empty())
+          objItem["showTitle"] = tag.m_strShowTitle;
+        break;
+      case MUSICVIDEOS:
+        if (!tag.m_strAlbum.empty())
+          objItem["album"] = tag.m_strAlbum;
+        if (!tag.m_artist.empty())
+          objItem["artist"] = StringUtils::Join(tag.m_artist, " / ");
+        break;
+      default:
+        break;
+    }
+  }
+  else
+  {
+    objItem["id"] = id;
+  }
+}
+
+void CopyMusicTagInfoToObject(const CFileItem& item, CVariant& object)
+{
+  MUSIC_INFO::CMusicInfoTag tag = *item.GetMusicInfoTag();
+
+  auto& objItem = object["item"];
+  int id = tag.GetDatabaseId();
+  objItem["type"] = KODI::MEDIA::NameOf(KODI::MEDIA::MediaType::SONG);
+
+  //! @todo Can be removed once this is properly handled when starting playback of a file
+  if (id <= 0 && !item.GetPath().empty())
+  {
+    CMusicDatabase musicdatabase;
+    if (musicdatabase.Open())
+    {
+      CSong song;
+      if (musicdatabase.GetSongByFileName(item.GetPath(), song, item.GetStartOffset()))
+      {
+        tag.SetSong(song);
+        id = tag.GetDatabaseId();
+      }
+
+      musicdatabase.Close();
+    }
+    else
+    {
+      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
+                  "Unable to open music database. Can not load song tag for announcement!");
+    }
+  }
+
+  if (id <= 0)
+  {
+    objItem["title"] = tag.GetTitle();
+    if (objItem["title"].empty())
+      objItem["title"] = item.GetLabel();
+
+    if (tag.GetTrackNumber() > 0)
+      objItem["track"] = tag.GetTrackNumber();
+    if (!tag.GetAlbum().empty())
+      objItem["album"] = tag.GetAlbum();
+    if (!tag.GetArtist().empty())
+      objItem["artist"] = tag.GetArtist();
+  }
+  else
+  {
+    objItem["id"] = id;
+  }
+}
+
+CVariant CreateDataObjectFromItem(const CFileItem& item, const CVariant& data)
+{
+  CVariant object;
+  if (data.isNull() || data.isObject())
+    object = data;
+  else
+    object = CVariant::VariantTypeObject;
+
+  if (item.HasPVRChannelInfoTag())
+  {
+    CopyPVRTagInfoToObject(*item.GetPVRChannelInfoTag(), object);
+  }
+  else if (item.HasVideoInfoTag() && !item.HasPVRRecordingInfoTag())
+  {
+    CopyVideoTagInfoToObject(item, object);
+  }
+  else if (item.HasMusicInfoTag())
+  {
+    CopyMusicTagInfoToObject(item, object);
+  }
+  else if (KODI::VIDEO::IsVideo(item))
+  {
+    // video item but has no video info tag.
+    object["item"]["type"] = "movie";
+    object["item"]["title"] = item.GetLabel();
+  }
+  else if (item.HasPictureInfoTag())
+  {
+    object["item"]["type"] = "picture";
+    object["item"]["file"] = item.GetPath();
+  }
+  else
+    object["item"]["type"] = "unknown";
+
+  return object;
 }
 
 } // unnamed namespace
@@ -327,38 +512,59 @@ AnnouncementFlag FlagOf(const Announcement& announcement)
 const char* MessageOf(const Announcement& announcement)
 {
   return std::visit(
-      [](const auto& flagEvent)
+      [](const auto& flagEvent) -> const char*
       {
         using FlagEvent = std::decay_t<decltype(flagEvent)>;
-        return std::visit([](const auto& event) { return std::decay_t<decltype(event)>::MESSAGE; },
-                          static_cast<const typename FlagEvent::variant&>(flagEvent));
+        if constexpr (std::is_same_v<FlagEvent, OtherEvent>)
+          return flagEvent.message.c_str();
+        else
+          return std::visit([](const auto& event)
+                            { return std::decay_t<decltype(event)>::MESSAGE; },
+                            static_cast<const typename FlagEvent::variant&>(flagEvent));
       },
       static_cast<const Announcement::variant&>(announcement));
+}
+
+const std::string& SenderOf(const Announcement& announcement)
+{
+  if (const auto* other = std::get_if<OtherEvent>(&announcement))
+    return other->sender;
+  return CAnnouncementManager::ANNOUNCEMENT_SENDER;
 }
 
 std::shared_ptr<const CFileItem> ItemOf(const Announcement& announcement)
 {
   return std::visit(
-      [](const auto& flagEvent)
+      [](const auto& flagEvent) -> std::shared_ptr<const CFileItem>
       {
         using FlagEvent = std::decay_t<decltype(flagEvent)>;
-        return std::visit(
-            [](const auto& event) -> std::shared_ptr<const CFileItem>
-            {
-              if constexpr (requires { event.item; })
-                return event.item;
-              else
-                return nullptr;
-            },
-            static_cast<const typename FlagEvent::variant&>(flagEvent));
+        if constexpr (std::is_same_v<FlagEvent, OtherEvent>)
+          return nullptr;
+        else
+          return std::visit(
+              [](const auto& event) -> std::shared_ptr<const CFileItem>
+              {
+                if constexpr (requires { event.item; })
+                  return event.item;
+                else
+                  return nullptr;
+              },
+              static_cast<const typename FlagEvent::variant&>(flagEvent));
       },
       static_cast<const Announcement::variant&>(announcement));
 }
 
-CVariant LegacyDataOf(const Announcement& announcement)
+CVariant EventDataOf(const Announcement& announcement)
 {
-  return std::visit([](const auto& event) { return LegacyDataOfEvent(event); },
+  return std::visit([](const auto& event) { return DataOfEvent(event); },
                     static_cast<const Announcement::variant&>(announcement));
+}
+
+CVariant NotificationDataOf(const Announcement& announcement)
+{
+  const std::shared_ptr<const CFileItem> item = ItemOf(announcement);
+  return item ? CreateDataObjectFromItem(*item, EventDataOf(announcement))
+              : EventDataOf(announcement);
 }
 
 Announcement WithItem(Announcement announcement, std::shared_ptr<const CFileItem> item)
@@ -367,13 +573,14 @@ Announcement WithItem(Announcement announcement, std::shared_ptr<const CFileItem
       [&item](auto& flagEvent)
       {
         using FlagEvent = std::decay_t<decltype(flagEvent)>;
-        std::visit(
-            [&item](auto& event)
-            {
-              if constexpr (requires { event.item; })
-                event.item = std::move(item);
-            },
-            static_cast<typename FlagEvent::variant&>(flagEvent));
+        if constexpr (!std::is_same_v<FlagEvent, OtherEvent>)
+          std::visit(
+              [&item](auto& event)
+              {
+                if constexpr (requires { event.item; })
+                  event.item = std::move(item);
+              },
+              static_cast<typename FlagEvent::variant&>(flagEvent));
       },
       static_cast<Announcement::variant&>(announcement));
   return announcement;

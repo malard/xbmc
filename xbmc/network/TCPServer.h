@@ -45,10 +45,7 @@ namespace JSONRPC
     bool PrepareDownload(const char *path, CVariant &details, std::string &protocol) override;
     int GetCapabilities() override;
 
-    void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                  const std::string& sender,
-                  const std::string& message,
-                  const CVariant& data) override;
+    void OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement) override;
 
   protected:
     void Process() override;

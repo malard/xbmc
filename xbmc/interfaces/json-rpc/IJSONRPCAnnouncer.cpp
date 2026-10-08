@@ -10,6 +10,7 @@
 
 #include "AudioLibrary.h"
 #include "VideoLibrary.h"
+#include "interfaces/AnnouncementEvents.h"
 #include "interfaces/AnnouncementMessages.h"
 #include "media/MediaType.h"
 #include "utils/JSONVariantWriter.h"
@@ -20,6 +21,15 @@
 
 namespace JSONRPC
 {
+
+std::string IJSONRPCAnnouncer::AnnouncementToJSONRPC(const ANNOUNCEMENT::Announcement& announcement,
+                                                     bool compactOutput)
+{
+  return AnnouncementToJSONRPC(ANNOUNCEMENT::FlagOf(announcement),
+                               ANNOUNCEMENT::SenderOf(announcement),
+                               ANNOUNCEMENT::MessageOf(announcement),
+                               ANNOUNCEMENT::NotificationDataOf(announcement), compactOutput);
+}
 
 std::string IJSONRPCAnnouncer::AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
                                                      const std::string& sender,

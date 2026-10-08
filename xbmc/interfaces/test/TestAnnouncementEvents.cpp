@@ -23,7 +23,7 @@ using namespace ANNOUNCEMENT;
 using namespace std::chrono_literals;
 
 /*
- * Python add-ons receive LegacyDataOf() as onNotification data, so these expectations are a
+ * Python add-ons receive these as onNotification data, so these expectations are a
  * contract: an addition is allowed, but nothing may move, be renamed, be removed or change type.
  */
 namespace
@@ -39,7 +39,7 @@ void ExpectData(const Announcement& announcement, const std::string& expected)
   std::string expectedJson;
   std::string actualJson;
   CJSONVariantWriter::Write(parsed, expectedJson, true);
-  CJSONVariantWriter::Write(LegacyDataOf(announcement), actualJson, true);
+  CJSONVariantWriter::Write(EventDataOf(announcement), actualJson, true);
   EXPECT_EQ(expectedJson, actualJson);
 }
 } // unnamed namespace
@@ -94,7 +94,7 @@ TEST(TestAnnouncementEvents, PlaybackFailedData)
              R"({"reason":"unresolved"})");
   ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Locked}}, R"({"reason":"locked"})");
   ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Error}}, R"({"reason":"error"})");
-  EXPECT_TRUE(LegacyDataOf(PlayerEvent{PlaybackFailed{}}).isNull());
+  EXPECT_TRUE(EventDataOf(PlayerEvent{PlaybackFailed{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, PlayerPropertiesData)
@@ -140,10 +140,10 @@ TEST(TestAnnouncementEvents, PlayerOtherData)
              R"({"aspect":2.39,"player":{"players":["video"]}})");
   ExpectData(PlayerEvent{Commercial{"01:30"}}, R"("01:30")");
   ExpectData(PlayerEvent{ToggleSkipCommercials{true}}, "true");
-  EXPECT_TRUE(LegacyDataOf(PlayerEvent{ProcessInfo{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(PlayerEvent{Menu{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(PlayerEvent{BlurayMenuError{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(PlayerEvent{BlurayEncryptedError{}}).isNull());
+  EXPECT_TRUE(EventDataOf(PlayerEvent{ProcessInfo{}}).isNull());
+  EXPECT_TRUE(EventDataOf(PlayerEvent{Menu{}}).isNull());
+  EXPECT_TRUE(EventDataOf(PlayerEvent{BlurayMenuError{}}).isNull());
+  EXPECT_TRUE(EventDataOf(PlayerEvent{BlurayEncryptedError{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, PlaylistData)
@@ -180,8 +180,8 @@ TEST(TestAnnouncementEvents, GUIEvents)
 
   ExpectData(GUIEvent{ScreensaverDeactivated{true}}, R"({"shuttingdown":true})");
   ExpectData(GUIEvent{ScreensaverDeactivated{false}}, R"({"shuttingdown":false})");
-  EXPECT_TRUE(LegacyDataOf(GUIEvent{ScreensaverActivated{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(GUIEvent{SkinLoaded{}}).isNull());
+  EXPECT_TRUE(EventDataOf(GUIEvent{ScreensaverActivated{}}).isNull());
+  EXPECT_TRUE(EventDataOf(GUIEvent{SkinLoaded{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, SystemEvents)
@@ -195,7 +195,7 @@ TEST(TestAnnouncementEvents, SystemEvents)
   EXPECT_STREQ("OnLowBattery", MessageOf(SystemEvent{LowBattery{}}));
 
   ExpectData(SystemEvent{Quit{64}}, R"({"exitcode":64})");
-  EXPECT_TRUE(LegacyDataOf(SystemEvent{Restart{}}).isNull());
+  EXPECT_TRUE(EventDataOf(SystemEvent{Restart{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, LibraryEventsKeepTheirMessages)
@@ -212,9 +212,9 @@ TEST(TestAnnouncementEvents, LibraryEventsKeepTheirMessages)
   EXPECT_STREQ("OnExport", MessageOf(VideoLibraryEvent{Export{}}));
   EXPECT_STREQ("OnRefresh", MessageOf(VideoLibraryEvent{Refresh{}}));
 
-  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{ScanStarted{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(AudioLibraryEvent{CleanFinished{}}).isNull());
-  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{Refresh{}}).isNull());
+  EXPECT_TRUE(EventDataOf(VideoLibraryEvent{ScanStarted{}}).isNull());
+  EXPECT_TRUE(EventDataOf(AudioLibraryEvent{CleanFinished{}}).isNull());
+  EXPECT_TRUE(EventDataOf(VideoLibraryEvent{Refresh{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, LibraryUpdateData)
@@ -254,7 +254,7 @@ TEST(TestAnnouncementEvents, LibraryRemoveAndExportData)
              R"({"root":"/export/","file":"/export/videodb.xml","failcount":3})");
   ExpectData(AudioLibraryEvent{Export{.file = "/export/kodi_musicdb.xml"}},
              R"({"file":"/export/kodi_musicdb.xml"})");
-  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{Export{}}).isNull());
+  EXPECT_TRUE(EventDataOf(VideoLibraryEvent{Export{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, OnlyScansAndCleansAreTransactions)
@@ -289,7 +289,7 @@ TEST(TestAnnouncementEvents, InputEvents)
              R"({"type":"seconds","value":"90"})");
   ExpectData(InputEvent{Requested{IPAddress, std::nullopt, "10.0.0.1"}},
              R"({"type":"ip","value":"10.0.0.1"})");
-  EXPECT_TRUE(LegacyDataOf(InputEvent{Finished{}}).isNull());
+  EXPECT_TRUE(EventDataOf(InputEvent{Finished{}}).isNull());
 }
 
 TEST(TestAnnouncementEvents, PVREvents)
@@ -312,7 +312,7 @@ TEST(TestAnnouncementEvents, InfoSourcesAndSettingsEvents)
 {
   EXPECT_EQ(Info, FlagOf(InfoEvent{EVENT::INFO::Changed{}}));
   EXPECT_STREQ("OnChanged", MessageOf(InfoEvent{EVENT::INFO::Changed{}}));
-  EXPECT_TRUE(LegacyDataOf(InfoEvent{EVENT::INFO::Changed{}}).isNull());
+  EXPECT_TRUE(EventDataOf(InfoEvent{EVENT::INFO::Changed{}}).isNull());
 
   using namespace EVENT::SOURCES;
   EXPECT_EQ(Sources, FlagOf(SourcesEvent{Added{}}));

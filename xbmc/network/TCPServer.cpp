@@ -329,11 +329,9 @@ int CTCPServer::GetCapabilities()
   return Response | Announcing;
 }
 
-void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                          const std::string& sender,
-                          const std::string& message,
-                          const CVariant& data)
+void CTCPServer::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
 {
+  const ANNOUNCEMENT::AnnouncementFlag flag = ANNOUNCEMENT::FlagOf(announcement);
   // Take a snapshot under the lock and send outside it. Each entry is a shared_ptr, so a
   // connection the Process thread drops mid-iteration stays alive until we are done with it.
   std::vector<std::shared_ptr<CTCPClient>> connections;
@@ -345,7 +343,9 @@ void CTCPServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     connections = m_connections;
   }
 
-  std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(flag, sender, message, data, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
+  std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(
+      announcement,
+      CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
   if (str.empty())
     return;
 

@@ -14,6 +14,7 @@
 #include "application/Application.h"
 #include "application/ApplicationPlayLists.h"
 #include "filesystem/SpecialProtocol.h"
+#include "interfaces/AnnouncementEvents.h"
 #include "media/MediaType.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
@@ -249,14 +250,13 @@ void CAnnounceReceiver::DeInitialize()
   CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(GetInstance());
 }
 
-void CAnnounceReceiver::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                 const std::string& sender,
-                                 const std::string& message,
-                                 const CVariant& data)
+void CAnnounceReceiver::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
 {
   // can be called from c++, we need an auto poll here.
   @autoreleasepool
   {
-    AnnounceBridge(flag, sender, message, data);
+    AnnounceBridge(ANNOUNCEMENT::FlagOf(announcement), ANNOUNCEMENT::SenderOf(announcement),
+                   ANNOUNCEMENT::MessageOf(announcement),
+                   ANNOUNCEMENT::NotificationDataOf(announcement));
   }
 }

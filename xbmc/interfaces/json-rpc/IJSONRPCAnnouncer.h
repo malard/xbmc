@@ -22,6 +22,10 @@ namespace JSONRPC
     ~IJSONRPCAnnouncer() override = default;
 
   protected:
+  //! \return the notification for \p announcement, or nothing when clients do not receive it
+  static std::string AnnouncementToJSONRPC(const ANNOUNCEMENT::Announcement& announcement,
+                                           bool compactOutput);
+
   //! \return the notification, or nothing when the announcement is not one clients receive
   static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
                                              const std::string& sender,

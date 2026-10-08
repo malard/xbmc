@@ -21,13 +21,6 @@ namespace
 class CTestAnnouncer : public IJSONRPCAnnouncer
 {
 public:
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
-  {
-  }
-
   static CVariant Notification(ANNOUNCEMENT::AnnouncementFlag flag,
                                const std::string& message,
                                const CVariant& data)

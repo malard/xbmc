@@ -57,13 +57,13 @@ protected:
   std::shared_ptr<CTestPlayLists> m_playLists = std::make_shared<CTestPlayLists>();
   std::vector<Published> m_published;
   // What JSON-RPC and Python are given for each announcement.
-  CPlaybackAnnouncer m_announcer{
-      m_playLists, [this](const ANNOUNCEMENT::Announcement& announcement)
-      {
-        m_published.push_back(
-            {ANNOUNCEMENT::FlagOf(announcement), ANNOUNCEMENT::MessageOf(announcement),
-             ANNOUNCEMENT::ItemOf(announcement), ANNOUNCEMENT::LegacyDataOf(announcement)});
-      }};
+  CPlaybackAnnouncer m_announcer{m_playLists, [this](const ANNOUNCEMENT::Announcement& announcement)
+                                 {
+                                   m_published.push_back({ANNOUNCEMENT::FlagOf(announcement),
+                                                          ANNOUNCEMENT::MessageOf(announcement),
+                                                          ANNOUNCEMENT::ItemOf(announcement),
+                                                          ANNOUNCEMENT::EventDataOf(announcement)});
+                                 }};
 };
 
 const CVariant AUDIO{std::vector<std::string>{"audio"}};

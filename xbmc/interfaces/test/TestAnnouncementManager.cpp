@@ -27,15 +27,17 @@ namespace
 {
 constexpr auto TIMEOUT = 5s;
 
+OtherEvent TestEvent()
+{
+  return {CAnnouncementManager::ANNOUNCEMENT_SENDER, "Test", {}};
+}
+
 //! Stands in for an announcer that waits on another thread, as closing a window waits on the GUI
 //! thread.
 class CBlockingAnnouncer : public IAnnouncer
 {
 public:
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
     m_entered.Set();
     m_released = m_release.Wait(TIMEOUT);
@@ -49,10 +51,7 @@ public:
 class CRecordingAnnouncer : public IAnnouncer
 {
 public:
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
     if (m_removed)
       m_calledAfterRemoval = true;
@@ -67,10 +66,7 @@ class CSelfRemovingAnnouncer : public IAnnouncer
 public:
   explicit CSelfRemovingAnnouncer(CAnnouncementManager& manager) : m_manager(manager) {}
 
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
     m_manager.RemoveAnnouncer(this);
     m_removed.Set();
@@ -83,10 +79,7 @@ public:
 class CThrowingAnnouncer : public IAnnouncer
 {
 public:
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
     m_called.Set();
     throw std::runtime_error("announcer failed");
@@ -110,7 +103,7 @@ protected:
 TEST_F(TestAnnouncementManager, AnAnnouncerCanBeAddedWhileAnotherIsBeingCalled)
 {
   m_manager.AddAnnouncer(&m_blocking);
-  m_manager.Announce(Other, "Test");
+  m_manager.Announce(TestEvent());
   ASSERT_TRUE(m_blocking.m_entered.Wait(TIMEOUT));
 
   m_manager.AddAnnouncer(&m_recording);
@@ -124,7 +117,7 @@ TEST_F(TestAnnouncementManager, AnAnnouncerRemovedDuringADispatchIsNotCalledAfte
 {
   m_manager.AddAnnouncer(&m_blocking);
   m_manager.AddAnnouncer(&m_recording);
-  m_manager.Announce(Other, "Test");
+  m_manager.Announce(TestEvent());
   ASSERT_TRUE(m_blocking.m_entered.Wait(TIMEOUT));
 
   m_manager.RemoveAnnouncer(&m_recording);
@@ -139,7 +132,7 @@ TEST_F(TestAnnouncementManager, AnAnnouncerRemovedDuringADispatchIsNotCalledAfte
 TEST_F(TestAnnouncementManager, RemovingAnAnnouncerWaitsForItsCallInProgress)
 {
   m_manager.AddAnnouncer(&m_blocking);
-  m_manager.Announce(Other, "Test");
+  m_manager.Announce(TestEvent());
   ASSERT_TRUE(m_blocking.m_entered.Wait(TIMEOUT));
 
   std::atomic<bool> removed{false};
@@ -162,7 +155,7 @@ TEST_F(TestAnnouncementManager, AnAnnouncerCanRemoveItselfWhileBeingCalled)
 {
   CSelfRemovingAnnouncer announcer(m_manager);
   m_manager.AddAnnouncer(&announcer);
-  m_manager.Announce(Other, "Test");
+  m_manager.Announce(TestEvent());
 
   EXPECT_TRUE(announcer.m_removed.Wait(TIMEOUT));
   m_manager.Deinitialize();
@@ -175,7 +168,7 @@ TEST(TestAnnouncementManagerFailure, RemovingAnAnnouncerWhoseCallThrewDoesNotWai
   auto announcer = std::make_unique<CThrowingAnnouncer>();
   manager->Start();
   manager->AddAnnouncer(announcer.get());
-  manager->Announce(Other, "Test");
+  manager->Announce(TestEvent());
   ASSERT_TRUE(announcer->m_called.Wait(TIMEOUT));
 
   auto removed = std::make_shared<CEvent>();
@@ -206,13 +199,11 @@ public:
     m_typed.Set();
   }
 
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
-    m_message = message;
-    m_data = data;
+    m_message = MessageOf(announcement);
+    m_data = NotificationDataOf(announcement);
+    IAnnouncer::OnAnnouncement(announcement);
     m_legacy.Set();
   }
 
@@ -263,13 +254,11 @@ public:
     m_audioReceived.Set();
   }
 
-  void Announce(AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnAnnouncement(const Announcement& announcement) override
   {
-    if (flag == VideoLibrary)
-      m_videoData = data;
+    if (FlagOf(announcement) == VideoLibrary)
+      m_videoData = NotificationDataOf(announcement);
+    IAnnouncer::OnAnnouncement(announcement);
   }
 
   VideoLibraryEvent m_video;
@@ -308,11 +297,11 @@ TEST_F(TestAnnouncementManager, ATypedEventIsNotDeliveredForAnotherFlag)
   CTypedAnnouncer announcer;
   m_manager.AddAnnouncer(&announcer, Playlist);
   m_manager.Announce(PlayerEvent{EVENT::PLAYER::Menu{}});
-  m_manager.Announce(Playlist, "Marker");
+  m_manager.Announce(PlaylistEvent{EVENT::PLAYLIST::Clear{}});
   ASSERT_TRUE(announcer.m_legacy.Wait(TIMEOUT));
   m_manager.RemoveAnnouncer(&announcer);
   m_manager.Deinitialize();
 
   EXPECT_FALSE(announcer.m_typed.Wait(0ms));
-  EXPECT_EQ("Marker", announcer.m_message);
+  EXPECT_EQ("OnClear", announcer.m_message);
 }

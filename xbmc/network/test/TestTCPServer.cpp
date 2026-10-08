@@ -219,7 +219,7 @@ TEST_F(TestTCPServer, StopsWhileAnAnnouncementIsBlockedOnAPeerThatStoppedReading
   // Far more than the socket buffers hold, so the announcement thread blocks in send()
   const CVariant data(std::string(60000, 'x'));
   for (int i = 0; i < 400; ++i)
-    manager->Announce(ANNOUNCEMENT::Other, "test", "flood", data);
+    manager->Announce(ANNOUNCEMENT::OtherEvent{"test", "flood", data});
   std::this_thread::sleep_for(500ms);
 
   std::promise<void> stopped;
