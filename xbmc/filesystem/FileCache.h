@@ -61,7 +61,7 @@ public:
     void OnExit() override;
     void StopThread(bool bWait = true) override;
 
-    // IFIle methods
+    // IFile methods
     bool Open(const CURL& url) override;
     void Close() override;
     bool Exists(const CURL& url) override;
@@ -102,6 +102,8 @@ public:
     std::unique_ptr<CCacheStrategy> ForStreams(std::unique_ptr<CCacheStrategy> cache) const;
     //! Makes the memory cache current and records the forward capacity of its size per buffer
     void SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize);
+    //! Waits up to the timeout for a seek request, leaving one that arrives set for the fill loop
+    bool SeekRequestedWithin(std::chrono::milliseconds timeout);
     void ReportSourceOutage(int64_t answeredInMs, ssize_t iRead, bool wasCancelled);
     //! Cancels a source read left unanswered for longer than a healthy source takes
     void CancelStalledSourceRead();
