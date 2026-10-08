@@ -511,7 +511,7 @@ void VFSDirEntriesToCFileItemList(int num_entries, const VFSDirEntry* entries, C
     {
       if (StringUtils::CompareNoCase(entries[i].properties[j].name, "propmisusepreformatted") == 0)
       {
-        if (StringUtils::CompareNoCase(entries[i].properties[j].name, "true") == 0)
+        if (StringUtils::CompareNoCase(entries[i].properties[j].val, "true") == 0)
           item->SetLabelPreformatted(true);
         else
           item->SetLabelPreformatted(false);
