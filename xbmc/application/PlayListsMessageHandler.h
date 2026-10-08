@@ -12,9 +12,24 @@
 #include "messaging/IMessageTarget.h"
 #include "playlists/PlayListTypes.h"
 
+#include <memory>
 #include <optional>
+#include <string>
 
 class CApplicationPlayLists;
+class CFileItemList;
+
+namespace KODI::APPLICATION
+{
+/*!
+ * \brief Play items on the application thread.
+ * \param start The entry to start from; none for the default.
+ * \param player The player to use; empty for the default.
+ */
+void PostPlayItems(std::unique_ptr<CFileItemList> items,
+                   std::optional<int> start = std::nullopt,
+                   const std::string& player = "");
+} // namespace KODI::APPLICATION
 
 /*!
  * \brief Turns the playlist messages into calls on the playlists, and answers the user for them.

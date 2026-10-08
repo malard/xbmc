@@ -20,6 +20,7 @@
 #include "application/ApplicationContentGeometry.h"
 #include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/IPlayer.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -109,10 +110,9 @@ namespace XBMCAddon
         }
         else
         {
-          CFileItemList *l = new CFileItemList; //don't delete,
+          auto l = std::make_unique<CFileItemList>();
           l->Add(std::make_shared<CFileItem>(item, false));
-          CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
-                                                     static_cast<void*>(l));
+          APPLICATION::PostPlayItems(std::move(l));
         }
       }
       else

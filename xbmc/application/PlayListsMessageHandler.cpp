@@ -21,6 +21,7 @@
 #include "application/PlayListsGUIListener.h"
 #include "filesystem/PluginDirectory.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "utils/URIUtils.h"
@@ -47,6 +48,17 @@ std::optional<int> PositionFromInt(int position)
   return position < 0 ? std::nullopt : std::optional<int>(position);
 }
 } // namespace
+
+namespace KODI::APPLICATION
+{
+void PostPlayItems(std::unique_ptr<CFileItemList> items,
+                   std::optional<int> start,
+                   const std::string& player)
+{
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, start.value_or(-1), -1,
+                                             TransferToMessenger(std::move(items)), player);
+}
+} // namespace KODI::APPLICATION
 
 CPlayListsMessageHandler::CPlayListsMessageHandler(CApplicationPlayLists& playLists)
   : m_playLists(playLists)

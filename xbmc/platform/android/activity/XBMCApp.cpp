@@ -25,6 +25,7 @@
 #include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/AudioEngine/AESinkFactory.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h"
@@ -1409,7 +1410,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         auto list = std::make_unique<CFileItemList>();
         list->Add(std::move(item));
 
-        appMessenger->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1, static_cast<void*>(list.release()));
+        KODI::APPLICATION::PostPlayItems(std::move(list));
       }
       else
       {

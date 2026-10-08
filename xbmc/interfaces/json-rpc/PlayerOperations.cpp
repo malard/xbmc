@@ -29,6 +29,7 @@
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "application/ApplicationVolumeHandling.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
@@ -1263,8 +1264,7 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
 
   auto items = std::make_unique<CFileItemList>();
   items->Copy(list);
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
-                                             TransferToMessenger(std::move(items)), playername);
+  APPLICATION::PostPlayItems(std::move(items), {}, playername);
 
   return ACK;
 }

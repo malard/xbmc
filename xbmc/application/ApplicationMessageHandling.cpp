@@ -25,6 +25,7 @@
 #include "application/ApplicationSkinHandling.h"
 #include "application/ApplicationStackHelper.h"
 #include "application/ApplicationVolumeHandling.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/DataCacheCore.h"
 #include "dialogs/GUIDialogBusy.h"
@@ -587,8 +588,7 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
       {
         auto fileitemList{std::make_unique<CFileItemList>()};
         fileitemList->Add(std::move(trailerItem));
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
-                                                   static_cast<void*>(fileitemList.release()));
+        APPLICATION::PostPlayItems(std::move(fileitemList));
       }
       else
       {

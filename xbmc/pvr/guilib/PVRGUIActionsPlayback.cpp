@@ -12,6 +12,7 @@
 #include "FileItemList.h"
 #include "ServiceBroker.h"
 #include "application/ApplicationEnums.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/DataCacheCore.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogYesNo.h"
@@ -114,8 +115,7 @@ bool CPVRGUIActionsPlayback::PlayRecording(const CFileItem& item) const
                                       std::make_shared<CFileItem>(item), &start);
     if (start >= 0)
     {
-      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, start, -1,
-                                                 static_cast<void*>(queuedItems.release()));
+      APPLICATION::PostPlayItems(std::move(queuedItems), start);
       CheckAndSwitchToFullscreen(true);
       return true;
     }

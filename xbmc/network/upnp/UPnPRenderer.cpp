@@ -18,6 +18,7 @@
 #include "URL.h"
 #include "application/Application.h"
 #include "application/ApplicationPlayLists.h"
+#include "application/PlayListsMessageHandler.h"
 #include "filesystem/SpecialProtocol.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
@@ -680,9 +681,9 @@ NPT_Result CUPnPRenderer::PlayMedia(const NPT_String& uri,
   else
   {
     item->SetProperty("no-ext-subs-scan", true);
-    CFileItemList* l = new CFileItemList; //don't delete,
+    auto l = std::make_unique<CFileItemList>();
     l->Add(std::make_shared<CFileItem>(*item));
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1, static_cast<void*>(l));
+    APPLICATION::PostPlayItems(std::move(l));
   }
 
   // just return success because the play actions are asynchronous

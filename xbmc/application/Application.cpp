@@ -1491,10 +1491,9 @@ int CApplication::Run()
   if (const CFileItemList& playlist = CServiceBroker::GetAppParams()->GetPlaylist();
       !playlist.IsEmpty())
   {
-    auto* items = new CFileItemList;
+    auto items = std::make_unique<CFileItemList>();
     items->Copy(playlist);
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEMS, -1, -1,
-                                               static_cast<void*>(items));
+    APPLICATION::PostPlayItems(std::move(items));
   }
 
 #ifdef TARGET_WASM
