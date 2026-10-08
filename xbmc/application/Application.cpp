@@ -1996,17 +1996,11 @@ bool CApplication::IsFullScreen()
   return IsPlayingFullScreenVideo() || (shown && *shown != PlaybackWindow::Video);
 }
 
-bool CApplication::LeavePlaybackWindow()
-{
-  const std::optional<PlaybackWindow> shown =
-      AsPlaybackWindow(CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow());
-  return shown && LeavePlaybackWindow(*shown);
-}
-
-bool CApplication::LeavePlaybackWindow(PlaybackWindow window)
+bool CApplication::LeavePlaybackWindow(std::optional<PlaybackWindow> window)
 {
   CGUIWindowManager& windowManager = CServiceBroker::GetGUI()->GetWindowManager();
-  if (AsPlaybackWindow(windowManager.GetActiveWindow()) != window)
+  const std::optional<PlaybackWindow> shown = AsPlaybackWindow(windowManager.GetActiveWindow());
+  if (!shown || (window && *shown != *window))
     return false;
   windowManager.PreviousWindow();
   return true;

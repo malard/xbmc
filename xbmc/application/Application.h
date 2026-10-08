@@ -166,16 +166,11 @@ public:
   };
 
   /*!
-   * \brief Go back from whichever full-screen playback window is showing.
-   * \return Whether one was showing and was left.
+   * \brief Go back from the full-screen playback window that is showing.
+   * \param window Leave only this window; nullopt for whichever is showing.
+   * \return Whether a window was left.
    */
-  bool LeavePlaybackWindow();
-
-  /*!
-   * \brief Go back from this full-screen playback window, if it is showing.
-   * \return Whether it was showing and was left.
-   */
-  bool LeavePlaybackWindow(PlaybackWindow window);
+  bool LeavePlaybackWindow(std::optional<PlaybackWindow> window = std::nullopt);
   void Restart(bool bSamePosition = true);
   void DelayedPlayerRestart();
   void CheckDelayedPlayerRestart();

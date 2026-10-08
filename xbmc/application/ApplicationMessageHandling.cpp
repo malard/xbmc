@@ -464,12 +464,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
 
     case TMSG_MEDIA_STOP:
     {
-      if (const std::optional<CApplication::PlaybackWindow> window =
-              PlaybackWindowFromInt(pMsg->param1);
-          window)
-        m_app.LeavePlaybackWindow(*window);
-      else
-        m_app.LeavePlaybackWindow();
+      m_app.LeavePlaybackWindow(PlaybackWindowFromInt(pMsg->param1));
 
       appPower->WakeScreen();
 
