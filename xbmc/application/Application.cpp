@@ -1042,6 +1042,27 @@ void ShowRatingChanged(const std::shared_ptr<CFileItem>& playing)
   CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, playing);
   CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
 }
+
+bool PlayerSeesActionFirst(int windowId, int actionId, bool playingPVRChannel)
+{
+  switch (windowId)
+  {
+    case WINDOW_FULLSCREEN_VIDEO:
+    case WINDOW_FULLSCREEN_GAME:
+      return true;
+    case WINDOW_VISUALISATION:
+      return playingPVRChannel;
+    case WINDOW_DIALOG_MUSIC_OSD:
+      if (!playingPVRChannel)
+        return false;
+      [[fallthrough]];
+    case WINDOW_DIALOG_VIDEO_OSD:
+      return actionId == ACTION_NEXT_ITEM || actionId == ACTION_PREV_ITEM ||
+             actionId == ACTION_CHANNEL_UP || actionId == ACTION_CHANNEL_DOWN;
+    default:
+      return false;
+  }
+}
 } // namespace
 
 bool CApplication::OnAction(const CAction &action)
@@ -1192,40 +1213,11 @@ bool CApplication::OnAction(const CAction &action)
     }
   }
 
-  // Now check with the player if action can be handled.
-  bool bIsPlayingPVRChannel = (CServiceBroker::GetPVRManager().IsStarted() &&
-                               CurrentFileItem().IsPVRChannel());
-
-  bool bNotifyPlayer = false;
-  if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
-    bNotifyPlayer = true;
-  else if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_GAME)
-    bNotifyPlayer = true;
-  else if (windowManager.GetActiveWindow() == WINDOW_VISUALISATION && bIsPlayingPVRChannel)
-    bNotifyPlayer = true;
-  else if (windowManager.GetActiveWindow() == WINDOW_DIALOG_VIDEO_OSD ||
-          (windowManager.GetActiveWindow() == WINDOW_DIALOG_MUSIC_OSD && bIsPlayingPVRChannel))
-  {
-    switch (action.GetID())
-    {
-      case ACTION_NEXT_ITEM:
-      case ACTION_PREV_ITEM:
-      case ACTION_CHANNEL_UP:
-      case ACTION_CHANNEL_DOWN:
-        bNotifyPlayer = true;
-        break;
-      default:
-        break;
-    }
-  }
-  else if (action.GetID() == ACTION_STOP)
-    bNotifyPlayer = true;
-
-  if (bNotifyPlayer)
-  {
-    if (appPlayer->OnAction(action))
-      return true;
-  }
+  const bool playingPVRChannel{CServiceBroker::GetPVRManager().IsStarted() &&
+                               CurrentFileItem().IsPVRChannel()};
+  if (PlayerSeesActionFirst(windowManager.GetActiveWindow(), action.GetID(), playingPVRChannel) &&
+      appPlayer->OnAction(action))
+    return true;
 
   // stop : stops playing current audio song
   if (action.GetID() == ACTION_STOP)
