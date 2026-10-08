@@ -13,6 +13,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 
 CGUISourcesAnnouncementHandler::CGUISourcesAnnouncementHandler()
 {
@@ -29,7 +30,8 @@ void CGUISourcesAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag fla
                                               const std::string& message,
                                               const CVariant& data)
 {
-  if (message == "OnAdded" || message == "OnRemoved" || message == "OnUpdated")
+  if (message == ANNOUNCEMENT::MESSAGE::ON_ADDED || message == ANNOUNCEMENT::MESSAGE::ON_REMOVED ||
+      message == ANNOUNCEMENT::MESSAGE::ON_UPDATED)
   {
     CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
     message.SetStringParam(data.asString());

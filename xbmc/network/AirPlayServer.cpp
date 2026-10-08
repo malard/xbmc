@@ -23,6 +23,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "settings/Settings.h"
@@ -171,7 +172,7 @@ void CAirPlayServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
   if (sender == ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER && ServerInstance)
   {
-    if (message == "OnStop")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_STOP)
     {
       const bool shouldRestoreVolume = data["item"]["type"].asString() != "picture";
 
@@ -180,11 +181,12 @@ void CAirPlayServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
       ServerInstance->AnnounceToClients(EVENT_STOPPED);
     }
-    else if (message == "OnPlay" || message == "OnResume")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
+             message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
     {
       ServerInstance->AnnounceToClients(EVENT_PLAYING);
     }
-    else if (message == "OnPause")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE)
     {
       ServerInstance->AnnounceToClients(EVENT_PAUSED);
     }

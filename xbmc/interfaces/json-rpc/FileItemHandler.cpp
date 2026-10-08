@@ -21,6 +21,7 @@
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
@@ -710,7 +711,8 @@ void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
     if (item.isMember(name->asString()))
       data["properties"][name->asString()] = item[name->asString()];
   }
-  CServiceBroker::GetAnnouncementManager()->Announce(library, "OnUpdate", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(library, ANNOUNCEMENT::MESSAGE::ON_UPDATE,
+                                                     data);
 }
 
 void CFileItemHandler::Sort(CFileItemList &items, const CVariant &parameterObject)

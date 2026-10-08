@@ -38,6 +38,7 @@
 #include "input/actions/ActionIDs.h"
 #include "input/mouse/MouseStat.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "platform/xbmc.h"
 #include "powermanagement/PowerManager.h"
@@ -206,30 +207,30 @@ void CXBMCApp::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
   if (flag & Input)
   {
-    if (message == "OnInputRequested")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED)
       CAndroidKey::SetHandleSearchKeys(true);
-    else if (message == "OnInputFinished")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED)
       CAndroidKey::SetHandleSearchKeys(false);
   }
   else if (flag & Player)
   {
-    if (message == "OnPlay" || message == "OnResume")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
       OnPlayBackStarted();
-    else if (message == "OnPause")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE)
       OnPlayBackPaused();
-    else if (message == "OnStop")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_STOP)
       OnPlayBackStopped();
-    else if (message == "OnSeek")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SEEK)
     {
       m_mediaSessionUpdated = false;
       UpdateSessionState();
     }
-    else if (message == "OnSpeedChanged")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
     {
       m_mediaSessionUpdated = false;
       UpdateSessionState();
     }
-    else if (message == "OnAVStart")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_AV_START)
     {
       m_mediaSessionUpdated = false;
       UpdateSessionState();
@@ -237,7 +238,7 @@ void CXBMCApp::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   }
   else if (flag & Info)
   {
-    if (message == "OnChanged")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_CHANGED)
     {
       m_mediaSessionUpdated = false;
       UpdateSessionMetadata();

@@ -22,6 +22,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "music/MusicLibraryQueue.h"
@@ -100,7 +101,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
       m_dpmsIsManual = false;
       SetRenderGUI(true);
       CheckOSScreenSaverInhibitionSetting();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnDPMSDeactivated");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::GUI, ANNOUNCEMENT::MESSAGE::ON_DPMS_DEACTIVATED);
       return dpms->DisablePowerSaving();
     }
     else
@@ -111,7 +113,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
         m_dpmsIsManual = manual;
         SetRenderGUI(false);
         CheckOSScreenSaverInhibitionSetting();
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnDPMSActivated");
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::GUI, ANNOUNCEMENT::MESSAGE::ON_DPMS_ACTIVATED);
         return true;
       }
     }
@@ -142,8 +145,8 @@ bool CApplicationPowerHandling::WakeUpScreenSaverAndDPMS(bool bPowerOffKeyPresse
     // allow listeners to ignore the deactivation if it precedes a powerdown/suspend etc
     CVariant data(CVariant::VariantTypeObject);
     data["shuttingdown"] = bPowerOffKeyPressed;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI,
-                                                       "OnScreensaverDeactivated", data);
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::GUI, ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED, data);
   }
 
   return result;
@@ -374,7 +377,8 @@ void CApplicationPowerHandling::ActivateScreenSaver(bool forceType /*= false */)
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_screensaverActive = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnScreensaverActivated");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::GUI, ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED);
 
   // disable screensaver lock from the login screen
   m_iScreenSaveLock =

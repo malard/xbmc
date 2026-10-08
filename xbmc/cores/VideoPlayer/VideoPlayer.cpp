@@ -49,6 +49,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobQueue.h"
 #include "language/Language.h"
 #include "messaging/ApplicationMessenger.h"
@@ -1569,8 +1570,8 @@ void CVideoPlayer::Prepare()
 
         CVariant announcement(
             StringUtils::SecondsToTimeString(edit->end.count(), TIME_FORMAT_MM_SS));
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnCommercial",
-                                                           announcement);
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL, announcement);
       }
     }
   }
@@ -2926,8 +2927,8 @@ void CVideoPlayer::CheckAutoSceneSkip()
       CVariant announcement{StringUtils::SecondsToTimeString(
           std::chrono::duration_cast<std::chrono::seconds>(edit->end - edit->start).count(),
           TIME_FORMAT_MM_SS)};
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnCommercial",
-                                                         announcement);
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL, announcement);
 
       // use resolved seek target, not edit->start, to also suppress
       // adjacent commercial breaks encountered while seeking
@@ -4881,15 +4882,16 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray menu not supported (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnBlurayMenuError");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_BLURAY_MENU_ERROR);
     }
     break;
     case BD_EVENT_ENC_ERROR:
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray the disc/file is encrypted and can't be played (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
-                                                         "OnBlurayEncryptedError");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_BLURAY_ENCRYPTED_ERROR);
     }
     break;
     case BD_EVENT_DISCONTINUITY:
@@ -5051,8 +5053,8 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
       {
         CLog::Log(LOGDEBUG, "DVDNAV_ERROR");
         m_dvd.state = DVDSTATE_NORMAL;
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
-                                                           "OnPlaybackFailed");
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED);
       }
       break;
     default:
@@ -5122,7 +5124,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
           }
 
           // Let everyone know that we've gone to the menu
-          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnMenu");
+          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
+                                                             ANNOUNCEMENT::MESSAGE::ON_MENU);
         }
         return true;
       }
@@ -5285,7 +5288,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
     case ACTION_TOGGLE_COMMSKIP:
       m_SkipCommercials = !m_SkipCommercials;
       CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Player, "OnToggleSkipCommercials", CVariant{m_SkipCommercials});
+          ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_TOGGLE_SKIP_COMMERCIALS,
+          CVariant{m_SkipCommercials});
       break;
 
     case ACTION_PLAYER_DEBUG:
@@ -5296,7 +5300,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
       break;
 
     case ACTION_PLAYER_PROCESS_INFO:
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnProcessInfo");
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player,
+                                                         ANNOUNCEMENT::MESSAGE::ON_PROCESS_INFO);
       return true;
   }
 

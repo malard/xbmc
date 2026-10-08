@@ -19,6 +19,7 @@
 #include "input/mouse/MouseStat.h"
 #include "input/touch/generic/GenericTouchInputHandler.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "peripherals/Peripherals.h"
 #include "rendering/dx/DeviceResources.h"
@@ -665,22 +666,22 @@ void CWinEventsWin10::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     bool changed = false;
     MediaPlaybackStatus status = MediaPlaybackStatus::Changing;
 
-    if (message == "OnPlay" || message == "OnResume")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
     {
       changed = true;
       status = MediaPlaybackStatus::Playing;
     }
-    else if (message == "OnStop")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_STOP)
     {
       changed = true;
       status = MediaPlaybackStatus::Stopped;
     }
-    else if (message == "OnPause")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE)
     {
       changed = true;
       status = MediaPlaybackStatus::Paused;
     }
-    else if (message == "OnSpeedChanged")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
     {
       changed = true;
       status = speed != 0.0 ? MediaPlaybackStatus::Playing : MediaPlaybackStatus::Paused;

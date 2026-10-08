@@ -18,6 +18,7 @@
 #include "Util.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/legacy/AddonUtils.h"
 #include "interfaces/legacy/Monitor.h"
 #include "interfaces/python/AddonPythonInvoker.h"
@@ -129,35 +130,35 @@ void XBPython::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 {
   if (flag & ANNOUNCEMENT::VideoLibrary)
   {
-    if (message == "OnScanFinished")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
       OnScanFinished("video");
-    else if (message == "OnScanStarted")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED)
       OnScanStarted("video");
-    else if (message == "OnCleanStarted")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
       OnCleanStarted("video");
-    else if (message == "OnCleanFinished")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
       OnCleanFinished("video");
   }
   else if (flag & ANNOUNCEMENT::AudioLibrary)
   {
-    if (message == "OnScanFinished")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
       OnScanFinished("music");
-    else if (message == "OnScanStarted")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED)
       OnScanStarted("music");
-    else if (message == "OnCleanStarted")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
       OnCleanStarted("music");
-    else if (message == "OnCleanFinished")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
       OnCleanFinished("music");
   }
   else if (flag & ANNOUNCEMENT::GUI)
   {
-    if (message == "OnScreensaverDeactivated")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED)
       OnScreensaverDeactivated();
-    else if (message == "OnScreensaverActivated")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED)
       OnScreensaverActivated();
-    else if (message == "OnDPMSDeactivated")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_DPMS_DEACTIVATED)
       OnDPMSDeactivated();
-    else if (message == "OnDPMSActivated")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_DPMS_ACTIVATED)
       OnDPMSActivated();
   }
 

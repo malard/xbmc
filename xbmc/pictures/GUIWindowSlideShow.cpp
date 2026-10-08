@@ -30,6 +30,7 @@
 #include "input/actions/ActionIDs.h"
 #include "input/mouse/MouseEvent.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "pictures/GUIViewStatePictures.h"
 #include "pictures/PictureThumbLoader.h"
 #include "pictures/SlideShowDelegator.h"
@@ -170,7 +171,7 @@ void CGUIWindowSlideShow::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                                    const std::string& message,
                                    const CVariant& data)
 {
-  if (message == "OnPlay" || message == "OnResume")
+  if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
   {
     const CVariant& players = data["player"]["players"];
     if (data["item"]["type"].asString() != "picture" &&

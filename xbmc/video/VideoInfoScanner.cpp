@@ -31,6 +31,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "playlists/PlayListFileItemClassify.h"
@@ -221,7 +222,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
       CLog::Log(LOGINFO, "VideoInfoScanner: Starting scan .. (grouping of similar videos is {})",
                 SimilarVideoScanActionToStr(m_similarVideoAction));
       CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                         "OnScanStarted");
+                                                         ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED);
 
       // Database operations should not be canceled
       // using Interrupt() while scanning as it could
@@ -326,7 +327,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
     m_bRunning = false;
     CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                       "OnScanFinished");
+                                                       ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED);
 
     if (m_handle)
       m_handle->MarkFinished();
@@ -2393,8 +2394,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
     data["added"] = true;
     if (m_bRunning)
       data["transaction"] = true;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
-                                                       itemCopy, data);
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibrary, ANNOUNCEMENT::MESSAGE::ON_UPDATE, itemCopy, data);
     return lResult;
   }
 

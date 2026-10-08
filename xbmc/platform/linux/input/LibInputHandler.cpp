@@ -14,6 +14,7 @@
 #include "LibInputTouch.h"
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
 
@@ -123,9 +124,9 @@ void CLibInputHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 {
   if (flag & (ANNOUNCEMENT::System))
   {
-    if (message == "OnSleep")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SLEEP)
       libinput_suspend(m_li);
-    else if (message == "OnWake")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_WAKE)
     {
       auto ret = libinput_resume(m_li);
       if (ret < 0)

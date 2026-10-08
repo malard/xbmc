@@ -23,6 +23,7 @@
 #include "input/keyboard/XBMC_vkeys.h"
 #include "input/keymaps/keyboard/KeyIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -241,7 +242,8 @@ void CGUIDialogKeyboardGeneric::OnInitWindow()
   data["title"] = m_strHeading;
   data["type"] = !m_hiddenInput ? "keyboard" : "password";
   data["value"] = GetText();
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputRequested", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::Input, ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED, data);
 }
 
 bool CGUIDialogKeyboardGeneric::OnAction(const CAction &action)
@@ -578,7 +580,8 @@ void CGUIDialogKeyboardGeneric::OnDeinitWindow(int nextWindowID)
   // reset the heading (we don't always have this)
   m_strHeading = "";
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input,
+                                                     ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED);
 }
 
 void CGUIDialogKeyboardGeneric::MoveCursor(int iAmount)

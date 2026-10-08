@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "pvr/PVRComponentRegistration.h"
@@ -226,9 +227,9 @@ void CPVRManager::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 
   if (flag & ANNOUNCEMENT::GUI)
   {
-    if (message == "OnScreensaverActivated")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED)
       m_addons->OnPowerSavingActivated();
-    else if (message == "OnScreensaverDeactivated")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED)
       m_addons->OnPowerSavingDeactivated();
   }
 }

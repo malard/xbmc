@@ -20,6 +20,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "music/tags/ReplayGain.h"
 #include "peripherals/Peripherals.h"
 #include "settings/Settings.h"
@@ -64,7 +65,8 @@ void CApplicationVolumeHandling::VolumeChanged(Changed changed)
   else
     data["properties"]["muted"] = m_muted;
   const auto announcementMgr = CServiceBroker::GetAnnouncementManager();
-  announcementMgr->Announce(ANNOUNCEMENT::Player, "OnPropertiesChanged", data);
+  announcementMgr->Announce(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED,
+                            data);
 
   auto& components = CServiceBroker::GetAppComponents();
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();

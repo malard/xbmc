@@ -15,6 +15,7 @@
 #include "application/ApplicationPlayer.h"
 #include "guilib/GUIMessage.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/PlaybackValues.h"
 #include "pictures/PictureInfoTag.h"
 #include "playlists/PlayList.h"
@@ -94,19 +95,19 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
   switch (message.GetMessage())
   {
     case GUI_MSG_PLAYBACK_AVSTARTED:
-      Publish("OnAVStart", item, Speed(1));
+      Publish(ANNOUNCEMENT::MESSAGE::ON_AV_START, item, Speed(1));
       break;
     case GUI_MSG_PLAYBACK_AVCHANGE:
-      Publish("OnAVChange", item, Speed(1));
+      Publish(ANNOUNCEMENT::MESSAGE::ON_AV_CHANGE, item, Speed(1));
       break;
     case GUI_MSG_PLAYBACK_PAUSED:
-      Publish("OnPause", item, Speed(0));
+      Publish(ANNOUNCEMENT::MESSAGE::ON_PAUSE, item, Speed(0));
       break;
     case GUI_MSG_PLAYBACK_RESUMED:
-      Publish("OnResume", item, Speed(1));
+      Publish(ANNOUNCEMENT::MESSAGE::ON_RESUME, item, Speed(1));
       break;
     case GUI_MSG_PLAYBACK_SPEED_CHANGED:
-      Publish("OnSpeedChanged", item, Speed(message.GetParam1()));
+      Publish(ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED, item, Speed(message.GetParam1()));
       break;
     case GUI_MSG_PLAYBACK_SEEKED:
     {
@@ -116,7 +117,7 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
                                            data["player"]["time"]);
       INTERFACES::MillisecondsToTimeObject(static_cast<int>(message.GetParam2AsI64()),
                                            data["player"]["seekoffset"]);
-      Publish("OnSeek", item, data);
+      Publish(ANNOUNCEMENT::MESSAGE::ON_SEEK, item, data);
       break;
     }
     case GUI_MSG_PLAYBACK_STOPPED:
@@ -124,7 +125,7 @@ bool CPlaybackAnnouncer::OnMessage(CGUIMessage& message)
     {
       CVariant data(CVariant::VariantTypeObject);
       data["end"] = message.GetMessage() == GUI_MSG_PLAYBACK_ENDED;
-      m_sink(ANNOUNCEMENT::Player, "OnStop", item, data);
+      m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_STOP, item, data);
       break;
     }
     default:
@@ -139,7 +140,7 @@ void CPlaybackAnnouncer::OnStarted(const std::shared_ptr<CFileItem>& started)
     return;
   CVariant data = Speed(1);
   data["player"]["players"] = GetPlayers(started.get(), true);
-  m_sink(ANNOUNCEMENT::Player, "OnPlay", started, data);
+  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAY, started, data);
 }
 
 CVariant CPlaybackAnnouncer::GetPlayers(const CFileItem* item, bool claimed) const
@@ -195,17 +196,17 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
     case SlideShowEvent::Play:
       m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = running ? 1 : 0;
-      message = "OnPlay";
+      message = ANNOUNCEMENT::MESSAGE::ON_PLAY;
       break;
     case SlideShowEvent::Pause:
       m_playLists->SetSlideShowRunning(true);
       data["player"]["speed"] = 0;
-      message = "OnPause";
+      message = ANNOUNCEMENT::MESSAGE::ON_PAUSE;
       break;
     case SlideShowEvent::Stop:
       m_playLists->SetSlideShowRunning(false);
       data["end"] = true;
-      message = "OnStop";
+      message = ANNOUNCEMENT::MESSAGE::ON_STOP;
       break;
   }
   // a slide is announced as a picture even before its tag has been read
@@ -221,7 +222,7 @@ void CPlaybackAnnouncer::OnSlideShow(SlideShowEvent event,
 
 void CPlaybackAnnouncer::OnContentGeometryChanged(CVariant data) const
 {
-  Publish("OnContentGeometryChange", nullptr, std::move(data));
+  Publish(ANNOUNCEMENT::MESSAGE::ON_CONTENT_GEOMETRY_CHANGE, nullptr, std::move(data));
 }
 
 void CPlaybackAnnouncer::OnSlideShowShuffled() const
@@ -270,7 +271,7 @@ void CPlaybackAnnouncer::OnFailed(const std::shared_ptr<const CFileItem>& item,
       data["reason"] = "error";
       break;
   }
-  m_sink(ANNOUNCEMENT::Player, "OnPlaybackFailed", item, data);
+  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED, item, data);
 }
 
 void CPlaybackAnnouncer::OnRepeat(Type type, CApplicationPlayLists::Repeat repeat)
@@ -296,7 +297,7 @@ void CPlaybackAnnouncer::PublishProperty(const CVariant& players,
   CVariant data;
   data["properties"][PropertyName(property)] = value;
   data["player"]["players"] = players;
-  m_sink(ANNOUNCEMENT::Player, "OnPropertiesChanged", nullptr, data);
+  m_sink(ANNOUNCEMENT::Player, ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED, nullptr, data);
 }
 
 void CPlaybackAnnouncer::PublishPlayListProperty(std::string_view playList,
@@ -306,7 +307,7 @@ void CPlaybackAnnouncer::PublishPlayListProperty(std::string_view playList,
   CVariant data;
   data["playlist"] = std::string{playList};
   data["properties"][PropertyName(property)] = value;
-  m_sink(ANNOUNCEMENT::Playlist, "OnPropertiesChanged", nullptr, data);
+  m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED, nullptr, data);
 }
 
 void CPlaybackAnnouncer::PublishListChange(std::string_view playList,
@@ -318,14 +319,14 @@ void CPlaybackAnnouncer::PublishListChange(std::string_view playList,
   {
     case PlayListChange::Type::Added:
       data["position"] = change.position;
-      m_sink(ANNOUNCEMENT::Playlist, "OnAdd", change.item, data);
+      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_ADD, change.item, data);
       break;
     case PlayListChange::Type::Removed:
       data["position"] = change.position;
-      m_sink(ANNOUNCEMENT::Playlist, "OnRemove", nullptr, data);
+      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_REMOVE, nullptr, data);
       break;
     case PlayListChange::Type::Cleared:
-      m_sink(ANNOUNCEMENT::Playlist, "OnClear", nullptr, data);
+      m_sink(ANNOUNCEMENT::Playlist, ANNOUNCEMENT::MESSAGE::ON_CLEAR, nullptr, data);
       break;
     case PlayListChange::Type::Moved:
     case PlayListChange::Type::Shuffled:

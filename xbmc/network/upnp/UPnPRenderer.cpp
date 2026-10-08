@@ -26,6 +26,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
@@ -250,7 +251,7 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   NPT_AutoLock lock(m_state);
   PLT_Service *avt, *rct;
 
-  if (flag == ANNOUNCEMENT::Player && message == "OnPropertiesChanged")
+  if (flag == ANNOUNCEMENT::Player && message == ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED)
   {
     const CVariant& properties = data["properties"];
     if (!(properties.isMember("volume") || properties.isMember("muted")) ||
@@ -273,7 +274,7 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     if (NPT_FAILED(FindServiceByType("urn:schemas-upnp-org:service:AVTransport:1", avt)))
       return;
 
-    if (message == "OnPlay" || message == "OnResume")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY || message == ANNOUNCEMENT::MESSAGE::ON_RESUME)
     {
       avt->SetStateVariable("AVTransportURI", g_application.CurrentFile().c_str());
       avt->SetStateVariable("CurrentTrackURI", g_application.CurrentFile().c_str());
@@ -293,18 +294,18 @@ void CUPnPRenderer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
       avt->SetStateVariable("NextAVTransportURI", "");
       avt->SetStateVariable("NextAVTransportURIMetaData", "");
     }
-    else if (message == "OnPause")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE)
     {
       int64_t speed = data["player"]["speed"].asInteger();
       avt->SetStateVariable("TransportPlaySpeed", NPT_String::FromInteger(speed != 0 ? speed : 1));
       avt->SetStateVariable("TransportState", "PAUSED_PLAYBACK");
     }
-    else if (message == "OnSpeedChanged")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
     {
       avt->SetStateVariable("TransportPlaySpeed",
                             NPT_String::FromInteger(data["player"]["speed"].asInteger()));
     }
-    else if (message == "OnStop")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_STOP)
     {
       Reset(avt);
     }

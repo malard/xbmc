@@ -23,6 +23,7 @@
 #include "input/keyboard/Key.h"
 #include "input/keymaps/remote/IRRemoteIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "peripherals/Peripherals.h"
@@ -156,7 +157,7 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                                      const CVariant& data)
 {
   if (flag == ANNOUNCEMENT::System && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-      message == "OnQuit" && m_bIsReady)
+      message == ANNOUNCEMENT::MESSAGE::ON_QUIT && m_bIsReady)
   {
     std::unique_lock lock(m_critSection);
     m_iExitCode = static_cast<int>(data["exitcode"].asInteger(EXITCODE_QUIT));
@@ -164,7 +165,7 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     StopThread(false);
   }
   else if (flag == ANNOUNCEMENT::GUI && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == "OnScreensaverDeactivated" && m_bIsReady)
+           message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED && m_bIsReady)
   {
     bool bIgnoreDeactivate(false);
     if (data["shuttingdown"].isBoolean())
@@ -183,7 +184,7 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     }
   }
   else if (flag == ANNOUNCEMENT::GUI && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == "OnScreensaverActivated" && m_bIsReady)
+           message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED && m_bIsReady)
   {
     const int iStandbyMode = GetSettingInt("cec_standby_screensaver_mode");
     if (iStandbyMode != LOCALISED_ID_NONE)
@@ -202,7 +203,7 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     }
   }
   else if (flag == ANNOUNCEMENT::System && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == "OnSleep")
+           message == ANNOUNCEMENT::MESSAGE::ON_SLEEP)
   {
     // this will also power off devices when we're the active source
     {
@@ -212,7 +213,7 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     StopThread();
   }
   else if (flag == ANNOUNCEMENT::System && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == "OnWake")
+           message == ANNOUNCEMENT::MESSAGE::ON_WAKE)
   {
     CLog::Log(LOGDEBUG, "{} - reconnecting to the CEC adapter after standby mode", __FUNCTION__);
     if (ReopenConnection())
@@ -228,14 +229,15 @@ void CPeripheralCecAdapter::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
     }
   }
   else if (flag == ANNOUNCEMENT::Player && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           message == "OnStop")
+           message == ANNOUNCEMENT::MESSAGE::ON_STOP)
   {
     std::unique_lock lock(m_critSection);
     m_preventActivateSourceOnPlay = CDateTime::GetCurrentDateTime();
     m_bOnPlayReceived = false;
   }
   else if (flag == ANNOUNCEMENT::Player && sender == CAnnouncementManager::ANNOUNCEMENT_SENDER &&
-           (message == "OnPlay" || message == "OnResume"))
+           (message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
+            message == ANNOUNCEMENT::MESSAGE::ON_RESUME))
   {
     // activate the source when playback started, and the option is enabled
     bool bActivateSource(false);

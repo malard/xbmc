@@ -14,6 +14,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -36,7 +37,7 @@ void CGUIPlayerAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag
                                              const CVariant& data)
 {
   auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
-  if (message == "OnCommercial")
+  if (message == ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL)
   {
     const std::shared_ptr<CAdvancedSettings> advancedSettings =
         CServiceBroker::GetSettingsComponent()->GetAdvancedSettings();
@@ -49,13 +50,13 @@ void CGUIPlayerAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(21454), localizeStrings.Get(21455));
   }
-  else if (message == "OnToggleSkipCommercials")
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_TOGGLE_SKIP_COMMERCIALS)
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(25011),
                                           localizeStrings.Get(data.asBoolean() ? 25013
                                                                                           : 25012));
   }
-  else if (message == "OnProcessInfo")
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_PROCESS_INFO)
   {
     if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() !=
         WINDOW_DIALOG_PLAYER_PROCESS_INFO)
@@ -66,21 +67,21 @@ void CGUIPlayerAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag
     }
   }
   // A failure the playlists report carries a reason and is shown by whoever refused it
-  else if (message == "OnPlaybackFailed" && !data.isMember("reason"))
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED && !data.isMember("reason"))
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(16026), localizeStrings.Get(16029));
   }
 #if defined(HAVE_LIBBLURAY)
-  else if (message == "OnBlurayMenuError")
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_BLURAY_MENU_ERROR)
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(25008), localizeStrings.Get(25009));
   }
-  else if (message == "OnBlurayEncryptedError")
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_BLURAY_ENCRYPTED_ERROR)
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(16026), localizeStrings.Get(29805));
   }
 #endif
-  else if (message == "OnMenu")
+  else if (message == ANNOUNCEMENT::MESSAGE::ON_MENU)
   {
     CGUIMessage msg(GUI_MSG_VIDEO_MENU_STARTED, 0, 0);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);

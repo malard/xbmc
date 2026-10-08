@@ -39,6 +39,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "resources/LocalizeStrings.h"
@@ -465,7 +466,8 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
   // Let listeners (e.g. addons with their own custom windows) know the skin is about
   // to be unloaded before the window manager tears their windows down, since the C++
   // OnDeinitWindow path gives the script engine no way to react in time.
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinUnloading");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI,
+                                                     ANNOUNCEMENT::MESSAGE::ON_SKIN_UNLOADING);
 
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
   std::string newSkin = settings->GetString(CSettings::SETTING_LOOKANDFEEL_SKIN);
@@ -473,7 +475,8 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
   {
     // The new skin is up and the previous active window has been restored, so listeners
     // can safely rebuild any windows they had open.
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinLoaded");
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI,
+                                                       ANNOUNCEMENT::MESSAGE::ON_SKIN_LOADED);
 
     /* The Reset() or SetString() below will cause recursion, so the m_confirmSkinChange boolean is set so as to not prompt the
        user as to whether they want to keep the current skin. */
@@ -494,7 +497,8 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
     // Tell listeners the reload has failed so anyone that reacted to OnSkinUnloading
     // doesn't wait forever. The fallback to the default skin below reloads again and
     // announces its own events.
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinLoadFailed");
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI,
+                                                       ANNOUNCEMENT::MESSAGE::ON_SKIN_LOAD_FAILED);
 
     // skin failed to load - we revert to the default only if we didn't fail loading the default
     auto setting = settings->GetSetting(CSettings::SETTING_LOOKANDFEEL_SKIN);

@@ -10,6 +10,7 @@
 
 #include "AudioLibrary.h"
 #include "VideoLibrary.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "media/MediaType.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/Variant.h"
@@ -58,9 +59,10 @@ void IJSONRPCAnnouncer::AsPropertiesChanged(ANNOUNCEMENT::AnnouncementFlag flag,
 
   const CVariant& player = data["player"];
   CVariant properties(CVariant::VariantTypeObject);
-  if (method == "OnPause" || method == "OnResume" || method == "OnSpeedChanged")
+  if (method == ANNOUNCEMENT::MESSAGE::ON_PAUSE || method == ANNOUNCEMENT::MESSAGE::ON_RESUME ||
+      method == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
     properties["speed"] = player["speed"];
-  else if (method == "OnSeek")
+  else if (method == ANNOUNCEMENT::MESSAGE::ON_SEEK)
     properties["time"] = player["time"];
   else
     return;
@@ -68,7 +70,7 @@ void IJSONRPCAnnouncer::AsPropertiesChanged(ANNOUNCEMENT::AnnouncementFlag flag,
   CVariant changed(CVariant::VariantTypeObject);
   changed["properties"] = std::move(properties);
   changed["player"]["players"] = player["players"];
-  method = "OnPropertiesChanged";
+  method = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
   data = std::move(changed);
 }
 
@@ -77,7 +79,7 @@ bool IJSONRPCAnnouncer::AsItemNotification(ANNOUNCEMENT::AnnouncementFlag flag,
                                            CVariant& data)
 {
   if ((flag != ANNOUNCEMENT::VideoLibrary && flag != ANNOUNCEMENT::AudioLibrary) ||
-      (method != "OnUpdate" && method != "OnRemove"))
+      (method != ANNOUNCEMENT::MESSAGE::ON_UPDATE && method != ANNOUNCEMENT::MESSAGE::ON_REMOVE))
     return true;
 
   const CVariant& item = data.isMember("item") ? data["item"] : data;
@@ -89,7 +91,7 @@ bool IJSONRPCAnnouncer::AsItemNotification(ANNOUNCEMENT::AnnouncementFlag flag,
   if (id <= 0 || !isKind)
     return false;
 
-  const bool removed = method == "OnRemove";
+  const bool removed = method == ANNOUNCEMENT::MESSAGE::ON_REMOVE;
   const bool added = !removed && data["added"].asBoolean(false);
   CVariant changed(CVariant::VariantTypeObject);
   changed["item"]["kind"] = kind;
@@ -104,7 +106,9 @@ bool IJSONRPCAnnouncer::AsItemNotification(ANNOUNCEMENT::AnnouncementFlag flag,
   if (data.isMember("transaction"))
     changed["transaction"] = data["transaction"];
 
-  method = removed ? "OnItemRemoved" : added ? "OnItemAdded" : "OnItemPropertiesChanged";
+  method = removed ? ANNOUNCEMENT::MESSAGE::ON_ITEM_REMOVED
+           : added ? ANNOUNCEMENT::MESSAGE::ON_ITEM_ADDED
+                   : ANNOUNCEMENT::MESSAGE::ON_ITEM_PROPERTIES_CHANGED;
   data = std::move(changed);
   return true;
 }

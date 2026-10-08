@@ -50,6 +50,7 @@
 #include "input/joysticks/interfaces/IButtonMapper.h"
 #include "input/keyboard/Key.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/ThreadMessage.h"
 #include "peripherals/dialogs/GUIDialogPeripherals.h"
@@ -1113,7 +1114,7 @@ void CPeripherals::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 {
   if (sender == ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER)
   {
-    if (message == "OnQuit")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_QUIT)
     {
       if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
               CSettings::SETTING_INPUT_CONTROLLERPOWEROFF))

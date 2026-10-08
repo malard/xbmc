@@ -39,6 +39,7 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "language/LanguageTag.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/Artist.h"
@@ -6707,7 +6708,8 @@ CDateTime CVideoDatabase::SetPlayCount(const CFileItem& item, int count, const C
       // Only provide the "playcount" value if it has actually changed
       if (item.GetVideoInfoTag()->GetPlayCount() != count)
         data["playcount"] = count;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                         ANNOUNCEMENT::MESSAGE::ON_UPDATE,
                                                          std::make_shared<CFileItem>(item), data);
     }
 
@@ -10282,7 +10284,7 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
     auto start = std::chrono::steady_clock::now();
     CLog::Log(LOGINFO, "Starting videodatabase cleanup ..");
     CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                       "OnCleanStarted");
+                                                       ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED);
 
     if (handle)
     {
@@ -10410,8 +10412,8 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
           {
             progress->Close();
             m_pDS2->close();
-            CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                               "OnCleanFinished");
+            CServiceBroker::GetAnnouncementManager()->Announce(
+                ANNOUNCEMENT::VideoLibrary, ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
             return;
           }
         }
@@ -10946,7 +10948,8 @@ void CVideoDatabase::CleanDatabase(CGUIDialogProgressBarHandle* handle,
   if (progress)
     progress->Close();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnCleanFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
 }
 
 std::vector<int> CVideoDatabase::CleanMediaType(MediaType mediaType, const std::string &cleanableFileIDs,
@@ -11922,8 +11925,8 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
       if (iFailCount > 0)
         data["failcount"] = iFailCount;
     }
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnExport",
-                                                       data);
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                       ANNOUNCEMENT::MESSAGE::ON_EXPORT, data);
   }
   catch (...)
   {
@@ -12499,7 +12502,8 @@ void CVideoDatabase::AnnounceRemove(MediaType content, int id, bool scanning /* 
   data["id"] = id;
   if (scanning)
     data["transaction"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnRemove", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_REMOVE, data);
 }
 
 void CVideoDatabase::AnnounceUpdate(MediaType content, int id)
@@ -12507,7 +12511,8 @@ void CVideoDatabase::AnnounceUpdate(MediaType content, int id)
   CVariant data;
   data["type"] = NameOf(content);
   data["id"] = id;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
 }
 
 bool CVideoDatabase::GetItemsForPath(const std::string& content,

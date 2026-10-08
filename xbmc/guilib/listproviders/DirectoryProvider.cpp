@@ -17,6 +17,7 @@
 #include "favourites/FavouritesService.h"
 #include "filesystem/Directory.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
 #include "jobs/JobManager.h"
 #include "music/MusicFileItemClassify.h"
@@ -94,7 +95,8 @@ private:
 
     if (flag & ANNOUNCEMENT::Player)
     {
-      if (message == "OnPlay" || message == "OnResume" || message == "OnStop")
+      if (message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
+          message == ANNOUNCEMENT::MESSAGE::ON_RESUME || message == ANNOUNCEMENT::MESSAGE::ON_STOP)
         OnEventPublished(Topic::PLAYER);
     }
     else
@@ -105,8 +107,11 @@ private:
 
       // if there was a database update, we set the update state
       // to PENDING to fire off a new job in the next update
-      if (message == "OnScanFinished" || message == "OnCleanFinished" || message == "OnUpdate" ||
-          message == "OnRemove" || message == "OnRefresh")
+      if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED ||
+          message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED ||
+          message == ANNOUNCEMENT::MESSAGE::ON_UPDATE ||
+          message == ANNOUNCEMENT::MESSAGE::ON_REMOVE ||
+          message == ANNOUNCEMENT::MESSAGE::ON_REFRESH)
         OnEventPublished();
     }
   }

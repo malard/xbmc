@@ -28,6 +28,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/MessengerPayload.h"
 #include "music/tags/MusicInfoTag.h"
@@ -199,7 +200,9 @@ void CAirTunesServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
 {
   if (sender == ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER)
   {
-    if ((message == "OnPlay" || message == "OnResume") && m_streamStarted)
+    if ((message == ANNOUNCEMENT::MESSAGE::ON_PLAY ||
+         message == ANNOUNCEMENT::MESSAGE::ON_RESUME) &&
+        m_streamStarted)
     {
       RefreshMetadata();
       RefreshCoverArt();
@@ -208,14 +211,14 @@ void CAirTunesServer::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
         m_pDACP->Play();
     }
 
-    if (message == "OnStop" && m_streamStarted)
+    if (message == ANNOUNCEMENT::MESSAGE::ON_STOP && m_streamStarted)
     {
       std::unique_lock lock(m_dacpLock);
       if (m_pDACP)
         m_pDACP->Stop();
     }
 
-    if (message == "OnPause" && m_streamStarted)
+    if (message == ANNOUNCEMENT::MESSAGE::ON_PAUSE && m_streamStarted)
     {
       std::unique_lock lock(m_dacpLock);
       if (m_pDACP)

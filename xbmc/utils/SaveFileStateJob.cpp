@@ -18,6 +18,7 @@
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "log.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicFileItemClassify.h"
@@ -142,8 +143,8 @@ void CSaveFileState::DoWork(CFileItem& item,
                 CVariant data;
                 data["id"] = item.GetVideoInfoTag()->m_iDbId;
                 data["type"] = item.GetVideoInfoTag()->m_type;
-                CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                                   "OnUpdate", data);
+                CServiceBroker::GetAnnouncementManager()->Announce(
+                    ANNOUNCEMENT::VideoLibrary, ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
               }
             }
           }
@@ -185,8 +186,8 @@ void CSaveFileState::DoWork(CFileItem& item,
               CVariant data;
               data["id"] = item.GetVideoInfoTag()->m_iDbId;
               data["type"] = item.GetVideoInfoTag()->m_type;
-              CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                                 "OnUpdate", data);
+              CServiceBroker::GetAnnouncementManager()->Announce(
+                  ANNOUNCEMENT::VideoLibrary, ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
             }
 
             updateListing = true;
@@ -339,8 +340,8 @@ void CSaveFileState::DoWork(CFileItem& item,
           CVariant data;
           data["id"] = item.GetMusicInfoTag()->GetDatabaseId();
           data["type"] = item.GetMusicInfoTag()->GetType();
-          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnUpdate",
-                                                             data);
+          CServiceBroker::GetAnnouncementManager()->Announce(
+              ANNOUNCEMENT::AudioLibrary, ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
         }
       }
     }

@@ -13,6 +13,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 
 CGUISettingsAnnouncementHandler::CGUISettingsAnnouncementHandler()
 {
@@ -29,7 +30,7 @@ void CGUISettingsAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag fl
                                                const std::string& message,
                                                const CVariant& data)
 {
-  if (message == "OnLevelChanged")
+  if (message == ANNOUNCEMENT::MESSAGE::ON_LEVEL_CHANGED)
   {
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_SETTING_LEVEL_CHANGED);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);

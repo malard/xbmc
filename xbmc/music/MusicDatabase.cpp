@@ -39,6 +39,7 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDbPaths.h"
@@ -109,7 +110,8 @@ void AnnounceRemove(MediaType content, int id)
   data["id"] = id;
   if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
     data["transaction"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnRemove", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_REMOVE, data);
 }
 
 void AnnounceUpdate(MediaType content, int id, bool added = false)
@@ -121,7 +123,8 @@ void AnnounceUpdate(MediaType content, int id, bool added = false)
     data["transaction"] = true;
   if (added)
     data["added"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnUpdate", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
 }
 
 class CTemporaryTable
@@ -4684,7 +4687,8 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   std::chrono::seconds duration;
   auto time = std::chrono::steady_clock::now();
   CLog::Log(LOGINFO, "Starting musicdatabase cleanup ...");
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnCleanStarted");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED);
 
   BeginTransaction();
   SetLibraryLastCleaned();
@@ -4825,7 +4829,8 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   duration =
       std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - time);
   CLog::Log(LOGINFO, "Cleaning musicdatabase done. Operation took {}s", duration.count());
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnCleanFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
 
   if (!Compress(false))
   {
@@ -4837,7 +4842,8 @@ error:
   RollbackTransaction();
   // Recreate DELETE triggers on song_artist and album_artist
   CreateRemovedLinkTriggers();
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnCleanFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
   return ret;
 }
 
@@ -12259,8 +12265,8 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
       data["file"] = xmlFile;
       if (iFailCount > 0)
         data["failcount"] = iFailCount;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnExport",
-                                                         data);
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
+                                                         ANNOUNCEMENT::MESSAGE::ON_EXPORT, data);
     }
   }
   catch (...)

@@ -22,6 +22,7 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "input/WindowTranslator.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/info/InfoExpression.h"
 #include "messaging/ApplicationMessenger.h"
 #include "playlists/PlayListTypes.h"
@@ -12490,7 +12491,8 @@ void CGUIInfoManager::SetCurrentItem(const CFileItem& item)
 
   m_infoProviders.InitCurrentItem(m_currentFile.get());
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CHANGED);
 }
 
 void CGUIInfoManager::SetCurrentAlbumThumb(const std::string& thumbFileName)
@@ -12838,7 +12840,8 @@ void CGUIInfoManager::SetCurrentVideoTag(const CVideoInfoTag& tag)
   m_currentFile->SetFromVideoInfoTag(tag);
   m_currentFile->SetStartOffset(0);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CHANGED);
 }
 
 void CGUIInfoManager::SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag& tag)
@@ -12846,7 +12849,8 @@ void CGUIInfoManager::SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag& tag)
   m_currentFile->SetFromMusicInfoTag(tag);
   m_currentFile->SetStartOffset(0);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info,
+                                                     ANNOUNCEMENT::MESSAGE::ON_CHANGED);
 }
 
 const MUSIC_INFO::CMusicInfoTag* CGUIInfoManager::GetCurrentSongTag() const

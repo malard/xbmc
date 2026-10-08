@@ -18,6 +18,7 @@
 #include "input/keyboard/XBMC_vkeys.h"
 #include "input/keymaps/keyboard/KeyIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -94,7 +95,8 @@ void CGUIDialogNumeric::OnInitWindow()
 
   data["value"] = GetOutputString();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputRequested", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::Input, ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED, data);
 }
 
 void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
@@ -102,7 +104,8 @@ void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
   // call base class
   CGUIDialog::OnDeinitWindow(nextWindowID);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input,
+                                                     ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED);
 }
 
 bool CGUIDialogNumeric::OnAction(const CAction &action)

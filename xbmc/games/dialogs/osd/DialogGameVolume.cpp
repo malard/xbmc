@@ -19,6 +19,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/Variant.h"
@@ -114,7 +115,8 @@ void CDialogGameVolume::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                                  const std::string& message,
                                  const CVariant& data)
 {
-  if (message == "OnPropertiesChanged" && data["properties"].isMember("volume"))
+  if (message == ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED &&
+      data["properties"].isMember("volume"))
   {
     const float volumePercent = static_cast<float>(data["properties"]["volume"].asDouble());
 

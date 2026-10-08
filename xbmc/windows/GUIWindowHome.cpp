@@ -17,6 +17,7 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobManager.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
@@ -85,10 +86,11 @@ void CGUIWindowHome::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   if (data.isMember("transaction") && data["transaction"].asBoolean())
     return;
 
-  if (message == "OnScanStarted" || message == "OnCleanStarted")
+  if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED ||
+      message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
     return;
 
-  bool onUpdate = message == "OnUpdate";
+  bool onUpdate = message == ANNOUNCEMENT::MESSAGE::ON_UPDATE;
   // always update Totals except on an OnUpdate with no playcount update
   if (!onUpdate || data.isMember("playcount"))
     ra_flag |= Totals;

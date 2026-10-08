@@ -29,6 +29,7 @@
 #include "guilib/WindowIDs.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "music/Artist.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicDbPaths.h"
@@ -525,17 +526,20 @@ void CUPnPServer::Announce(AnnouncementFlag flag,
   if (sender != CAnnouncementManager::ANNOUNCEMENT_SENDER)
     return;
 
-  if (message != "OnUpdate" && message != "OnRemove" && message != "OnScanStarted" &&
-      message != "OnScanFinished")
+  if (message != ANNOUNCEMENT::MESSAGE::ON_UPDATE && message != ANNOUNCEMENT::MESSAGE::ON_REMOVE &&
+      message != ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED &&
+      message != ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
     return;
 
   if (data.isNull())
   {
-    if (message == "OnScanStarted" || message == "OnCleanStarted")
+    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED ||
+        message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
     {
       m_scanning = true;
     }
-    else if (message == "OnScanFinished" || message == "OnCleanFinished")
+    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED ||
+             message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
     {
       OnScanCompleted(flag);
     }
@@ -1390,8 +1394,8 @@ NPT_Result CUPnPServer::OnUpdateObject(PLT_ActionReference& action,
         CVariant data;
         data["id"] = updated.GetVideoInfoTag()->m_iDbId;
         data["type"] = updated.GetVideoInfoTag()->m_type;
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
-                                                           data);
+        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
+                                                           ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
       }
       updatelisting = true;
     }
