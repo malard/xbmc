@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
 #include "media/MediaType.h"
 #include "utils/Variant.h"
@@ -45,6 +46,8 @@ struct Players
 
 struct Play
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PLAY;
+
   std::shared_ptr<const CFileItem> item;
   int speed{1};
   Players players;
@@ -52,30 +55,40 @@ struct Play
 
 struct AVStart
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_AV_START;
+
   std::shared_ptr<const CFileItem> item;
   Players players;
 };
 
 struct AVChange
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_AV_CHANGE;
+
   std::shared_ptr<const CFileItem> item;
   Players players;
 };
 
 struct Pause
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PAUSE;
+
   std::shared_ptr<const CFileItem> item;
   Players players;
 };
 
 struct Resume
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_RESUME;
+
   std::shared_ptr<const CFileItem> item;
   Players players;
 };
 
 struct SpeedChanged
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED;
+
   std::shared_ptr<const CFileItem> item;
   int speed{1};
   Players players;
@@ -83,6 +96,8 @@ struct SpeedChanged
 
 struct Seek
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SEEK;
+
   std::shared_ptr<const CFileItem> item;
   int speed{1};
   std::chrono::milliseconds time{0};
@@ -92,6 +107,8 @@ struct Seek
 
 struct Stop
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_STOP;
+
   std::shared_ptr<const CFileItem> item;
   //! The playback reached its end, rather than being stopped.
   bool end{false};
@@ -101,6 +118,8 @@ struct Stop
 
 struct PlaybackFailed
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED;
+
   enum class Reason
   {
     None,
@@ -117,6 +136,8 @@ struct PlaybackFailed
 //! The properties of the player that changed; only those given changed.
 struct PropertiesChanged
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
+
   std::optional<Players> players;
   std::optional<int> volume;
   std::optional<bool> muted;
@@ -132,6 +153,8 @@ struct PropertiesChanged
 
 struct ContentGeometryChange
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CONTENT_GEOMETRY_CHANGE;
+
   //! The geometry as JSON-RPC describes it.
   CVariant geometry;
   Players players;
@@ -139,34 +162,43 @@ struct ContentGeometryChange
 
 struct Commercial
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_COMMERCIAL;
+
   //! How long the commercial lasts, or where it ends, as MM:SS.
   std::string time;
 };
 
 struct ToggleSkipCommercials
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_TOGGLE_SKIP_COMMERCIALS;
+
   bool skip{false};
 };
 
 struct ProcessInfo
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROCESS_INFO;
 };
 
 struct Menu
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_MENU;
 };
 
 struct BlurayMenuError
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_BLURAY_MENU_ERROR;
 };
 
 struct BlurayEncryptedError
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_BLURAY_ENCRYPTED_ERROR;
 };
 
 //! The source delivers data more slowly than playback needs.
 struct SourceSlow
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::SOURCE_SLOW;
 };
 //! Whether the item is announced as a picture rather than as a video, song or channel.
 bool IsPicture(const CFileItem* item);
@@ -192,12 +224,15 @@ struct PlayerEvent : std::variant<EVENT::PLAYER::Play,
                                   EVENT::PLAYER::SourceSlow>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Player;
 };
 
 namespace EVENT::PLAYLIST
 {
 struct Add
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_ADD;
+
   std::string playList;
   int position{-1};
   std::shared_ptr<const CFileItem> item;
@@ -205,18 +240,24 @@ struct Add
 
 struct Remove
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REMOVE;
+
   std::string playList;
   int position{-1};
 };
 
 struct Clear
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CLEAR;
+
   std::string playList;
 };
 
 //! The properties of a playlist that changed; only those given changed.
 struct PropertiesChanged
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PROPERTIES_CHANGED;
+
   std::string playList;
   std::optional<bool> shuffled;
   std::optional<std::string> repeat;
@@ -229,46 +270,57 @@ struct PlaylistEvent : std::variant<EVENT::PLAYLIST::Add,
                                     EVENT::PLAYLIST::PropertiesChanged>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Playlist;
 };
 
 namespace EVENT::GUI
 {
 struct ScreensaverActivated
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED;
 };
 
 struct ScreensaverDeactivated
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED;
+
   //! A power down or suspend follows, so the deactivation may be ignored.
   bool shuttingDown{false};
 };
 
 struct DPMSActivated
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_DPMS_ACTIVATED;
 };
 
 struct DPMSDeactivated
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_DPMS_DEACTIVATED;
 };
 
 struct SkinUnloading
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SKIN_UNLOADING;
 };
 
 struct SkinLoaded
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SKIN_LOADED;
 };
 
 struct SkinLoadFailed
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SKIN_LOAD_FAILED;
 };
 
 struct WindowFocused
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::WINDOW_FOCUSED;
 };
 
 struct WindowUnfocused
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::WINDOW_UNFOCUSED;
 };
 } // namespace EVENT::GUI
 
@@ -283,29 +335,36 @@ struct GUIEvent : std::variant<EVENT::GUI::ScreensaverActivated,
                                EVENT::GUI::WindowUnfocused>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = GUI;
 };
 
 namespace EVENT::SYSTEM
 {
 struct Quit
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_QUIT;
+
   int exitCode{0};
 };
 
 struct Restart
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_RESTART;
 };
 
 struct Sleep
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SLEEP;
 };
 
 struct Wake
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_WAKE;
 };
 
 struct LowBattery
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_LOW_BATTERY;
 };
 } // namespace EVENT::SYSTEM
 
@@ -316,28 +375,35 @@ struct SystemEvent : std::variant<EVENT::SYSTEM::Quit,
                                   EVENT::SYSTEM::LowBattery>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = System;
 };
 
 namespace EVENT::LIBRARY
 {
 struct ScanStarted
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED;
 };
 
 struct ScanFinished
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED;
 };
 
 struct CleanStarted
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED;
 };
 
 struct CleanFinished
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED;
 };
 
 struct Update
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_UPDATE;
+
   //! When given, it names the item, and type and id are not used.
   std::shared_ptr<const CFileItem> item{};
   KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
@@ -351,6 +417,8 @@ struct Update
 
 struct Remove
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REMOVE;
+
   KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
   int id{-1};
   bool transaction{false};
@@ -358,6 +426,8 @@ struct Remove
 
 struct Export
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_EXPORT;
+
   std::optional<std::string> root{};
   std::optional<std::string> file{};
   std::optional<int> failCount{};
@@ -365,6 +435,7 @@ struct Export
 
 struct Refresh
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REFRESH;
 };
 } // namespace EVENT::LIBRARY
 
@@ -383,11 +454,13 @@ struct LibraryEvent : std::variant<EVENT::LIBRARY::ScanStarted,
 struct VideoLibraryEvent : LibraryEvent
 {
   using LibraryEvent::LibraryEvent;
+  static constexpr AnnouncementFlag FLAG = VideoLibrary;
 };
 
 struct AudioLibraryEvent : LibraryEvent
 {
   using LibraryEvent::LibraryEvent;
+  static constexpr AnnouncementFlag FLAG = AudioLibrary;
 };
 
 //! Whether the event is part of a scan or clean, which announces its own end.
@@ -397,6 +470,8 @@ namespace EVENT::INPUT
 {
 struct Requested
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED;
+
   enum class Kind
   {
     Keyboard,
@@ -416,12 +491,14 @@ struct Requested
 
 struct Finished
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED;
 };
 } // namespace EVENT::INPUT
 
 struct InputEvent : std::variant<EVENT::INPUT::Requested, EVENT::INPUT::Finished>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Input;
 };
 
 namespace EVENT::PVR
@@ -429,12 +506,16 @@ namespace EVENT::PVR
 //! A radio traffic announcement started or ended.
 struct RadioTrafficAnnouncement
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::RDS_RADIO_TA;
+
   bool on{false};
 };
 
 //! The time a radio station's RDS clock gives.
 struct RadioClock
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::RDS_RADIO_RTC;
+
   //! RFC 1123, or empty when the clock is invalid.
   std::string dateTime;
 };
@@ -442,6 +523,8 @@ struct RadioClock
 //! A radio traffic message channel (RDS-TMC) message.
 struct RadioTrafficMessage
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::RDS_RADIO_TMC;
+
   std::string channel;
   uint16_t ident{0};
   unsigned int flags{0};
@@ -456,6 +539,7 @@ struct PVREvent : std::variant<EVENT::PVR::RadioTrafficAnnouncement,
                                EVENT::PVR::RadioTrafficMessage>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = ANNOUNCEMENT::PVR;
 };
 
 namespace EVENT::INFO
@@ -463,28 +547,36 @@ namespace EVENT::INFO
 //! The item the info labels describe changed.
 struct Changed
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_CHANGED;
 };
 } // namespace EVENT::INFO
 
 struct InfoEvent : std::variant<EVENT::INFO::Changed>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Info;
 };
 
 namespace EVENT::SOURCES
 {
 struct Added
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_ADDED;
+
   std::string path;
 };
 
 struct Removed
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_REMOVED;
+
   std::string path;
 };
 
 struct Updated
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_UPDATED;
+
   std::string path;
 };
 } // namespace EVENT::SOURCES
@@ -493,12 +585,15 @@ struct SourcesEvent
   : std::variant<EVENT::SOURCES::Added, EVENT::SOURCES::Removed, EVENT::SOURCES::Updated>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Sources;
 };
 
 namespace EVENT::SETTINGS
 {
 struct LevelChanged
 {
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_LEVEL_CHANGED;
+
   SettingLevel level{};
 };
 } // namespace EVENT::SETTINGS
@@ -506,6 +601,7 @@ struct LevelChanged
 struct SettingsEvent : std::variant<EVENT::SETTINGS::LevelChanged>
 {
   using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Settings;
 };
 
 struct Announcement : std::variant<PlayerEvent,

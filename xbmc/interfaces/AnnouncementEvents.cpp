@@ -9,7 +9,6 @@
 #include "AnnouncementEvents.h"
 
 #include "FileItem.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/PlaybackValues.h"
 #include "settings/lib/SettingLevel.h"
 #include "video/VideoFileItemClassify.h"
@@ -87,117 +86,6 @@ const char* NameOf(EVENT::INPUT::Requested::Kind kind)
       return "ip";
   }
   return "keyboard";
-}
-
-const char* MessageOfEvent(const PlayerEvent& event)
-{
-  using namespace EVENT::PLAYER;
-  return std::visit(
-      Overloaded{[](const Play&) { return MESSAGE::ON_PLAY; },
-                 [](const AVStart&) { return MESSAGE::ON_AV_START; }, [](const AVChange&)
-                 { return MESSAGE::ON_AV_CHANGE; }, [](const Pause&) { return MESSAGE::ON_PAUSE; },
-                 [](const Resume&) { return MESSAGE::ON_RESUME; },
-                 [](const SpeedChanged&) { return MESSAGE::ON_SPEED_CHANGED; }, [](const Seek&)
-                 { return MESSAGE::ON_SEEK; }, [](const Stop&) { return MESSAGE::ON_STOP; },
-                 [](const PlaybackFailed&) { return MESSAGE::ON_PLAYBACK_FAILED; },
-                 [](const PropertiesChanged&) { return MESSAGE::ON_PROPERTIES_CHANGED; },
-                 [](const ContentGeometryChange&) { return MESSAGE::ON_CONTENT_GEOMETRY_CHANGE; },
-                 [](const Commercial&) { return MESSAGE::ON_COMMERCIAL; },
-                 [](const ToggleSkipCommercials&) { return MESSAGE::ON_TOGGLE_SKIP_COMMERCIALS; },
-                 [](const ProcessInfo&) { return MESSAGE::ON_PROCESS_INFO; },
-                 [](const Menu&) { return MESSAGE::ON_MENU; },
-                 [](const BlurayMenuError&) { return MESSAGE::ON_BLURAY_MENU_ERROR; },
-                 [](const BlurayEncryptedError&) { return MESSAGE::ON_BLURAY_ENCRYPTED_ERROR; },
-                 [](const SourceSlow&) { return MESSAGE::SOURCE_SLOW; }},
-      static_cast<const PlayerEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const PlaylistEvent& event)
-{
-  using namespace EVENT::PLAYLIST;
-  return std::visit(Overloaded{[](const Add&) { return MESSAGE::ON_ADD; },
-                               [](const Remove&) { return MESSAGE::ON_REMOVE; }, [](const Clear&)
-                               { return MESSAGE::ON_CLEAR; }, [](const PropertiesChanged&)
-                               { return MESSAGE::ON_PROPERTIES_CHANGED; }},
-                    static_cast<const PlaylistEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const GUIEvent& event)
-{
-  using namespace EVENT::GUI;
-  return std::visit(
-      Overloaded{[](const ScreensaverActivated&) { return MESSAGE::ON_SCREENSAVER_ACTIVATED; },
-                 [](const ScreensaverDeactivated&) { return MESSAGE::ON_SCREENSAVER_DEACTIVATED; },
-                 [](const DPMSActivated&) { return MESSAGE::ON_DPMS_ACTIVATED; },
-                 [](const DPMSDeactivated&) { return MESSAGE::ON_DPMS_DEACTIVATED; },
-                 [](const SkinUnloading&) { return MESSAGE::ON_SKIN_UNLOADING; },
-                 [](const SkinLoaded&) { return MESSAGE::ON_SKIN_LOADED; },
-                 [](const SkinLoadFailed&) { return MESSAGE::ON_SKIN_LOAD_FAILED; },
-                 [](const WindowFocused&) { return MESSAGE::WINDOW_FOCUSED; },
-                 [](const WindowUnfocused&) { return MESSAGE::WINDOW_UNFOCUSED; }},
-      static_cast<const GUIEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const SystemEvent& event)
-{
-  using namespace EVENT::SYSTEM;
-  return std::visit(Overloaded{[](const Quit&) { return MESSAGE::ON_QUIT; },
-                               [](const Restart&) { return MESSAGE::ON_RESTART; },
-                               [](const EVENT::SYSTEM::Sleep&) { return MESSAGE::ON_SLEEP; },
-                               [](const Wake&) { return MESSAGE::ON_WAKE; },
-                               [](const LowBattery&) { return MESSAGE::ON_LOW_BATTERY; }},
-                    static_cast<const SystemEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const LibraryEvent& event)
-{
-  using namespace EVENT::LIBRARY;
-  return std::visit(Overloaded{[](const ScanStarted&) { return MESSAGE::ON_SCAN_STARTED; },
-                               [](const ScanFinished&) { return MESSAGE::ON_SCAN_FINISHED; },
-                               [](const CleanStarted&) { return MESSAGE::ON_CLEAN_STARTED; },
-                               [](const CleanFinished&) { return MESSAGE::ON_CLEAN_FINISHED; },
-                               [](const Update&) { return MESSAGE::ON_UPDATE; },
-                               [](const Remove&) { return MESSAGE::ON_REMOVE; },
-                               [](const Export&) { return MESSAGE::ON_EXPORT; },
-                               [](const Refresh&) { return MESSAGE::ON_REFRESH; }},
-                    static_cast<const LibraryEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const InputEvent& event)
-{
-  using namespace EVENT::INPUT;
-  return std::visit(Overloaded{[](const Requested&) { return MESSAGE::ON_INPUT_REQUESTED; },
-                               [](const Finished&) { return MESSAGE::ON_INPUT_FINISHED; }},
-                    static_cast<const InputEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const PVREvent& event)
-{
-  using namespace EVENT::PVR;
-  return std::visit(Overloaded{[](const RadioTrafficAnnouncement&)
-                               { return MESSAGE::RDS_RADIO_TA; },
-                               [](const RadioClock&) { return MESSAGE::RDS_RADIO_RTC; },
-                               [](const RadioTrafficMessage&) { return MESSAGE::RDS_RADIO_TMC; }},
-                    static_cast<const PVREvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const InfoEvent&)
-{
-  return MESSAGE::ON_CHANGED;
-}
-
-const char* MessageOfEvent(const SourcesEvent& event)
-{
-  using namespace EVENT::SOURCES;
-  return std::visit(Overloaded{[](const Added&) { return MESSAGE::ON_ADDED; },
-                               [](const Removed&) { return MESSAGE::ON_REMOVED; },
-                               [](const Updated&) { return MESSAGE::ON_UPDATED; }},
-                    static_cast<const SourcesEvent::variant&>(event));
-}
-
-const char* MessageOfEvent(const SettingsEvent&)
-{
-  return MESSAGE::ON_LEVEL_CHANGED;
 }
 
 CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
@@ -450,21 +338,20 @@ bool IsTransaction(const LibraryEvent& event)
 
 AnnouncementFlag FlagOf(const Announcement& announcement)
 {
-  return std::visit(
-      Overloaded{[](const PlayerEvent&) { return Player; }, [](const PlaylistEvent&)
-                 { return Playlist; }, [](const GUIEvent&) { return GUI; }, [](const SystemEvent&)
-                 { return System; }, [](const VideoLibraryEvent&) { return VideoLibrary; },
-                 [](const AudioLibraryEvent&) { return AudioLibrary; }, [](const InputEvent&)
-                 { return Input; }, [](const PVREvent&) { return ANNOUNCEMENT::PVR; },
-                 [](const InfoEvent&) { return Info; }, [](const SourcesEvent&) { return Sources; },
-                 [](const SettingsEvent&) { return Settings; }},
-      static_cast<const Announcement::variant&>(announcement));
+  return std::visit([](const auto& flagEvent) { return std::decay_t<decltype(flagEvent)>::FLAG; },
+                    static_cast<const Announcement::variant&>(announcement));
 }
 
 const char* MessageOf(const Announcement& announcement)
 {
-  return std::visit([](const auto& event) { return MessageOfEvent(event); },
-                    static_cast<const Announcement::variant&>(announcement));
+  return std::visit(
+      [](const auto& flagEvent)
+      {
+        using FlagEvent = std::decay_t<decltype(flagEvent)>;
+        return std::visit([](const auto& event) { return std::decay_t<decltype(event)>::MESSAGE; },
+                          static_cast<const typename FlagEvent::variant&>(flagEvent));
+      },
+      static_cast<const Announcement::variant&>(announcement));
 }
 
 std::shared_ptr<const CFileItem> ItemOf(const Announcement& announcement)
