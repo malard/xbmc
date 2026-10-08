@@ -99,7 +99,7 @@ public:
   void OnRepeat(KODI::PLAYLIST::Type type, KODI::PLAYLIST::Repeat repeat) override;
   void OnFeed(bool playing) override;
   void OnFailed(const std::shared_ptr<const CFileItem>& item,
-                CApplicationPlayLists::FailReason reason) override;
+                KODI::PLAYLIST::FailReason reason) override;
 
 private:
   void PublishListChange(std::optional<KODI::PLAYLIST::Type> playList,

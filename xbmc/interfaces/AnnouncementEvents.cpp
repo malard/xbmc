@@ -44,25 +44,6 @@ CVariant SpeedAndPlayers(int speed, KODI::MEDIA::Streams streams)
   return data;
 }
 
-const char* ReasonOf(EVENT::PLAYER::PlaybackFailed::Reason reason)
-{
-  using enum EVENT::PLAYER::PlaybackFailed::Reason;
-  switch (reason)
-  {
-    case Unplayable:
-      return "unplayable";
-    case Unresolved:
-      return "unresolved";
-    case Locked:
-      return "locked";
-    case Error:
-      return "error";
-    case None:
-      break;
-  }
-  return nullptr;
-}
-
 const char* NameOf(EVENT::INPUT::Requested::Kind kind)
 {
   using enum EVENT::INPUT::Requested::Kind;
@@ -142,11 +123,10 @@ CVariant LegacyDataOfEvent(const PlayerEvent& event)
                  },
                  [](const PlaybackFailed& e)
                  {
-                   const char* reason = ReasonOf(e.reason);
-                   if (!reason)
+                   if (!e.reason)
                      return CVariant{};
                    CVariant data(CVariant::VariantTypeObject);
-                   data["reason"] = reason;
+                   data["reason"] = std::string{KODI::PLAYLIST::NameOf(*e.reason)};
                    return data;
                  },
                  [](const PropertiesChanged& e)

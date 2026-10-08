@@ -66,7 +66,7 @@ void CGUIPlayerAnnouncementHandler::OnPlayerEvent(const ANNOUNCEMENT::PlayerEven
   }
   // A failure the playlists report carries a reason and is shown by whoever refused it
   else if (const auto* failed = std::get_if<PLAYER::PlaybackFailed>(&event);
-           failed && failed->reason == PLAYER::PlaybackFailed::Reason::None)
+           failed && !failed->reason)
   {
     CGUIDialogKaiToast::QueueNotification(localizeStrings.Get(16026), localizeStrings.Get(16029));
   }

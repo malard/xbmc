@@ -33,13 +33,12 @@ public:
   void OnShuffled(PLAYLIST::Type type, bool shuffled) override {}
   void OnRepeat(PLAYLIST::Type type, PLAYLIST::Repeat repeat) override {}
   void OnFeed(bool playing) override {}
-  void OnFailed(const std::shared_ptr<const CFileItem>& item,
-                CApplicationPlayLists::FailReason reason) override
+  void OnFailed(const std::shared_ptr<const CFileItem>& item, PLAYLIST::FailReason reason) override
   {
     failed.emplace_back(item->GetPath(), reason);
   }
 
-  std::vector<std::pair<std::string, CApplicationPlayLists::FailReason>> failed;
+  std::vector<std::pair<std::string, PLAYLIST::FailReason>> failed;
 };
 } // namespace
 
@@ -61,5 +60,5 @@ TEST(TestApplicationPlayMedia, DISABLED_AnAddonItemThatDoesNotResolveIsReported)
   EXPECT_FALSE(played);
   ASSERT_EQ(1u, observer.failed.size());
   EXPECT_EQ("plugin://plugin.video.absent/", observer.failed.front().first);
-  EXPECT_EQ(CApplicationPlayLists::FailReason::Unresolved, observer.failed.front().second);
+  EXPECT_EQ(PLAYLIST::FailReason::Unresolved, observer.failed.front().second);
 }

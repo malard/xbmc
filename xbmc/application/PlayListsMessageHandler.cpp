@@ -221,7 +221,7 @@ void CPlayListsMessageHandler::OnPlayItems(ThreadMessage* pMsg)
   // if the item is a plugin we need to resolve the URL to ensure the infotags are filled.
   if (URIUtils::HasPluginPath(*item) && !XFILE::CPluginDirectory::GetResolvedPluginResult(*item))
   {
-    m_playLists.ReportFailed(item, CApplicationPlayLists::FailReason::Unresolved);
+    m_playLists.ReportFailed(item, PLAYLIST::FailReason::Unresolved);
     return;
   }
   const bool isVideo{VIDEO::IsVideo(*item)};
@@ -236,7 +236,7 @@ void CPlayListsMessageHandler::OnPlayItems(ThreadMessage* pMsg)
   {
     CLog::LogF(LOGERROR, "MasterCode or MediaSource-code is wrong: {} will not be played.",
                item->GetPath());
-    m_playLists.ReportFailed(item, CApplicationPlayLists::FailReason::Locked);
+    m_playLists.ReportFailed(item, PLAYLIST::FailReason::Locked);
     return;
   }
   const Type type = TypeFor(*item);

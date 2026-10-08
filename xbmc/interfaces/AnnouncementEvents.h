@@ -113,17 +113,9 @@ struct PlaybackFailed
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PLAYBACK_FAILED;
 
-  enum class Reason
-  {
-    None,
-    Unplayable,
-    Unresolved,
-    Locked,
-    Error,
-  };
-
   std::shared_ptr<const CFileItem> item;
-  Reason reason{Reason::None};
+  //! Empty when the player gave no reason.
+  std::optional<KODI::PLAYLIST::FailReason> reason;
 };
 
 //! The properties of the player that changed; only those given changed.

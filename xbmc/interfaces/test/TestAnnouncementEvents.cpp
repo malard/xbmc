@@ -87,14 +87,13 @@ TEST(TestAnnouncementEvents, PlayerStopData)
 TEST(TestAnnouncementEvents, PlaybackFailedData)
 {
   using namespace EVENT::PLAYER;
-  ExpectData(PlayerEvent{PlaybackFailed{nullptr, PlaybackFailed::Reason::Unplayable}},
+  using KODI::PLAYLIST::FailReason;
+  ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Unplayable}},
              R"({"reason":"unplayable"})");
-  ExpectData(PlayerEvent{PlaybackFailed{nullptr, PlaybackFailed::Reason::Unresolved}},
+  ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Unresolved}},
              R"({"reason":"unresolved"})");
-  ExpectData(PlayerEvent{PlaybackFailed{nullptr, PlaybackFailed::Reason::Locked}},
-             R"({"reason":"locked"})");
-  ExpectData(PlayerEvent{PlaybackFailed{nullptr, PlaybackFailed::Reason::Error}},
-             R"({"reason":"error"})");
+  ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Locked}}, R"({"reason":"locked"})");
+  ExpectData(PlayerEvent{PlaybackFailed{nullptr, FailReason::Error}}, R"({"reason":"error"})");
   EXPECT_TRUE(LegacyDataOf(PlayerEvent{PlaybackFailed{}}).isNull());
 }
 

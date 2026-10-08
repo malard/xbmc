@@ -1850,8 +1850,7 @@ bool CApplication::PlayMedia(const CFileItem& item, const std::string& player /*
   const std::shared_ptr<CFileItem> playable = PlayableItem(item);
   if (!playable)
   {
-    playLists->ReportFailed(std::make_shared<CFileItem>(item),
-                            CApplicationPlayLists::FailReason::Unresolved);
+    playLists->ReportFailed(std::make_shared<CFileItem>(item), PLAYLIST::FailReason::Unresolved);
     return false;
   }
 

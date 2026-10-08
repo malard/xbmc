@@ -216,27 +216,9 @@ void CPlaybackAnnouncer::OnFeed(bool playing)
 }
 
 void CPlaybackAnnouncer::OnFailed(const std::shared_ptr<const CFileItem>& item,
-                                  CApplicationPlayLists::FailReason reason)
+                                  PLAYLIST::FailReason reason)
 {
-  using Reason = ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed::Reason;
-  Reason announced = Reason::None;
-  switch (reason)
-  {
-    using enum CApplicationPlayLists::FailReason;
-    case Unplayable:
-      announced = Reason::Unplayable;
-      break;
-    case Unresolved:
-      announced = Reason::Unresolved;
-      break;
-    case Locked:
-      announced = Reason::Locked;
-      break;
-    case Error:
-      announced = Reason::Error;
-      break;
-  }
-  m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{item, announced}});
+  m_sink(PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{item, reason}});
 }
 
 void CPlaybackAnnouncer::OnRepeat(Type type, PLAYLIST::Repeat repeat)

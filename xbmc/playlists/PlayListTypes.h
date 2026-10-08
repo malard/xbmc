@@ -99,6 +99,36 @@ inline std::optional<Repeat> RepeatFromName(std::string_view name)
   return std::nullopt;
 }
 
+//! Why a play that was asked for did not happen.
+enum class FailReason
+{
+  //! No player could play it, or the player refused it.
+  Unplayable,
+  //! A plugin did not return a playable item.
+  Unresolved,
+  //! The master or media source lock refused it.
+  Locked,
+  //! The player reported an error once playback had started.
+  Error
+};
+
+//! A fail reason's name in the interfaces: "unplayable", "unresolved", "locked" or "error".
+constexpr std::string_view NameOf(FailReason reason)
+{
+  switch (reason)
+  {
+    case FailReason::Unplayable:
+      return "unplayable";
+    case FailReason::Unresolved:
+      return "unresolved";
+    case FailReason::Locked:
+      return "locked";
+    case FailReason::Error:
+      break;
+  }
+  return "error";
+}
+
 /*!
  * \brief Identifies one entry of one playlist. Never reused within that playlist, so a stale id
  * resolves to nothing rather than to a different entry.

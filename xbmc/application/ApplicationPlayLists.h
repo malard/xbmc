@@ -63,19 +63,6 @@ public:
     Yes
   };
 
-  //! Why a play that was asked for did not happen.
-  enum class FailReason
-  {
-    //! No player could play it, or the player refused it.
-    Unplayable,
-    //! A plugin did not return a playable item.
-    Unresolved,
-    //! The master or media source lock refused it.
-    Locked,
-    //! The player reported an error once playback had started.
-    Error
-  };
-
   /*!
    * \brief Told what the player started and what changes on the playlists.
    */
@@ -91,7 +78,8 @@ public:
     virtual void OnRepeat(KODI::PLAYLIST::Type type, KODI::PLAYLIST::Repeat repeat) = 0;
     //! Whether a feed is playing changed.
     virtual void OnFeed(bool playing) = 0;
-    virtual void OnFailed(const std::shared_ptr<const CFileItem>& item, FailReason reason) = 0;
+    virtual void OnFailed(const std::shared_ptr<const CFileItem>& item,
+                          KODI::PLAYLIST::FailReason reason) = 0;
   };
 
   /*!
@@ -118,7 +106,8 @@ public:
 
   //! Report a play that was asked for and did not happen, where it was refused before reaching
   //! the playlists.
-  void ReportFailed(const std::shared_ptr<const CFileItem>& item, FailReason reason) const;
+  void ReportFailed(const std::shared_ptr<const CFileItem>& item,
+                    KODI::PLAYLIST::FailReason reason) const;
 
   /*!
    * \brief Go back an entry, unless the playing file is past its first few seconds and can seek,

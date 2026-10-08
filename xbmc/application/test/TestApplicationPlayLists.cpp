@@ -714,9 +714,7 @@ TEST(TestApplicationPlayLists, StartingOrRestartingAFeedReportsItOnce)
     void OnShuffled(PLAYLIST::Type, bool) override {}
     void OnRepeat(PLAYLIST::Type, PLAYLIST::Repeat) override {}
     void OnFeed(bool playing) override { feeds.push_back(playing); }
-    void OnFailed(const std::shared_ptr<const CFileItem>&, CApplicationPlayLists::FailReason) override
-    {
-    }
+    void OnFailed(const std::shared_ptr<const CFileItem>&, PLAYLIST::FailReason) override {}
   } observer;
 
   CTestPlayLists playLists;
