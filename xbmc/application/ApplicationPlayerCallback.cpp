@@ -55,8 +55,6 @@ using namespace std::chrono_literals;
 
 void CApplicationPlayerCallback::OnPlayBackEnded()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_ENDED, 0, 0);
@@ -82,7 +80,6 @@ bool ShouldUpdateStreamDetails(const CFileItem& file)
 
 void CApplicationPlayerCallback::OnPlayBackStarted(const CFileItem& file)
 {
-  CLog::LogF(LOGDEBUG, "call");
   std::shared_ptr<CFileItem> itemCurrentFile;
 
   // check if VideoPlayer should set file item stream details from its current streams
@@ -442,8 +439,6 @@ void CApplicationPlayerCallback::OnPlayBackResumed()
 
 void CApplicationPlayerCallback::OnPlayBackStopped()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_STOPPED, 0, 0);
@@ -461,8 +456,6 @@ void CApplicationPlayerCallback::OnPlayBackError()
 
 void CApplicationPlayerCallback::OnQueueNextItem()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   // informs python script currently running that we are requesting the next track
   // (does nothing if python is not loaded)
 #ifdef HAS_PYTHON
@@ -503,8 +496,6 @@ void CApplicationPlayerCallback::OnPlayBackSpeedChanged(int iSpeed)
 
 void CApplicationPlayerCallback::OnAVChange()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetGUI()->GetStereoscopicsManager().OnStreamChange();
 
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
@@ -515,8 +506,6 @@ void CApplicationPlayerCallback::OnAVChange()
 
 void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVSTARTED, 0, 0);
