@@ -10,6 +10,7 @@
 
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 
 #include "platform/darwin/osx/MediaKeys.h"
 
@@ -37,12 +38,12 @@ void CHotKeyController::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
   {
     case ANNOUNCEMENT::GUI:
     {
-      if (message == "WindowFocused")
+      if (message == ANNOUNCEMENT::MESSAGE::WINDOW_FOCUSED)
       {
         m_appHasFocus = true;
         [m_mediaKeytap enableMediaKeyTap];
       }
-      else if (message == "WindowUnfocused")
+      else if (message == ANNOUNCEMENT::MESSAGE::WINDOW_UNFOCUSED)
       {
         m_appHasFocus = false;
         if (!m_appIsPlaying)

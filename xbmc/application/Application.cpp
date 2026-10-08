@@ -91,7 +91,6 @@
 #include "input/actions/ActionTranslator.h"
 #include "input/keyboard/KeyboardLayoutManager.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/builtins/Builtins.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "interfaces/json-rpc/JSONRPC.h"
@@ -1723,10 +1722,8 @@ bool CApplication::Stop(int exitCode)
   {
     m_frameMoveGuard.unlock();
 
-    CVariant vExitCode(CVariant::VariantTypeObject);
-    vExitCode["exitcode"] = exitCode;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System,
-                                                       ANNOUNCEMENT::MESSAGE::ON_QUIT, vExitCode);
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Quit{exitCode}});
 
     // Abort any active screensaver
     GetComponent<CApplicationPowerHandling>()->WakeUpScreenSaverAndDPMS();

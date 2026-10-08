@@ -21,7 +21,6 @@
 #include "URL.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
 #include "profiles/ProfileManager.h"
@@ -172,14 +171,14 @@ public:
   bool OnMSAdded(PLT_DeviceDataReference& device) override
   {
     CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_ADDED, CVariant{"upnp://"});
+        ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Added{"upnp://"}});
 
     return PLT_SyncMediaBrowser::OnMSAdded(device);
   }
   void OnMSRemoved(PLT_DeviceDataReference& device) override
   {
     CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_REMOVED, CVariant{"upnp://"});
+        ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Removed{"upnp://"}});
 
     PLT_SyncMediaBrowser::OnMSRemoved(device);
   }
@@ -199,7 +198,7 @@ public:
 
     m_logger->debug("notified container update {}", (const char*)path);
     CServiceBroker::GetAnnouncementManager()->Announce(
-        ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_UPDATED, CVariant{path.GetChars()});
+        ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Updated{path.GetChars()}});
   }
 
   bool MarkWatched(const CFileItem& item, const bool watched)

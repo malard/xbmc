@@ -11,7 +11,6 @@
 #include "ServiceBroker.h"
 #include "SortFileItem.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "utils/SortUtils.h"
 #include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
@@ -238,10 +237,8 @@ void CViewStateSettings::SetSettingLevel(SettingLevel settingLevel)
 
   m_settingLevel = settingLevel;
 
-  CVariant data(CVariant::VariantTypeObject);
-  data["level"] = SettingLevelToString(m_settingLevel);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Settings,
-                                                     ANNOUNCEMENT::MESSAGE::ON_LEVEL_CHANGED, data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::SettingsEvent{ANNOUNCEMENT::EVENT::SETTINGS::LevelChanged{m_settingLevel}});
 }
 
 void CViewStateSettings::CycleSettingLevel()

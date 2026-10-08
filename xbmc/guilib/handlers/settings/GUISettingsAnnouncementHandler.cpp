@@ -13,7 +13,8 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
+
+#include <variant>
 
 CGUISettingsAnnouncementHandler::CGUISettingsAnnouncementHandler()
 {
@@ -25,12 +26,9 @@ CGUISettingsAnnouncementHandler::~CGUISettingsAnnouncementHandler()
   CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
 }
 
-void CGUISettingsAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                               const std::string& sender,
-                                               const std::string& message,
-                                               const CVariant& data)
+void CGUISettingsAnnouncementHandler::OnSettingsEvent(const ANNOUNCEMENT::SettingsEvent& event)
 {
-  if (message == ANNOUNCEMENT::MESSAGE::ON_LEVEL_CHANGED)
+  if (std::holds_alternative<ANNOUNCEMENT::EVENT::SETTINGS::LevelChanged>(event))
   {
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_SETTING_LEVEL_CHANGED);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);

@@ -22,7 +22,6 @@
 
 #include <memory>
 #include <mutex>
-#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -208,6 +207,61 @@ CVariant CreateDataObjectFromItem(const CFileItem& item, const CVariant& data)
   return object;
 }
 
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::PlayerEvent& event)
+{
+  announcer.OnPlayerEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::PlaylistEvent& event)
+{
+  announcer.OnPlaylistEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::GUIEvent& event)
+{
+  announcer.OnGUIEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SystemEvent& event)
+{
+  announcer.OnSystemEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::VideoLibraryEvent& event)
+{
+  announcer.OnVideoLibraryEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::AudioLibraryEvent& event)
+{
+  announcer.OnAudioLibraryEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::InputEvent& event)
+{
+  announcer.OnInputEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::PVREvent& event)
+{
+  announcer.OnPVREvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::InfoEvent& event)
+{
+  announcer.OnInfoEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SourcesEvent& event)
+{
+  announcer.OnSourcesEvent(event);
+}
+
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SettingsEvent& event)
+{
+  announcer.OnSettingsEvent(event);
+}
+
 } // unnamed namespace
 
 CAnnouncementManager::CAnnouncementManager() : CThread("Announce")
@@ -387,16 +441,8 @@ void CAnnouncementManager::DoAnnounce(AnnouncementFlag flag,
     {
       CSingleExit unlock(m_announcersCritSection);
       if (announcement)
-        std::visit(
-            [announcer](const auto& event)
-            {
-              using Event = std::decay_t<decltype(event)>;
-              if constexpr (std::is_same_v<Event, PlayerEvent>)
-                announcer->OnPlayerEvent(event);
-              else if constexpr (std::is_same_v<Event, PlaylistEvent>)
-                announcer->OnPlaylistEvent(event);
-            },
-            static_cast<const Announcement::variant&>(*announcement));
+        std::visit([announcer](const auto& event) { Deliver(*announcer, event); },
+                   static_cast<const Announcement::variant&>(*announcement));
       announcer->Announce(flag, sender, message, data);
     }
     catch (...)

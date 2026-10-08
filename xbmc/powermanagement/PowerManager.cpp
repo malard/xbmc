@@ -25,7 +25,6 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "network/Network.h"
 #include "pvr/PVRManager.h"
 #include "resources/LocalizeStrings.h"
@@ -146,8 +145,8 @@ bool CPowerManager::Reboot()
 
   if (success)
   {
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System,
-                                                       ANNOUNCEMENT::MESSAGE::ON_RESTART);
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Restart{}});
 
     CGUIDialogBusyNoCancel* dialog =
         CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(
@@ -194,8 +193,8 @@ void CPowerManager::ProcessEvents()
 
 void CPowerManager::OnSleep()
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System,
-                                                     ANNOUNCEMENT::MESSAGE::ON_SLEEP);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Sleep{}});
 
   CGUIDialogBusyNoCancel* dialog =
       CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusyNoCancel>(
@@ -255,8 +254,8 @@ void CPowerManager::OnWake()
   CServiceBroker::GetPVRManager().OnWake();
   RestorePlayerState();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System,
-                                                     ANNOUNCEMENT::MESSAGE::ON_WAKE);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Wake{}});
 }
 
 void CPowerManager::OnLowBattery()
@@ -267,8 +266,8 @@ void CPowerManager::OnLowBattery()
       CGUIDialogKaiToast::Warning,
       CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13050), "");
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System,
-                                                     ANNOUNCEMENT::MESSAGE::ON_LOW_BATTERY);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::LowBattery{}});
 }
 
 void CPowerManager::StorePlayerState()

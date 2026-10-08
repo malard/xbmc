@@ -246,6 +246,63 @@ TEST_F(TestAnnouncementManager, ATypedEventReachesListenersAsItselfAndAsData)
   EXPECT_TRUE(announcer.m_data["item"].isMember("type"));
 }
 
+namespace
+{
+class CLibraryAnnouncer : public IAnnouncer
+{
+public:
+  void OnVideoLibraryEvent(const VideoLibraryEvent& event) override
+  {
+    m_video = event;
+    m_videoReceived.Set();
+  }
+
+  void OnAudioLibraryEvent(const AudioLibraryEvent& event) override
+  {
+    m_audio = event;
+    m_audioReceived.Set();
+  }
+
+  void Announce(AnnouncementFlag flag,
+                const std::string& sender,
+                const std::string& message,
+                const CVariant& data) override
+  {
+    if (flag == VideoLibrary)
+      m_videoData = data;
+  }
+
+  VideoLibraryEvent m_video;
+  CEvent m_videoReceived;
+  AudioLibraryEvent m_audio;
+  CEvent m_audioReceived;
+  CVariant m_videoData;
+};
+} // namespace
+
+TEST_F(TestAnnouncementManager, ALibraryEventReachesTheHandlerForItsLibrary)
+{
+  CLibraryAnnouncer announcer;
+  m_manager.AddAnnouncer(&announcer, VideoLibrary | AudioLibrary);
+  const auto item = std::make_shared<CFileItem>("/movies/film.mkv", false);
+  m_manager.Announce(AudioLibraryEvent{EVENT::LIBRARY::ScanStarted{}});
+  m_manager.Announce(VideoLibraryEvent{EVENT::LIBRARY::Update{.item = item, .added = true}});
+  ASSERT_TRUE(announcer.m_audioReceived.Wait(TIMEOUT));
+  ASSERT_TRUE(announcer.m_videoReceived.Wait(TIMEOUT));
+  m_manager.RemoveAnnouncer(&announcer);
+  m_manager.Deinitialize();
+
+  EXPECT_TRUE(std::holds_alternative<EVENT::LIBRARY::ScanStarted>(announcer.m_audio));
+  const auto* update = std::get_if<EVENT::LIBRARY::Update>(&announcer.m_video);
+  ASSERT_NE(nullptr, update);
+  ASSERT_NE(nullptr, update->item);
+  EXPECT_NE(item, update->item) << "a listener must receive the copy taken when it was announced";
+  EXPECT_TRUE(update->added);
+
+  EXPECT_TRUE(announcer.m_videoData["added"].asBoolean());
+  EXPECT_TRUE(announcer.m_videoData["item"].isMember("type"));
+}
+
 TEST_F(TestAnnouncementManager, ATypedEventIsNotDeliveredForAnotherFlag)
 {
   CTypedAnnouncer announcer;

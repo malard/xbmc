@@ -18,7 +18,6 @@
 #include "addons/Scraper.h"
 #include "addons/addoninfo/AddonInfo.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "utils/ArtTypes.h"
 #include "utils/ContentNames.h"
@@ -483,11 +482,9 @@ JSONRPC_STATUS CVideoLibrary::AddItem(const CVariant& parameterObject, CVariant&
   CFileItem added;
   added.GetVideoInfoTag()->m_iDbId = id;
   added.GetVideoInfoTag()->SetMediaType(traits->type);
-  CVariant data;
-  data["added"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_UPDATE,
-                                                     std::make_shared<CFileItem>(added), data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+          .item = std::make_shared<CFileItem>(added), .added = true}});
   return OK;
 }
 

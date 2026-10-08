@@ -18,7 +18,6 @@
 #include "Util.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/legacy/AddonUtils.h"
 #include "interfaces/legacy/Monitor.h"
 #include "interfaces/python/AddonPythonInvoker.h"
@@ -34,6 +33,7 @@
 #endif
 
 #include <algorithm>
+#include <variant>
 
 XBPython::XBPython()
 {
@@ -123,45 +123,47 @@ XBPython::~XBPython()
 
 #define CHECK_FOR_ENTRY(l, v) (l.hadSomethingRemoved ? (std::ranges::find(l, v) != l.end()) : true)
 
+void XBPython::OnVideoLibraryEvent(const ANNOUNCEMENT::VideoLibraryEvent& event)
+{
+  OnLibraryEvent(event, "video");
+}
+
+void XBPython::OnAudioLibraryEvent(const ANNOUNCEMENT::AudioLibraryEvent& event)
+{
+  OnLibraryEvent(event, "music");
+}
+
+void XBPython::OnLibraryEvent(const ANNOUNCEMENT::LibraryEvent& event, const std::string& library)
+{
+  namespace LIBRARY = ANNOUNCEMENT::EVENT::LIBRARY;
+  if (std::holds_alternative<LIBRARY::ScanFinished>(event))
+    OnScanFinished(library);
+  else if (std::holds_alternative<LIBRARY::ScanStarted>(event))
+    OnScanStarted(library);
+  else if (std::holds_alternative<LIBRARY::CleanStarted>(event))
+    OnCleanStarted(library);
+  else if (std::holds_alternative<LIBRARY::CleanFinished>(event))
+    OnCleanFinished(library);
+}
+
+void XBPython::OnGUIEvent(const ANNOUNCEMENT::GUIEvent& event)
+{
+  namespace GUI = ANNOUNCEMENT::EVENT::GUI;
+  if (std::holds_alternative<GUI::ScreensaverDeactivated>(event))
+    OnScreensaverDeactivated();
+  else if (std::holds_alternative<GUI::ScreensaverActivated>(event))
+    OnScreensaverActivated();
+  else if (std::holds_alternative<GUI::DPMSDeactivated>(event))
+    OnDPMSDeactivated();
+  else if (std::holds_alternative<GUI::DPMSActivated>(event))
+    OnDPMSActivated();
+}
+
 void XBPython::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
                         const std::string& sender,
                         const std::string& message,
                         const CVariant& data)
 {
-  if (flag & ANNOUNCEMENT::VideoLibrary)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
-      OnScanFinished("video");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED)
-      OnScanStarted("video");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
-      OnCleanStarted("video");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
-      OnCleanFinished("video");
-  }
-  else if (flag & ANNOUNCEMENT::AudioLibrary)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
-      OnScanFinished("music");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED)
-      OnScanStarted("music");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
-      OnCleanStarted("music");
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
-      OnCleanFinished("music");
-  }
-  else if (flag & ANNOUNCEMENT::GUI)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED)
-      OnScreensaverDeactivated();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED)
-      OnScreensaverActivated();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_DPMS_DEACTIVATED)
-      OnDPMSDeactivated();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_DPMS_ACTIVATED)
-      OnDPMSActivated();
-  }
-
   std::string jsonData;
   if (CJSONVariantWriter::Write(
           data, jsonData,

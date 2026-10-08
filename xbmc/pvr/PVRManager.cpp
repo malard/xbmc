@@ -11,7 +11,6 @@
 #include "FileItem.h"
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "pvr/PVRComponentRegistration.h"
@@ -53,6 +52,7 @@
 #include <mutex>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace PVR;
@@ -217,21 +217,15 @@ CPVRManager::~CPVRManager()
   CLog::LogFC(LOGDEBUG, LOGPVR, "PVR Manager instance destroyed");
 }
 
-void CPVRManager::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                           const std::string& sender,
-                           const std::string& message,
-                           const CVariant& data)
+void CPVRManager::OnGUIEvent(const ANNOUNCEMENT::GUIEvent& event)
 {
   if (!IsStarted())
     return;
 
-  if (flag & ANNOUNCEMENT::GUI)
-  {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_ACTIVATED)
-      m_addons->OnPowerSavingActivated();
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCREENSAVER_DEACTIVATED)
-      m_addons->OnPowerSavingDeactivated();
-  }
+  if (std::holds_alternative<ANNOUNCEMENT::EVENT::GUI::ScreensaverActivated>(event))
+    m_addons->OnPowerSavingActivated();
+  else if (std::holds_alternative<ANNOUNCEMENT::EVENT::GUI::ScreensaverDeactivated>(event))
+    m_addons->OnPowerSavingDeactivated();
 }
 
 std::shared_ptr<CPVRDatabase> CPVRManager::GetTVDatabase() const

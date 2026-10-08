@@ -18,7 +18,6 @@
 #include "input/keyboard/XBMC_vkeys.h"
 #include "input/keymaps/keyboard/KeyIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -63,40 +62,41 @@ void CGUIDialogNumeric::OnInitWindow()
 {
   CGUIDialog::OnInitWindow();
 
-  CVariant data;
+  using Kind = ANNOUNCEMENT::EVENT::INPUT::Requested::Kind;
+  ANNOUNCEMENT::EVENT::INPUT::Requested requested;
   switch (m_mode)
   {
   case INPUT_TIME:
-    data["type"] = "time";
+    requested.kind = Kind::Time;
     break;
   case INPUT_DATE:
-    data["type"] = "date";
+    requested.kind = Kind::Date;
     break;
   case INPUT_IP_ADDRESS:
-    data["type"] = "ip";
+    requested.kind = Kind::IPAddress;
     break;
   case INPUT_PASSWORD:
-    data["type"] = "numericpassword";
+    requested.kind = Kind::NumericPassword;
     break;
   case INPUT_NUMBER:
-    data["type"] = "number";
+    requested.kind = Kind::Number;
     break;
   case INPUT_TIME_SECONDS:
-    data["type"] = "seconds";
+    requested.kind = Kind::Seconds;
     break;
   default:
-    data["type"] = "keyboard";
+    requested.kind = Kind::Keyboard;
     break;
   }
 
   const CGUIControl *control = GetControl(CONTROL_HEADING_LABEL);
   if (control != nullptr)
-    data["title"] = control->GetDescription();
+    requested.title = control->GetDescription();
 
-  data["value"] = GetOutputString();
+  requested.value = GetOutputString();
 
   CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::Input, ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED, data);
+      ANNOUNCEMENT::InputEvent{std::move(requested)});
 }
 
 void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
@@ -104,8 +104,8 @@ void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
   // call base class
   CGUIDialog::OnDeinitWindow(nextWindowID);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input,
-                                                     ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
 }
 
 bool CGUIDialogNumeric::OnAction(const CAction &action)

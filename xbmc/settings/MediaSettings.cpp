@@ -14,7 +14,6 @@
 #include "cores/RetroPlayer/RetroPlayerUtils.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/builtins/Builtins.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "messaging/helpers/DialogOKHelper.h"
@@ -386,8 +385,8 @@ void CMediaSettings::OnSettingChanged(const std::shared_ptr<const CSetting>& set
 
   const std::string& settingId{setting->GetId()};
   if (settingId == CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                       ANNOUNCEMENT::MESSAGE::ON_REFRESH);
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Refresh{}});
   else if (settingId == CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY ||
            settingId == CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN)
   {

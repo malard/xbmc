@@ -20,6 +20,7 @@
 
 #include <mutex>
 #include <utility>
+#include <variant>
 #if defined(TARGET_ANDROID)
 #include "platform/android/peripherals/PeripheralBusAndroid.h"
 #elif defined(TARGET_DARWIN)
@@ -50,7 +51,6 @@
 #include "input/joysticks/interfaces/IButtonMapper.h"
 #include "input/keyboard/Key.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/ThreadMessage.h"
 #include "peripherals/dialogs/GUIDialogPeripherals.h"
@@ -142,7 +142,7 @@ void CPeripherals::Initialise()
   m_eventScanner->Start();
 
   CServiceBroker::GetAppMessenger()->RegisterReceiver(this);
-  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player);
+  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::System);
 
   // Register for GUI messages
   CGUIComponent* gui = CServiceBroker::GetGUI();
@@ -1107,19 +1107,13 @@ int CPeripherals::GetMessageMask()
   return TMSG_MASK_PERIPHERALS;
 }
 
-void CPeripherals::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                            const std::string& sender,
-                            const std::string& message,
-                            const CVariant& data)
+void CPeripherals::OnSystemEvent(const ANNOUNCEMENT::SystemEvent& event)
 {
-  if (sender == ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER)
+  if (std::holds_alternative<ANNOUNCEMENT::EVENT::SYSTEM::Quit>(event))
   {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_QUIT)
-    {
-      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-              CSettings::SETTING_INPUT_CONTROLLERPOWEROFF))
-        PowerOffDevices();
-    }
+    if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+            CSettings::SETTING_INPUT_CONTROLLERPOWEROFF))
+      PowerOffDevices();
   }
 }
 

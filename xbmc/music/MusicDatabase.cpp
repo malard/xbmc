@@ -39,7 +39,6 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/MusicDbPaths.h"
@@ -105,26 +104,19 @@ constexpr size_t MIN_FULL_SEARCH_LENGTH = 3;
 
 void AnnounceRemove(MediaType content, int id)
 {
-  CVariant data;
-  data["type"] = NameOf(content);
-  data["id"] = id;
-  if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
-    data["transaction"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_REMOVE, data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Remove{
+          content, id, CMusicLibraryQueue::GetInstance().IsScanningLibrary()}});
 }
 
 void AnnounceUpdate(MediaType content, int id, bool added = false)
 {
-  CVariant data;
-  data["type"] = NameOf(content);
-  data["id"] = id;
-  if (CMusicLibraryQueue::GetInstance().IsScanningLibrary())
-    data["transaction"] = true;
-  if (added)
-    data["added"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+          .type = content,
+          .id = id,
+          .transaction = CMusicLibraryQueue::GetInstance().IsScanningLibrary(),
+          .added = added}});
 }
 
 class CTemporaryTable
@@ -4687,8 +4679,8 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   std::chrono::seconds duration;
   auto time = std::chrono::steady_clock::now();
   CLog::Log(LOGINFO, "Starting musicdatabase cleanup ...");
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanStarted{}});
 
   BeginTransaction();
   SetLibraryLastCleaned();
@@ -4829,8 +4821,8 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress* progressDialog /*= nullptr*/)
   duration =
       std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - time);
   CLog::Log(LOGINFO, "Cleaning musicdatabase done. Operation took {}s", duration.count());
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
 
   if (!Compress(false))
   {
@@ -4842,8 +4834,8 @@ error:
   RollbackTransaction();
   // Recreate DELETE triggers on song_artist and album_artist
   CreateRemovedLinkTriggers();
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                     ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::CleanFinished{}});
   return ret;
 }
 
@@ -12261,12 +12253,11 @@ void CMusicDatabase::ExportToXML(const CLibExportSettings& settings,
             strFolder, "kodi_musicdb" + CDateTime::GetCurrentDateTime().GetAsSaveString() + ".xml");
       xmlDoc.SaveFile(xmlFile);
 
-      CVariant data;
-      data["file"] = xmlFile;
+      ANNOUNCEMENT::EVENT::LIBRARY::Export exported{.file = xmlFile};
       if (iFailCount > 0)
-        data["failcount"] = iFailCount;
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary,
-                                                         ANNOUNCEMENT::MESSAGE::ON_EXPORT, data);
+        exported.failCount = iFailCount;
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::AudioLibraryEvent{std::move(exported)});
     }
   }
   catch (...)

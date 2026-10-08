@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "interfaces/AnnouncementMessages.h"
 #include "interfaces/PlaybackValues.h"
+#include "settings/lib/SettingLevel.h"
 #include "video/VideoFileItemClassify.h"
 
 #include <type_traits>
@@ -63,7 +64,32 @@ const char* ReasonOf(EVENT::PLAYER::PlaybackFailed::Reason reason)
   return nullptr;
 }
 
-const char* MessageOfPlayer(const PlayerEvent& event)
+const char* NameOf(EVENT::INPUT::Requested::Kind kind)
+{
+  using enum EVENT::INPUT::Requested::Kind;
+  switch (kind)
+  {
+    case Keyboard:
+      return "keyboard";
+    case Password:
+      return "password";
+    case Number:
+      return "number";
+    case NumericPassword:
+      return "numericpassword";
+    case Date:
+      return "date";
+    case Time:
+      return "time";
+    case Seconds:
+      return "seconds";
+    case IPAddress:
+      return "ip";
+  }
+  return "keyboard";
+}
+
+const char* MessageOfEvent(const PlayerEvent& event)
 {
   using namespace EVENT::PLAYER;
   return std::visit(
@@ -86,7 +112,7 @@ const char* MessageOfPlayer(const PlayerEvent& event)
       static_cast<const PlayerEvent::variant&>(event));
 }
 
-const char* MessageOfPlaylist(const PlaylistEvent& event)
+const char* MessageOfEvent(const PlaylistEvent& event)
 {
   using namespace EVENT::PLAYLIST;
   return std::visit(Overloaded{[](const Add&) { return MESSAGE::ON_ADD; },
@@ -94,6 +120,84 @@ const char* MessageOfPlaylist(const PlaylistEvent& event)
                                { return MESSAGE::ON_CLEAR; }, [](const PropertiesChanged&)
                                { return MESSAGE::ON_PROPERTIES_CHANGED; }},
                     static_cast<const PlaylistEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const GUIEvent& event)
+{
+  using namespace EVENT::GUI;
+  return std::visit(
+      Overloaded{[](const ScreensaverActivated&) { return MESSAGE::ON_SCREENSAVER_ACTIVATED; },
+                 [](const ScreensaverDeactivated&) { return MESSAGE::ON_SCREENSAVER_DEACTIVATED; },
+                 [](const DPMSActivated&) { return MESSAGE::ON_DPMS_ACTIVATED; },
+                 [](const DPMSDeactivated&) { return MESSAGE::ON_DPMS_DEACTIVATED; },
+                 [](const SkinUnloading&) { return MESSAGE::ON_SKIN_UNLOADING; },
+                 [](const SkinLoaded&) { return MESSAGE::ON_SKIN_LOADED; },
+                 [](const SkinLoadFailed&) { return MESSAGE::ON_SKIN_LOAD_FAILED; },
+                 [](const WindowFocused&) { return MESSAGE::WINDOW_FOCUSED; },
+                 [](const WindowUnfocused&) { return MESSAGE::WINDOW_UNFOCUSED; }},
+      static_cast<const GUIEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const SystemEvent& event)
+{
+  using namespace EVENT::SYSTEM;
+  return std::visit(Overloaded{[](const Quit&) { return MESSAGE::ON_QUIT; },
+                               [](const Restart&) { return MESSAGE::ON_RESTART; },
+                               [](const EVENT::SYSTEM::Sleep&) { return MESSAGE::ON_SLEEP; },
+                               [](const Wake&) { return MESSAGE::ON_WAKE; },
+                               [](const LowBattery&) { return MESSAGE::ON_LOW_BATTERY; }},
+                    static_cast<const SystemEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const LibraryEvent& event)
+{
+  using namespace EVENT::LIBRARY;
+  return std::visit(Overloaded{[](const ScanStarted&) { return MESSAGE::ON_SCAN_STARTED; },
+                               [](const ScanFinished&) { return MESSAGE::ON_SCAN_FINISHED; },
+                               [](const CleanStarted&) { return MESSAGE::ON_CLEAN_STARTED; },
+                               [](const CleanFinished&) { return MESSAGE::ON_CLEAN_FINISHED; },
+                               [](const Update&) { return MESSAGE::ON_UPDATE; },
+                               [](const Remove&) { return MESSAGE::ON_REMOVE; },
+                               [](const Export&) { return MESSAGE::ON_EXPORT; },
+                               [](const Refresh&) { return MESSAGE::ON_REFRESH; }},
+                    static_cast<const LibraryEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const InputEvent& event)
+{
+  using namespace EVENT::INPUT;
+  return std::visit(Overloaded{[](const Requested&) { return MESSAGE::ON_INPUT_REQUESTED; },
+                               [](const Finished&) { return MESSAGE::ON_INPUT_FINISHED; }},
+                    static_cast<const InputEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const PVREvent& event)
+{
+  using namespace EVENT::PVR;
+  return std::visit(Overloaded{[](const RadioTrafficAnnouncement&)
+                               { return MESSAGE::RDS_RADIO_TA; },
+                               [](const RadioClock&) { return MESSAGE::RDS_RADIO_RTC; },
+                               [](const RadioTrafficMessage&) { return MESSAGE::RDS_RADIO_TMC; }},
+                    static_cast<const PVREvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const InfoEvent&)
+{
+  return MESSAGE::ON_CHANGED;
+}
+
+const char* MessageOfEvent(const SourcesEvent& event)
+{
+  using namespace EVENT::SOURCES;
+  return std::visit(Overloaded{[](const Added&) { return MESSAGE::ON_ADDED; },
+                               [](const Removed&) { return MESSAGE::ON_REMOVED; },
+                               [](const Updated&) { return MESSAGE::ON_UPDATED; }},
+                    static_cast<const SourcesEvent::variant&>(event));
+}
+
+const char* MessageOfEvent(const SettingsEvent&)
+{
+  return MESSAGE::ON_LEVEL_CHANGED;
 }
 
 CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
@@ -120,7 +224,7 @@ CVariant PropertiesOf(const EVENT::PLAYER::PropertiesChanged& changed)
   return properties;
 }
 
-CVariant LegacyDataOfPlayer(const PlayerEvent& event)
+CVariant LegacyDataOfEvent(const PlayerEvent& event)
 {
   using namespace EVENT::PLAYER;
   return std::visit(
@@ -179,7 +283,7 @@ CVariant LegacyDataOfPlayer(const PlayerEvent& event)
       static_cast<const PlayerEvent::variant&>(event));
 }
 
-CVariant LegacyDataOfPlaylist(const PlaylistEvent& event)
+CVariant LegacyDataOfEvent(const PlaylistEvent& event)
 {
   using namespace EVENT::PLAYLIST;
   return std::visit(Overloaded{[](const Add& e)
@@ -215,6 +319,117 @@ CVariant LegacyDataOfPlaylist(const PlaylistEvent& event)
                     static_cast<const PlaylistEvent::variant&>(event));
 }
 
+CVariant LegacyDataOfEvent(const GUIEvent& event)
+{
+  if (const auto* deactivated = std::get_if<EVENT::GUI::ScreensaverDeactivated>(&event))
+  {
+    CVariant data(CVariant::VariantTypeObject);
+    data["shuttingdown"] = deactivated->shuttingDown;
+    return data;
+  }
+  return CVariant{};
+}
+
+CVariant LegacyDataOfEvent(const SystemEvent& event)
+{
+  if (const auto* quit = std::get_if<EVENT::SYSTEM::Quit>(&event))
+  {
+    CVariant data(CVariant::VariantTypeObject);
+    data["exitcode"] = quit->exitCode;
+    return data;
+  }
+  return CVariant{};
+}
+
+CVariant LegacyDataOfEvent(const LibraryEvent& event)
+{
+  using namespace EVENT::LIBRARY;
+  CVariant data;
+  if (const auto* update = std::get_if<Update>(&event))
+  {
+    if (!update->item)
+    {
+      data["type"] = KODI::MEDIA::NameOf(update->type);
+      data["id"] = update->id;
+    }
+    if (update->transaction)
+      data["transaction"] = true;
+    if (update->added)
+      data["added"] = true;
+    if (update->playCount)
+      data["playcount"] = *update->playCount;
+    if (update->properties)
+      data["properties"] = *update->properties;
+  }
+  else if (const auto* remove = std::get_if<Remove>(&event))
+  {
+    data["type"] = KODI::MEDIA::NameOf(remove->type);
+    data["id"] = remove->id;
+    if (remove->transaction)
+      data["transaction"] = true;
+  }
+  else if (const auto* exported = std::get_if<Export>(&event))
+  {
+    if (exported->root)
+      data["root"] = *exported->root;
+    if (exported->file)
+      data["file"] = *exported->file;
+    if (exported->failCount)
+      data["failcount"] = *exported->failCount;
+  }
+  return data;
+}
+
+CVariant LegacyDataOfEvent(const InputEvent& event)
+{
+  CVariant data;
+  if (const auto* requested = std::get_if<EVENT::INPUT::Requested>(&event))
+  {
+    data["type"] = NameOf(requested->kind);
+    if (requested->title)
+      data["title"] = *requested->title;
+    data["value"] = requested->value;
+  }
+  return data;
+}
+
+CVariant LegacyDataOfEvent(const PVREvent& event)
+{
+  using namespace EVENT::PVR;
+  CVariant data(CVariant::VariantTypeObject);
+  std::visit(Overloaded{[&data](const RadioTrafficAnnouncement& e) { data["on"] = e.on; },
+                        [&data](const RadioClock& e) { data["dateTime"] = e.dateTime; },
+                        [&data](const RadioTrafficMessage& e)
+                        {
+                          data["channel"] = e.channel;
+                          data["ident"] = e.ident;
+                          data["flags"] = e.flags;
+                          data["x"] = e.x;
+                          data["y"] = e.y;
+                          data["z"] = e.z;
+                        }},
+             static_cast<const PVREvent::variant&>(event));
+  return data;
+}
+
+CVariant LegacyDataOfEvent(const InfoEvent&)
+{
+  return CVariant{};
+}
+
+CVariant LegacyDataOfEvent(const SourcesEvent& event)
+{
+  return std::visit([](const auto& e) { return CVariant{e.path}; },
+                    static_cast<const SourcesEvent::variant&>(event));
+}
+
+CVariant LegacyDataOfEvent(const SettingsEvent& event)
+{
+  CVariant data(CVariant::VariantTypeObject);
+  data["level"] = SettingLevelToString(std::get<EVENT::SETTINGS::LevelChanged>(event).level);
+  return data;
+}
+
 } // unnamed namespace
 
 bool EVENT::PLAYER::IsPicture(const CFileItem* item)
@@ -224,17 +439,31 @@ bool EVENT::PLAYER::IsPicture(const CFileItem* item)
          !item->HasMusicInfoTag() && !KODI::VIDEO::IsVideo(*item) && item->HasPictureInfoTag();
 }
 
+bool IsTransaction(const LibraryEvent& event)
+{
+  if (const auto* update = std::get_if<EVENT::LIBRARY::Update>(&event))
+    return update->transaction;
+  if (const auto* remove = std::get_if<EVENT::LIBRARY::Remove>(&event))
+    return remove->transaction;
+  return false;
+}
+
 AnnouncementFlag FlagOf(const Announcement& announcement)
 {
-  return std::visit(Overloaded{[](const PlayerEvent&) { return Player; },
-                               [](const PlaylistEvent&) { return Playlist; }},
-                    static_cast<const Announcement::variant&>(announcement));
+  return std::visit(
+      Overloaded{[](const PlayerEvent&) { return Player; }, [](const PlaylistEvent&)
+                 { return Playlist; }, [](const GUIEvent&) { return GUI; }, [](const SystemEvent&)
+                 { return System; }, [](const VideoLibraryEvent&) { return VideoLibrary; },
+                 [](const AudioLibraryEvent&) { return AudioLibrary; }, [](const InputEvent&)
+                 { return Input; }, [](const PVREvent&) { return ANNOUNCEMENT::PVR; },
+                 [](const InfoEvent&) { return Info; }, [](const SourcesEvent&) { return Sources; },
+                 [](const SettingsEvent&) { return Settings; }},
+      static_cast<const Announcement::variant&>(announcement));
 }
 
 const char* MessageOf(const Announcement& announcement)
 {
-  return std::visit(Overloaded{[](const PlayerEvent& e) { return MessageOfPlayer(e); },
-                               [](const PlaylistEvent& e) { return MessageOfPlaylist(e); }},
+  return std::visit([](const auto& event) { return MessageOfEvent(event); },
                     static_cast<const Announcement::variant&>(announcement));
 }
 
@@ -259,8 +488,7 @@ std::shared_ptr<const CFileItem> ItemOf(const Announcement& announcement)
 
 CVariant LegacyDataOf(const Announcement& announcement)
 {
-  return std::visit(Overloaded{[](const PlayerEvent& e) { return LegacyDataOfPlayer(e); },
-                               [](const PlaylistEvent& e) { return LegacyDataOfPlaylist(e); }},
+  return std::visit([](const auto& event) { return LegacyDataOfEvent(event); },
                     static_cast<const Announcement::variant&>(announcement));
 }
 

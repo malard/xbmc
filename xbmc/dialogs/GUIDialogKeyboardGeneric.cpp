@@ -23,7 +23,6 @@
 #include "input/keyboard/XBMC_vkeys.h"
 #include "input/keymaps/keyboard/KeyIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -238,12 +237,10 @@ void CGUIDialogKeyboardGeneric::OnInitWindow()
   SET_CONTROL_LABEL(CTL_LABEL_HZCODE, "");
   SET_CONTROL_LABEL(CTL_LABEL_HZLIST, "");
 
-  CVariant data;
-  data["title"] = m_strHeading;
-  data["type"] = !m_hiddenInput ? "keyboard" : "password";
-  data["value"] = GetText();
+  using Kind = ANNOUNCEMENT::EVENT::INPUT::Requested::Kind;
   CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::Input, ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED, data);
+      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Requested{
+          !m_hiddenInput ? Kind::Keyboard : Kind::Password, m_strHeading, GetText()}});
 }
 
 bool CGUIDialogKeyboardGeneric::OnAction(const CAction &action)
@@ -580,8 +577,8 @@ void CGUIDialogKeyboardGeneric::OnDeinitWindow(int nextWindowID)
   // reset the heading (we don't always have this)
   m_strHeading = "";
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input,
-                                                     ANNOUNCEMENT::MESSAGE::ON_INPUT_FINISHED);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
 }
 
 void CGUIDialogKeyboardGeneric::MoveCursor(int iAmount)

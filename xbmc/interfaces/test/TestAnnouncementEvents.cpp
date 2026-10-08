@@ -8,6 +8,7 @@
 
 #include "FileItem.h"
 #include "interfaces/AnnouncementEvents.h"
+#include "settings/lib/SettingLevel.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/Variant.h"
@@ -156,6 +157,172 @@ TEST(TestAnnouncementEvents, PlaylistData)
              R"({"playlist":"audio","properties":{"shuffled":true}})");
   ExpectData(PlaylistEvent{PropertiesChanged{"video", std::nullopt, "all"}},
              R"({"playlist":"video","properties":{"repeat":"all"}})");
+}
+
+TEST(TestAnnouncementEvents, GUIEvents)
+{
+  using namespace EVENT::GUI;
+  EXPECT_EQ(GUI, FlagOf(GUIEvent{SkinLoaded{}}));
+  EXPECT_STREQ("OnScreensaverActivated", MessageOf(GUIEvent{ScreensaverActivated{}}));
+  EXPECT_STREQ("OnScreensaverDeactivated", MessageOf(GUIEvent{ScreensaverDeactivated{}}));
+  EXPECT_STREQ("OnDPMSActivated", MessageOf(GUIEvent{DPMSActivated{}}));
+  EXPECT_STREQ("OnDPMSDeactivated", MessageOf(GUIEvent{DPMSDeactivated{}}));
+  EXPECT_STREQ("OnSkinUnloading", MessageOf(GUIEvent{SkinUnloading{}}));
+  EXPECT_STREQ("OnSkinLoaded", MessageOf(GUIEvent{SkinLoaded{}}));
+  EXPECT_STREQ("OnSkinLoadFailed", MessageOf(GUIEvent{SkinLoadFailed{}}));
+  EXPECT_STREQ("WindowFocused", MessageOf(GUIEvent{WindowFocused{}}));
+  EXPECT_STREQ("WindowUnfocused", MessageOf(GUIEvent{WindowUnfocused{}}));
+
+  ExpectData(GUIEvent{ScreensaverDeactivated{true}}, R"({"shuttingdown":true})");
+  ExpectData(GUIEvent{ScreensaverDeactivated{false}}, R"({"shuttingdown":false})");
+  EXPECT_TRUE(LegacyDataOf(GUIEvent{ScreensaverActivated{}}).isNull());
+  EXPECT_TRUE(LegacyDataOf(GUIEvent{SkinLoaded{}}).isNull());
+}
+
+TEST(TestAnnouncementEvents, SystemEvents)
+{
+  using namespace EVENT::SYSTEM;
+  EXPECT_EQ(System, FlagOf(SystemEvent{Wake{}}));
+  EXPECT_STREQ("OnQuit", MessageOf(SystemEvent{Quit{}}));
+  EXPECT_STREQ("OnRestart", MessageOf(SystemEvent{Restart{}}));
+  EXPECT_STREQ("OnSleep", MessageOf(SystemEvent{EVENT::SYSTEM::Sleep{}}));
+  EXPECT_STREQ("OnWake", MessageOf(SystemEvent{Wake{}}));
+  EXPECT_STREQ("OnLowBattery", MessageOf(SystemEvent{LowBattery{}}));
+
+  ExpectData(SystemEvent{Quit{64}}, R"({"exitcode":64})");
+  EXPECT_TRUE(LegacyDataOf(SystemEvent{Restart{}}).isNull());
+}
+
+TEST(TestAnnouncementEvents, LibraryEventsKeepTheirMessages)
+{
+  using namespace EVENT::LIBRARY;
+  EXPECT_EQ(VideoLibrary, FlagOf(VideoLibraryEvent{ScanStarted{}}));
+  EXPECT_EQ(AudioLibrary, FlagOf(AudioLibraryEvent{ScanStarted{}}));
+  EXPECT_STREQ("OnScanStarted", MessageOf(VideoLibraryEvent{ScanStarted{}}));
+  EXPECT_STREQ("OnScanFinished", MessageOf(AudioLibraryEvent{ScanFinished{}}));
+  EXPECT_STREQ("OnCleanStarted", MessageOf(VideoLibraryEvent{CleanStarted{}}));
+  EXPECT_STREQ("OnCleanFinished", MessageOf(AudioLibraryEvent{CleanFinished{}}));
+  EXPECT_STREQ("OnUpdate", MessageOf(VideoLibraryEvent{Update{}}));
+  EXPECT_STREQ("OnRemove", MessageOf(AudioLibraryEvent{Remove{}}));
+  EXPECT_STREQ("OnExport", MessageOf(VideoLibraryEvent{Export{}}));
+  EXPECT_STREQ("OnRefresh", MessageOf(VideoLibraryEvent{Refresh{}}));
+
+  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{ScanStarted{}}).isNull());
+  EXPECT_TRUE(LegacyDataOf(AudioLibraryEvent{CleanFinished{}}).isNull());
+  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{Refresh{}}).isNull());
+}
+
+TEST(TestAnnouncementEvents, LibraryUpdateData)
+{
+  using namespace EVENT::LIBRARY;
+  using KODI::MEDIA::MediaType;
+  ExpectData(VideoLibraryEvent{Update{.type = MediaType::MOVIE, .id = 7}},
+             R"({"type":"movie","id":7})");
+  ExpectData(AudioLibraryEvent{Update{
+                 .type = MediaType::SONG, .id = 2, .transaction = true, .added = true}},
+             R"({"type":"song","id":2,"transaction":true,"added":true})");
+  ExpectData(VideoLibraryEvent{Update{.type = MediaType::NONE, .id = -1}},
+             R"({"type":"","id":-1})");
+
+  // An item names itself; the announcement manager adds it to the data.
+  const auto item = std::make_shared<CFileItem>("/movies/film.mkv", false);
+  ExpectData(VideoLibraryEvent{Update{.item = item, .transaction = true, .playCount = 2}},
+             R"({"transaction":true,"playcount":2})");
+  ExpectData(VideoLibraryEvent{Update{.item = item, .added = true}}, R"({"added":true})");
+
+  CVariant properties;
+  properties["title"] = "Film";
+  ExpectData(AudioLibraryEvent{Update{.type = MediaType::ALBUM, .id = 4, .properties = properties}},
+             R"({"type":"album","id":4,"properties":{"title":"Film"}})");
+}
+
+TEST(TestAnnouncementEvents, LibraryRemoveAndExportData)
+{
+  using namespace EVENT::LIBRARY;
+  using KODI::MEDIA::MediaType;
+  ExpectData(VideoLibraryEvent{Remove{MediaType::EPISODE, 5, false}},
+             R"({"type":"episode","id":5})");
+  ExpectData(AudioLibraryEvent{Remove{MediaType::ARTIST, 9, true}},
+             R"({"type":"artist","id":9,"transaction":true})");
+
+  ExpectData(VideoLibraryEvent{Export{"/export/", "/export/videodb.xml", 3}},
+             R"({"root":"/export/","file":"/export/videodb.xml","failcount":3})");
+  ExpectData(AudioLibraryEvent{Export{.file = "/export/kodi_musicdb.xml"}},
+             R"({"file":"/export/kodi_musicdb.xml"})");
+  EXPECT_TRUE(LegacyDataOf(VideoLibraryEvent{Export{}}).isNull());
+}
+
+TEST(TestAnnouncementEvents, OnlyScansAndCleansAreTransactions)
+{
+  using namespace EVENT::LIBRARY;
+  EXPECT_TRUE(IsTransaction(VideoLibraryEvent{Update{.transaction = true}}));
+  EXPECT_TRUE(IsTransaction(AudioLibraryEvent{Remove{.transaction = true}}));
+  EXPECT_FALSE(IsTransaction(VideoLibraryEvent{Update{}}));
+  EXPECT_FALSE(IsTransaction(VideoLibraryEvent{ScanFinished{}}));
+}
+
+TEST(TestAnnouncementEvents, InputEvents)
+{
+  using namespace EVENT::INPUT;
+  using enum Requested::Kind;
+  EXPECT_EQ(Input, FlagOf(InputEvent{Finished{}}));
+  EXPECT_STREQ("OnInputRequested", MessageOf(InputEvent{Requested{}}));
+  EXPECT_STREQ("OnInputFinished", MessageOf(InputEvent{Finished{}}));
+
+  ExpectData(InputEvent{Requested{Keyboard, "Search", "abc"}},
+             R"({"type":"keyboard","title":"Search","value":"abc"})");
+  ExpectData(InputEvent{Requested{Password, "PIN", ""}},
+             R"({"type":"password","title":"PIN","value":""})");
+  ExpectData(InputEvent{Requested{NumericPassword, std::nullopt, "12"}},
+             R"({"type":"numericpassword","value":"12"})");
+  ExpectData(InputEvent{Requested{Number, std::nullopt, "7"}}, R"({"type":"number","value":"7"})");
+  ExpectData(InputEvent{Requested{Date, std::nullopt, "01/02/2026"}},
+             R"({"type":"date","value":"01/02/2026"})");
+  ExpectData(InputEvent{Requested{Time, std::nullopt, "12:30"}},
+             R"({"type":"time","value":"12:30"})");
+  ExpectData(InputEvent{Requested{Seconds, std::nullopt, "90"}},
+             R"({"type":"seconds","value":"90"})");
+  ExpectData(InputEvent{Requested{IPAddress, std::nullopt, "10.0.0.1"}},
+             R"({"type":"ip","value":"10.0.0.1"})");
+  EXPECT_TRUE(LegacyDataOf(InputEvent{Finished{}}).isNull());
+}
+
+TEST(TestAnnouncementEvents, PVREvents)
+{
+  using namespace EVENT::PVR;
+  EXPECT_EQ(ANNOUNCEMENT::PVR, FlagOf(PVREvent{RadioClock{}}));
+  EXPECT_STREQ("RDSRadioTA", MessageOf(PVREvent{RadioTrafficAnnouncement{}}));
+  EXPECT_STREQ("RDSRadioRTC", MessageOf(PVREvent{RadioClock{}}));
+  EXPECT_STREQ("RDSRadioTMC", MessageOf(PVREvent{RadioTrafficMessage{}}));
+
+  ExpectData(PVREvent{RadioTrafficAnnouncement{true}}, R"({"on":true})");
+  ExpectData(PVREvent{RadioClock{"Thu, 08 Oct 2026 18:00:00 GMT"}},
+             R"({"dateTime":"Thu, 08 Oct 2026 18:00:00 GMT"})");
+  ExpectData(PVREvent{RadioClock{""}}, R"({"dateTime":""})");
+  ExpectData(PVREvent{RadioTrafficMessage{"Radio 1", 0x1234, 0x80, 1, 0x0203, 0x0405}},
+             R"({"channel":"Radio 1","ident":4660,"flags":128,"x":1,"y":515,"z":1029})");
+}
+
+TEST(TestAnnouncementEvents, InfoSourcesAndSettingsEvents)
+{
+  EXPECT_EQ(Info, FlagOf(InfoEvent{EVENT::INFO::Changed{}}));
+  EXPECT_STREQ("OnChanged", MessageOf(InfoEvent{EVENT::INFO::Changed{}}));
+  EXPECT_TRUE(LegacyDataOf(InfoEvent{EVENT::INFO::Changed{}}).isNull());
+
+  using namespace EVENT::SOURCES;
+  EXPECT_EQ(Sources, FlagOf(SourcesEvent{Added{}}));
+  EXPECT_STREQ("OnAdded", MessageOf(SourcesEvent{Added{}}));
+  EXPECT_STREQ("OnRemoved", MessageOf(SourcesEvent{Removed{}}));
+  EXPECT_STREQ("OnUpdated", MessageOf(SourcesEvent{Updated{}}));
+  ExpectData(SourcesEvent{Added{"upnp://"}}, R"("upnp://")");
+  ExpectData(SourcesEvent{Updated{"zeroconf://"}}, R"("zeroconf://")");
+
+  EXPECT_EQ(Settings, FlagOf(SettingsEvent{EVENT::SETTINGS::LevelChanged{}}));
+  EXPECT_STREQ("OnLevelChanged", MessageOf(SettingsEvent{EVENT::SETTINGS::LevelChanged{}}));
+  ExpectData(SettingsEvent{EVENT::SETTINGS::LevelChanged{SettingLevel::Advanced}},
+             R"({"level":"advanced"})");
+  ExpectData(SettingsEvent{EVENT::SETTINGS::LevelChanged{SettingLevel::Basic}},
+             R"({"level":"basic"})");
 }
 
 TEST(TestAnnouncementEvents, AnItemCanBeReplaced)

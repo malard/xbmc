@@ -76,6 +76,16 @@ inline const char* AnnouncementFlagToString(const AnnouncementFlag& notification
 
 struct PlayerEvent;
 struct PlaylistEvent;
+struct GUIEvent;
+struct SystemEvent;
+struct LibraryEvent;
+struct VideoLibraryEvent;
+struct AudioLibraryEvent;
+struct InputEvent;
+struct PVREvent;
+struct InfoEvent;
+struct SourcesEvent;
+struct SettingsEvent;
 
   class IAnnouncer
   {
@@ -95,5 +105,14 @@ struct PlaylistEvent;
 
     virtual void OnPlayerEvent(const PlayerEvent& event) {}
     virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
+    virtual void OnGUIEvent(const GUIEvent& event) {}
+    virtual void OnSystemEvent(const SystemEvent& event) {}
+    virtual void OnVideoLibraryEvent(const VideoLibraryEvent& event) {}
+    virtual void OnAudioLibraryEvent(const AudioLibraryEvent& event) {}
+    virtual void OnInputEvent(const InputEvent& event) {}
+    virtual void OnPVREvent(const PVREvent& event) {}
+    virtual void OnInfoEvent(const InfoEvent& event) {}
+    virtual void OnSourcesEvent(const SourcesEvent& event) {}
+    virtual void OnSettingsEvent(const SettingsEvent& event) {}
   };
 }

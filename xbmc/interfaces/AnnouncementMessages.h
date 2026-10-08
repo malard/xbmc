@@ -62,6 +62,11 @@ inline constexpr char ON_TOGGLE_SKIP_COMMERCIALS[] = "OnToggleSkipCommercials";
 inline constexpr char ON_UPDATE[] = "OnUpdate";
 inline constexpr char ON_UPDATED[] = "OnUpdated";
 inline constexpr char ON_WAKE[] = "OnWake";
+inline constexpr char RDS_RADIO_RTC[] = "RDSRadioRTC";
+inline constexpr char RDS_RADIO_TA[] = "RDSRadioTA";
+inline constexpr char RDS_RADIO_TMC[] = "RDSRadioTMC";
 inline constexpr char SOURCE_SLOW[] = "SourceSlow";
+inline constexpr char WINDOW_FOCUSED[] = "WindowFocused";
+inline constexpr char WINDOW_UNFOCUSED[] = "WindowUnfocused";
 
 } // namespace ANNOUNCEMENT::MESSAGE

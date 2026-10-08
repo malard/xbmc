@@ -29,7 +29,6 @@
 #include "guilib/WindowIDs.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "music/Artist.h"
 #include "music/MusicDatabase.h"
 #include "music/MusicDbPaths.h"
@@ -49,7 +48,6 @@
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoDbPaths.h"
@@ -59,6 +57,7 @@
 #include "view/GUIViewState.h"
 
 #include <memory>
+#include <variant>
 
 #include <Platinum/Source/Platinum/Platinum.h>
 
@@ -512,51 +511,55 @@ failure:
 }
 
 /*----------------------------------------------------------------------
-|   CUPnPServer::Announce
+|   CUPnPServer::OnLibraryEvent
 +---------------------------------------------------------------------*/
-void CUPnPServer::Announce(AnnouncementFlag flag,
-                           const std::string& sender,
-                           const std::string& message,
-                           const CVariant& data)
+void CUPnPServer::OnVideoLibraryEvent(const VideoLibraryEvent& event)
 {
-  NPT_String path;
+  OnLibraryEvent(event, VideoLibrary);
+}
+
+void CUPnPServer::OnAudioLibraryEvent(const AudioLibraryEvent& event)
+{
+  OnLibraryEvent(event, AudioLibrary);
+}
+
+void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag flag)
+{
+  namespace LIBRARY = EVENT::LIBRARY;
   int item_id;
   MediaType item_type{MediaType::NONE};
 
-  if (sender != CAnnouncementManager::ANNOUNCEMENT_SENDER)
-    return;
-
-  if (message != ANNOUNCEMENT::MESSAGE::ON_UPDATE && message != ANNOUNCEMENT::MESSAGE::ON_REMOVE &&
-      message != ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED &&
-      message != ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED)
-    return;
-
-  if (data.isNull())
+  if (std::holds_alternative<LIBRARY::ScanStarted>(event))
   {
-    if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED ||
-        message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
-    {
-      m_scanning = true;
-    }
-    else if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED ||
-             message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED)
-    {
-      OnScanCompleted(flag);
-    }
+    m_scanning = true;
+  }
+  else if (std::holds_alternative<LIBRARY::ScanFinished>(event))
+  {
+    OnScanCompleted(flag);
   }
   else
   {
     // handle both updates & removals
-    if (!data["item"].isNull())
+    if (const auto* update = std::get_if<LIBRARY::Update>(&event))
     {
-      item_id = (int)data["item"]["id"].asInteger();
-      item_type = MediaTypeOf(data["item"]["type"].asString());
+      if (update->item && update->item->HasVideoInfoTag())
+      {
+        item_id = update->item->GetVideoInfoTag()->m_iDbId;
+        item_type = update->item->GetVideoInfoTag()->GetMediaType();
+      }
+      else
+      {
+        item_id = update->id;
+        item_type = update->type;
+      }
+    }
+    else if (const auto* remove = std::get_if<LIBRARY::Remove>(&event))
+    {
+      item_id = remove->id;
+      item_type = remove->type;
     }
     else
-    {
-      item_id = (int)data["id"].asInteger();
-      item_type = MediaTypeOf(data["type"].asString());
-    }
+      return;
 
     // we always update 'recently added' nodes along with the specific container,
     // as we don't differentiate 'updates' from 'adds' in RPC interface
@@ -1391,11 +1394,9 @@ NPT_Result CUPnPServer::OnUpdateObject(PLT_ActionReference& action,
       }
       if (playCount.IsEmpty())
       {
-        CVariant data;
-        data["id"] = updated.GetVideoInfoTag()->m_iDbId;
-        data["type"] = updated.GetVideoInfoTag()->m_type;
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                           ANNOUNCEMENT::MESSAGE::ON_UPDATE, data);
+        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
+            ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = updated.GetVideoInfoTag()->GetMediaType(),
+                                                 .id = updated.GetVideoInfoTag()->m_iDbId}});
       }
       updatelisting = true;
     }

@@ -17,7 +17,6 @@
 #include "favourites/FavouritesService.h"
 #include "filesystem/Directory.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
 #include "jobs/JobManager.h"
 #include "music/MusicFileItemClassify.h"
@@ -66,8 +65,7 @@ public:
   explicit CSubscriber(ISubscriberCallback& invalidate) : m_callback(invalidate)
   {
     CServiceBroker::GetAnnouncementManager()->AddAnnouncer(
-        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player |
-                  ANNOUNCEMENT::GUI);
+        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player);
   }
   ~CSubscriber() override { CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this); }
 
@@ -92,32 +90,34 @@ private:
       OnEventPublished(Topic::PLAYER);
   }
 
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnVideoLibraryEvent(const ANNOUNCEMENT::VideoLibraryEvent& event) override
   {
-    if (flag & ANNOUNCEMENT::VideoLibrary && OnEventPublished(Topic::VIDEO_LIBRARY))
+    OnLibraryEvent(event, Topic::VIDEO_LIBRARY);
+  }
+
+  void OnAudioLibraryEvent(const ANNOUNCEMENT::AudioLibraryEvent& event) override
+  {
+    OnLibraryEvent(event, Topic::AUDIO_LIBRARY);
+  }
+
+  void OnLibraryEvent(const ANNOUNCEMENT::LibraryEvent& event, Topic topic)
+  {
+    namespace LIBRARY = ANNOUNCEMENT::EVENT::LIBRARY;
+    if (OnEventPublished(topic))
       return;
 
-    if (flag & ANNOUNCEMENT::AudioLibrary && OnEventPublished(Topic::AUDIO_LIBRARY))
+    // if we're in a database transaction, don't bother doing anything just yet
+    if (ANNOUNCEMENT::IsTransaction(event))
       return;
 
-    if (!(flag & ANNOUNCEMENT::Player))
-    {
-      // if we're in a database transaction, don't bother doing anything just yet
-      if (data.isMember("transaction") && data["transaction"].asBoolean())
-        return;
-
-      // if there was a database update, we set the update state
-      // to PENDING to fire off a new job in the next update
-      if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_FINISHED ||
-          message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_FINISHED ||
-          message == ANNOUNCEMENT::MESSAGE::ON_UPDATE ||
-          message == ANNOUNCEMENT::MESSAGE::ON_REMOVE ||
-          message == ANNOUNCEMENT::MESSAGE::ON_REFRESH)
-        OnEventPublished();
-    }
+    // if there was a database update, we set the update state
+    // to PENDING to fire off a new job in the next update
+    if (std::holds_alternative<LIBRARY::ScanFinished>(event) ||
+        std::holds_alternative<LIBRARY::CleanFinished>(event) ||
+        std::holds_alternative<LIBRARY::Update>(event) ||
+        std::holds_alternative<LIBRARY::Remove>(event) ||
+        std::holds_alternative<LIBRARY::Refresh>(event))
+      OnEventPublished();
   }
 
   CCriticalSection m_critSection;

@@ -13,7 +13,8 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
+
+#include <variant>
 
 CGUISourcesAnnouncementHandler::CGUISourcesAnnouncementHandler()
 {
@@ -25,16 +26,11 @@ CGUISourcesAnnouncementHandler::~CGUISourcesAnnouncementHandler()
   CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
 }
 
-void CGUISourcesAnnouncementHandler::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                              const std::string& sender,
-                                              const std::string& message,
-                                              const CVariant& data)
+void CGUISourcesAnnouncementHandler::OnSourcesEvent(const ANNOUNCEMENT::SourcesEvent& event)
 {
-  if (message == ANNOUNCEMENT::MESSAGE::ON_ADDED || message == ANNOUNCEMENT::MESSAGE::ON_REMOVED ||
-      message == ANNOUNCEMENT::MESSAGE::ON_UPDATED)
-  {
-    CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
-    message.SetStringParam(data.asString());
-    CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(message);
-  }
+  CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
+  message.SetStringParam(
+      std::visit([](const auto& changed) { return changed.path; },
+                 static_cast<const ANNOUNCEMENT::SourcesEvent::variant&>(event)));
+  CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(message);
 }

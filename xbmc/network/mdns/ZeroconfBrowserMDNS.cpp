@@ -10,7 +10,6 @@
 
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "network/DNSNameCache.h"
 #include "utils/log.h"
 
@@ -86,7 +85,7 @@ void DNSSD_API CZeroconfBrowserMDNS::BrowserCallback(DNSServiceRef browser,
     if(! (flags & kDNSServiceFlagsMoreComing) )
     {
       CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_UPDATED, CVariant{"zeroconf://"});
+          ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Updated{"zeroconf://"}});
       CLog::Log(
           LOGDEBUG,
           "ZeroconfBrowserMDNS::BrowserCallback sent source update announce for path zeroconf://");

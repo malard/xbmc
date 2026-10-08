@@ -17,16 +17,14 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "jobs/JobManager.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/RecentlyAddedJob.h"
 #include "utils/StringUtils.h"
-#include "utils/Variant.h"
-#include "utils/log.h"
 
 #include <mutex>
+#include <variant>
 
 CGUIWindowHome::CGUIWindowHome(void) : CGUIWindow(WINDOW_HOME, "Home.xml")
 {
@@ -73,36 +71,36 @@ void CGUIWindowHome::OnInitWindow()
   CGUIWindow::OnInitWindow();
 }
 
-void CGUIWindowHome::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                              const std::string& sender,
-                              const std::string& message,
-                              const CVariant& data)
+void CGUIWindowHome::OnVideoLibraryEvent(const ANNOUNCEMENT::VideoLibraryEvent& event)
 {
+  OnLibraryEvent(event, Video);
+}
+
+void CGUIWindowHome::OnAudioLibraryEvent(const ANNOUNCEMENT::AudioLibraryEvent& event)
+{
+  OnLibraryEvent(event, Audio);
+}
+
+void CGUIWindowHome::OnLibraryEvent(const ANNOUNCEMENT::LibraryEvent& event, int library)
+{
+  namespace LIBRARY = ANNOUNCEMENT::EVENT::LIBRARY;
   int ra_flag = 0;
 
-  CLog::Log(LOGDEBUG, LOGANNOUNCE, "GOT ANNOUNCEMENT, type: {}, from {}, message {}",
-            AnnouncementFlagToString(flag), sender, message);
-
-  if (data.isMember("transaction") && data["transaction"].asBoolean())
+  if (ANNOUNCEMENT::IsTransaction(event))
     return;
 
-  if (message == ANNOUNCEMENT::MESSAGE::ON_SCAN_STARTED ||
-      message == ANNOUNCEMENT::MESSAGE::ON_CLEAN_STARTED)
+  if (std::holds_alternative<LIBRARY::ScanStarted>(event) ||
+      std::holds_alternative<LIBRARY::CleanStarted>(event))
     return;
 
-  bool onUpdate = message == ANNOUNCEMENT::MESSAGE::ON_UPDATE;
   // always update Totals except on an OnUpdate with no playcount update
-  if (!onUpdate || data.isMember("playcount"))
+  const auto* update = std::get_if<LIBRARY::Update>(&event);
+  if (!update || update->playCount)
     ra_flag |= Totals;
 
   // always update the full list except on an OnUpdate
-  if (!onUpdate)
-  {
-    if (flag & ANNOUNCEMENT::VideoLibrary)
-      ra_flag |= Video;
-    else if (flag & ANNOUNCEMENT::AudioLibrary)
-      ra_flag |= Audio;
-  }
+  if (!update)
+    ra_flag |= library;
 
   CGUIMessage reload(GUI_MSG_NOTIFY_ALL, GetID(), 0, GUI_MSG_REFRESH_THUMBS, ra_flag);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(reload, GetID());

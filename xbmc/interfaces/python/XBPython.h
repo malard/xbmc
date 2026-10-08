@@ -75,6 +75,9 @@ public:
                 const std::string& sender,
                 const std::string& message,
                 const CVariant& data) override;
+  void OnVideoLibraryEvent(const ANNOUNCEMENT::VideoLibraryEvent& event) override;
+  void OnAudioLibraryEvent(const ANNOUNCEMENT::AudioLibraryEvent& event) override;
+  void OnGUIEvent(const ANNOUNCEMENT::GUIEvent& event) override;
   void RegisterPythonPlayerCallBack(IPlayerCallback* pCallback);
   void UnregisterPythonPlayerCallBack(IPlayerCallback* pCallback);
   void RegisterPythonMonitorCallBack(XBMCAddon::xbmc::Monitor* pCallback);
@@ -110,6 +113,8 @@ public:
   bool WaitForEvent(CEvent& hEvent, unsigned int milliseconds);
 
 private:
+  void OnLibraryEvent(const ANNOUNCEMENT::LibraryEvent& event, const std::string& library);
+
   CCriticalSection m_critSection;
   PyThreadState* m_mainThreadState{nullptr};
   bool m_bindingModulesLoaded{true};

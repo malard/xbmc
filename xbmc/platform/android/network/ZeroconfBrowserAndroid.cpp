@@ -10,7 +10,6 @@
 
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "network/DNSNameCache.h"
 #include "utils/log.h"
 
@@ -240,7 +239,7 @@ void CZeroconfBrowserAndroidDiscover::onServiceFound(const jni::CJNINsdServiceIn
   m_browser->addDiscoveredService(this, s);
 
   CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_UPDATED, CVariant{"zeroconf://"});
+      ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Updated{"zeroconf://"}});
   CLog::Log(LOGDEBUG, "CZeroconfBrowserAndroidDiscover::onServiceFound sent source update announce "
                       "for path zeroconf://");
 }

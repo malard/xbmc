@@ -10,7 +10,6 @@
 
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "utils/log.h"
 
 #include "platform/darwin/DarwinUtils.h"
@@ -167,7 +166,7 @@ void CZeroconfBrowserDarwin::BrowserCallback(CFNetServiceBrowserRef browser, CFO
     if (! (flags & kCFNetServiceFlagMoreComing) )
     {
       CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::Sources, ANNOUNCEMENT::MESSAGE::ON_UPDATED, CVariant{"zeroconf://"});
+          ANNOUNCEMENT::SourcesEvent{ANNOUNCEMENT::EVENT::SOURCES::Updated{"zeroconf://"}});
       CLog::Log(LOGDEBUG, "CZeroconfBrowserDarwin::BrowserCallback sent sources update "
                           "announcement for path zeroconf://");
     }

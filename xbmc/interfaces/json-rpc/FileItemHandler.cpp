@@ -21,7 +21,6 @@
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementMessages.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
@@ -702,17 +701,20 @@ void CFileItemHandler::AnnounceChange(ANNOUNCEMENT::AnnouncementFlag library,
   if (names.empty())
     return;
 
-  CVariant data{CVariant::VariantTypeObject};
-  data["type"] = NameOf(kind);
-  data["id"] = id;
-  data["properties"] = CVariant{CVariant::VariantTypeObject};
+  CVariant properties{CVariant::VariantTypeObject};
   for (auto name = names.begin_array(); name != names.end_array(); ++name)
   {
     if (item.isMember(name->asString()))
-      data["properties"][name->asString()] = item[name->asString()];
+      properties[name->asString()] = item[name->asString()];
   }
-  CServiceBroker::GetAnnouncementManager()->Announce(library, ANNOUNCEMENT::MESSAGE::ON_UPDATE,
-                                                     data);
+  ANNOUNCEMENT::EVENT::LIBRARY::Update update{
+      .type = kind, .id = id, .properties = std::move(properties)};
+  if (library == ANNOUNCEMENT::VideoLibrary)
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibraryEvent{std::move(update)});
+  else
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::AudioLibraryEvent{std::move(update)});
 }
 
 void CFileItemHandler::Sort(CFileItemList &items, const CVariant &parameterObject)

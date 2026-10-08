@@ -9,15 +9,18 @@
 #pragma once
 
 #include "interfaces/IAnnouncer.h"
+#include "media/MediaType.h"
 #include "utils/Variant.h"
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <variant>
 
 class CFileItem;
+enum class SettingLevel;
 
 /*!
  * \brief What an announcement says, as the sender knew it when it was raised.
@@ -228,7 +231,294 @@ struct PlaylistEvent : std::variant<EVENT::PLAYLIST::Add,
   using variant::variant;
 };
 
-struct Announcement : std::variant<PlayerEvent, PlaylistEvent>
+namespace EVENT::GUI
+{
+struct ScreensaverActivated
+{
+};
+
+struct ScreensaverDeactivated
+{
+  //! A power down or suspend follows, so the deactivation may be ignored.
+  bool shuttingDown{false};
+};
+
+struct DPMSActivated
+{
+};
+
+struct DPMSDeactivated
+{
+};
+
+struct SkinUnloading
+{
+};
+
+struct SkinLoaded
+{
+};
+
+struct SkinLoadFailed
+{
+};
+
+struct WindowFocused
+{
+};
+
+struct WindowUnfocused
+{
+};
+} // namespace EVENT::GUI
+
+struct GUIEvent : std::variant<EVENT::GUI::ScreensaverActivated,
+                               EVENT::GUI::ScreensaverDeactivated,
+                               EVENT::GUI::DPMSActivated,
+                               EVENT::GUI::DPMSDeactivated,
+                               EVENT::GUI::SkinUnloading,
+                               EVENT::GUI::SkinLoaded,
+                               EVENT::GUI::SkinLoadFailed,
+                               EVENT::GUI::WindowFocused,
+                               EVENT::GUI::WindowUnfocused>
+{
+  using variant::variant;
+};
+
+namespace EVENT::SYSTEM
+{
+struct Quit
+{
+  int exitCode{0};
+};
+
+struct Restart
+{
+};
+
+struct Sleep
+{
+};
+
+struct Wake
+{
+};
+
+struct LowBattery
+{
+};
+} // namespace EVENT::SYSTEM
+
+struct SystemEvent : std::variant<EVENT::SYSTEM::Quit,
+                                  EVENT::SYSTEM::Restart,
+                                  EVENT::SYSTEM::Sleep,
+                                  EVENT::SYSTEM::Wake,
+                                  EVENT::SYSTEM::LowBattery>
+{
+  using variant::variant;
+};
+
+namespace EVENT::LIBRARY
+{
+struct ScanStarted
+{
+};
+
+struct ScanFinished
+{
+};
+
+struct CleanStarted
+{
+};
+
+struct CleanFinished
+{
+};
+
+struct Update
+{
+  //! When given, it names the item, and type and id are not used.
+  std::shared_ptr<const CFileItem> item{};
+  KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
+  int id{-1};
+  bool transaction{false};
+  bool added{false};
+  std::optional<int> playCount{};
+  //! The properties that changed, as JSON-RPC describes them.
+  std::optional<CVariant> properties{};
+};
+
+struct Remove
+{
+  KODI::MEDIA::MediaType type{KODI::MEDIA::MediaType::NONE};
+  int id{-1};
+  bool transaction{false};
+};
+
+struct Export
+{
+  std::optional<std::string> root{};
+  std::optional<std::string> file{};
+  std::optional<int> failCount{};
+};
+
+struct Refresh
+{
+};
+} // namespace EVENT::LIBRARY
+
+struct LibraryEvent : std::variant<EVENT::LIBRARY::ScanStarted,
+                                   EVENT::LIBRARY::ScanFinished,
+                                   EVENT::LIBRARY::CleanStarted,
+                                   EVENT::LIBRARY::CleanFinished,
+                                   EVENT::LIBRARY::Update,
+                                   EVENT::LIBRARY::Remove,
+                                   EVENT::LIBRARY::Export,
+                                   EVENT::LIBRARY::Refresh>
+{
+  using variant::variant;
+};
+
+struct VideoLibraryEvent : LibraryEvent
+{
+  using LibraryEvent::LibraryEvent;
+};
+
+struct AudioLibraryEvent : LibraryEvent
+{
+  using LibraryEvent::LibraryEvent;
+};
+
+//! Whether the event is part of a scan or clean, which announces its own end.
+bool IsTransaction(const LibraryEvent& event);
+
+namespace EVENT::INPUT
+{
+struct Requested
+{
+  enum class Kind
+  {
+    Keyboard,
+    Password,
+    Number,
+    NumericPassword,
+    Date,
+    Time,
+    Seconds,
+    IPAddress,
+  };
+
+  Kind kind{Kind::Keyboard};
+  std::optional<std::string> title;
+  std::string value;
+};
+
+struct Finished
+{
+};
+} // namespace EVENT::INPUT
+
+struct InputEvent : std::variant<EVENT::INPUT::Requested, EVENT::INPUT::Finished>
+{
+  using variant::variant;
+};
+
+namespace EVENT::PVR
+{
+//! A radio traffic announcement started or ended.
+struct RadioTrafficAnnouncement
+{
+  bool on{false};
+};
+
+//! The time a radio station's RDS clock gives.
+struct RadioClock
+{
+  //! RFC 1123, or empty when the clock is invalid.
+  std::string dateTime;
+};
+
+//! A radio traffic message channel (RDS-TMC) message.
+struct RadioTrafficMessage
+{
+  std::string channel;
+  uint16_t ident{0};
+  unsigned int flags{0};
+  uint8_t x{0};
+  unsigned int y{0};
+  unsigned int z{0};
+};
+} // namespace EVENT::PVR
+
+struct PVREvent : std::variant<EVENT::PVR::RadioTrafficAnnouncement,
+                               EVENT::PVR::RadioClock,
+                               EVENT::PVR::RadioTrafficMessage>
+{
+  using variant::variant;
+};
+
+namespace EVENT::INFO
+{
+//! The item the info labels describe changed.
+struct Changed
+{
+};
+} // namespace EVENT::INFO
+
+struct InfoEvent : std::variant<EVENT::INFO::Changed>
+{
+  using variant::variant;
+};
+
+namespace EVENT::SOURCES
+{
+struct Added
+{
+  std::string path;
+};
+
+struct Removed
+{
+  std::string path;
+};
+
+struct Updated
+{
+  std::string path;
+};
+} // namespace EVENT::SOURCES
+
+struct SourcesEvent
+  : std::variant<EVENT::SOURCES::Added, EVENT::SOURCES::Removed, EVENT::SOURCES::Updated>
+{
+  using variant::variant;
+};
+
+namespace EVENT::SETTINGS
+{
+struct LevelChanged
+{
+  SettingLevel level{};
+};
+} // namespace EVENT::SETTINGS
+
+struct SettingsEvent : std::variant<EVENT::SETTINGS::LevelChanged>
+{
+  using variant::variant;
+};
+
+struct Announcement : std::variant<PlayerEvent,
+                                   PlaylistEvent,
+                                   GUIEvent,
+                                   SystemEvent,
+                                   VideoLibraryEvent,
+                                   AudioLibraryEvent,
+                                   InputEvent,
+                                   PVREvent,
+                                   InfoEvent,
+                                   SourcesEvent,
+                                   SettingsEvent>
 {
   using variant::variant;
 };
