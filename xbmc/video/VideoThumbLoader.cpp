@@ -91,8 +91,10 @@ const std::map<std::string, std::vector<std::string>> artTypeDefaults = {
     {NameOf(MEDIA::TYPE::MOVIE), {ART::TYPE::POSTER, ART::TYPE::FANART}},
     {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), {ART::TYPE::POSTER, ART::TYPE::FANART}},
     {NameOf(MEDIA::TYPE::MUSIC_VIDEO), {ART::TYPE::POSTER, ART::TYPE::FANART}},
-    {NameOf(MEDIA::TYPE::VIDEO_VERSION), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
-    {NameOf(MEDIA::TYPE::NONE), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::VIDEO_VERSION),
+     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::NONE),
+     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
 };
 
 const std::vector<std::string> artTypeDefaultsFallback = {};
@@ -500,7 +502,8 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       // For episodes and seasons, we want to set fanart for that of the show
       if (!item.HasArt("tvshow.fanart") && tag.m_iIdShow >= 0)
       {
-        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MEDIA::TYPE::TV_SHOW), tag.m_iIdShow);
+        const KODI::ART::Artwork& artmap =
+            GetArtFromCache(NameOf(MEDIA::TYPE::TV_SHOW), tag.m_iIdShow);
         if (!artmap.empty())
         {
           item.AppendArt(artmap, NameOf(MEDIA::TYPE::TV_SHOW));
@@ -511,12 +514,14 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
 
       if (mediaType == MEDIA::TYPE::EPISODE && !item.HasArt("season.poster") && tag.m_iSeason > -1)
       {
-        const KODI::ART::Artwork& artmap = GetArtFromCache(NameOf(MEDIA::TYPE::SEASON), tag.m_iIdSeason);
+        const KODI::ART::Artwork& artmap =
+            GetArtFromCache(NameOf(MEDIA::TYPE::SEASON), tag.m_iIdSeason);
         if (!artmap.empty())
           item.AppendArt(artmap, NameOf(MEDIA::TYPE::SEASON));
       }
     }
-    else if (mediaType == MEDIA::TYPE::MOVIE && tag.m_set.GetID() >= 0 && !item.HasArt("set.fanart"))
+    else if (mediaType == MEDIA::TYPE::MOVIE && tag.m_set.GetID() >= 0 &&
+             !item.HasArt("set.fanart"))
     {
       const KODI::ART::Artwork& artmap =
           GetArtFromCache(NameOf(MEDIA::TYPE::VIDEO_COLLECTION), tag.m_set.GetID());

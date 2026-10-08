@@ -172,7 +172,8 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
     item->SetArt(KODI::ART::TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
     KODI::ART::FillInDefaultIcon(*item);
 
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1, KODI::MESSAGING::TransferToMessenger(std::move(item)));
+    CServiceBroker::GetAppMessenger()->PostMsg(
+        TMSG_UPDATE_PLAYER_ITEM, -1, -1, KODI::MESSAGING::TransferToMessenger(std::move(item)));
   }
 }
 
@@ -196,7 +197,8 @@ void CAirTunesServer::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
   namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
   if ((std::holds_alternative<PLAYER::Play>(event) ||
-       std::holds_alternative<PLAYER::Resume>(event)) && m_streamStarted)
+       std::holds_alternative<PLAYER::Resume>(event)) &&
+      m_streamStarted)
   {
     RefreshMetadata();
     RefreshCoverArt();

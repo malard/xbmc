@@ -676,7 +676,8 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem, const std::string &player)
       OnQueueItem(iItem);
       return true;
     }
-    CServiceBroker::GetPlayLists()->PlayItem(m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, {.player = player});
+    CServiceBroker::GetPlayLists()->PlayItem(
+        m_guiState->GetPlayListType().value_or(PLAYLIST::Audio), pItem, {.player = player});
     return true;
   }
   return CGUIMediaWindow::OnPlayMedia(iItem, player);
@@ -746,8 +747,7 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     // We want to expand disc images when browsing in file view but not on library, smartplaylist
     // or node menu music windows
     if (!items.GetPath().empty() && !URIUtils::IsMusicDb(items.GetPath()) &&
-        !URIUtils::IsSpecial(items.GetPath()) &&
-        !URIUtils::IsLibraryFolder(items.GetPath()))
+        !URIUtils::IsSpecial(items.GetPath()) && !URIUtils::IsLibraryFolder(items.GetPath()))
       CDirectory::FilterFileDirectories(items, ".iso", true);
 
     CMusicThumbLoader loader;
@@ -826,8 +826,10 @@ bool CGUIWindowMusicBase::GetDirectory(const std::string &strDirectory, CFileIte
     items.FilterCueItems();
 
     std::string label;
-    if (items.GetLabel().empty() && m_rootDir.IsSource(items.GetPath(),
-                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC), &label))
+    if (items.GetLabel().empty() &&
+        m_rootDir.IsSource(items.GetPath(),
+                           &CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC),
+                           &label))
       items.SetLabel(label);
   }
 

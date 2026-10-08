@@ -169,7 +169,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
 
   // we start with a <tag> tag
   TiXmlElement movieElement(tag.c_str());
-  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE || tag == NFO_ROOT::MUSIC_VIDEO)
+  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE ||
+      tag == NFO_ROOT::MUSIC_VIDEO)
     movieElement.SetAttribute("version", 0);
   TiXmlNode *movie = node->InsertEndChild(movieElement);
 
@@ -334,7 +335,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
       XMLUtils::SetInt(&stream, "height", m_streamDetails.GetVideoHeight(iStream));
       XMLUtils::SetInt(&stream, "durationinseconds", m_streamDetails.GetVideoDuration(iStream));
       XMLUtils::SetString(&stream, "stereomode", m_streamDetails.GetStereoMode(iStream));
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetVideoLanguage(iStream).AsIso6392B());
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetVideoLanguage(iStream).AsIso6392B());
       XMLUtils::SetString(&stream, "hdrtype", m_streamDetails.GetVideoHdrType(iStream));
       XMLUtils::SetString(&stream, "hdrdetail", m_streamDetails.GetVideoHdrDetail(iStream));
       streamdetails.InsertEndChild(stream);
@@ -343,7 +345,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     {
       TiXmlElement stream("audio");
       XMLUtils::SetString(&stream, "codec", m_streamDetails.GetAudioCodec(iStream));
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetAudioLanguage(iStream).AsIso6392B());
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetAudioLanguage(iStream).AsIso6392B());
       XMLUtils::SetInt(&stream, "channels", m_streamDetails.GetAudioChannels(iStream));
       if (m_streamDetails.GetVersion(CStreamDetail::AUDIO, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
@@ -359,7 +362,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     for (int iStream=1; iStream<=m_streamDetails.GetSubtitleStreamCount(); iStream++)
     {
       TiXmlElement stream("subtitle");
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetSubtitleLanguage(iStream).AsIso6392B());
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetSubtitleLanguage(iStream).AsIso6392B());
       if (m_streamDetails.GetVersion(CStreamDetail::SUBTITLE, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
       {
@@ -897,7 +901,8 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["album"] = m_strAlbum;
   value["artist"] = m_artist;
   value["playCount"] = GetPlayCount();
-  value["lastPlayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["lastPlayed"] =
+      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
   value["top250"] = m_iTop250;
   value["year"] = GetYear();
   value["season"] = m_iSeason;
@@ -1237,7 +1242,8 @@ bool CVideoInfoTag::HasConflictingUniqueID(const CVideoInfoTag& other) const
                              [&other](const auto& id)
                              {
                                const auto it{other.m_uniqueIDs.find(id.first)};
-                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN && !id.second.empty() &&
+                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
+                                      !id.second.empty() &&
                                       it != other.m_uniqueIDs.end() && !it->second.empty() &&
                                       it->second != id.second;
                              });

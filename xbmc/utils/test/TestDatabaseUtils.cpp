@@ -132,8 +132,11 @@ void ExpectIndexes(KODI::MEDIA::TYPE type, std::span<const IndexCase> cases)
 
 TEST(TestDatabaseUtils, GetField_None)
 {
-  EXPECT_EQ(DatabaseUtils::GetField(Field::NONE, KODI::MEDIA::TYPE::NONE, DatabaseQueryPart::SELECT), "");
-  EXPECT_EQ(DatabaseUtils::GetField(Field::NONE, KODI::MEDIA::TYPE::MOVIE, DatabaseQueryPart::SELECT), "");
+  EXPECT_EQ(
+      DatabaseUtils::GetField(Field::NONE, KODI::MEDIA::TYPE::NONE, DatabaseQueryPart::SELECT), "");
+  EXPECT_EQ(
+      DatabaseUtils::GetField(Field::NONE, KODI::MEDIA::TYPE::MOVIE, DatabaseQueryPart::SELECT),
+      "");
 }
 
 TEST(TestDatabaseUtils, GetField_MediaTypeAlbum)

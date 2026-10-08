@@ -475,8 +475,9 @@ bool CGUIDialogVideoManagerVersions::ChoosePlaylist(const std::shared_ptr<CFileI
     return false;
   const CFileItem& chosen{*items[0]};
 
-  const CFileItem& owner{item->GetVideoInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::VIDEO_VERSION ? *m_videoAsset
-                                                                                  : *item};
+  const CFileItem& owner{item->GetVideoInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::VIDEO_VERSION
+                             ? *m_videoAsset
+                             : *item};
   const VideoAssetInfo existing{m_database.GetVideoVersionInfo(chosen.GetDynPath())};
   if (existing.m_idFile >= 0 && existing.m_mediaType == KODI::MEDIA::TYPE::MOVIE &&
       existing.m_idMedia == owner.GetVideoInfoTag()->m_iDbId &&
@@ -956,7 +957,8 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
 
         CGUIDialogOK::ShowAndGetInput(
             CVariant{40014},
-            StringUtils::Format(localizeStrings.Get(msgid),
+            StringUtils::Format(
+                localizeStrings.Get(msgid),
                 newAsset.m_assetTypeName));
         return false;
       }
@@ -996,7 +998,8 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
 
         if (!CGUIDialogYesNo::ShowAndGetInput(
                 CVariant{40014},
-                StringUtils::Format(localizeStrings.Get(msgid),
+                StringUtils::Format(
+                    localizeStrings.Get(msgid),
                     newAsset.m_assetTypeName, videoTitle)))
         {
           return false;

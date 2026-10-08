@@ -811,6 +811,7 @@ CVideoPlayer::CVideoPlayer(IPlayerCallback& callback)
   m_processInfo->SetFrameAdvance(false);
 
   CreatePlayers();
+
   m_error = false;
   m_bCloseRequest = false;
   if (auto system = CServiceBroker::GetWinSystem(); system != nullptr)
@@ -2183,7 +2184,8 @@ void CVideoPlayer::HandlePlaySpeed()
     {
       if (cache.level < 0.0)
       {
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::SourceSlow{}});
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::SourceSlow{}});
         SetCaching(CACHESTATE_INIT);
       }
       // Note: Previously used cache.level >= 1 would keep video stalled
@@ -3662,8 +3664,7 @@ void CVideoPlayer::HandleMessages()
       const LiveGeometryUpdate update =
           std::static_pointer_cast<CDVDMsgType<LiveGeometryUpdate>>(pMsg)->m_value;
       IPlayerCallback* cb = &m_callback;
-      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update);
-      });
+      m_outboundEvents->Submit([cb, update]() { cb->OnContentGeometryChanged(update); });
     }
     else if (pMsg->IsType(CDVDMsg::PLAYER_ABORT))
     {
@@ -4879,14 +4880,16 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray menu not supported (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayMenuError{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayMenuError{}});
     }
     break;
     case BD_EVENT_ENC_ERROR:
     {
       m_dvd.state = DVDSTATE_NORMAL;
       CLog::Log(LOGDEBUG, "CVideoPlayer::OnDiscNavResult - libbluray the disc/file is encrypted and can't be played (DVDSTATE_NORMAL)");
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayEncryptedError{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::BlurayEncryptedError{}});
     }
     break;
     case BD_EVENT_DISCONTINUITY:
@@ -5048,7 +5051,8 @@ int CVideoPlayer::OnDiscNavResult(void* pData, int iMessage)
       {
         CLog::Log(LOGDEBUG, "DVDNAV_ERROR");
         m_dvd.state = DVDSTATE_NORMAL;
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{}});
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::PlaybackFailed{}});
       }
       break;
     default:
@@ -5118,7 +5122,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
           }
 
           // Let everyone know that we've gone to the menu
-          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Menu{}});
+          CServiceBroker::GetAnnouncementManager()->Announce(
+              ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::Menu{}});
         }
         return true;
       }
@@ -5280,8 +5285,7 @@ bool CVideoPlayer::OnAction(const CAction &action)
         break;
     case ACTION_TOGGLE_COMMSKIP:
       m_SkipCommercials = !m_SkipCommercials;
-      CServiceBroker::GetAnnouncementManager()->Announce(
-          ANNOUNCEMENT::PlayerEvent{
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{
           ANNOUNCEMENT::EVENT::PLAYER::ToggleSkipCommercials{m_SkipCommercials}});
       break;
 
@@ -5293,7 +5297,8 @@ bool CVideoPlayer::OnAction(const CAction &action)
       break;
 
     case ACTION_PLAYER_PROCESS_INFO:
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ProcessInfo{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::PlayerEvent{ANNOUNCEMENT::EVENT::PLAYER::ProcessInfo{}});
       return true;
   }
 
@@ -6183,9 +6188,11 @@ bool CVideoPlayer::SuspendPresentation(SuspendReason reason)
   if (held == 0)
   {
     if (m_VideoPlayerAudio->IsInited())
-      m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
+      m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
+                                      1);
     if (m_VideoPlayerVideo->IsInited())
-      m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true), 1);
+      m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, true),
+                                      1);
     m_clock.Pause(true);
   }
   return true;
@@ -6201,8 +6208,10 @@ bool CVideoPlayer::ResumePresentation(SuspendReason reason)
   m_suspendReasons = held & ~static_cast<unsigned>(reason);
   if (m_suspendReasons == 0)
   {
-    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
-    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false), 1);
+    m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false),
+                                    1);
+    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, false),
+                                    1);
     m_clock.Pause(false);
   }
   return true;
@@ -6261,7 +6270,8 @@ void CVideoPlayer::ReleaseAudioFormatHold()
                                     .count()) /
                 1000.0,
             early ? "chain reported ready" : "timed out");
-  m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
+  m_VideoPlayerAudio->SendMessage(
+      std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
   ResumePresentation(SuspendReason::AUDIO_FORMAT_CHANGE);
   m_audioChainReady = false;
 
@@ -6338,8 +6348,8 @@ void CVideoPlayer::UpdateContentState()
       m_SelectionStreams.TypeIndexOf(StreamType::SUBTITLE, m_CurrentSubtitle.source,
                                      m_CurrentSubtitle.demuxerId, m_CurrentSubtitle.id);
 
-  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) && m_content.m_videoIndex == -1 &&
-      m_content.m_audioIndex == -1)
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD) &&
+      m_content.m_videoIndex == -1 && m_content.m_audioIndex == -1)
   {
     std::shared_ptr<CDVDInputStreamNavigator> nav =
           std::static_pointer_cast<CDVDInputStreamNavigator>(m_pInputStream);
@@ -6365,7 +6375,8 @@ void CVideoPlayer::UpdateContentState()
            m_content.m_selectedSubtitleIndex < m_SelectionStreams.CountType(StreamType::SUBTITLE))
     m_content.m_subtitleIndex = m_content.m_selectedSubtitleIndex;
 
-  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) && m_State.menuType == MenuType::NATIVE)
+  if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_BLURAY) &&
+      m_State.menuType == MenuType::NATIVE)
   {
     // Update settings with changes made in bluray menu
     CVideoSettings settings{m_processInfo->GetVideoSettings()};

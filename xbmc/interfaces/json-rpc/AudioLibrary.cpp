@@ -89,8 +89,7 @@ JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant &parameterObject, CVa
     return InternalError;
 
   CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (CVariant::const_iterator_array it = names.begin_array();
-       it != names.end_array(); ++it)
+  for (CVariant::const_iterator_array it = names.begin_array(); it != names.end_array(); ++it)
   {
     const std::string propertyName = it->asString();
     CVariant property;
@@ -146,7 +145,8 @@ constexpr KindTraits KIND_TABLE[] = {
      KODI::MUSIC::DB_PATH::ALBUMS,
      "Audio.Filter.Albums",
      ALBUM_FILTERS},
-    {{AudioKind::Song, KODI::MEDIA::TYPE::SONG, "songId", "Audio.Fields.Song", "Audio.Details.Song.Set"},
+    {{AudioKind::Song, KODI::MEDIA::TYPE::SONG, "songId", "Audio.Fields.Song",
+      "Audio.Details.Song.Set"},
      KODI::MEDIA::CONTENT::SONGS,
      KODI::MUSIC::DB_PATH::SONGS,
      "Audio.Filter.Songs",
@@ -198,8 +198,8 @@ JSONRPC_STATUS CAudioLibrary::GetItems(const CVariant& parameterObject, CVariant
   return GetItemsIn(KINDS, CheckForKind, Query, parameterObject, result);
 }
 
-JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
-                                    Listing listing, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::Query(
+    AudioKind kind, Listing listing, const CVariant& parameterObject, CVariant& result)
 {
   const KindTraits& traits = KINDS.Of(kind);
 
@@ -281,7 +281,8 @@ JSONRPC_STATUS CAudioLibrary::Query(AudioKind kind,
 
   if (kind == AudioKind::Artist)
   {
-    bool albumArtistsOnly = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS);
+    bool albumArtistsOnly = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+        CSettings::SETTING_MUSICLIBRARY_SHOWCOMPILATIONARTISTS);
     if (parameterObject["albumArtistsOnly"].isBoolean())
       albumArtistsOnly = parameterObject["albumArtistsOnly"].asBoolean();
     musicUrl.AddOption("albumartistsonly", albumArtistsOnly);
@@ -428,7 +429,7 @@ JSONRPC_STATUS CAudioLibrary::SetItemProperties(const CVariant& parameterObject,
 }
 
 JSONRPC_STATUS CAudioLibrary::ReadItem(
-    AudioKind kind, int id, const CVariant & fields, CMusicDatabase& musicdatabase, CVariant &result)
+    AudioKind kind, int id, const CVariant& fields, CMusicDatabase& musicdatabase, CVariant& result)
 {
   const KindTraits& traits = KINDS.Of(kind);
 
@@ -736,7 +737,8 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id, const CVariant & properties
   CopyIfGiven(properties, "userRating", song.userrating);
   CopyIfGiven(properties, "votes", song.votes);
   if (ParameterNotNull(properties, "track"))
-    song.iTrack = (song.iTrack & 0xffff0000) | (static_cast<int>(properties["track"].asInteger()) & 0xffff);
+    song.iTrack = (song.iTrack & 0xffff0000) |
+                  (static_cast<int>(properties["track"].asInteger()) & 0xffff);
   if (ParameterNotNull(properties, "disc"))
     song.iTrack = (song.iTrack & 0xffff) | (static_cast<int>(properties["disc"].asInteger()) << 16);
   CopyIfGiven(properties, "duration", song.iDuration);

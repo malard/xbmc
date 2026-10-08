@@ -494,7 +494,8 @@ bool CApplication::CreateGUI()
   CDisplaySettings::GetInstance().SetCurrentResolution(CDisplaySettings::GetInstance().GetDisplayResolution());
   CLog::Log(LOGINFO, "Checking resolution {}",
             CDisplaySettings::GetInstance().GetCurrentResolution());
-  if (!m_pWinSystem->GetGfxContext().IsValidResolution(CDisplaySettings::GetInstance().GetCurrentResolution()))
+  if (!m_pWinSystem->GetGfxContext().IsValidResolution(
+          CDisplaySettings::GetInstance().GetCurrentResolution()))
   {
     CLog::Log(LOGINFO, "Setting safe mode {}", RES_DESKTOP);
     // defer saving resolution after window was created
@@ -504,7 +505,8 @@ bool CApplication::CreateGUI()
 
   // update the window resolution
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-  m_pWinSystem->SetWindowResolution(settings->GetInt(CSettings::SETTING_WINDOW_WIDTH), settings->GetInt(CSettings::SETTING_WINDOW_HEIGHT));
+  m_pWinSystem->SetWindowResolution(settings->GetInt(CSettings::SETTING_WINDOW_WIDTH),
+                                    settings->GetInt(CSettings::SETTING_WINDOW_HEIGHT));
 
   ApplyRasterSettings();
 
@@ -515,7 +517,8 @@ bool CApplication::CreateGUI()
     sav_res = true;
   }
 
-  if (!m_pWinSystem->GetGfxContext().IsValidResolution(CDisplaySettings::GetInstance().GetCurrentResolution()))
+  if (!m_pWinSystem->GetGfxContext().IsValidResolution(
+          CDisplaySettings::GetInstance().GetCurrentResolution()))
   {
     // Oh uh - doesn't look good for starting in their wanted screenmode
     CLog::Log(LOGERROR, "The screen resolution requested is not valid, resetting to a valid mode");
@@ -1169,7 +1172,8 @@ bool CApplication::OnAction(const CAction &action)
   }
 
   const std::shared_ptr<CFileItem> playing = CurrentFileItemPtr();
-  const bool steps{action.GetID() == ACTION_INCREASE_RATING || action.GetID() == ACTION_DECREASE_RATING};
+  const bool steps{action.GetID() == ACTION_INCREASE_RATING ||
+                   action.GetID() == ACTION_DECREASE_RATING};
 
   if (appPlayer->IsPlayingAudio() && (steps || action.GetID() == ACTION_SET_RATING))
   {
@@ -1715,7 +1719,8 @@ bool CApplication::Stop(int exitCode)
   {
     m_frameMoveGuard.unlock();
 
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Quit{exitCode}});
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::SystemEvent{ANNOUNCEMENT::EVENT::SYSTEM::Quit{exitCode}});
 
     // Abort any active screensaver
     GetComponent<CApplicationPowerHandling>()->WakeUpScreenSaverAndDPMS();
@@ -1859,7 +1864,8 @@ bool CApplication::PlayMedia(const CFileItem& item, const std::string& player /*
                               position, {.player = player}, playable->GetPath());
 }
 
-CApplication::PlayResult CApplication::PlayFile(const CFileItem& item, const std::string& player /* = "" */,
+CApplication::PlayResult CApplication::PlayFile(const CFileItem& item,
+                                                const std::string& player /* = "" */,
                                                 Reopen reopen /* = Reopen::No */,
                                                 StartsRun startsRun /* = StartsRun::Yes */)
 {
@@ -1964,7 +1970,7 @@ void CApplication::PlaybackCleanup()
   const bool nothingFollows = !CServiceBroker::GetPlayLists()->GetPlayingType();
   const CFileItem& playing = CurrentFileItem();
   const bool discGone = (MUSIC::IsCDDA(playing) || playing.IsOnDVD()) &&
-      !CServiceBroker::GetMediaManager().IsDiscInDrive();
+                        !CServiceBroker::GetMediaManager().IsDiscInDrive();
   if (!appPlayer->IsPlayingAudio() && (nothingFollows || discGone) &&
       LeavePlaybackWindow(PlaybackWindow::Visualisation))
   {
@@ -2465,7 +2471,8 @@ void CApplication::SeekTime( double dTime )
                              static_cast<int64_t>(startOfNewFile));
         // don't just call "PlayFile" here, as we are quite likely called from the
         // player thread, so we won't be able to delete ourselves.
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 1, 0, static_cast<void*>(item));
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 1, 0,
+                                                   static_cast<void*>(item));
       }
       return;
     }

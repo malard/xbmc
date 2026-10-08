@@ -105,7 +105,9 @@ bool CMusicThumbLoader::LoadItemLookup(CFileItem* pItem)
   if (pItem->IsShareOrDrive())
     return false;
 
-  if (pItem->HasMusicInfoTag() && pItem->GetMusicInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::ARTIST) // No fallback for artist
+  if (pItem->HasMusicInfoTag() &&
+      pItem->GetMusicInfoTag()->GetMediaType() ==
+          KODI::MEDIA::TYPE::ARTIST) // No fallback for artist
     return false;
 
   if (pItem->HasVideoInfoTag())
@@ -167,7 +169,7 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
   KODI::MEDIA::TYPE mediaType = tag.GetMediaType();
   if (tag.GetDatabaseId() > -1 &&
       (mediaType == KODI::MEDIA::TYPE::SONG || mediaType == KODI::MEDIA::TYPE::ALBUM ||
-                                   mediaType == KODI::MEDIA::TYPE::ARTIST))
+       mediaType == KODI::MEDIA::TYPE::ARTIST))
   {
     // Item in music library, fetch the art
     m_musicDatabase->Open();
@@ -315,7 +317,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
 
       // Add fallback art for "thumb" and "fanart" art types only
       // Set album thumb as the fallback used when song thumb is missing
-      if (mediaType == KODI::MEDIA::TYPE::SONG && artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ALBUM) &&
+      if (mediaType == KODI::MEDIA::TYPE::SONG &&
+          artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ALBUM) &&
           artitem.artType == KODI::ART::TYPE::THUMB)
       {
         item.SetArtFallback(artitem.artType, artname);
@@ -325,7 +328,8 @@ bool CMusicThumbLoader::FillLibraryArt(CFileItem &item)
       // For songs prefer primary song artist over primary albumartist fanart as fallback fanart
       if (artitem.prefix == "artist" && artitem.artType == KODI::ART::TYPE::FANART)
         fanartfallback = artname;
-      if (artitem.prefix == "albumartist" && artitem.artType == KODI::ART::TYPE::FANART && fanartfallback.empty())
+      if (artitem.prefix == "albumartist" && artitem.artType == KODI::ART::TYPE::FANART &&
+          fanartfallback.empty())
         fanartfallback = artname;
     }
     if (!fanartfallback.empty())

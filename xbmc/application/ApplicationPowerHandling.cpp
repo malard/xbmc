@@ -100,7 +100,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
       m_dpmsIsManual = false;
       SetRenderGUI(true);
       CheckOSScreenSaverInhibitionSetting();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSDeactivated{}});
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSDeactivated{}});
       return dpms->DisablePowerSaving();
     }
     else
@@ -111,7 +112,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
         m_dpmsIsManual = manual;
         SetRenderGUI(false);
         CheckOSScreenSaverInhibitionSetting();
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSActivated{}});
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSActivated{}});
         return true;
       }
     }
@@ -372,7 +374,8 @@ void CApplicationPowerHandling::ActivateScreenSaver(bool forceType /*= false */)
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_screensaverActive = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::ScreensaverActivated{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::ScreensaverActivated{}});
 
   // disable screensaver lock from the login screen
   m_iScreenSaveLock =

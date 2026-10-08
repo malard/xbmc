@@ -81,9 +81,9 @@ bool CRecentlyAddedJob::UpdateVideo()
       if (!item->HasArt(KODI::ART::TYPE::THUMB))
         loader.LoadItem(item.get());
 
-      home->SetProperty("LatestMovie." + value + ".Thumb"       , item->GetArt(KODI::ART::TYPE::THUMB));
-      home->SetProperty("LatestMovie." + value + ".Fanart"      , item->GetArt(KODI::ART::TYPE::FANART));
-      home->SetProperty("LatestMovie." + value + ".Poster"      , item->GetArt(KODI::ART::TYPE::POSTER));
+      home->SetProperty("LatestMovie." + value + ".Thumb", item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestMovie." + value + ".Fanart", item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestMovie." + value + ".Poster", item->GetArt(KODI::ART::TYPE::POSTER));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -131,12 +131,14 @@ bool CRecentlyAddedJob::UpdateVideo()
       std::string seasonThumb;
       if (item->GetVideoInfoTag()->m_iIdSeason > 0)
         seasonThumb = videodatabase.GetArtForItem(item->GetVideoInfoTag()->m_iIdSeason,
-                                                  KODI::MEDIA::TYPE::SEASON, KODI::ART::TYPE::THUMB);
+                                                  KODI::MEDIA::TYPE::SEASON,
+                                                  KODI::ART::TYPE::THUMB);
 
-      home->SetProperty("LatestEpisode." + value + ".Thumb"         , item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestEpisode." + value + ".Thumb", item->GetArt(KODI::ART::TYPE::THUMB));
       home->SetProperty("LatestEpisode." + value + ".ShowThumb"     , item->GetArt("tvshow.thumb"));
       home->SetProperty("LatestEpisode." + value + ".SeasonThumb"   , seasonThumb);
-      home->SetProperty("LatestEpisode." + value + ".Fanart"        , item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestEpisode." + value + ".Fanart",
+                        item->GetArt(KODI::ART::TYPE::FANART));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -182,8 +184,10 @@ bool CRecentlyAddedJob::UpdateVideo()
       if (!item->HasArt(KODI::ART::TYPE::THUMB))
         loader.LoadItem(item.get());
 
-      home->SetProperty("LatestMusicVideo." + value + ".Thumb"       , item->GetArt(KODI::ART::TYPE::THUMB));
-      home->SetProperty("LatestMusicVideo." + value + ".Fanart"      , item->GetArt(KODI::ART::TYPE::FANART));
+      home->SetProperty("LatestMusicVideo." + value + ".Thumb",
+                        item->GetArt(KODI::ART::TYPE::THUMB));
+      home->SetProperty("LatestMusicVideo." + value + ".Fanart",
+                        item->GetArt(KODI::ART::TYPE::FANART));
     }
   }
   for (; i < NUM_ITEMS; ++i)
@@ -292,9 +296,11 @@ bool CRecentlyAddedJob::UpdateMusic()
       {
         for (const auto& artitem : art)
         {
-          if (artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ALBUM) && artitem.artType == KODI::ART::TYPE::THUMB)
+          if (artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ALBUM) &&
+              artitem.artType == KODI::ART::TYPE::THUMB)
             strThumb = artitem.url;
-          else if (artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ARTIST) && artitem.artType == KODI::ART::TYPE::FANART)
+          else if (artitem.mediaType == NameOf(KODI::MEDIA::TYPE::ARTIST) &&
+                   artitem.artType == KODI::ART::TYPE::FANART)
             strFanart = artitem.url;
         }
       }

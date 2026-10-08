@@ -238,7 +238,8 @@ bool CGUIWindowVideoBase::OnItemInfo(const CFileItem& fileItem)
     return KODI::UTILS::GUILIB::CGUIContentUtils::ShowInfoForItem(fileItem);
 
   // Video version
-  if (fileItem.HasVideoInfoTag() && fileItem.GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::VIDEO_VERSION)
+  if (fileItem.HasVideoInfoTag() &&
+      fileItem.GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::VIDEO_VERSION)
     return false;
 
   // Movie set
@@ -403,7 +404,8 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
       if (item->IsFolder())
       {
         const CVideoInfoTag* videoTag = item->GetVideoInfoTag();
-        if (videoTag && videoTag->GetMediaType() == MEDIA::TYPE::SEASON && videoTag->m_iSeason != -1)
+        if (videoTag && videoTag->GetMediaType() == MEDIA::TYPE::SEASON &&
+            videoTag->m_iSeason != -1)
           bHasInfo = m_database.GetSeasonInfo(videoTag->m_iIdSeason, movieDetails);
         if (!bHasInfo)
           bHasInfo = m_database.GetTvShowInfo(item->GetPath(), movieDetails, dbId);
@@ -652,7 +654,8 @@ bool CGUIWindowVideoBase::OnSelect(int iItem)
 
   const std::string path{item->GetPath()};
   if (!item->IsFolder() && path != ITEM::PLACEHOLDER::ADD_SOURCE &&
-      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) && !URIUtils::IsPlugin(path)) ||
+      ((!ITEM::PLACEHOLDER::IsNewItem(path) && !URIUtils::IsScript(path) &&
+        !URIUtils::IsPlugin(path)) ||
        (URIUtils::IsPlugin(path) &&
         item->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean(false))))
   {
@@ -1097,7 +1100,8 @@ bool CGUIWindowVideoBase::PlayItem(const std::shared_ptr<CFileItem>& pItem,
     LoadPlayList(pItem->GetDynPath(), PLAYLIST::Video);
     return true;
   }
-  else if (m_guiState.get() && m_guiState->AutoPlayNextItem() && !PARTYMODE::IsRunning(PLAYLIST::Video))
+  else if (m_guiState.get() && m_guiState->AutoPlayNextItem() &&
+           !PARTYMODE::IsRunning(PLAYLIST::Video))
     return OnPlayAndQueueMedia(pItem, player);
   else
     return OnPlayMedia(pItem, player);
@@ -1134,7 +1138,8 @@ bool CGUIWindowVideoBase::GetDirectory(const std::string &strDirectory, CFileIte
     items.Add(newPlaylist);
 
     newPlaylist =
-        std::make_shared<CFileItem>(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video", false);
+        std::make_shared<CFileItem>(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video",
+                                    false);
     newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
         21437)); // "new smart playlist..."
     newPlaylist->SetArt(ART::TYPE::ICON, ART::DEFAULT::ADD_SOURCE);

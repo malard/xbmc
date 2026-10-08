@@ -566,7 +566,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         break;
       }
       case LISTITEM_AUDIO_LANGUAGE:
-        value = tag->m_streamDetails.GetAudioLanguage(tag->GetDescribedAudioStreamIndex()).ToString();
+        value =
+            tag->m_streamDetails.GetAudioLanguage(tag->GetDescribedAudioStreamIndex()).ToString();
         return true;
       case LISTITEM_SUBTITLE_LANGUAGE:
         value = tag->m_streamDetails.GetSubtitleLanguage().ToString();
@@ -732,7 +733,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         if (fallback)
           *fallback = "DefaultVideoCover.png";
 
-        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB) : ART::DEFAULT::VIDEO_COVER;
+        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
+                                               : ART::DEFAULT::VIDEO_COVER;
         return true;
       }
       break;

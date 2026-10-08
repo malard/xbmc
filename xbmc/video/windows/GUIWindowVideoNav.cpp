@@ -412,7 +412,8 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
         std::string label;
         if (items.GetLabel().empty() &&
             m_rootDir.IsSource(items.GetPath(),
-                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO), &label))
+                               &CMediaSourceSettings::GetInstance().GetSources(MediaSection::VIDEO),
+                               &label))
           items.SetLabel(label);
         if (!items.IsSourcesPath() && !items.IsLibraryFolder())
           LoadVideoInfo(items, m_database);
@@ -720,7 +721,8 @@ void CGUIWindowVideoNav::OnDeleteItem(const CFileItemPtr& pItem)
   if (!VIDEO::IsVideoDb(*m_vecItems) && !VIDEO::IsVideoDb(*pItem))
   {
     if (!pItem->IsPath(std::string{ITEM::PLACEHOLDER::NEW_SMART_PLAYLIST} + "video") &&
-        !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) && !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
+        !pItem->IsPath(CUtil::PlaylistsPathOf(MediaSection::VIDEO)) &&
+        !pItem->IsPath(CSourcesDirectory::PathOf(MediaSection::VIDEO)) &&
         !URIUtils::IsProtocol(pItem->GetPath(), "newtag"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
@@ -791,7 +793,8 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons(MediaSection::VIDEO, item, buttons);
-    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE &&
+        !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
@@ -851,9 +854,9 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
             item->HasVideoInfoTag())
         {
           const MEDIA::TYPE type = item->GetVideoInfoTag()->GetMediaType();
-          if (type == MEDIA::TYPE::MOVIE || type == MEDIA::TYPE::TV_SHOW || type == MEDIA::TYPE::SEASON ||
-              type == MEDIA::TYPE::EPISODE || type == MEDIA::TYPE::MUSIC_VIDEO ||
-              type == MEDIA::TYPE::VIDEO_COLLECTION ||
+          if (type == MEDIA::TYPE::MOVIE || type == MEDIA::TYPE::TV_SHOW ||
+              type == MEDIA::TYPE::SEASON || type == MEDIA::TYPE::EPISODE ||
+              type == MEDIA::TYPE::MUSIC_VIDEO || type == MEDIA::TYPE::VIDEO_COLLECTION ||
               item->GetVideoInfoTag()->m_type == KODI::VIDEO::DB_TABLE::TAG)
             buttons.Add(CONTEXT_BUTTON_EDIT, 16106);
         }

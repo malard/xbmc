@@ -86,7 +86,8 @@ CMusicInfoScanner::~CMusicInfoScanner() = default;
 
 void CMusicInfoScanner::Process()
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanStarted{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanStarted{}});
   try
   {
     if (m_showDialog && !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_BACKGROUNDUPDATE))
@@ -288,7 +289,8 @@ void CMusicInfoScanner::Process()
   CLog::Log(LOGDEBUG, "{} - Finished scan", __FUNCTION__);
 
   m_bRunning = false;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanFinished{}});
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanFinished{}});
 
   // we need to clear the musicdb cache and update any active lists
   CUtil::DeleteMusicDatabaseDirectoryCache();
@@ -2164,7 +2166,8 @@ bool CMusicInfoScanner::AddAlbumArtwork(CAlbum& album)
     // first disc in the set with a thumb
     if (!firstDiscThumb.empty() && !album.art.contains(ART::TYPE::THUMB))
     {
-      m_musicDatabase.SetArtForItem(album.idAlbum, MEDIA::TYPE::ALBUM, ART::TYPE::THUMB, firstDiscThumb);
+      m_musicDatabase.SetArtForItem(album.idAlbum, MEDIA::TYPE::ALBUM, ART::TYPE::THUMB,
+                                    firstDiscThumb);
       // Assign art as folder thumb (in textures db) as well
 
       CFileItem albumItem(album.strPath, true);

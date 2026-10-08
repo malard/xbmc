@@ -924,9 +924,7 @@ void CGUIDialogMusicInfo::OnGetArt()
       CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC));
   CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_item);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(
-          items, sources, localizeStrings.Get(13511),
-          result) &&
+  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
       result != ART::CHOICE::CURRENT)
   {
     // User didn't choose the one they have.
