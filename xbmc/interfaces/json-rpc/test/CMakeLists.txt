@@ -33,6 +33,7 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp
+            TestVideoLibraryUpdatedDetails.cpp
             TestVideoStreamsSchema.cpp)
 
 core_add_test_library(jsonrpc_test)

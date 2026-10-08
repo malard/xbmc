@@ -17,6 +17,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class CFileItem;
@@ -112,6 +113,11 @@ protected:
   static DetailsEdit EditDetails(const CVariant& parameterObject,
                                  CVideoInfoTag& details,
                                  CVideoDatabase& videodatabase);
+  static void UpdateVideoTag(const CVariant& parameterObject,
+                             CVideoInfoTag& details,
+                             KODI::ART::Artwork& artwork,
+                             std::set<std::string, std::less<>>& removedArtwork,
+                             std::set<std::string, std::less<>>& updatedDetails);
 
   //! Stores the playcount, last played date and resume point an edit changed from \p before.
   static void StorePlaybackEdit(const CVariant& parameterObject,
@@ -214,13 +220,9 @@ public:
                                            CVideoDatabase& videodatabase,
                                            CFileItem& item,
                                            CVariant& result);
-    static void UpdateVideoTag(const CVariant& parameterObject,
-                               CVideoInfoTag& details,
-                               KODI::ART::Artwork& artwork,
-                               std::set<std::string, std::less<>>& removedArtwork,
-                               std::set<std::string, std::less<>>& updatedDetails);
     static void UpdateVideoTagField(const CVariant& parameterObject,
                                     const std::string& fieldName,
+                                    std::string_view detail,
                                     std::vector<std::string>& fieldValue,
                                     std::set<std::string, std::less<>>& updatedDetails);
   };

@@ -2692,30 +2692,30 @@ int CVideoDatabase::UpdateDetailsForMovie(int idMovie,
     BeginTransaction();
 
     // process the link table updates
-    if (updatedDetails.contains("genre"))
+    if (updatedDetails.contains(UPDATED_DETAIL::GENRE))
       UpdateLinksToItem(idMovie, MediaType::MOVIE, "genre", details.m_genre);
-    if (updatedDetails.contains("studio"))
+    if (updatedDetails.contains(UPDATED_DETAIL::STUDIO))
       UpdateLinksToItem(idMovie, MediaType::MOVIE, "studio", details.m_studio);
-    if (updatedDetails.contains("country"))
+    if (updatedDetails.contains(UPDATED_DETAIL::COUNTRY))
       UpdateLinksToItem(idMovie, MediaType::MOVIE, "country", details.m_country);
-    if (updatedDetails.contains("tag"))
+    if (updatedDetails.contains(UPDATED_DETAIL::TAG))
       UpdateLinksToItem(idMovie, MediaType::MOVIE, "tag", details.m_tags);
-    if (updatedDetails.contains("director"))
+    if (updatedDetails.contains(UPDATED_DETAIL::DIRECTOR))
       UpdateActorLinksToItem(idMovie, MediaType::MOVIE, "director", details.m_director);
-    if (updatedDetails.contains("writer"))
+    if (updatedDetails.contains(UPDATED_DETAIL::WRITER))
       UpdateActorLinksToItem(idMovie, MediaType::MOVIE, "writer", details.m_writingCredits);
-    if (updatedDetails.contains("art.altered"))
+    if (updatedDetails.contains(UPDATED_DETAIL::ART))
       SetArtForItem(idMovie, MediaType::MOVIE, artwork);
-    if (updatedDetails.contains("ratings"))
+    if (updatedDetails.contains(UPDATED_DETAIL::RATINGS))
       details.m_iIdRating = UpdateRatings(idMovie, MediaType::MOVIE, details.m_ratings, details.GetDefaultRating());
-    if (updatedDetails.contains("uniqueid"))
+    if (updatedDetails.contains(UPDATED_DETAIL::UNIQUE_ID))
       details.m_iIdUniqueID = UpdateUniqueIDs(idMovie, MediaType::MOVIE, details);
-    if (updatedDetails.contains("dateadded") && details.m_dateAdded.IsValid())
+    if (updatedDetails.contains(UPDATED_DETAIL::DATE_ADDED) && details.m_dateAdded.IsValid())
       UpdateFileDateAdded(details);
 
     // track if the set was updated
     int idSet = 0;
-    if (updatedDetails.contains("set"))
+    if (updatedDetails.contains(UPDATED_DETAIL::SET))
     { // set
       idSet = -1;
       if (details.m_set.HasTitle())
@@ -2724,7 +2724,7 @@ int CVideoDatabase::UpdateDetailsForMovie(int idMovie,
       }
     }
 
-    if (updatedDetails.contains("showlink"))
+    if (updatedDetails.contains(UPDATED_DETAIL::SHOW_LINK))
     {
       // remove existing links
       std::vector<int> tvShowIds;

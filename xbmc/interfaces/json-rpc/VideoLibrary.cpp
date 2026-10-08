@@ -38,6 +38,7 @@
 #include <span>
 
 using namespace JSONRPC;
+namespace UPDATED_DETAIL = KODI::VIDEO::UPDATED_DETAIL;
 
 namespace
 {
@@ -1287,13 +1288,14 @@ void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInf
 
 void CVideoLibrary::UpdateVideoTagField(const CVariant& parameterObject,
                                         const std::string& fieldName,
+                                        std::string_view detail,
                                         std::vector<std::string>& fieldValue,
                                         std::set<std::string, std::less<>>& updatedDetails)
 {
   if (ParameterNotNull(parameterObject, fieldName))
   {
     CopyStringArray(parameterObject[fieldName], fieldValue);
-    updatedDetails.insert(fieldName);
+    updatedDetails.emplace(detail);
   }
 }
 
@@ -1311,11 +1313,11 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     details.SetDuration(static_cast<int>(parameterObject["runtime"].asInteger()));
 
   std::vector<std::string> director(details.m_director);
-  UpdateVideoTagField(parameterObject, "director", director, updatedDetails);
+  UpdateVideoTagField(parameterObject, "director", UPDATED_DETAIL::DIRECTOR, director, updatedDetails);
   details.SetDirector(director);
 
   std::vector<std::string> studio(details.m_studio);
-  UpdateVideoTagField(parameterObject, "studio", studio, updatedDetails);
+  UpdateVideoTagField(parameterObject, "studio", UPDATED_DETAIL::STUDIO, studio, updatedDetails);
   details.SetStudio(studio);
 
   if (ParameterNotNull(parameterObject, "plot"))
@@ -1324,23 +1326,23 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     details.SetAlbum(parameterObject["album"].asString());
 
   std::vector<std::string> artist(details.m_artist);
-  UpdateVideoTagField(parameterObject, "artist", artist, updatedDetails);
+  UpdateVideoTagField(parameterObject, "artist", UPDATED_DETAIL::ARTIST, artist, updatedDetails);
   details.SetArtist(artist);
 
   std::vector<std::string> genre(details.m_genre);
-  UpdateVideoTagField(parameterObject, "genre", genre, updatedDetails);
+  UpdateVideoTagField(parameterObject, "genre", UPDATED_DETAIL::GENRE, genre, updatedDetails);
   details.SetGenre(genre);
 
   CopyIfGiven(parameterObject, "track", details.m_iTrack);
   if (ParameterNotNull(parameterObject, "rating"))
   {
     details.SetRating(parameterObject["rating"].asFloat());
-    updatedDetails.insert("ratings");
+    updatedDetails.insert(UPDATED_DETAIL::RATINGS);
   }
   if (ParameterNotNull(parameterObject, "votes"))
   {
     details.SetVotes(StringUtils::ReturnDigits(parameterObject["votes"].asString()));
-    updatedDetails.insert("ratings"); //Votes and ratings both need updates now, this will trigger those
+    updatedDetails.insert(UPDATED_DETAIL::RATINGS); //Votes and ratings both need updates now, this will trigger those
   }
   if (ParameterNotNull(parameterObject, "ratings"))
   {
@@ -1360,12 +1362,12 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
         else
           details.SetRating(rating["rating"].asFloat(), rIt->first, (ParameterNotNull(rating, "default") && rating["default"].asBoolean()));
 
-        updatedDetails.insert("ratings");
+        updatedDetails.insert(UPDATED_DETAIL::RATINGS);
       }
       else if (rIt->second.isNull())
       {
         details.RemoveRating(rIt->first);
-        updatedDetails.insert("ratings");
+        updatedDetails.insert(UPDATED_DETAIL::RATINGS);
       }
     }
   }
@@ -1375,7 +1377,7 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   if (ParameterNotNull(parameterObject, "imdbNumber"))
   {
     details.SetUniqueID(parameterObject["imdbNumber"].asString());
-    updatedDetails.insert("uniqueId");
+    updatedDetails.insert(UPDATED_DETAIL::UNIQUE_ID);
   }
   if (ParameterNotNull(parameterObject, "uniqueId"))
   {
@@ -1386,12 +1388,12 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
       if (idIt->second.isString() && !idIt->second.asString().empty())
       {
         details.SetUniqueID(idIt->second.asString(), idIt->first);
-        updatedDetails.insert("uniqueId");
+        updatedDetails.insert(UPDATED_DETAIL::UNIQUE_ID);
       }
       else if (idIt->second.isNull() && idIt->first != details.GetDefaultUniqueID())
       {
         details.RemoveUniqueID(idIt->first);
-        updatedDetails.insert("uniqueId");
+        updatedDetails.insert(UPDATED_DETAIL::UNIQUE_ID);
       }
     }
   }
@@ -1423,11 +1425,11 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
     details.SetPlotOutline(parameterObject["plotOutline"].asString());
 
   std::vector<std::string> credits(details.m_writingCredits);
-  UpdateVideoTagField(parameterObject, "writer", credits, updatedDetails);
+  UpdateVideoTagField(parameterObject, "writer", UPDATED_DETAIL::WRITER, credits, updatedDetails);
   details.SetWritingCredits(credits);
 
   std::vector<std::string> country(details.m_country);
-  UpdateVideoTagField(parameterObject, "country", country, updatedDetails);
+  UpdateVideoTagField(parameterObject, "country", UPDATED_DETAIL::COUNTRY, country, updatedDetails);
   details.SetCountry(country);
 
   CopyIfGiven(parameterObject, "top250", details.m_iTop250);
@@ -1438,37 +1440,37 @@ void CVideoLibrary::UpdateVideoTag(const CVariant& parameterObject,
   if (ParameterNotNull(parameterObject, "set"))
   {
     details.SetSet(parameterObject["set"].asString());
-    updatedDetails.insert("set");
+    updatedDetails.insert(UPDATED_DETAIL::SET);
   }
 
   std::vector<std::string> showLink(details.m_showLink);
-  UpdateVideoTagField(parameterObject, "showLink", showLink, updatedDetails);
+  UpdateVideoTagField(parameterObject, "showLink", UPDATED_DETAIL::SHOW_LINK, showLink, updatedDetails);
   details.SetShowLink(showLink);
 
   std::vector<std::string> tags(details.m_tags);
-  UpdateVideoTagField(parameterObject, "tag", tags, updatedDetails);
+  UpdateVideoTagField(parameterObject, "tag", UPDATED_DETAIL::TAG, tags, updatedDetails);
   details.SetTags(tags);
 
   if (ParameterNotNull(parameterObject, "thumbnail"))
   {
     std::string value = parameterObject["thumbnail"].asString();
     artwork[KODI::ART::TYPE::THUMB] = StringUtils::Trim(value);
-    updatedDetails.insert("art.altered");
+    updatedDetails.insert(UPDATED_DETAIL::ART);
   }
   if (ParameterNotNull(parameterObject, "fanart"))
   {
     std::string value = parameterObject["fanart"].asString();
     artwork[KODI::ART::TYPE::FANART] = StringUtils::Trim(value);
-    updatedDetails.insert("art.altered");
+    updatedDetails.insert(UPDATED_DETAIL::ART);
   }
 
   if (ParameterNotNull(parameterObject, "art") &&
       EditArtwork(parameterObject["art"], artwork, removedArtwork))
-    updatedDetails.insert("art.altered");
+    updatedDetails.insert(UPDATED_DETAIL::ART);
 
   if (ParameterNotNull(parameterObject, "dateAdded"))
   {
     SetFromDBDateTime(parameterObject["dateAdded"], details.m_dateAdded);
-    updatedDetails.insert("dateAdded");
+    updatedDetails.insert(UPDATED_DETAIL::DATE_ADDED);
   }
 }

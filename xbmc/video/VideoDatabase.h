@@ -58,6 +58,26 @@ namespace KODI::VIDEO
   struct SScanSettings;
 }
 
+/*!
+ * \brief The details an edit changed, as passed to CVideoDatabase::UpdateDetailsForMovie.
+ */
+namespace KODI::VIDEO::UPDATED_DETAIL
+{
+inline constexpr char ART[] = "art.altered";
+inline constexpr char ARTIST[] = "artist";
+inline constexpr char COUNTRY[] = "country";
+inline constexpr char DATE_ADDED[] = "dateadded";
+inline constexpr char DIRECTOR[] = "director";
+inline constexpr char GENRE[] = "genre";
+inline constexpr char RATINGS[] = "ratings";
+inline constexpr char SET[] = "set";
+inline constexpr char SHOW_LINK[] = "showlink";
+inline constexpr char STUDIO[] = "studio";
+inline constexpr char TAG[] = "tag";
+inline constexpr char UNIQUE_ID[] = "uniqueid";
+inline constexpr char WRITER[] = "writer";
+} // namespace KODI::VIDEO::UPDATED_DETAIL
+
 enum VideoDbDetails
 {
   VideoDbDetailsNone     = 0x00,
