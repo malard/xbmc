@@ -67,10 +67,9 @@ struct ContentMapping
 };
 
 // clang-format off
-const std::array<ContentMapping, 7> content = {{
-  {"unknown",     ADDON::ContentType::NONE,        231},
+const std::array<ContentMapping, 6> content = {{
+  {CONTENT::UNKNOWN,     ADDON::ContentType::NONE,        231},
   {CONTENT::ALBUMS,      ADDON::ContentType::ALBUMS,      132},
-  {"music",       ADDON::ContentType::ALBUMS,      132},
   {CONTENT::ARTISTS,     ADDON::ContentType::ARTISTS,     133},
   {CONTENT::MOVIES,      ADDON::ContentType::MOVIES,      20342},
   {CONTENT::TVSHOWS,     ADDON::ContentType::TVSHOWS,     20343},
