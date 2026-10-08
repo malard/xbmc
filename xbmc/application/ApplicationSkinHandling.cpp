@@ -95,15 +95,12 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     if (bPreviousPlayingState)
       appPlayer->Pause();
     appPlayer->FlushRenderer();
-    if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+    const int activeWindow = windowManager.GetActiveWindow();
+    if (activeWindow == WINDOW_FULLSCREEN_VIDEO || activeWindow == WINDOW_FULLSCREEN_GAME)
     {
       windowManager.ActivateWindow(WINDOW_HOME);
-      previousRenderingState = RENDERING_STATE::VIDEO;
-    }
-    else if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_GAME)
-    {
-      windowManager.ActivateWindow(WINDOW_HOME);
-      previousRenderingState = RENDERING_STATE::GAME;
+      previousRenderingState =
+          activeWindow == WINDOW_FULLSCREEN_VIDEO ? RENDERING_STATE::VIDEO : RENDERING_STATE::GAME;
     }
   }
 
