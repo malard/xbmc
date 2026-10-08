@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "dialogs/NumericInputMode.h"
 #include "interfaces/AnnouncementMessages.h"
 #include "interfaces/IAnnouncer.h"
 #include "media/MediaStreams.h"
@@ -457,21 +458,12 @@ struct Requested
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_INPUT_REQUESTED;
 
-  enum class Kind
-  {
-    Keyboard,
-    Password,
-    Number,
-    NumericPassword,
-    Date,
-    Time,
-    Seconds,
-    IPAddress,
-  };
-
-  Kind kind{Kind::Keyboard};
-  std::optional<std::string> title;
-  std::string value;
+  //! The numeric dialog's mode, or empty for the keyboard.
+  std::optional<KODI::DIALOGS::NUMERIC_MODE> numeric{};
+  //! The keyboard hides what is typed.
+  bool hidden{false};
+  std::optional<std::string> title{};
+  std::string value{};
 };
 
 struct Finished

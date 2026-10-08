@@ -19,7 +19,7 @@ TEST(TestGUIDialogNumeric, BackspaceInTheSecondsRemovesASecondsDigit)
   initial.minute = 42;
 
   CGUIDialogNumeric dialog;
-  dialog.SetMode(CGUIDialogNumeric::INPUT_TIME_SECONDS, initial);
+  dialog.SetMode(KODI::DIALOGS::NUMERIC_MODE::TIME_SECONDS, initial);
 
   dialog.OnAction(CAction(ACTION_NEXT_ITEM));
   dialog.OnAction(CAction(ACTION_NEXT_ITEM));
@@ -35,7 +35,7 @@ TEST(TestGUIDialogNumeric, BackspaceInTheSecondsRemovesASecondsDigit)
 TEST(TestGUIDialogNumeric, TheSecondsCanBeReachedAfterTextInput)
 {
   CGUIDialogNumeric dialog;
-  dialog.SetMode(CGUIDialogNumeric::INPUT_TIME_SECONDS, "01:42:00");
+  dialog.SetMode(KODI::DIALOGS::NUMERIC_MODE::TIME_SECONDS, "01:42:00");
 
   dialog.OnAction(CAction(ACTION_NEXT_ITEM));
   dialog.OnAction(CAction(ACTION_NEXT_ITEM));
@@ -60,7 +60,7 @@ unsigned short DayAfterConfirming(unsigned short day,
   date.year = year;
 
   CGUIDialogNumeric dialog;
-  dialog.SetMode(CGUIDialogNumeric::INPUT_DATE, date);
+  dialog.SetMode(KODI::DIALOGS::NUMERIC_MODE::DATE, date);
   for (int i = 0; i < blocks; ++i)
     dialog.OnAction(CAction(ACTION_NEXT_ITEM));
   return dialog.GetOutput().day;

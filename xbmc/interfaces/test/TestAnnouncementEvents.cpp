@@ -268,25 +268,26 @@ TEST(TestAnnouncementEvents, OnlyScansAndCleansAreTransactions)
 TEST(TestAnnouncementEvents, InputEvents)
 {
   using namespace EVENT::INPUT;
-  using enum Requested::Kind;
+  using enum KODI::DIALOGS::NUMERIC_MODE;
   EXPECT_EQ(Input, FlagOf(InputEvent{Finished{}}));
   EXPECT_STREQ("OnInputRequested", MessageOf(InputEvent{Requested{}}));
   EXPECT_STREQ("OnInputFinished", MessageOf(InputEvent{Finished{}}));
 
-  ExpectData(InputEvent{Requested{Keyboard, "Search", "abc"}},
+  ExpectData(InputEvent{Requested{.title = "Search", .value = "abc"}},
              R"({"type":"keyboard","title":"Search","value":"abc"})");
-  ExpectData(InputEvent{Requested{Password, "PIN", ""}},
+  ExpectData(InputEvent{Requested{.hidden = true, .title = "PIN", .value = ""}},
              R"({"type":"password","title":"PIN","value":""})");
-  ExpectData(InputEvent{Requested{NumericPassword, std::nullopt, "12"}},
+  ExpectData(InputEvent{Requested{.numeric = PASSWORD, .value = "12"}},
              R"({"type":"numericpassword","value":"12"})");
-  ExpectData(InputEvent{Requested{Number, std::nullopt, "7"}}, R"({"type":"number","value":"7"})");
-  ExpectData(InputEvent{Requested{Date, std::nullopt, "01/02/2026"}},
+  ExpectData(InputEvent{Requested{.numeric = NUMBER, .value = "7"}},
+             R"({"type":"number","value":"7"})");
+  ExpectData(InputEvent{Requested{.numeric = DATE, .value = "01/02/2026"}},
              R"({"type":"date","value":"01/02/2026"})");
-  ExpectData(InputEvent{Requested{Time, std::nullopt, "12:30"}},
+  ExpectData(InputEvent{Requested{.numeric = TIME, .value = "12:30"}},
              R"({"type":"time","value":"12:30"})");
-  ExpectData(InputEvent{Requested{Seconds, std::nullopt, "90"}},
+  ExpectData(InputEvent{Requested{.numeric = TIME_SECONDS, .value = "90"}},
              R"({"type":"seconds","value":"90"})");
-  ExpectData(InputEvent{Requested{IPAddress, std::nullopt, "10.0.0.1"}},
+  ExpectData(InputEvent{Requested{.numeric = IP_ADDRESS, .value = "10.0.0.1"}},
              R"({"type":"ip","value":"10.0.0.1"})");
   EXPECT_TRUE(EventDataOf(InputEvent{Finished{}}).isNull());
 }

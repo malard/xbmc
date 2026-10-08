@@ -237,10 +237,9 @@ void CGUIDialogKeyboardGeneric::OnInitWindow()
   SET_CONTROL_LABEL(CTL_LABEL_HZCODE, "");
   SET_CONTROL_LABEL(CTL_LABEL_HZLIST, "");
 
-  using Kind = ANNOUNCEMENT::EVENT::INPUT::Requested::Kind;
   CServiceBroker::GetAnnouncementManager()->Announce(
       ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Requested{
-          !m_hiddenInput ? Kind::Keyboard : Kind::Password, m_strHeading, GetText()}});
+          .hidden = m_hiddenInput, .title = m_strHeading, .value = GetText()}});
 }
 
 bool CGUIDialogKeyboardGeneric::OnAction(const CAction &action)

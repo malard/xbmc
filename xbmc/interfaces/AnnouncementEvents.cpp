@@ -52,29 +52,28 @@ CVariant SpeedAndPlayers(int speed, KODI::MEDIA::Streams streams)
   return data;
 }
 
-const char* KindNameOf(EVENT::INPUT::Requested::Kind kind)
+const char* InputNameOf(const EVENT::INPUT::Requested& requested)
 {
-  using enum EVENT::INPUT::Requested::Kind;
-  switch (kind)
+  if (!requested.numeric)
+    return requested.hidden ? "password" : "keyboard";
+
+  using enum KODI::DIALOGS::NUMERIC_MODE;
+  switch (*requested.numeric)
   {
-    case Keyboard:
-      return "keyboard";
-    case Password:
-      return "password";
-    case Number:
-      return "number";
-    case NumericPassword:
-      return "numericpassword";
-    case Date:
-      return "date";
-    case Time:
+    case TIME:
       return "time";
-    case Seconds:
-      return "seconds";
-    case IPAddress:
+    case DATE:
+      return "date";
+    case IP_ADDRESS:
       return "ip";
+    case PASSWORD:
+      return "numericpassword";
+    case NUMBER:
+      return "number";
+    case TIME_SECONDS:
+      break;
   }
-  return "keyboard";
+  return "seconds";
 }
 
 std::string ListNameOf(const std::optional<KODI::PLAYLIST::Type>& list)
@@ -263,7 +262,7 @@ CVariant DataOfEvent(const InputEvent& event)
   CVariant data;
   if (const auto* requested = std::get_if<EVENT::INPUT::Requested>(&event))
   {
-    data["type"] = KindNameOf(requested->kind);
+    data["type"] = InputNameOf(*requested);
     if (requested->title)
       data["title"] = *requested->title;
     data["value"] = requested->value;
