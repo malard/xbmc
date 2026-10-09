@@ -28,6 +28,7 @@
 #include "settings/SettingUtils.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ArtTypes.h"
 #include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
@@ -84,14 +85,16 @@ std::vector<std::string> GetSettingListAsString(const std::string& settingID)
 }
 
 const std::map<std::string, std::vector<std::string>> artTypeDefaults = {
-    {NameOf(MEDIA::TYPE::EPISODE), {"thumb"}},
-    {NameOf(MEDIA::TYPE::TV_SHOW), {"poster", "fanart", "banner"}},
-    {NameOf(MEDIA::TYPE::SEASON), {"poster", "fanart", "banner"}},
-    {NameOf(MEDIA::TYPE::MOVIE), {"poster", "fanart"}},
-    {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), {"poster", "fanart"}},
-    {NameOf(MEDIA::TYPE::MUSIC_VIDEO), {"poster", "fanart"}},
-    {NameOf(MEDIA::TYPE::VIDEO_VERSION), {"poster", "fanart", "banner", "thumb"}},
-    {NameOf(MEDIA::TYPE::NONE), {"poster", "fanart", "banner", "thumb"}},
+    {NameOf(MEDIA::TYPE::EPISODE), {ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::TV_SHOW), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
+    {NameOf(MEDIA::TYPE::SEASON), {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER}},
+    {NameOf(MEDIA::TYPE::MOVIE), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::VIDEO_COLLECTION), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::MUSIC_VIDEO), {ART::TYPE::POSTER, ART::TYPE::FANART}},
+    {NameOf(MEDIA::TYPE::VIDEO_VERSION),
+     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
+    {NameOf(MEDIA::TYPE::NONE),
+     {ART::TYPE::POSTER, ART::TYPE::FANART, ART::TYPE::BANNER, ART::TYPE::THUMB}},
 };
 
 const std::vector<std::string> artTypeDefaultsFallback = {};
@@ -233,8 +236,8 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
   if (artwork.empty())
   {
     std::vector<std::string> artTypes = GetArtTypes(pItem->HasVideoInfoTag() ? pItem->GetVideoInfoTag()->m_type : "");
-    if (find(artTypes.begin(), artTypes.end(), "thumb") == artTypes.end())
-      artTypes.emplace_back("thumb"); // always look for "thumb" art for files
+    if (find(artTypes.begin(), artTypes.end(), ART::TYPE::THUMB) == artTypes.end())
+      artTypes.emplace_back(ART::TYPE::THUMB); // always look for "thumb" art for files
     for (std::vector<std::string>::const_iterator i = artTypes.begin(); i != artTypes.end(); ++i)
     {
       std::string type = *i;
@@ -270,14 +273,14 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
     KODI::ART::Artwork artwork = pItem->GetArt();
     std::vector<std::string> artTypes =
         GetArtTypes(pItem->HasVideoInfoTag() ? pItem->GetVideoInfoTag()->m_type : "");
-    if (find(artTypes.begin(), artTypes.end(), "thumb") == artTypes.end())
-      artTypes.emplace_back("thumb"); // always look for "thumb" art for files
+    if (find(artTypes.begin(), artTypes.end(), ART::TYPE::THUMB) == artTypes.end())
+      artTypes.emplace_back(ART::TYPE::THUMB); // always look for "thumb" art for files
     for (std::vector<std::string>::const_iterator i = artTypes.begin(); i != artTypes.end(); ++i)
     {
       std::string type = *i;
       if (!pItem->HasArt(type))
       {
-        std::string art = GetLocalArt(*pItem, type, type == "fanart");
+        std::string art = GetLocalArt(*pItem, type, type == ART::TYPE::FANART);
         if (!art.empty()) // cache it
         {
           SetCachedImage(*pItem, type, art);
@@ -308,7 +311,7 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
   if (!pItem->IsFolder() && VIDEO::IsVideo(*pItem))
   {
     const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-    if (!pItem->HasArt("thumb"))
+    if (!pItem->HasArt(ART::TYPE::THUMB))
     {
       std::string thumbURL = GetEmbeddedThumbURL(*pItem);
       if (CDVDFileInfo::CanExtract(*pItem) &&
@@ -316,13 +319,13 @@ bool CVideoThumbLoader::LoadItemLookup(CFileItem* pItem)
           settings->GetInt(CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL) !=
               CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_NONE)
       {
-        pItem->SetArt("thumb", thumbURL);
+        pItem->SetArt(ART::TYPE::THUMB, thumbURL);
 
         if (pItem->HasVideoInfoTag())
         {
           CVideoInfoTag* info = pItem->GetVideoInfoTag();
           if (info->m_iDbId > 0 && !info->m_type.empty())
-            m_videoDatabase->SetArtForItem(info->m_iDbId, info->m_type, "thumb", thumbURL);
+            m_videoDatabase->SetArtForItem(info->m_iDbId, info->m_type, ART::TYPE::THUMB, thumbURL);
         }
       }
     }
@@ -504,7 +507,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
         if (!artmap.empty())
         {
           item.AppendArt(artmap, NameOf(MEDIA::TYPE::TV_SHOW));
-          item.SetArtFallback("fanart", "tvshow.fanart");
+          item.SetArtFallback(ART::TYPE::FANART, "tvshow.fanart");
           item.SetArtFallback("tvshow.thumb", "tvshow.poster");
         }
       }
@@ -533,17 +536,17 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
 
 bool CVideoThumbLoader::FillThumb(CFileItem &item)
 {
-  if (item.HasArt("thumb"))
+  if (item.HasArt(ART::TYPE::THUMB))
     return true;
-  std::string thumb = GetCachedImage(item, "thumb");
+  std::string thumb = GetCachedImage(item, ART::TYPE::THUMB);
   if (thumb.empty())
   {
-    thumb = GetLocalArt(item, "thumb");
+    thumb = GetLocalArt(item, ART::TYPE::THUMB);
     if (!thumb.empty())
-      SetCachedImage(item, "thumb", thumb);
+      SetCachedImage(item, ART::TYPE::THUMB, thumb);
   }
   if (!thumb.empty())
-    item.SetArt("thumb", thumb);
+    item.SetArt(ART::TYPE::THUMB, thumb);
   else
   {
     // If nothing was found, try embedded art
@@ -551,7 +554,7 @@ bool CVideoThumbLoader::FillThumb(CFileItem &item)
     {
       for (auto& it : item.GetVideoInfoTag()->m_coverArt)
       {
-        if (it.m_type == "thumb")
+        if (it.m_type == ART::TYPE::THUMB)
         {
           thumb = IMAGE_FILES::URLFromFile(item.GetPath(), "video_" + it.m_type);
           item.SetArt(it.m_type, thumb);
@@ -594,7 +597,7 @@ std::string CVideoThumbLoader::GetLocalArt(const CFileItem &item, const std::str
     if (art.empty())
       art = item.FindLocalArt(type + ".png", checkFolder);
   }
-  if (art.empty() && (type.empty() || type == "thumb"))
+  if (art.empty() && (type.empty() || type == ART::TYPE::THUMB))
   { // backward compatibility
     art = item.FindLocalArt("", false);
     if (art.empty() &&

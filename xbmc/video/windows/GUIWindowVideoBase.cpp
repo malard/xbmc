@@ -50,6 +50,7 @@
 #include "settings/SettingsComponent.h"
 #include "settings/dialogs/GUIDialogContentSettings.h"
 #include "storage/MediaManager.h"
+#include "utils/ArtTypes.h"
 #include "utils/ContentNames.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
@@ -519,7 +520,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
 
     pDlgInfo->SetMovie(item.get());
     pDlgInfo->Open();
-    item->SetArt("thumb", pDlgInfo->GetThumbnail());
+    item->SetArt(ART::TYPE::THUMB, pDlgInfo->GetThumbnail());
     needsRefresh = pDlgInfo->NeedRefresh();
     if (needsRefresh && pDlgInfo->GetCurrentListItem() != nullptr)
     {
@@ -1208,7 +1209,7 @@ bool CGUIWindowVideoBase::GetDirectory(const std::string &strDirectory, CFileIte
     CFileItemPtr newPlaylist(new CFileItem(profileManager->GetUserDataItem("PartyMode-Video.xsp"),false));
     newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16035));
     newPlaylist->SetLabelPreformatted(true);
-    newPlaylist->SetArt("icon", "DefaultPartyMode.png");
+    newPlaylist->SetArt(ART::TYPE::ICON, "DefaultPartyMode.png");
     newPlaylist->SetFolder(true);
     items.Add(newPlaylist);
 
@@ -1221,7 +1222,7 @@ bool CGUIWindowVideoBase::GetDirectory(const std::string &strDirectory, CFileIte
         std::make_shared<CFileItem>(std::string{PLACEHOLDER::NEW_SMART_PLAYLIST} + "video", false);
     newPlaylist->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
         21437)); // "new smart playlist..."
-    newPlaylist->SetArt("icon", "DefaultAddSource.png");
+    newPlaylist->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
     newPlaylist->SetLabelPreformatted(true);
     items.Add(newPlaylist);
   }

@@ -47,6 +47,8 @@
 #include <utility>
 #include <vector>
 
+using KODI::MEDIA::MediaSection;
+
 static constexpr unsigned int CONTROL_BUTTON_ADD_VERSION = 22;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_VERSION = 24;
 static constexpr unsigned int CONTROL_BUTTON_SET_DEFAULT = 25;
@@ -915,7 +917,8 @@ bool CGUIDialogVideoManagerVersions::AddVideoVersionFilePicker()
   const KODI::MEDIA::TYPE mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
 
   // prompt to choose a video file
-  std::vector<CMediaSource> sources{*CMediaSourceSettings::GetInstance().GetSources("files")};
+  std::vector<CMediaSource> sources{
+      CMediaSourceSettings::GetInstance().GetSources(MediaSection::FILES)};
 
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
   CServiceBroker::GetMediaManager().GetNetworkLocations(sources);
