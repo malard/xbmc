@@ -5699,7 +5699,7 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
   }
 }
 
-void CVideoDatabase::UpdateArtForItem(int mediaId, MEDIA::TYPE mediaType) const
+void CVideoDatabase::UpdateArtForItem(int mediaId, const std::string& mediaType) const
 {
   AnnounceUpdate(mediaType, mediaId);
 }
@@ -12466,8 +12466,13 @@ void CVideoDatabase::AnnounceRemove(MEDIA::TYPE content, int id, bool scanning /
 
 void CVideoDatabase::AnnounceUpdate(MEDIA::TYPE content, int id)
 {
+  AnnounceUpdate(NameOf(content), id);
+}
+
+void CVideoDatabase::AnnounceUpdate(const std::string& mediaType, int id)
+{
   CVariant data;
-  data["type"] = NameOf(content);
+  data["type"] = mediaType;
   data["id"] = id;
   CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate", data);
 }
