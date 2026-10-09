@@ -27,7 +27,6 @@
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "filesystem/AddonsDirectory.h"
-#include "filesystem/AddonsPaths.h"
 #include "filesystem/Directory.h"
 #include "filesystem/MultiPathDirectory.h"
 #include "filesystem/PlaylistDirectory.h"

@@ -127,7 +127,6 @@ CApplicationMessageHandling::CApplicationMessageHandling(CApplication& app)
 void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage* pMsg)
 {
   CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
-  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   uint32_t msg = pMsg->dwMessage;
   if (msg == TMSG_SYSTEM_POWERDOWN)
   {
@@ -267,7 +266,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       newEvent.resize.height = pMsg->param2;
       newEvent.resize.scale = 1.0;
       this->OnEvent(newEvent);
-      windowManager.MarkDirty();
+      CServiceBroker::GetGUI()->GetWindowManager().MarkDirty();
     }
     break;
 
@@ -326,13 +325,13 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       if (appPlayer->IsPlayingVideo())
         m_app.StopPlaying();
 
-      if (windowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
-        windowManager.PreviousWindow();
+      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+        CServiceBroker::GetGUI()->GetWindowManager().PreviousWindow();
       appPower->ResetScreenSaver();
       appPower->WakeUpScreenSaverAndDPMS();
 
-      if (windowManager.GetActiveWindow() != WINDOW_SLIDESHOW)
-        windowManager.ActivateWindow(WINDOW_SLIDESHOW);
+      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
+        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SLIDESHOW);
       if (URIUtils::IsZIP(pMsg->strParam) || URIUtils::IsRAR(pMsg->strParam)) // actually a cbz/cbr
       {
         CFileItemList items;
@@ -389,7 +388,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
         slideShow.StartSlideShow(); //Start the slideshow!
       }
 
-      if (windowManager.GetActiveWindow() != WINDOW_SLIDESHOW)
+      if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() != WINDOW_SLIDESHOW)
       {
         if (items.IsEmpty())
         {
@@ -398,7 +397,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
           appPower->ActivateScreenSaver();
         }
         else
-          windowManager.ActivateWindow(WINDOW_SLIDESHOW);
+          CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SLIDESHOW);
       }
     }
     break;

@@ -471,7 +471,7 @@ bool CMusicGUIInfo::GetLabel(std::string& value,
       if (appPlayer->IsPlayingAudio())
       {
         if (fallback)
-          *fallback = "DefaultAlbumCover.png";
+          *fallback = ART::DEFAULT::ALBUM_COVER;
         value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
                                                : ART::DEFAULT::ALBUM_COVER;
         return true;

@@ -731,7 +731,7 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
       if (m_appPlayer->IsPlayingVideo())
       {
         if (fallback)
-          *fallback = "DefaultVideoCover.png";
+          *fallback = ART::DEFAULT::VIDEO_COVER;
 
         value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
                                                : ART::DEFAULT::VIDEO_COVER;

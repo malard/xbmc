@@ -9,6 +9,8 @@
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
+#include "resources/LocalizeStrings.h"
+#include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -1019,4 +1021,12 @@ TEST_F(TestTitleFromPath, DecodesAnArchiveNameOnlyWhenItsParentIsAUrl)
       CUtil::GetTitleFromPath("zip://davs%3a%2f%2fserver%2ffiles%2f100%2525%2520proof.zip/", true));
   EXPECT_EQ("100%20proof.zip",
             CUtil::GetTitleFromPath("zip://%2fmedia%2f100%2520proof.zip/", true));
+}
+
+TEST_F(TestTitleFromPath, NamesThePlaylistsFolders)
+{
+  const std::string playlists{
+      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136)};
+  EXPECT_EQ(playlists, CUtil::GetTitleFromPath("special://musicplaylists/"));
+  EXPECT_EQ(playlists, CUtil::GetTitleFromPath("special://videoplaylists/"));
 }
