@@ -17,6 +17,7 @@
 #include "filesystem/MultiPathDirectory.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/AnnouncementManager.h"
+#include "playlists/SmartPlayList.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/Artwork.h"
 #include "utils/DatabaseUtils.h"
@@ -421,6 +422,27 @@ TEST_F(TestVideoDatabase, ATvShowDirectorFoundBySearchListsTheirShows)
   ASSERT_TRUE(m_db.GetTvShowsByWhere(directors[0]->GetPath(), CDatabase::Filter(), shows));
   ASSERT_EQ(1, shows.Size());
   EXPECT_EQ(idShow, shows[0]->GetVideoInfoTag()->m_iDbId);
+}
+
+TEST_F(TestVideoDatabase, ASmartPlaylistGenreRuleFindsAMovieOfThatGenre)
+{
+  CVideoInfoTag drama{Tag("/videos/drama.mkv")};
+  drama.SetGenre({"Drama"});
+  const int idMovie{m_db.SetDetailsForMovie(drama, KODI::ART::Artwork{})};
+  ASSERT_GT(idMovie, 0);
+  ASSERT_GT(AddMovie("/videos/other.mkv"), 0);
+
+  KODI::PLAYLIST::CSmartPlaylistRule rule;
+  rule.m_field = static_cast<int>(Field::GENRE);
+  rule.m_operator = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
+  rule.m_parameter = {"Drama"};
+  const std::string where{rule.GetWhereClause(m_db, "movies")};
+  EXPECT_NE(std::string::npos, where.find("genre_link.media_type = 'movie'")) << where;
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter{where}, items));
+  ASSERT_EQ(1, items.Size());
+  EXPECT_EQ(idMovie, items[0]->GetVideoInfoTag()->m_iDbId);
 }
 
 TEST_F(TestVideoDatabase, GetPlayCountsListingInsideArchiveAcrossZipAndArchiveProtocols)

@@ -771,8 +771,9 @@ public:
    */
   static std::string ToStoredPath(const std::string& directory);
 
-  /*! \brief The id column of the table holding \p type, which NameOf(type) names.
-   \return empty for a type without a table of its own
+  /*! \brief The id column of the movie, tvshow, episode or musicvideo table, whichever holds
+   \p type.
+   \return empty for any other type
    */
   static std::string_view IdColumnOf(KODI::MEDIA::TYPE type);
 
