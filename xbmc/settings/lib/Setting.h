@@ -16,6 +16,7 @@
 #include "SettingLevel.h"
 #include "SettingType.h"
 #include "SettingUpdate.h"
+#include "threads/CriticalSection.h"
 #include "threads/SharedSection.h"
 #include "utils/logtypes.h"
 
@@ -132,7 +133,8 @@ protected:
 
    The callbacks run with m_critical released, unless the caller already holds it, because
    one of them reading this setting back on another thread would otherwise deadlock against
-   the write. validate is the exception: it is called while the lock is held.
+   the write. validate is the exception: it is called while the lock is held. m_writeSection
+   is held throughout.
 
    \return false where the value was invalid, or a callback refused it and it was reverted.
    */
@@ -151,6 +153,9 @@ protected:
   std::set<CSettingUpdate> m_updates;
   bool m_changed = false;
   mutable CSharedSection m_critical;
+  //! Held by a writer from before its value is stored until its callbacks finish, so writers apply
+  //! one at a time while readers take only m_critical. Taken before m_critical.
+  mutable CCriticalSection m_writeSection;
 
   std::string m_referencedId;
 
