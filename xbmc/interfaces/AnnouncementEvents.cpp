@@ -226,7 +226,8 @@ CVariant DataOfEvent(const LibraryEvent& event)
   {
     if (!update->item)
     {
-      data["type"] = KODI::MEDIA::NameOf(update->type);
+      data["type"] =
+          update->otherType.empty() ? KODI::MEDIA::NameOf(update->type) : update->otherType;
       data["id"] = update->id;
     }
     if (update->transaction)

@@ -1019,7 +1019,8 @@ public:
   */
   unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
-  void UpdateArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType) const;
+  //! \brief Announce the art of an item changed, by the stored media type its art rows carry.
+  void UpdateArtForItem(int mediaId, const std::string& mediaType) const;
 
   /*!
    * \brief Retrieve all art for the given video asset, with optional fallback to the art of the

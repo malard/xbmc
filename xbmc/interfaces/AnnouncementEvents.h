@@ -390,6 +390,8 @@ struct Update
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_UPDATE;
 
   KODI::MEDIA::TYPE type{KODI::MEDIA::TYPE::NONE};
+  //! The stored type of an item no KODI::MEDIA::TYPE names, such as an actor, in place of type.
+  std::string otherType{};
   int id{-1};
   //! The item itself, when the sender has it: the data JSON-RPC and Python are given then
   //! describes it under "item" in place of the type and id.

@@ -5789,10 +5789,17 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
   }
 }
 
-void CVideoDatabase::UpdateArtForItem(int mediaId, MEDIA::TYPE mediaType) const
+void CVideoDatabase::UpdateArtForItem(int mediaId, const std::string& mediaType) const
 {
-  if (m_announceUpdates)
-    AnnounceUpdate(mediaType, mediaId);
+  if (!m_announceUpdates)
+    return;
+
+  const MEDIA::TYPE type{MEDIA::MediaTypeOf(mediaType)};
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+          .type = type,
+          .otherType = type == MEDIA::TYPE::NONE ? mediaType : std::string{},
+          .id = mediaId}});
 }
 
 bool CVideoDatabase::GetArtForAsset(int assetId,

@@ -228,6 +228,8 @@ TEST(TestAnnouncementEvents, LibraryUpdateData)
              R"({"type":"song","id":2,"transaction":true,"added":true})");
   ExpectData(VideoLibraryEvent{Update{.type = KODI::MEDIA::TYPE::NONE, .id = -1}},
              R"({"type":"","id":-1})");
+  ExpectData(VideoLibraryEvent{Update{.otherType = "actor", .id = 3}},
+             R"({"type":"actor","id":3})");
 
   // An item names itself; the announcement manager adds it to the data.
   const auto item = std::make_shared<CFileItem>("/movies/film.mkv", false);
