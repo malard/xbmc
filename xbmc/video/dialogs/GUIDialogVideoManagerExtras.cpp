@@ -35,6 +35,8 @@
 #include <algorithm>
 #include <string>
 
+using KODI::MEDIA::MediaSection;
+
 static constexpr unsigned int CONTROL_BUTTON_ADD_EXTRAS = 23;
 static constexpr unsigned int CONTROL_BUTTON_RENAME_EXTRA = 28;
 
@@ -112,7 +114,8 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
   const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->m_type};
 
   // prompt to choose a video file
-  std::vector<CMediaSource> sources{*CMediaSourceSettings::GetInstance().GetSources("files")};
+  std::vector<CMediaSource> sources{
+      CMediaSourceSettings::GetInstance().GetSources(MediaSection::FILES)};
 
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
   CServiceBroker::GetMediaManager().GetNetworkLocations(sources);

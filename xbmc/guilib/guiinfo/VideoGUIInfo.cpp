@@ -36,6 +36,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
+#include "utils/ArtTypes.h"
 #include "utils/AspectRatioVocabulary.h"
 #include "utils/StreamDetails.h"
 #include "utils/StringUtils.h"
@@ -144,7 +145,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
     CLog::Log(LOGDEBUG, "CVideoGUIInfo::InitCurrentItem({})", CURL::GetRedacted(item->GetPath()));
 
     // Find a thumb for this file.
-    if (!item->HasArt("thumb"))
+    if (!item->HasArt(ART::TYPE::THUMB))
     {
       CVideoThumbLoader loader;
       loader.LoadItem(item);
@@ -161,7 +162,7 @@ bool CVideoGUIInfo::InitCurrentItem(CFileItem* item)
 
         CVideoThumbLoader loader;
         if (loader.FillThumb(thumbItem))
-          item->SetArt("thumb", thumbItem.GetArt("thumb"));
+          item->SetArt(ART::TYPE::THUMB, thumbItem.GetArt(ART::TYPE::THUMB));
       }
     }
     return true;
@@ -759,7 +760,8 @@ bool CVideoGUIInfo::GetLabel(std::string& value,
         if (fallback)
           *fallback = "DefaultVideoCover.png";
 
-        value = item->HasArt("thumb") ? item->GetArt("thumb") : "DefaultVideoCover.png";
+        value = item->HasArt(ART::TYPE::THUMB) ? item->GetArt(ART::TYPE::THUMB)
+                                               : "DefaultVideoCover.png";
         return true;
       }
       break;
@@ -863,7 +865,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
 
   const CFileItemPtr playlistItem = playlist[index];
   // try to set a thumbnail
-  if (!playlistItem->HasArt("thumb"))
+  if (!playlistItem->HasArt(ART::TYPE::THUMB))
   {
     CVideoThumbLoader loader;
     loader.LoadItem(playlistItem.get());
@@ -875,7 +877,7 @@ bool CVideoGUIInfo::GetPlaylistInfo(std::string& value, const CGUIInfo& info) co
   }
   else if (info.GetInfo() == VIDEOPLAYER_COVER)
   {
-    value = playlistItem->GetArt("thumb");
+    value = playlistItem->GetArt(ART::TYPE::THUMB);
     return true;
   }
   else if (info.GetInfo() == VIDEOPLAYER_ART)
