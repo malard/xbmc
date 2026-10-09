@@ -6,6 +6,7 @@ set(SOURCES TestBookmark.cpp
             TestVideoDatabase.cpp
             TestVideoDatabaseContentGeometry.cpp
             TestVideoDatabaseDeclaredAspect.cpp
+            TestVideoDbPaths.cpp
             TestVideoDbUrl.cpp
             TestVideoFileItemClassify.cpp
             TestVideoInfoTag.cpp
