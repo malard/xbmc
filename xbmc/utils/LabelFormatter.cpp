@@ -23,6 +23,7 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ItemProperties.h"
 #include "video/VideoInfoTag.h"
 
 #include <cassert>
@@ -214,13 +215,17 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
     value = CUtil::GetTitleFromPath(item->GetPath(), item->IsFolder() && !item->IsFileFolder());
     break;
   case 'L':
+  {
     value = item->GetLabel();
-    // is the label the actual file or folder name?
-    if (value == URIUtils::GetFileName(item->GetPath()))
+    // is the label the actual file or folder name? A VFS that escapes its names hands the
+    // label over decoded, so the escaped form has to be compared as well.
+    const std::string& path = item->GetPath();
+    if (value == URIUtils::GetFileName(path) || value == URIUtils::GetDecodedFileName(path))
     { // label is the same as filename, clean it up as appropriate
       value = CUtil::GetTitleFromPath(item->GetPath(), item->IsFolder() && !item->IsFileFolder());
     }
     break;
+  }
   case 'D':
     { // duration
       int nDuration=0;
@@ -372,8 +377,8 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
       value = pic->GetDateTimeTaken().GetAsLocalizedDate();
     break;
   case 's': // Addon status
-    if (item->HasProperty("Addon.Status"))
-      value = item->GetProperty("Addon.Status").asString();
+    if (item->HasProperty(KODI::ITEM::PROPERTY::ADDON_STATUS))
+      value = item->GetProperty(KODI::ITEM::PROPERTY::ADDON_STATUS).asString();
     break;
   case 'i': // Install date
     if (item->HasAddonInfo() && item->GetAddonInfo()->InstallDate().IsValid())

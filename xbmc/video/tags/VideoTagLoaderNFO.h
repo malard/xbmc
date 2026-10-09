@@ -42,6 +42,12 @@ public:
   //! \brief Returns the bluray playlist from a <playlist> nfo element, -1 if there isn't one.
   int GetBlurayPlaylist() const override;
 
+  //! \brief Returns the parts from a <stack> nfo element, empty if there isn't one.
+  std::vector<XFILE::StackPartPlaylist> GetStackParts() const override;
+
+  //! \brief Returns the path of the nfo file, empty if none was found.
+  const std::string& GetNFOPath() const { return m_path; }
+
 protected:
   //! \brief Find nfo file for item
   //! \param item The item to find NFO file for

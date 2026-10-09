@@ -23,6 +23,7 @@
 #include "music/MusicFileItemClassify.h"
 #include "music/tags/MusicInfoTag.h"
 #include "network/upnp/UPnP.h"
+#include "utils/ItemProperties.h"
 #include "utils/Variant.h"
 #include "video/Bookmark.h"
 #include "video/VideoDatabase.h"
@@ -46,10 +47,10 @@ void CSaveFileState::DoWork(CFileItem& item,
         item.GetVideoInfoTag()
             ->m_strFileNameAndPath; // we need the file url of the video db item to create the bookmark
   }
-  else if (item.HasProperty("original_listitem_url"))
+  else if (item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
   {
     // only use original_listitem_url for Python, UPnP and Bluray sources
-    std::string original = item.GetProperty("original_listitem_url").asString();
+    std::string original = item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
     if (URIUtils::IsPlugin(original) || URIUtils::IsUPnP(original) ||
         URIUtils::IsBlurayPath(item.GetPath()))
       progressTrackingFile = original;
@@ -67,8 +68,9 @@ void CSaveFileState::DoWork(CFileItem& item,
         CFileItem updatedItem(item);
         if (updatedItem.HasVideoInfoTag())
           updatedItem.GetVideoInfoTag()->SetResumePoint(bookmark);
-        if (updatedItem.HasProperty("original_listitem_url"))
-          updatedItem.SetPath(updatedItem.GetProperty("original_listitem_url").asString());
+        if (updatedItem.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
+          updatedItem.SetPath(
+              updatedItem.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString());
         else
           updatedItem.SetPath(
               progressTrackingFile); // fallback to progressTrackingFile which should be the upnp path
@@ -101,7 +103,7 @@ void CSaveFileState::DoWork(CFileItem& item,
           if (videodatabase.LoadVideoInfo(progressTrackingFile, *tag))
           {
             item.SetPath(progressTrackingFile);
-            item.ClearProperty("original_listitem_url");
+            item.ClearProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL);
             tag->m_streamDetails = streams;
           }
         }
@@ -132,7 +134,7 @@ void CSaveFileState::DoWork(CFileItem& item,
               if (item.HasVideoInfoTag())
               {
                 if (item.GetVideoInfoTag()->IncrementPlayCount())
-                  item.SetProperty("playcount_incremented", CVariant{true});
+                  item.SetProperty(ITEM::PROPERTY::PLAYCOUNT_INCREMENTED, CVariant{true});
 
                 if (newLastPlayed.IsValid())
                   item.GetVideoInfoTag()->m_lastPlayed = newLastPlayed;
@@ -232,21 +234,23 @@ void CSaveFileState::DoWork(CFileItem& item,
                   !URIUtils::IsStack(tag->m_strFileNameAndPath) &&
                   tag->m_strFileNameAndPath != item.GetDynPath())
                 return true; // Bluray path to update
-              if (item.GetProperty("new_playlist_path").asBoolean(false))
+              if (item.GetProperty(ITEM::PROPERTY::NEW_PLAYLIST_PATH).asBoolean(false))
                 return true; // Bluray playlist replaced by user selection
-              if (item.GetProperty("new_stack_path").asBoolean(false))
+              if (item.GetProperty(ITEM::PROPERTY::NEW_STACK_PATH).asBoolean(false))
                 return true; // Stack path to update
               return false;
             }()};
 
+        int replacedFileId{-1};
         if (updateNeeded)
         {
           videodatabase.BeginTransaction();
           // tag->m_iFileId contains the idFile originally played and may be different to the idFile
           // in the movie table entry if it's a non-default video version
+          const int oldFileId{tag->m_iFileId};
           const int newFileId{videodatabase.SetFileForMedia(
               progressTrackingFile, item.GetVideoContentType(), tag->m_iDbId,
-              CVideoDatabase::FileRecord{.m_idFile = tag->m_iFileId,
+              CVideoDatabase::FileRecord{.m_idFile = oldFileId,
                                          .m_playCount = tag->GetPlayCount(),
                                          .m_lastPlayed = tag->m_lastPlayed,
                                          .m_dateAdded = tag->m_dateAdded})};
@@ -254,6 +258,13 @@ void CSaveFileState::DoWork(CFileItem& item,
           {
             videodatabase.CommitTransaction();
             item.GetVideoInfoTag()->m_iFileId = newFileId;
+            if (newFileId != oldFileId)
+            {
+              CLog::LogF(LOGDEBUG, "{} {} now uses file {} ({}) instead of file {}", tag->m_type,
+                         tag->m_iDbId, newFileId, redactPath, oldFileId);
+              replacedFileId = oldFileId;
+              updateListing = true;
+            }
           }
           else
             videodatabase.RollbackTransaction();
@@ -263,11 +274,17 @@ void CSaveFileState::DoWork(CFileItem& item,
         {
           CUtil::DeleteVideoDatabaseDirectoryCache();
           CFileItemPtr msgItem(new CFileItem(item));
-          if (item.HasProperty("original_listitem_url"))
-            msgItem->SetPath(item.GetProperty("original_listitem_url").asString());
+          if (item.HasProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL))
+            msgItem->SetPath(item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString());
+          if (replacedFileId > 0)
+            msgItem->SetProperty(ITEM::PROPERTY::REPLACED_FILE_ID, replacedFileId);
 
           CGUIMessage message(GUI_MSG_NOTIFY_ALL, CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow(), 0, GUI_MSG_UPDATE_ITEM, 0, msgItem);
           CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(message);
+
+          // Widgets reload on the announcement, which must follow the file change
+          if (replacedFileId > 0)
+            CVideoDatabase::AnnounceUpdate(tag->m_type, tag->m_iDbId);
         }
 
         CLog::LogF(LOGDEBUG, "Finished saving file state for video item {} (listing update {})",

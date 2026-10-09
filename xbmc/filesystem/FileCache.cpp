@@ -291,7 +291,7 @@ void CFileCache::Process()
     }
     else
     {
-      if (AbortableWait(m_seekEvent) != WAIT_SIGNALED || m_bStop)
+      if (!m_seekEvent.Wait() || m_bStop)
         break;
       seekRequested = true;
     }
@@ -445,12 +445,10 @@ void CFileCache::Process()
 
         m_pCache->EndOfInput();
 
-        // The thread event will now also cause the wait of an event to return a false.
-        if (AbortableWait(m_seekEvent) == WAIT_SIGNALED)
+        if (!m_bStop && m_seekEvent.Wait() && !m_bStop)
         {
           m_pCache->ClearEndOfInput();
-          if (!m_bStop)
-            m_seekEvent.Set(); // hack so that later we realize seek is needed
+          m_seekEvent.Set(); // hack so that later we realize seek is needed
         }
         else
           break; // while (!m_bStop)

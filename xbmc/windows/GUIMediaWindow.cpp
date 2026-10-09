@@ -60,7 +60,9 @@
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/LabelFormatter.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -398,15 +400,16 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
           CFileItemList items;
           items.SetPath(URIUtils::GetDirectory(newItem->GetPath()));
 
-          const bool hasCacheFilename = newItem->HasProperty("cachefilename");
-          const bool hasParentPath = newItem->HasProperty("ParentPath");
+          const bool hasCacheFilename = newItem->HasProperty(ITEM::PROPERTY::CACHE_FILENAME);
+          const bool hasParentPath = newItem->HasProperty(ITEM::PROPERTY::PARENT_PATH);
 
           // Use the stored cache file name
           if (hasCacheFilename)
-            items.RemoveDiscCacheCRC(newItem->GetProperty("cachefilename").asString());
+            items.RemoveDiscCacheCRC(
+                newItem->GetProperty(ITEM::PROPERTY::CACHE_FILENAME).asString());
 
           if (hasParentPath)
-            RemoveDiscCache(newItem->GetProperty("ParentPath").asString());
+            RemoveDiscCache(newItem->GetProperty(ITEM::PROPERTY::PARENT_PATH).asString());
 
           // No stored cache file name or parent path, try the truncated item path as list path
           if (!hasCacheFilename && !hasParentPath)
@@ -772,7 +775,7 @@ bool CGUIMediaWindow::GetDirectory(const std::string &strDirectory, CFileItemLis
   // Store parent path along with item as parent path cannot safely be calculated from item's path.
   for (const auto& item : items)
   {
-    item->SetProperty("ParentPath", m_vecItems->GetPath());
+    item->SetProperty(ITEM::PROPERTY::PARENT_PATH, m_vecItems->GetPath());
   }
 
   // update the view state's reference to the current items
@@ -916,7 +919,7 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
     const std::string& strLabel =
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(showLabel);
     CFileItemPtr pItem(new CFileItem(strLabel));
-    pItem->SetPath("add");
+    pItem->SetPath(PLACEHOLDER::ADD_SOURCE);
     pItem->SetArt("icon", "DefaultAddSource.png");
     pItem->SetLabel(strLabel);
     pItem->SetLabelPreformatted(true);
@@ -1034,7 +1037,8 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     return true;
   }
 
-  if (pItem->GetPath() == "add" || pItem->GetPath() == "sources://add/") // 'add source button' in empty root
+  if (pItem->GetPath() == PLACEHOLDER::ADD_SOURCE ||
+      pItem->GetPath() == "sources://add/") // 'add source button' in empty root
   {
     if (profileManager->IsMasterProfile())
     {
@@ -1133,7 +1137,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
 
     return true;
   }
-  else if (pItem->IsPlugin() && !pItem->GetProperty("isplayable").asBoolean())
+  else if (pItem->IsPlugin() && !pItem->GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean())
   {
     bool resume = pItem->GetStartOffset() == STARTOFFSET_RESUME;
     return XFILE::CPluginDirectory::RunScriptWithParams(pItem->GetURL(), resume);
@@ -1150,13 +1154,14 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
   {
     SaveSelectedItemInHistory();
 
-    if (pItem->GetPath() == "newplaylist://")
+    if (pItem->GetPath() == PLACEHOLDER::NEW_PLAYLIST)
     {
       m_vecItems->RemoveDiscCache(GetID());
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST_EDITOR,"newplaylist://");
+      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST_EDITOR,
+                                                                  PLACEHOLDER::NEW_PLAYLIST);
       return true;
     }
-    else if (StringUtils::StartsWithNoCase(pItem->GetPath(), "newsmartplaylist://"))
+    else if (StringUtils::StartsWithNoCase(pItem->GetPath(), PLACEHOLDER::NEW_SMART_PLAYLIST))
     {
       m_vecItems->RemoveDiscCache(GetID());
       if (CGUIDialogSmartPlaylistEditor::NewPlaylist(pItem->GetPath().substr(19)))

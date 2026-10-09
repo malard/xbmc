@@ -11,6 +11,7 @@
 #include "OptionalsReg.h"
 #include "cores/RetroPlayer/process/gbm/RPProcessInfoGbm.h"
 #include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAOpenGL.h"
+#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererFBO.h"
 #include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGL.h"
 #include "cores/VideoPlayer/DVDCodecs/DVDFactoryCodec.h"
 #include "cores/VideoPlayer/Process/gbm/ProcessInfoGBM.h"
@@ -59,6 +60,7 @@ bool CWinSystemGbmGLContext::InitWindowSystem()
   RETRO::CRPProcessInfoGbm::Register();
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryDMAOpenGL);
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryOpenGL);
+  RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryFBO);
 
   if (!CWinSystemGbmEGLContext::InitWindowSystemEGL(EGL_OPENGL_BIT, EGL_OPENGL_API))
   {
@@ -165,13 +167,8 @@ void CWinSystemGbmGLContext::PresentRender(bool rendered, bool videoLayer)
 
   if (m_dispReset && m_dispResetTimer.IsTimePast())
   {
-    CLog::Log(LOGDEBUG, "CWinSystemGbmGLContext::{} - Sending display reset to all clients",
-              __FUNCTION__);
     m_dispReset = false;
-    std::unique_lock lock(m_resourceSection);
-
-    for (auto resource : m_resources)
-      resource->OnResetDisplay();
+    CWinSystemGbm::OnResetDisplay();
   }
 }
 

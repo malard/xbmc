@@ -18,6 +18,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "messaging/helpers/DialogOKHelper.h"
+#include "music/MusicDbPaths.h"
 #include "music/MusicDbUrl.h"
 #include "music/MusicLibraryQueue.h"
 #include "music/infoscanner/MusicInfoScanner.h"
@@ -61,29 +62,17 @@ static int CleanLibrary(const std::vector<std::string>& params)
         if (!content.empty() || !directory.empty())
         {
           CVideoDatabase db;
-          std::set<std::string, std::less<>> contentPaths;
           if (db.Open())
-          {
-            if (!directory.empty())
-              contentPaths.insert(directory);
-            else
-              db.GetPaths(contentPaths);
-            for (const std::string& path : contentPaths)
-            {
-              if (db.GetContentForPath(path) == content)
-              {
-                paths.insert(db.GetPathId(path));
-                std::vector<std::pair<int, std::string>> sub;
-                if (db.GetSubPaths(path, sub))
-                {
-                  for (const auto& it : sub)
-                    paths.insert(it.first);
-                }
-              }
-            }
-          }
+            db.GetPathsForCleaning(directory, content, paths);
           if (paths.empty())
+          {
+            CLog::Log(LOGWARNING,
+                      "CleanLibrary: nothing to clean - '{}' does not resolve to any library path "
+                      "with content '{}'",
+                      directory.empty() ? "<library>" : directory,
+                      content.empty() ? "<any>" : content);
             return 0;
+          }
         }
 
         if (userInitiated)
@@ -361,7 +350,7 @@ static int RefreshArtist(const std::vector<std::string>& params)
 
   // Set the artist id on the musicdb url
   CMusicDbUrl musicUrl;
-  if (!musicUrl.FromString("musicdb://artists/"))
+  if (!musicUrl.FromString(KODI::MUSIC::DB_PATH::ARTISTS))
     return -1;
   musicUrl.AddOption("artistid", params.front());
 
@@ -383,7 +372,7 @@ static int RefreshAlbum(const std::vector<std::string>& params)
 
   // Set the album id on the musicdb url
   CMusicDbUrl musicUrl;
-  if (!musicUrl.FromString("musicdb://albums/"))
+  if (!musicUrl.FromString(KODI::MUSIC::DB_PATH::ALBUMS))
     return -1;
   musicUrl.AddOption("albumid", params.front());
 

@@ -18,7 +18,9 @@
 
 #include <array>
 #include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -260,6 +262,13 @@ public:
   void UpdateMovieTitle(int idMovie,
                         const std::string& strNewMovieTitle,
                         VideoDbContentType iType = VideoDbContentType::MOVIES);
+
+  /*! \brief Set the sort title of a movie, tvshow or movie set.
+   \param[in] idDb the dbId of the item
+   \param[in] strNewSortTitle the new sort title
+   \param[in] iType the content type of the item
+   \return true on success.
+   */
   bool UpdateVideoSortTitle(int idDb,
                             const std::string& strNewSortTitle,
                             VideoDbContentType iType = VideoDbContentType::MOVIES);
@@ -304,8 +313,13 @@ public:
   bool GetFileInfo(const std::string& strFilenameAndPath, CVideoInfoTag& details, int idFile = -1);
 
   int GetPathId(const std::string& strPath);
+  /*! \brief Get the id of a path, also accepting the zip:// or archive:// equivalent of an
+   *         archive path (AddPath() stores these interchangeably).
+   */
+  int GetArchiveOrAliasPathId(const std::string& strPath);
   int GetTvShowId(const std::string& strPath);
-  int GetEpisodeId(const std::string& strFilenameAndPath, int idEpisode=-1, int idSeason=-1); // idEpisode, idSeason are used for multipart episodes as hints
+  // input value is episode/season number hint - for multiparters
+  int GetEpisodeId(const std::string& strFilenameAndPath, int episode = -1, int season = -1);
   int GetSeasonId(int idShow, int season) const;
 
   void GetEpisodesByBlurayPath(const std::string& path, std::vector<CVideoInfoTag>& episodes);
@@ -391,6 +405,12 @@ public:
     int idFile{-1};
     VideoDbContentType mediaType{-1};
     int idMedia{-1};
+    std::string title{};
+
+    //! Which of a movie's assets holds the playlist. Unset for an episode, which is named by its
+    //! title instead.
+    std::optional<VideoAssetType> itemType{};
+    CDateTime dateAdded{};
   };
 
   /*!
@@ -399,6 +419,12 @@ public:
    * \return vector array of playlist numbers and idFiles
    */
   std::vector<PlaylistInfo> GetPlaylistsByPath(const std::string& path);
+
+  /*!
+   * \brief Announce that a library item has changed, so that widgets and other listeners reload it
+   * \param[in] content The item's media type
+   */
+  static void AnnounceUpdate(const std::string& content, int id);
 
   void SetTrailerForMovie(int idMovie, const std::string& trailer);
 
@@ -520,10 +546,20 @@ public:
   bool GetBookMarkForEpisode(const CVideoInfoTag& tag, CBookmark& bookmark) const;
   void AddBookMarkForEpisode(const CVideoInfoTag& tag, const CBookmark& bookmark);
   void DeleteBookMarkForEpisode(const CVideoInfoTag& tag);
+  void DeleteBookMarkForEpisode(int idEpisode);
   bool GetResumePoint(CVideoInfoTag& tag);
   bool GetStreamDetails(CFileItem& item);
   bool GetStreamDetails(CVideoInfoTag& tag);
   bool GetStreamDetails(const std::string& filenameAndPath, CStreamDetails& details);
+  /*! \brief Get play count, last played, resume point and stream details of all files of a path
+   Obtaining the metadata of many files one by one is expensive if the database connection has
+   high latency, as every single value requires its own round trip.
+   \param strPath the path to get the file metadata for
+   \param metadata filled with a tag per file, keyed by file name
+   \return true on success, false otherwise
+   */
+  bool GetFileMetadataForPath(const std::string& strPath,
+                              std::map<std::string, CVideoInfoTag>& metadata);
   bool GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id);
   CVideoInfoTag GetDetailsByTypeAndId(VideoDbContentType type, int id);
 
@@ -613,6 +649,26 @@ public:
   bool GetSubPaths(const std::string& basepath,
                    std::vector<std::pair<int, std::string>>& subpaths,
                    bool excludeDiscPaths = true);
+
+  /*! \brief Normalise a directory to the form the path table stores it in.
+   \param directory the directory as it was given
+   \return the same directory with platform separators and a trailing separator
+   */
+  static std::string ToStoredPath(const std::string& directory);
+
+  /*! \brief Resolve the path ids a library clean should cover.
+   \param directory a directory to restrict the clean to, empty for the whole library.
+                    Normalised with ToStoredPath before matching.
+   \param content the content type to clean for ("movies", "tvshows", "musicvideos"),
+                  empty for any. With a directory, "tvshows" also matches paths
+                  resolving to "seasons" or "episodes".
+   \param paths the matching path ids, including subpaths. Left empty when nothing
+                matches.
+   \return true on success (even with no matches), false on a database error
+   */
+  bool GetPathsForCleaning(const std::string& directory,
+                           const std::string& content,
+                           std::set<int>& paths);
 
   bool GetSourcePath(const std::string &path, std::string &sourcePath);
   bool GetSourcePath(const std::string& path,
@@ -856,14 +912,6 @@ public:
     }
   }
 
-  bool SetArtForItem(int mediaId,
-                     const MediaType& mediaType,
-                     const std::string& artType,
-                     const std::string& url);
-  bool SetArtForItem(int mediaId, const MediaType& mediaType, const KODI::ART::Artwork& art);
-  bool GetArtForItem(int mediaId, const MediaType& mediaType, KODI::ART::Artwork& art);
-  std::string GetArtForItem(int mediaId, const MediaType &mediaType, const std::string &artType);
-
   void UpdateArtForItem(int mediaId, const MediaType& mediaType) const;
 
   /*!
@@ -877,10 +925,6 @@ public:
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
   bool HasArtForItem(int mediaId, const MediaType &mediaType);
-  bool RemoveArtForItem(int mediaId, const MediaType &mediaType, const std::string &artType);
-  bool RemoveArtForItem(int mediaId,
-                        const MediaType& mediaType,
-                        const std::set<std::string, std::less<>>& artTypes);
   /*!
    * \brief Retrieve season information of a TV show.
    * \param[in] showId ID of the show
@@ -905,7 +949,6 @@ public:
   std::string GetTvShowNamedSeasonById(int tvshowId, int seasonId) const;
 
   bool GetTvShowSeasonArt(int mediaId, KODI::ART::SeasonsArtwork& seasonArt);
-  bool GetArtTypes(const MediaType &mediaType, std::vector<std::string> &artTypes);
 
   /*! \brief Fetch the distinct types of available-but-unassigned art held in the
   database for a specific media item.
@@ -940,9 +983,21 @@ public:
   \return The dbId of the season.
   */
   int AddSeason(int showID, int season, const std::string& name = "", const std::string& plot = "");
+
+  /*! \brief Add a movie set, or update it if it already exists.
+   \param[in] strSet the (possibly user defined) title of the set
+   \param[in] strOverview the overview of the set
+   \param[in] strOriginalSet the title of the set as given by the scraper. Used to identify an
+              existing set, and defaults to strSet when empty.
+   \param[in] strSortSet the title used to sort the set. An empty value never clears an existing
+              sort title, so callers without one to offer can leave it out.
+   \param[in] updateOverview whether an existing set's overview should be replaced
+   \return the dbId of the set, or -1 on failure.
+   */
   int AddSet(const std::string& strSet,
              const std::string& strOverview = "",
              const std::string& strOriginalSet = "",
+             const std::string& strSortSet = "",
              const bool updateOverview = true);
   void ClearMovieSet(int idMovie);
   void SetMovieSet(int idMovie, int idSet);
@@ -969,16 +1024,13 @@ public:
    * \param idVideoVersion[in] new versiontype of the default version of the video
    *                           special value -1: keep the current versiontype of the video.
    * \param assetType[in] new asset type of the default version of the video.
-   * \param cascadeAction[in] action to take on the assets of the video being converted
-   *        (used to preserve streamdetails for bluray playlists)
    * \return true for success, false otherwise
    */
   bool ConvertVideoToVersion(VideoDbContentType itemType,
                              int dbIdSource,
                              int dbIdTarget,
                              int idVideoVersion,
-                             VideoAssetType assetType,
-                             DeleteMovieCascadeAction cascadeAction);
+                             VideoAssetType assetType);
 
   /*!
    * \brief Adds or updates a version of an existing movie to the database
@@ -1265,6 +1317,13 @@ private:
    */
   CDateTime GetLastPlayed(int iFileId);
 
+  /*! \brief Add the stream described by the current row of the given dataset to the given details
+   \param ds dataset whose current row starts with the columns of the streamdetails table
+   \param details stream details to add the stream to
+   \return true if a stream was added, false otherwise
+   */
+  static bool AddStreamDetailFromRow(dbiplus::Dataset& ds, CStreamDetails& details);
+
   bool GetSeasonInfo(int idSeason, CVideoInfoTag& details, bool allDetails, CFileItem* item);
 
   int GetMinSchemaVersion() const override { return 75; }
@@ -1296,7 +1355,6 @@ private:
                                   std::map<int, bool> &pathsDeleteDecisions, std::string &deletedFileIDs, bool silent);
 
   static void AnnounceRemove(const std::string& content, int id, bool scanning = false);
-  static void AnnounceUpdate(const std::string& content, int id);
 
   static CDateTime GetDateAdded(const std::string& filename, CDateTime dateAdded = CDateTime());
 };

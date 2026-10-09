@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "LangInfo.h"
+#include "language/LangInfo.h"
 #include "pictures/PictureScalingAlgorithm.h"
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
@@ -307,6 +307,7 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_caseSensitiveLocalArtMatch{true};
     int m_minimumEpisodePlaylistDuration; // seconds
     bool m_disableEpisodeRanges{false};
+    bool m_parseBlurayProjectFile{true};
     bool m_bNoRemoteArtWithLocalScraper{false};
     bool m_ignoreFolderNamesInArchives{true};
 

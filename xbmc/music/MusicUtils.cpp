@@ -21,6 +21,7 @@
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "filesystem/Directory.h"
+#include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "guilib/GUIComponent.h"
@@ -44,6 +45,8 @@
 #include "threads/IRunnable.h"
 #include "utils/Artwork.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
+#include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -660,7 +663,7 @@ std::string GetMusicDbItemPath(const CFileItem& item)
 {
   std::string path = item.GetPath();
   if (!URIUtils::IsMusicDb(path))
-    path = item.GetProperty("original_listitem_url").asString();
+    path = item.GetProperty(ITEM::PROPERTY::ORIGINAL_LISTITEM_URL).asString();
 
   if (URIUtils::IsMusicDb(path))
     return path;
@@ -744,7 +747,7 @@ void PlayItem(const std::shared_ptr<CFileItem>& itemIn,
     {
       // Add item and all its siblings to the playlist and play. Prefer musicdb path if available,
       // because it provides more information than just a plain file system path for example.
-      std::string parentPath = item->GetProperty("ParentPath").asString();
+      std::string parentPath = item->GetProperty(ITEM::PROPERTY::PARENT_PATH).asString();
       if (parentPath.empty())
       {
         std::string path = GetMusicDbItemPath(*item);
@@ -898,7 +901,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   // Exclude all video library items
-  if (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), "library://video/"))
+  if (IsVideoDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::VIDEO))
     return false;
 
   // Exclude other components
@@ -906,8 +909,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   // Exclude special items
-  if (StringUtils::StartsWithNoCase(item.GetPath(), "newsmartplaylist://") ||
-      StringUtils::StartsWithNoCase(item.GetPath(), "newplaylist://"))
+  if (PLACEHOLDER::IsNewPlaylist(item.GetPath()))
     return false;
 
   // Include playlists located at one of the possible music playlist locations
@@ -938,7 +940,7 @@ bool IsItemPlayable(const CFileItem& item)
     return false;
 
   if (item.IsFolder() &&
-      (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), "library://music/")))
+      (MUSIC::IsMusicDb(item) || StringUtils::StartsWithNoCase(item.GetPath(), LIBRARY::MUSIC)))
   {
     // Exclude top level nodes - eg can't play 'genres' just a specific genre etc
     const auto node = XFILE::CMusicDatabaseDirectory::GetDirectoryParentType(item.GetPath());
@@ -949,7 +951,7 @@ bool IsItemPlayable(const CFileItem& item)
   }
 
   if (item.IsPlugin() && MUSIC::IsAudio(item) && !IsEmptyMusicItem(item) &&
-      item.GetProperty("isplayable").asBoolean(false))
+      item.GetProperty(ITEM::PROPERTY::IS_PLAYABLE).asBoolean(false))
   {
     return true;
   }
@@ -965,7 +967,7 @@ bool IsItemPlayable(const CFileItem& item)
   {
     // Not a music-specific folder (just file:// or nfs://). Allow play if context is Music window.
     if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_MUSIC_NAV &&
-        item.GetPath() != "add") // Exclude "Add music source" item
+        item.GetPath() != PLACEHOLDER::ADD_SOURCE) // Exclude "Add music source" item
       return true;
   }
   return false;

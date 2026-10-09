@@ -1,4 +1,7 @@
-set(SOURCES TestUPnPInternal.cpp)
+set(SOURCES TestUPnPFileMediaServer.cpp
+            TestUPnPInternal.cpp
+            TestUPnPPlayerController.cpp
+)
 
 core_add_test_library(network_upnp_test)
 if(ENABLE_STATIC_LIBS)

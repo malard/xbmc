@@ -389,7 +389,7 @@
 		<value condition="Player.Muted">dialogs/volume/mute.png</value>
 		<value condition="Integer.IsGreater(Player.Volume,66)">dialogs/volume/volume.png</value>
 		<value condition="Integer.IsGreater(Player.Volume,33)">dialogs/volume/volume2.png</value>
-		<value condition="player.passthrough">dialogs/volume/volume.png</value>
+		<value condition="player.passthrough + !System.GetBool(audiooutput.passthroughvolumecontrol)">dialogs/volume/volume.png</value>
 		<value>dialogs/volume/volume1.png</value>
 	</variable>
 	<variable name="ListSubLabelVar">
@@ -737,23 +737,19 @@
 		<value condition="!String.IsEmpty(Listitem.EpgEventIcon)">$INFO[ListItem.EpgEventIcon]</value>
 		<value>$INFO[ListItem.Icon]</value>
 	</variable>
-	<variable name="ActiveVideoPlayerSubtitleLanguage">
+	<variable name="ActiveVideoPlayerSubtitle">
 		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + !VideoPlayer.HasSubtitles">$LOCALIZE[36623]</value>
 		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + !VideoPlayer.SubtitlesEnabled">$LOCALIZE[1223]</value>
-        <value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + [String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)]">$LOCALIZE[13205]$VAR[SubtitleCodecVar, | ]</value>
-		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitlesLanguage)">$INFO[VideoPlayer.SubtitlesLanguage]$VAR[SubtitleCodecVar, | ]</value>
-        <value condition="Window.IsActive(fullscreenvideo) + [String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)] + !String.IsEmpty(VideoPlayer.SubtitleCodec)">$VAR[SubtitleCodecVar]</value>
-		<value condition="Window.IsActive(fullscreenvideo) + !String.IsEmpty(VideoPlayer.SubtitlesLanguage)">$INFO[VideoPlayer.SubtitlesLanguage]$VAR[SubtitleCodecVar, &#8226; ]</value>
+		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + String.IsEmpty(VideoPlayer.SubtitleCodec)">$LOCALIZE[13205]</value>
+		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitleCodec)">$VAR[SubtitleCodecVar]</value>
+	</variable>
+	<variable name="ActiveVideoPlayerSubtitleLanguage">
+		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + [String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)]">$LOCALIZE[13205]</value>
+		<value condition="Window.IsActive(Custom_1101_SettingsDialog.xml) + VideoPlayer.HasSubtitles + VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitlesLanguage)">$INFO[VideoPlayer.SubtitlesLanguage]</value>
 	</variable>
 	<variable name="ActiveVideoPlayerAudioLanguage">
+		<value condition="String.IsEmpty(VideoPlayer.AudioLanguage) | String.IsEqual(VideoPlayer.AudioLanguage,und)">$LOCALIZE[13205]</value>
 		<value condition="!String.IsEmpty(VideoPlayer.AudioLanguage)">$INFO[VideoPlayer.AudioLanguage]</value>
-		<value condition="String.IsEmpty(VideoPlayer.AudioLanguage) | String.IsEqual(ListItem.AudioLanguage,und)">$LOCALIZE[13205]</value>
-	</variable>
-	<variable name="AudioPropertyFlagVar">
-		<value condition="!Window.IsActive(fullscreenvideo) + [String.IsEmpty(ListItem.AudioLanguage) | String.IsEqual(ListItem.AudioLanguage,und)]">$VAR[AudioChannelsVar]</value>
-		<value condition="Window.IsActive(fullscreenvideo) + [String.IsEmpty(VideoPlayer.AudioLanguage) | String.IsEqual(VideoPlayer.AudioLanguage,und)]">$VAR[AudioChannelsVar]</value>
-		<value condition="Window.IsActive(fullscreenvideo)">$INFO[VideoPlayer.AudioLanguage]$VAR[AudioChannelsVar, &#8226; ]</value>
-		<value>$INFO[ListItem.AudioLanguage]$VAR[AudioChannelsVar, &#8226; ]</value>
 	</variable>
 	<variable name="VideoListPosterVar">
 		<value condition="!String.IsEmpty(Container(6).ListItem.Art(poster))">$INFO[Container(6).ListItem.Art(poster)]</value>
@@ -912,23 +908,8 @@
 		<value condition="!String.IsEmpty(ListItem.Property(stream.codec))">$INFO[ListItem.Property(stream.codec)]$INFO[ListItem.Property(stream.description), | ]</value>
 		<value>$INFO[ListItem.Property(stream.description)]</value>
 	</variable>
-	<variable name="MediaInfoListLabelVar">
-		<value>$INFO[ListItem.Label]</value>
-	</variable>
-	<variable name="MediaInfoListLabel2Var">
-		<value condition="ListItem.IsStereoscopic">3D$VAR[VideoCodecVar, | ]$INFO[ListItem.VideoResolution, | ]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRTypeVar, | ]$INFO[ListItem.VideoAspect, | ,:1]$VAR[VideoAssetAudioPropertyVar]$VAR[VideoLanguagesVar]</value>
-		<value>$VAR[VideoCodecVar]$INFO[ListItem.VideoResolution, | ]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRTypeVar, | ]$INFO[ListItem.VideoAspect, | ,:1]$VAR[VideoAssetAudioPropertyVar]$VAR[VideoLanguagesVar]</value>
-	</variable>
-	<variable name="VideoAssetAudioPropertyVar">
-		<value condition="Window.IsVisible(managevideoversions) | Window.IsVisible(managevideoextras)">$VAR[FirstAudioCodecVar, | ]$INFO[ListItem.FirstAudioChannels(DefaultLayout), ]</value>
-		<value>$VAR[AudioCodecVar, | ]$VAR[AudioChannelsVar, ]</value>
-	</variable>
 	<variable name="FirstAudioCodecVar">
 		<value>$MAP[DefaultAltAudioMap, ListItem.FirstAudioCodec]</value>
-	</variable>
-	<variable name="VideoLanguagesVar">
-		<value condition="!String.IsEqual(ListItem.AudioLanguage,und) + [Window.IsVisible(managevideoversions) | Window.IsVisible(managevideoextras)]">$INFO[ListItem.FirstAudioLanguage, | ]</value>
-		<value condition="!String.IsEqual(ListItem.AudioLanguage,und)">$INFO[ListItem.AudioLanguage, | ]</value>
 	</variable>
 	<variable name="PVRInstanceName">
 		<value condition="Integer.IsGreater(PVR.ClientCount,1)">$INFO[ListItem.PVRClientName,[COLOR grey]$LOCALIZE[31137]:[/COLOR] ,]$INFO[ListItem.PVRInstanceName, (,)]</value>
@@ -957,5 +938,38 @@
 	<variable name="GameDiscEjectedTransparencyVar">
 		<value condition="!RetroPlayer.DiscEjected">60FFFFFF</value>
 		<value>FFFFFFFF</value>
+	</variable>
+	<variable name="MediaVideoPropVar">
+		<value condition="VideoPlayer.IsStereoscopic + Window.IsActive(fullscreenvideo)">3D$INFO[VideoPlayer.VideoResolution, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRTypeVar, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoCodecVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[VideoPlayer.VideoAspect, [COLOR border_alpha]&#8226;[/COLOR] ,:1]</value>
+		<value condition="Window.IsActive(fullscreenvideo)">$INFO[VideoPlayer.VideoResolution]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRTypeVar, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoCodecVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[VideoPlayer.VideoAspect, [COLOR border_alpha]&#8226;[/COLOR] ,:1]</value>
+		<value condition="ListItem.IsStereoscopic">3D$INFO[ListItem.VideoResolution, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRType1Var, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoHDRType2Var, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoCodecVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[ListItem.VideoAspect, [COLOR border_alpha]&#8226;[/COLOR] ,:1]</value>
+		<value>$INFO[ListItem.VideoResolution]$VAR[VideoResolutionTypeVar, ]$VAR[VideoHDRType1Var, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoHDRType2Var, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[VideoCodecVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[ListItem.VideoAspect, [COLOR border_alpha]&#8226;[/COLOR] ,:1]</value>
+	</variable>
+	<variable name="MediaAudioPropVar">
+		<value condition="String.IsEqual(VideoPlayer.AudioLanguage,und) + Window.IsActive(fullscreenvideo)">$VAR[AudioCodecFlagVar]$VAR[AudioChannelsVar, ]</value>
+		<value condition="Window.IsActive(fullscreenvideo)">$VAR[AudioCodecFlagVar]$VAR[AudioChannelsVar, ]$INFO[VideoPlayer.AudioLanguage, [COLOR border_alpha]&#8226;[/COLOR] ]</value>
+		<value condition="String.IsEqual(ListItem.AudioLanguage,und) + [Window.IsVisible(managevideoversions) | Window.IsVisible(managevideoextras)]">$MAP[DefaultAltAudioMap, ListItem.FirstAudioCodec]$INFO[ListItem.FirstAudioChannels(DefaultLayout), ]</value>
+		<value condition="Window.IsVisible(managevideoversions) | Window.IsVisible(managevideoextras)">$MAP[DefaultAltAudioMap, ListItem.FirstAudioCodec]$INFO[ListItem.FirstAudioChannels(DefaultLayout), ]$INFO[ListItem.FirstAudioLanguage, [COLOR border_alpha]&#8226;[/COLOR] ]</value>
+		<value condition="String.IsEqual(ListItem.AudioLanguage,und)">$VAR[AudioCodecFlagVar]$VAR[AudioChannelsVar, ]</value>
+		<value>$VAR[AudioCodecFlagVar]$VAR[AudioChannelsVar, ]$INFO[ListItem.AudioLanguage, [COLOR border_alpha]&#8226;[/COLOR] ]</value>
+	</variable>
+	<variable name="MediaSubtitlePropVar">
+		<value condition="Window.IsActive(fullscreenvideo) + VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitleCodec) + [String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)] ">$VAR[SubtitleCodecVar]</value>
+		<value condition="Window.IsActive(fullscreenvideo) + VideoPlayer.SubtitlesEnabled + String.IsEmpty(VideoPlayer.SubtitleCodec) + ![String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)]">$INFO[VideoPlayer.SubtitlesLanguage]</value>
+		<value condition="Window.IsActive(fullscreenvideo) + VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitleCodec) + ![String.IsEmpty(VideoPlayer.SubtitlesLanguage) | String.IsEqual(VideoPlayer.SubtitlesLanguage,und)]">$VAR[SubtitleCodecVar]$INFO[VideoPlayer.SubtitlesLanguage, [COLOR border_alpha]&#8226;[/COLOR] ]</value>
+		<value condition="!String.IsEqual(ListItem.SubtitleLanguage,und)">$INFO[ListItem.SubtitleLanguage]</value>
+	</variable>
+	<variable name="MediaMusicPropVar">
+		<value condition="RDS.HasRDS + Window.IsActive(visualisation)">RDS$VAR[AudioCodecFlagVar, [COLOR border_alpha]&#8226;[/COLOR] ]$VAR[AudioChannelsVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[MusicPlayer.SampleRate, [COLOR border_alpha]&#8226;[/COLOR] ,kHz]$INFO[MusicPlayer.BitRate, [COLOR border_alpha]&#8226;[/COLOR] ,kbps]$VAR[MusicBitsPerSampleVar, [COLOR border_alpha]&#8226;[/COLOR] ,bit]$VAR[MusicBMPVar, [COLOR border_alpha]&#8226;[/COLOR] ,bmp]</value>
+		<value condition="Window.IsActive(visualisation)">$VAR[AudioCodecFlagVar]$VAR[AudioChannelsVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[MusicPlayer.SampleRate, [COLOR border_alpha]&#8226;[/COLOR] ,kHz]$INFO[MusicPlayer.BitRate, [COLOR border_alpha]&#8226;[/COLOR] ,kbps]$VAR[MusicBitsPerSampleVar, [COLOR border_alpha]&#8226;[/COLOR] , bit]$VAR[MusicBMPVar, [COLOR border_alpha]&#8226;[/COLOR] ,bmp]</value>
+		<value>$INFO[ListItem.FileExtension]$VAR[AudioChannelsVar, [COLOR border_alpha]&#8226;[/COLOR] ]$INFO[ListItem.Samplerate, [COLOR border_alpha]&#8226;[/COLOR] ,kHz]$INFO[ListItem.BitRate, [COLOR border_alpha]&#8226;[/COLOR] ,kbps]$VAR[MusicBitsPerSampleVar, [COLOR border_alpha]&#8226;[/COLOR] ,bit]$VAR[MusicBMPVar, [COLOR border_alpha]&#8226;[/COLOR] ,bmp]</value>
+	</variable>
+	<variable name="MusicBitsPerSampleVar">
+		<value condition="Window.IsActive(visualisation) + !String.IsEmpty(MusicPlayer.BitsPerSample)">$INFO[MusicPlayer.BitsPerSample]</value>
+		<value condition="!String.IsEmpty(ListItem.MusicBitsPerSample)">$INFO[ListItem.MusicBitsPerSample]</value>
+	</variable>
+	<variable name="MusicBMPVar">
+		<value condition="Window.IsActive(visualisation) + !String.IsEmpty(MusicPlayer.BMP)">$INFO[MusicPlayer.BMP]</value>
+		<value condition="!String.IsEmpty(ListItem.BMP)">$INFO[ListItem.BMP]</value>
 	</variable>
 </includes>

@@ -8,6 +8,7 @@
 
 #include "ApplicationMessageHandling.h"
 
+#include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIInfoManager.h"
 #include "GUIUserMessages.h"
@@ -47,6 +48,7 @@
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/PlayListTypes.h"
 #include "powermanagement/PowerManager.h"
 #include "profiles/Profile.h"
 #include "profiles/ProfileManager.h"
@@ -59,9 +61,12 @@
 #include "settings/SettingsComponent.h"
 #include "utils/ContentUtils.h"
 #include "utils/FileExtensionProvider.h"
+#include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "video/VideoFileItemClassify.h"
 #include "windowing/WinSystem.h"
+
+#include <memory>
 
 #ifdef TARGET_ANDROID
 #include "platform/android/activity/XBMCApp.h"
@@ -84,7 +89,7 @@ public:
 
   bool HandlePlaycountIncremented() const
   {
-    return m_item.GetProperty("playcount_incremented").asBoolean(false) &&
+    return m_item.GetProperty(ITEM::PROPERTY::PLAYCOUNT_INCREMENTED).asBoolean(false) &&
            m_item.IsPVRRecording() &&
            CServiceBroker::GetPVRManager().Get<PVR::GUI::Recordings>().ProcessDeleteAfterWatch(
                m_item);
@@ -402,7 +407,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
     case TMSG_UPDATE_PLAYER_ITEM:
     {
       std::unique_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
-      if (item)
+      if (item && m_app.CurrentFileItem().IsSamePath(item.get()))
       {
         m_app.CurrentFileItem().UpdateInfo(*item);
         CServiceBroker::GetGUI()->GetInfoManager().UpdateCurrentItem(m_app.CurrentFileItem());
@@ -429,6 +434,14 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
       const std::unique_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
       const CPlaycountIncrementedHandler playcountIncrementedHandler(*item);
       playcountIncrementedHandler.HandlePlaycountIncremented();
+      break;
+    }
+
+    case TMSG_APPLICATION_PLAY_MEDIA:
+    {
+      const std::unique_ptr<CFileItem> item{static_cast<CFileItem*>(pMsg->lpVoid)};
+      const auto playlistId = static_cast<PLAYLIST::Id>(pMsg->param1);
+      m_app.PlayMedia(*item, pMsg->strParam, playlistId);
       break;
     }
 

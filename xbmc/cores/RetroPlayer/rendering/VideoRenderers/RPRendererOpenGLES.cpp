@@ -14,6 +14,7 @@
 #include "cores/RetroPlayer/shaders/gles/ShaderPresetGLES.h"
 #include "cores/RetroPlayer/shaders/gles/ShaderTextureGLES.h"
 #include "cores/RetroPlayer/shaders/gles/ShaderTextureGLESRef.h"
+#include "rendering/gles/RenderSystemGLES.h"
 #include "utils/GLUtils.h"
 #include "utils/log.h"
 
@@ -37,9 +38,14 @@ CRPBaseRenderer* CRendererFactoryOpenGLES::CreateRenderer(
   return new CRPRendererOpenGLES(settings, context, std::move(bufferPool));
 }
 
-RenderBufferPoolVector CRendererFactoryOpenGLES::CreateBufferPools(CRenderContext&)
+RenderBufferPoolVector CRendererFactoryOpenGLES::CreateBufferPools(CRenderContext& context)
 {
-  return {std::make_shared<CRenderBufferPoolOpenGLES>()};
+  bool supportsTextureSwizzle = false;
+#if defined(GL_ES_VERSION_3_0)
+  auto* renderSystem = static_cast<CRenderSystemGLES*>(context.Rendering());
+  supportsTextureSwizzle = renderSystem && renderSystem->SupportsTextureSwizzle();
+#endif
+  return {std::make_shared<CRenderBufferPoolOpenGLES>(supportsTextureSwizzle)};
 }
 
 // --- CRPRendererOpenGLES -----------------------------------------------------
@@ -99,6 +105,8 @@ void CRPRendererOpenGLES::RenderInternal(bool clear, uint8_t alpha)
 
 void CRPRendererOpenGLES::FlushInternal()
 {
+  m_RBTexturesMap.clear();
+
   if (!m_bConfigured)
     return;
 
@@ -245,7 +253,7 @@ void CRPRendererOpenGLES::Render(uint8_t alpha)
   if (renderBuffer == nullptr)
     return;
 
-  Updateshaders();
+  UpdateShaders();
 
   // Use video shader preset
   if (m_bUseShaderPreset)
@@ -261,12 +269,18 @@ void CRPRendererOpenGLES::Render(uint8_t alpha)
     }
 
     const auto it = m_RBTexturesMap.find(renderBuffer);
-    if (it != m_RBTexturesMap.end())
+    if (it != m_RBTexturesMap.end() &&
+        it->second->sourceTexture->GetTextureID() == renderBuffer->TextureID() &&
+        it->second->sourceTexture->GetWidth() == renderBuffer->GetWidth() &&
+        it->second->sourceTexture->GetHeight() == renderBuffer->GetHeight())
     {
       rbTextures = it->second.get();
     }
     else
     {
+      if (it != m_RBTexturesMap.end())
+        m_RBTexturesMap.erase(it);
+
       rbTextures = new RenderBufferTextures{
           // Source texture
           std::make_shared<SHADER::CShaderTextureGLESRef>(

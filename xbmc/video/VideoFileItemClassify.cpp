@@ -13,6 +13,7 @@
 #include "URL.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/RegExp.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -80,6 +81,11 @@ bool IsProtectedBlurayDisc(const CFileItem& item)
 {
   const std::string path = URIUtils::AddFileToFolder(item.GetPath(), "AACS", "Unit_Key_RO.inf");
   return CFileUtils::Exists(path);
+}
+
+bool IsBrowsableFolder(const CFileItem& item)
+{
+  return item.IsFolder() && !item.GetProperty(ITEM::PROPERTY::IS_HYBRID_FOLDER).asBoolean(false);
 }
 
 bool IsSubtitle(const CFileItem& item)

@@ -89,6 +89,9 @@ namespace OVERLAY {
     float m_source_width{0}; // Video source width resolution used to calculate aspect ratio
     float m_source_height{0}; // Video source height resolution used to calculate aspect ratio
 
+    // pixels are already HDR, matching video's colorimetry
+    bool m_isHDROverlay{false};
+
   protected:
     /*!
      * \brief Given the resolution ratio determines if it is a 4/3 resolution
@@ -109,6 +112,9 @@ namespace OVERLAY {
 
     void AddOverlay(std::shared_ptr<CDVDOverlay> o, double pts, int index);
     virtual void Render(int idx, float depth = 0.0f);
+
+    // render overlays already in HDR (not sRGB)
+    void RenderHDROverlays(int idx);
 
     /*!
      * \brief Pre-walk hook: render libass output for the present slot.
@@ -201,6 +207,19 @@ namespace OVERLAY {
      */
     void LoadSettings();
 
+    //! \brief The display values the overlays need
+    struct SubtitleResolution
+    {
+      float pixelRatio{1.0f};
+      int overscanTop{0};
+    };
+
+    /*!
+     * \brief Establish the subtitle style and position for the current frame.
+     * \param[out] resolution the display values read while doing so
+     */
+    void UpdateSubtitleStyleAndPosition(SubtitleResolution& resolution);
+
     enum PositonResInfoState
     {
       POSRESINFO_UNSET = -1,
@@ -217,8 +236,8 @@ namespace OVERLAY {
     std::string m_stereomode;
     // Current subtitle position
     int m_subtitlePosition{0};
-    // Current subtitle position from resolution info,
-    // or PositonResInfoState enum values for deferred processing
+    // The calibration line for MANUAL alignment and the frame height otherwise,
+    // or a PositonResInfoState value for deferred processing
     int m_subtitlePosResInfo{POSRESINFO_UNSET};
     int m_subtitleVerticalMargin{0};
     bool m_saveSubtitlePosition{false}; // To save subtitle position permanently

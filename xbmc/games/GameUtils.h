@@ -10,6 +10,7 @@
 
 #include "GameTypes.h"
 
+#include <cstdint>
 #include <mutex>
 #include <set>
 #include <string>
@@ -61,6 +62,25 @@ public:
    * \return True if the choice was stored
    */
   static bool ChooseAndSetDefaultGameClient(const CFileItem& item);
+
+  /*!
+   * \brief The game client playing right now, if a game is playing
+   *
+   * For callers outside the player that need the client itself rather than
+   * what it is playing, such as the OSD.
+   *
+   * \return The client, or empty if no game is playing
+   */
+  static GameClientPtr GetPlayingGameClient();
+
+  /*!
+   * \brief Tell the player that hardcore mode withheld what they asked for
+   *
+   * Silently ignoring the request would read as a broken control.
+   *
+   * \param featureStringId The localized name of the feature that was withheld
+   */
+  static void NotifyBlockedByHardcore(uint32_t featureStringId);
 
   /*!
    * \brief Check if the file extension is supported by an add-on in

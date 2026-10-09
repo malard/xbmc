@@ -17,8 +17,11 @@
 #include "addons/AddonManager.h"
 #include "addons/BinaryAddonCache.h"
 #include "addons/addoninfo/AddonType.h"
+#include "cores/RetroPlayer/guibridge/GUIGameRenderManager.h"
+#include "cores/RetroPlayer/guibridge/GUIGameSettingsHandle.h"
 #include "cores/RetroPlayer/savestates/ISavestate.h"
 #include "cores/RetroPlayer/savestates/SavestateDatabase.h"
+#include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogOK.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "filesystem/AddonsDirectory.h"
@@ -61,7 +64,7 @@ bool CGameUtils::FillInGameClient(CFileItem& item, std::string& savestatePath)
     }
     else
     {
-      if (!CGUIDialogSelectSavestate::ShowAndGetSavestate(item.GetPath(), savestatePath))
+      if (!CGUIDialogSelectSavestate::ShowAndGetSavestate(item.GetDynPath(), savestatePath))
         return false;
 
       if (!savestatePath.empty())
@@ -117,7 +120,7 @@ bool CGameUtils::FillInGameClient(CFileItem& item, std::string& savestatePath)
           else
           {
             std::string gameClient = CGUIDialogSelectGameClient::ShowAndGetGameClient(
-                item.GetPath(), candidates, installable);
+                item.GetDynPath(), candidates, installable);
 
             if (!gameClient.empty())
               item.GetGameInfoTag()->SetGameClient(gameClient);
@@ -280,7 +283,7 @@ void CGameUtils::GetInstalledGameClients(const CFileItem& file,
   bHasVfsGameClient = false;
 
   // Try to resolve path to a local file, as not all game clients support VFS
-  CURL translatedUrl(CSpecialProtocol::TranslatePath(file.GetPath()));
+  CURL translatedUrl(CSpecialProtocol::TranslatePath(file.GetDynPath()));
 
   VECADDONS localAddons;
   CBinaryAddonCache& addonCache = CServiceBroker::GetBinaryAddonCache();
@@ -310,7 +313,7 @@ void CGameUtils::GetInstallableGameClients(const CFileItem& file,
   using namespace ADDON;
 
   // Try to resolve path to a local file, as not all game clients support VFS
-  CURL translatedUrl(CSpecialProtocol::TranslatePath(file.GetPath()));
+  CURL translatedUrl(CSpecialProtocol::TranslatePath(file.GetDynPath()));
 
   VECADDONS remoteAddons;
   if (!CServiceBroker::GetAddonMgr().GetInstallableAddons(remoteAddons, AddonType::GAMEDLL))
@@ -515,4 +518,37 @@ void CGameUtils::LoadInstallableAddons()
     m_installableGameAddons.clear();
     CServiceBroker::GetAddonMgr().GetInstallableAddons(m_installableGameAddons, AddonType::GAMEDLL);
   }
+}
+
+GameClientPtr CGameUtils::GetPlayingGameClient()
+{
+  auto gameSettingsHandle = CServiceBroker::GetGameRenderManager().RegisterGameSettingsDialog();
+  if (!gameSettingsHandle)
+    return {};
+
+  // A handle is given out whether or not a game is playing, and says so with an
+  // empty id rather than by being null
+  const std::string gameClientId = gameSettingsHandle->GameClientID();
+  if (gameClientId.empty())
+    return {};
+
+  ADDON::AddonPtr addon;
+  if (!CServiceBroker::GetAddonMgr().GetAddon(gameClientId, addon, ADDON::AddonType::GAMEDLL,
+                                              ADDON::OnlyEnabled::CHOICE_YES))
+    return {};
+
+  return std::static_pointer_cast<CGameClient>(addon);
+}
+
+void CGameUtils::NotifyBlockedByHardcore(uint32_t featureStringId)
+{
+  constexpr unsigned int TOAST_DISPLAY_TIME_MS = 5000;
+
+  const auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
+
+  // "Hardcore mode", "{0:s} is not available". The mode heads the toast so the
+  // longest feature name still fits the notification's fixed width.
+  CGUIDialogKaiToast::QueueNotification(
+      CGUIDialogKaiToast::Info, strings.Get(35700),
+      StringUtils::Format(strings.Get(35305), strings.Get(featureStringId)), TOAST_DISPLAY_TIME_MS);
 }

@@ -3,6 +3,7 @@ set(SOURCES ActorProtocol.cpp
             AliasShortcutUtils.cpp
             Archive.cpp
             ArtUtils.cpp
+            AspectRatioVocabulary.cpp
             Base64.cpp
             BitstreamConverter.cpp
             BitstreamReader.cpp
@@ -42,7 +43,6 @@ set(SOURCES ActorProtocol.cpp
             JSONVariantWriter.cpp
             LabelFormatter.cpp
             LangCodeExpander.cpp
-            LanguageTag.cpp
             LegacyPathTranslation.cpp
             Locale.cpp
             log.cpp
@@ -88,6 +88,7 @@ set(HEADERS ActorProtocol.h
             Archive.h
             ArtUtils.h
             Artwork.h
+            AspectRatioVocabulary.h
             Base64.h
             BitstreamConverter.h
             BitstreamReader.h
@@ -99,6 +100,7 @@ set(HEADERS ActorProtocol.h
             CPUInfo.h
             ColorUtils.h
             ComponentContainer.h
+            ContentNames.h
             ContentUtils.h
             Crc32.h
             CSSUtils.h
@@ -137,11 +139,11 @@ set(HEADERS ActorProtocol.h
             ISerializable.h
             ISortable.h
             IXmlDeserializable.h
+            ItemProperties.h
             JSONVariantParser.h
             JSONVariantWriter.h
             LabelFormatter.h
             LangCodeExpander.h
-            LanguageTag.h
             LegacyPathTranslation.h
             Locale.h
             LockInfo.h
@@ -156,6 +158,7 @@ set(HEADERS ActorProtocol.h
             Observer.h
             params_check_macros.h
             POUtils.h
+            PlaceholderPaths.h
             PlayerUtils.h
             ProgressJob.h
             RecentlyAddedJob.h

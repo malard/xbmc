@@ -10,7 +10,6 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "LangInfo.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
@@ -34,11 +33,13 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
 #include "jobs/Job.h"
+#include "language/LangInfo.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
+#include "utils/ItemProperties.h"
 #include "utils/LangCodeExpander.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -152,7 +153,8 @@ bool CGUIDialogSubtitles::OnMessage(CGUIMessage& message)
       int item = msg.GetParam1();
       if (item >= 0 && item < m_serviceItems->Size())
       {
-        SetService(m_serviceItems->Get(item)->GetProperty("Addon.ID").asString());
+        SetService(
+            m_serviceItems->Get(item)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
         Search();
       }
       return true;
@@ -340,7 +342,7 @@ const CFileItemPtr CGUIDialogSubtitles::GetService() const
 {
   for (int i = 0; i < m_serviceItems->Size(); i++)
   {
-    if (m_serviceItems->Get(i)->GetProperty("Addon.ID") == m_currentService)
+    if (m_serviceItems->Get(i)->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID) == m_currentService)
       return m_serviceItems->Get(i);
   }
   return CFileItemPtr();
@@ -452,25 +454,26 @@ void CGUIDialogSubtitles::OnSubtitleServiceContextMenu(int itemIdx)
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_SETTINGS:
     {
       AddonPtr addon;
-      if (CServiceBroker::GetAddonMgr().GetAddon(service->GetProperty("Addon.ID").asString(), addon,
-                                                 AddonType::SUBTITLE_MODULE,
-                                                 OnlyEnabled::CHOICE_YES))
+      if (CServiceBroker::GetAddonMgr().GetAddon(
+              service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(), addon,
+              AddonType::SUBTITLE_MODULE, OnlyEnabled::CHOICE_YES))
       {
         CGUIDialogAddonSettings::ShowForAddon(addon);
       }
       else
       {
         CLog::Log(LOGERROR, "{} - Could not open settings for addon: {}", __FUNCTION__,
-                  service->GetProperty("Addon.ID").asString());
+                  service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
       }
       break;
     }
     case SUBTITLE_SERVICE_CONTEXT_BUTTONS::ADDON_DISABLE:
     {
-      CServiceBroker::GetAddonMgr().DisableAddon(service->GetProperty("Addon.ID").asString(),
-                                                 AddonDisabledReason::USER);
+      CServiceBroker::GetAddonMgr().DisableAddon(
+          service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString(),
+          AddonDisabledReason::USER);
       const bool currentActiveServiceWasDisabled =
-          m_currentService == service->GetProperty("Addon.ID").asString();
+          m_currentService == service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString();
       FillServices();
       // restart search if the current active service was disabled
       if (currentActiveServiceWasDisabled && !m_serviceItems->IsEmpty())
@@ -609,6 +612,7 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
   // Extract the language and appropriate extension
   std::string strSubLang;
   CLangCodeExpander::ConvertToISO6391(language, strSubLang);
+  const std::string langSuffix{strSubLang.empty() ? "" : "." + strSubLang};
 
   // Iterate over all items to transfer
   for (unsigned int i = 0; i < vecFiles.size() && i < (unsigned int) items->Size(); i++)
@@ -619,7 +623,7 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
 
     // construct subtitle path
     std::string strSubExt = URIUtils::GetExtension(strUrl);
-    std::string strSubName = StringUtils::Format("{}.{}{}", strFileName, strSubLang, strSubExt);
+    std::string strSubName = StringUtils::Format("{}{}{}", strFileName, langSuffix, strSubExt);
 
     // Handle URL encoding:
     std::string strDownloadFile = URIUtils::ChangeBasePath(strCurrentFilePath, strSubName, strDownloadPath);
@@ -671,7 +675,7 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
         strUrl = URIUtils::ReplaceExtension(strUrl, ".idx");
         if(CFile::Exists(strUrl))
         {
-          std::string strSubNameIdx = StringUtils::Format("{}.{}.idx", strFileName, strSubLang);
+          std::string strSubNameIdx = StringUtils::Format("{}{}.idx", strFileName, langSuffix);
           // Handle URL encoding:
           strDestFile = URIUtils::ChangeBasePath(strCurrentFilePath, strSubNameIdx, strDestPath);
           CFile::Copy(strUrl, strDestFile);

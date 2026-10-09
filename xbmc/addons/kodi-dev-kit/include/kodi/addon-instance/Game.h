@@ -279,6 +279,23 @@ public:
   }
   //----------------------------------------------------------------------------
 
+  //============================================================================
+  /// @brief **Callback to Kodi Function**\n
+  /// The <libretro_core> property from addon.xml, such as "fceumm_libretro".
+  ///
+  /// @return The core's name, or an empty string if addon.xml has none or
+  ///         Kodi's game API is older than 8.2.1
+  ///
+  /// @remarks Only called from the add-on itself
+  ///
+  std::string LibretroCore() const
+  {
+    if (!IsInstanceAPIVersionAtLeast(8, 2, 1) || m_instanceData->props->libretro_core == nullptr)
+      return "";
+    return m_instanceData->props->libretro_core;
+  }
+  //----------------------------------------------------------------------------
+
   ///@}
 
   //--==----==----==----==----==----==----==----==----==----==----==----==----==--
@@ -478,7 +495,10 @@ public:
     ///
     /// @param[in] properties The stream properties
     ///
-    /// @return A stream handle, or `nullptr` on failure
+    /// Hardware streams are reset once after their handle is installed. Reset
+    /// may use GetBuffer(); reset failure releases that stream.
+    ///
+    /// @return True if the stream is ready, false otherwise
     ///
     /// @remarks Only called from the add-on itself
     ///
@@ -497,6 +517,15 @@ public:
           *static_cast<CInstanceGame*>(CPrivateBase::m_interface->globalSingleInstance)
                ->m_instanceData->toKodi;
       m_handle = cb.OpenStream(cb.kodiInstance, &properties);
+      if (m_handle && properties.type == GAME_STREAM_HW_FRAMEBUFFER)
+      {
+        const KODI_GAME_STREAM_HANDLE handle = m_handle;
+        const bool started = cb.StartStream(cb.kodiInstance, handle);
+        if (m_handle != handle)
+          return false;
+        if (!started)
+          Close();
+      }
       return m_handle != nullptr;
     }
     //--------------------------------------------------------------------------
@@ -515,8 +544,10 @@ public:
       AddonToKodiFuncTable_Game& cb =
           *static_cast<CInstanceGame*>(CPrivateBase::m_interface->globalSingleInstance)
                ->m_instanceData->toKodi;
-      cb.CloseStream(cb.kodiInstance, m_handle);
-      m_handle = nullptr;
+      const KODI_GAME_STREAM_HANDLE handle = m_handle;
+      cb.CloseStream(cb.kodiInstance, handle);
+      if (m_handle == handle)
+        m_handle = nullptr;
     }
     //--------------------------------------------------------------------------
 
@@ -551,6 +582,10 @@ public:
     /// @brief Add a data packet to a stream
     ///
     /// @param[in] packet The data packet
+    ///
+    /// Hardware packets carry the current frame size, display aspect ratio and
+    /// rotation. Rotation affects presentation geometry; it does not change
+    /// the framebuffer contents or the context's bottom-left-origin setting.
     ///
     /// @remarks Only called from the add-on itself
     ///
@@ -641,7 +676,9 @@ public:
   //============================================================================
   /// @brief Invalidates the current HW context and reinitializes GPU resources
   ///
-  /// Any GL state is lost, and must not be deinitialized explicitly.
+  /// Kodi calls this once with the hardware context current after CStream has
+  /// installed its handle. GetBuffer() is available during this callback.
+  /// Returning an error closes the stream and calls HwContextDestroy().
   ///
   /// @return The error, or @ref GAME_ERROR_NO_ERROR if the HW context was reset
   ///

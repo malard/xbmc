@@ -378,8 +378,31 @@ void CWinSystemGbm::OnLostDevice()
   m_dispReset = true;
 
   std::unique_lock lock(m_resourceSection);
-  for (auto resource : m_resources)
+  std::vector<IDispResource*> resources = m_resources;
+
+  for (auto resource : resources)
+  {
+    if (find(m_resources.begin(), m_resources.end(), resource) == m_resources.end())
+      continue;
+
     resource->OnLostDisplay();
+  }
+}
+
+void CWinSystemGbm::OnResetDisplay()
+{
+  CLog::Log(LOGDEBUG, "{} - notify display reset event", __FUNCTION__);
+
+  std::unique_lock lock(m_resourceSection);
+  std::vector<IDispResource*> resources = m_resources;
+
+  for (auto resource : resources)
+  {
+    if (find(m_resources.begin(), m_resources.end(), resource) == m_resources.end())
+      continue;
+
+    resource->OnResetDisplay();
+  }
 }
 
 std::unique_ptr<CVideoSync> CWinSystemGbm::GetVideoSync(CVideoReferenceClock* clock)

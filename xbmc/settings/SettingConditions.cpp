@@ -399,6 +399,7 @@ void CSettingConditions::Initialize()
 #endif
 #ifdef TARGET_ANDROID
   m_simpleConditions.emplace("has_mediacodec");
+  m_simpleConditions.emplace("have_android");
 #endif
 #ifdef TARGET_DARWIN
   m_simpleConditions.emplace("HasVTB");
@@ -411,6 +412,9 @@ void CSettingConditions::Initialize()
 #endif
 #ifdef TARGET_DARWIN_TVOS
   m_simpleConditions.emplace("have_tvos");
+#endif
+#ifdef TARGET_WASM
+  m_simpleConditions.emplace("have_wasm");
 #endif
 #if defined(TARGET_WINDOWS)
   m_simpleConditions.emplace("has_dx");
