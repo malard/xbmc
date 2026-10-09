@@ -796,7 +796,8 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
   {
     // get the usual shares
     CGUIDialogContextMenu::GetContextButtons("video", item, buttons);
-    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE && !item->IsParentFolder() &&
+    if (!item->IsDVD() && item->GetPath() != ITEM::PLACEHOLDER::ADD_SOURCE &&
+        !item->IsParentFolder() &&
         (profileManager->GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
       CVideoDatabase database;
