@@ -7,6 +7,7 @@ set(SOURCES TestAlarmClock.cpp
             TestBitstreamConverter.cpp
             TestBitstreamStats.cpp
             TestCharsetConverter.cpp
+            TestContentNames.cpp
             TestCPUInfo.cpp
             TestComponentContainer.cpp
             TestContentUtils.cpp
@@ -19,6 +20,7 @@ set(SOURCES TestAlarmClock.cpp
             TestFileOperationJob.cpp
             TestFileUtils.cpp
             TestGlobalsHandling.cpp
+            TestGroupUtils.cpp
             TestGPUInfo.cpp
             TestHTMLUtil.cpp
             TestHttpHeader.cpp
