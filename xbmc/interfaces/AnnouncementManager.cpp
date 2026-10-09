@@ -14,6 +14,7 @@
 #include "playlists/PlayListTypes.h"
 #include "pvr/channels/PVRChannel.h"
 #include "threads/SingleLock.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -84,7 +85,8 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& object)
   if (!tag.m_type.empty())
     objItem["type"] = tag.m_type;
   else
-    objItem["type"] = CVideoDatabase::VideoContentTypeToString(item.GetVideoContentType());
+    objItem["type"] =
+        KODI::MEDIA::NameOf(DatabaseUtils::MediaTypeFromVideoContentType(item.GetVideoContentType()));
 
   if (id <= 0)
   {
@@ -133,7 +135,7 @@ void CopyMusicTagInfoToObject(CFileItem& item, CVariant& object)
 
   auto& objItem = object["item"];
   int id = tag.GetDatabaseId();
-  objItem["type"] = MediaTypeSong;
+  objItem["type"] = KODI::MEDIA::NameOf(KODI::MEDIA::TYPE::SONG);
 
   //! @todo Can be removed once this is properly handled when starting playback of a file
   if (id <= 0 && !item.GetPath().empty() && item.GetProperty(LOOKUP_PROPERTY).asBoolean(true))

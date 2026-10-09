@@ -108,7 +108,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 {
   // @todo: combine with versions add file logic, structured similarly and sharing most logic.
 
-  const MediaType mediaType{m_videoAsset->GetVideoInfoTag()->m_type};
+  const KODI::MEDIA::TYPE mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
 
   // prompt to choose a video file
   std::vector<CMediaSource> sources{*CMediaSourceSettings::GetInstance().GetSources("files")};
@@ -169,7 +169,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
       }
 
       std::string videoTitle;
-      if (newAsset.m_mediaType == MediaTypeMovie)
+      if (newAsset.m_mediaType == KODI::MEDIA::TYPE::MOVIE)
       {
         videoTitle = m_database.GetMovieTitle(newAsset.m_idMedia);
       }
