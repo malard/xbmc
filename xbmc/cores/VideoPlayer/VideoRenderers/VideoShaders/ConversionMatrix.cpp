@@ -8,6 +8,7 @@
 
 #include "ConversionMatrix.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
@@ -523,32 +524,18 @@ const CGlMatrix& CConvertMatrix::GenMat()
     mat *= CTranslate(0, -0.5, -0.5);
   }
 
-  // limited range of the second and third planes, as 8 bit codes
-  const float range = m_rgbSrc ? 219.0f : 224.0f;
-
   if (m_limitedSrc)
   {
-    if (m_srcBits >= 12)
-    {
-      CScale scale(4095.0f / (3760 - 256), 4095.0f / (range * 16), 4095.0f / (range * 16));
-      CTranslate trans(-256.0f / 4095.0f, -256.0f / 4095.0f, -256.0f / 4095.0f);
-      mat *= scale;
-      mat *= trans;
-    }
-    else if (m_srcBits == 10)
-    {
-      CScale scale(1023.0f / (940 - 64), 1023.0f / (range * 4), 1023.0f / (range * 4));
-      CTranslate trans(-64.0f / 1023.0f, -64.0f / 1023.0f, -64.0f / 1023.0f);
-      mat *= scale;
-      mat *= trans;
-    }
-    else
-    {
-      CScale scale(255.0f / (235 - 16), 255.0f / range, 255.0f / range);
-      CTranslate trans(- 16.0f / 255, - 16.0f / 255, - 16.0f / 255);
-      mat *= scale;
-      mat *= trans;
-    }
+    // the limited range is 16 to 235, or to 240 for chroma, times the step of an 8 bit code
+    const int bits = std::max(m_srcBits, 8);
+    const float step = static_cast<float>(1 << (bits - 8));
+    const float peak = static_cast<float>((1 << bits) - 1);
+    const float luma = peak / (219 * step);
+    const float chroma = m_rgbSrc ? luma : peak / (224 * step);
+    const float black = -16 * step / peak;
+
+    mat *= CScale(luma, chroma, chroma);
+    mat *= CTranslate(black, black, black);
   }
 
   if (m_srcTextureBits > 8)

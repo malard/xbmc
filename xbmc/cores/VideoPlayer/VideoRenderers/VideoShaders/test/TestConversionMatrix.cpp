@@ -96,6 +96,26 @@ std::array<std::array<float, 4>, 4> bt709_10bit =
 
 Matrix4 bt709Mat_10bit(bt709_10bit);
 
+std::array<std::array<float, 4>, 4> bt709_12bit =
+{{
+  {1.1686643836, 1.1686643836, 1.1686643836, 0.0000000000},
+  {0.0000000000, -0.2140326165, 2.1201679688, 0.0000000000},
+  {1.7993320313, -0.5348685540, 0.0000000000, 0.0000000000},
+  {-0.9729450750, 0.3014826655, -1.1334022179, 1.0000000000},
+}};
+
+Matrix4 bt709Mat_12bit(bt709_12bit);
+
+std::array<std::array<float, 4>, 4> bt709_16bit =
+{{
+  {1.1689319349, 1.1689319349, 1.1689319349, 0.0000000000},
+  {0.0000000000, -0.2140816167, 2.1206533552, 0.0000000000},
+  {1.7997439662, -0.5349910056, 0.0000000000, 0.0000000000},
+  {-0.9729450750, 0.3014826655, -1.1334022179, 1.0000000000},
+}};
+
+Matrix4 bt709Mat_16bit(bt709_16bit);
+
 std::array<std::array<float, 4>, 4> bt709_10bit_texture =
 {{
   {74.8116378784, 74.8116378784, 74.8116378784, 0.0000000000},
@@ -181,6 +201,20 @@ TEST(TestConvertMatrix, YUV2RGB)
   DebugPrint(yuvMat);
 
   EXPECT_TRUE(CompareMatrices(bt709Mat_10bit, yuvMat, 0.0001f));
+
+  convMat.SetSourceBitDepth(12)
+         .SetSourceTextureBitDepth(8);
+  yuvMat = convMat.GetYuvMat();
+  DebugPrint(yuvMat);
+
+  EXPECT_TRUE(CompareMatrices(bt709Mat_12bit, yuvMat, 0.0001f));
+
+  convMat.SetSourceBitDepth(16)
+         .SetSourceTextureBitDepth(8);
+  yuvMat = convMat.GetYuvMat();
+  DebugPrint(yuvMat);
+
+  EXPECT_TRUE(CompareMatrices(bt709Mat_16bit, yuvMat, 0.0001f));
 
   convMat.SetSourceBitDepth(10)
          .SetSourceTextureBitDepth(10);

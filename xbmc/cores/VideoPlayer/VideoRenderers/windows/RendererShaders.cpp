@@ -40,6 +40,12 @@ constexpr PlaneTextures FORMATS[] = {
     {AV_PIX_FMT_YUV420P10, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
     {AV_PIX_FMT_P016, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM},
     {AV_PIX_FMT_YUV420P16, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
+    {AV_PIX_FMT_YUV422P, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM},
+    {AV_PIX_FMT_YUV422P10, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
+    {AV_PIX_FMT_YUV422P12, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
+    {AV_PIX_FMT_YUV444P, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM},
+    {AV_PIX_FMT_YUV444P10, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
+    {AV_PIX_FMT_YUV444P12, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
     {AV_PIX_FMT_GBRP, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM},
     {AV_PIX_FMT_GBRP10, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
     {AV_PIX_FMT_GBRP12, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM},
@@ -456,11 +462,15 @@ bool CRendererShaders::CRenderBufferImpl::UploadFromBuffer() const
   videoBuffer->GetPlanes(bufData);
   videoBuffer->GetStrides(srcLines);
 
+  bool loaded = true;
   for (unsigned plane = 0; plane < m_viewCount; ++plane)
   {
     D3D11_MAPPED_SUBRESOURCE mapping = {};
     if (!m_textures[plane].LockRect(0, &mapping, D3D11_MAP_WRITE_DISCARD))
+    {
+      loaded = false;
       break;
+    }
 
     auto* dst = static_cast<uint8_t*>(mapping.pData);
     auto* src = bufData[plane];
@@ -488,5 +498,5 @@ bool CRendererShaders::CRenderBufferImpl::UploadFromBuffer() const
   for (unsigned plane = 0; plane < m_viewCount; ++plane)
     if (!m_textures[plane].UnlockRect(0)) {}
 
-  return true;
+  return loaded;
 }
