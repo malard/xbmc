@@ -47,10 +47,13 @@ void CRendererShaders::GetWeight(std::map<RenderMethod, int>& weights, const Vid
       break;
     case AV_PIX_FMT_YUV420P:
     case AV_PIX_FMT_NV12:
+    case AV_PIX_FMT_GBRP:
       weight += 500; // single copying
       break;
     case AV_PIX_FMT_YUV420P10:
     case AV_PIX_FMT_YUV420P16:
+    case AV_PIX_FMT_GBRP10:
+    case AV_PIX_FMT_GBRP12:
       if (DX::Windowing()->IsFormatSupport(DXGI_FORMAT_R16_UNORM, D3D11_FORMAT_SUPPORT_TEXTURE2D))
         weight += 500; // single copying
       else
@@ -253,6 +256,7 @@ CRendererShaders::CRenderBufferImpl::CRenderBufferImpl(AVPixelFormat av_pix_form
     break;
   }
   case AV_PIX_FMT_YUV420P:
+  case AV_PIX_FMT_GBRP:
   {
     view_formats[0] = view_formats[1] = view_formats[2] = DXGI_FORMAT_R8_UNORM;
     m_viewCount = 3;
@@ -260,10 +264,12 @@ CRendererShaders::CRenderBufferImpl::CRenderBufferImpl(AVPixelFormat av_pix_form
   }
   case AV_PIX_FMT_YUV420P10:
   case AV_PIX_FMT_YUV420P16:
+  case AV_PIX_FMT_GBRP10:
+  case AV_PIX_FMT_GBRP12:
   {
     view_formats[0] = view_formats[1] = view_formats[2] = DXGI_FORMAT_R16_UNORM;
     m_viewCount = 3;
-    texBits = av_format == AV_PIX_FMT_YUV420P10 ? 10 : 16;
+    texBits = av_pix_fmt_desc_get(av_format)->comp[0].depth;
     break;
   }
   default:
@@ -273,10 +279,13 @@ CRendererShaders::CRenderBufferImpl::CRenderBufferImpl(AVPixelFormat av_pix_form
 
   if (av_format != AV_PIX_FMT_D3D11VA_VLD)
   {
+    const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(av_format);
+
     for (size_t i = 0; i < m_viewCount; i++)
     {
-      const auto w = i ? m_width >> 1 : m_width;
-      const auto h = i ? m_height >> 1 : m_height;
+      const auto w = i ? m_width >> desc->log2_chroma_w : m_width;
+      const auto h = i ? m_height >> desc->log2_chroma_h : m_height;
+      const bool uv = i && !(desc->flags & AV_PIX_FMT_FLAG_RGB);
 
       if (!m_textures[i].Create(w, h, 1, D3D11_USAGE_DYNAMIC, view_formats[i]))
         break;
@@ -288,9 +297,9 @@ CRendererShaders::CRenderBufferImpl::CRenderBufferImpl(AVPixelFormat av_pix_form
         if (view_formats[i] == DXGI_FORMAT_R8_UNORM ||
           view_formats[i] == DXGI_FORMAT_R8G8_UNORM ||
           view_formats[i] == DXGI_FORMAT_R8G8_SNORM)
-          memset(mapping.pData, i ? 0x80 : 0, mapping.RowPitch * h);
+          memset(mapping.pData, uv ? 0x80 : 0, mapping.RowPitch * h);
         else
-          wmemset(static_cast<wchar_t*>(mapping.pData), i ? 0x8000 : 0, mapping.RowPitch * h >> 1);
+          wmemset(static_cast<wchar_t*>(mapping.pData), uv ? 0x8000 : 0, mapping.RowPitch * h >> 1);
 
         if (m_textures[i].UnlockRect(0)) {}
       }
@@ -470,7 +479,7 @@ bool CRendererShaders::CRenderBufferImpl::UploadFromBuffer() const
     auto* src = bufData[plane];
     int srcLine = srcLines[plane];
     int dstLine = mapping.RowPitch;
-    int height = plane ? m_height >> 1 : m_height;
+    int height = m_textures[plane].GetHeight();
 
     if (srcLine == dstLine)
     {

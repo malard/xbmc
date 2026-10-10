@@ -35,6 +35,8 @@ constexpr ConvYCbCr BT601YCbCr = {0.299, 0.114};
 constexpr ConvYCbCr BT2020YCbCr = {0.2627, 0.0593};
 constexpr ConvYCbCr ST240YCbCr = {0.212, 0.087};
 
+constexpr std::array<std::array<float, 3>, 3> GBRToRGB = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
+
 constexpr Primaries PrimariesBT709 = {{{0.640, 0.330}, {0.300, 0.600}, {0.150, 0.060}},
                                       {0.3127, 0.3290}};
 constexpr Primaries PrimariesBT610_525 = {{{0.640, 0.340}, {0.310, 0.595}, {0.155, 0.070}},
@@ -352,6 +354,15 @@ CConvertMatrix& CConvertMatrix::SetSourceColorSpace(AVColorSpace colorSpace)
   return *this;
 }
 
+CConvertMatrix& CConvertMatrix::SetSourceRGB(bool rgb)
+{
+  if (m_rgbSrc != rgb)
+    m_mat.reset();
+
+  m_rgbSrc = rgb;
+  return *this;
+}
+
 CConvertMatrix& CConvertMatrix::SetSourceBitDepth(int bits)
 {
   if (m_srcBits != bits)
@@ -505,31 +516,35 @@ const CGlMatrix& CConvertMatrix::GenMat()
       break;
   }
 
-  ConversionToRGB mConvRGB(convYCbCr.Kr, convYCbCr.Kb);
-  CGlMatrix mat(mConvRGB);
+  CGlMatrix mat(GBRToRGB);
+  if (!m_rgbSrc)
+  {
+    mat = CGlMatrix(ConversionToRGB(convYCbCr.Kr, convYCbCr.Kb));
+    mat *= CTranslate(0, -0.5, -0.5);
+  }
 
-  CTranslate trans(0, -0.5, -0.5);
-  mat *= trans;
+  // limited range of the second and third planes, as 8 bit codes
+  const float range = m_rgbSrc ? 219.0f : 224.0f;
 
   if (m_limitedSrc)
   {
     if (m_srcBits >= 12)
     {
-      CScale scale(4095.0f / (3760 - 256), 4095.0f / (3840 - 256), 4095.0f / (3840 - 256));
+      CScale scale(4095.0f / (3760 - 256), 4095.0f / (range * 16), 4095.0f / (range * 16));
       CTranslate trans(-256.0f / 4095.0f, -256.0f / 4095.0f, -256.0f / 4095.0f);
       mat *= scale;
       mat *= trans;
     }
     else if (m_srcBits == 10)
     {
-      CScale scale(1023.0f / (940 - 64), 1023.0f / (960 - 64), 1023.0f / (960 - 64));
+      CScale scale(1023.0f / (940 - 64), 1023.0f / (range * 4), 1023.0f / (range * 4));
       CTranslate trans(-64.0f / 1023.0f, -64.0f / 1023.0f, -64.0f / 1023.0f);
       mat *= scale;
       mat *= trans;
     }
     else
     {
-      CScale scale(255.0f / (235 - 16), 255.0f / (240 - 16), 255.0f / (240 - 16));
+      CScale scale(255.0f / (235 - 16), 255.0f / range, 255.0f / range);
       CTranslate trans(- 16.0f / 255, - 16.0f / 255, - 16.0f / 255);
       mat *= scale;
       mat *= trans;

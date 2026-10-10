@@ -1087,6 +1087,11 @@ bool CDVDVideoCodecFFmpeg::GetPictureCommon(VideoPicture* pVideoPicture)
   if (m_pCodecContext->color_range == AVCOL_RANGE_JPEG ||
     m_pCodecContext->pix_fmt == AV_PIX_FMT_YUVJ420P)
     pVideoPicture->color_range = 1;
+  // RGB with no range given is full range
+  else if (m_pCodecContext->color_range == AVCOL_RANGE_UNSPECIFIED &&
+           m_hints.colorRange == AVCOL_RANGE_UNSPECIFIED && desc &&
+           (desc->flags & AV_PIX_FMT_FLAG_RGB))
+    pVideoPicture->color_range = 1;
   else
     pVideoPicture->color_range = m_hints.colorRange == AVCOL_RANGE_JPEG ? 1 : 0;
 

@@ -601,6 +601,12 @@ bool CYUV2RGBShader::Create(AVPixelFormat fmt, AVColorPrimaries dstPrimaries,
   case AV_PIX_FMT_YUYV422:
     defines["XBMC_YUY2"] = "";
     break;
+  case AV_PIX_FMT_GBRP:
+  case AV_PIX_FMT_GBRP10:
+  case AV_PIX_FMT_GBRP12:
+    defines["XBMC_GBRP"] = "";
+    m_convMatrix.SetSourceRGB(true);
+    break;
   default:
     return false;
   }

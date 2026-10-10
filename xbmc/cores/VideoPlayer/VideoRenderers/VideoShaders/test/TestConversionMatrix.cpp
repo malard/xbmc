@@ -106,6 +106,36 @@ std::array<std::array<float, 4>, 4> bt709_10bit_texture =
 
 Matrix4 bt709Mat_10bit_texture(bt709_10bit_texture);
 
+std::array<std::array<float, 4>, 4> gbr_full =
+{{
+  {0.0000000000, 1.0000000000, 0.0000000000, 0.0000000000},
+  {0.0000000000, 0.0000000000, 1.0000000000, 0.0000000000},
+  {1.0000000000, 0.0000000000, 0.0000000000, 0.0000000000},
+  {0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000},
+}};
+
+Matrix4 gbrMat_full(gbr_full);
+
+std::array<std::array<float, 4>, 4> gbr_8bit =
+{{
+  {0.0000000000, 1.1643835616, 0.0000000000, 0.0000000000},
+  {0.0000000000, 0.0000000000, 1.1643835616, 0.0000000000},
+  {1.1643835616, 0.0000000000, 0.0000000000, 0.0000000000},
+  {-0.0730593607, -0.0730593607, -0.0730593607, 1.0000000000},
+}};
+
+Matrix4 gbrMat_8bit(gbr_8bit);
+
+std::array<std::array<float, 4>, 4> gbr_10bit_texture =
+{{
+  {0.0000000000, 74.8116438356, 0.0000000000, 0.0000000000},
+  {0.0000000000, 0.0000000000, 74.8116438356, 0.0000000000},
+  {74.8116438356, 0.0000000000, 0.0000000000, 0.0000000000},
+  {-0.0730593607, -0.0730593607, -0.0730593607, 1.0000000000},
+}};
+
+Matrix4 gbrMat_10bit_texture(gbr_10bit_texture);
+
 std::array<std::array<float, 3>, 3> bt601_to_bt709 =
 {{
   {1.0440435410, -0.0000000230, 0.0000000056},
@@ -158,6 +188,39 @@ TEST(TestConvertMatrix, YUV2RGB)
   DebugPrint(yuvMat);
 
   EXPECT_TRUE(CompareMatrices(bt709Mat_10bit_texture, yuvMat, 0.0001f));
+}
+
+TEST(TestConvertMatrix, GBR2RGB)
+{
+  CConvertMatrix convMat;
+  convMat.SetSourceRGB(true)
+         .SetSourceLimitedRange(false);
+
+  convMat.SetDestinationBlack(0.0f)
+         .SetDestinationContrast(1.0f)
+         .SetDestinationLimitedRange(false);
+
+  Matrix4 rgbMat;
+
+  convMat.SetSourceBitDepth(8)
+         .SetSourceTextureBitDepth(8);
+  rgbMat = convMat.GetYuvMat();
+  DebugPrint(rgbMat);
+
+  EXPECT_TRUE(CompareMatrices(gbrMat_full, rgbMat, 0.0001f));
+
+  convMat.SetSourceLimitedRange(true);
+  rgbMat = convMat.GetYuvMat();
+  DebugPrint(rgbMat);
+
+  EXPECT_TRUE(CompareMatrices(gbrMat_8bit, rgbMat, 0.0001f));
+
+  convMat.SetSourceBitDepth(10)
+         .SetSourceTextureBitDepth(10);
+  rgbMat = convMat.GetYuvMat();
+  DebugPrint(rgbMat);
+
+  EXPECT_TRUE(CompareMatrices(gbrMat_10bit_texture, rgbMat, 0.0001f));
 }
 
 TEST(TestConvertMatrix, ColorSpaceConversion)

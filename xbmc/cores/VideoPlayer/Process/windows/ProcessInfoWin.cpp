@@ -36,6 +36,9 @@ std::vector<AVPixelFormat> CProcessInfoWin::GetRenderFormats()
     AV_PIX_FMT_P010,
     AV_PIX_FMT_YUV420P10,
     AV_PIX_FMT_P016,
-    AV_PIX_FMT_YUV420P16
+    AV_PIX_FMT_YUV420P16,
+    AV_PIX_FMT_GBRP,
+    AV_PIX_FMT_GBRP10,
+    AV_PIX_FMT_GBRP12
   };
 }
