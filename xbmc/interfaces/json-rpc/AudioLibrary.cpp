@@ -884,7 +884,9 @@ bool CAudioLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
   int albumID = static_cast<int>(parameterObject["albumId"].asInteger(-1));
   int genreID = static_cast<int>(parameterObject["genreId"].asInteger(-1));
 
-  // Sort only what this call resolved; the caller's list may already hold items.
+  // Gather into a list of our own. The sort below applies to what this call resolved, and
+  // callers accumulate several items into one list - sorting theirs would reorder the items
+  // they resolved earlier.
   CFileItemList resolved;
 
   bool success = false;
@@ -924,10 +926,10 @@ bool CAudioLibrary::FillFileItemList(const CVariant &parameterObject, CFileItemL
     // we sort by artist (and implicitly by album and track number)
     else if (genreID != -1)
       resolved.Sort(SortBy::ARTIST, SortOrder::ASCENDING,
-                CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                    CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
-                    ? SortAttributeIgnoreArticle
-                    : SortAttributeNone);
+                    CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+                        CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                        ? SortAttributeIgnoreArticle
+                        : SortAttributeNone);
     // otherwise we sort by track number
     else
       resolved.Sort(SortBy::TRACK_NUMBER, SortOrder::ASCENDING);

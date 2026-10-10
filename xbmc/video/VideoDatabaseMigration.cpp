@@ -1435,19 +1435,22 @@ void CVideoDatabase::UpdateTables(int iVersion)
 
   if (iVersion < 151)
   {
+    for (const char* table :
+         {"movie", "tvshow", "seasons", "episode", "musicvideo", "sets", "genre", "tag"})
+      AddAutoIncrement(table);
+  }
+
+  if (iVersion < 152)
+  {
     KODI::DATABASE::CVideoDatabaseDDL::CreateContentGeometryTable(*this);
 
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredAspect float");
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredOn text");
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DetectedWhenDeclared float");
-
-    for (const char* table :
-         {"movie", "tvshow", "seasons", "episode", "musicvideo", "sets", "genre", "tag"})
-      AddAutoIncrement(table);
   }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 151;
+  return 152;
 }

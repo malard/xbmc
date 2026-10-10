@@ -33,7 +33,7 @@ namespace JSONRPC
     static bool FillFileItem(
         const std::shared_ptr<CFileItem>& originalItem,
         std::shared_ptr<CFileItem>& item,
-                           std::optional<KODI::MEDIA::MediaSection> section = {},
+        std::optional<KODI::MEDIA::MediaSection> section = {},
         const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
     static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
     static bool NeedsLibraryLookup(const CVariant& parameterObject);

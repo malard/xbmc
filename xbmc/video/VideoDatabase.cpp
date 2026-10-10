@@ -1046,7 +1046,7 @@ int CVideoDatabase::GetFileId(const CFileItem &item)
 {
   int fileId = -1;
 
-  if (URIUtils::IsBlurayPath(item.GetDynPath()))
+  if (URIUtils::IsBlurayPath(item.GetDynPath()) && CUtil::UseDynPathForAddOrUpdate(item))
     return GetFileId(item.GetDynPath());
 
   if (item.HasVideoInfoTag())
@@ -7238,9 +7238,7 @@ bool CVideoDatabase::GetSetsByWhere(const std::string& strBaseDir, const Filter 
   return false;
 }
 
-bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFileItemList& items,
-                                            const Filter &filter /* = Filter() */,
-                                            bool countOnly /* = false */)
+bool CVideoDatabase::GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFileItemList& items, const Filter &filter /* = Filter() */, bool countOnly /* = false */)
 {
   try
   {

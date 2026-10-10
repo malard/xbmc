@@ -347,14 +347,14 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
                                        "contentgeometry";
 }
 
-//! The real 150 to 151 upgrade, driven through CDatabaseManager.
+//! The real 150 to 152 upgrade, driven through CDatabaseManager.
 TEST(TestVideoDatabaseMigration, UpgradingFrom150AddsTheTableAndItsCascade)
 {
   const DatabaseSettings settings{TestDatabaseSettings()};
 
   // Started at 150 rather than earlier because 150 is upstream's set sort title migration, and
   // replaying it over a table the current schema already built adds a duplicate column and
-  // aborts. This test is about the 151 upgrade.
+  // aborts. This test is about the 152 upgrade.
   {
     CVideoDatabase old;
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
@@ -369,9 +369,9 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom150AddsTheTableAndItsCascade)
 
   CVideoDatabase migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-            migrated.Connect("MyVideosMigration151", settings, false));
+            migrated.Connect("MyVideosMigration152", settings, false));
 
-  EXPECT_EQ(151, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
+  EXPECT_EQ(152, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
 
   // The same upgrade carries the declaration columns, which live with the other per-file
   // overrides rather than in the cache.

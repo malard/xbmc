@@ -40,9 +40,9 @@
 #include "utils/FileUtils.h"
 
 using namespace KODI;
+using KODI::MEDIA::MediaSection;
 
 namespace CONTENT = KODI::MEDIA::CONTENT;
-using KODI::MEDIA::MediaSection;
 
 #define CONTROL_BTN_REFRESH       6
 #define CONTROL_USERRATING        7
