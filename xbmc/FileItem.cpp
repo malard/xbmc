@@ -34,8 +34,8 @@
 #include "music/tags/MusicInfoTagLoaderFactory.h"
 #include "network/NetworkFileItemClassify.h"
 #include "pictures/PictureInfoTag.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannel.h"
@@ -58,6 +58,7 @@
 #include "utils/Archive.h"
 #include "utils/ArtTypes.h"
 #include "utils/ArtUtils.h"
+#include "utils/DefaultArt.h"
 #include "utils/EpisodeUtils.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/ItemProperties.h"
@@ -87,6 +88,7 @@ using namespace PLAYLIST;
 using namespace MUSIC_INFO;
 using namespace PVR;
 using namespace GAME;
+using KODI::MEDIA::IsContainer;
 
 namespace
 {
@@ -94,7 +96,7 @@ namespace
 bool HasNoLocalArtLocation(const CFileItem& item)
 {
   const std::string& path{item.GetPath()};
-  return path.empty() || PLACEHOLDER::IsNewPlaylist(path) || item.IsShareOrDrive() ||
+  return path.empty() || ITEM::PLACEHOLDER::IsNewPlaylist(path) || item.IsShareOrDrive() ||
          NETWORK::IsInternetStream(item) || URIUtils::IsUPnP(path) ||
          (URIUtils::IsFTP(path) &&
           !CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bFTPThumbs) ||
@@ -172,9 +174,9 @@ CFileItem::CFileItem(const std::shared_ptr<CPVREpgInfoTag>& tag)
     if (!iconPath.empty())
       SetArt(ART::TYPE::ICON, iconPath);
     else if (tag->IsRadio())
-      SetArt(ART::TYPE::ICON, "DefaultMusicSongs.png");
+      SetArt(ART::TYPE::ICON, ART::DEFAULT::MUSIC_SONGS);
     else
-      SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
+      SetArt(ART::TYPE::ICON, ART::DEFAULT::TV_SHOWS);
   }
 
   // Speedup FillInDefaultIcon()
@@ -200,7 +202,7 @@ CFileItem::CFileItem(const std::shared_ptr<PVR::CPVREpgSearchFilter>& filter)
   if (!iconPath.empty())
     SetArt(ART::TYPE::ICON, iconPath);
   else
-    SetArt(ART::TYPE::ICON, "DefaultPVRSearch.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::PVR_SEARCH);
 
   // Speedup FillInDefaultIcon()
   SetProperty(ITEM::PROPERTY::ICON_NEVER_OVERLAY, true);
@@ -220,9 +222,9 @@ CFileItem::CFileItem(const std::shared_ptr<CPVRChannelGroupMember>& channelGroup
   if (!channel->IconPath().empty())
     SetArt(ART::TYPE::ICON, channel->IconPath());
   else if (channel->IsRadio())
-    SetArt(ART::TYPE::ICON, "DefaultMusicSongs.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::MUSIC_SONGS);
   else
-    SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::TV_SHOWS);
 
   SetProperty("channelid", channel->ChannelID());
   SetProperty("path", channelGroupMember->Path());
@@ -256,9 +258,9 @@ CFileItem::CFileItem(const std::shared_ptr<CPVRRecording>& record)
     if (channel && !channel->IconPath().empty())
       SetArt(ART::TYPE::ICON, channel->IconPath());
     else if (record->IsRadio())
-      SetArt(ART::TYPE::ICON, "DefaultMusicSongs.png");
+      SetArt(ART::TYPE::ICON, ART::DEFAULT::MUSIC_SONGS);
     else
-      SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
+      SetArt(ART::TYPE::ICON, ART::DEFAULT::TV_SHOWS);
   }
 
   if (!record->ThumbnailPath().empty())
@@ -285,9 +287,9 @@ CFileItem::CFileItem(const std::shared_ptr<CPVRTimerInfoTag>& timer)
   if (!timer->ChannelIcon().empty())
     SetArt(ART::TYPE::ICON, timer->ChannelIcon());
   else if (timer->IsRadio())
-    SetArt(ART::TYPE::ICON, "DefaultMusicSongs.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::MUSIC_SONGS);
   else
-    SetArt(ART::TYPE::ICON, "DefaultTVShows.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::TV_SHOWS);
 
   // Speedup FillInDefaultIcon()
   SetProperty(ITEM::PROPERTY::ICON_NEVER_OVERLAY, true);
@@ -305,7 +307,7 @@ CFileItem::CFileItem(std::string_view path, const std::shared_ptr<CPVRProvider>&
   if (!provider->GetIconPath().empty())
     SetArt(ART::TYPE::ICON, provider->GetIconPath());
   else
-    SetArt(ART::TYPE::ICON, "DefaultPVRProvider.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::PVR_PROVIDER);
 
   if (!provider->GetThumbPath().empty())
     SetArt(ART::TYPE::THUMB, provider->GetThumbPath());
@@ -512,6 +514,7 @@ CFileItem& CFileItem::operator=(const CFileItem& item)
   m_strDVDLabel = item.m_strDVDLabel;
   m_strTitle = item.m_strTitle;
   m_programCount = item.m_programCount;
+  m_playListOrder = item.m_playListOrder;
   m_depth = item.m_depth;
   m_lockInfo = item.m_lockInfo;
   m_bCanQueue=item.m_bCanQueue;
@@ -540,6 +543,7 @@ void CFileItem::Archive(CArchive& ar)
     ar << m_strDVDLabel;
     ar << m_strTitle;
     ar << m_programCount;
+    ar << m_playListOrder;
     ar << m_depth;
     ar << m_lStartOffset;
     ar << m_lStartPartNumber;
@@ -597,6 +601,7 @@ void CFileItem::Archive(CArchive& ar)
     ar >> m_strDVDLabel;
     ar >> m_strTitle;
     ar >> m_programCount;
+    ar >> m_playListOrder;
     ar >> m_depth;
     ar >> m_lStartOffset;
     ar >> m_lStartPartNumber;
@@ -637,17 +642,14 @@ void CFileItem::Archive(CArchive& ar)
 
 void CFileItem::Serialize(CVariant& value) const
 {
-  //! @todo Why is this commented out? The implementation exists but will never be called.
-  //CGUIListItem::Serialize(value["CGUIListItem"]);
-
   value["strPath"] = m_strPath;
   value["dateTime"] = (m_dateTime.IsValid()) ? m_dateTime.GetAsRFC1123DateTime() : "";
-  value["lastmodified"] = m_dateTime.IsValid() ? m_dateTime.GetAsDBDateTime() : "";
+  value["lastModified"] = m_dateTime.IsValid() ? m_dateTime.GetAsDBDateTime() : "";
   value["size"] = m_dwSize;
   value["DVDLabel"] = m_strDVDLabel;
   value["title"] = m_strTitle;
-  value["mimetype"] = m_mimetype;
-  value["extrainfo"] = m_extrainfo;
+  value["mimeType"] = m_mimetype;
+  value["extraInfo"] = m_extrainfo;
 
   if (m_musicInfoTag)
     (*m_musicInfoTag).Serialize(value["musicInfoTag"]);
@@ -665,7 +667,7 @@ void CFileItem::Serialize(CVariant& value) const
   //! Why is this implemented here and not in CGUIListItem?
   if (HasProperties())
   {
-    auto& customProperties = value["customproperties"];
+    auto& customProperties = value["customProperties"];
     for (const auto& [propname, propval] : GetProperties())
       customProperties[propname] = propval;
   }
@@ -695,6 +697,9 @@ void CFileItem::ToSortable(SortItem &sortable, Field field) const
       break;
     case Field::PROGRAM_COUNT:
       sortable[Field::PROGRAM_COUNT] = m_programCount;
+      break;
+    case Field::PLAYLIST_ORDER:
+      sortable[Field::PLAYLIST_ORDER] = m_playListOrder;
       break;
     case Field::BITRATE:
       sortable[Field::BITRATE] = m_dwSize;
@@ -773,8 +778,9 @@ void CFileItem::ToSortable(SortItem &sortable, const Fields &fields) const
 
 bool CFileItem::Exists(bool bUseCache /* = true */) const
 {
-  if (m_strPath.empty() || IsPath(PLACEHOLDER::ADD_SOURCE) || NETWORK::IsInternetStream(*this) ||
-      IsParentFolder() || IsVirtualDirectoryRoot() || IsPlugin() || IsPVR())
+  if (m_strPath.empty() || IsPath(ITEM::PLACEHOLDER::ADD_SOURCE) ||
+      NETWORK::IsInternetStream(*this) || IsParentFolder() || IsVirtualDirectoryRoot() ||
+      IsPlugin() || IsPVR())
     return true;
 
   if (VIDEO::IsVideoDb(*this) && HasVideoInfoTag())
@@ -1275,7 +1281,7 @@ bool IsSameLibraryItem(const CFileItem& item, const CFileItem& other)
       }};
 
   // For a version its db id is a file id
-  if (myTag.m_type == MediaTypeVideoVersion)
+  if (myTag.GetMediaType() == MEDIA::TYPE::VIDEO_VERSION)
   {
     if (myTag.m_iFileId == -1 || otherTag.m_iFileId == -1)
       return myTag.m_iFileId == otherTag.m_iFileId && myTag.m_iDbId == otherTag.m_iDbId;
@@ -1474,7 +1480,7 @@ void CFileItem::UpdateInfo(const CFileItem& item,
 
 void CFileItem::MergeInfo(const CFileItem& item)
 {
-  // TODO: Currently merge the metadata/art info is implemented for video case only
+  //! @todo Merging metadata/art is implemented for video only
   if (item.HasVideoInfoTag())
   {
     if (item.m_videoInfoTag)
@@ -1656,7 +1662,7 @@ void CFileItem::SetFromAlbum(const CAlbum &album)
   GetMusicInfoTag()->SetAlbum(album);
 
   if (album.art.empty())
-    SetArt(ART::TYPE::ICON, "DefaultAlbumCover.png");
+    SetArt(ART::TYPE::ICON, ART::DEFAULT::ALBUM_COVER);
   else
     SetArt(album.art);
 
@@ -1901,7 +1907,7 @@ std::string CFileItem::GetThumbHideIfUnwatched(const CFileItem* item) const
   const std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
       CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
           CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
-  if (setting && item->HasVideoInfoTag() && item->GetVideoInfoTag()->m_type == MediaTypeEpisode &&
+  if (setting && item->HasVideoInfoTag() && item->GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::EPISODE &&
       item->GetVideoInfoTag()->GetPlayCount() == 0 &&
       !CSettingUtils::FindIntInList(setting,
                                     CSettings::VIDEOLIBRARY_THUMB_SHOW_UNWATCHED_EPISODE) &&
@@ -2020,7 +2026,7 @@ std::string CFileItem::GetBaseMoviePath(bool bUseFolderNames) const
   }
   else if (bUseFolderNames && !URIUtils::IsInArchive(strMovieName) &&
            (!IsFolder() || (HasVideoInfoTag() && GetVideoInfoTag()->m_iDbId > 0 &&
-                            !CMediaTypes::IsContainer(GetVideoInfoTag()->m_type))))
+                            !IsContainer(GetVideoInfoTag()->GetMediaType()))))
   {
     const std::string name{strMovieName};
     if (!URIUtils::GetParentPath(name, strMovieName))
@@ -2171,7 +2177,6 @@ bool CFileItem::LoadGameTag()
   if (HasGameInfoTag() && m_gameInfoTag->IsLoaded())
     return true;
 
-  //! @todo
   GetGameInfoTag();
 
   m_gameInfoTag->SetLoaded(true);
@@ -2268,8 +2273,8 @@ bool CFileItem::LoadDetails()
 
   if (PLAYLIST::IsPlayList(*this) && IsType(".strm"))
   {
-    const std::unique_ptr<PLAYLIST::CPlayList> playlist(PLAYLIST::CPlayListFactory::Create(*this));
-    if (playlist && playlist->Load(GetPath()) && playlist->size() == 1)
+    const std::unique_ptr<PLAYLIST::CPlayListFile> playlist(PLAYLIST::CPlayListFactory::Create(*this));
+    if (playlist && playlist->Load(GetPath()) && playlist->Size() == 1)
     {
       const auto item{(*playlist)[0]};
       if (VIDEO::IsVideo(*item))
@@ -2437,14 +2442,20 @@ VideoDbContentType CFileItem::GetVideoContentType() const
   if (HasVideoInfoTag())
   {
     const auto& tag{GetVideoInfoTag()};
-    if (tag->m_type == MediaTypeTvShow)
-      type = TVSHOWS;
-    if (tag->m_type == MediaTypeEpisode)
-      return EPISODES;
-    if (tag->m_type == MediaTypeMusicVideo)
-      return MUSICVIDEOS;
-    if (tag->m_type == MediaTypeAlbum)
-      return MUSICALBUMS;
+    switch (tag->GetMediaType())
+    {
+      case MEDIA::TYPE::TV_SHOW:
+        type = TVSHOWS;
+        break;
+      case MEDIA::TYPE::EPISODE:
+        return EPISODES;
+      case MEDIA::TYPE::MUSIC_VIDEO:
+        return MUSICVIDEOS;
+      case MEDIA::TYPE::ALBUM:
+        return MUSICALBUMS;
+      default:
+        break;
+    }
     if (tag->m_strFileNameAndPath.starts_with("bluray://removable"))
       // cannot tell if a removable bluray is a movie or a tv show
       return UNKNOWN;

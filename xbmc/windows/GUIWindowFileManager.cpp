@@ -11,7 +11,6 @@
 #include "Autorun.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
@@ -44,8 +43,6 @@
 #include "network/Network.h"
 #include "pictures/SlideShowDelegator.h"
 #include "platform/Filesystem.h"
-#include "playlists/PlayList.h"
-#include "playlists/PlayListFactory.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -54,6 +51,7 @@
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
 #include "utils/ArtTypes.h"
+#include "utils/DefaultArt.h"
 #include "utils/FileOperationJob.h"
 #include "utils/FileUtils.h"
 #include "utils/PlaceholderPaths.h"
@@ -222,7 +220,7 @@ bool CGUIWindowFileManager::OnMessage(CGUIMessage& message)
             CONTROL_SELECT_ITEM(CONTROL_LEFT_LIST + i, iItem);
           }
           else if (m_Directory[i]->IsRemovable() && !m_rootDir.IsInSource(m_Directory[i]->GetPath()))
-          { //
+          {
             if (IsActive())
               Update(i, "");
             else
@@ -256,8 +254,6 @@ bool CGUIWindowFileManager::OnMessage(CGUIMessage& message)
   case GUI_MSG_PLAYBACK_STOPPED:
   case GUI_MSG_PLAYLIST_CHANGED:
   case GUI_MSG_PLAYLISTPLAYER_STOPPED:
-  case GUI_MSG_PLAYLISTPLAYER_STARTED:
-  case GUI_MSG_PLAYLISTPLAYER_CHANGED:
     { // send a notify all to all controls on this window
       CGUIMessage msg(GUI_MSG_NOTIFY_ALL, GetID(), 0, GUI_MSG_REFRESH_LIST);
       OnMessage(msg);
@@ -328,7 +324,7 @@ void CGUIWindowFileManager::OnSort(int iList)
   for (int i = 0; i < m_vecItems[iList]->Size(); i++)
   {
     CFileItemPtr pItem = m_vecItems[iList]->Get(i);
-    if (pItem->IsFolder() && (!pItem->GetSize() || pItem->IsPath(PLACEHOLDER::ADD_SOURCE)))
+    if (pItem->IsFolder() && (!pItem->GetSize() || pItem->IsPath(ITEM::PLACEHOLDER::ADD_SOURCE)))
       pItem->SetLabel2("");
     else
       pItem->SetFileSizeLabel();
@@ -482,8 +478,8 @@ bool CGUIWindowFileManager::Update(int iList, const std::string &strDirectory)
     const std::string& strLabel =
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(1026);
     CFileItemPtr pItem(new CFileItem(strLabel));
-    pItem->SetPath(PLACEHOLDER::ADD_SOURCE);
-    pItem->SetArt(ART::TYPE::ICON, "DefaultAddSource.png");
+    pItem->SetPath(ITEM::PLACEHOLDER::ADD_SOURCE);
+    pItem->SetArt(ART::TYPE::ICON, ART::DEFAULT::ADD_SOURCE);
     pItem->SetLabel(strLabel);
     pItem->SetLabelPreformatted(true);
     pItem->SetFolder(true);
@@ -505,21 +501,21 @@ bool CGUIWindowFileManager::Update(int iList, const std::string &strDirectory)
   {
     CFileItemPtr pItem(new CFileItem("special://profile/", true));
     pItem->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20070));
-    pItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
+    pItem->SetArt(ART::TYPE::THUMB, ART::DEFAULT::FOLDER);
     pItem->SetLabelPreformatted(true);
     m_vecItems[iList]->Add(pItem);
 
     #ifdef TARGET_DARWIN_EMBEDDED
       CFileItemPtr iItem(new CFileItem("special://envhome/Documents/Inbox", true));
       iItem->SetLabel("Inbox");
-      iItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
+      iItem->SetArt(ART::TYPE::THUMB, ART::DEFAULT::FOLDER);
       iItem->SetLabelPreformatted(true);
       m_vecItems[iList]->Add(iItem);
     #endif
     #ifdef TARGET_ANDROID
       CFileItemPtr iItem(new CFileItem("special://logpath", true));
       iItem->SetLabel("Logs");
-      iItem->SetArt(ART::TYPE::THUMB, "DefaultFolder.png");
+      iItem->SetArt(ART::TYPE::THUMB, ART::DEFAULT::FOLDER);
       iItem->SetLabelPreformatted(true);
       m_vecItems[iList]->Add(iItem);
     #endif
@@ -564,7 +560,7 @@ void CGUIWindowFileManager::OnClick(int iList, int iItem)
   if ( iItem < 0 || iItem >= m_vecItems[iList]->Size() ) return ;
 
   CFileItemPtr pItem = m_vecItems[iList]->Get(iItem);
-  if (pItem->GetPath() == PLACEHOLDER::ADD_SOURCE &&
+  if (pItem->GetPath() == ITEM::PLACEHOLDER::ADD_SOURCE &&
       pItem->GetLabel() == CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
                                1026)) // 'add source button' in empty root
   {
@@ -621,37 +617,17 @@ void CGUIWindowFileManager::OnClick(int iList, int iItem)
     OnStart(pItem.get(), "");
     return ;
   }
-  // UpdateButtons();
 }
 
 //! @todo 2.0: Can this be removed, or should we run without the "special" file directories while
 // in filemanager view.
 void CGUIWindowFileManager::OnStart(CFileItem *pItem, const std::string &player)
 {
-  // start playlists from file manager
-  if (PLAYLIST::IsPlayList(*pItem))
+  const bool isPlayList = PLAYLIST::IsPlayList(*pItem);
+  if (isPlayList || MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem) || pItem->IsGame())
   {
-    const std::string& strPlayList = pItem->GetPath();
-    std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-    if (nullptr != pPlayList)
-    {
-      if (!pPlayList->Load(strPlayList))
-      {
-        HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-        return;
-      }
-    }
-    g_application.ProcessAndStartPlaylist(strPlayList, *pPlayList, PLAYLIST::Id::TYPE_MUSIC);
-    return;
-  }
-  if (MUSIC::IsAudio(*pItem) || VIDEO::IsVideo(*pItem))
-  {
-    CServiceBroker::GetPlaylistPlayer().Play(std::make_shared<CFileItem>(*pItem), player);
-    return;
-  }
-  if (pItem->IsGame())
-  {
-    g_application.PlayFile(*pItem, player);
+    if (!g_application.PlayMedia(*pItem, player) && isPlayList)
+      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
     return ;
   }
 #ifdef HAS_PYTHON
@@ -728,7 +704,6 @@ void CGUIWindowFileManager::OnMark(int iList, int iItem)
   }
 
   UpdateItemCounts();
-  // UpdateButtons();
 }
 
 void CGUIWindowFileManager::OnCopy(int iList)

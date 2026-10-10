@@ -102,6 +102,20 @@ bool AttachmentIsFont(const AVDictionaryEntry* dict)
   }
   return false;
 }
+
+//! A language tag written inside curly braces in a track title, as "Commentary {en-GB}"
+std::optional<CLanguageTag> LanguageInTitle(std::string_view title)
+{
+  const std::size_t begin = title.find('{');
+  if (begin == std::string_view::npos)
+    return std::nullopt;
+
+  const std::size_t end = title.find('}', begin + 1);
+  if (end == std::string_view::npos)
+    return std::nullopt;
+
+  return CLanguageTag::TryParse(std::string{title.substr(begin + 1, end - begin - 1)});
+}
 } // namespace
 
 std::string CDemuxStreamAudioFFmpeg::GetStreamName()
@@ -171,9 +185,13 @@ static int dvd_file_read(void* h, uint8_t* buf, int size)
   std::shared_ptr<CDVDInputStream> pInputStream = static_cast<CDVDDemuxFFmpeg*>(h)->m_pInput;
   int len = pInputStream->Read(buf, size);
   if (len == 0)
+  {
+    // A file input that has bytes left is a stalled source rather than the end
+    if (pInputStream->IsStreamType(DVDSTREAM_TYPE_FILE) && !pInputStream->IsEOF())
+      return AVERROR(EAGAIN);
     return AVERROR_EOF;
-  else
-    return len;
+  }
+  return len;
 }
 /*
 static int dvd_file_write(URLContext* h, uint8_t* buf, int size)
@@ -1085,9 +1103,14 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
     std::unique_lock lock(m_critSection); // open lock scope
     if (m_pFormatContext)
     {
-      // assume we are not eof
+      // assume we are not eof; clear stale io error so a failure below is this read's own
       if (m_pFormatContext->pb)
+      {
         m_pFormatContext->pb->eof_reached = 0;
+        m_pFormatContext->pb->error = 0;
+      }
+
+      bool readPacingExpired = false;
 
       // check for saved packet after a program change
       if (m_pkt.result < 0)
@@ -1096,10 +1119,16 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
         m_pkt.pkt.size = 0;
         m_pkt.pkt.data = NULL;
 
-        // timeout reads after 100ms
-        m_timeout.Set(20s);
+        m_timeout.Set(m_readTimeout);
         m_pkt.result = av_read_frame(m_pFormatContext, &m_pkt.pkt);
+        readPacingExpired = m_timeout.IsTimePast();
         m_timeout.SetInfinite();
+      }
+
+      if (m_inputStalled && m_pkt.result >= 0)
+      {
+        m_inputStalled = false;
+        CLog::LogF(LOGINFO, "input recovered");
       }
 
       if (m_pkt.result == AVERROR(EINTR) || m_pkt.result == AVERROR(EAGAIN))
@@ -1109,10 +1138,18 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
       }
       else if (m_pkt.result == AVERROR_EOF)
       {
+        if (WaitingOutInputStall(readPacingExpired))
+          bReturnEmpty = true;
       }
       else if (m_pkt.result < 0)
       {
-        Flush();
+        // A source that blocks inside av_read_frame trips the read timer before its io
+        // error can propagate, so an expired timer is read as pacing rather than an abort
+        if ((m_pkt.result != AVERROR_EXIT || readPacingExpired) &&
+            WaitingOutInputStall(readPacingExpired))
+          bReturnEmpty = true;
+        else
+          Flush();
       }
       // check size and stream index for being in a valid range
       else if (m_pkt.pkt.size < 0 || m_pkt.pkt.stream_index < 0 ||
@@ -1296,6 +1333,59 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
     pPacket->demuxerId = GetDemuxerId();
   }
   return pPacket;
+}
+
+bool CDVDDemuxFFmpeg::WaitingOutInputStall(bool readPacingExpired)
+{
+  if (!m_pInput || !m_pInput->IsStreamType(DVDSTREAM_TYPE_FILE) || m_pInput->IsEOF())
+    return false;
+
+  // Opening the window takes evidence of a stall: an io-reported failure, or the read pacing
+  // expiring around a blocked read.
+  if (!m_inputStalled && !readPacingExpired &&
+      (!m_pFormatContext || !m_pFormatContext->pb || m_pFormatContext->pb->error == 0))
+    return false;
+
+  if (!m_inputStalled)
+  {
+    m_inputStalled = true;
+    m_stallDeadline.Set(m_stallRecoveryWindow);
+    m_nextStallProbe.Set(STALL_PROBE_INTERVAL);
+    CLog::LogF(LOGWARNING, "input stalled short of its length, polling for up to {} s",
+               std::chrono::duration_cast<std::chrono::seconds>(m_stallRecoveryWindow).count());
+    // Answering at once lets the player stop its clock; probing first would park this thread in
+    // the stalled input for another read, with the clock running on over a stopped picture
+    return true;
+  }
+
+  if (m_stallDeadline.IsTimePast())
+    return false;
+
+  if (!m_nextStallProbe.IsTimePast())
+    return true;
+
+  m_nextStallProbe.Set(STALL_PROBE_INTERVAL);
+
+  // Only the input stream can report recovery: the demuxer's io state stays latched from the
+  // failed reads.
+  const int64_t position = m_pInput->Seek(0, SEEK_CUR);
+  if (position >= 0)
+  {
+    // A zero read short of the end is the stall itself; at the end it is the end answering
+    uint8_t probe = 0;
+    const int read = m_pInput->Read(&probe, 1);
+    if (read > 0 || (read == 0 && m_pInput->IsEOF()))
+    {
+      m_pInput->Seek(position, SEEK_SET);
+      // A seek is what resets the demuxer's latched end-of-file
+      if (m_pFormatContext && m_currentPts != DVD_NOPTS_VALUE)
+        av_seek_frame(m_pFormatContext, -1, static_cast<int64_t>(m_currentPts),
+                      AVSEEK_FLAG_BACKWARD);
+      CLog::LogF(LOGINFO, "input answered again, resuming");
+    }
+  }
+
+  return true;
 }
 
 DemuxPacket* CDVDDemuxFFmpeg::Read()
@@ -2181,14 +2271,14 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
       // A transport stream can carry several ISO 639 language descriptors for one track, which
       // ffmpeg joins with commas ("deu,eng" for dual mono, or one entry per DVB subtitle page)
       const std::string_view language{langTag->value};
-      stream->language = CLanguageTag::Parse(std::string{language.substr(0, language.find(','))});
+      stream->language = CLanguageTag::ParseStreamLanguage(std::string{language.substr(0, language.find(','))});
       //! @todo ffmpeg does not read the Matroska v4 LanguageBCP47 element, which takes priority
       //! over Language when present, so every track is reported with the value of Language. The
       //! curly-brace tag in the title field is the interim way to state a track's real language.
       AVDictionaryEntry* title = av_dict_get(pStream->metadata, "title", NULL, 0);
       if (title && title->value)
       {
-        if (const auto tag = CLanguageTag::FindInText(title->value); tag.has_value())
+        if (const auto tag = LanguageInTitle(title->value); tag.has_value())
           stream->language = *tag;
       }
     }
@@ -2233,7 +2323,7 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
       const auto bluray{std::static_pointer_cast<CDVDInputStreamBluray>(m_pInput)};
       std::string blurayLanguage;
       bluray->GetStreamInfo(pStream->id, blurayLanguage);
-      stream->language = CLanguageTag::Parse(blurayLanguage);
+      stream->language = CLanguageTag::ParseStreamLanguage(blurayLanguage);
 
       // The transport stream of a bluray carries no disposition, so the default audio and subtitle
       // streams have to be flagged from the clip information (see IsDefaultStream)

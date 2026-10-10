@@ -1,0 +1,969 @@
+# Migrating a client from JSON-RPC 13 or 14 to 15
+
+Version 15 is a breaking release: a client written against version 13 or 14
+is not guaranteed to work against it unchanged. Everything that breaks is
+listed here, with what to do about it.
+
+The baseline is **13.5.0, the version Kodi 21 (Omega) shipped** — the last
+version delivered in a stable release. The Kodi 22 pre-releases carried
+13.8.0 to 13.200.0; 13.200.0 (22.0b2) already has the library-id part of
+section 1 and the BCP 47 languages of section 10, and none of the other
+breaks.
+
+Check what you are talking to before you assume either shape:
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "JSONRPC.Version"}
+```
+
+```json
+{"jsonrpc": "2.0", "id": 1, "result": {"version": {"major": 15, "minor": 0, "patch": 0}}}
+```
+
+Nothing below depends on Kodi's own version. A client that supports both
+should branch on `version.major`.
+
+---
+
+## 1. Errors are more specific than `InvalidParams`
+
+**Most likely to break you, and the easiest to miss**: the calls still work,
+only the failures changed.
+
+Version 13 answered `-32602 InvalidParams` for almost everything that went
+wrong after the parameters had been validated. Version 15 separates them:
+
+| Code | Name | Means |
+|---|---|---|
+| -32602 | `InvalidParams` | the request itself is wrong |
+| -32098 | `NotFound` | what you named does not exist |
+| -32097 | `Unavailable` | it exists but cannot be provided now |
+| -32096 | `AccessDenied` | it is locked on this installation: a path outside every shared source, or a setting level behind the profile's lock |
+| -32603 | `InternalError` | the method failed for a reason none of the above describes |
+
+Affected since 13.200.0: every `AudioLibrary` and `VideoLibrary`
+`Get*Details`, `Set*Details` and `Refresh*` method answers `NotFound` for an
+id no item has, and `Player.Open` answers `Unavailable` for an item it cannot
+reach. New in 15: `Files.GetDirectory`, `Files.GetFileDetails`,
+`Files.SetFileDetails`, `Files.PrepareDownload`,
+`Player.Open`, `VideoLibrary.Scan`, `VideoLibrary.Clean`,
+`AudioLibrary.GetArtistDetails`, `Settings.GetSettingValue`,
+`Settings.SetSettingValue`, `Settings.ResetSettingValue`, and every `PVR`
+method that takes a channel, channel group, broadcast, timer or recording
+id.
+
+The three `Settings` calls also stop refusing a *hidden* setting. If you
+relied on `InvalidParams` to mean "hidden on this installation", read
+`enabled` from `Settings.GetSettings` instead; a write is refused, as
+`Unavailable`, only when the setting is disabled by its dependencies.
+
+**What to do.** If you test `error.code == -32602` to decide that something is
+missing, you will now miss the case. Treat -32098, -32097 and -32096 as
+failures too, and prefer them for the "gone" and "forbidden" messages you show
+a user.
+
+The full taxonomy is discoverable rather than hardcoded:
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "JSONRPC.Introspect",
+ "params": {"filter": {"type": "error", "id": "NotFound"}}}
+```
+
+---
+
+## 2. `Playlist.Add` and `Playlist.Insert` return a result
+
+Version 13 returned the string `"OK"` whether or not anything was added, and
+dropped silently whatever it could not resolve.
+
+```json
+{"result": "OK"}
+```
+
+Version 15 says what happened:
+
+```json
+{"result": {"added": 2,
+            "unresolved": [{"item": {"movieId": 4321}, "reason": "no-such-item"}]}}
+```
+
+`reason` is one of the failure reasons of section 23. When *nothing* was
+added the call is an error instead — `NotFound` if anything named something
+real that has gone, `InvalidParams` if every entry was malformed — and its
+`error.data` carries the same reason as that item's entry would.
+
+**What to do.** If you check `result == "OK"`, that test now fails against a
+successful call. Read `result.added`, and show `result.unresolved` if you
+report progress to a user.
+
+---
+
+## 3. A PVR channel's `uniqueid` is now `channeluid`
+
+`PVR.Details.Channel.uniqueid` is gone. The same value is `channeluid`, which
+is what a broadcast and a recording already called it.
+
+```diff
+- {"channelid": 12, "uniqueid": 8201}
++ {"channelid": 12, "channeluid": 8201}
+```
+
+`uniqueid` is no longer a member of `PVR.Fields.Channel`, so requesting it
+returns `InvalidParams`.
+
+**What to do.** Rename the field you request and the one you read. Note this
+is unrelated to `uniqueid` on a library item, which is a set of scraper
+identifiers and has not changed.
+
+---
+
+## 4. An unselected stream is `null`, not `{}`
+
+`Player.GetProperties` reported `currentaudiostream`, `currentvideostream`
+and `currentsubtitle` as an empty object when nothing was selected.
+
+```diff
+- {"currentsubtitle": {}}
++ {"currentsubtitle": null}
+```
+
+**What to do.** Test for `null` before reading `index`. A client that checks
+"is this object non-empty" keeps working; one that reads `.index`
+unconditionally will now fault on `null`.
+
+`Player.Subtitle` also gains a `codec` member.
+
+---
+
+## 5. `XBMC.GetInfoLabels` and `XBMC.GetInfoBooleans` are removed
+
+The `XBMC` namespace is gone. `GUI.GetInfoLabels` and `GUI.GetInfoBooleans`
+are the same methods.
+
+```diff
+- {"method": "XBMC.GetInfoLabels", "params": {"labels": ["System.Time"]}}
++ {"method": "GUI.GetInfoLabels",  "params": {"labels": ["System.Time"]}}
+```
+
+Parameters, result and required permission are identical, so this is a rename
+at the call site and nothing more.
+
+`GetInfoBooleans` now describes its result as an object of **booleans**; the
+schema said strings, the wire always carried booleans. A type generated from
+the schema changes even though the traffic does not.
+
+---
+
+## 6. `JSONRPC.Introspect` answers in JSON Schema 2020-12
+
+**Only affects you if you consume the service description itself.** A client
+that just calls methods is unaffected by this section.
+
+The description was JSON Schema draft-03. It is now 2020-12:
+
+| draft-03 | 2020-12 |
+|---|---|
+| `"extends": "Name"` | `"allOf": [{"$ref": "#/$defs/Name"}]` |
+| `"$ref": "Name"` | `"$ref": "#/$defs/Name"` |
+| `"enums": [...]` | `"enum": [...]` |
+| `"required": true` on a property | `"required": ["prop"]` on the object |
+| `"type": [ {...}, {...} ]` | `"anyOf": [ {...}, {...} ]` |
+| `"type": "any"` | the keyword is omitted |
+| `{"name": "x", "type": "string"}` as a param | `{"name": "x", "schema": {"type": "string"}}` |
+
+A method's parameters are now content descriptors: `name`, `required` and
+`description` belong to the descriptor, and the schema of the value sits
+under `schema`. Tuple-form `items`, `additionalItems`, `divisibleBy` and the
+boolean `exclusiveMinimum`/`exclusiveMaximum` are no longer read; the shipped
+schema never used them.
+
+**What to do.** If you validate against the description, use a 2020-12
+validator. If you generate code from it, most generators support 2020-12
+directly and needed a shim for draft-03. You can also skip `Introspect`
+entirely and consume [openrpc.json](openrpc.json), which is generated from the
+same schema and gated in CI so it cannot drift.
+
+---
+
+## 7. `seasonnum` and `episodenum` on a PVR broadcast are deprecated
+
+Superseded by `season` and `episode`. The old names still work.
+
+Their descriptions have said "Deprecated" since 13.6.0, which reached no
+stable release. They now carry the `deprecated` annotation, so
+`JSONRPC.Introspect` and `openrpc.json` report it.
+
+## 8. `Files.GetDirectory` browses directories, and answers `properties`
+
+Three changes to one call.
+
+**A folder stays a folder.** Version 13 matched each entry against the video
+library and, on a hit, replaced the entry with the library item, path and
+all. With one movie per folder, every scanned folder became the movie inside
+it:
+
+```json
+{"file": "smb://nas/Movies/Hail Caesar (2016)/Hail.Caesar.2016.mp4",
+ "filetype": "file", "label": "Hail, Caesar!"}
+```
+
+Version 15 keeps the entry the caller was browsing and annotates it:
+
+```json
+{"file": "smb://nas/Movies/Hail Caesar (2016)/",
+ "filetype": "directory", "label": "Hail, Caesar!"}
+```
+
+**What to do.** If you followed `file` to play an item, check `filetype`
+first: a `directory` is a level to descend into. Only folders change; an
+entry for a file is byte-for-byte what it was.
+
+**`"media": "files"` answers `properties`.** It previously ignored them and
+returned bare listings. Both modes now return the same details for the same
+entry, so `"media": "files"` is the mode to browse with. A request naming no
+`properties`, or only file properties, still gets the plain listing and costs no
+library lookups.
+
+**Tv show folders resolve.** Version 13 looked up movies, episodes and music
+videos, never shows. A show's folder now carries the details
+`VideoLibrary.GetTVShows` reports for it. A show has no `thumbnail`; use
+`art.poster`.
+
+---
+
+## 9. The four `VideoLibrary.Refresh*` methods are deprecated
+
+`RefreshMovie`, `RefreshTVShow`, `RefreshEpisode` and `RefreshMusicVideo` are
+superseded by one `VideoLibrary.Refresh` that names the item. The old names
+still work.
+
+```diff
+- {"method": "VideoLibrary.RefreshMovie", "params": {"movieid": 42}}
++ {"method": "VideoLibrary.Refresh",      "params": {"item": {"kind": "movie", "id": 42}}}
+```
+
+The id moves inside an `item` object with its kind; `ignorenfo`, `title` and
+`refreshepisodes` stay where they are. The kind is any of `movie`, `set`,
+`tvshow`, `season`, `episode` or `musicvideo`, so a movie set and a season
+can be refreshed for the first time.
+`refreshepisodes` applies to a tv show or a season and is ignored by the rest.
+
+---
+
+## 10. Stream languages are BCP 47 tags
+
+`language` on `Player.Audio.Stream`, `Player.Video.Stream` and
+`Player.Subtitle`, and inside a library item's `streamdetails`, is a BCP 47
+language tag rather than an ISO 639-2/B code.
+
+```diff
+- {"language": "eng"}
++ {"language": "en"}
+```
+
+A player stream carries a region when the player knows one, `en-AU`; a
+library stream never does. An empty value still means the stream declared
+none, and a value Kodi does not recognise passes through unchanged.
+
+**What to do.** Match on the primary subtag (`en` from `en-AU`) rather than
+on a three-letter code. Since 13.200.0.
+
+## 11. Playlists are named, and players are addressed by playlist
+
+A playlist is `video`, `audio` or `picture`, in place of the numeric
+`playlistid` every `Playlist` method and notification took, and
+`Playlist.GetPlaylists` answers the names.
+
+```diff
+- {"method": "Playlist.GetItems", "params": {"playlistid": 1}}
++ {"method": "Playlist.GetItems", "params": {"playlist": "video"}}
+```
+
+`playerid` is gone from every `Player` method. Version 13 resolved it through
+the playlist in use, so it never named a player: playerid 1 was accepted only
+while the video playlist was current, and accepted even when nothing played.
+A `Player` method now takes an optional `playlist`: `playing`, the default,
+or `video`, `audio` or `picture`, the slideshow. With `playing` it acts on
+everything playing, the playback and a slideshow beside it, and a query
+answers for the playback, then the slideshow. A named playlist that nothing
+is playing through answers `FailedToExecute`.
+
+```diff
+- {"method": "Player.Stop", "params": {"playerid": 1}}
++ {"method": "Player.Stop"}
+```
+
+`Player.GetActivePlayers` is removed. `Player.GetProperties` reports the
+`playlist` being played and the `playertype`, and the `player` object of every
+`Player.On*` notification carries `players`, the playlists the playback holds,
+in place of `playerid`.
+
+`Playlist.GetItems` answers each entry with its `position` in the list and its
+`displayorder`, its place in play order; the two differ while the playlist is
+shuffled. `Player.GoTo` and `Playlist.Remove` take a `position`.
+`Player.GetProperties` reports `displayorder` beside `position`.
+
+**What to do.** Send playlist names where you sent numbers. Drop `playerid`
+from `Player` calls, or send the `playlist` you mean. Read what is playing
+from `Player.GetProperties` or from the notification's `players` rather than
+from `Player.GetActivePlayers`.
+
+## 12. Settings writes need the `WriteSetting` permission
+
+`Settings.SetSettingValue`, `Settings.ResetSettingValue` and
+`Settings.SetSkinSettingValue` have always documented `WriteSetting` as their
+permission, but no such permission existed and they were gated at `ReadData`.
+An HTTP `GET` request, which carries `ReadData` alone, could change any
+setting. The permission now exists, those three methods and
+`Settings.SetLevel` require it, and `JSONRPC.Permission` reports it.
+
+**Who is affected.** Only a client that sends a settings write as an HTTP
+`GET` request, with the call in the `request` query argument, or as JSONP.
+The web server gives a `GET` request `ReadData` alone and a `POST` request
+every permission, so a settings write over `POST` is unchanged, and so is
+one over TCP, from Python or from the Android interface, all of which hold
+every permission.
+
+**What to do.** Send the same request body as an HTTP `POST` to `/jsonrpc`
+with `Content-Type: application/json`, as every other write already has to
+be. Nothing in the request changes but the transport:
+
+```
+GET  /jsonrpc?request={"jsonrpc":"2.0","id":1,"method":"Settings.SetSettingValue","params":{"setting":"lookandfeel.enablerssfeeds","value":false}}
+```
+
+answers `BadPermission` (-32099), while
+
+```
+POST /jsonrpc
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"Settings.SetSettingValue","params":{"setting":"lookandfeel.enablerssfeeds","value":false}}
+```
+
+answers `true` as it always has. A client that checks `JSONRPC.Permission`
+first sees `WriteSetting` false on `GET` and true on `POST`.
+
+## 13. The texture cache is under `Application`
+
+A namespace names what it acts on, and the thumbnail cache is Kodi's
+internals.
+
+```diff
+- {"method": "Textures.GetTextures",    "params": {"properties": ["url"]}}
++ {"method": "Application.GetTextures", "params": {"properties": ["url"]}}
+```
+
+`Textures.RemoveTexture` is `Application.RemoveTexture`. Parameters, results
+and permissions are unchanged.
+
+## 14. Shuffle and repeat belong to the playlist
+
+`Player.SetShuffle` and `Player.SetRepeat` are removed. `Player.GetProperties`
+no longer reports `shuffled` or `repeat`, and `Player.OnPropertiesChanged` no
+longer carries them.
+
+```diff
+- {"method": "Player.SetShuffle",   "params": {"shuffle": true}}
++ {"method": "Playlist.SetShuffle", "params": {"playlist": "audio", "shuffle": true}}
+```
+
+**What to do.** Set shuffle and repeat with `Playlist.SetShuffle` and
+`Playlist.SetRepeat`, read them from `Playlist.GetProperties`, and follow
+them through `Playlist.OnPropertiesChanged`. The playlist being played is the
+`playlist` property of `Player.GetProperties`. A slideshow's shuffle is the
+`picture` playlist's.
+
+## 15. Volume belongs to `Player`
+
+`Player` is what is seen and heard now, whether or not anything plays.
+`Application.SetVolume` and `Application.SetMute` are removed, and
+`Application.GetProperties` no longer reports `volume`, `muted` or
+`contentrect`.
+
+```diff
+- {"method": "Application.SetVolume",  "params": {"volume": 40}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"volume": 40}}}
+- {"method": "Application.SetVolume",  "params": {"volume": "increment"}}
++ {"method": "Player.VolumeUp"}
+- {"method": "Application.SetMute",    "params": {"mute": true}}
++ {"method": "Player.SetProperties",   "params": {"properties": {"muted": true}}}
+```
+
+`Player.SetProperties` changes only the properties named and answers with
+their values now in force. `Player.GetProperties` answers `volume`, `muted`
+and `contentrect` with nothing playing; every other property still needs
+something to play.
+
+**What to do.** Read volume, mute and `contentrect` from
+`Player.GetProperties`. There is no toggle: send the `muted` value you want.
+
+## 16. State changes arrive as `OnPropertiesChanged`
+
+`Player.OnPropertyChanged` and `Playlist.OnPropertyChanged` are renamed
+`Player.OnPropertiesChanged` and `Playlist.OnPropertiesChanged`, and what
+changed is under `data.properties`, using the names `GetProperties` answers
+with. `Application.OnVolumeChanged` is removed.
+
+```diff
+- {"method": "Application.OnVolumeChanged", "params": {"data": {"volume": 40, "muted": false}}}
++ {"method": "Player.OnPropertiesChanged",  "params": {"data": {"properties": {"volume": 40}}}}
+```
+
+Only what changed is carried: a volume change carries `volume`, a mute
+change `muted`. `player` is present when the change belongs to a playback,
+and absent for volume and mute, which change whether or not anything plays.
+
+`Player.OnPause`, `Player.OnResume`, `Player.OnSpeedChanged` and
+`Player.OnSeek` are removed, because each is only a change of state: pause,
+resume and a speed change arrive as `Player.OnPropertiesChanged` carrying
+`speed` (0 while paused), and a seek as one carrying `time`.
+
+```diff
+- {"method": "Player.OnPause",             "params": {"data": {"item": {...}, "player": {"players": ["video"], "speed": 0}}}}
++ {"method": "Player.OnPropertiesChanged", "params": {"data": {"properties": {"speed": 0}, "player": {"players": ["video"]}}}}
+```
+
+**What to do.** Merge `data.properties` into the state you hold for the
+player or the playlist, as you would a `GetProperties` answer. Treat
+`speed` 0 as paused.
+
+## 17. Names are camelCase
+
+Every property, parameter and result name, and every value of an enum the API
+defines for itself, is camelCase: `movieid` is `movieId`, `playcount` is
+`playCount`, `canchangespeed` is `canChangeSpeed`. Only the case changes, so
+the old name is the new one lowercased.
+
+```diff
+- {"method": "VideoLibrary.GetMovieDetails", "params": {"movieid": 3, "properties": ["playcount", "lastplayed"]}}
++ {"method": "VideoLibrary.GetMovieDetails", "params": {"movieId": 3, "properties": ["playCount", "lastPlayed"]}}
+```
+
+Vocabularies the API shares with the rest of Kodi keep their spelling for now:
+media types (`tvshow`, `musicvideo`), content types (`tvshows`), sort methods
+(`dateadded`), smart playlist fields and operators, window and action names,
+add-on types, stereoscopic and view mode names, database types and PVR timer
+states.
+
+**What to do.** Rename every name in your requests and in what you read from
+answers and notifications, using the table.
+
+| Before | After |
+|---|---|
+| `actorthumbs` | `actorThumbs` |
+| `addonid` | `addonId` |
+| `addontype` | `addonType` |
+| `albumartist` | `albumArtist` |
+| `albumartistid` | `albumArtistId` |
+| `albumartistsonly` | `albumArtistsOnly` |
+| `albumdetails` | `albumDetails` |
+| `albumduration` | `albumDuration` |
+| `albumid` | `albumId` |
+| `albumlabel` | `albumLabel` |
+| `albumlimit` | `albumLimit` |
+| `albumreleasetype` | `albumReleaseType` |
+| `albumslastadded` | `albumsLastAdded` |
+| `albumsmodified` | `albumsModified` |
+| `albumstatus` | `albumStatus` |
+| `allowempty` | `allowEmpty` |
+| `allradio` | `allRadio` |
+| `allroles` | `allRoles` |
+| `alltv` | `allTv` |
+| `androidapp` | `androidApp` |
+| `applyto` | `applyTo` |
+| `artistdetails` | `artistDetails` |
+| `artistid` | `artistId` |
+| `artistlinksupdated` | `artistLinksUpdated` |
+| `artistslastadded` | `artistsLastAdded` |
+| `artistsmodified` | `artistsModified` |
+| `arttype` | `artType` |
+| `aspectratio` | `aspectRatio` |
+| `audiostreams` | `audioStreams` |
+| `availableart` | `availableArt` |
+| `availablearttypes` | `availableArtTypes` |
+| `bigbackward` | `bigBackward` |
+| `bigforward` | `bigForward` |
+| `bitspersample` | `bitsPerSample` |
+| `broadcastdetails` | `broadcastDetails` |
+| `broadcastid` | `broadcastId` |
+| `broadcastids` | `broadcastIds` |
+| `broadcastnext` | `broadcastNext` |
+| `broadcastnow` | `broadcastNow` |
+| `cachedurl` | `cachedUrl` |
+| `cachepercentage` | `cachePercentage` |
+| `canchangespeed` | `canChangeSpeed` |
+| `canhibernate` | `canHibernate` |
+| `canmove` | `canMove` |
+| `canreboot` | `canReboot` |
+| `canrepeat` | `canRepeat` |
+| `canrotate` | `canRotate` |
+| `canseek` | `canSeek` |
+| `canshuffle` | `canShuffle` |
+| `canshutdown` | `canShutdown` |
+| `cansuspend` | `canSuspend` |
+| `canzoom` | `canZoom` |
+| `channeldetails` | `channelDetails` |
+| `channelgroupdetails` | `channelGroupDetails` |
+| `channelgroupid` | `channelGroupId` |
+| `channelgroups` | `channelGroups` |
+| `channelid` | `channelId` |
+| `channelnumber` | `channelNumber` |
+| `channeltype` | `channelType` |
+| `channeluid` | `channelUid` |
+| `clearmode` | `clearMode` |
+| `clientid` | `clientId` |
+| `compilationartist` | `compilationArtist` |
+| `containssingleitem` | `containsSingleItem` |
+| `contentrect` | `contentRect` |
+| `currentaudiostream` | `currentAudioStream` |
+| `currentcontrol` | `currentControl` |
+| `currentsubtitle` | `currentSubtitle` |
+| `currentvideostream` | `currentVideoStream` |
+| `currentwindow` | `currentWindow` |
+| `customproperties` | `customProperties` |
+| `dateadded` | `dateAdded` |
+| `datemodified` | `dateModified` |
+| `datenew` | `dateNew` |
+| `debugfreemem` | `debugFreeMem` |
+| `declaredon` | `declaredOn` |
+| `disctitle` | `discTitle` |
+| `displayartist` | `displayArtist` |
+| `displaycomposer` | `displayComposer` |
+| `displayconductor` | `displayConductor` |
+| `displaylyricist` | `displayLyricist` |
+| `displayorchestra` | `displayOrchestra` |
+| `displayorder` | `displayOrder` |
+| `displaytime` | `displayTime` |
+| `dynpath` | `dynPath` |
+| `elementtype` | `elementType` |
+| `endanytime` | `endAnytime` |
+| `endmargin` | `endMargin` |
+| `endtime` | `endTime` |
+| `epgeventid` | `epgEventId` |
+| `epgsearchstring` | `epgSearchString` |
+| `epguid` | `epgUid` |
+| `episodedetails` | `episodeDetails` |
+| `episodeguide` | `episodeGuide` |
+| `episodeid` | `episodeId` |
+| `episodename` | `episodeName` |
+| `episodenum` | `episodeNum` |
+| `episodepart` | `episodePart` |
+| `exitcode` | `exitCode` |
+| `extrainfo` | `extraInfo` |
+| `failcount` | `failCount` |
+| `filedetails` | `fileDetails` |
+| `filetype` | `fileType` |
+| `filterbytransport` | `filterByTransport` |
+| `firstaired` | `firstAired` |
+| `firstday` | `firstDay` |
+| `formatlabel` | `formatLabel` |
+| `formatvalue` | `formatValue` |
+| `frameheight` | `frameHeight` |
+| `framewidth` | `frameWidth` |
+| `fulltextepgsearch` | `fullTextEpgSearch` |
+| `genreid` | `genreId` |
+| `genreslastadded` | `genresLastAdded` |
+| `getdescriptions` | `getDescriptions` |
+| `getmetadata` | `getMetadata` |
+| `getreferences` | `getReferences` |
+| `hasarchive` | `hasArchive` |
+| `hasrecording` | `hasRecording` |
+| `hasreminder` | `hasReminder` |
+| `hastimer` | `hasTimer` |
+| `hastimerrule` | `hasTimerRule` |
+| `hdrdetail` | `hdrDetail` |
+| `hdrtype` | `hdrType` |
+| `holdtime` | `holdTime` |
+| `ignorearticle` | `ignoreArticle` |
+| `ignorenfo` | `ignoreNfo` |
+| `imagehash` | `imageHash` |
+| `imdbnumber` | `imdbNumber` |
+| `includesingles` | `includeSingles` |
+| `isactive` | `isActive` |
+| `isalbumartist` | `isAlbumArtist` |
+| `isboxset` | `isBoxSet` |
+| `isdefault` | `isDefault` |
+| `isdeleted` | `isDeleted` |
+| `isforced` | `isForced` |
+| `isimpaired` | `isImpaired` |
+| `ismanual` | `isManual` |
+| `isoriginal` | `isOriginal` |
+| `isplayable` | `isPlayable` |
+| `isradio` | `isRadio` |
+| `isreadonly` | `isReadOnly` |
+| `isrecording` | `isRecording` |
+| `isreminder` | `isReminder` |
+| `isseries` | `isSeries` |
+| `istimerrule` | `isTimerRule` |
+| `lasthashcheck` | `lastHashCheck` |
+| `lastlibrarycheck` | `lastLibraryCheck` |
+| `lastmodified` | `lastModified` |
+| `lastplayed` | `lastPlayed` |
+| `lastused` | `lastUsed` |
+| `librarylastcleaned` | `libraryLastCleaned` |
+| `librarylastupdated` | `libraryLastUpdated` |
+| `lockmode` | `lockMode` |
+| `loglevel` | `logLevel` |
+| `maxrecordings` | `maxRecordings` |
+| `mediapath` | `mediaPath` |
+| `mimetype` | `mimeType` |
+| `minimumlabel` | `minimumLabel` |
+| `missingartistid` | `missingArtistId` |
+| `moviedetails` | `movieDetails` |
+| `movieid` | `movieId` |
+| `multiselect` | `multiSelect` |
+| `musicbrainzalbumartistid` | `musicBrainzAlbumArtistId` |
+| `musicbrainzalbumid` | `musicBrainzAlbumId` |
+| `musicbrainzartistid` | `musicBrainzArtistId` |
+| `musicbrainzreleasegroupid` | `musicBrainzReleaseGroupId` |
+| `musicbrainztrackid` | `musicBrainzTrackId` |
+| `musicvideodetails` | `musicVideoDetails` |
+| `musicvideoid` | `musicVideoId` |
+| `musicvideos` | `musicVideos` |
+| `nonlinearstretch` | `nonlinearStretch` |
+| `noupdate` | `noUpdate` |
+| `originaldate` | `originalDate` |
+| `originaltitle` | `originalTitle` |
+| `osdplacement` | `osdPlacement` |
+| `parentalrating` | `parentalRating` |
+| `parentalratingcode` | `parentalRatingCode` |
+| `parentalratingicon` | `parentalRatingIcon` |
+| `parentalratingsource` | `parentalRatingSource` |
+| `partymode` | `partyMode` |
+| `pixelratio` | `pixelRatio` |
+| `playcount` | `playCount` |
+| `playername` | `playerName` |
+| `playertype` | `playerType` |
+| `playsaudio` | `playsAudio` |
+| `playsvideo` | `playsVideo` |
+| `plotoutline` | `plotOutline` |
+| `preventduplicateepisodes` | `preventDuplicateEpisodes` |
+| `previewurl` | `previewUrl` |
+| `productioncode` | `productionCode` |
+| `progresspercentage` | `progressPercentage` |
+| `recordingdetails` | `recordingDetails` |
+| `recordinggroup` | `recordingGroup` |
+| `recordingid` | `recordingId` |
+| `refreshepisodes` | `refreshEpisodes` |
+| `releasecandidate` | `releaseCandidate` |
+| `releasedate` | `releaseDate` |
+| `releasetype` | `releaseType` |
+| `roleid` | `roleId` |
+| `samplerate` | `sampleRate` |
+| `scanrecursive` | `scanRecursive` |
+| `scraperid` | `scraperId` |
+| `scrapersettings` | `scraperSettings` |
+| `seasondetails` | `seasonDetails` |
+| `seasonid` | `seasonId` |
+| `seasonnum` | `seasonNum` |
+| `setdetails` | `setDetails` |
+| `setid` | `setId` |
+| `showdialogs` | `showDialogs` |
+| `showlink` | `showLink` |
+| `showtitle` | `showTitle` |
+| `shuttingdown` | `shuttingDown` |
+| `singlesonly` | `singlesOnly` |
+| `smallbackward` | `smallBackward` |
+| `smallforward` | `smallForward` |
+| `songdetails` | `songDetails` |
+| `songgenre` | `songGenre` |
+| `songgenreid` | `songGenreId` |
+| `songgenres` | `songGenres` |
+| `songid` | `songId` |
+| `songslastadded` | `songsLastAdded` |
+| `songsmodified` | `songsModified` |
+| `songvideourl` | `songVideoUrl` |
+| `sortartist` | `sortArtist` |
+| `sortname` | `sortName` |
+| `sorttitle` | `sortTitle` |
+| `sorttokens` | `sortTokens` |
+| `sourceid` | `sourceId` |
+| `specialsortepisode` | `specialSortEpisode` |
+| `specialsortseason` | `specialSortSeason` |
+| `startanytime` | `startAnytime` |
+| `startmargin` | `startMargin` |
+| `starttime` | `startTime` |
+| `stationname` | `stationName` |
+| `stereomode` | `stereoMode` |
+| `stereoscopicmode` | `stereoscopicMode` |
+| `stereoscopicmodes` | `stereoscopicModes` |
+| `streamdetails` | `streamDetails` |
+| `streamurl` | `streamUrl` |
+| `subchannelnumber` | `subChannelNumber` |
+| `subtitleenabled` | `subtitleEnabled` |
+| `supportschannelgroups` | `supportsChannelGroups` |
+| `supportschannelscan` | `supportsChannelScan` |
+| `supportsepg` | `supportsEpg` |
+| `supportsradio` | `supportsRadio` |
+| `supportsrecordings` | `supportsRecordings` |
+| `supportstimers` | `supportsTimers` |
+| `supportstv` | `supportsTv` |
+| `tagid` | `tagId` |
+| `tagversion` | `tagVersion` |
+| `textureid` | `textureId` |
+| `timerdetails` | `timerDetails` |
+| `timerid` | `timerId` |
+| `timerrule` | `timerRule` |
+| `titleextrainfo` | `titleExtraInfo` |
+| `totaldiscs` | `totalDiscs` |
+| `totaltime` | `totalTime` |
+| `tvshowdetails` | `tvShowDetails` |
+| `tvshowid` | `tvShowId` |
+| `tvshows` | `tvShows` |
+| `uniqueid` | `uniqueId` |
+| `useartistsortname` | `useArtistSortName` |
+| `usecount` | `useCount` |
+| `usedirectorynames` | `useDirectoryNames` |
+| `userrating` | `userRating` |
+| `verifynewvalue` | `verifyNewValue` |
+| `verticalshift` | `verticalShift` |
+| `videostreams` | `videoStreams` |
+| `viewmode` | `viewMode` |
+| `wasactive` | `wasActive` |
+| `watchedepisodes` | `watchedEpisodes` |
+| `windowparameter` | `windowParameter` |
+| `yearsactive` | `yearsActive` |
+
+## 18. A library item is a target: `GetItemProperties` and `SetItemProperties`
+
+The `Get*Details` and `Set*Details` methods of both libraries are removed. An
+item is addressed by its kind and id, and its properties are read with
+`GetItemProperties` and changed with `SetItemProperties`.
+
+```diff
+- {"method": "VideoLibrary.GetMovieDetails",   "params": {"movieId": 3, "properties": ["title", "playCount"]}}
++ {"method": "VideoLibrary.GetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": ["title", "playCount"]}}
+- {"method": "VideoLibrary.SetMovieDetails",   "params": {"movieId": 3, "playCount": 1}}
++ {"method": "VideoLibrary.SetItemProperties", "params": {"item": {"kind": "movie", "id": 3}, "properties": {"playCount": 1}}}
+```
+
+| Removed | Kind |
+| --- | --- |
+| `VideoLibrary.GetMovieDetails`, `SetMovieDetails` | `movie` |
+| `VideoLibrary.GetMovieSetDetails`, `SetMovieSetDetails` | `set` |
+| `VideoLibrary.GetTVShowDetails`, `SetTVShowDetails` | `tvshow` |
+| `VideoLibrary.GetSeasonDetails`, `SetSeasonDetails` | `season` |
+| `VideoLibrary.GetEpisodeDetails`, `SetEpisodeDetails` | `episode` |
+| `VideoLibrary.GetMusicVideoDetails`, `SetMusicVideoDetails` | `musicvideo` |
+| `AudioLibrary.GetArtistDetails`, `SetArtistDetails` | `artist` |
+| `AudioLibrary.GetAlbumDetails`, `SetAlbumDetails` | `album` |
+| `AudioLibrary.GetSongDetails`, `SetSongDetails` | `song` |
+
+`GetItemProperties` answers the item itself, not wrapped in `movieDetails`
+and the like. `SetItemProperties` takes the values under `properties`,
+changes only those given, and answers like `GetItemProperties` for the ones
+it can read back, in place of `"OK"`. A movie set no longer lists its movies:
+ask `VideoLibrary.GetItems` for `"kind": "movie"` with `"filter": {"setId": 2}`.
+
+`GetAvailableArtTypes` and `GetAvailableArt` of both libraries take their
+`item` the same way.
+
+```diff
+- {"method": "VideoLibrary.GetAvailableArt", "params": {"item": {"movieId": 3}, "artType": "poster"}}
++ {"method": "VideoLibrary.GetAvailableArt", "params": {"item": {"kind": "movie", "id": 3}, "artType": "poster"}}
+```
+
+**What to do.** Replace each call as above. Read the answer as the item.
+
+## 19. A library item's changes, additions and removals are its own notifications
+
+`VideoLibrary.OnUpdate` and `AudioLibrary.OnUpdate` are
+`VideoLibrary.OnItemPropertiesChanged` and
+`AudioLibrary.OnItemPropertiesChanged`. The item is addressed as
+`SetItemProperties` addresses it, and what changed is under `properties`,
+using the names `GetItemProperties` answers with.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",                "params": {"data": {"item": {"id": 12, "type": "episode"}, "playcount": 1}}}
++ {"method": "VideoLibrary.OnItemPropertiesChanged", "params": {"data": {"item": {"kind": "episode", "id": 12}, "properties": {"playCount": 1}}}}
+```
+
+`properties` is absent when Kodi does not say what changed, as after a
+refresh; read the item again then. `transaction` is carried as before. An
+update to a file that is not a library item used to arrive with `id` -1; it
+is no longer sent. A change made with `SetItemProperties` is announced to
+every client once, with the values it set.
+
+A newly added item, which arrived as `OnUpdate` with `added`, is an event of
+its own: `VideoLibrary.OnItemAdded` and `AudioLibrary.OnItemAdded`, carrying
+the item and `transaction`. `OnItemPropertiesChanged` never carries `added`.
+
+```diff
+- {"method": "VideoLibrary.OnUpdate",    "params": {"data": {"item": {"id": 9, "type": "movie"}, "added": true, "transaction": true}}}
++ {"method": "VideoLibrary.OnItemAdded", "params": {"data": {"item": {"kind": "movie", "id": 9}, "transaction": true}}}
+```
+
+A removed item is `VideoLibrary.OnItemRemoved` or
+`AudioLibrary.OnItemRemoved`, in place of `OnRemove`, addressing the item
+the same way and carrying `transaction` when the removal is part of a clean.
+The removal of a movie's version, which arrived as `OnRemove` with
+`"type": "videoversion"`, is no longer sent: a version is not an item you
+can address.
+
+```diff
+- {"method": "VideoLibrary.OnRemove",      "params": {"data": {"id": 7, "type": "movie", "transaction": true}}}
++ {"method": "VideoLibrary.OnItemRemoved", "params": {"data": {"item": {"kind": "movie", "id": 7}, "transaction": true}}}
+```
+
+**What to do.** Listen for `OnItemPropertiesChanged`. Merge `properties`
+into what you hold for the item, or read it with `GetItemProperties` when
+there is none. Listen for `OnItemAdded` and `OnItemRemoved` to learn of new
+and removed items.
+
+## 20. `GetInProgressTVShows` sorts and limits as asked
+
+`VideoLibrary.GetInProgressTVShows` took `sort` and `limits` but answered
+every in-progress show in title order, with only the returned `limits`
+reflecting what was asked. It now sorts and limits like every other list
+method.
+
+**What to do.** Nothing, unless you sent `sort` or `limits` and relied on
+their being ignored: drop them to get every in-progress show, as before.
+
+## 21. Every library list answers `items`
+
+The library list methods keep their names and parameters, but answer as
+`VideoLibrary.GetItems` and `AudioLibrary.GetItems` do: the list is `items`,
+not a name for the kind.
+
+```diff
+- {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "movies": [{"movieId": 1, "label": "The Matrix"}, ...]}}
++ {"result": {"limits": {"start": 0, "end": 2, "total": 245}, "items":  [{"movieId": 1, "label": "The Matrix"}, ...]}}
+```
+
+This holds for `GetMovies`, `GetMovieSets`, `GetTVShows`, `GetSeasons`,
+`GetEpisodes`, `GetMusicVideos`, `GetRecentlyAddedMovies`,
+`GetRecentlyAddedEpisodes`, `GetRecentlyAddedMusicVideos`,
+`GetInProgressTVShows`, `GetArtists`, `GetAlbums`, `GetSongs`,
+`GetRecentlyAddedAlbums`, `GetRecentlyAddedSongs`, `GetRecentlyPlayedAlbums`
+and `GetRecentlyPlayedSongs`. Each item still carries its kind's id
+(`movieId`, `tvShowId`, ...). A music list that finds nothing answers an
+empty `items`, where it used to answer no list at all.
+
+**What to do.** Read `result.items` in place of `result.movies`,
+`result.tvShows` and the rest.
+
+## 22. Several failures answer with the status that fits
+
+The calls still work; only these failures changed code. Each now also names
+its reason in `error.data.reason`.
+
+| Call | Failure | Was | Now |
+|---|---|---|---|
+| `Addons.GetAddonDetails`, `Addons.SetAddonEnabled`, `Addons.ExecuteAddon` | no add-on has the id | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-addon` |
+| `Player.GetChapters` | no video playing | -32602 `InvalidParams` (audio or pictures playing) | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Player.Open` | unknown `broadcastId`, `channelId` or `recordingId` | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-item` |
+| `Player.Open` | a PVR recording path nothing has | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-path` |
+| `PVR.Record` | `"channel": "current"` with no channel playing | -32603 `InternalError` | -32100 `FailedToExecute`, `nothing-playing` or `not-applicable` |
+| `Files.GetDirectory` | the directory does not exist | -32097 `Unavailable` | -32098 `NotFound`, `no-such-path` |
+| `Addons.SetAddonEnabled` | Kodi refuses the change, as for a required add-on | -32602 `InvalidParams` | -32097 `Unavailable`, `change-declined` |
+| `Player.SetPartymode` | party mode runs on the other playlist | -32602 `InvalidParams` | -32100 `FailedToExecute`, `party-mode-elsewhere` |
+| `PVR.AddTimer` | the broadcast already has a timer | -32602 `InvalidParams` | -32100 `FailedToExecute`, `timer-exists` |
+| `Settings.GetSkinSettingValue`, `Settings.SetSkinSettingValue` | the skin has no such setting | -32602 `InvalidParams` | -32098 `NotFound`, `no-such-setting` |
+| `PVR.GetProperties` | PVR is off | -32100 `FailedToExecute` | no error: `available`, `recording` and `scanning` are `false` |
+
+`Files.GetDirectory` still answers `Unavailable` (`unreachable`) when no
+directory above the one asked for can be listed either, as when its share
+is offline.
+
+**What to do.** Treat -32098 as "gone" for these calls, and read
+`error.data.reason` rather than the code where you need to tell the cases
+apart.
+
+## 23. An unresolved item's reason is a failure reason
+
+Clients of 14 saw `Playlist.AddResult.unresolved[].reason` as `notfound`,
+`unavailable` or `invalid`. It now uses the vocabulary of
+`error.data.reason`:
+
+| Was | Now |
+|---|---|
+| `notfound` | `no-such-item` for a library id, `no-such-path` for a file or directory |
+| `unavailable` | not given: nothing diagnosed it |
+| `invalid` | `not-a-file` for a directory named as a file, `not-playable` otherwise |
+
+```diff
+- {"item": {"movieid": 4321}, "reason": "notfound"}
++ {"item": {"movieId": 4321}, "reason": "no-such-item"}
+```
+
+**What to do.** Match on the new names. A call that adds nothing fails with
+the reason the first missing item gives, so the same code reads both.
+
+## 24. `Files.Download` is removed
+
+No transport served a file directly, so `Files.Download` answered
+`MethodNotFound` on every one of them and nothing could reach it. It is gone,
+and `Files.PrepareDownload` no longer answers `mode`, which was always
+`redirect`.
+
+**What to do.** Download through `Files.PrepareDownload`: it answers
+`details.path`, the URL path to fetch the file from over HTTP.
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "Files.PrepareDownload",
+ "params": {"path": "special://profile/playlists/music/party.m3u"}}
+```
+
+Drop any use of `result.mode`.
+
+## Finding the rest
+
+Anything deprecated is marked `"deprecated": true` on its method or its
+schema:
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "JSONRPC.Introspect",
+ "params": {"getdescriptions": false}}
+```
+
+The flag is reported even with descriptions suppressed. `openrpc.json` carries
+the same flag for offline tooling.
+
+---
+
+## Nothing to do, but worth knowing
+
+New since Kodi 21 and safe to ignore until you want it. The
+[changelog](CHANGELOG.md) has the complete list.
+
+- **A failure says why.** Where a client can act on it, `error.data` names
+  the reason and what it concerns, whatever the code:
+
+  ```json
+  {"jsonrpc": "2.0", "id": 1, "error": {"code": -32100, "message": "Failed to execute method.",
+   "data": {"reason": "nothing-playing"}}}
+  ```
+
+  Each method lists its `reasons` beside its `errors` in `JSONRPC.Introspect`.
+  Match on `reason`, never on `message`.
+- **Playback failure is reported.** `Player.OnPlaybackFailed` fires when
+  playback was requested and did not happen, with a `reason` of `unplayable`,
+  `unresolved`, `locked` or `error`.
+- **Playlist shuffle and repeat** are readable (`Playlist.GetProperties`),
+  settable (`Playlist.SetShuffle`, `Playlist.SetRepeat`) and observable
+  (`Playlist.OnPropertiesChanged`).
+- **Skin lifecycle notifications**: `GUI.OnSkinLoaded`,
+  `GUI.OnSkinLoadFailed` and `GUI.OnSkinUnloading`.
+- **`PVR.GetPlayableBroadcasts`** answers which broadcasts in a time range can
+  be played back.
+- **`VideoLibrary.SetSourceContent`** assigns a content type and scraper to a
+  source path, which previously only the "Set content" dialog could do.
+- **`Player.GetChapters`** returns the playing item's chapters.
+- **`VideoLibrary.GetItems` and `AudioLibrary.GetItems`** list any kind of
+  item with one method; `GetMovies` and the other list methods are the same
+  query with preset values.
+- **`GUI.TakeScreenshot`**, `Database.GetDatabaseName`,
+  `AudioLibrary.RefreshAlbum` and `AudioLibrary.RefreshArtist`.
+- **PVR image properties are URLs** the web server's `/image/` endpoint can
+  serve, in place of paths only the machine running Kodi could read.
+- **A PVR channel keeps its own logo** in `icon` and `thumbnail` even when the
+  programme airing has its own artwork; the programme's artwork is under
+  `broadcastnow`.
+- **`Player.OnPropertiesChanged`** carries every member its declared type
+  promises, rather than a subset.
+- **New properties**: `stationname`, `episodename` and `episodepart` on list
+  items, the parental rating fields on PVR broadcasts and recordings,
+  `bitspersample` on an audio stream, `status` and `trailer` on a TV show,
+  and `lastlibrarycheck` on a texture.

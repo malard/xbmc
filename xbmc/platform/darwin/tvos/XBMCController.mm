@@ -17,8 +17,6 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPowerHandling.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "network/Network.h"
@@ -110,7 +108,7 @@ XBMCController* g_xbmcController;
   [super viewDidAppear:animated];
   [self becomeFirstResponder];
   [[UIApplication sharedApplication]
-      beginReceivingRemoteControlEvents]; // @todo MPRemoteCommandCenter
+      beginReceivingRemoteControlEvents]; //! @todo MPRemoteCommandCenter
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -203,12 +201,8 @@ XBMCController* g_xbmcController;
   //    CPowerManager::OnSleep()
   //    CApplication::StopPlaying()
   //    CGUIWindowManager::ProcessRenderLoop
-  //TODO: Understand why we need this hack and fix the bug to remove this hack
-  if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_SLIDESHOW ||
-      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO ||
-      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_GAME ||
-      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VISUALISATION)
-    CServiceBroker::GetGUI()->GetWindowManager().PreviousWindow();
+  //! @todo Understand why we need this hack and fix the bug to remove this hack
+  g_application.LeavePlaybackWindow();
 
   dynamic_cast<CTVOSPowerSyscall*>(CServiceBroker::GetPowerManager().GetPowerSyscall())
       ->SetOnPause();
@@ -360,7 +354,6 @@ XBMCController* g_xbmcController;
     try
     {
       // set up some Kodi specific relationships
-      //    XBMC::Context run_context; //! @todo
       m_appAlive = YES;
       // start up with gui enabled
       status = KODI_Run(true);
@@ -390,7 +383,7 @@ int KODI_Run(bool renderGUI)
 {
   int status = -1;
 
-  CAppEnvironment::SetUp(std::make_shared<CAppParams>()); //! @todo : proper params
+  CAppEnvironment::SetUp(std::make_shared<CAppParams>()); //! @todo proper params
 
   if (!g_application.Create())
   {
@@ -409,14 +402,6 @@ int KODI_Run(bool renderGUI)
 #endif
   CServiceBroker::GetLogging().SetLogLevel(
       CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel);
-
-  // not a failure if returns false, just means someone
-  // did the init before us.
-  if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialized())
-  {
-    //CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialize();
-    //! @todo
-  }
 
   CAnnounceReceiver::GetInstance()->Initialize();
 

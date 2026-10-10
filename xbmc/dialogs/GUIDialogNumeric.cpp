@@ -25,6 +25,8 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 
 #define CONTROL_HEADING_LABEL  1
@@ -37,7 +39,17 @@
 #define CONTROL_BACKSPACE     23
 
 using namespace KODI::MESSAGING;
+using KODI::DIALOGS::NUMERIC_MODE;
 using KODI::UTILITY::CDigest;
+
+namespace
+{
+bool IsDateOrTime(NUMERIC_MODE mode)
+{
+  return mode == NUMERIC_MODE::TIME || mode == NUMERIC_MODE::TIME_SECONDS ||
+         mode == NUMERIC_MODE::DATE;
+}
+} // namespace
 
 CGUIDialogNumeric::CGUIDialogNumeric(void) : CGUIDialog(WINDOW_DIALOG_NUMERIC, "DialogNumeric.xml")
 {
@@ -51,39 +63,17 @@ void CGUIDialogNumeric::OnInitWindow()
 {
   CGUIDialog::OnInitWindow();
 
-  CVariant data;
-  switch (m_mode)
-  {
-  case INPUT_TIME:
-    data["type"] = "time";
-    break;
-  case INPUT_DATE:
-    data["type"] = "date";
-    break;
-  case INPUT_IP_ADDRESS:
-    data["type"] = "ip";
-    break;
-  case INPUT_PASSWORD:
-    data["type"] = "numericpassword";
-    break;
-  case INPUT_NUMBER:
-    data["type"] = "number";
-    break;
-  case INPUT_TIME_SECONDS:
-    data["type"] = "seconds";
-    break;
-  default:
-    data["type"] = "keyboard";
-    break;
-  }
+  ANNOUNCEMENT::EVENT::INPUT::Requested requested;
+  requested.numeric = m_mode;
 
   const CGUIControl *control = GetControl(CONTROL_HEADING_LABEL);
   if (control != nullptr)
-    data["title"] = control->GetDescription();
+    requested.title = control->GetDescription();
 
-  data["value"] = GetOutputString();
+  requested.value = GetOutputString();
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputRequested", data);
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InputEvent{std::move(requested)});
 }
 
 void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
@@ -91,53 +81,87 @@ void CGUIDialogNumeric::OnDeinitWindow(int nextWindowID)
   // call base class
   CGUIDialog::OnDeinitWindow(nextWindowID);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Input, "OnInputFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InputEvent{ANNOUNCEMENT::EVENT::INPUT::Finished{}});
 }
 
 bool CGUIDialogNumeric::OnAction(const CAction &action)
 {
-  if (action.GetID() == ACTION_NEXT_ITEM)
-    OnNext();
-  else if (action.GetID() == ACTION_PREV_ITEM)
-    OnPrevious();
-  else if (action.GetID() == ACTION_BACKSPACE)
-    OnBackSpace();
-  else if (action.GetID() == ACTION_ENTER)
-    OnOK();
-  else if (action.GetID() >= REMOTE_0 && action.GetID() <= REMOTE_9)
-    OnNumber(action.GetID() - REMOTE_0);
-  else if (action.GetID() >= KEY_VKEY && action.GetID() <= KEY_VKEY_MAX)
+  const int id{action.GetID()};
+  switch (id)
+  {
+    case ACTION_NEXT_ITEM:
+      OnNext();
+      return true;
+    case ACTION_PREV_ITEM:
+      OnPrevious();
+      return true;
+    case ACTION_BACKSPACE:
+      OnBackSpace();
+      return true;
+    case ACTION_ENTER:
+      OnOK();
+      return true;
+    case KEY_UNICODE:
+      switch (const wchar_t c{action.GetUnicode()})
+      {
+        case '\n':
+        case '\r':
+          OnOK();
+          break;
+        case '\b':
+          OnBackSpace();
+          break;
+        case 27: // escape
+          OnCancel();
+          break;
+        case '.':
+          OnNext();
+          break;
+        default:
+          if (c >= '0' && c <= '9')
+            OnNumber(c - '0');
+          break;
+      }
+      return true;
+    default:
+      break;
+  }
+
+  if (id >= REMOTE_0 && id <= REMOTE_9)
+  {
+    OnNumber(id - REMOTE_0);
+    return true;
+  }
+
+  if (id >= KEY_VKEY && id <= KEY_VKEY_MAX)
   {
     // input from the keyboard (vkey, not ascii)
-    uint16_t b = action.GetID() - KEY_VKEY;
-    if (b == XBMCVK_LEFT)
-      OnPrevious();
-    else if (b == XBMCVK_RIGHT)
-      OnNext();
-    else if (b == XBMCVK_RETURN || b == XBMCVK_NUMPADENTER)
-      OnOK();
-    else if (b == XBMCVK_BACK)
-      OnBackSpace();
-    else if (b == XBMCVK_ESCAPE)
-      OnCancel();
+    switch (id - KEY_VKEY)
+    {
+      case XBMCVK_LEFT:
+        OnPrevious();
+        break;
+      case XBMCVK_RIGHT:
+        OnNext();
+        break;
+      case XBMCVK_RETURN:
+      case XBMCVK_NUMPADENTER:
+        OnOK();
+        break;
+      case XBMCVK_BACK:
+        OnBackSpace();
+        break;
+      case XBMCVK_ESCAPE:
+        OnCancel();
+        break;
+      default:
+        break;
+    }
+    return true;
   }
-  else if (action.GetID() == KEY_UNICODE)
-  { // input from the keyboard
-    if (action.GetUnicode() == 10 || action.GetUnicode() == 13)
-      OnOK(); // enter
-    else if (action.GetUnicode() == 8)
-      OnBackSpace(); // backspace
-    else if (action.GetUnicode() == 27)
-      OnCancel(); // escape
-    else if (action.GetUnicode() == 46)
-      OnNext(); // '.'
-    else if (action.GetUnicode() >= 48 && action.GetUnicode() < 58)  // number
-      OnNumber(action.GetUnicode() - 48);
-  }
-  else
-    return CGUIDialog::OnAction(action);
 
-  return true;
+  return CGUIDialog::OnAction(action);
 }
 
 bool CGUIDialogNumeric::OnBack(int actionID)
@@ -169,25 +193,22 @@ bool CGUIDialogNumeric::OnMessage(CGUIMessage& message)
         OnNumber(iControl - 10);
         return true;
       }
-      else if (iControl == CONTROL_PREVIOUS)
+      switch (iControl)
       {
-        OnPrevious();
-        return true;
-      }
-      else if (iControl == CONTROL_NEXT)
-      {
-        OnNext();
-        return true;
-      }
-      else if (iControl == CONTROL_BACKSPACE)
-      {
-        OnBackSpace();
-        return true;
-      }
-      else if (iControl == CONTROL_ENTER)
-      {
-        OnOK();
-        return true;
+        case CONTROL_PREVIOUS:
+          OnPrevious();
+          return true;
+        case CONTROL_NEXT:
+          OnNext();
+          return true;
+        case CONTROL_BACKSPACE:
+          OnBackSpace();
+          return true;
+        case CONTROL_ENTER:
+          OnOK();
+          return true;
+        default:
+          break;
       }
     }
     break;
@@ -210,76 +231,80 @@ void CGUIDialogNumeric::OnBackSpace()
     --m_block;
     return;
   }
-  if (m_mode == INPUT_NUMBER || m_mode == INPUT_PASSWORD)
-  { // just go back one character
-    if (!m_number.empty())
-      m_number.erase(m_number.length() - 1);
-  }
-  else if (m_mode == INPUT_IP_ADDRESS)
+  switch (m_mode)
   {
-    if (m_ip[m_block])
-      m_ip[m_block] /= 10;
-    else if (m_block)
-    {
-      --m_block;
-      m_dirty = false;
-    }
-  }
-  else if (m_mode == INPUT_TIME)
-  {
-    if (m_block == 0)
-      m_datetime.hour /= 10;
-    else if (m_datetime.minute)
-      m_datetime.minute /= 10;
-    else
-    {
-      m_block = 0;
-      m_dirty = false;
-    }
-  }
-  else if (m_mode == INPUT_TIME_SECONDS)
-  {
-    if (m_block == 0)
-      m_datetime.hour /= 10;
-    else if (m_block == 1)
-    {
-      if (m_datetime.minute)
+    case NUMERIC_MODE::NUMBER:
+    case NUMERIC_MODE::PASSWORD:
+      // just go back one character
+      if (!m_number.empty())
+        m_number.erase(m_number.length() - 1);
+      break;
+
+    case NUMERIC_MODE::IP_ADDRESS:
+      if (m_ip[m_block])
+        m_ip[m_block] /= 10;
+      else if (m_block)
+      {
+        --m_block;
+        m_dirty = false;
+      }
+      break;
+
+    case NUMERIC_MODE::TIME:
+      if (m_block == 0)
+        m_datetime.hour /= 10;
+      else if (m_datetime.minute)
         m_datetime.minute /= 10;
       else
       {
         m_block = 0;
         m_dirty = false;
       }
-    }
-    else if (m_datetime.second)
-      m_datetime.minute /= 10;
-    else
-    {
-      m_block = 0;
-      m_dirty = false;
-    }
-  }
-  else if (m_mode == INPUT_DATE)
-  {
-    if (m_block == 0)
-      m_datetime.day /= 10;
-    else if (m_block == 1)
-    {
-      if (m_datetime.month)
-        m_datetime.month /= 10;
+      break;
+
+    case NUMERIC_MODE::TIME_SECONDS:
+      if (m_block == 0)
+        m_datetime.hour /= 10;
+      else if (m_block == 1)
+      {
+        if (m_datetime.minute)
+          m_datetime.minute /= 10;
+        else
+        {
+          m_block = 0;
+          m_dirty = false;
+        }
+      }
+      else if (m_datetime.second)
+        m_datetime.second /= 10;
       else
       {
         m_block = 0;
         m_dirty = false;
       }
-    }
-    else if (m_datetime.year) // m_block == 2
-      m_datetime.year /= 10;
-    else
-    {
-      m_block = 1;
-      m_dirty = false;
-    }
+      break;
+
+    case NUMERIC_MODE::DATE:
+      if (m_block == 0)
+        m_datetime.day /= 10;
+      else if (m_block == 1)
+      {
+        if (m_datetime.month)
+          m_datetime.month /= 10;
+        else
+        {
+          m_block = 0;
+          m_dirty = false;
+        }
+      }
+      else if (m_datetime.year) // m_block == 2
+        m_datetime.year /= 10;
+      else
+      {
+        m_block = 1;
+        m_dirty = false;
+      }
+      break;
   }
 }
 
@@ -292,13 +317,13 @@ void CGUIDialogNumeric::OnPrevious()
 
 void CGUIDialogNumeric::OnNext()
 {
-  if (m_mode == INPUT_IP_ADDRESS && m_block==0 && m_ip[0]==0)
+  if (m_mode == NUMERIC_MODE::IP_ADDRESS && m_block==0 && m_ip[0]==0)
     return;
 
   if (m_block < m_lastblock)
     m_block++;
   m_dirty = false;
-  if (m_mode == INPUT_DATE)
+  if (m_mode == NUMERIC_MODE::DATE)
     VerifyDate(m_block == 2);
 }
 
@@ -307,37 +332,36 @@ void CGUIDialogNumeric::FrameMove()
   std::string strLabel;
   unsigned int start = 0;
   unsigned int end = 0;
-  if (m_mode == INPUT_PASSWORD)
-    strLabel.assign(m_number.length(), '*');
-  else if (m_mode == INPUT_NUMBER)
-    strLabel = m_number;
-  else if (m_mode == INPUT_TIME)
-  { // format up the time
-    strLabel = StringUtils::Format("{:2}:{:02}", m_datetime.hour, m_datetime.minute);
-    start = m_block * 3;
-    end = m_block * 3 + 2;
-  }
-  else if (m_mode == INPUT_TIME_SECONDS)
-  { // format up the time
-    strLabel = StringUtils::Format("{:2}:{:02}:{:02}", m_datetime.hour, m_datetime.minute,
-                                   m_datetime.second);
-    start = m_block * 3;
-    end = m_block * 3 + 2;
-  }
-  else if (m_mode == INPUT_DATE)
-  { // format up the date
-    strLabel =
-        StringUtils::Format("{:2}/{:2}/{:4}", m_datetime.day, m_datetime.month, m_datetime.year);
-    start = m_block * 3;
-    end = m_block * 3 + 2;
-    if (m_block == 2)
-      end = m_block * 3 + 4;
-  }
-  else if (m_mode == INPUT_IP_ADDRESS)
-  { // format up the date
-    strLabel = StringUtils::Format("{:3}.{:3}.{:3}.{:3}", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
-    start = m_block * 4;
-    end = m_block * 4 + 3;
+  switch (m_mode)
+  {
+    case NUMERIC_MODE::PASSWORD:
+      strLabel.assign(m_number.length(), '*');
+      break;
+    case NUMERIC_MODE::NUMBER:
+      strLabel = m_number;
+      break;
+    case NUMERIC_MODE::TIME:
+      strLabel = StringUtils::Format("{:2}:{:02}", m_datetime.hour, m_datetime.minute);
+      start = m_block * 3;
+      end = m_block * 3 + 2;
+      break;
+    case NUMERIC_MODE::TIME_SECONDS:
+      strLabel = StringUtils::Format("{:2}:{:02}:{:02}", m_datetime.hour, m_datetime.minute,
+                                     m_datetime.second);
+      start = m_block * 3;
+      end = m_block * 3 + 2;
+      break;
+    case NUMERIC_MODE::DATE:
+      strLabel =
+          StringUtils::Format("{:2}/{:2}/{:4}", m_datetime.day, m_datetime.month, m_datetime.year);
+      start = m_block * 3;
+      end = m_block == 2 ? m_block * 3 + 4 : m_block * 3 + 2;
+      break;
+    case NUMERIC_MODE::IP_ADDRESS:
+      strLabel = StringUtils::Format("{:3}.{:3}.{:3}.{:3}", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
+      start = m_block * 4;
+      end = m_block * 4 + 3;
+      break;
   }
   CGUILabelControl *pLabel = dynamic_cast<CGUILabelControl *>(GetControl(CONTROL_INPUT_LABEL));
   if (pLabel)
@@ -354,46 +378,46 @@ void CGUIDialogNumeric::OnNumber(uint32_t num)
 
   switch (m_mode)
   {
-  case INPUT_NUMBER:
-  case INPUT_PASSWORD:
+  case NUMERIC_MODE::NUMBER:
+  case NUMERIC_MODE::PASSWORD:
     m_number += num + '0';
     break;
-  case INPUT_TIME:
+  case NUMERIC_MODE::TIME:
     HandleInputTime(num);
     break;
-  case INPUT_TIME_SECONDS:
+  case NUMERIC_MODE::TIME_SECONDS:
     HandleInputSeconds(num);
     break;
-  case INPUT_DATE:
+  case NUMERIC_MODE::DATE:
     HandleInputDate(num);
     break;
-  case INPUT_IP_ADDRESS:
+  case NUMERIC_MODE::IP_ADDRESS:
     HandleInputIP(num);
     break;
   }
 }
 
-void CGUIDialogNumeric::SetMode(INPUT_MODE mode, const KODI::TIME::SystemTime& initial)
+void CGUIDialogNumeric::SetMode(NUMERIC_MODE mode, const KODI::TIME::SystemTime& initial)
 {
   m_mode = mode;
   m_block = 0;
   m_lastblock = 0;
-  if (m_mode == INPUT_TIME || m_mode == INPUT_TIME_SECONDS || m_mode == INPUT_DATE)
+  if (IsDateOrTime(m_mode))
   {
     m_datetime = initial;
-    m_lastblock = (m_mode != INPUT_TIME) ? 2 : 1;
+    m_lastblock = (m_mode == NUMERIC_MODE::TIME) ? 1 : 2;
   }
 }
 
-void CGUIDialogNumeric::SetMode(INPUT_MODE mode, const std::string &initial)
+void CGUIDialogNumeric::SetMode(NUMERIC_MODE mode, const std::string &initial)
 {
   m_mode = mode;
   m_block = 0;
   m_lastblock = 0;
-  if (m_mode == INPUT_TIME || m_mode == INPUT_TIME_SECONDS || m_mode == INPUT_DATE)
+  if (IsDateOrTime(m_mode))
   {
     CDateTime dateTime;
-    if (m_mode == INPUT_TIME || m_mode == INPUT_TIME_SECONDS)
+    if (m_mode == NUMERIC_MODE::TIME || m_mode == NUMERIC_MODE::TIME_SECONDS)
     {
       // check if we have a pure number
       if (initial.find_first_not_of("0123456789") == std::string::npos)
@@ -406,12 +430,12 @@ void CGUIDialogNumeric::SetMode(INPUT_MODE mode, const std::string &initial)
         std::string tmp = initial;
         // if we are handling seconds and if the string only contains
         // "mm:ss" we need to add dummy "hh:" to get "hh:mm:ss"
-        if (m_mode == INPUT_TIME_SECONDS && tmp.length() <= 5)
+        if (m_mode == NUMERIC_MODE::TIME_SECONDS && tmp.length() <= 5)
           tmp = "00:" + tmp;
         dateTime.SetFromDBTime(tmp);
       }
     }
-    else if (m_mode == INPUT_DATE)
+    else if (m_mode == NUMERIC_MODE::DATE)
     {
       std::string tmp = initial;
       StringUtils::Replace(tmp, '/', '.');
@@ -422,9 +446,9 @@ void CGUIDialogNumeric::SetMode(INPUT_MODE mode, const std::string &initial)
       return;
 
     dateTime.GetAsSystemTime(m_datetime);
-    m_lastblock = (m_mode == INPUT_DATE) ? 2 : 1;
+    m_lastblock = (m_mode == NUMERIC_MODE::TIME) ? 1 : 2;
   }
-  else if (m_mode == INPUT_IP_ADDRESS)
+  else if (m_mode == NUMERIC_MODE::IP_ADDRESS)
   {
     m_lastblock = 3;
     auto blocks = StringUtils::Split(initial, '.');
@@ -439,13 +463,13 @@ void CGUIDialogNumeric::SetMode(INPUT_MODE mode, const std::string &initial)
       m_ip[i] = static_cast<uint8_t>(atoi(blocks[i].c_str()));
     }
   }
-  else if (m_mode == INPUT_NUMBER || m_mode == INPUT_PASSWORD)
+  else if (m_mode == NUMERIC_MODE::NUMBER || m_mode == NUMERIC_MODE::PASSWORD)
     m_number = initial;
 }
 
 KODI::TIME::SystemTime CGUIDialogNumeric::GetOutput() const
 {
-  assert(m_mode == INPUT_TIME || m_mode == INPUT_TIME_SECONDS || m_mode == INPUT_DATE);
+  assert(IsDateOrTime(m_mode));
   return m_datetime;
 }
 
@@ -453,18 +477,18 @@ std::string CGUIDialogNumeric::GetOutputString() const
 {
   switch (m_mode)
   {
-  case INPUT_DATE:
+  case NUMERIC_MODE::DATE:
     return StringUtils::Format("{:02}/{:02}/{:04}", m_datetime.day, m_datetime.month,
                                m_datetime.year);
-  case INPUT_TIME:
+  case NUMERIC_MODE::TIME:
     return StringUtils::Format("{}:{:02}", m_datetime.hour, m_datetime.minute);
-  case INPUT_TIME_SECONDS:
+  case NUMERIC_MODE::TIME_SECONDS:
     return StringUtils::Format("{}:{:02}:{:02}", m_datetime.hour, m_datetime.minute,
                                m_datetime.second);
-  case INPUT_IP_ADDRESS:
+  case NUMERIC_MODE::IP_ADDRESS:
     return StringUtils::Format("{}.{}.{}.{}", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
-  case INPUT_NUMBER:
-  case INPUT_PASSWORD:
+  case NUMERIC_MODE::NUMBER:
+  case NUMERIC_MODE::PASSWORD:
     return m_number;
   }
 
@@ -481,7 +505,7 @@ bool CGUIDialogNumeric::ShowAndGetSeconds(std::string &timeString, const std::st
   time.hour = seconds / 3600;
   time.minute = (seconds - time.hour * 3600) / 60;
   time.second = seconds - time.hour * 3600 - time.minute * 60;
-  pDialog->SetMode(INPUT_TIME_SECONDS, time);
+  pDialog->SetMode(NUMERIC_MODE::TIME_SECONDS, time);
   pDialog->SetHeading(heading);
   pDialog->Open();
   if (!pDialog->IsConfirmed() || pDialog->IsCanceled())
@@ -496,7 +520,7 @@ bool CGUIDialogNumeric::ShowAndGetTime(KODI::TIME::SystemTime& time, const std::
 {
   CGUIDialogNumeric *pDialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogNumeric>(WINDOW_DIALOG_NUMERIC);
   if (!pDialog) return false;
-  pDialog->SetMode(INPUT_TIME, time);
+  pDialog->SetMode(NUMERIC_MODE::TIME, time);
   pDialog->SetHeading(heading);
   pDialog->Open();
   if (!pDialog->IsConfirmed() || pDialog->IsCanceled())
@@ -509,7 +533,7 @@ bool CGUIDialogNumeric::ShowAndGetDate(KODI::TIME::SystemTime& date, const std::
 {
   CGUIDialogNumeric *pDialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogNumeric>(WINDOW_DIALOG_NUMERIC);
   if (!pDialog) return false;
-  pDialog->SetMode(INPUT_DATE, date);
+  pDialog->SetMode(NUMERIC_MODE::DATE, date);
   pDialog->SetHeading(heading);
   pDialog->Open();
   if (!pDialog->IsConfirmed() || pDialog->IsCanceled())
@@ -522,7 +546,7 @@ bool CGUIDialogNumeric::ShowAndGetIPAddress(std::string &IPAddress, const std::s
 {
   CGUIDialogNumeric *pDialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogNumeric>(WINDOW_DIALOG_NUMERIC);
   if (!pDialog) return false;
-  pDialog->SetMode(INPUT_IP_ADDRESS, IPAddress);
+  pDialog->SetMode(NUMERIC_MODE::IP_ADDRESS, IPAddress);
   pDialog->SetHeading(heading);
   pDialog->Open();
   if (!pDialog->IsConfirmed() || pDialog->IsCanceled())
@@ -538,9 +562,9 @@ bool CGUIDialogNumeric::ShowAndGetNumber(std::string& strInput, const std::strin
   pDialog->SetHeading( strHeading );
 
   if (bSetHidden)
-    pDialog->SetMode(INPUT_PASSWORD, strInput);
+    pDialog->SetMode(NUMERIC_MODE::PASSWORD, strInput);
   else
-    pDialog->SetMode(INPUT_NUMBER, strInput);
+    pDialog->SetMode(NUMERIC_MODE::NUMBER, strInput);
   if (iAutoCloseTimeoutMs)
     pDialog->SetAutoClose(iAutoCloseTimeoutMs);
 
@@ -637,7 +661,7 @@ InputVerificationResult CGUIDialogNumeric::ShowAndVerifyInput(std::string& strTo
   if (!bVerifyInput)
     strInput = strToVerify;
 
-  pDialog->SetMode(INPUT_PASSWORD, strInput);
+  pDialog->SetMode(NUMERIC_MODE::PASSWORD, strInput);
   pDialog->Open();
 
   strInput = pDialog->GetOutputString();
@@ -684,24 +708,14 @@ void CGUIDialogNumeric::VerifyDate(bool checkYear)
     m_datetime.day = 1;
   if (m_datetime.month == 0)
     m_datetime.month = 1;
-  // check for number of days in the month
-  if (m_datetime.day == 31)
-  {
-    if (m_datetime.month == 4 || m_datetime.month == 6 || m_datetime.month == 9 ||
-        m_datetime.month == 11)
-      m_datetime.day = 30;
-  }
-  if (m_datetime.month == 2 && m_datetime.day > 28)
-  {
-    m_datetime.day = 29; // max in february.
-    if (checkYear)
-    {
-      // leap years occur when the year is divisible by 4 but not by 100, or the year is divisible by 400
-      // thus they don't occur, if the year has a remainder when divided by 4, or when the year is divisible by 100 but not by 400
-      if ((m_datetime.year % 4) || (!(m_datetime.year % 100) && (m_datetime.year % 400)))
-        m_datetime.day = 28;
-    }
-  }
+  // without a year yet, February allows the 29th
+  static constexpr std::array<int, 12> daysInMonth{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  int lastDay = daysInMonth[m_datetime.month - 1];
+  const int year = m_datetime.year;
+  if (m_datetime.month == 2 && checkYear &&
+      !(year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)))
+    lastDay = 28;
+  m_datetime.day = static_cast<unsigned short>(std::min<int>(m_datetime.day, lastDay));
 }
 
 void CGUIDialogNumeric::OnOK()

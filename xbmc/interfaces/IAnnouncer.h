@@ -10,7 +10,6 @@
 
 #include <string>
 
-class CVariant;
 namespace ANNOUNCEMENT
 {
 enum AnnouncementFlag
@@ -26,11 +25,12 @@ enum AnnouncementFlag
   PVR = 0x100,
   Other = 0x200,
   Info = 0x400,
-  Sources = 0x800
+  Sources = 0x800,
+  Settings = 0x1000
 };
 
 const auto ANNOUNCE_ALL = (Player | Playlist | GUI | System | VideoLibrary | AudioLibrary |
-                           Application | Input | ANNOUNCEMENT::PVR | Other | Info | Sources);
+                           Application | Input | ANNOUNCEMENT::PVR | Other | Info | Sources | Settings);
 
 /*!
     \brief Returns a string representation for the
@@ -66,19 +66,51 @@ inline const char* AnnouncementFlagToString(const AnnouncementFlag& notification
       return "Info";
     case Sources:
       return "Sources";
+    case Settings:
+      return "Settings";
     default:
       return "Unknown";
   }
 }
+
+struct PlayerEvent;
+struct PlaylistEvent;
+struct GUIEvent;
+struct SystemEvent;
+struct LibraryEvent;
+struct VideoLibraryEvent;
+struct AudioLibraryEvent;
+struct InputEvent;
+struct PVREvent;
+struct InfoEvent;
+struct SourcesEvent;
+struct SettingsEvent;
+struct OtherEvent;
+struct Announcement;
 
   class IAnnouncer
   {
   public:
     IAnnouncer() = default;
     virtual ~IAnnouncer() = default;
-    virtual void Announce(AnnouncementFlag flag,
-                          const std::string& sender,
-                          const std::string& message,
-                          const CVariant& data) = 0;
+
+    /*!
+     * \brief Every announcement of the flags the announcer was added for. Each goes to the
+     * handler for its flag unless this is overridden.
+     */
+    virtual void OnAnnouncement(const Announcement& announcement);
+
+    virtual void OnPlayerEvent(const PlayerEvent& event) {}
+    virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
+    virtual void OnGUIEvent(const GUIEvent& event) {}
+    virtual void OnSystemEvent(const SystemEvent& event) {}
+    virtual void OnVideoLibraryEvent(const VideoLibraryEvent& event) {}
+    virtual void OnAudioLibraryEvent(const AudioLibraryEvent& event) {}
+    virtual void OnInputEvent(const InputEvent& event) {}
+    virtual void OnPVREvent(const PVREvent& event) {}
+    virtual void OnInfoEvent(const InfoEvent& event) {}
+    virtual void OnSourcesEvent(const SourcesEvent& event) {}
+    virtual void OnSettingsEvent(const SettingsEvent& event) {}
+    virtual void OnOtherEvent(const OtherEvent& event) {}
   };
 }

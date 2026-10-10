@@ -47,6 +47,8 @@ inline constexpr char LIBRARY_FILTER[] = "library.filter";
 inline constexpr char LIBRARY_SMARTPLAYLIST[] = "library.smartplaylist";
 inline constexpr char WATCHED_MODE[] = "watchedmode";
 inline constexpr char PLAYLIST_POSITION[] = "playlistposition";
+inline constexpr char PLAYLIST_DISPLAY_ORDER[] = "playlistdisplayorder";
+inline constexpr char PLAYLIST_ENTRY[] = "playlistentry";
 inline constexpr char DEVICE_PATH[] = "device_path";
 inline constexpr char HIDE_ADD_REMOVE_FAVOURITE[] = "hide_add_remove_favourite";
 inline constexpr char TIMELINE_INDEX[] = "TimelineIndex";
@@ -68,6 +70,7 @@ inline constexpr char NUM_EPISODES[] = "numepisodes";
 inline constexpr char WATCHED_EPISODES[] = "watchedepisodes";
 inline constexpr char UNWATCHED_EPISODES[] = "unwatchedepisodes";
 inline constexpr char IN_PROGRESS_EPISODES[] = "inprogressepisodes";
+inline constexpr char WATCHED_EPISODE_PERCENT[] = "watchedepisodepercent";
 
 // Add-on listings
 inline constexpr char ADDON_ID[] = "Addon.ID";

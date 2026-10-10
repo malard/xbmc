@@ -9,18 +9,30 @@
 #pragma once
 
 #include "JSONRPCUtils.h"
+#include "dbwrappers/Database.h"
 #include "playlists/SmartPlayList.h"
+#include "utils/Artwork.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
+#include <memory>
+#include <set>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 class CDateTime;
+
+namespace ADDON
+{
+class CScraper;
+enum class ContentType;
+} // namespace ADDON
 
 namespace JSONRPC
 {
@@ -45,32 +57,33 @@ namespace JSONRPC
    json rpc method calls.*/
   class CJSONUtils
   {
-  public:
-    static void MillisecondsToTimeObject(int time, CVariant &result)
+protected:
+  //! Empty when the value is not an array.
+  static std::set<std::string> FieldNames(const CVariant & properties)
     {
-      int ms = time % 1000;
-      result["milliseconds"] = ms;
-      time = (time - ms) / 1000;
-
-      int s = time % 60;
-      result["seconds"] = s;
-      time = (time - s) / 60;
-
-      int m = time % 60;
-      result["minutes"] = m;
-      time = (time -m) / 60;
-
-      result["hours"] = time;
+    std::set<std::string> fields;
+    if (properties.isArray())
+    {
+      for (CVariant::const_iterator_array field = properties.begin_array();
+           field != properties.end_array(); ++field)
+        fields.insert(field->asString());
     }
 
-  protected:
-    static void HandleLimits(const CVariant &parameterObject, CVariant &result, int size, int &start, int &end)
+    return fields;
+  }
+
+  static std::set<std::string> RequestedFields(const CVariant& parameterObject)
+  {
+    return FieldNames(parameterObject["properties"]);
+  }
+
+  static void HandleLimits(const CVariant &parameterObject, CVariant &result, int size, int &start, int &end)
     {
       if (size < 0)
         size = 0;
 
-      start = (int)parameterObject["limits"]["start"].asInteger();
-      end   = (int)parameterObject["limits"]["end"].asInteger();
+      start = static_cast<int>(parameterObject["limits"]["start"].asInteger());
+      end   = static_cast<int>(parameterObject["limits"]["end"].asInteger());
       end = (end <= 0 || end > size) ? size : end;
       start = start > end ? end : start;
 
@@ -88,9 +101,9 @@ namespace JSONRPC
 
       // parse the sort attributes
       sortAttributes = SortAttributeNone;
-      if (parameterObject["sort"]["ignorearticle"].asBoolean())
+      if (parameterObject["sort"]["ignoreArticle"].asBoolean())
         sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeIgnoreArticle);
-      if (parameterObject["sort"]["useartistsortname"].asBoolean())
+      if (parameterObject["sort"]["useArtistSortName"].asBoolean())
         sortAttributes = static_cast<SortAttribute>(sortAttributes | SortAttributeUseArtistSortName);
 
       // parse the sort order
@@ -106,8 +119,8 @@ namespace JSONRPC
 
     static void ParseLimits(const CVariant &parameterObject, int &limitStart, int &limitEnd)
     {
-      limitStart = (int)parameterObject["limits"]["start"].asInteger();
-      limitEnd = (int)parameterObject["limits"]["end"].asInteger();
+      limitStart = static_cast<int>(parameterObject["limits"]["start"].asInteger());
+      limitEnd = static_cast<int>(parameterObject["limits"]["end"].asInteger());
     }
 
     /*!
@@ -216,8 +229,6 @@ namespace JSONRPC
     {
       if (transport.compare("Announcing") == 0)
         return Announcing;
-      if (transport.compare("FileDownloadDirect") == 0)
-        return FileDownloadDirect;
       if (transport.compare("FileDownloadRedirect") == 0)
         return FileDownloadRedirect;
 
@@ -259,7 +270,7 @@ namespace JSONRPC
     static inline std::string SchemaValueTypeToString(JSONSchemaType valueType)
     {
       std::vector<JSONSchemaType> types = std::vector<JSONSchemaType>();
-      for (unsigned int value = 0x01; value <= (unsigned int)AnyValue; value *= 2)
+      for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
       {
         if (HasType(valueType, (JSONSchemaType)value))
           types.push_back((JSONSchemaType)value);
@@ -320,7 +331,7 @@ namespace JSONRPC
     static inline void SchemaValueTypeToJson(JSONSchemaType valueType, CVariant &jsonObject)
     {
       jsonObject = CVariant(CVariant::VariantTypeArray);
-      for (unsigned int value = 0x01; value <= (unsigned int)AnyValue; value *= 2)
+      for (unsigned int value = 0x01; value <= static_cast<unsigned int>(AnyValue); value *= 2)
       {
         if (HasType(valueType, (JSONSchemaType)value))
           jsonObject.append(SchemaValueTypeToString((JSONSchemaType)value));
@@ -356,30 +367,7 @@ namespace JSONRPC
       default:
         return "unknown";
       }
-    }
-
-    /*!
-     \brief Checks if the parameter with the given name or at
-     the given position is of a certain type
-     \param parameterObject Object containing all provided parameters
-     \param key Possible name of the parameter
-     \param position Possible position of the parameter
-     \param valueType Expected type of the parameter
-     \return True if the specific parameter is of the given type otherwise false
-     */
-    static inline bool IsParameterType(const CVariant &parameterObject, const char *key, unsigned int position, JSONSchemaType valueType)
-    {
-      if ((valueType & AnyValue) == AnyValue)
-        return true;
-
-      CVariant parameter;
-      if (IsValueMember(parameterObject, key))
-        parameter = parameterObject[key];
-      else if(parameterObject.isArray() && parameterObject.size() > position)
-        parameter = parameterObject[position];
-
-      return IsType(parameter, valueType);
-    }
+  }
 
     /*!
      \brief Checks if the given json value is of the given type
@@ -447,7 +435,27 @@ namespace JSONRPC
       return parameterObject.isMember(key) && !parameterObject[key].isNull();
     }
 
-    /*!
+  /*!
+     \brief The answer to a library lookup
+     \param target The id looked up, as the caller gave it, e.g. {"movieId": 3}
+     */
+  static JSONRPC_STATUS StatusFor(CDatabase::GetResult lookup,
+                                  CVariant& result,
+                                  const CVariant& target)
+  {
+    switch (lookup)
+    {
+      case CDatabase::GetResult::Ok:
+        return OK;
+      case CDatabase::GetResult::NotFound:
+        return Fail(result, NotFound, Reason::NoSuchItem, target);
+      case CDatabase::GetResult::Error:
+        break;
+    }
+    return InternalError;
+  }
+
+  /*!
      \brief Copies the values from the jsonStringArray to the stringArray.
      stringArray is cleared.
      \param jsonStringArray JSON object representing a string array
@@ -463,9 +471,52 @@ namespace JSONRPC
         stringArray.push_back(it->asString());
     }
 
-    static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);
+  //! Copies the caller's value for \p key into \p target, if the caller gave one
+  template<typename T>
+  static void CopyIfGiven(const CVariant& parameterObject, const std::string& key, T& target)
+  {
+    if (!ParameterNotNull(parameterObject, key))
+      return;
+
+    const CVariant& value = parameterObject[key];
+    if constexpr (std::is_same_v<T, std::string>)
+      target = value.asString();
+    else if constexpr (std::is_same_v<T, std::vector<std::string>>)
+      CopyStringArray(value, target);
+    else if constexpr (std::is_same_v<T, bool>)
+      target = value.asBoolean();
+    else if constexpr (std::is_same_v<T, float>)
+      target = value.asFloat();
+    else if constexpr (std::is_same_v<T, int>)
+      target = static_cast<int>(value.asInteger());
+    else
+      static_assert(sizeof(T) == 0, "no conversion from a JSON value to this type");
+  }
+
+  static void SetFromDBDate(const CVariant& jsonDate, CDateTime& date);
 
     static void SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date);
+
+  /*!
+     \brief Applies a caller's art edit: a value replaces its art type, a null removes it
+     \param removed gains each art type the edit removed
+     \return whether the edit gave any art type a value
+     */
+  static bool EditArtwork(const CVariant& art,
+                          KODI::ART::Artwork& artwork,
+                          std::set<std::string, std::less<>>& removed);
+
+  /*!
+     \brief The enabled scraper \p scraperId names for \p content, with \p settings applied
+     \param settings the caller's settings XML, empty for the scraper's defaults
+     \return NotFound for no such enabled add-on; InvalidParams for an add-on that is not a
+     scraper for \p content, or for settings the scraper rejects
+     */
+  static JSONRPC_STATUS ResolveScraper(const std::string& scraperId,
+                                       ADDON::ContentType content,
+                                       const std::string& settings,
+                                       std::shared_ptr<ADDON::CScraper>& scraper,
+                                       CVariant& result);
 
     static bool GetXspFiltering(const std::string &type, const CVariant &filter, std::string &xsp)
     {
@@ -487,4 +538,25 @@ namespace JSONRPC
       return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
     }
   };
+
+/*!
+   \brief Answers a GetProperties call, reading each property the caller names with \p getValue
+   \return OK, or the first status other than OK that \p getValue answers
+   */
+template<typename Getter>
+JSONRPC_STATUS GetNamedProperties(const CVariant& parameterObject,
+                                  CVariant& result,
+                                  const Getter& getValue)
+{
+  CVariant properties(CVariant::VariantTypeObject);
+  const CVariant& names = parameterObject["properties"];
+  for (auto name = names.begin_array(); name != names.end_array(); ++name)
+  {
+    const std::string property = name->asString();
+    if (const JSONRPC_STATUS status = getValue(property, properties[property]); status != OK)
+      return status;
+  }
+  result = std::move(properties);
+  return OK;
 }
+} // namespace JSONRPC

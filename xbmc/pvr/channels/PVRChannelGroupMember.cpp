@@ -47,8 +47,8 @@ CPVRChannelGroupMember::CPVRChannelGroupMember(int iGroupID,
 
 void CPVRChannelGroupMember::Serialize(CVariant& value) const
 {
-  value["channelnumber"] = m_channelNumber.GetChannelNumber();
-  value["subchannelnumber"] = m_channelNumber.GetSubChannelNumber();
+  value["channelNumber"] = m_channelNumber.GetChannelNumber();
+  value["subChannelNumber"] = m_channelNumber.GetSubChannelNumber();
 }
 
 void CPVRChannelGroupMember::SetChannel(const std::shared_ptr<CPVRChannel>& channel)

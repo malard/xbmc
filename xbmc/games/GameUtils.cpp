@@ -450,6 +450,19 @@ std::set<std::string> CGameUtils::GetGameExtensions()
   return extensions;
 }
 
+std::shared_ptr<CFileItem> CGameUtils::GetGameAddonItem(const std::string& path)
+{
+  const CURL url(path);
+  if (url.GetProtocol() != "game")
+    return nullptr;
+
+  ADDON::AddonPtr addon;
+  if (!CServiceBroker::GetAddonMgr().GetAddon(url.GetHostName(), addon, ADDON::AddonType::GAMEDLL,
+                                              ADDON::OnlyEnabled::CHOICE_YES))
+    return nullptr;
+  return std::make_shared<CFileItem>(addon);
+}
+
 bool CGameUtils::IsStandaloneGame(const ADDON::AddonPtr& addon)
 {
   using namespace ADDON;

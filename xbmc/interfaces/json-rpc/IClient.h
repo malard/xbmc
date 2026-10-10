@@ -18,4 +18,4 @@ namespace JSONRPC
     virtual int GetAnnouncementFlags() = 0;
     virtual bool SetAnnouncementFlags(int flags) = 0;
   };
-}
+} // namespace JSONRPC

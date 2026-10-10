@@ -10,12 +10,15 @@
 
 #include "SetInfoTag.h"
 #include "XBDateTime.h"
+#include "media/MediaType.h"
 #include "utils/EmbeddedArt.h"
 #include "utils/Fanart.h"
 #include "utils/ISortable.h"
 #include "utils/ScraperUrl.h"
 #include "utils/StreamDetails.h"
 #include "video/Bookmark.h"
+#include "video/geometry/ContentGeometryRecord.h"
+#include "video/geometry/EffectiveGeometry.h"
 
 #include <string>
 #include <string_view>
@@ -27,6 +30,28 @@ class TiXmlElement;
 class CVariant;
 
 enum class VideoAssetType;
+
+namespace KODI::VIDEO::UNIQUE_ID
+{
+//! \brief The type of a unique id whose source is not known, as a legacy NFO's bare <id> gives.
+inline constexpr char UNKNOWN[] = "unknown";
+} // namespace KODI::VIDEO::UNIQUE_ID
+
+//! \brief Video database tables that CVideoInfoTag::m_type names besides media types.
+namespace KODI::VIDEO::DB_TABLE
+{
+inline constexpr char ACTOR[] = "actor";
+inline constexpr char TAG[] = "tag";
+} // namespace KODI::VIDEO::DB_TABLE
+
+//! \brief The root element of each kind of video NFO.
+namespace KODI::VIDEO::NFO_ROOT
+{
+inline constexpr char EPISODE[] = "episodedetails";
+inline constexpr char MOVIE[] = "movie";
+inline constexpr char MUSIC_VIDEO[] = "musicvideo";
+inline constexpr char TV_SHOW[] = "tvshow";
+} // namespace KODI::VIDEO::NFO_ROOT
 
 struct SActorInfo
 {
@@ -107,7 +132,19 @@ public:
   const CDateTime& GetFirstAired() const;
   std::string GetCast(const std::string& separator, bool bIncludeRole = false) const;
   bool HasStreamDetails() const;
+
+  //! \brief The media type m_type names, NONE where it names a node such as a genre, or is spelled otherwise.
+  KODI::MEDIA::TYPE GetMediaType() const;
+  void SetMediaType(KODI::MEDIA::TYPE type);
   bool HasNFOStreamDetails() const;
+
+  //! \brief Whether a measured content rectangle is attached. Independent of HasStreamDetails():
+  //! the measurement lives in its own table and survives its refreshes.
+  bool HasContentGeometry() const;
+
+  //! \brief The content rectangle in force for this item, resolved as the player resolves it.
+  //! A default geometry when nothing was measured.
+  KODI::VIDEO::GEOMETRY::EffectiveGeometry ResolveContentGeometry() const;
   bool IsEmpty() const;
 
   const std::string& GetPath() const
@@ -171,21 +208,12 @@ public:
   void SetFileNameAndPath(std::string fileNameAndPath);
   void SetOriginalTitle(std::string originalTitle);
 
-  enum class LanguageTagSource
-  {
-    SOURCE_INTERNAL,
-    SOURCE_EXTERNAL,
-  };
-
   /*!
-   * \brief Set the original audio language, with optional conversion.
-   * \param[in] language The original language.
-   * \param[in] type The language tag type.
-   *            For 'type' TYPE_ANY, the function will attempt to guess the encoding of 'language'
-   *            and recognizes ISO 639-1, ISO 639-2, BCP47 tags, and English names
-   * \return success of the conversion
+   * \brief Set the language the work was made in.
+   * \param[in] language The language in any notation CLanguageTag reads; empty clears it.
+   * \return false, leaving the language as it was, where the text names no language.
    */
-  bool SetOriginalLanguage(std::string language, LanguageTagSource source);
+  bool SetOriginalLanguage(const std::string& language);
   void SetEpisodeGuide(std::string episodeGuide);
   void SetStatus(std::string status);
   void SetProductionCode(std::string productionCode);
@@ -383,7 +411,7 @@ public:
    */
   virtual bool SetResumePoint(double timeInSeconds, double totalTimeInSeconds, const std::string &playerState);
 
-  const std::string& GetOriginalLanguage() const { return m_originalLanguage; }
+  const KODI::LANGUAGE::CLanguageTag& GetOriginalLanguage() const { return m_originalLanguage; }
 
   std::string m_basePath; // the base path of the video, for folder-based lookups
   int m_parentPathID;      // the parent path id where the base path of the video lies
@@ -438,8 +466,12 @@ public:
   int m_iIdSeason;
   CFanart m_fanart;
   CStreamDetails m_streamDetails;
+
+  //! \brief The measured picture rectangle, when one is known. Round-trips through NFO export
+  //! and import.
+  KODI::VIDEO::GEOMETRY::ContentGeometryRecord m_contentGeometry;
   CDateTime m_dateAdded;
-  MediaType m_type;
+  std::string m_type; //!< the table m_iDbId is in: a media type, or a node such as genre
   int m_relevance; // Used for actors' number of appearances
   int m_parsedDetails;
   std::vector<EmbeddedArtInfo> m_coverArt; ///< art information
@@ -456,6 +488,8 @@ protected:
   bool SaveTvShowSeasons(TiXmlNode* node) const;
 
 private:
+  void SerializeContentGeometry(CVariant& streamdetails) const;
+
   /* \brief Parse our native XML format for video info.
    See Load for a description of the available tag types.
 
@@ -470,7 +504,7 @@ private:
   std::map<std::string, std::string, std::less<>> m_uniqueIDs;
   std::string Trim(std::string&& value) const;
   std::vector<std::string> Trim(std::vector<std::string>&& items) const;
-  std::string m_originalLanguage;
+  KODI::LANGUAGE::CLanguageTag m_originalLanguage;
 
   int m_playCount;
   CBookmark m_resumePoint;

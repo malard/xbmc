@@ -9,101 +9,121 @@
 #include "ApplicationOperations.h"
 
 #include "CompileInfo.h"
-#include "InputOperations.h"
 #include "ServiceBroker.h"
-#include "application/ApplicationComponents.h"
-#include "application/ApplicationVolumeHandling.h"
-#include "input/actions/Action.h"
-#include "input/actions/ActionIDs.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "messaging/ApplicationMessenger.h"
+#include "settings/AdvancedSettings.h"
+#include "settings/Settings.h"
+#include "settings/SettingsComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
+#include "utils/log.h"
 
-#include <cmath>
-#include <string.h>
+#include <array>
+#include <memory>
+#include <utility>
+#include <vector>
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CApplicationOperations::GetProperties(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
 {
-  CVariant properties = CVariant(CVariant::VariantTypeObject);
-  for (unsigned int index = 0; index < parameterObject["properties"].size(); index++)
-  {
-    std::string propertyName = parameterObject["properties"][index].asString();
-    CVariant property;
-    JSONRPC_STATUS ret;
-    if ((ret = GetPropertyValue(propertyName, property)) != OK)
-      return ret;
+  return GetNamedProperties(parameterObject, result, GetPropertyValue);
+}
 
-    properties[propertyName] = property;
+namespace
+{
+constexpr std::array<std::pair<int, const char*>, 4> LOG_LEVEL_NAMES{{
+    {LOG_LEVEL_NONE, "none"},
+    {LOG_LEVEL_NORMAL, "normal"},
+    {LOG_LEVEL_DEBUG, "debug"},
+    {LOG_LEVEL_DEBUG_FREEMEM, "debugFreeMem"},
+}};
+} // unnamed namespace
+
+JSONRPC_STATUS CApplicationOperations::SetLogLevel(const CVariant &parameterObject, CVariant &result)
+{
+  const CVariant& levelParam{parameterObject["level"]};
+  const CVariant& componentsParam{parameterObject["components"]};
+
+  std::optional<int> level;
+  if (!levelParam.isNull())
+  {
+    level = LogLevelFromName(levelParam.asString());
+    if (!level)
+      return InvalidParams;
   }
 
-  result = properties;
+  std::vector<CVariant> componentIds;
+  if (!componentsParam.isNull())
+  {
+    for (auto it = componentsParam.begin_array(); it != componentsParam.end_array(); ++it)
+    {
+      const uint32_t id{CLog::GetComponentByName(it->asString())};
+      if (id == CLog::LOG_COMPONENT_GENERAL)
+        return InvalidParams;
+      componentIds.emplace_back(static_cast<int>(id));
+    }
+  }
 
+  const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
+
+  if (level)
+  {
+    // SetDebugMode cannot express none or debugfreemem, so the exact level is applied after it.
+    settings->SetBool(CSettings::SETTING_DEBUG_SHOWLOGINFO, *level >= LOG_LEVEL_DEBUG);
+    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->SetLogLevel(*level);
+  }
+
+  if (!componentsParam.isNull())
+  {
+    // CLog listens to both settings, so there is nothing to tell it directly
+    settings->SetList(CSettings::SETTING_DEBUG_SETEXTRALOGLEVEL, componentIds);
+    settings->SetBool(CSettings::SETTING_DEBUG_EXTRALOGGING, !componentIds.empty());
+  }
+
+  result = LogLevelValue();
   return OK;
 }
 
-JSONRPC_STATUS CApplicationOperations::SetVolume(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+std::string CApplicationOperations::LogLevelName(int level)
 {
-  bool up = false;
-  if (parameterObject["volume"].isInteger())
+  for (const auto& [value, name] : LOG_LEVEL_NAMES)
   {
-    auto& components = CServiceBroker::GetAppComponents();
-    const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-    int oldVolume = static_cast<int>(appVolume->GetVolumePercent());
-    int volume = static_cast<int>(parameterObject["volume"].asInteger());
-
-    appVolume->SetVolume(static_cast<float>(volume), true);
-
-    up = oldVolume < volume;
+    if (value == level)
+      return name;
   }
-  else if (parameterObject["volume"].isString())
-  {
-    JSONRPC_STATUS ret;
-    std::string direction = parameterObject["volume"].asString();
-    if (direction.compare("increment") == 0)
-    {
-      ret = CInputOperations::SendAction(ACTION_VOLUME_UP, false, true);
-      up = true;
-    }
-    else if (direction.compare("decrement") == 0)
-    {
-      ret = CInputOperations::SendAction(ACTION_VOLUME_DOWN, false, true);
-      up = false;
-    }
-    else
-      return InvalidParams;
-
-    if (ret != ACK && ret != OK)
-      return ret;
-  }
-  else
-    return InvalidParams;
-
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_VOLUME_SHOW,
-                                             up ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN);
-
-  return GetPropertyValue("volume", result);
+  return {};
 }
 
-JSONRPC_STATUS CApplicationOperations::SetMute(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+std::optional<int> CApplicationOperations::LogLevelFromName(const std::string& name)
 {
-  const auto& components = CServiceBroker::GetAppComponents();
-  const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-  if ((parameterObject["mute"].isString() &&
-       parameterObject["mute"].asString().compare("toggle") == 0) ||
-      (parameterObject["mute"].isBoolean() &&
-       parameterObject["mute"].asBoolean() != appVolume->IsMuted()))
-    CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                                               static_cast<void*>(new CAction(ACTION_MUTE)));
-  else if (!parameterObject["mute"].isBoolean() && !parameterObject["mute"].isString())
-    return InvalidParams;
-
-  return GetPropertyValue("muted", result);
+  for (const auto& [value, levelName] : LOG_LEVEL_NAMES)
+  {
+    if (name == levelName)
+      return value;
+  }
+  return std::nullopt;
 }
 
-JSONRPC_STATUS CApplicationOperations::Quit(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+CVariant CApplicationOperations::LogLevelValue()
+{
+  CVariant value{CVariant::VariantTypeObject};
+  value["level"] = LogLevelName(CServiceBroker::GetLogging().GetLogLevel());
+
+  value["components"] = CVariant{CVariant::VariantTypeArray};
+  for (const std::string& name : CLog::GetComponentNames())
+  {
+    CVariant component{CVariant::VariantTypeObject};
+    component["name"] = name;
+    component["enabled"] =
+        CServiceBroker::GetLogging().CanLogComponent(CLog::GetComponentByName(name));
+    value["components"].append(std::move(component));
+  }
+  return value;
+}
+
+JSONRPC_STATUS CApplicationOperations::Quit(const CVariant &parameterObject, CVariant &result)
 {
   CServiceBroker::GetAppMessenger()->PostMsg(TMSG_QUIT);
   return ACK;
@@ -111,16 +131,7 @@ JSONRPC_STATUS CApplicationOperations::Quit(const std::string &method, ITranspor
 
 JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string &property, CVariant &result)
 {
-  if (property == "volume" || property == "muted")
-  {
-    const auto& components = CServiceBroker::GetAppComponents();
-    const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-    if (property == "volume")
-      result = static_cast<int>(std::lroundf(appVolume->GetVolumePercent()));
-    else if (property == "muted")
-      result = appVolume->IsMuted();
-  }
-  else if (property == "name")
+  if (property == "name")
     result = CCompileInfo::GetAppName();
   else if (property == "version")
   {
@@ -132,32 +143,36 @@ JSONRPC_STATUS CApplicationOperations::GetPropertyValue(const std::string &prope
     if (StringUtils::StartsWithNoCase(tag, "alpha"))
     {
       result["tag"] = "alpha";
-      result["tagversion"] = StringUtils::Mid(tag, 5);
+      result["tagVersion"] = StringUtils::Mid(tag, 5);
     }
     else if (StringUtils::StartsWithNoCase(tag, "beta"))
     {
       result["tag"] = "beta";
-      result["tagversion"] = StringUtils::Mid(tag, 4);
+      result["tagVersion"] = StringUtils::Mid(tag, 4);
     }
     else if (StringUtils::StartsWithNoCase(tag, "rc"))
     {
-      result["tag"] = "releasecandidate";
-      result["tagversion"] = StringUtils::Mid(tag, 2);
+      result["tag"] = "releaseCandidate";
+      result["tagVersion"] = StringUtils::Mid(tag, 2);
     }
     else if (tag.empty())
       result["tag"] = "stable";
     else
       result["tag"] = "prealpha";
   }
-  else if (property == "sorttokens")
+  else if (property == "sortTokens")
   {
     result = CVariant(CVariant::VariantTypeArray); // Ensure no tokens returns as []
-    const CLangInfo::Tokens sortTokens = g_langInfo.GetSortTokens();
+    const auto& sortTokens = KODI::LANGUAGE::CLanguage::GetInstance().SortTokens();
     for (const auto& token : sortTokens)
       result.append(token);
   }
   else if (property == "language")
-    result = g_langInfo.GetLocale().ToShortString();
+  {
+    result = KODI::LANGUAGE::CLanguage::GetInstance().UI().ToString();
+  }
+  else if (property == "logLevel")
+    result = LogLevelValue();
   else
     return InvalidParams;
 

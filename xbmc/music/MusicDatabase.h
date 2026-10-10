@@ -15,6 +15,7 @@
 
 #include "addons/Scraper.h"
 #include "dbwrappers/Database.h"
+#include "media/MediaType.h"
 #include "music/AudioType.h"
 #include "settings/LibExportSettings.h"
 #include "utils/Artwork.h"
@@ -117,9 +118,9 @@ public:
    \param strTitle [in] the title of the song (required to be non-empty)
    \param strMusicBrainzTrackID [in] the MusicBrainz track ID of the song
    \param strPathAndFileName [in] the path and filename to the song
-   \param strComment [in] the ids of the added songs
+   \param strComment [in] the comment of the song
    \param strMood [in] the mood of the added song
-   \param strThumb [in] the ids of the added songs
+   \param strThumb [in] the thumb of the song
    \param artistDisp [in] the assembled artist name(s) display string
    \param artistSort [in] the artist name(s) sort string
    \param genres [in] a vector of genres to which this song belongs
@@ -135,6 +136,10 @@ public:
    \param rating [in] a rating for the song
    \param userrating [in] a userrating (my rating) for the song
    \param votes [in] a vote counter for the song rating
+   \param iBPM [in] the beats per minute of a song
+   \param iBitRate [in] the bitrate of the song file
+   \param iSampleRate [in] the sample rate of the song file
+   \param iChannels [in] the number of audio channels in the song file
    \param songVideoURL [in] url to video of the song
    \param replayGain [in] album and track replaygain and peak values
    \return the id of the song
@@ -171,10 +176,12 @@ public:
               const ReplayGain& replayGain);
   bool GetSong(int idSong, CSong& song);
 
+  GetResult TryGetSong(int idSong, CSong& song);
+
   /*! \brief Update a song and all its nested entities (genres, artists, contributors)
     \param song [in/out] the song to update, artist ids are returned in artist credits
     \param bArtists to update artist credits and contributors, default is true
-    \param bArtists to check and log if artist links have changed, default is true
+    \param bArtistLinks to check and log if artist links have changed, default is true
     \return true if successful
    */
   bool UpdateSong(CSong& song, bool bArtists = true, bool bArtistLinks = true);
@@ -184,9 +191,9 @@ public:
    \param strTitle [in] the title of the song (required to be non-empty)
    \param strMusicBrainzTrackID [in] the MusicBrainz track ID of the song
    \param strPathAndFileName [in] the path and filename to the song
-   \param strComment [in] the ids of the added songs
+   \param strComment [in] the comment of the song
    \param strMood [in] the mood of the added song
-   \param strThumb [in] the ids of the added songs
+   \param strThumb [in] the thumb of the song
    \param artistDisp [in] the artist name(s) display string
    \param artistSort [in] the artist name(s) sort string
    \param genres [in] a vector of genres to which this song belongs
@@ -262,7 +269,7 @@ public:
   /*! \brief Add an album and all its songs to the database
   \param album the album to add
   \param idSource the music source id
-  \return the id of the album
+  \return true if successful
   */
   bool AddAlbum(CAlbum& album, int idSource);
 
@@ -275,6 +282,7 @@ public:
   /*! \brief Add an album to the database
    \param strAlbum the album title
    \param strMusicBrainzAlbumID the Musicbrainz Id
+   \param strReleaseGroupMBID the MusicBrainz release group id
    \param strArtist the album artist name(s) display string
    \param strArtistSort the album artist name(s) sort string
    \param strGenre the album genre(s)
@@ -310,6 +318,9 @@ public:
    \return true if the album is retrieved, false otherwise.
    */
   bool GetAlbum(int idAlbum, CAlbum& album, bool getSongs = true);
+
+  //! An album with no songs is retrieved with an empty song list, not reported as missing.
+  GetResult TryGetAlbum(int idAlbum, CAlbum& album, bool getSongs = true);
   int UpdateAlbum(int idAlbum,
                   const std::string& strAlbum,
                   const std::string& strMusicBrainzAlbumID,
@@ -378,7 +389,13 @@ public:
                 const std::string& strMusicBrainzArtistID,
                 bool bScrapedMBID = false);
   bool GetArtist(int idArtist, CArtist& artist, bool fetchAll = false);
+
+  //! fetchAll also retrieves the discography and video links.
+  GetResult TryGetArtist(int idArtist, CArtist& artist, bool fetchAll = false);
+
   bool GetArtistExists(int idArtist);
+
+  GetResult TryGetArtistExists(int idArtist);
   int GetLastArtist() const;
   int GetArtistFromMBID(const std::string& strMusicBrainzArtistID, std::string& artistname);
   int UpdateArtist(int idArtist,
@@ -421,7 +438,7 @@ public:
 
   /*! \brief Propagate artist sort name into the concatenated artist sort name strings
   held for songs and albums
-  \param int idArtist to propagate sort name for, -1 means all artists
+  \param idArtist to propagate sort name for, -1 means all artists
   */
   bool UpdateArtistSortNames(int idArtist = -1);
 
@@ -639,17 +656,17 @@ public:
   int GetDiscsCount(const std::string& baseDir, const Filter& filter = Filter());
   int GetSongsCount(const Filter& filter = Filter());
   bool GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription& sorting) override;
-  int GetOrderFilter(const std::string& type, const SortDescription& sorting, Filter& filter) const;
+  int GetOrderFilter(KODI::MEDIA::TYPE type, const SortDescription& sorting, Filter& filter) const;
 
   /////////////////////////////////////////////////
   // Party Mode
   /////////////////////////////////////////////////
   /*! \brief Gets song IDs in random order that match the filter criteria
   \param filter the criteria to apply in the query
-  \param songIDs a vector of <1, id> pairs suited to party mode use
+  \param songIDs [out] the matching song ids
   \return count of song ids found.
   */
-  unsigned int GetRandomSongIDs(const Filter& filter, std::vector<std::pair<int, int>>& songIDs);
+  unsigned int GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs);
 
   /////////////////////////////////////////////////
   // JSON-RPC
@@ -674,6 +691,10 @@ public:
   /////////////////////////////////////////////////
   // Scraper
   /////////////////////////////////////////////////
+  /*! \brief Set the information provider for a single artist or album.
+   \param content ARTISTS or ALBUMS.
+   \param scraper nullptr clears the item's own, leaving the default to apply.
+   */
   bool SetScraper(int id, ADDON::ContentType content, const ADDON::ScraperPtr& scraper);
   bool SetScraperAll(const std::string& strBaseDir, const ADDON::ScraperPtr& scraper);
   bool GetScraper(int id, ADDON::ContentType content, ADDON::ScraperPtr& scraper);
@@ -715,7 +736,7 @@ public:
   void SetPropertiesForFileItem(CFileItem& item);
   static void SetPropertiesFromArtist(CFileItem& item, const CArtist& artist);
   static void SetPropertiesFromAlbum(CFileItem& item, const CAlbum& album);
-  void SetItemUpdated(int mediaId, const std::string& mediaType);
+  void SetItemUpdated(int mediaId, KODI::MEDIA::TYPE mediaType);
 
   /////////////////////////////////////////////////
   // Art
@@ -764,7 +785,7 @@ public:
   \param mediaType the type of media, which corresponds to the table the item resides in (artist/album).
   \return the types of art e.g. "thumb", "fanart", etc.
   */
-  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, const MediaType& mediaType);
+  std::vector<std::string> GetAvailableArtTypesForItem(int mediaId, KODI::MEDIA::TYPE mediaType);
 
   /*! \brief Fetch the list of available-but-unassigned art URLs held in the
   database for a specific media item and art type.
@@ -774,7 +795,7 @@ public:
   \return list of URLs
   */
   std::vector<CScraperUrl::SUrlEntry> GetAvailableArtForItem(int mediaId,
-                                                             const MediaType& mediaType,
+                                                             KODI::MEDIA::TYPE mediaType,
                                                              const std::string& artType);
 
   /////////////////////////////////////////////////
@@ -812,9 +833,9 @@ public:
   std::string GetArtistsLastModified() const;
 
   /*!
-   * @brief Check the passed in list of images if used in this database. Used to clean the image cache.
-   * @param imagesToCheck
-   * @return a list of the passed in images used by this database.
+   * \brief Check the passed in list of images if used in this database. Used to clean the image cache.
+   * \param imagesToCheck the image URLs to check
+   * \return a list of the passed in images used by this database.
    */
   std::vector<std::string> GetUsedImages(const std::vector<std::string>& imagesToCheck) const;
 

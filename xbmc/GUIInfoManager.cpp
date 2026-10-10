@@ -2265,54 +2265,32 @@ constexpr std::array<InfoMap, 8> network_labels = {{
 ///     @return **True** if Party Mode is enabled.
 ///     <p>
 ///   }
-///   \table_row3{   <b>`MusicPartyMode.SongsPlayed`</b>,
-///                  \anchor MusicPartyMode_SongsPlayed
+///   \table_row3{   <b>`MusicPartyMode.MatchingEntries`</b>,
+///                  \anchor MusicPartyMode_MatchingEntries
 ///                  _string_,
-///     @return The number of songs played during Party Mode.
+///     @return The number of entries Party Mode's rules matched.
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link MusicPartyMode_MatchingEntries `MusicPartyMode.MatchingEntries`\endlink
+///     replaces `MusicPartyMode.MatchingSongs`.
 ///     <p>
 ///   }
-///   \table_row3{   <b>`MusicPartyMode.MatchingSongs`</b>,
-///                  \anchor MusicPartyMode_MatchingSongs
+///   \table_row3{   <b>`MusicPartyMode.MatchingEntriesLeft`</b>,
+///                  \anchor MusicPartyMode_MatchingEntriesLeft
 ///                  _string_,
-///     @return The number of songs available to Party Mode.
-///     <p>
-///   }
-///   \table_row3{   <b>`MusicPartyMode.MatchingSongsPicked`</b>,
-///                  \anchor MusicPartyMode_MatchingSongsPicked
-///                  _string_,
-///     @return The number of songs picked already for Party Mode.
-///     <p>
-///   }
-///   \table_row3{   <b>`MusicPartyMode.MatchingSongsLeft`</b>,
-///                  \anchor MusicPartyMode_MatchingSongsLeft
-///                  _string_,
-///     @return The number of songs left to be picked from for Party Mode.
-///     <p>
-///   }
-///   \table_row3{   <b>`MusicPartyMode.RelaxedSongsPicked`</b>,
-///                  \anchor MusicPartyMode_RelaxedSongsPicked
-///                  _string_,
-///     @todo Not currently used
-///     <p>
-///   }
-///   \table_row3{   <b>`MusicPartyMode.RandomSongsPicked`</b>,
-///                  \anchor MusicPartyMode_RandomSongsPicked
-///                  _string_,
-///     @return The number of unique random songs picked during Party Mode.
+///     @return The number of matched entries Party Mode has not placed on the playlist yet.
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link MusicPartyMode_MatchingEntriesLeft `MusicPartyMode.MatchingEntriesLeft`\endlink
+///     replaces `MusicPartyMode.MatchingSongsLeft`.
 ///     <p>
 ///   }
 /// \table_end
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 7> musicpartymode = {{
+constexpr std::array<InfoMap, 3> musicpartymode = {{
     {"enabled",             MUSICPM_ENABLED},
-    {"songsplayed",         MUSICPM_SONGSPLAYED},
-    {"matchingsongs",       MUSICPM_MATCHINGSONGS},
-    {"matchingsongspicked", MUSICPM_MATCHINGSONGSPICKED},
-    {"matchingsongsleft",   MUSICPM_MATCHINGSONGSLEFT},
-    {"relaxedsongspicked",  MUSICPM_RELAXEDSONGSPICKED},
-    {"randomsongspicked",   MUSICPM_RANDOMSONGSPICKED},
+    {"matchingentries",     MUSICPM_MATCHINGENTRIES},
+    {"matchingentriesleft", MUSICPM_MATCHINGENTRIESLEFT},
 }};
 // clang-format on
 
@@ -2930,7 +2908,8 @@ constexpr std::array<InfoMap, 7> musicpartymode = {{
 ///   \table_row3{   <b>`MusicPlayer.PlaylistPosition`</b>,
 ///                  \anchor MusicPlayer_PlaylistPosition
 ///                  _string_,
-///     @return The position of the current song in the current music playlist.
+///     @return The place of the current song in the music playlist's play order\, counted from 1;
+///     with shuffle off this is its position in the list.
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`MusicPlayer.PlaylistLength`</b>,
@@ -3152,6 +3131,22 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     - <b>livetv</b>
 ///     <p>
 ///   }
+///   \table_row3{   <b>`VideoPlayer.HasPrevious`</b>,
+///                  \anchor VideoPlayer_HasPrevious
+///                  _boolean_,
+///     @return **True** if the video playlist is playing and an entry plays before the current one.
+///     <p><hr>
+///     @skinning_v23 **[New Boolean Condition]** \link VideoPlayer_HasPrevious `VideoPlayer.HasPrevious`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.HasNext`</b>,
+///                  \anchor VideoPlayer_HasNext
+///                  _boolean_,
+///     @return **True** if the video playlist is playing and skipping forward reaches another entry.
+///     <p><hr>
+///     @skinning_v23 **[New Boolean Condition]** \link VideoPlayer_HasNext `VideoPlayer.HasNext`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`VideoPlayer.HasSubtitles`</b>,
 ///                  \anchor VideoPlayer_HasSubtitles
 ///                  _boolean_,
@@ -3171,6 +3166,16 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     video.
 ///     <p><hr>
 ///     @skinning_v13 **[New Boolean Condition]** \link VideoPlayer_IsStereoscopic `VideoPlayer.IsStereoscopic`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.ContentAspectVaries`</b>,
+///                  \anchor VideoPlayer_ContentAspectVaries
+///                  _boolean_,
+///     @return **True** when the currently playing title's picture changes shape partway
+///     through\, so that one ratio does not describe all of it. What the other ratios are is
+///     at \ref VideoPlayer_ContentAspect "VideoPlayer.ContentAspect(n)".
+///     <p><hr>
+///     @skinning_v23 **[New Boolean Condition]** \link VideoPlayer_ContentAspectVaries `VideoPlayer.ContentAspectVaries`\endlink
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`VideoPlayer.SubtitlesEnabled`</b>,
@@ -3647,7 +3652,8 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///   \table_row3{   <b>`VideoPlayer.PlaylistPosition`</b>,
 ///                  \anchor VideoPlayer_PlaylistPosition
 ///                  _string_,
-///     @return The position of the current song in the current video playlist.
+///     @return The place of the current video in the video playlist's play order\, counted from 1;
+///     with shuffle off this is its position in the list.
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`VideoPlayer.PlaylistLength`</b>,
@@ -3979,6 +3985,58 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     @skinning_v18 **[New Infolabel]** \link VideoPlayer_VideoBitrate `VideoPlayer.VideoBitrate`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`VideoPlayer.VideoAspectName`</b>,
+///                  \anchor VideoPlayer_VideoAspectName
+///                  _string_,
+///     @return The name of the aspect ratio of the currently playing video (possible values:
+///     see \ref ListItem_VideoAspectName "ListItem.VideoAspectName").
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link VideoPlayer_VideoAspectName `VideoPlayer.VideoAspectName`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.ContentAspect([n])`</b>,
+///                  \anchor VideoPlayer_ContentAspect
+///                  _string_,
+///     @return The ratio of the picture inside the currently playing video's frame\, e.g. `2.35`
+///     - which is what the film was shot at\, where \ref VideoPlayer_VideoAspect
+///     "VideoPlayer.VideoAspect" is the shape of the frame carrying it. Empty when nothing has
+///     been measured or declared. `n` indexes the ratios a title whose geometry changes partway
+///     through contains\, dominant first\, so `ContentAspect` and `ContentAspect(0)` are the
+///     same value (possible values: see \ref ListItem_VideoAspect "ListItem.VideoAspect").
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link VideoPlayer_ContentAspect `VideoPlayer.ContentAspect`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.ContentAspectName([n])`</b>,
+///                  \anchor VideoPlayer_ContentAspectName
+///                  _string_,
+///     @return What the ratio at \ref VideoPlayer_ContentAspect "VideoPlayer.ContentAspect" is
+///     called\, e.g. `Scope`\, and empty when it has no name. Not translated (possible values:
+///     see \ref ListItem_VideoAspectName "ListItem.VideoAspectName").
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link VideoPlayer_ContentAspectName `VideoPlayer.ContentAspectName`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.ContentAspectCount`</b>,
+///                  \anchor VideoPlayer_ContentAspectCount
+///                  _string_,
+///     @return How many distinct ratios the currently playing title contains\, and **`0` when
+///     nothing was measured or declared for it**\, which is not the same as a title detected as
+///     the shape of its own frame. The count is of ratios\, never of how much runtime each holds.
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link VideoPlayer_ContentAspectCount `VideoPlayer.ContentAspectCount`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`VideoPlayer.ContentAspectSource`</b>,
+///                  \anchor VideoPlayer_ContentAspectSource
+///                  _string_,
+///     @return Where the ratio came from: `container` (nothing is known\, so the frame is the
+///     answer)\, `cached` (a stored measurement)\, `live` (measured during playback) or
+///     `declared` (stated by the viewer\, which pins).
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link VideoPlayer_ContentAspectSource `VideoPlayer.ContentAspectSource`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`VideoPlayer.AudioCodec`</b>,
 ///                  \anchor VideoPlayer_AudioCodec
 ///                  _string_,
@@ -4017,6 +4075,8 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     @return The language of the audio of the currently playing video(possible
 ///     values: see \ref ListItem_AudioLanguage "ListItem.AudioLanguage").
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link VideoPlayer_AudioLanguage `VideoPlayer.AudioLanguage`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v13 **[New Infolabel]** \link VideoPlayer_AudioLanguage `VideoPlayer.AudioLanguage`\endlink
 ///     <p>
 ///   }
@@ -4044,6 +4104,8 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     @note `VideoPlayer.SubtitlesLanguage` holds the language of the next available
 ///     subtitle stream if subtitles are disabled in the player
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link VideoPlayer_SubtitlesLanguage `VideoPlayer.SubtitlesLanguage`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v13 **[New Infolabel]** \link VideoPlayer_SubtitlesLanguage `VideoPlayer.SubtitlesLanguage`\endlink
 ///     <p>
 ///   }
@@ -4338,7 +4400,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 88> videoplayer = {{
+constexpr std::array<InfoMap, 96> videoplayer = {{
     {"title",                 VIDEOPLAYER_TITLE},
     {"genre",                 VIDEOPLAYER_GENRE},
     {"country",               VIDEOPLAYER_COUNTRY},
@@ -4375,6 +4437,12 @@ constexpr std::array<InfoMap, 88> videoplayer = {{
     {"videocodec",            VIDEOPLAYER_VIDEO_CODEC},
     {"videoresolution",       VIDEOPLAYER_VIDEO_RESOLUTION},
     {"videoaspect",           VIDEOPLAYER_VIDEO_ASPECT},
+    {"videoaspectname",       VIDEOPLAYER_VIDEO_ASPECT_NAME},
+    {"contentaspect",         VIDEOPLAYER_CONTENT_ASPECT},
+    {"contentaspectname",     VIDEOPLAYER_CONTENT_ASPECT_NAME},
+    {"contentaspectcount",    VIDEOPLAYER_CONTENT_ASPECT_COUNT},
+    {"contentaspectsource",   VIDEOPLAYER_CONTENT_ASPECT_SOURCE},
+    {"contentaspectvaries",   VIDEOPLAYER_CONTENT_ASPECT_VARIES},
     {"videobitrate",          VIDEOPLAYER_VIDEO_BITRATE},
     {"audiocodec",            VIDEOPLAYER_AUDIO_CODEC},
     {"audiochannels",         VIDEOPLAYER_AUDIO_CHANNELS},
@@ -4391,6 +4459,8 @@ constexpr std::array<InfoMap, 88> videoplayer = {{
     {"subtitlelanguageex",    VIDEOPLAYER_SUBTITLE_LANG_EX},
     {"subtitlecodec",         VIDEOPLAYER_SUBTITLE_CODEC},
     {"subtitlename",          VIDEOPLAYER_SUBTITLE_NAME},
+    {"hasprevious",           VIDEOPLAYER_HASPREVIOUS},
+    {"hasnext",               VIDEOPLAYER_HASNEXT},
     {"starttime",             VIDEOPLAYER_STARTTIME},
     {"endtime",               VIDEOPLAYER_ENDTIME},
     {"nexttitle",             VIDEOPLAYER_NEXT_TITLE},
@@ -6757,6 +6827,78 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///      - <b>2.40</b>
 ///      - <b>2.55</b>
 ///      - <b>2.76</b>
+///     .
+///     The list is the shipped `system/aspectratios.xml`\, which a user may add to.
+///     <p>
+///   }
+///   \table_row3{   <b>`ListItem.VideoAspectName`</b>,
+///                  \anchor ListItem_VideoAspectName
+///                  _string_,
+///     @return What that aspect ratio is called\, empty for a ratio that has no name.
+///     Reported alongside \ref ListItem_VideoAspect "ListItem.VideoAspect"\, never instead
+///     of it. Not translated. Values:
+///      - <b>Movietone</b>
+///      - <b>4:3</b>
+///      - <b>Academy</b>
+///      - <b>IMAX 70mm</b>
+///      - <b>3:2</b>
+///      - <b>16:9</b>
+///      - <b>Flat</b>
+///      - <b>IMAX digital</b>
+///      - <b>Univisium</b>
+///      - <b>Todd-AO</b>
+///      - <b>CinemaScope</b>
+///      - <b>Scope</b>
+///      - <b>CinemaScope 55</b>
+///      - <b>Ultra Panavision 70</b>
+///     .
+///     The list is the shipped `system/aspectratios.xml`\, which a user may add to or rename.
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link ListItem_VideoAspectName `ListItem.VideoAspectName`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`ListItem.ContentAspect([n])`</b>,
+///                  \anchor ListItem_ContentAspect
+///                  _string_,
+///     @return The ratio of the picture inside the selected item's frame - what the film was
+///     shot at\, where \ref ListItem_VideoAspect "ListItem.VideoAspect" is the shape of the
+///     frame carrying it. A hard-matted 2.35 film in a 1920x1080 encode reports `2.35` here and
+///     `1.78` there. Empty when nothing has been measured or declared for the item. `n` indexes
+///     the ratios a title whose geometry changes partway through contains\, dominant first\, so
+///     `ContentAspect` and `ContentAspect(0)` are the same value. Values as for \ref
+///     ListItem_VideoAspect "ListItem.VideoAspect".
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link ListItem_ContentAspect `ListItem.ContentAspect`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`ListItem.ContentAspectName([n])`</b>,
+///                  \anchor ListItem_ContentAspectName
+///                  _string_,
+///     @return What the ratio at \ref ListItem_ContentAspect "ListItem.ContentAspect" is
+///     called\, empty for a ratio that has no name. Not translated. Values as for \ref
+///     ListItem_VideoAspectName "ListItem.VideoAspectName".
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link ListItem_ContentAspectName `ListItem.ContentAspectName`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`ListItem.ContentAspectCount`</b>,
+///                  \anchor ListItem_ContentAspectCount
+///                  _string_,
+///     @return How many distinct ratios the selected item contains\, and **`0` when nothing was
+///     measured or declared for it**\, which is not the same as an item detected as the shape of
+///     its own frame. The count is of ratios\, never of how much runtime each holds.
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link ListItem_ContentAspectCount `ListItem.ContentAspectCount`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`ListItem.ContentAspectSource`</b>,
+///                  \anchor ListItem_ContentAspectSource
+///                  _string_,
+///     @return Where the ratio came from: `container` (nothing is known\, so the frame is the
+///     answer)\, `cached` (a stored measurement)\, `live` (measured during playback) or
+///     `declared` (stated by the viewer\, which pins).
+///     <p><hr>
+///     @skinning_v23 **[New Infolabel]** \link ListItem_ContentAspectSource `ListItem.ContentAspectSource`\endlink
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`ListItem.AudioCodec`</b>,
@@ -6840,24 +6982,30 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///   \table_row3{   <b>`ListItem.AudioLanguage`</b>,
 ///                  \anchor ListItem_AudioLanguage
 ///                  _string_,
-///     @return The audio language of the currently selected video (an
-///     ISO 639-2 three character code: e.g. eng\, epo\, deu)
+///     @return The audio language of the currently selected video (a BCP 47 language tag:
+///     e.g. en\, en-GB\, pt-BR)
+///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link ListItem_AudioLanguage `ListItem.AudioLanguage`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`ListItem.SubtitleLanguage`</b>,
 ///                  \anchor ListItem_SubtitleLanguage
 ///                  _string_,
-///     @return The subtitle language of the currently selected video (an
-///     ISO 639-2 three character code: e.g. eng\, epo\, deu)
+///     @return The subtitle language of the currently selected video (a BCP 47 language tag:
+///     e.g. en\, en-GB\, pt-BR)
+///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link ListItem_SubtitleLanguage `ListItem.SubtitleLanguage`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`ListItem.FirstAudioLanguage`</b>,
 ///                  \anchor ListItem_FirstAudioLanguage
 ///                  _string_,
 ///     @return The language of the first audio stream of the currently selected video\, in the
-///     order the source lists them. Usually an ISO 639-2 code taken from the container and
-///     truncated to three characters\, but it is not validated as one\, and may be a BCP 47
-///     derived code where the track title carries one
+///     order the source lists them\, as a BCP 47 language tag: e.g. en\, en-GB\, pt-BR.
+///     A stream declaring no language is empty\, and one naming nothing readable as a
+///     language is und
 ///     @note Unlike \link ListItem_AudioLanguage `ListItem.AudioLanguage`\endlink this is the
 ///     stream listed first by whatever produced the stream details: a bluray playlist\, whose
 ///     streams are in stream number order so the first is the one the disc expects a player to
@@ -6936,6 +7084,8 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The audio language of the currently selected video
 ///     @param n - the number of the audiostream (values: see \ref ListItem_AudioLanguage "ListItem.AudioLanguage")
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link ListItem_Property_AudioLanguage `ListItem.Property(AudioLanguage.[n])`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v16 **[New Infolabel]** \link ListItem_Property_AudioLanguage `ListItem.Property(AudioLanguage.[n])`\endlink
 ///     <p>
 ///   }
@@ -6945,6 +7095,8 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The subtitle language of the currently selected video
 ///     @param n - the number of the subtitle (values: see \ref ListItem_SubtitleLanguage "ListItem.SubtitleLanguage")
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link ListItem_Property_SubtitleLanguage `ListItem.Property(SubtitleLanguage.[n])`\endlink
+///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v16 **[New Infolabel]** \link ListItem_Property_SubtitleLanguage `ListItem.Property(SubtitleLanguage.[n])`\endlink
 ///     <p>
 ///   }
@@ -7812,6 +7964,15 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     <p><hr>
 ///     @skinning_v21 **[New Infolabel]** \link ListItem_IsVideoExtra `ListItem.IsVideoExtra`\endlink
 ///   }
+///   \table_row3{   <b>`ListItem.ContentAspectVaries`</b>,
+///                  \anchor ListItem_ContentAspectVaries
+///                  _boolean_,
+///     @return **True** when the selected item's picture changes shape partway through\, so
+///     that one ratio does not describe all of it. What the other ratios are is at \ref
+///     ListItem_ContentAspect "ListItem.ContentAspect(n)".
+///     <p><hr>
+///     @skinning_v23 **[New Boolean Condition]** \link ListItem_ContentAspectVaries `ListItem.ContentAspectVaries`\endlink
+///   }
 ///   \table_row3{   <b>`ListItem.VideoVersionName`</b>,
 ///                  \anchor ListItem_VideoVersionName
 ///                  _string_,
@@ -7889,7 +8050,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 233> listitem_labels = {{
+constexpr std::array<InfoMap, 239> listitem_labels = {{
     {"thumb",                         LISTITEM_THUMB},
     {"icon",                          LISTITEM_ICON},
     {"actualicon",                    LISTITEM_ACTUAL_ICON},
@@ -8007,6 +8168,12 @@ constexpr std::array<InfoMap, 233> listitem_labels = {{
     {"videowidth",                    LISTITEM_VIDEO_WIDTH},
     {"videoheight",                   LISTITEM_VIDEO_HEIGHT},
     {"videoaspect",                   LISTITEM_VIDEO_ASPECT},
+    {"videoaspectname",               LISTITEM_VIDEO_ASPECT_NAME},
+    {"contentaspect",                 LISTITEM_CONTENT_ASPECT},
+    {"contentaspectname",             LISTITEM_CONTENT_ASPECT_NAME},
+    {"contentaspectcount",            LISTITEM_CONTENT_ASPECT_COUNT},
+    {"contentaspectsource",           LISTITEM_CONTENT_ASPECT_SOURCE},
+    {"contentaspectvaries",           LISTITEM_CONTENT_ASPECT_VARIES},
     {"audiocodec",                    LISTITEM_AUDIO_CODEC},
     {"audiochannels",                 LISTITEM_AUDIO_CHANNELS},
     {"audiolanguage",                 LISTITEM_AUDIO_LANGUAGE},
@@ -8558,7 +8725,8 @@ constexpr std::array<InfoMap, 4> control_labels = {{
 ///   \table_row3{   <b>`Playlist.Position(media)`</b>,
 ///                  \anchor Playlist_Position
 ///                  _integer_,
-///     @return The position of the current item in the current playlist.
+///     @return The place of the current item in the playlist's play order\, counted from 1;
+///     with shuffle off this is its position in the list.
 ///     @param media - [opt] mediatype with is either
 ///     video or music.
 ///     <p>
@@ -9565,16 +9733,26 @@ constexpr std::array<InfoMap, 12> pvr_times = {{
 ///   \table_row3{   <b>`RDS.AudioLanguage`</b>,
 ///                  \anchor RDS_AudioLanguage
 ///                  _string_,
-///     @return The RDS reported audio language of the channel.
+///     @return The RDS reported audio language of the channel\, as a BCP 47 language tag:
+///     e.g. en\, de\, pt-BR
+///     @note A broadcaster sends an index into the language table EBU Tech 3244 Annex J
+///     defines\, never text\, so an index the standard reserves is reported as und.
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
+///     now the language tag itself\, where it was whatever the RDS table held
 ///     @skinning_v16 **[New Infolabel]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
 ///     <p>
 ///   }
 ///   \table_row3{   <b>`RDS.ChannelCountry`</b>,
 ///                  \anchor RDS_ChannelCountry
 ///                  _string_,
-///     @return The country where the radio channel is broadcasted.
+///     @return The country where the radio channel is broadcast\, as an ISO 3166-1 alpha-2
+///     code: e.g. GB\, US\, DE
+///     @note A broadcaster sends a country as an index into the tables EBU Tech 3244
+///     Annex D defines\, never text\, so an index the standard reserves is empty.
 ///     <p><hr>
+///     @skinning_v22 **[Infolabel Updated]** \link RDS_ChannelCountry `RDS.ChannelCountry`\endlink
+///     empty where the table names no place\, where it was the raw table cell
 ///     @skinning_v16 **[New Infolabel]** \link RDS_ChannelCountry `RDS.ChannelCountry`\endlink
 ///     <p>
 ///   }
@@ -10842,6 +11020,14 @@ constexpr std::array<InfoMap, 63> slideshow = {{
 /// \page modules__infolabels_boolean_conditions
 /// \section modules_rm_infolabels_booleans Additional revision history for Infolabels and Boolean Conditions
 /// <hr>
+/// \subsection modules_rm_infolabels_booleans_v23 Kodi v23
+/// @skinning_v23 **[Removed Infolabels]** The following infolabels have been removed:
+///   - `MusicPartyMode.RelaxedSongsPicked` - it was never implemented and always returned 0
+///   - `MusicPartyMode.SongsPlayed` - use \link Playlist_Position `Playlist.Position(music)`\endlink
+///   - `MusicPartyMode.MatchingSongsPicked` and `MusicPartyMode.RandomSongsPicked` - use \link Playlist_Length `Playlist.Length(music)`\endlink
+///   - `MusicPartyMode.MatchingSongs` and `MusicPartyMode.MatchingSongsLeft` - use \link MusicPartyMode_MatchingEntries `MusicPartyMode.MatchingEntries`\endlink and \link MusicPartyMode_MatchingEntriesLeft `MusicPartyMode.MatchingEntriesLeft`\endlink
+///
+/// <hr>
 /// \subsection modules_rm_infolabels_booleans_v22 Kodi v22
 /// @skinning_v22 **[Removed Infolabels]** The following infolabels have been removed:
 ///   - `Player.Cutlist` - Please use \link Player_Editlist `Player.EditList`\endlink for the EDL list and \link Player_Cuts `Player.Cuts`\endlink for the cut markers
@@ -11440,6 +11626,15 @@ int CGUIInfoManager::TranslateSingleString(const std::string& strCondition, bool
       {
         return AddMultiInfo(CGUIInfo(VIDEOPLAYER_ART, prop.param(), 0));
       }
+      // The ratios a title contains, dominant first. Index zero is the same answer the
+      // unparameterised form gives, so a skin writing a loop does not need a special case
+      // for the first one.
+      if ((prop.Name() == "contentaspect" || prop.Name() == "contentaspectname") &&
+          prop.num_params() > 0)
+      {
+        return AddMultiInfo(CGUIInfo(TranslateVideoPlayerString(prop.Name()),
+                                     static_cast<uint32_t>(std::atoi(prop.param().c_str()))));
+      }
       if (prop.Name() == "cast" && prop.num_params() > 0)
       {
         return AddMultiInfo(CGUIInfo(VIDEOPLAYER_CAST, TranslateListSeparator(prop.param()), 0));
@@ -11640,14 +11835,9 @@ int CGUIInfoManager::TranslateSingleString(const std::string& strCondition, bool
           return ret;
         else
         {
-          PLAYLIST::Id playlistid = PLAYLIST::Id::TYPE_NONE;
-          if (StringUtils::EqualsNoCase(prop.param(), "video"))
-            playlistid = PLAYLIST::Id::TYPE_VIDEO;
-          else if (StringUtils::EqualsNoCase(prop.param(), "music"))
-            playlistid = PLAYLIST::Id::TYPE_MUSIC;
-
-          if (playlistid != PLAYLIST::Id::TYPE_NONE)
-            return AddMultiInfo(CGUIInfo(ret, static_cast<int>(playlistid), 1));
+          // data1 is the named playlist; data2 = 1 marks that a playlist was named
+          if (const std::optional<PLAYLIST::Type> type = PLAYLIST::TypeFromName(prop.param()); type)
+            return AddMultiInfo(CGUIInfo(ret, static_cast<int>(*type), 1));
         }
       }
     }
@@ -11816,6 +12006,11 @@ int CGUIInfoManager::TranslateListItem(const Property& cat,
              prop.Name() == "firstaudiochannels")
     {
       data3 = prop.param();
+    }
+    // Index zero is the unparameterised form's answer, as for VideoPlayer.
+    else if (prop.Name() == "contentaspect" || prop.Name() == "contentaspectname")
+    {
+      data4 = std::atoi(prop.param().c_str());
     }
   }
 
@@ -12305,7 +12500,8 @@ void CGUIInfoManager::SetCurrentItem(const CFileItem& item)
 
   m_infoProviders.InitCurrentItem(m_currentFile.get());
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
 }
 
 void CGUIInfoManager::SetCurrentAlbumThumb(const std::string& thumbFileName)
@@ -12638,6 +12834,11 @@ bool CGUIInfoManager::GetItemBool(const CGUIListItem* item, int contextWindow, i
 
 void CGUIInfoManager::ResetCache()
 {
+  // The content geometry a refresh serves is resolved once and held for the whole of it, so the
+  // ratio, the count and whether it varies cannot come from two resolutions either side of a
+  // change. A refresh ends here, so the snapshot expires here.
+  m_infoProviders.GetVideoInfoProvider().ResetContentGeometry();
+
   // mark our infobools as dirty
   std::unique_lock lock(m_critInfo);
   ++m_refreshCounter;
@@ -12648,7 +12849,8 @@ void CGUIInfoManager::SetCurrentVideoTag(const CVideoInfoTag& tag)
   m_currentFile->SetFromVideoInfoTag(tag);
   m_currentFile->SetStartOffset(0);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
 }
 
 void CGUIInfoManager::SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag& tag)
@@ -12656,7 +12858,8 @@ void CGUIInfoManager::SetCurrentSongTag(const MUSIC_INFO::CMusicInfoTag& tag)
   m_currentFile->SetFromMusicInfoTag(tag);
   m_currentFile->SetStartOffset(0);
 
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Info, "OnChanged");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
 }
 
 const MUSIC_INFO::CMusicInfoTag* CGUIInfoManager::GetCurrentSongTag() const

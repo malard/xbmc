@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "media/MediaType.h"
 #include "utils/Artwork.h"
 
 #include <memory>
@@ -97,6 +98,16 @@ public:
     std::string param;
     std::string join;
     std::string where;
+  };
+
+  /*!
+   \brief The outcome of a query for a single record.
+   */
+  enum class GetResult
+  {
+    Ok, ///< the record was found and has been returned
+    NotFound, ///< the database was queried successfully and holds no such record
+    Error, ///< the record could not be returned, so whether it exists may be unknown
   };
 
   explicit CDatabase(const std::string& dbType);
@@ -270,6 +281,13 @@ public:
 
   ConnectionState Connect(const std::string& dbName, const DatabaseSettings& db, bool create);
 
+  /*!
+   \brief Whether this connection's writes announce the items they update
+
+   A caller that announces what it changed itself turns this off, so a change is announced once.
+   */
+  void SetAnnounceUpdates(bool announce) { m_announceUpdates = announce; }
+
   /*! \brief Sets art for a library item.
    \param mediaId the id in the item's table.
    \param mediaType the type of the item, which corresponds to the table it resides in.
@@ -307,6 +325,33 @@ public:
    \return false on a database error
    */
   bool GetArtTypes(const std::string& mediaType, std::vector<std::string>& artTypes);
+
+  //! \brief The art functions above, for an item whose table is a media type.
+  bool SetArtForItem(int mediaId,
+                     KODI::MEDIA::TYPE mediaType,
+                     const std::string& artType,
+                     const std::string& url)
+  {
+    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType, url);
+  }
+  bool SetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, const KODI::ART::Artwork& art)
+  {
+    return SetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
+  }
+  bool GetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, KODI::ART::Artwork& art)
+  {
+    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), art);
+  }
+  std::string GetArtForItem(int mediaId, KODI::MEDIA::TYPE mediaType, const std::string& artType)
+  {
+    return GetArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artType);
+  }
+  bool RemoveArtForItem(int mediaId,
+                        KODI::MEDIA::TYPE mediaType,
+                        const std::set<std::string, std::less<>>& artTypes)
+  {
+    return RemoveArtForItem(mediaId, KODI::MEDIA::NameOf(mediaType), artTypes);
+  }
 
 protected:
   friend class CDatabaseManager;
@@ -358,6 +403,7 @@ protected:
   bool BuildSQL(std::string_view strQuery, const Filter& filter, std::string& strSQL) const;
 
   bool m_sqlite{true}; ///< \brief whether we use sqlite (defaults to true)
+  bool m_announceUpdates{true};
 
   std::unique_ptr<dbiplus::Database> m_pDB;
   std::unique_ptr<dbiplus::Dataset> m_pDS;

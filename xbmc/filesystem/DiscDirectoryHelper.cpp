@@ -22,6 +22,7 @@
 #include "settings/VideoVersionsSettings.h"
 #include "threads/IRunnable.h"
 #include "utils/ArtTypes.h"
+#include "utils/DefaultArt.h"
 #include "utils/ItemProperties.h"
 #include "utils/RegExp.h"
 #include "utils/StreamUtils.h"
@@ -2048,6 +2049,7 @@ std::shared_ptr<CFileItem> GenerateEpisodeItem(const CURL& url,
                                                std::chrono::milliseconds episodeStart = 0ms,
                                                std::chrono::milliseconds episodeDuration = 0ms)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CURL path{url};
   std::string buf{StringUtils::Format("BDMV/PLAYLIST/{:05}.mpls", playlist)};
   path.SetFileName(buf);
@@ -2078,29 +2080,24 @@ std::shared_ptr<CFileItem> GenerateEpisodeItem(const CURL& url,
   if (isSpecial)
   {
     if (title.empty())
-      buf = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21350); /* Special */
+      buf = localizeStrings.Get(21350); /* Special */
     else
       /* Special xx - title */
-      buf = StringUtils::Format(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21348), episode.iEpisode,
-          episode.strTitle);
+      buf = StringUtils::Format(localizeStrings.Get(21348), episode.iEpisode, episode.strTitle);
   }
   else
     /* Episode xx - title */
-    buf =
-        StringUtils::Format(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21349),
-                            episode.iEpisode, episode.strTitle);
+    buf = StringUtils::Format(localizeStrings.Get(21349), episode.iEpisode, episode.strTitle);
   item->SetTitle(buf);
   item->SetLabel(buf);
 
   item->SetLabel2(StringUtils::Format(
       "{0:s} - {1:s}: {2:s}\r\n{3:s}: {4:s}", GetTitleWithName(playlist, names),
-      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(180) /* Duration */,
+      localizeStrings.Get(180) /* Duration */,
       StringUtils::SecondsToTimeString(static_cast<int>(duration.count() / 1000)),
-      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24026) /* Languages */,
-      langs));
+      localizeStrings.Get(24026) /* Languages */, langs));
   item->SetSize(0);
-  item->SetArt(KODI::ART::TYPE::ICON, "DefaultVideo.png");
+  item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO);
 
   return item;
 }
@@ -2318,6 +2315,7 @@ std::shared_ptr<CFileItem> GenerateAllEpisodesItem(const CURL& url,
                                                    const PlaylistInformation& information,
                                                    const PlaylistNames& names)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CURL path{url};
   path.SetFileName(StringUtils::Format("BDMV/PLAYLIST/{:05}.mpls", playlist));
   const auto item{std::make_shared<CFileItem>(path.Get(), false)};
@@ -2333,19 +2331,17 @@ std::shared_ptr<CFileItem> GenerateAllEpisodesItem(const CURL& url,
   item->SetProperty(KODI::ITEM::PROPERTY::BLURAY_PLAYLIST, playlist);
 
   // Get title
-  const std::string title{StringUtils::Format(
-      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25005), playlist)};
+  const std::string title{StringUtils::Format(localizeStrings.Get(25005), playlist)};
   item->SetTitle(title);
   item->SetLabel(title);
 
   item->SetLabel2(StringUtils::Format(
       "{0:s}{1:s}: {2:s}\r\n{3:s}: {4:s}", GetNamePrefix(playlist, names),
-      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(180) /* Duration */,
+      localizeStrings.Get(180) /* Duration */,
       StringUtils::SecondsToTimeString(static_cast<int>(duration.count() / 1000)),
-      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24026) /* Languages */,
-      langs));
+      localizeStrings.Get(24026) /* Languages */, langs));
   item->SetSize(0);
-  item->SetArt(KODI::ART::TYPE::ICON, "DefaultVideo.png");
+  item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO);
 
   return item;
 }
@@ -2471,7 +2467,7 @@ void LogMoviePlaylist(std::string_view prefix, const PlaylistInformation& playli
           std::chrono::duration_cast<std::chrono::seconds>(playlist.duration).count())),
       playlist.chapters.size(), playlist.clips.size(), playlist.languages,
       fmt::join(playlist.pgStreams | std::views::transform([](const auto& stream)
-                                                           { return stream.language.AsBcp47(); }),
+                                                           { return stream.language.ToString(); }),
                 ","));
 }
 
@@ -2861,14 +2857,17 @@ std::string GetDefaultStreamLanguages(const PlaylistInformation& information)
   const auto isDefault{[](const auto& stream)
                        { return (stream.flags & StreamFlags::FLAG_DEFAULT) != 0; }};
 
+  // A person reads this to tell one playlist from another, so the languages are named rather than
+  // coded. The language alone, without whatever a subtag qualifies it with, keeps the list narrow
+  // enough to read.
   std::vector<std::string> languages;
   if (const auto audio{std::ranges::find_if(information.audioStreams, isDefault)};
-      audio != information.audioStreams.cend() && !audio->language.IsEmpty())
-    languages.emplace_back(audio->language.AsIso6392B());
+      audio != information.audioStreams.cend() && !audio->language.IsUndetermined())
+    languages.emplace_back(audio->language.ToEnglishLanguageName());
 
   if (const auto pg{std::ranges::find_if(information.pgStreams, isDefault)};
-      pg != information.pgStreams.cend() && !pg->language.IsEmpty())
-    languages.emplace_back(pg->language.AsIso6392B());
+      pg != information.pgStreams.cend() && !pg->language.IsUndetermined())
+    languages.emplace_back(pg->language.ToEnglishLanguageName());
 
   return StringUtils::Join(languages, " | ");
 }
@@ -2879,6 +2878,7 @@ std::shared_ptr<CFileItem> GenerateMovieItem(const CURL& url,
                                              const PlaylistInformation& information,
                                              const PlaylistNames& names)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   CURL path{url};
   std::string buf{StringUtils::Format("BDMV/PLAYLIST/{:05}.mpls", playlist)};
   path.SetFileName(buf);
@@ -2893,8 +2893,8 @@ std::shared_ptr<CFileItem> GenerateMovieItem(const CURL& url,
 
   buf = StringUtils::Format(
       playlist == mainPlaylist
-          ? CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25004) /* Main Title */
-          : CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25005) /* Title */,
+          ? localizeStrings.Get(25004) /* Main Title */
+          : localizeStrings.Get(25005) /* Title */,
       playlist);
   item->SetTitle(buf);
   item->SetLabel(buf);
@@ -2902,22 +2902,20 @@ std::shared_ptr<CFileItem> GenerateMovieItem(const CURL& url,
   // What the disc calls the playlist leads the description, as the label gives its number
   std::string label2{
       GetNamePrefix(playlist, names) +
-      StringUtils::Format(
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25007),
+      StringUtils::Format(localizeStrings.Get(25007),
           information.chapters.size(),
           StringUtils::SecondsToTimeString(static_cast<int>(duration.count() / 1000)))};
 
   // The streams a playlist starts on are what tells playlists offering the same content apart
   if (const std::string languages{GetDefaultStreamLanguages(information)}; !languages.empty())
     label2 += StringUtils::Format(
-        "\r\n{}: {}",
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24026) /* Languages */,
+        "\r\n{}: {}", localizeStrings.Get(24026) /* Languages */,
         languages);
 
   item->SetLabel2(label2);
 
   item->SetSize(0);
-  item->SetArt(KODI::ART::TYPE::ICON, "DefaultVideo.png");
+  item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO);
 
   return item;
 }
@@ -3739,7 +3737,7 @@ void CDiscDirectoryHelper::AddRootOptions(const CURL& url,
     item->SetLabel(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25002) /* All titles */);
     item->SetSpecialSort(SortSpecial::BOTTOM); // below the playlists, however they are sorted
-    item->SetArt(KODI::ART::TYPE::ICON, "DefaultVideoPlaylists.png");
+    item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::VIDEO_PLAYLISTS);
     items.Add(item);
   }
 
@@ -3751,7 +3749,7 @@ void CDiscDirectoryHelper::AddRootOptions(const CURL& url,
     item->SetLabel(
         CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25003) /* Menu */);
     item->SetSpecialSort(SortSpecial::BOTTOM);
-    item->SetArt(KODI::ART::TYPE::ICON, "DefaultProgram.png");
+    item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::PROGRAM);
     items.Add(item);
   }
 }

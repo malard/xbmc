@@ -10,13 +10,13 @@
 
 #include "ServiceBroker.h"
 #include "imagefiles/ImageFileURL.h"
+#include "language/LanguageTag.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Archive.h"
-#include "utils/LangCodeExpander.h"
 #include "utils/StreamUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -24,14 +24,46 @@
 #include "utils/XMLUtils.h"
 #include "utils/log.h"
 #include "video/VideoManagerTypes.h"
+#include "video/geometry/GeometryPublication.h"
+#include "video/geometry/GeometrySettings.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
+
+namespace NFO_ROOT = KODI::VIDEO::NFO_ROOT;
 
 namespace
 {
+/*!
+ * \brief Read the <language> of one stream in an NFO.
+ * \note Kept as written even where it names no language - unlike a language a container states,
+ *       which becomes und, an NFO is the user's own file and rewriting it must not silently
+ *       discard what its author put there. The warning is the only way they learn that a value
+ *       they wrote states nothing.
+ * \param value The text of the element.
+ * \param streamType The kind of stream it describes, for the warning.
+ * \return The language.
+ */
+KODI::LANGUAGE::CLanguageTag LanguageFromNfo(const std::string& value, std::string_view streamType)
+{
+  // Trimmed and lower case whether or not it names a language: that is the form the
+  // streamdetails column holds, and a smart playlist rule compares against the column as stored
+  std::string text{StringUtils::ToLower(value)};
+  StringUtils::Trim(text);
+
+  KODI::LANGUAGE::CLanguageTag language{KODI::LANGUAGE::CLanguageTag::Parse(text)};
+  if (!language.IsValid())
+  {
+    CLog::Log(LOGWARNING, "CVideoInfoTag: {} stream: unknown language '{}'", streamType, value);
+  }
+
+  return language;
+}
+
 /*!
  * \brief Read the <flags> block of one <audio> or <subtitle> stream in an NFO.
  * \param nodeDetail The stream element to read from.
@@ -69,7 +101,7 @@ void CVideoInfoTag::Reset()
   m_strTitle.clear();
   m_strShowTitle.clear();
   m_strOriginalTitle.clear();
-  m_originalLanguage.clear();
+  m_originalLanguage = {};
   m_strSortTitle.clear();
   m_cast.clear();
   m_set.Reset();
@@ -97,7 +129,7 @@ void CVideoInfoTag::Reset()
   m_iEpisode = -1;
   m_iIdUniqueID = -1;
   m_uniqueIDs.clear();
-  m_strDefaultUniqueID = "unknown";
+  m_strDefaultUniqueID = KODI::VIDEO::UNIQUE_ID::UNKNOWN;
   m_iSpecialSortSeason = -1;
   m_iSpecialSortEpisode = -1;
   m_strDefaultRating = "default";
@@ -114,6 +146,7 @@ void CVideoInfoTag::Reset()
   m_showLink.clear();
   m_seasons.clear();
   m_streamDetails.Reset();
+  m_contentGeometry = {};
   m_playCount = PLAYCOUNT_NOT_SET;
   m_EpBookmark.Reset();
   m_EpBookmark.type = CBookmark::EPISODE;
@@ -136,7 +169,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
 
   // we start with a <tag> tag
   TiXmlElement movieElement(tag.c_str());
-  if (tag == "movie" || tag == "tvshow" || tag == "episodedetails" || tag == "musicvideo")
+  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE ||
+      tag == NFO_ROOT::MUSIC_VIDEO)
     movieElement.SetAttribute("version", 0);
   TiXmlNode *movie = node->InsertEndChild(movieElement);
 
@@ -185,14 +219,14 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   }
 
   XMLUtils::SetInt(movie, "top250", m_iTop250);
-  if (tag == "episodedetails" || tag == "tvshow")
+  if (tag == NFO_ROOT::EPISODE || tag == NFO_ROOT::TV_SHOW)
   {
     XMLUtils::SetInt(movie, "season", m_iSeason);
     XMLUtils::SetInt(movie, "episode", m_iEpisode);
     XMLUtils::SetInt(movie, "displayseason",m_iSpecialSortSeason);
     XMLUtils::SetInt(movie, "displayepisode",m_iSpecialSortEpisode);
   }
-  if (tag == "musicvideo")
+  if (tag == NFO_ROOT::MUSIC_VIDEO)
   {
     XMLUtils::SetInt(movie, "track", m_iTrack);
     XMLUtils::SetString(movie, "album", m_strAlbum);
@@ -301,7 +335,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
       XMLUtils::SetInt(&stream, "height", m_streamDetails.GetVideoHeight(iStream));
       XMLUtils::SetInt(&stream, "durationinseconds", m_streamDetails.GetVideoDuration(iStream));
       XMLUtils::SetString(&stream, "stereomode", m_streamDetails.GetStereoMode(iStream));
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetVideoLanguage(iStream));
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetVideoLanguage(iStream).AsIso6392B());
       XMLUtils::SetString(&stream, "hdrtype", m_streamDetails.GetVideoHdrType(iStream));
       XMLUtils::SetString(&stream, "hdrdetail", m_streamDetails.GetVideoHdrDetail(iStream));
       streamdetails.InsertEndChild(stream);
@@ -310,7 +345,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     {
       TiXmlElement stream("audio");
       XMLUtils::SetString(&stream, "codec", m_streamDetails.GetAudioCodec(iStream));
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetAudioLanguage(iStream));
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetAudioLanguage(iStream).AsIso6392B());
       XMLUtils::SetInt(&stream, "channels", m_streamDetails.GetAudioChannels(iStream));
       if (m_streamDetails.GetVersion(CStreamDetail::AUDIO, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
@@ -326,7 +362,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     for (int iStream=1; iStream<=m_streamDetails.GetSubtitleStreamCount(); iStream++)
     {
       TiXmlElement stream("subtitle");
-      XMLUtils::SetString(&stream, "language", m_streamDetails.GetSubtitleLanguage(iStream));
+      XMLUtils::SetString(&stream, "language",
+                          m_streamDetails.GetSubtitleLanguage(iStream).AsIso6392B());
       if (m_streamDetails.GetVersion(CStreamDetail::SUBTITLE, iStream) >=
           CStreamDetail::STREAM_DETAILS_VERSION_FLAGS)
       {
@@ -341,6 +378,9 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
     fileinfo.InsertEndChild(streamdetails);
     movie->InsertEndChild(fileinfo);
   }  /* if has stream details */
+
+  if (HasContentGeometry())
+    KODI::VIDEO::GEOMETRY::SaveContentGeometryXML(*movie, m_contentGeometry);
 
   // cast
   for (auto it = m_cast.begin(); it != m_cast.end(); ++it)
@@ -374,9 +414,9 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   XMLUtils::SetDateTime(movie, "dateadded", m_dateAdded);
 
   {
-    const std::string lang{GetOriginalLanguage()};
+    const std::string& lang{GetOriginalLanguage().ToString()};
 
-    if (!lang.empty() && (tag == "movie" || tag == "tvshow"))
+    if (!lang.empty() && (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW))
       XMLUtils::SetString(movie, "originallanguage", lang);
   }
 
@@ -445,7 +485,7 @@ void CVideoInfoTag::Merge(CVideoInfoTag& other)
     m_strShowTitle = other.m_strShowTitle;
   if (!other.m_strOriginalTitle.empty())
     m_strOriginalTitle = other.m_strOriginalTitle;
-  if (!other.m_originalLanguage.empty())
+  if (!other.m_originalLanguage.ToString().empty())
     m_originalLanguage = other.m_originalLanguage;
   if (!other.m_strSortTitle.empty())
     m_strSortTitle = other.m_strSortTitle;
@@ -537,6 +577,8 @@ void CVideoInfoTag::Merge(CVideoInfoTag& other)
     m_seasons = other.m_seasons;
   if (other.m_streamDetails.HasItems())
     m_streamDetails = other.m_streamDetails;
+  if (other.HasContentGeometry())
+    m_contentGeometry = other.m_contentGeometry;
   if (other.IsPlayCountSet())
     SetPlayCount(other.GetPlayCount());
 
@@ -614,7 +656,7 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar << m_strMPAARating;
     ar << m_strFileNameAndPath;
     ar << m_strOriginalTitle;
-    ar << m_originalLanguage;
+    ar << m_originalLanguage.ToString();
     ar << m_strEpisodeGuide;
     ar << m_premiered;
     ar << m_bHasPremiered;
@@ -652,6 +694,7 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar << m_iBookmarkId;
     ar << m_iTrack;
     ar << dynamic_cast<IArchivable&>(m_streamDetails);
+    KODI::VIDEO::GEOMETRY::Archive(ar, m_contentGeometry);
     ar << m_showLink;
     ar << static_cast<int>(m_seasons.size());
     for (const auto& [number, attr] : m_seasons)
@@ -720,7 +763,9 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar >> m_strMPAARating;
     ar >> m_strFileNameAndPath;
     ar >> m_strOriginalTitle;
-    ar >> m_originalLanguage;
+    std::string originalLanguage;
+    ar >> originalLanguage;
+    m_originalLanguage = KODI::LANGUAGE::CLanguageTag::Parse(originalLanguage);
     ar >> m_strEpisodeGuide;
     ar >> m_premiered;
     ar >> m_bHasPremiered;
@@ -772,6 +817,7 @@ void CVideoInfoTag::Archive(CArchive& ar)
     ar >> m_iBookmarkId;
     ar >> m_iTrack;
     ar >> dynamic_cast<IArchivable&>(m_streamDetails);
+    KODI::VIDEO::GEOMETRY::Archive(ar, m_contentGeometry);
     ar >> m_showLink;
     int namedSeasonSize;
     ar >> namedSeasonSize;
@@ -814,7 +860,7 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["genre"] = m_genre;
   value["country"] = m_country;
   value["tagline"] = m_strTagLine;
-  value["plotoutline"] = m_strPlotOutline;
+  value["plotOutline"] = m_strPlotOutline;
   value["plot"] = m_strPlot;
   value["title"] = m_strTitle;
   value["votes"] = std::to_string(GetRating().votes);
@@ -840,28 +886,29 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["runtime"] = GetDuration();
   value["file"] = m_strFile;
   value["path"] = m_strPath;
-  value["imdbnumber"] = GetUniqueID();
+  value["imdbNumber"] = GetUniqueID();
   value["mpaa"] = m_strMPAARating;
   value["filenameandpath"] = m_strFileNameAndPath;
-  value["originaltitle"] = m_strOriginalTitle;
-  value["originallanguage"] = m_originalLanguage;
-  value["sorttitle"] = m_strSortTitle;
-  value["episodeguide"] = m_strEpisodeGuide;
+  value["originalTitle"] = m_strOriginalTitle;
+  value["originallanguage"] = m_originalLanguage.ToString();
+  value["sortTitle"] = m_strSortTitle;
+  value["episodeGuide"] = m_strEpisodeGuide;
   value["premiered"] = m_premiered.IsValid() ? m_premiered.GetAsDBDate() : StringUtils::Empty;
   value["status"] = m_strStatus;
-  value["productioncode"] = m_strProductionCode;
-  value["firstaired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
-  value["showtitle"] = m_strShowTitle;
+  value["productionCode"] = m_strProductionCode;
+  value["firstAired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
+  value["showTitle"] = m_strShowTitle;
   value["album"] = m_strAlbum;
   value["artist"] = m_artist;
-  value["playcount"] = GetPlayCount();
-  value["lastplayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["playCount"] = GetPlayCount();
+  value["lastPlayed"] =
+      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
   value["top250"] = m_iTop250;
   value["year"] = GetYear();
   value["season"] = m_iSeason;
   value["episode"] = m_iEpisode;
   for (const auto& i : m_uniqueIDs)
-    value["uniqueid"][i.first] = i.second;
+    value["uniqueId"][i.first] = i.second;
 
   value["rating"] = GetRating().rating;
   CVariant ratings{CVariant::VariantTypeObject};
@@ -875,22 +922,23 @@ void CVideoInfoTag::Serialize(CVariant& value) const
     ratings[ratingname] = rating;
   }
   value["ratings"] = ratings;
-  value["userrating"] = m_iUserRating;
+  value["userRating"] = m_iUserRating;
   value["dbid"] = m_iDbId;
   value["fileid"] = m_iFileId;
   value["track"] = m_iTrack;
-  value["showlink"] = m_showLink;
-  m_streamDetails.Serialize(value["streamdetails"]);
+  value["showLink"] = m_showLink;
+  m_streamDetails.Serialize(value["streamDetails"]);
+  SerializeContentGeometry(value["streamDetails"]);
   CVariant resume{CVariant::VariantTypeObject};
   resume["position"] = m_resumePoint.timeInSeconds;
   resume["total"] = m_resumePoint.totalTimeInSeconds;
   value["resume"] = resume;
-  value["tvshowid"] = m_iIdShow;
-  value["dateadded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
+  value["tvShowId"] = m_iIdShow;
+  value["dateAdded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
   value["type"] = m_type;
-  value["seasonid"] = m_iIdSeason;
-  value["specialsortseason"] = m_iSpecialSortSeason;
-  value["specialsortepisode"] = m_iSpecialSortEpisode;
+  value["seasonId"] = m_iIdSeason;
+  value["specialSortSeason"] = m_iSpecialSortSeason;
+  value["specialSortEpisode"] = m_iSpecialSortEpisode;
 }
 
 int CVideoInfoTag::GetDescribedAudioStreamIndex() const
@@ -1081,12 +1129,12 @@ void CVideoInfoTag::ToSortable(SortItem& sortable, Field field) const
       else if (field == Field::AUDIO_CODEC)
         sortable[Field::AUDIO_CODEC] = m_streamDetails.GetAudioCodec(idx);
       else
-        sortable[Field::AUDIO_LANGUAGE] = m_streamDetails.GetAudioLanguage(idx);
+        sortable[Field::AUDIO_LANGUAGE] = m_streamDetails.GetAudioLanguage(idx).ToString();
       break;
     }
 
     case Field::SUBTITLE_LANGUAGE:
-      sortable[Field::SUBTITLE_LANGUAGE] = m_streamDetails.GetSubtitleLanguage();
+      sortable[Field::SUBTITLE_LANGUAGE] = m_streamDetails.GetSubtitleLanguage().ToString();
       break;
 
     case Field::IN_PROGRESS:
@@ -1194,7 +1242,8 @@ bool CVideoInfoTag::HasConflictingUniqueID(const CVideoInfoTag& other) const
                              [&other](const auto& id)
                              {
                                const auto it{other.m_uniqueIDs.find(id.first)};
-                               return id.first != "unknown" && !id.second.empty() &&
+                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
+                                      !id.second.empty() &&
                                       it != other.m_uniqueIDs.end() && !it->second.empty() &&
                                       it->second != id.second;
                              });
@@ -1357,7 +1406,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
         else
           SetUniqueID(uniqueid->FirstChild()->ValueStr());
         bool isDefault;
-        if (m_strDefaultUniqueID == "unknown" &&
+        if (m_strDefaultUniqueID == KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
             (uniqueid->QueryBoolAttribute("default", &isDefault) == TIXML_SUCCESS) && isDefault)
         {
           m_strDefaultUniqueID = value;
@@ -1575,6 +1624,9 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
   }
   SetArtist(artist);
 
+  if (const auto record = KODI::VIDEO::GEOMETRY::LoadContentGeometryXML(*movie))
+    m_contentGeometry = *record;
+
   node = movie->FirstChildElement("fileinfo");
   if (node)
   {
@@ -1590,14 +1642,13 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
           p->m_strCodec = StringUtils::Trim(value);
 
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "audio");
 
         XMLUtils::GetInt(nodeDetail, "channels", p->m_iChannels);
 
         p->m_flags = ParseStreamFlags(nodeDetail);
 
         StringUtils::ToLower(p->m_strCodec);
-        StringUtils::ToLower(p->m_strLanguage);
         p->m_strCodec = StreamUtils::NormalizeAudioCodecName(p->m_strCodec);
         m_streamDetails.AddStream(p);
       }
@@ -1615,7 +1666,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
         if (XMLUtils::GetString(nodeDetail, "stereomode", value))
           p->m_strStereoMode = StringUtils::Trim(value);
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "video");
         if (XMLUtils::GetString(nodeDetail, "hdrtype", value))
           p->m_strHdrType = StringUtils::Trim(value);
         if (XMLUtils::GetString(nodeDetail, "hdrdetail", value))
@@ -1623,7 +1674,6 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
 
         StringUtils::ToLower(p->m_strCodec);
         StringUtils::ToLower(p->m_strStereoMode);
-        StringUtils::ToLower(p->m_strLanguage);
         StringUtils::ToLower(p->m_strHdrType);
         m_streamDetails.AddStream(p);
       }
@@ -1632,11 +1682,9 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
       {
         auto* p = new CStreamDetailSubtitle();
         if (XMLUtils::GetString(nodeDetail, "language", value))
-          p->m_strLanguage = CLangCodeExpander::AsISO6392B(StringUtils::Trim(value));
+          p->m_language = LanguageFromNfo(value, "subtitle");
 
         p->m_flags = ParseStreamFlags(nodeDetail);
-
-        StringUtils::ToLower(p->m_strLanguage);
         m_streamDetails.AddStream(p);
       }
     }
@@ -1702,9 +1750,18 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
 
   XMLUtils::GetDateTime(movie, "dateadded", m_dateAdded);
 
-  if (XMLUtils::GetString(movie, "originallanguage", value) &&
-      !SetOriginalLanguage(value, LanguageTagSource::SOURCE_EXTERNAL))
-    CLog::LogF(LOGWARNING, "<originallanguage> tag value {} is not recognized", value);
+  if (XMLUtils::GetString(movie, "originallanguage", value))
+    SetOriginalLanguage(value);
+}
+
+KODI::MEDIA::TYPE CVideoInfoTag::GetMediaType() const
+{
+  return KODI::MEDIA::MediaTypeOf(m_type);
+}
+
+void CVideoInfoTag::SetMediaType(KODI::MEDIA::TYPE type)
+{
+  m_type = KODI::MEDIA::NameOf(type);
 }
 
 bool CVideoInfoTag::HasStreamDetails() const
@@ -1718,6 +1775,43 @@ bool CVideoInfoTag::HasNFOStreamDetails() const
     return false;
 
   return m_streamDetails.GetSources() >= CStreamDetail::NFO;
+}
+
+bool CVideoInfoTag::HasContentGeometry() const
+{
+  return m_contentGeometry.HasReading();
+}
+
+KODI::VIDEO::GEOMETRY::EffectiveGeometry CVideoInfoTag::ResolveContentGeometry() const
+{
+  if (!HasContentGeometry())
+    return {};
+
+  const int width{m_streamDetails.GetVideoWidth()};
+  const int height{m_streamDetails.GetVideoHeight()};
+  if (width <= 0 || height <= 0)
+    return {};
+
+  // Neither rotation nor a declaration is applied.
+  KODI::VIDEO::GEOMETRY::GeometryInputs inputs;
+  inputs.stream = KODI::VIDEO::GEOMETRY::MeasuredStreamGeometry(
+      m_streamDetails.GetStereoMode(), static_cast<unsigned int>(width),
+      static_cast<unsigned int>(height), m_streamDetails.GetVideoAspect());
+  inputs.cached.record = m_contentGeometry;
+  inputs.cached.state = KODI::VIDEO::GEOMETRY::StateOf(m_contentGeometry);
+  inputs.policy = KODI::VIDEO::GEOMETRY::ContentGeometryPolicyFromSettings();
+  inputs.atRestAspect = KODI::VIDEO::GEOMETRY::ContentGeometryAtRestFromSettings();
+
+  return KODI::VIDEO::GEOMETRY::ResolveEffectiveGeometry(inputs);
+}
+
+void CVideoInfoTag::SerializeContentGeometry(CVariant& streamdetails) const
+{
+  if (!HasContentGeometry() || !streamdetails["video"].isArray() || streamdetails["video"].empty())
+    return;
+
+  KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(ResolveContentGeometry(),
+                                                    streamdetails["video"][0]["contentRect"]);
 }
 
 bool CVideoInfoTag::IsEmpty() const
@@ -1968,23 +2062,23 @@ void CVideoInfoTag::SetOriginalTitle(std::string originalTitle)
   m_strOriginalTitle = Trim(std::move(originalTitle));
 }
 
-bool CVideoInfoTag::SetOriginalLanguage(std::string language, LanguageTagSource source)
+bool CVideoInfoTag::SetOriginalLanguage(const std::string& language)
 {
-  if (source == LanguageTagSource::SOURCE_INTERNAL)
+  if (language.empty())
   {
-    m_originalLanguage = std::move(language);
+    m_originalLanguage = {};
     return true;
   }
 
-  StringUtils::Trim(language);
-  if (CLangCodeExpander::ConvertToBcp47(language, language))
+  const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(language);
+  if (!tag.has_value())
   {
-    m_originalLanguage = std::move(language);
-    return true;
+    CLog::Log(LOGWARNING, "CVideoInfoTag: unknown original language '{}'", language);
+    return false;
   }
 
-  CLog::LogF(LOGERROR, "{} is not recognized as a valid language tag or English name", language);
-  return false;
+  m_originalLanguage = *tag;
+  return true;
 }
 
 void CVideoInfoTag::SetEpisodeGuide(std::string episodeGuide)

@@ -19,6 +19,7 @@
 #include "dialogs/GUIDialogKaiToast.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/PlaylistFileDirectory.h"
+#include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIKeyboardFactory.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
@@ -182,24 +183,25 @@ bool CGUIWindowMusicPlaylistEditor::OnMessage(CGUIMessage& message)
 
 bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory, CFileItemList &items)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   items.Clear();
   if (strDirectory.empty())
   { // root listing - list files:// and musicdb://
-    CFileItemPtr files(new CFileItem("sources://music/", true));
-    files->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(744));
+    CFileItemPtr files(new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
+    files->SetLabel(localizeStrings.Get(744));
     files->SetLabelPreformatted(true);
     files->SetIsShareOrDrive(true);
     items.Add(files);
 
-    CFileItemPtr mdb(new CFileItem(LIBRARY::MUSIC, true));
-    mdb->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(14022));
+    CFileItemPtr mdb(new CFileItem(MEDIA::LIBRARY_PATH::MUSIC, true));
+    mdb->SetLabel(localizeStrings.Get(14022));
     mdb->SetLabelPreformatted(true);
     mdb->SetIsShareOrDrive(true);
     items.SetPath("");
     items.Add(mdb);
 
     CFileItemPtr vdb(new CFileItem(VIDEO::DB_PATH::MUSICVIDEOS, true));
-    vdb->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20389));
+    vdb->SetLabel(localizeStrings.Get(20389));
     vdb->SetLabelPreformatted(true);
     vdb->SetIsShareOrDrive(true);
     items.SetPath("");
@@ -353,7 +355,7 @@ void CGUIWindowMusicPlaylistEditor::OnLoadPlaylist()
   // Prompt user for file to load from music playlists folder
   std::string playlist;
   if (CGUIDialogFileBrowser::ShowAndGetFile(
-          "special://musicplaylists/", ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
+          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), ".m3u|.m3u8|.pls|.b4s|.wpl|.xspf",
           CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(656), playlist))
     LoadPlaylist(playlist);
 }

@@ -36,7 +36,14 @@
 #include "utils/AlarmClock.h"
 #include "utils/log.h"
 #include "video/VideoLibraryQueue.h"
+#include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
+
+void CApplicationPowerHandling::WakeScreen()
+{
+  ResetScreenSaver();
+  WakeUpScreenSaverAndDPMS();
+}
 
 void CApplicationPowerHandling::ResetScreenSaver()
 {
@@ -93,7 +100,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
       m_dpmsIsManual = false;
       SetRenderGUI(true);
       CheckOSScreenSaverInhibitionSetting();
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnDPMSDeactivated");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSDeactivated{}});
       return dpms->DisablePowerSaving();
     }
     else
@@ -104,7 +112,8 @@ bool CApplicationPowerHandling::ToggleDPMS(bool manual)
         m_dpmsIsManual = manual;
         SetRenderGUI(false);
         CheckOSScreenSaverInhibitionSetting();
-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnDPMSActivated");
+        CServiceBroker::GetAnnouncementManager()->Announce(
+            ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::DPMSActivated{}});
         return true;
       }
     }
@@ -133,10 +142,8 @@ bool CApplicationPowerHandling::WakeUpScreenSaverAndDPMS(bool bPowerOffKeyPresse
   if (result)
   {
     // allow listeners to ignore the deactivation if it precedes a powerdown/suspend etc
-    CVariant data(CVariant::VariantTypeObject);
-    data["shuttingdown"] = bPowerOffKeyPressed;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI,
-                                                       "OnScreensaverDeactivated", data);
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUIEvent{
+        ANNOUNCEMENT::EVENT::GUI::ScreensaverDeactivated{bPowerOffKeyPressed}});
   }
 
   return result;
@@ -248,6 +255,7 @@ void CApplicationPowerHandling::CheckOSScreenSaverInhibitionSetting()
 
 void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
 {
+  const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
   bool maybeScreensaver = true;
   if (m_dpmsIsActive)
     maybeScreensaver = false;
@@ -270,8 +278,7 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
     maybeDPMS = false;
   else if (!dpms || !dpms->IsSupported())
     maybeDPMS = false;
-  else if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
-               CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) <= 0)
+  else if (settings->GetInt(CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) <= 0)
     maybeDPMS = false;
 
   // whether the current state of the application should be regarded as active even when there is no
@@ -288,6 +295,9 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
   if (m_bInhibitScreenSaver)
     haveIdleActivity = true;
 
+  if (winSystem->GetGfxContext().IsCalibrating())
+    haveIdleActivity = true;
+
   // Are we playing a video and it is not paused?
   const auto& components = CServiceBroker::GetAppComponents();
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
@@ -296,20 +306,18 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
 
   // Are we playing audio and screensaver is disabled globally for audio?
   else if (appPlayer && appPlayer->IsPlayingAudio() &&
-           CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-               CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
+           settings->GetBool(CSettings::SETTING_SCREENSAVER_DISABLEFORAUDIO))
   {
     haveIdleActivity = true;
   }
 
   // Handle OS screen saver state
-  if (haveIdleActivity && CServiceBroker::GetWinSystem()->GetOSScreenSaver())
+  if (haveIdleActivity && winSystem->GetOSScreenSaver())
   {
     // Always inhibit OS screen saver during these kinds of activities
     if (!m_screensaverInhibitor)
     {
-      m_screensaverInhibitor =
-          CServiceBroker::GetWinSystem()->GetOSScreenSaver()->CreateInhibitor();
+      m_screensaverInhibitor = winSystem->GetOSScreenSaver()->CreateInhibitor();
     }
   }
   else if (m_screensaverInhibitor)
@@ -344,17 +352,12 @@ void CApplicationPowerHandling::CheckScreenSaverAndDPMS()
   float elapsed = m_screenSaverTimer.IsRunning() ? m_screenSaverTimer.GetElapsedSeconds() : 0.f;
 
   // DPMS has priority (it makes the screensaver not needed)
-  if (maybeDPMS && elapsed > CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
-                                 CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) *
-                                 60)
+  if (maybeDPMS && elapsed > settings->GetInt(CSettings::SETTING_POWERMANAGEMENT_DISPLAYSOFF) * 60)
   {
     ToggleDPMS(false);
     WakeUpScreenSaver();
   }
-  else if (maybeScreensaver &&
-           elapsed > CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
-                         CSettings::SETTING_SCREENSAVER_TIME) *
-                         60)
+  else if (maybeScreensaver && elapsed > settings->GetInt(CSettings::SETTING_SCREENSAVER_TIME) * 60)
   {
     ActivateScreenSaver();
   }
@@ -370,7 +373,8 @@ void CApplicationPowerHandling::ActivateScreenSaver(bool forceType /*= false */)
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_screensaverActive = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnScreensaverActivated");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::ScreensaverActivated{}});
 
   // disable screensaver lock from the login screen
   m_iScreenSaveLock =
@@ -547,23 +551,15 @@ bool CApplicationPowerHandling::IsIdleShutdownInhibited() const
   return m_bInhibitIdleShutdown;
 }
 
-bool CApplicationPowerHandling::OnSettingChanged(const CSetting& setting)
+void CApplicationPowerHandling::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  const std::string& settingId = setting.GetId();
-
-  if (settingId == CSettings::SETTING_SCREENSAVER_MODE)
-  {
+  if (setting->GetId() == CSettings::SETTING_SCREENSAVER_MODE)
     CheckOSScreenSaverInhibitionSetting();
-  }
-  else
-    return false;
-
-  return true;
 }
 
-bool CApplicationPowerHandling::OnSettingAction(const CSetting& setting)
+void CApplicationPowerHandling::OnSettingAction(const std::shared_ptr<const CSetting>& setting)
 {
-  const std::string& settingId = setting.GetId();
+  const std::string& settingId = setting->GetId();
 
   if (settingId == CSettings::SETTING_SCREENSAVER_PREVIEW)
     ActivateScreenSaver(true);
@@ -576,8 +572,4 @@ bool CApplicationPowerHandling::OnSettingAction(const CSetting& setting)
             addon, ADDON::AddonType::SCREENSAVER, ADDON::OnlyEnabled::CHOICE_YES))
       CGUIDialogAddonSettings::ShowForAddon(addon);
   }
-  else
-    return false;
-
-  return true;
 }

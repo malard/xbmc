@@ -12,7 +12,6 @@
 #include "CompileInfo.h"
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
 #include "utils/Mime.h"
 // Audio Engine includes for Factory and interfaces
@@ -23,8 +22,10 @@
 #include "application/AppParams.h"
 #include "application/Application.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/PlayListsMessageHandler.h"
 #include "cores/AudioEngine/AESinkFactory.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 #include "cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h"
@@ -38,6 +39,7 @@
 #include "input/actions/ActionIDs.h"
 #include "input/mouse/MouseStat.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "platform/xbmc.h"
 #include "powermanagement/PowerManager.h"
@@ -66,10 +68,12 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <utility>
 
 #include <android/bitmap.h>
 #include <android/configuration.h>
@@ -194,53 +198,34 @@ CXBMCApp::~CXBMCApp()
 {
 }
 
-void CXBMCApp::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                        const std::string& sender,
-                        const std::string& message,
-                        const CVariant& data)
+void CXBMCApp::OnInputEvent(const ANNOUNCEMENT::InputEvent& event)
 {
-  if (sender != CAnnouncementManager::ANNOUNCEMENT_SENDER)
-    return;
+  CAndroidKey::SetHandleSearchKeys(
+      std::holds_alternative<ANNOUNCEMENT::EVENT::INPUT::Requested>(event));
+}
 
-  if (flag & Input)
+void CXBMCApp::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
+{
+  namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+  if (std::holds_alternative<PLAYER::Play>(event) || std::holds_alternative<PLAYER::Resume>(event))
+    OnPlayBackStarted();
+  else if (std::holds_alternative<PLAYER::Pause>(event))
+    OnPlayBackPaused();
+  else if (std::holds_alternative<PLAYER::Stop>(event))
+    OnPlayBackStopped();
+  else if (std::holds_alternative<PLAYER::Seek>(event) ||
+           std::holds_alternative<PLAYER::SpeedChanged>(event) ||
+           std::holds_alternative<PLAYER::AVStart>(event))
   {
-    if (message == "OnInputRequested")
-      CAndroidKey::SetHandleSearchKeys(true);
-    else if (message == "OnInputFinished")
-      CAndroidKey::SetHandleSearchKeys(false);
+    m_mediaSessionUpdated = false;
+    UpdateSessionState();
   }
-  else if (flag & Player)
-  {
-    if (message == "OnPlay" || message == "OnResume")
-      OnPlayBackStarted();
-    else if (message == "OnPause")
-      OnPlayBackPaused();
-    else if (message == "OnStop")
-      OnPlayBackStopped();
-    else if (message == "OnSeek")
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-    else if (message == "OnSpeedChanged")
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-    else if (message == "OnAVStart")
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionState();
-    }
-  }
-  else if (flag & Info)
-  {
-    if (message == "OnChanged")
-    {
-      m_mediaSessionUpdated = false;
-      UpdateSessionMetadata();
-    }
-  }
+}
+
+void CXBMCApp::OnInfoEvent(const ANNOUNCEMENT::InfoEvent&)
+{
+  m_mediaSessionUpdated = false;
+  UpdateSessionMetadata();
 }
 
 void CXBMCApp::onStart()
@@ -276,6 +261,20 @@ void CXBMCApp::onStart()
 
 namespace
 {
+// Whether what plays holds video and audio: from what the playing entry holds, or, for playback
+// started outside the playlists, from what the player has opened.
+std::pair<bool, bool> PlayingVideoAndAudio()
+{
+  const auto& components = CServiceBroker::GetAppComponents();
+  const auto playLists = CServiceBroker::GetPlayLists();
+  if (const std::optional<KODI::MEDIA::Streams> streams = playLists->GetPlayingStreams(); streams)
+    return {KODI::MEDIA::HasVideo(*streams),
+            KODI::MEDIA::HasAudio(*streams) || playLists->IsAudioFollowingVideo()};
+
+  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
+  return {appPlayer->HasVideo(), appPlayer->HasAudio()};
+}
+
 bool isHeadsetPlugged()
 {
   CJNIAudioManager audioManager(CXBMCApp::getSystemService(CJNIContext::AUDIO_SERVICE));
@@ -820,11 +819,7 @@ void CXBMCApp::UpdateSessionMetadata()
                  infoMgr.GetLabel(PLAYER_TITLE, INFO::DEFAULT_CONTEXT))
       .putString(CJNIMediaMetadata::METADATA_KEY_TITLE,
                  infoMgr.GetLabel(PLAYER_TITLE, INFO::DEFAULT_CONTEXT))
-      .putLong(CJNIMediaMetadata::METADATA_KEY_DURATION, appPlayer->GetTotalTime())
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_ART_URI, thumb)
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_DISPLAY_ICON_URI, thumb)
-      //      .putString(CJNIMediaMetadata::METADATA_KEY_ALBUM_ART_URI, thumb)
-      ;
+      .putLong(CJNIMediaMetadata::METADATA_KEY_DURATION, appPlayer->GetTotalTime());
 
   std::string thumb;
   if (m_playback_state & PLAYBACK_STATE_VIDEO)
@@ -868,12 +863,13 @@ void CXBMCApp::UpdateSessionState()
   uint32_t oldPlayState = m_playback_state;
   if (m_playback_state != PLAYBACK_STATE_STOPPED)
   {
-    if (appPlayer->HasVideo())
+    const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+    if (hasVideo)
       m_playback_state |= PLAYBACK_STATE_VIDEO;
     else
       m_playback_state &= ~PLAYBACK_STATE_VIDEO;
 
-    if (appPlayer->HasAudio())
+    if (hasAudio)
       m_playback_state |= PLAYBACK_STATE_AUDIO;
     else
       m_playback_state &= ~PLAYBACK_STATE_AUDIO;
@@ -905,9 +901,10 @@ void CXBMCApp::OnPlayBackStarted()
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
   m_playback_state = PLAYBACK_STATE_PLAYING;
-  if (appPlayer->HasVideo())
+  const auto [hasVideo, hasAudio] = PlayingVideoAndAudio();
+  if (hasVideo)
     m_playback_state |= PLAYBACK_STATE_VIDEO;
-  if (appPlayer->HasAudio())
+  if (hasAudio)
     m_playback_state |= PLAYBACK_STATE_AUDIO;
   if (!appPlayer->CanPause())
     m_playback_state |= PLAYBACK_STATE_CANNOT_PAUSE;
@@ -1157,7 +1154,6 @@ int CXBMCApp::GetMaxSystemVolume()
   {
     maxVolume = GetMaxSystemVolume(env);
   }
-  //android_printf("CXBMCApp::GetMaxSystemVolume: %i",maxVolume);
   return maxVolume;
 }
 
@@ -1360,6 +1356,7 @@ void CXBMCApp::OnWakeup()
 
 void CXBMCApp::onNewIntent(CJNIIntent intent)
 {
+  const auto appMessenger{CServiceBroker::GetAppMessenger()};
   if (!intent)
   {
     CLog::Log(LOGINFO, "CXBMCApp::onNewIntent - Got invalid intent.");
@@ -1387,8 +1384,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0,
-                                                   nullptr, "", params);
+        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0, nullptr, "", params);
       }
       else if (targeturl.IsProtocol("musicdb")
                || (targeturl.IsProtocol("special") && targetFile.find("playlists/music") != std::string::npos))
@@ -1396,8 +1392,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0,
-                                                   nullptr, "", params);
+        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0, nullptr, "", params);
       }
     }
     else
@@ -1413,26 +1408,9 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         }
 
         auto list = std::make_unique<CFileItemList>();
+        list->Add(std::move(item));
 
-        std::unique_ptr<KODI::PLAYLIST::CPlayList> playlist(
-            KODI::PLAYLIST::CPlayListFactory::Create(*item));
-
-        if (playlist && playlist->Load(item->GetPath()))
-        {
-          for (int i = 0; i < playlist->size(); i++)
-          {
-            list->Add((*playlist)[i]);
-          }
-        }
-        else
-        {
-          // Fallback: If playlist parsing fails, append the original item
-          // to prevent sending an empty list to TMSG_MEDIA_PLAY
-          list->Add(std::make_shared<CFileItem>(*item));
-        }
-
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, -1, -1,
-                                                   static_cast<void*>(list.release()));
+        KODI::APPLICATION::PostPlayItems(std::move(list));
       }
       else
       {
@@ -1443,7 +1421,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
           item->SetPath(item->GetVideoInfoTag()->m_strFileNameAndPath);
         }
 
-        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, 0, 0, static_cast<void*>(item));
+        appMessenger->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0, static_cast<void*>(item));
       }
     }
   }
@@ -1454,7 +1432,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
       if (m_playback_state & PLAYBACK_STATE_VIDEO)
         RequestVisibleBehind(true);
       if (!(m_playback_state & PLAYBACK_STATE_PLAYING))
-        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        appMessenger->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
                                                    static_cast<void*>(new CAction(ACTION_PAUSE)));
     }
   }

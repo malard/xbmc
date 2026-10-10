@@ -30,7 +30,7 @@
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "platform/Platform.h"
 #include "resources/LocalizeStrings.h"
@@ -41,6 +41,7 @@
 #include "storage/MediaManager.h"
 #include "threads/IRunnable.h"
 #include "utils/ArtTypes.h"
+#include "utils/DefaultArt.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -296,19 +297,18 @@ void CGUIWindowAddonBrowser::UpdateButtons()
   CGUIMediaWindow::UpdateButtons();
 }
 
-static bool IsForeign(const std::string& languages)
+static bool IsForeign(const std::vector<KODI::LANGUAGE::CLanguageTag>& languages)
 {
   if (languages.empty())
     return false;
 
-  for (const auto& lang : StringUtils::Split(languages, " "))
-  {
-    if (lang == "en" || lang == g_langInfo.GetLocale().GetLanguageCode() ||
-        lang == g_langInfo.GetLocale().ToShortString())
-      return false;
+  const KODI::LANGUAGE::CLanguageTag& interfaceLanguage{
+      KODI::LANGUAGE::CLanguage::GetInstance().UI()};
 
-    // for backwards compatibility
-    if (lang == "no" && g_langInfo.GetLocale().ToShortString() == "nb_NO")
+  for (const KODI::LANGUAGE::CLanguageTag& language : languages)
+  {
+    if (language.IsEnglish() || language.Matches(interfaceLanguage) ||
+        interfaceLanguage.IsWithin(language))
       return false;
   }
   return true;
@@ -327,8 +327,8 @@ bool CGUIWindowAddonBrowser::GetDirectory(const std::string& strDirectory, CFile
       int i = 0;
       while (i < items.Size())
       {
-        auto prop = items[i]->GetProperty("Addon.Language");
-        if (!prop.isNull() && IsForeign(prop.asString()))
+        const auto info = items[i]->GetAddonInfo();
+        if (info && IsForeign(info->Languages()))
           items.Remove(i);
         else
           ++i;
@@ -451,6 +451,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
                                           bool showInstallable /* = false */,
                                           bool showMore /* = true */)
 {
+  auto& addonMgr{CServiceBroker::GetAddonMgr()};
   // if we shouldn't show neither installed nor installable addons the list will be empty
   if (!showInstalled && !showInstallable)
     return -1;
@@ -491,7 +492,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
       else if (type == AddonType::GAME)
         CAddonsDirectory::GetScriptsAndPlugins("game", typeAddons);
       else
-        CServiceBroker::GetAddonMgr().GetAddons(typeAddons, type);
+        addonMgr.GetAddons(typeAddons, type);
 
       addons.insert(addons.end(), typeAddons.begin(), typeAddons.end());
     }
@@ -500,7 +501,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
   if (showInstallable || showMore)
   {
     VECADDONS installableAddons;
-    if (CServiceBroker::GetAddonMgr().GetInstallableAddons(installableAddons))
+    if (addonMgr.GetInstallableAddons(installableAddons))
     {
       for (auto addon = installableAddons.begin(); addon != installableAddons.end();)
       {
@@ -583,7 +584,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
     auto item{std::make_shared<CFileItem>("", false)};
     item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(231));
     item->SetLabel2(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24040));
-    item->SetArt(KODI::ART::TYPE::ICON, "DefaultAddonNone.png");
+    item->SetArt(KODI::ART::TYPE::ICON, KODI::ART::DEFAULT::ADDON_NONE);
     item->SetSpecialSort(SortSpecial::TOP);
     items.Add(std::move(item));
   }
@@ -625,7 +626,7 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
         const AddonPtr& addon = itAddon->second;
 
         // if the addon isn't installed we need to install it
-        if (!CServiceBroker::GetAddonMgr().IsAddonInstalled(addon->ID()))
+        if (!addonMgr.IsAddonInstalled(addon->ID()))
         {
           AddonPtr installedAddon;
           if (!CAddonInstaller::GetInstance().InstallModal(addon->ID(), installedAddon,
@@ -634,8 +635,8 @@ int CGUIWindowAddonBrowser::SelectAddonID(const std::vector<AddonType>& types,
         }
 
         // if the addon is disabled we need to enable it
-        if (CServiceBroker::GetAddonMgr().IsAddonDisabled(addon->ID()))
-          CServiceBroker::GetAddonMgr().EnableAddon(addon->ID());
+        if (addonMgr.IsAddonDisabled(addon->ID()))
+          addonMgr.EnableAddon(addon->ID());
       }
     }
 

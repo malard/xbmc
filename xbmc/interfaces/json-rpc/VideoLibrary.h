@@ -17,6 +17,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class CFileItem;
@@ -26,65 +27,105 @@ class CVariant;
 
 namespace JSONRPC
 {
-  class CVideoLibrary : public CFileItemHandler
+//! The kinds of item the video library holds
+enum class VideoKind
+{
+  Movie,
+  Set,
+  TVShow,
+  Season,
+  Episode,
+  MusicVideo,
+};
+
+class CVideoLibrary : public CFileItemHandler
   {
   public:
-    static JSONRPC_STATUS GetMovies(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetMovieDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetMovieSets(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetMovieSetDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  //! Whether the library holds items of \p type
+  static bool IsItemKind(KODI::MEDIA::TYPE type);
 
-    static JSONRPC_STATUS GetTVShows(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetTVShowDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetSeasons(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetSeasonDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetEpisodes(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetEpisodeDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  //! The query over one kind's items
+  static JSONRPC_STATUS GetItems(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetMusicVideos(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetMusicVideoDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  //! A list method: the query over \p Kind with the listing \p From
+  template<VideoKind Kind, Listing From = Listing::All>
+  static JSONRPC_STATUS List(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetItemProperties(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS AddItem(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetRecentlyAddedMovies(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetRecentlyAddedEpisodes(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetRecentlyAddedMusicVideos(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetInProgressTVShows(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetTags(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS GetGenres(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetTags(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetAvailableArtTypes(const std::string& method, ITransportLayer* transport, IClient* client, const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetAvailableArt(const std::string& method, ITransportLayer* transport, IClient* client, const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS Refresh(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS SetMovieDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetMovieSetDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetTVShowDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSeasonDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetEpisodeDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetMusicVideoDetails(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  // Deprecated in favour of Refresh, which also reaches movie sets and seasons
+  static JSONRPC_STATUS RefreshMovie(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshTVShow(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshEpisode(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshMusicVideo(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RefreshContentGeometry(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS RefreshMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshTVShow(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshEpisode(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RefreshMusicVideo(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS RemoveMovie(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveTVShow(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveEpisode(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS RemoveMusicVideo(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS RemoveMovie(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveTVShow(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveEpisode(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveMusicVideo(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  static JSONRPC_STATUS Scan(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetSourceContent(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS Export(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS Clean(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Scan(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSourceContent(const std::string& method,
-                                           ITransportLayer* transport,
-                                           IClient* client,
-                                           const CVariant& parameterObject,
-                                           CVariant& result);
-    static JSONRPC_STATUS Export(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Clean(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+  static bool FillFileItem(const std::string& strFilename,
+                           std::shared_ptr<CFileItem>& item,
+                           const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
+  static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
 
-    static bool FillFileItem(
-        const std::string& strFilename,
-        std::shared_ptr<CFileItem>& item,
-        const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
-    static bool FillFileItemList(const CVariant &parameterObject, CFileItemList &list);
+protected:
+  //! Adds the files table's playback state to an item that already says what it is.
+  static void ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details);
+
+  struct PlaybackUpdate
+  {
+    int playCount;
+    CDateTime lastPlayed;
+  };
+
+  /*! \brief The playback state a show-level update leaves one of its episodes with.
+     \return what to store, or nothing when the episode is left as it is
+    */
+  static std::optional<PlaybackUpdate> EpisodePlaybackUpdate(const CVideoInfoTag& show,
+                                                             bool updatePlaycount,
+                                                             bool updateLastplayed,
+                                                             const CVideoInfoTag& episode);
+
+  //! What a Set*Details call changes about an item's artwork, and which details it names
+  struct DetailsEdit
+  {
+    KODI::ART::Artwork artwork;
+    std::set<std::string, std::less<>> removedArtwork;
+    std::set<std::string, std::less<>> updatedDetails;
+  };
+
+  //! Applies the caller's edit to \p details and to the item's stored artwork.
+  static DetailsEdit EditDetails(const CVariant& parameterObject,
+                                 CVideoInfoTag& details,
+                                 CVideoDatabase& videodatabase);
+  static void UpdateVideoTag(const CVariant& parameterObject,
+                             CVideoInfoTag& details,
+                             KODI::ART::Artwork& artwork,
+                             std::set<std::string, std::less<>>& removedArtwork,
+                             std::set<std::string, std::less<>>& updatedDetails);
+
+  //! Stores the playcount, last played date and resume point an edit changed from \p before.
+  static void StorePlaybackEdit(const CVariant& parameterObject,
+                                const PlaybackUpdate& before,
+                                CVideoInfoTag& details,
+                                CVideoDatabase& videodatabase);
+
+public:
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 
     /*! \brief Provided the JSON-RPC parameter object compute the VideoDbDetails mask
@@ -93,33 +134,107 @@ namespace JSONRPC
     */
     static int GetDetailsFromJsonParameters(const CVariant& parameterObject);
 
-  protected:
-    struct PlaybackUpdate
-    {
-      int playCount;
-      CDateTime lastPlayed;
-    };
-
-    /*! \brief The playback state a show-level update leaves one of its episodes with.
-       \return what to store, or nothing when the episode is left as it is
-      */
-    static std::optional<PlaybackUpdate> EpisodePlaybackUpdate(const CVideoInfoTag& show,
-                                                               bool updatePlaycount,
-                                                               bool updateLastplayed,
-                                                               const CVideoInfoTag& episode);
-
   private:
-    static int RequiresAdditionalDetails(const MediaType& mediaType, const CVariant &parameterObject);
-    static JSONRPC_STATUS HandleItems(const char *idProperty, const char *resultName, CFileItemList &items, const CVariant &parameterObject, CVariant &result, bool limit = true);
+  /*!
+     \brief Lists the items of \p kind that \p listing selects
+     \param parameterObject The caller's properties, limits, sort and filter, and the show and
+     season an episode or season list is narrowed to
+     */
+  static JSONRPC_STATUS Query(VideoKind kind,
+                              Listing listing,
+                              const CVariant& parameterObject,
+                              CVariant& result);
+
+  //! Answers the \p fields of the item of \p kind with \p id
+  static JSONRPC_STATUS ReadItem(VideoKind kind,
+                                 int id,
+                                 const CVariant& fields,
+                                 CVideoDatabase& videodatabase,
+                                 CVariant& result);
+
+  /*! \brief Stores \p infos, the item of their kind with \p id after \p edit
+     \param before the item's playback state before the edit
+     */
+  static JSONRPC_STATUS SetMovieDetails(int id,
+                                        const CVariant& properties,
+                                        const PlaybackUpdate& before,
+                                        const DetailsEdit& edit,
+                                        CVideoInfoTag& infos,
+                                        CVideoDatabase& videodatabase,
+                                        CVariant& result);
+  static JSONRPC_STATUS SetMovieSetDetails(int id,
+                                           const CVariant& properties,
+                                           const PlaybackUpdate& before,
+                                           const DetailsEdit& edit,
+                                           CVideoInfoTag& infos,
+                                           CVideoDatabase& videodatabase,
+                                           CVariant& result);
+  static JSONRPC_STATUS SetTVShowDetails(int id,
+                                         const CVariant& properties,
+                                         const PlaybackUpdate& before,
+                                         const DetailsEdit& edit,
+                                         CVideoInfoTag& infos,
+                                         CVideoDatabase& videodatabase,
+                                         CVariant& result);
+  static JSONRPC_STATUS SetSeasonDetails(int id,
+                                         const CVariant& properties,
+                                         const PlaybackUpdate& before,
+                                         const DetailsEdit& edit,
+                                         CVideoInfoTag& infos,
+                                         CVideoDatabase& videodatabase,
+                                         CVariant& result);
+  static JSONRPC_STATUS SetEpisodeDetails(int id,
+                                          const CVariant& properties,
+                                          const PlaybackUpdate& before,
+                                          const DetailsEdit& edit,
+                                          CVideoInfoTag& infos,
+                                          CVideoDatabase& videodatabase,
+                                          CVariant& result);
+  static JSONRPC_STATUS SetMusicVideoDetails(int id,
+                                             const CVariant& properties,
+                                             const PlaybackUpdate& before,
+                                             const DetailsEdit& edit,
+                                             CVideoInfoTag& infos,
+                                             CVideoDatabase& videodatabase,
+                                             CVariant& result);
+
+  static int RequiresAdditionalDetails(KODI::MEDIA::TYPE mediaType,
+                                       const CVariant &parameterObject);
+    static JSONRPC_STATUS HandleItems(const char *idProperty,
+                                      CFileItemList &items,
+                                      const CVariant &parameterObject,
+                                      CVariant &result,
+                                      bool limit = true);
     static JSONRPC_STATUS RemoveVideo(const CVariant &parameterObject);
-    static void UpdateVideoTag(const CVariant& parameterObject,
-                               CVideoInfoTag& details,
-                               KODI::ART::Artwork& artwork,
-                               std::set<std::string, std::less<>>& removedArtwork,
-                               std::set<std::string, std::less<>>& updatedDetails);
+
+  //! A deprecated refresh method: refreshes the item its kind's id member names
+  static JSONRPC_STATUS RefreshById(const CVariant& parameterObject, CVariant& result);
+
+  /*! \brief Queues a refresh of the item of \p kind with \p id
+     \param target The item as the caller named it, for a failure to name
+     */
+  static JSONRPC_STATUS RefreshVideo(VideoKind kind,
+                                     int id,
+                                     const CVariant& target,
+                                     const CVariant& parameterObject,
+                                     CVariant& result);
+
+  static JSONRPC_STATUS ResolveRefreshItem(VideoKind kind,
+                                           int id,
+                                           const CVariant& target,
+                                           CVideoDatabase& videodatabase,
+                                           CFileItem& item,
+                                           CVariant& result);
     static void UpdateVideoTagField(const CVariant& parameterObject,
                                     const std::string& fieldName,
+                                    std::string_view detail,
                                     std::vector<std::string>& fieldValue,
                                     std::set<std::string, std::less<>>& updatedDetails);
   };
+
+template<VideoKind Kind, Listing From>
+JSONRPC_STATUS CVideoLibrary::List(const CVariant& parameterObject, CVariant& result)
+{
+  return Query(Kind, From, parameterObject, result);
 }
+} // namespace JSONRPC

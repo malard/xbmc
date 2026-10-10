@@ -42,9 +42,7 @@ set(SOURCES ActorProtocol.cpp
             JSONVariantParser.cpp
             JSONVariantWriter.cpp
             LabelFormatter.cpp
-            LangCodeExpander.cpp
             LegacyPathTranslation.cpp
-            Locale.cpp
             log.cpp
             Mime.cpp
             MovingSpeed.cpp
@@ -106,6 +104,7 @@ set(HEADERS ActorProtocol.h
             Crc32.h
             CSSUtils.h
             DatabaseUtils.h
+            DefaultArt.h
             Digest.h
             DiscsUtils.h
             EndianSwap.h
@@ -144,9 +143,7 @@ set(HEADERS ActorProtocol.h
             JSONVariantParser.h
             JSONVariantWriter.h
             LabelFormatter.h
-            LangCodeExpander.h
             LegacyPathTranslation.h
-            Locale.h
             LockInfo.h
             log.h
             logtypes.h

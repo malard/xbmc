@@ -44,6 +44,7 @@
 
 using namespace XFILE;
 using namespace ADDON;
+using KODI::MEDIA::NameOf;
 
 namespace
 {
@@ -109,11 +110,11 @@ std::string ContentToMediaType(ContentType content, bool folder)
   {
     using enum ContentType;
     case MOVIES:
-      return MediaTypeMovie;
+      return NameOf(KODI::MEDIA::TYPE::MOVIE);
     case MUSICVIDEOS:
-      return MediaTypeMusicVideo;
+      return NameOf(KODI::MEDIA::TYPE::MUSIC_VIDEO);
     case TVSHOWS:
-      return folder ? MediaTypeTvShow : MediaTypeEpisode;
+      return folder ? NameOf(KODI::MEDIA::TYPE::TV_SHOW) : NameOf(KODI::MEDIA::TYPE::EPISODE);
     default:
       return "";
   }
@@ -259,8 +260,8 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
                                       UseRemoteArtWithLocalScraper useRemoteArt /* = yes */,
                                       const CFileItem* mediaItem /* = nullptr */) const
 {
-  int artLevel = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
-      CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL);
+  const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
+  int artLevel = settings->GetInt(CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL);
   if (artLevel == CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_NONE)
     return;
 
@@ -277,7 +278,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
   std::vector<std::string> movieSetArtTypes;
   if (moviePartOfSet)
   {
-    movieSetArtTypes = CVideoThumbLoader::GetArtTypes(MediaTypeVideoCollection);
+    movieSetArtTypes = CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION);
     for (const std::string& artType : movieSetArtTypes)
       artTypes.push_back("set." + artType);
   }
@@ -371,7 +372,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
     std::string aspect = url.m_aspect;
     if (aspect.empty())
       // Backward compatibility with Kodi 11 Eden NFO files
-      aspect = mediaType == MediaTypeEpisode ? ART::TYPE::THUMB : ART::TYPE::POSTER;
+      aspect = mediaType == NameOf(MEDIA::TYPE::EPISODE) ? ART::TYPE::THUMB : ART::TYPE::POSTER;
 
     if ((addAll || CVideoThumbLoader::IsArtTypeInWhitelist(aspect, artTypes, exactName)) &&
         !art.contains(aspect))
@@ -383,8 +384,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
     }
   }
 
-  if (!art.contains(ART::TYPE::THUMB) &&
-      CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+  if (!art.contains(ART::TYPE::THUMB) && settings->GetBool(
           CSettings::SETTING_MYVIDEOS_EXTRACTTHUMB) &&
       CDVDFileInfo::CanExtract(mediaItem ? *mediaItem : *pItem))
   {
@@ -401,8 +401,7 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
 
   // parent folder to apply the thumb to and to search for local actor thumbs
   std::string parentDir = URIUtils::GetParentPath(pItem->GetPath());
-  if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-          CSettings::SETTING_VIDEOLIBRARY_ACTORTHUMBS))
+  if (settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_ACTORTHUMBS))
   {
     // .actors sits alongside the nfo, so for a disc folder it is in BDMV/VIDEO_TS
     const std::string mediaDir{URIUtils::IsOpticalMediaFile(pItem->GetPath())

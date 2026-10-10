@@ -168,7 +168,7 @@ void CSetInfoTag::Archive(CArchive& ar)
 void CSetInfoTag::Serialize(CVariant& value) const
 {
   value["set"] = m_title;
-  value["setid"] = m_id;
+  value["setId"] = m_id;
   value["setoverview"] = m_overview;
   value["originalset"] = m_originalTitle;
   value["setsorttitle"] = m_sortTitle;

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "language/LangInfo.h"
 #include "media/MediaSection.h"
 #include "pictures/PictureScalingAlgorithm.h"
 #include "settings/lib/ISettingCallback.h"
@@ -189,6 +188,9 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     int m_musicPercentSeekBackwardBig;
     int m_videoIgnoreSecondsAtStart;
     float m_videoIgnorePercentAtEnd;
+
+    //! \brief Share of a title's samples a second shape needs before content counts as varying.
+    float m_videoContentGeometryVariesShare;
     float m_audioApplyDrc;
     unsigned int m_maxPassthroughOffSyncDuration = 50; // when 50 ms off adjust
     bool m_AllowMultiChannelFloat = false; // Android only switch to be removed in v22
@@ -316,8 +318,6 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_bNoRemoteArtWithLocalScraper{false};
     bool m_ignoreFolderNamesInArchives{true};
 
-    CLangInfo::Tokens m_vecTokens;
-
     int m_iEpgUpdateCheckInterval;  // seconds
     int m_iEpgCleanupInterval;      // seconds
     int m_iEpgActiveTagCheckInterval; // seconds
@@ -400,6 +400,9 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
 
     bool m_jsonOutputCompact;
     unsigned int m_jsonTcpPort;
+    //! Whether GUI.DeleteScreenshots is offered. Off by default: it is the only call that deletes
+    //! from disk, and the folder it clears is wherever debug.screenshotpath points.
+    bool m_jsonAllowScreenshotDeletion;
 
     bool m_enableMultimediaKeys;
     std::vector<std::string> m_settingsFiles;
@@ -409,6 +412,8 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_initialized{false};
 
     void SetDebugMode(bool debug);
+    //! Sets the level everything is logged at, which SetDebugMode also sets
+    void SetLogLevel(int level);
 
     //! \brief Toggles dirty-region visualization
     void ToggleDirtyRegionVisualization()

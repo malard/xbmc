@@ -21,6 +21,7 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoDbUrl.h"
 #include "video/VideoFileItemClassify.h"
+#include "video/VideoUtils.h"
 
 #include <memory>
 
@@ -90,15 +91,8 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         inprogress += static_cast<int>(
             item->GetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES).asInteger());
       }
-      const int totalEpisodes = watched + unwatched;
-      pItem->SetProperty("totalepisodes", totalEpisodes);
-      pItem->SetProperty("numepisodes",
-                         totalEpisodes); // will be changed later to reflect watchmode setting
-      pItem->SetProperty("watchedepisodes", watched);
-      pItem->SetProperty("unwatchedepisodes", unwatched);
+      KODI::VIDEO::UTILS::SetEpisodeCounts(*pItem, watched + unwatched, watched);
       pItem->SetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES, inprogress);
-      pItem->SetProperty("watchedepisodepercent",
-                         totalEpisodes > 0 ? watched * 100 / totalEpisodes : 0);
 
       // @note: The items list may contain additional items that do not belong to the show.
       // This is the case of the up directory (..) or movies linked to the tvshow.
@@ -109,7 +103,7 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         for (int i = 1; i < items.Size(); i++)
         {
           if (items[i]->HasVideoInfoTag() &&
-              items[i]->GetVideoInfoTag()->m_type == MediaTypeSeason &&
+              items[i]->GetVideoInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::SEASON &&
               items[i]->GetVideoInfoTag()->m_iSeason > 0)
           {
             *pItem->GetVideoInfoTag() = *items[i]->GetVideoInfoTag();
@@ -129,7 +123,7 @@ void CVideoFileItemListModifier::AddQueuingFolder(CFileItemList& items)
         pItem->GetVideoInfoTag()->m_iDbId = db.GetSeasonId(pItem->GetVideoInfoTag()->m_iIdShow, -1);
         db.Close();
       }
-      pItem->GetVideoInfoTag()->m_type = MediaTypeSeason;
+      pItem->GetVideoInfoTag()->SetMediaType(KODI::MEDIA::TYPE::SEASON);
   }
   break;
   case NodeType::MUSICVIDEOS_ALBUM:

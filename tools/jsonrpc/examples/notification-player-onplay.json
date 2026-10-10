@@ -1,0 +1,24 @@
+{
+  "title": "Notification pushed when playback of a movie starts",
+  "notification": "Player.OnPlay",
+  "message": {
+    "jsonrpc": "2.0",
+    "method": "Player.OnPlay",
+    "params": {
+      "sender": "xbmc",
+      "data": {
+        "item": {
+          "type": "movie",
+          "title": "The Matrix",
+          "year": 1999
+        },
+        "player": {
+          "players": [
+            "video"
+          ],
+          "speed": 1
+        }
+      }
+    }
+  }
+}

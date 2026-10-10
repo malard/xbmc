@@ -15,9 +15,10 @@
 #include "addons/IAddon.h"
 #include "addons/addoninfo/AddonType.h"
 #include "filesystem/Directory.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
+#include "utils/DefaultArt.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 
@@ -42,49 +43,64 @@ struct TypeMapping
 static constexpr const std::array<TypeMapping, 42> types =
   {{
    {"unknown",                           "", AddonType::UNKNOWN,                 0, AddonInstanceSupport::SUPPORT_NONE,      "" },
-   {"xbmc.metadata.scraper.albums",      "", AddonType::SCRAPER_ALBUMS,      24016, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonAlbumInfo.png" },
-   {"xbmc.metadata.scraper.artists",     "", AddonType::SCRAPER_ARTISTS,     24017, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonArtistInfo.png" },
-   {"xbmc.metadata.scraper.movies",      "", AddonType::SCRAPER_MOVIES,      24007, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonMovieInfo.png" },
-   {"xbmc.metadata.scraper.musicvideos", "", AddonType::SCRAPER_MUSICVIDEOS, 24015, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonMusicVideoInfo.png" },
-   {"xbmc.metadata.scraper.tvshows",     "", AddonType::SCRAPER_TVSHOWS,     24014, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonTvInfo.png" },
-   {"xbmc.metadata.scraper.library",     "", AddonType::SCRAPER_LIBRARY,     24083, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonInfoLibrary.png" },
-   {"xbmc.ui.screensaver",               "", AddonType::SCREENSAVER,         24008, AddonInstanceSupport::SUPPORT_OPTIONAL,  "DefaultAddonScreensaver.png" },
-   {"xbmc.player.musicviz",              "", AddonType::VISUALIZATION,       24010, AddonInstanceSupport::SUPPORT_OPTIONAL,  "DefaultAddonVisualization.png" },
+   {"xbmc.metadata.scraper.albums",      "", AddonType::SCRAPER_ALBUMS,      24016, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_ALBUM_INFO },
+   {"xbmc.metadata.scraper.artists",     "", AddonType::SCRAPER_ARTISTS,     24017, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_ARTIST_INFO },
+   {"xbmc.metadata.scraper.movies",      "", AddonType::SCRAPER_MOVIES,      24007, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_MOVIE_INFO },
+   {"xbmc.metadata.scraper.musicvideos", "", AddonType::SCRAPER_MUSICVIDEOS, 24015, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_MUSIC_VIDEO_INFO },
+   {"xbmc.metadata.scraper.tvshows",     "", AddonType::SCRAPER_TVSHOWS,     24014, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_TV_INFO },
+   {"xbmc.metadata.scraper.library",     "", AddonType::SCRAPER_LIBRARY,     24083, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_INFO_LIBRARY },
+   {"xbmc.ui.screensaver",               "", AddonType::SCREENSAVER,         24008, AddonInstanceSupport::SUPPORT_OPTIONAL,  KODI::ART::DEFAULT::ADDON_SCREENSAVER },
+   {"xbmc.player.musicviz",              "", AddonType::VISUALIZATION,       24010, AddonInstanceSupport::SUPPORT_OPTIONAL,  KODI::ART::DEFAULT::ADDON_VISUALIZATION },
    {"xbmc.python.pluginsource",          "", AddonType::PLUGIN,              24005, AddonInstanceSupport::SUPPORT_NONE,      "" },
    {"xbmc.python.script",                "", AddonType::SCRIPT,              24009, AddonInstanceSupport::SUPPORT_NONE,      "" },
-   {"xbmc.python.weather",               "", AddonType::SCRIPT_WEATHER,      24027, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonWeather.png" },
-   {"xbmc.python.lyrics",                "", AddonType::SCRIPT_LYRICS,       24013, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonLyrics.png" },
-   {"xbmc.python.library",               "", AddonType::SCRIPT_LIBRARY,      24081, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonHelper.png" },
-   {"xbmc.python.module",                "", AddonType::SCRIPT_MODULE,       24082, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonLibrary.png" },
-   {"xbmc.subtitle.module",              "", AddonType::SUBTITLE_MODULE,     24012, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonSubtitles.png" },
-   {"kodi.context.item",                 "", AddonType::CONTEXTMENU_ITEM,    24025, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonContextItem.png" },
-   {"kodi.game.controller",              "", AddonType::GAME_CONTROLLER,     35050, AddonInstanceSupport::SUPPORT_OPTIONAL,  "DefaultAddonGame.png" },
-   {"xbmc.gui.skin",                     "", AddonType::SKIN,                  166, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonSkin.png" },
-   {"xbmc.webinterface",                 "", AddonType::WEB_INTERFACE,         199, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonWebSkin.png" },
-   {"xbmc.addon.repository",             "", AddonType::REPOSITORY,          24011, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonRepository.png" },
-   {"kodi.pvrclient",      "xbmc.pvrclient", AddonType::PVRDLL,              24019, AddonInstanceSupport::SUPPORT_SETTINGS,  "DefaultAddonPVRClient.png" },
-   {"kodi.gameclient",                   "", AddonType::GAMEDLL,             35049, AddonInstanceSupport::SUPPORT_OPTIONAL,  "DefaultAddonGame.png" },
-   {"kodi.shader.presets",               "", AddonType::SHADERDLL,           35049, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonGame.png" },
-   {"kodi.peripheral",                   "", AddonType::PERIPHERALDLL,       35010, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonPeripheral.png" },
-   {"xbmc.addon.video",                  "", AddonType::VIDEO,                1037, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonVideo.png" },
-   {"xbmc.addon.audio",                  "", AddonType::AUDIO,                1038, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonMusic.png" },
-   {"xbmc.addon.image",                  "", AddonType::IMAGE,                1039, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonPicture.png" },
-   {"xbmc.addon.executable",             "", AddonType::EXECUTABLE,           1043, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonProgram.png" },
-   {"kodi.addon.game",                   "", AddonType::GAME,                35049, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonGame.png" },
-   {"kodi.audioencoder",                 "", AddonType::AUDIOENCODER,          200, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonAudioEncoder.png" },
-   {"kodi.audiodecoder",                 "", AddonType::AUDIODECODER,          201, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonAudioDecoder.png" },
-   {"xbmc.service",                      "", AddonType::SERVICE,             24018, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonService.png" },
-   {"kodi.resource.images",              "", AddonType::RESOURCE_IMAGES,     24035, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonImages.png" },
-   {"kodi.resource.language",            "", AddonType::RESOURCE_LANGUAGE,   24026, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonLanguage.png" },
-   {"kodi.resource.uisounds",            "", AddonType::RESOURCE_UISOUNDS,   24006, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonUISounds.png" },
-   {"kodi.resource.games",               "", AddonType::RESOURCE_GAMES,      35209, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonGame.png" },
-   {"kodi.resource.font",                "", AddonType::RESOURCE_FONT,       13303, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonFont.png" },
-   {"kodi.resource.skin",                "", AddonType::RESOURCE_SKIN,           0, AddonInstanceSupport::SUPPORT_NONE,      "DefaultAddonSkin.png" },
-   {"kodi.inputstream",                  "", AddonType::INPUTSTREAM,         24048, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonInputstream.png" },
-   {"kodi.vfs",                          "", AddonType::VFS,                 39013, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonVfs.png" },
-   {"kodi.imagedecoder",                 "", AddonType::IMAGEDECODER,        39015, AddonInstanceSupport::SUPPORT_MANDATORY, "DefaultAddonImageDecoder.png" },
+   {"xbmc.python.weather",               "", AddonType::SCRIPT_WEATHER,      24027, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_WEATHER },
+   {"xbmc.python.lyrics",                "", AddonType::SCRIPT_LYRICS,       24013, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_LYRICS },
+   {"xbmc.python.library",               "", AddonType::SCRIPT_LIBRARY,      24081, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_HELPER },
+   {"xbmc.python.module",                "", AddonType::SCRIPT_MODULE,       24082, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_LIBRARY },
+   {"xbmc.subtitle.module",              "", AddonType::SUBTITLE_MODULE,     24012, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_SUBTITLES },
+   {"kodi.context.item",                 "", AddonType::CONTEXTMENU_ITEM,    24025, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_CONTEXT_ITEM },
+   {"kodi.game.controller",              "", AddonType::GAME_CONTROLLER,     35050, AddonInstanceSupport::SUPPORT_OPTIONAL,  KODI::ART::DEFAULT::ADDON_GAME },
+   {"xbmc.gui.skin",                     "", AddonType::SKIN,                  166, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_SKIN },
+   {"xbmc.webinterface",                 "", AddonType::WEB_INTERFACE,         199, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_WEB_SKIN },
+   {"xbmc.addon.repository",             "", AddonType::REPOSITORY,          24011, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_REPOSITORY },
+   {"kodi.pvrclient",      "xbmc.pvrclient", AddonType::PVRDLL,              24019, AddonInstanceSupport::SUPPORT_SETTINGS,  KODI::ART::DEFAULT::ADDON_PVR_CLIENT },
+   {"kodi.gameclient",                   "", AddonType::GAMEDLL,             35049, AddonInstanceSupport::SUPPORT_OPTIONAL,  KODI::ART::DEFAULT::ADDON_GAME },
+   {"kodi.shader.presets",               "", AddonType::SHADERDLL,           35049, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_GAME },
+   {"kodi.peripheral",                   "", AddonType::PERIPHERALDLL,       35010, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_PERIPHERAL },
+   {"xbmc.addon.video",                  "", AddonType::VIDEO,                1037, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_VIDEO },
+   {"xbmc.addon.audio",                  "", AddonType::AUDIO,                1038, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_MUSIC },
+   {"xbmc.addon.image",                  "", AddonType::IMAGE,                1039, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_PICTURE },
+   {"xbmc.addon.executable",             "", AddonType::EXECUTABLE,           1043, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_PROGRAM },
+   {"kodi.addon.game",                   "", AddonType::GAME,                35049, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_GAME },
+   {"kodi.audioencoder",                 "", AddonType::AUDIOENCODER,          200, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_AUDIO_ENCODER },
+   {"kodi.audiodecoder",                 "", AddonType::AUDIODECODER,          201, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_AUDIO_DECODER },
+   {"xbmc.service",                      "", AddonType::SERVICE,             24018, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_SERVICE },
+   {"kodi.resource.images",              "", AddonType::RESOURCE_IMAGES,     24035, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_IMAGES },
+   {"kodi.resource.language",            "", AddonType::RESOURCE_LANGUAGE,   24026, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_LANGUAGE },
+   {"kodi.resource.uisounds",            "", AddonType::RESOURCE_UISOUNDS,   24006, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_UI_SOUNDS },
+   {"kodi.resource.games",               "", AddonType::RESOURCE_GAMES,      35209, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_GAME },
+   {"kodi.resource.font",                "", AddonType::RESOURCE_FONT,       13303, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_FONT },
+   {"kodi.resource.skin",                "", AddonType::RESOURCE_SKIN,           0, AddonInstanceSupport::SUPPORT_NONE,      KODI::ART::DEFAULT::ADDON_SKIN },
+   {"kodi.inputstream",                  "", AddonType::INPUTSTREAM,         24048, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_INPUTSTREAM },
+   {"kodi.vfs",                          "", AddonType::VFS,                 39013, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_VFS },
+   {"kodi.imagedecoder",                 "", AddonType::IMAGEDECODER,        39015, AddonInstanceSupport::SUPPORT_MANDATORY, KODI::ART::DEFAULT::ADDON_IMAGE_DECODER },
   }};
 // clang-format on
+
+struct SubContentName
+{
+  std::string_view name;
+  AddonType type;
+};
+
+//! The content a plugin can provide, by the name it gives it
+constexpr std::array<SubContentName, 5> SUB_CONTENT_NAMES{{
+    {"audio", AddonType::AUDIO},
+    {"image", AddonType::IMAGE},
+    {"executable", AddonType::EXECUTABLE},
+    {"video", AddonType::VIDEO},
+    {"game", AddonType::GAME},
+}};
 
 const std::string& CAddonInfo::OriginName() const
 {
@@ -142,18 +158,14 @@ std::string CAddonInfo::TranslateIconType(AddonType type)
 
 AddonType CAddonInfo::TranslateSubContent(std::string_view content)
 {
-  if (content == "audio")
-    return AddonType::AUDIO;
-  else if (content == "image")
-    return AddonType::IMAGE;
-  else if (content == "executable")
-    return AddonType::EXECUTABLE;
-  else if (content == "video")
-    return AddonType::VIDEO;
-  else if (content == "game")
-    return AddonType::GAME;
-  else
-    return AddonType::UNKNOWN;
+  const auto it = std::ranges::find(SUB_CONTENT_NAMES, content, &SubContentName::name);
+  return it != SUB_CONTENT_NAMES.end() ? it->type : AddonType::UNKNOWN;
+}
+
+std::string_view CAddonInfo::SubContentNameOf(AddonType type)
+{
+  const auto it = std::ranges::find(SUB_CONTENT_NAMES, type, &SubContentName::type);
+  return it != SUB_CONTENT_NAMES.end() ? it->name : std::string_view{};
 }
 
 AddonInstanceSupport CAddonInfo::InstanceSupportType(AddonType type)
@@ -247,21 +259,57 @@ const CAddonVersion& CAddonInfo::DependencyVersion(const std::string& dependency
   return emptyVersion;
 }
 
-const std::string& CAddonInfo::GetTranslatedText(const CLocale::LocalizedStringsMap& locales) const
+namespace
+{
+//! Higher is better; -1 where the candidate names a different language altogether
+int MatchRank(const KODI::LANGUAGE::CLanguageTag& wanted,
+              const KODI::LANGUAGE::CLanguageTag& candidate)
+{
+  if (!wanted.Matches(candidate))
+    return -1;
+
+  // A translation for the same place is the better match, so two tags naming no place are not
+  // a better match than any other - only two naming the same one are
+  const KODI::LANGUAGE::CTerritory territory{wanted.GetTerritory()};
+
+  return territory != KODI::LANGUAGE::CTerritory{} && territory == candidate.GetTerritory() ? 1 : 0;
+}
+} // namespace
+
+const std::string& CAddonInfo::GetTranslatedText(const LocalizedStringsMap& locales) const
 {
   if (locales.size() == 1)
     return locales.begin()->second;
   else if (locales.empty())
     return StringUtils::Empty;
 
-  // find the language from the list that matches the current locale best
-  std::string matchingLanguage = g_langInfo.GetLocale().FindBestMatch(locales);
-  if (matchingLanguage.empty())
-    matchingLanguage = KODI_ADDON_DEFAULT_LANGUAGE_CODE;
+  static const KODI::LANGUAGE::CLanguageTag fallback{
+      KODI::LANGUAGE::CLanguageTag::Parse(KODI_ADDON_DEFAULT_LANGUAGE_CODE)};
+  const KODI::LANGUAGE::CLanguageTag& wanted{KODI::LANGUAGE::CLanguage::GetInstance().UI()};
+  const std::string* bestText{nullptr};
+  const std::string* fallbackText{nullptr};
+  int bestRank = -1;
 
-  auto const& translatedValue = locales.find(matchingLanguage);
-  if (translatedValue != locales.end())
-    return translatedValue->second;
+  for (const auto& [locale, text] : locales)
+  {
+    const KODI::LANGUAGE::CLanguageTag candidate{KODI::LANGUAGE::CLanguageTag::Parse(locale)};
+    if (wanted == candidate)
+      return text;
+
+    if (candidate == fallback)
+      fallbackText = &text;
+
+    if (const int rank = MatchRank(wanted, candidate); rank > bestRank)
+    {
+      bestRank = rank;
+      bestText = &text;
+    }
+  }
+
+  if (bestText)
+    return *bestText;
+  if (fallbackText)
+    return *fallbackText;
   return StringUtils::Empty;
 }
 

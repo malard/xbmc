@@ -24,14 +24,16 @@
 #include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
+#include "filesystem/AddonsDirectory.h"
+#include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
 #include "media/MediaLockState.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "pictures/SlideShowDelegator.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -170,7 +172,8 @@ void CGUIWindowPictures::UpdateButtons()
   // check we can slideshow or recursive slideshow
   int nFolders = m_vecItems->GetFolderCount();
   if (nFolders == m_vecItems->Size() ||
-      m_vecItems->GetPath() == "addons://sources/image/")
+      m_vecItems->GetPath() ==
+          XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::PICTURES))
   {
     CONTROL_DISABLE(CONTROL_BTNSLIDESHOW);
   }
@@ -181,7 +184,8 @@ void CGUIWindowPictures::UpdateButtons()
   if (m_guiState.get() && !m_guiState->HideParentDirItems())
     nFolders--;
   if (m_vecItems->Size() == 0 || nFolders == 0 ||
-      m_vecItems->GetPath() == "addons://sources/image/")
+      m_vecItems->GetPath() ==
+          XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::PICTURES))
   {
     CONTROL_DISABLE(CONTROL_BTNSLIDESHOW_RECURSIVE);
   }
@@ -449,7 +453,7 @@ void CGUIWindowPictures::GetContextButtons(int itemNumber, CContextButtons &butt
 
   if (item)
   {
-    if ( m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->GetPath() == "sources://pictures/" )
+    if ( m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->GetPath() == CSourcesDirectory::PathOf(MediaSection::PICTURES))
     {
       CGUIDialogContextMenu::GetContextButtons(MediaSection::PICTURES, item, buttons);
     }
@@ -540,18 +544,15 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
   CLog::Log(LOGDEBUG,
             "CGUIWindowPictures::LoadPlayList()... converting playlist into slideshow: {}",
             strPlayList);
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (nullptr != pPlayList)
+  const auto pPlayList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!pPlayList)
   {
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return ; //hmmm unable to load playlist?
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return ; //hmmm unable to load playlist?
   }
 
-  PLAYLIST::CPlayList playlist = *pPlayList;
-  if (playlist.size() > 0)
+  const PLAYLIST::CPlayListFile& playlist = *pPlayList;
+  if (!playlist.IsEmpty())
   {
     //! @todo this should be reactive, based on a given event app player should stop the playback
     const auto& components = CServiceBroker::GetAppComponents();
@@ -562,10 +563,8 @@ void CGUIWindowPictures::LoadPlayList(const std::string& strPlayList)
     CSlideShowDelegator& slideShow = CServiceBroker::GetSlideShowDelegator();
     // convert playlist items into slideshow items
     slideShow.Reset();
-    for (int i = 0; i < playlist.size(); ++i)
+    for (const CFileItemPtr& pItem : playlist.GetItems())
     {
-      CFileItemPtr pItem = playlist[i];
-      //CLog::Log(LOGDEBUG,"-- playlist item: {}", pItem->GetPath());
       if (pItem->IsPicture() && !(pItem->IsZIP() || pItem->IsRAR() || pItem->IsCBZ() || pItem->IsCBR()))
       {
         slideShow.Add(pItem.get());
@@ -606,7 +605,7 @@ std::string CGUIWindowPictures::GetStartFolder(const std::string &dir)
 {
   if (StringUtils::EqualsNoCase(dir, "plugins") ||
       StringUtils::EqualsNoCase(dir, "addons"))
-    return "addons://sources/image/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::PICTURES);
 
   SetupShares();
   std::vector<CMediaSource> shares;

@@ -21,7 +21,7 @@
 #include "filesystem/BlurayCallback.h"
 #include "filesystem/Directory.h"
 #include "filesystem/DirectoryFactory.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #if defined(HAS_UDFREAD)
 #include "filesystem/UDFContext.h"
 #endif
@@ -373,6 +373,14 @@ void AddPlaylists(const CURL& url,
   for (auto& title : playlists)
     items.Add(GetFileItem(url, realPath, title, clipCache, StreamDetails::DEFER));
 }
+
+//! The streams' languages, comma separated
+template<typename Streams>
+std::string LanguagesOf(const Streams& streams)
+{
+  const auto language = [](const auto& stream) { return stream.language.ToString(); };
+  return fmt::format("{}", fmt::join(streams | std::views::transform(language), ","));
+}
 } // namespace
 
 bool CBlurayDirectory::GetPlaylists(const CURL& url,
@@ -463,11 +471,7 @@ void CBlurayDirectory::ProcessPlaylist(PlaylistMap& playlists,
   }
 
   // Get languages
-  titleInfo.languages =
-      fmt::format("{}", fmt::join(titleInfo.audioStreams |
-                                      std::views::transform([](const auto& stream)
-                                                            { return stream.language.AsBcp47(); }),
-                                  ","));
+  titleInfo.languages = LanguagesOf(titleInfo.audioStreams);
 
   // Saved as a whole, so a field added to PlaylistInformation reaches the playlist map without
   // having to be added here too
@@ -520,11 +524,7 @@ bool CBlurayDirectory::GetPlaylistsInformation(const CURL& url,
 
       CLog::LogF(LOGDEBUG, "Playlist {}, Duration {}, Langs {}, Subs {}, Clips {} ", playlist,
                  title->GetVideoInfoTag()->GetDuration(), titleInfo.languages,
-                 fmt::join(titleInfo.pgStreams |
-                               std::views::transform([](const auto& stream)
-                                                     { return stream.language.AsBcp47(); }),
-                           ","),
-                 fmt::join(titleInfo.clips, ","));
+                 LanguagesOf(titleInfo.pgStreams), fmt::join(titleInfo.clips, ","));
     }
 
     // List clip info (automatically sorted as map)
@@ -977,7 +977,7 @@ bool CBlurayDirectory::EnsureBlurayOpen()
     return false;
   }
 
-  const std::string menuLang{g_langInfo.GetDVDMenuLanguage().AsIso6392T()};
+  const std::string menuLang{KODI::LANGUAGE::CLanguage::GetInstance().UI().AsIso6392T()};
   bd_set_player_setting_str(m_bd, BLURAY_PLAYER_SETTING_MENU_LANG, menuLang.c_str());
 
   if (!bd_open_files(m_bd, &m_realPath, CBlurayCallback::dir_open, CBlurayCallback::file_open))

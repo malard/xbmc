@@ -19,6 +19,7 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "filesystem/Directory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUILabelControl.h"
@@ -32,6 +33,7 @@
 #include "pictures/GUIViewStatePictures.h"
 #include "pictures/PictureThumbLoader.h"
 #include "pictures/SlideShowDelegator.h"
+#include "playlists/PlayList.h"
 #include "playlists/PlayListTypes.h"
 #include "rendering/RenderSystem.h"
 #include "resources/LocalizeStrings.h"
@@ -48,7 +50,11 @@
 #include "video/VideoFileItemClassify.h"
 #include "windowing/WinSystem.h"
 
+#include <algorithm>
 #include <memory>
+#include <optional>
+#include <utility>
+#include <variant>
 
 using namespace KODI;
 using namespace KODI::VIDEO;
@@ -162,68 +168,53 @@ CGUIWindowSlideShow::~CGUIWindowSlideShow()
   CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this);
 }
 
-void CGUIWindowSlideShow::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                   const std::string& sender,
-                                   const std::string& message,
-                                   const CVariant& data)
+void CGUIWindowSlideShow::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
-  if (message == "OnPlay" || message == "OnResume")
-  {
-    if (data.isMember("player") && data["player"].isMember("playerid") &&
-        data["player"]["playerid"] == static_cast<int>(PLAYLIST::Id::TYPE_VIDEO))
-      Close();
-  }
+  namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+  std::optional<std::pair<const CFileItem*, KODI::MEDIA::Streams>> started;
+  if (const auto* play = std::get_if<PLAYER::Play>(&event))
+    started.emplace(play->item.get(), play->streams);
+  else if (const auto* resume = std::get_if<PLAYER::Resume>(&event))
+    started.emplace(resume->item.get(), resume->streams);
+
+  // video playback takes over the screen from the slideshow
+  if (started && KODI::MEDIA::HasVideo(started->second) && !PLAYER::IsPicture(started->first))
+    Close();
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerPlay(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["speed"] = m_bSlideShow && !m_bPause ? 1 : 0;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPlay", item, param);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
+      CPlaybackAnnouncer::SlideShowEvent::Play, item, m_bSlideShow && !m_bPause);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerPause(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["speed"] = 0;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPause", item, param);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
+      CPlaybackAnnouncer::SlideShowEvent::Pause, item, false);
 }
 
 void CGUIWindowSlideShow::AnnouncePlayerStop(const CFileItemPtr& item)
 {
-  CVariant param;
-  param["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  param["end"] = true;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnStop", item, param);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShow(
+      CPlaybackAnnouncer::SlideShowEvent::Stop, item, false);
 }
 
 void CGUIWindowSlideShow::AnnouncePlaylistClear()
 {
-  CVariant data;
-  data["playlistid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnClear", data);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShowListChanged(
+      {PLAYLIST::PlayListChange::Type::Cleared});
 }
 
 void CGUIWindowSlideShow::AnnouncePlaylistAdd(const CFileItemPtr& item, int pos)
 {
-  CVariant data;
-  data["playlistid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  data["position"] = pos;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Playlist, "OnAdd", item, data);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShowListChanged(
+      {PLAYLIST::PlayListChange::Type::Added, PLAYLIST::NO_ENTRY, pos, item});
 }
 
-void CGUIWindowSlideShow::AnnouncePropertyChanged(const std::string &strProperty, const CVariant &value)
+void CGUIWindowSlideShow::AnnounceShuffled()
 {
-  if (strProperty.empty() || value.isNull())
-    return;
-
-  CVariant data;
-  data["player"]["playerid"] = static_cast<int>(PLAYLIST::Id::TYPE_PICTURE);
-  data["property"][strProperty] = value;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "OnPropertyChanged",
-                                                     data);
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->OnSlideShowShuffled();
 }
 
 bool CGUIWindowSlideShow::IsPlaying() const
@@ -272,12 +263,6 @@ void CGUIWindowSlideShow::Reset()
 
 void CGUIWindowSlideShow::OnDeinitWindow(int nextWindowID)
 {
-  if (m_Resolution != CDisplaySettings::GetInstance().GetCurrentResolution())
-  {
-    //FIXME: Use GUI resolution for now
-    //CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(CDisplaySettings::GetInstance().GetCurrentResolution(), true);
-  }
-
   if (nextWindowID != WINDOW_FULLSCREEN_VIDEO &&
       nextWindowID != WINDOW_FULLSCREEN_GAME)
   {
@@ -409,7 +394,8 @@ void CGUIWindowSlideShow::SetDirection(int direction)
 
 void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &regions)
 {
-  const RESOLUTION_INFO res = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+  const RESOLUTION_INFO res = winSystem->GetGfxContext().GetResInfo();
 
   // reset the screensaver if we're in a slideshow
   // (unless we are the screensaver!)
@@ -425,8 +411,8 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
   if (!HasProcessed())
   {
     regions.emplace_back(CRect(
-        0.0f, 0.0f, static_cast<float>(CServiceBroker::GetWinSystem()->GetGfxContext().GetWidth()),
-        static_cast<float>(CServiceBroker::GetWinSystem()->GetGfxContext().GetHeight())));
+        0.0f, 0.0f, static_cast<float>(winSystem->GetGfxContext().GetWidth()),
+        static_cast<float>(winSystem->GetGfxContext().GetHeight())));
     MarkDirtyRegion();
   }
 
@@ -512,8 +498,8 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
   if (m_bErrorMessage)
   { // hack, just mark it all
     regions.emplace_back(CRect(
-        0.0f, 0.0f, static_cast<float>(CServiceBroker::GetWinSystem()->GetGfxContext().GetWidth()),
-        static_cast<float>(CServiceBroker::GetWinSystem()->GetGfxContext().GetHeight())));
+        0.0f, 0.0f, static_cast<float>(winSystem->GetGfxContext().GetWidth()),
+        static_cast<float>(winSystem->GetGfxContext().GetHeight())));
     MarkDirtyRegion();
     return;
   }
@@ -636,7 +622,6 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
     {
       if (m_pBackgroundLoader->IsLoading())
       {
-        //        CLog::Log(LOGDEBUG, "Having to hold the current image ({}) while we load {}", m_vecSlides[m_iCurrentSlide], m_vecSlides[m_iNextSlide]);
         m_Image[m_iCurrentPic]->Keep();
       }
     }
@@ -705,7 +690,7 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
     MarkDirtyRegion();
   }
   CGUIWindow::Process(currentTime, regions);
-  m_renderRegion.SetRect(0, 0, (float)CServiceBroker::GetWinSystem()->GetGfxContext().GetWidth(), (float)CServiceBroker::GetWinSystem()->GetGfxContext().GetHeight());
+  m_renderRegion.SetRect(0, 0, (float)winSystem->GetGfxContext().GetWidth(), (float)winSystem->GetGfxContext().GetHeight());
 }
 
 void CGUIWindowSlideShow::Render()
@@ -1042,7 +1027,7 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
     {
       m_Resolution = (RESOLUTION) CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_PICTURES_DISPLAYRESOLUTION);
 
-      //FIXME: Use GUI resolution for now
+      //! @todo use the video resolution rather than the GUI resolution
       if (false /*m_Resolution != CDisplaySettings::GetInstance().GetCurrentResolution() && m_Resolution != INVALID && m_Resolution!=AUTORES*/)
         CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(m_Resolution, false);
       else
@@ -1091,11 +1076,6 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
       }
       RunSlideShow(strFolder, bRecursive, bRandom, bNotRandom, beginSlidePath, !bPause);
     }
-    break;
-
-    case GUI_MSG_PLAYLISTPLAYER_STOPPED:
-      {
-      }
       break;
 
     case GUI_MSG_PLAYBACK_STOPPED:
@@ -1213,8 +1193,7 @@ bool CGUIWindowSlideShow::PlayVideo()
   CLog::Log(LOGDEBUG, "Playing current video slide {}", item->GetPath());
   m_bPlayingVideo = true;
   m_iVideoSlide = m_iCurrentSlide;
-  bool ret = g_application.PlayFile(*item, "");
-  if (ret == true)
+  if (g_application.PlayFile(*item) != CApplication::PlayResult::Failed)
     return true;
   else
   {
@@ -1293,7 +1272,7 @@ void CGUIWindowSlideShow::Shuffle()
   m_iNextSlide = GetNextSlide();
   m_bShuffled = true;
 
-  AnnouncePropertyChanged("shuffled", true);
+  AnnounceShuffled();
 }
 
 int CGUIWindowSlideShow::NumSlides() const

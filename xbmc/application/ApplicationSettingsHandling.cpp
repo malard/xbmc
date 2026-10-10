@@ -15,6 +15,7 @@
 #include "addons/addoninfo/AddonType.h"
 #include "addons/gui/GUIDialogAddonSettings.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationContentGeometry.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
 #include "application/ApplicationSkinHandling.h"
@@ -27,6 +28,7 @@
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
 #include "settings/lib/SettingsManager.h"
+#include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
 
 #if defined(TARGET_DARWIN_OSX)
@@ -54,35 +56,41 @@ void CApplicationSettingsHandling::RegisterSettings()
 
   settingsMgr->RegisterCallback(this, {
                                           CSettings::SETTING_AUDIOOUTPUT_PASSTHROUGH,
-                                          CSettings::SETTING_LOOKANDFEEL_SKIN,
                                           CSettings::SETTING_LOOKANDFEEL_SKINSETTINGS,
-                                          CSettings::SETTING_LOOKANDFEEL_FONT,
-                                          CSettings::SETTING_LOOKANDFEEL_SKINTHEME,
-                                          CSettings::SETTING_LOOKANDFEEL_SKINCOLORS,
-                                          CSettings::SETTING_LOOKANDFEEL_SKINZOOM,
-                                          CSettings::SETTING_MUSICPLAYER_REPLAYGAINPREAMP,
-                                          CSettings::SETTING_MUSICPLAYER_REPLAYGAINNOGAINPREAMP,
-                                          CSettings::SETTING_MUSICPLAYER_REPLAYGAINTYPE,
-                                          CSettings::SETTING_MUSICPLAYER_REPLAYGAINAVOIDCLIPPING,
-                                          CSettings::SETTING_SCRAPERS_MUSICVIDEOSDEFAULT,
-                                          CSettings::SETTING_SCREENSAVER_MODE,
-                                          CSettings::SETTING_SCREENSAVER_PREVIEW,
-                                          CSettings::SETTING_SCREENSAVER_SETTINGS,
                                           CSettings::SETTING_AUDIOCDS_SETTINGS,
                                           CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION,
-                                          CSettings::SETTING_VIDEOSCREEN_TESTPATTERN,
-                                          CSettings::SETTING_VIDEOPLAYER_USEMEDIACODEC,
-                                          CSettings::SETTING_VIDEOPLAYER_USEMEDIACODECSURFACE,
-                                          CSettings::SETTING_VIDEOPLAYER_USEDECODERFILTER,
-                                          CSettings::SETTING_AUDIOOUTPUT_VOLUMESTEPS,
+                                          CSettings::SETTING_VIDEOSCREEN_SCREENALIGNMENT,
+                                          CSettings::SETTING_VIDEOSCREEN_CALIBRATIONALIGNMENT,
                                           CSettings::SETTING_SOURCE_VIDEOS,
                                           CSettings::SETTING_SOURCE_MUSIC,
                                           CSettings::SETTING_SOURCE_PICTURES,
+                                          CSettings::SETTING_VIDEOSCREEN_RASTERASPECT,
+                                          CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE,
+                                          CSettings::SETTING_VIDEOSCREEN_GUISURROUND,
+                                          CSettings::SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR,
+                                          CSettings::SETTING_VIDEOSCREEN_GUISURROUNDIMAGE,
                                           CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN,
                                           CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS,
                                       });
 
   auto& components = CServiceBroker::GetAppComponents();
+  settingsMgr->RegisterCallback(
+      components.GetComponent<CApplicationSkinHandling>().get(),
+      {CSettings::SETTING_LOOKANDFEEL_SKIN, CSettings::SETTING_LOOKANDFEEL_FONT,
+       CSettings::SETTING_LOOKANDFEEL_SKINTHEME, CSettings::SETTING_LOOKANDFEEL_SKINCOLORS,
+       CSettings::SETTING_LOOKANDFEEL_SKINZOOM});
+  settingsMgr->RegisterCallback(components.GetComponent<CApplicationVolumeHandling>().get(),
+                                {CSettings::SETTING_MUSICPLAYER_REPLAYGAINPREAMP,
+                                 CSettings::SETTING_MUSICPLAYER_REPLAYGAINNOGAINPREAMP,
+                                 CSettings::SETTING_MUSICPLAYER_REPLAYGAINTYPE,
+                                 CSettings::SETTING_MUSICPLAYER_REPLAYGAINAVOIDCLIPPING});
+  settingsMgr->RegisterCallback(components.GetComponent<CApplicationPowerHandling>().get(),
+                                {CSettings::SETTING_SCREENSAVER_MODE,
+                                 CSettings::SETTING_SCREENSAVER_PREVIEW,
+                                 CSettings::SETTING_SCREENSAVER_SETTINGS});
+
+  ApplyRasterSettings();
+
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   if (!appPlayer)
     return;
@@ -93,6 +101,16 @@ void CApplicationSettingsHandling::RegisterSettings()
        CSettings::SETTING_MUSICPLAYER_SEEKDELAY, CSettings::SETTING_MUSICPLAYER_SEEKSTEPS});
 
   settingsMgr->AddDynamicCondition("isplaying", IsPlaying);
+
+  const auto contentGeometry = components.GetComponent<CApplicationContentGeometry>();
+  settingsMgr->RegisterCallback(contentGeometry.get(),
+                                {CSettings::SETTING_VIDEOSCREEN_RASTERASPECT,
+                                 CSettings::SETTING_VIDEOSCREEN_VARIABLECONTENTGEOMETRY,
+                                 CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE,
+                                 CSettings::SETTING_VIDEOSCREEN_GUISURROUND,
+                                 CSettings::SETTING_VIDEOSCREEN_OSDPLAYING});
+  contentGeometry->RefreshOsdPlacement();
+  contentGeometry->RefreshAtRest();
 
   settings->RegisterSubSettings(this);
 }
@@ -108,7 +126,12 @@ void CApplicationSettingsHandling::UnregisterSettings()
 
   settings->UnregisterSubSettings(this);
   settingsMgr->RemoveDynamicCondition("isplaying");
+  settingsMgr->UnregisterCallback(components.GetComponent<CApplicationContentGeometry>().get());
+
   settingsMgr->UnregisterCallback(&appPlayer->GetSeekHandler());
+  settingsMgr->UnregisterCallback(components.GetComponent<CApplicationSkinHandling>().get());
+  settingsMgr->UnregisterCallback(components.GetComponent<CApplicationVolumeHandling>().get());
+  settingsMgr->UnregisterCallback(components.GetComponent<CApplicationPowerHandling>().get());
   settingsMgr->UnregisterCallback(this);
   settingsMgr->UnregisterSettingsHandler(this);
 }
@@ -118,26 +141,13 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
   if (!setting)
     return;
 
-  auto& components = CServiceBroker::GetAppComponents();
-  const auto appSkin = components.GetComponent<CApplicationSkinHandling>();
-  if (appSkin->OnSettingChanged(*setting))
-    return;
-
-  const auto appVolume = components.GetComponent<CApplicationVolumeHandling>();
-  if (appVolume->OnSettingChanged(*setting))
-    return;
-
-  const auto appPower = components.GetComponent<CApplicationPowerHandling>();
-  if (appPower->OnSettingChanged(*setting))
-    return;
-
   const std::string& settingId = setting->GetId();
 
   if (settingId == CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN)
   {
-    if (CServiceBroker::GetWinSystem()->GetGfxContext().IsFullScreenRoot())
-      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(
-          CServiceBroker::GetWinSystem()->GetGfxContext().GetVideoResolution(), true);
+    CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+    if (winSystem->GetGfxContext().IsFullScreenRoot())
+      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(), true);
   }
   else if (settingId == CSettings::SETTING_AUDIOOUTPUT_PASSTHROUGH)
   {
@@ -152,6 +162,64 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
   }
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_RASTERASPECT)
+  {
+    ApplyRasterChange();
+  }
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE)
+  {
+    ApplyRasterSettings();
+  }
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_GUISURROUND ||
+           settingId == CSettings::SETTING_VIDEOSCREEN_GUISURROUNDCOLOUR ||
+           settingId == CSettings::SETTING_VIDEOSCREEN_GUISURROUNDIMAGE)
+  {
+    auto* const gui = CServiceBroker::GetGUI();
+    if (gui)
+    {
+      gui->GetWindowManager().InvalidateSurround();
+      gui->GetWindowManager().MarkDirty();
+    }
+  }
+}
+
+void CApplicationSettingsHandling::ApplyRasterChange()
+{
+  if (CServiceBroker::GetGUI())
+    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr,
+                                               "ReloadSkin");
+  else
+    ApplyRasterSettings();
+}
+
+void CApplicationSettingsHandling::ApplyRasterSettings()
+{
+  auto* const winSystem = CServiceBroker::GetWinSystem();
+  if (!winSystem)
+    return;
+
+  CGraphicContext& context = winSystem->GetGfxContext();
+
+  const auto contentGeometry =
+      CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>();
+  const float aspect = contentGeometry->RasterAspect();
+  const bool keepShape = CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_VIDEOSCREEN_GUIKEEPSHAPE);
+
+  if (aspect == context.GetRasterAspect() && keepShape == context.GetGuiKeepShape())
+    return;
+
+  context.SetRasterAspect(aspect);
+  context.SetGuiKeepShape(keepShape);
+
+  auto* const gui = CServiceBroker::GetGUI();
+  if (gui)
+  {
+    CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_WINDOW_RESIZE);
+    gui->GetWindowManager().SendThreadMessage(msg);
+  }
+
+  contentGeometry->RefreshAtRest();
 }
 
 void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const CSetting>& setting)
@@ -159,14 +227,10 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
   if (!setting)
     return;
 
-  auto& components = CServiceBroker::GetAppComponents();
-  const auto appPower = components.GetComponent<CApplicationPowerHandling>();
-  if (appPower->OnSettingAction(*setting))
-    return;
-
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   const std::string& settingId = setting->GetId();
   if (settingId == CSettings::SETTING_LOOKANDFEEL_SKINSETTINGS)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SKIN_SETTINGS);
+    windowManager.ActivateWindow(WINDOW_SKIN_SETTINGS);
   else if (settingId == CSettings::SETTING_AUDIOCDS_SETTINGS)
   {
     ADDON::AddonPtr addon;
@@ -177,19 +241,22 @@ void CApplicationSettingsHandling::OnSettingAction(const std::shared_ptr<const C
       CGUIDialogAddonSettings::ShowForAddon(addon);
   }
   else if (settingId == CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_SCREEN_CALIBRATION);
+    windowManager.ActivateWindow(WINDOW_SCREEN_CALIBRATION);
+  else if (settingId == CSettings::SETTING_VIDEOSCREEN_SCREENALIGNMENT ||
+           settingId == CSettings::SETTING_VIDEOSCREEN_CALIBRATIONALIGNMENT)
+    windowManager.ActivateWindow(WINDOW_SCREEN_ALIGNMENT);
   else if (settingId == CSettings::SETTING_SOURCE_VIDEOS)
   {
-    std::vector<std::string> params{KODI::LIBRARY::VIDEO_FILES, "return"};
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_NAV, params);
+    std::vector<std::string> params{KODI::MEDIA::LIBRARY_PATH::VIDEO_FILES, "return"};
+    windowManager.ActivateWindow(WINDOW_VIDEO_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_MUSIC)
   {
-    std::vector<std::string> params{KODI::LIBRARY::MUSIC_FILES, "return"};
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_NAV, params);
+    std::vector<std::string> params{KODI::MEDIA::LIBRARY_PATH::MUSIC_FILES, "return"};
+    windowManager.ActivateWindow(WINDOW_MUSIC_NAV, params);
   }
   else if (settingId == CSettings::SETTING_SOURCE_PICTURES)
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_PICTURES);
+    windowManager.ActivateWindow(WINDOW_PICTURES);
 }
 
 bool CApplicationSettingsHandling::OnSettingUpdate(const std::shared_ptr<CSetting>& setting,

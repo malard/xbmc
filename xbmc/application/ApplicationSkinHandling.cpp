@@ -13,7 +13,6 @@
 #include "GUIInfoManager.h"
 #include "GUILargeTextureManager.h"
 #include "GUIUserMessages.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
 #include "URL.h"
@@ -22,8 +21,11 @@
 #include "addons/Skin.h"
 #include "addons/addoninfo/AddonType.h"
 #include "application/ApplicationComponents.h"
+#include "application/ApplicationPlayLists.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationPowerHandling.h"
+#include "application/ApplicationSettingsHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "dialogs/GUIDialogButtonMenu.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogSubMenu.h"
@@ -65,6 +67,7 @@ CApplicationSkinHandling::CApplicationSkinHandling(IMsgTargetCallback* msgCb,
 
 bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
 {
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   std::shared_ptr<ADDON::CSkinInfo> skin;
   {
     ADDON::AddonPtr addon;
@@ -92,27 +95,23 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     if (bPreviousPlayingState)
       appPlayer->Pause();
     appPlayer->FlushRenderer();
-    if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+    const int activeWindow = windowManager.GetActiveWindow();
+    if (activeWindow == WINDOW_FULLSCREEN_VIDEO || activeWindow == WINDOW_FULLSCREEN_GAME)
     {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_HOME);
-      previousRenderingState = RENDERING_STATE::VIDEO;
-    }
-    else if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() ==
-             WINDOW_FULLSCREEN_GAME)
-    {
-      CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_HOME);
-      previousRenderingState = RENDERING_STATE::GAME;
+      windowManager.ActivateWindow(WINDOW_HOME);
+      previousRenderingState =
+          activeWindow == WINDOW_FULLSCREEN_VIDEO ? RENDERING_STATE::VIDEO : RENDERING_STATE::GAME;
     }
   }
 
   std::unique_lock lock(CServiceBroker::GetWinSystem()->GetGfxContext());
 
   // store current active window with its focused control
-  int currentWindowID = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+  int currentWindowID = windowManager.GetActiveWindow();
   int currentFocusedControlID = -1;
   if (currentWindowID != WINDOW_INVALID)
   {
-    CGUIWindow* pWindow = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(currentWindowID);
+    CGUIWindow* pWindow = windowManager.GetWindow(currentWindowID);
     if (pWindow)
       currentFocusedControlID = pWindow->GetFocusedControlID();
   }
@@ -124,7 +123,7 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     // the screensaver may have just been woken up as part of UnloadSkin(), which navigates back
     // to whatever window was active before the screensaver kicked in; restore that window
     // instead of blindly reactivating the (now defunct) screensaver window
-    currentWindowID = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+    currentWindowID = windowManager.GetActiveWindow();
     currentFocusedControlID = -1;
   }
 
@@ -176,23 +175,25 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   CLog::Log(LOGDEBUG, "Load Skin XML: {:.2f} ms", duration.count());
 
   CLog::Log(LOGINFO, "  initialize new skin...");
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(m_msgCb);
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&CServiceBroker::GetPlaylistPlayer());
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&g_fontManager);
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetTextureCallbackManager());
-  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(
-      &CServiceBroker::GetGUI()->GetStereoscopicsManager());
-  CServiceBroker::GetGUI()->GetWindowManager().SetCallback(*m_wCb);
+  // The playlists record what the player reports, then it is published, before the application
+  // acts on it.
+  windowManager.AddMsgTarget(CServiceBroker::GetPlayLists().get());
+  windowManager.AddMsgTarget(
+      CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>().get());
+  windowManager.AddMsgTarget(m_msgCb);
+  windowManager.AddMsgTarget(&g_fontManager);
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetTextureCallbackManager());
+  windowManager.AddMsgTarget(&CServiceBroker::GetGUI()->GetStereoscopicsManager());
+  windowManager.SetCallback(*m_wCb);
 
-  //@todo should be done by GUIComponents
-  CServiceBroker::GetGUI()->GetWindowManager().Initialize();
+  //! @todo should be done by GUIComponents
+  windowManager.Initialize();
   CServiceBroker::GetGUI()->GetAudioManager().Enable(true);
   CServiceBroker::GetGUI()->GetAudioManager().Load();
   CServiceBroker::GetTextureCache()->Initialize();
 
   if (skin->HasSkinFile("DialogFullScreenInfo.xml"))
-    CServiceBroker::GetGUI()->GetWindowManager().Add(new CGUIDialogFullScreenInfo);
+    windowManager.Add(new CGUIDialogFullScreenInfo);
 
   CLog::Log(LOGINFO, "  skin loaded...");
 
@@ -202,10 +203,10 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
   // restore active window
   if (currentWindowID != WINDOW_INVALID)
   {
-    CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(currentWindowID);
+    windowManager.ActivateWindow(currentWindowID);
     if (currentFocusedControlID != -1)
     {
-      CGUIWindow* pWindow = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(currentWindowID);
+      CGUIWindow* pWindow = windowManager.GetWindow(currentWindowID);
       if (pWindow && pWindow->HasSaveLastControl())
       {
         CGUIMessage msg(GUI_MSG_SETFOCUS, currentWindowID, currentFocusedControlID, 0);
@@ -223,10 +224,10 @@ bool CApplicationSkinHandling::LoadSkin(const std::string& skinID)
     switch (previousRenderingState)
     {
       case RENDERING_STATE::VIDEO:
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
+        windowManager.ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
         break;
       case RENDERING_STATE::GAME:
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_FULLSCREEN_GAME);
+        windowManager.ActivateWindow(WINDOW_FULLSCREEN_GAME);
         break;
       default:
         break;
@@ -453,13 +454,16 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
 
   std::string oldSkin = skin->ID();
 
+  CApplicationSettingsHandling::ApplyRasterSettings();
+
   CGUIMessage msg(GUI_MSG_LOAD_SKIN, -1, gui->GetWindowManager().GetActiveWindow());
   gui->GetWindowManager().SendMessage(msg);
 
   // Let listeners (e.g. addons with their own custom windows) know the skin is about
   // to be unloaded before the window manager tears their windows down, since the C++
   // OnDeinitWindow path gives the script engine no way to react in time.
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinUnloading");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::SkinUnloading{}});
 
   const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
   std::string newSkin = settings->GetString(CSettings::SETTING_LOOKANDFEEL_SKIN);
@@ -467,7 +471,8 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
   {
     // The new skin is up and the previous active window has been restored, so listeners
     // can safely rebuild any windows they had open.
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinLoaded");
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::SkinLoaded{}});
 
     /* The Reset() or SetString() below will cause recursion, so the m_confirmSkinChange boolean is set so as to not prompt the
        user as to whether they want to keep the current skin. */
@@ -488,7 +493,8 @@ void CApplicationSkinHandling::ReloadSkin(bool confirm)
     // Tell listeners the reload has failed so anyone that reacted to OnSkinUnloading
     // doesn't wait forever. The fallback to the default skin below reloads again and
     // announces its own events.
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::GUI, "OnSkinLoadFailed");
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::SkinLoadFailed{}});
 
     // skin failed to load - we revert to the default only if we didn't fail loading the default
     auto setting = settings->GetSetting(CSettings::SETTING_LOOKANDFEEL_SKIN);
@@ -527,9 +533,9 @@ void CApplicationSkinHandling::ProcessPendingSkinReload()
   ReloadSkin(confirm);
 }
 
-bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
+void CApplicationSkinHandling::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
 {
-  const std::string& settingId = setting.GetId();
+  const std::string& settingId = setting->GetId();
 
   if (settingId == CSettings::SETTING_LOOKANDFEEL_SKIN ||
       settingId == CSettings::SETTING_LOOKANDFEEL_FONT ||
@@ -541,7 +547,7 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
     // result in multiple skin reloads. Therefore we manually specify to ignore specific settings
     // which are going to be changed.
     if (m_ignoreSkinSettingChanges)
-      return true;
+      return;
 
     // if the skin changes and the current color/theme/font is not the default one, reset
     // the it to the default value
@@ -582,8 +588,8 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
       m_ignoreSkinSettingChanges = true;
 
       // we also need to adjust the skin color theme and fontset
-      std::string theme = static_cast<const CSettingString&>(setting).GetValue();
-      if (setting.IsDefault() || StringUtils::EqualsNoCase(theme, "Textures.xbt"))
+      std::string theme = static_cast<const CSettingString&>(*setting).GetValue();
+      if (setting->IsDefault() || StringUtils::EqualsNoCase(theme, "Textures.xbt"))
       {
         skinColorsSetting->Reset();
         skinFontSetting->Reset();
@@ -613,10 +619,6 @@ bool CApplicationSkinHandling::OnSettingChanged(const CSetting& setting)
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_WINDOW_RESIZE);
     CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
   }
-  else
-    return false;
-
-  return true;
 }
 
 void CApplicationSkinHandling::ProcessSkin() const

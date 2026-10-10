@@ -61,6 +61,15 @@
 #define SETTING_VIDEO_CALIBRATION         "video.calibration"
 #define SETTING_VIDEO_STREAM              "video.stream"
 
+namespace
+{
+std::shared_ptr<CSetting> CalibrationSetting()
+{
+  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
+      CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
+}
+} // unnamed namespace
+
 CGUIDialogVideoSettings::CGUIDialogVideoSettings()
     : CGUIDialogSettingsManualBase(WINDOW_DIALOG_VIDEO_OSD_SETTINGS, "DialogSettings.xml")
 { }
@@ -220,15 +229,7 @@ void CGUIDialogVideoSettings::OnSettingAction(const std::shared_ptr<const CSetti
   {
     const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
-    auto settingsComponent = CServiceBroker::GetSettingsComponent();
-    if (!settingsComponent)
-      return;
-
-    auto settings = settingsComponent->GetSettings();
-    if (!settings)
-      return;
-
-    auto calibsetting = settings->GetSetting(CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
+    const std::shared_ptr<CSetting> calibsetting = CalibrationSetting();
     if (!calibsetting)
     {
       CLog::Log(LOGERROR, "Failed to load setting for: {}",
@@ -271,6 +272,7 @@ bool CGUIDialogVideoSettings::Save()
     CMediaSettings::GetInstance().GetDefaultVideoSettings() = appPlayer->GetVideoSettings();
     CMediaSettings::GetInstance().GetDefaultVideoSettings().m_SubtitleStream = -1;
     CMediaSettings::GetInstance().GetDefaultVideoSettings().m_AudioStream = -1;
+    CMediaSettings::GetInstance().GetDefaultVideoSettings().ClearDeclaredAspect();
     CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
   }
 
@@ -465,7 +467,7 @@ void CGUIDialogVideoSettings::InitializeSettings()
 
   // general settings
   AddButton(groupSaveAsDefault, SETTING_VIDEO_MAKE_DEFAULT, 12376, SettingLevel::Basic);
-  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, SettingLevel::Basic);
+  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, CalibrationSetting()->GetLevel());
 }
 
 void CGUIDialogVideoSettings::AddVideoStreams(const std::shared_ptr<CSettingGroup>& group,

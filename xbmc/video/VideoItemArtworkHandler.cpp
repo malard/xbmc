@@ -22,6 +22,7 @@
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
 #include "utils/ArtUtils.h"
+#include "utils/DefaultArt.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
@@ -37,6 +38,7 @@
 #include "video/tags/VideoTagExtractionHelper.h"
 
 using namespace XFILE;
+using KODI::MEDIA::NameOf;
 
 namespace KODI::VIDEO
 {
@@ -118,7 +120,7 @@ std::string CVideoItemArtworkHandler::GetLocalArt() const
 
 std::string CVideoItemArtworkHandler::GetDefaultIcon() const
 {
-  return m_item->IsFolder() ? "DefaultFolder.png" : "DefaultPicture.png";
+  return m_item->IsFolder() ? ART::DEFAULT::FOLDER : ART::DEFAULT::PICTURE;
 }
 
 void CVideoItemArtworkHandler::AddItemPathToFileBrowserSources(std::vector<CMediaSource>& sources)
@@ -150,7 +152,7 @@ void CVideoItemArtworkHandler::PersistArt(const std::string& art)
 
   const bool isAssetArt{VIDEO::IsVideoAssetFile(*m_item)};
   const int mediaId = isAssetArt ? tag->m_iFileId : tag->m_iDbId;
-  const MediaType mediaType = isAssetArt ? MediaTypeVideoVersion : tag->m_type;
+  const std::string& mediaType = isAssetArt ? NameOf(MEDIA::TYPE::VIDEO_VERSION) : tag->m_type;
 
   videodb.SetArtForItem(mediaId, mediaType, m_artType, art);
 
@@ -185,7 +187,7 @@ public:
   std::vector<std::string> GetRemoteArt() const override;
   std::string GetLocalArt() const override;
 
-  std::string GetDefaultIcon() const override { return "DefaultArtist.png"; }
+  std::string GetDefaultIcon() const override { return ART::DEFAULT::ARTIST; }
 
   void PersistArt(const std::string& art) override;
 };
@@ -202,7 +204,7 @@ std::string CVideoItemArtworkArtistHandler::GetCurrentArt() const
   std::string currentArt;
   const int idArtist = musicdb.GetArtistByName(m_item->GetLabel());
   if (idArtist >= 0)
-    currentArt = musicdb.GetArtForItem(idArtist, MediaTypeArtist, ART::TYPE::THUMB);
+    currentArt = musicdb.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, ART::TYPE::THUMB);
 
   if (currentArt.empty())
   {
@@ -281,7 +283,7 @@ void CVideoItemArtworkArtistHandler::PersistArt(const std::string& art)
 
   const int idArtist = musicdb.GetArtistByName(m_item->GetLabel());
   if (idArtist >= 0)
-    musicdb.SetArtForItem(idArtist, MediaTypeArtist, m_artType, art);
+    musicdb.SetArtForItem(idArtist, MEDIA::TYPE::ARTIST, m_artType, art);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -300,7 +302,7 @@ public:
   std::string GetCurrentArt() const override;
   std::string GetLocalArt() const override;
 
-  std::string GetDefaultIcon() const override { return "DefaultActor.png"; }
+  std::string GetDefaultIcon() const override { return ART::DEFAULT::ACTOR; }
 };
 
 std::string CVideoItemArtworkActorHandler::GetCurrentArt() const
@@ -376,7 +378,7 @@ public:
   std::vector<std::string> GetRemoteArt() const override;
   std::string GetLocalArt() const override;
 
-  std::string GetDefaultIcon() const override { return "DefaultVideo.png"; }
+  std::string GetDefaultIcon() const override { return ART::DEFAULT::VIDEO; }
 
   void AddItemPathToFileBrowserSources(std::vector<CMediaSource>& sources) override;
 };
@@ -464,7 +466,7 @@ public:
   std::vector<std::string> GetRemoteArt() const override;
   std::string GetLocalArt() const override;
 
-  std::string GetDefaultIcon() const override { return "DefaultPicture.png"; }
+  std::string GetDefaultIcon() const override { return ART::DEFAULT::PICTURE; }
   bool SupportsFlippedArt() const override { return true; }
 
   std::string UpdateEmbeddedArt(const std::string& art) override;
@@ -556,15 +558,15 @@ std::unique_ptr<IVideoItemArtworkHandler> IVideoItemArtworkHandlerFactory::Creat
 {
   std::unique_ptr<IVideoItemArtworkHandler> artHandler;
 
-  if (artType == ART::TYPE::FANART && mediaType != MediaTypeVideoCollection)
+  if (artType == ART::TYPE::FANART && mediaType != NameOf(MEDIA::TYPE::VIDEO_COLLECTION))
     artHandler = std::make_unique<CVideoItemArtworkFanartHandler>(item, artType);
-  else if (mediaType == MediaTypeArtist)
+  else if (mediaType == NameOf(MEDIA::TYPE::ARTIST))
     artHandler = std::make_unique<CVideoItemArtworkArtistHandler>(item, artType);
-  else if (mediaType == "actor")
+  else if (mediaType == KODI::VIDEO::DB_TABLE::ACTOR)
     artHandler = std::make_unique<CVideoItemArtworkActorHandler>(item, artType);
-  else if (mediaType == MediaTypeSeason)
+  else if (mediaType == NameOf(MEDIA::TYPE::SEASON))
     artHandler = std::make_unique<CVideoItemArtworkSeasonHandler>(item, artType);
-  else if (mediaType == MediaTypeVideoCollection)
+  else if (mediaType == NameOf(MEDIA::TYPE::VIDEO_COLLECTION))
     artHandler = std::make_unique<CVideoItemArtworkMovieSetHandler>(item, artType);
   else
     artHandler = std::make_unique<CVideoItemArtworkHandler>(item, artType);

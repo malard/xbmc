@@ -20,11 +20,12 @@
 #include "input/keyboard/KeyboardLayout.h"
 #include "input/keyboard/KeyboardLayoutManager.h"
 #include "language/LangInfo.h"
+#include "language/Language.h"
+#include "resources/ResourcesComponent.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/CharsetConverter.h"
 #include "utils/Digest.h"
-#include "utils/LangCodeExpander.h"
 #include "utils/MemUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
@@ -90,23 +91,24 @@ char* Interface_General::get_language(void* kodiBase, int format, bool region)
     return nullptr;
   }
 
-  // The addon enum and the expander enum name the same three formats with the same values, and
-  // anything else has always been served as the English name
-  CLangCodeExpander::LANGFORMATS langFormat{CLangCodeExpander::ENGLISH_NAME};
+  KODI::LANGUAGE::CLanguageTag::Notation langFormat{KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME};
   switch (format)
   {
     case LANG_FMT_ISO_639_1:
-      langFormat = CLangCodeExpander::ISO_639_1;
+      langFormat = KODI::LANGUAGE::CLanguageTag::ISO_639_1;
       break;
     case LANG_FMT_ISO_639_2:
-      langFormat = CLangCodeExpander::ISO_639_2;
+      langFormat = KODI::LANGUAGE::CLanguageTag::ISO_639_2;
       break;
     case LANG_FMT_ENGLISH_NAME:
     default:
       break;
   }
 
-  return strdup(g_langInfo.GetLanguageAs(langFormat, region).c_str());
+  return strdup(KODI::LANGUAGE::DescribeLanguage(
+                    langFormat, KODI::LANGUAGE::CLanguage::GetInstance(),
+                    CServiceBroker::GetResourcesComponent().GetLangInfo(), region)
+                    .c_str());
 }
 
 bool Interface_General::queue_notification(void* kodiBase, int type, const char* header,
@@ -186,6 +188,7 @@ void Interface_General::get_md5(void* kodiBase, const char* text, char* md5)
 
 char* Interface_General::get_region(void* kodiBase, const char* id)
 {
+  const auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   const auto* addon = static_cast<const CAddonDll*>(kodiBase);
   if (!addon || !id)
   {
@@ -197,7 +200,7 @@ char* Interface_General::get_region(void* kodiBase, const char* id)
   std::string result;
   if (StringUtils::CompareNoCase(id, "datelong") == 0)
   {
-    result = g_langInfo.GetDateFormat(true);
+    result = langInfo.GetDateFormat(true);
     StringUtils::Replace(result, "DDDD", "%A");
     StringUtils::Replace(result, "MMMM", "%B");
     StringUtils::Replace(result, "D", "%d");
@@ -205,7 +208,7 @@ char* Interface_General::get_region(void* kodiBase, const char* id)
   }
   else if (StringUtils::CompareNoCase(id, "dateshort") == 0)
   {
-    result = g_langInfo.GetDateFormat(false);
+    result = langInfo.GetDateFormat(false);
     StringUtils::Replace(result, "MM", "%m");
     StringUtils::Replace(result, "DD", "%d");
 #ifdef TARGET_WINDOWS
@@ -218,12 +221,12 @@ char* Interface_General::get_region(void* kodiBase, const char* id)
     StringUtils::Replace(result, "YYYY", "%Y");
   }
   else if (StringUtils::CompareNoCase(id, "tempunit") == 0)
-    result = g_langInfo.GetTemperatureUnitString();
+    result = langInfo.GetTemperatureUnitString();
   else if (StringUtils::CompareNoCase(id, "speedunit") == 0)
-    result = g_langInfo.GetSpeedUnitString();
+    result = langInfo.GetSpeedUnitString();
   else if (StringUtils::CompareNoCase(id, "time") == 0)
   {
-    result = g_langInfo.GetTimeFormat();
+    result = langInfo.GetTimeFormat();
     StringUtils::Replace(result, "H", "%H");
     StringUtils::Replace(result, "h", "%I");
     StringUtils::Replace(result, "mm", "%M");
@@ -231,8 +234,9 @@ char* Interface_General::get_region(void* kodiBase, const char* id)
     StringUtils::Replace(result, "xx", "%p");
   }
   else if (StringUtils::CompareNoCase(id, "meridiem") == 0)
-    result = StringUtils::Format("{}/{}", g_langInfo.GetMeridiemSymbol(MeridiemSymbol::AM),
-                                 g_langInfo.GetMeridiemSymbol(MeridiemSymbol::PM));
+    result =
+        StringUtils::Format("{}/{}", langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::AM),
+                            langInfo.GetMeridiemSymbol(KODI::LANGUAGE::MeridiemSymbol::PM));
   else
   {
     CLog::LogF(LOGERROR, "Add-on '{}' requests invalid id '{}'", addon->Name(), id);

@@ -172,6 +172,7 @@ void CLabelFormatter::FormatItemLabels(CFileItemList& items, const LABEL_MASKS& 
 
 std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFileItem *item) const
 {
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
   if (!item) return "";
   const CMusicInfoTag *music = item->GetMusicInfoTag();
   const CVideoInfoTag *movie = item->GetVideoInfoTag();
@@ -193,7 +194,7 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
     if (music && !music->GetArtistString().empty())
       value = music->GetArtistString();
     if (movie && !movie->m_artist.empty())
-      value = StringUtils::Join(movie->m_artist, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+      value = StringUtils::Join(movie->m_artist, advancedSettings->m_videoItemSeparator);
     break;
   case 'T':
     if (music && !music->GetTitle().empty())
@@ -213,9 +214,9 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
     break;
   case 'G':
     if (music && !music->GetGenre().empty())
-      value = StringUtils::Join(music->GetGenre(), CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_musicItemSeparator);
+      value = StringUtils::Join(music->GetGenre(), advancedSettings->m_musicItemSeparator);
     if (movie && !movie->m_genre.empty())
-      value = StringUtils::Join(movie->m_genre, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+      value = StringUtils::Join(movie->m_genre, advancedSettings->m_videoItemSeparator);
     break;
   case 'Y':
     if (music)
@@ -234,10 +235,10 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
   case 'L':
   {
     value = item->GetLabel();
-    // is the label the actual file or folder name? A VFS that escapes its names hands the
-    // label over decoded, so the escaped form has to be compared as well.
+    // is the label the actual file or folder name?
     const std::string& path = item->GetPath();
-    if (value == URIUtils::GetFileName(path) || value == URIUtils::GetDecodedFileName(path))
+    const std::string fileName = URIUtils::GetFileName(path);
+    if (value == fileName || (URIUtils::IsURL(path) && value == URIUtils::GetDecodedFileName(path)))
     { // label is the same as filename, clean it up as appropriate
       value = CUtil::GetTitleFromPath(item->GetPath(), item->IsFolder() && !item->IsFileFolder());
     }
@@ -329,7 +330,7 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
   case 'U':
     if (movie && !movie->m_studio.empty())
     {// Studios
-      value = StringUtils::Join(movie ->m_studio, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
+      value = StringUtils::Join(movie->m_studio, advancedSettings->m_videoItemSeparator);
     }
     break;
   case 'V': // Playcount
@@ -366,7 +367,7 @@ std::string CLabelFormatter::GetMaskContent(const CMaskString &mask, const CFile
     if (music)
     {
       value = music->GetOriginalDate();
-      if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_bMusicLibraryUseISODates)
+      if (!advancedSettings->m_bMusicLibraryUseISODates)
         value = StringUtils::ISODateToLocalizedDate(value);
     }
     break;

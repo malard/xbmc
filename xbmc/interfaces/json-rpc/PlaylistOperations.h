@@ -10,37 +10,42 @@
 
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
+#include "media/MediaSection.h"
+
+#include <string_view>
 
 class CFileItemList;
 class CVariant;
-
-namespace KODI::PLAYLIST
-{
-enum class Id;
-} // namespace KODI::PLAYLIST
 
 namespace JSONRPC
 {
   class CPlaylistOperations : public CFileItemHandler
   {
   public:
-    static JSONRPC_STATUS GetPlaylists(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetProperties(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetPlaylists(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetProperties(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS GetItems(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Add(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Remove(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Insert(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Clear(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Swap(const std::string &method, ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetItems(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Add(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Remove(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Insert(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Clear(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Swap(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetShuffle(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS SetRepeat(const CVariant &parameterObject, CVariant &result);
   private:
-    static KODI::PLAYLIST::Id GetPlaylist(const CVariant& playlist);
-    static JSONRPC_STATUS GetPropertyValue(KODI::PLAYLIST::Id playlistId,
-                                           const std::string& property,
-                                           CVariant& result);
-    static bool CheckMediaParameter(KODI::PLAYLIST::Id playlistId, const CVariant& itemObject);
-    static bool HandleItemsParameter(KODI::PLAYLIST::Id playlistId,
+  /*!
+     * \brief Read the items a request names, as the media the playlist takes. What resolved
+     * arrives in items, in request order; everything else arrives in unresolved, each with the
+     * reason its diagnosis gives.
+     * \param failure Set to the error data of the call if it adds nothing
+     * \return The status of the call if it adds nothing: the first item whose reference has gone,
+     * else the first that was malformed
+     */
+  static JSONRPC_STATUS ReadItems(KODI::MEDIA::MediaSection media,
                                      const CVariant& itemParam,
-                                     CFileItemList& items);
+                                     CFileItemList& items,
+                                  CVariant& unresolved,
+                                  CVariant& failure);
   };
-}
+} // namespace JSONRPC

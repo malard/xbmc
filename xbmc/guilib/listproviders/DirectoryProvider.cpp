@@ -29,6 +29,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
+#include "utils/DefaultArt.h"
 #include "utils/ExecString.h"
 #include "utils/PlayerUtils.h"
 #include "utils/SortUtils.h"
@@ -50,6 +51,7 @@
 #include <memory>
 #include <mutex>
 #include <utility>
+#include <variant>
 
 using namespace XFILE;
 using namespace KODI;
@@ -63,8 +65,7 @@ public:
   explicit CSubscriber(ISubscriberCallback& invalidate) : m_callback(invalidate)
   {
     CServiceBroker::GetAnnouncementManager()->AddAnnouncer(
-        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player |
-                  ANNOUNCEMENT::GUI);
+        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player);
   }
   ~CSubscriber() override { CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this); }
 
@@ -80,34 +81,43 @@ private:
   CSubscriber() = delete;
 
   // IAnnouncer implementation
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event) override
   {
-    if (flag & ANNOUNCEMENT::VideoLibrary && OnEventPublished(Topic::VIDEO_LIBRARY))
+    namespace PLAYER = ANNOUNCEMENT::EVENT::PLAYER;
+    if (std::holds_alternative<PLAYER::Play>(event) ||
+        std::holds_alternative<PLAYER::Resume>(event) ||
+        std::holds_alternative<PLAYER::Stop>(event))
+      OnEventPublished(Topic::PLAYER);
+  }
+
+  void OnVideoLibraryEvent(const ANNOUNCEMENT::VideoLibraryEvent& event) override
+  {
+    OnLibraryEvent(event, Topic::VIDEO_LIBRARY);
+  }
+
+  void OnAudioLibraryEvent(const ANNOUNCEMENT::AudioLibraryEvent& event) override
+  {
+    OnLibraryEvent(event, Topic::AUDIO_LIBRARY);
+  }
+
+  void OnLibraryEvent(const ANNOUNCEMENT::LibraryEvent& event, Topic topic)
+  {
+    namespace LIBRARY = ANNOUNCEMENT::EVENT::LIBRARY;
+    if (OnEventPublished(topic))
       return;
 
-    if (flag & ANNOUNCEMENT::AudioLibrary && OnEventPublished(Topic::AUDIO_LIBRARY))
+    // if we're in a database transaction, don't bother doing anything just yet
+    if (ANNOUNCEMENT::IsTransaction(event))
       return;
 
-    if (flag & ANNOUNCEMENT::Player)
-    {
-      if (message == "OnPlay" || message == "OnResume" || message == "OnStop")
-        OnEventPublished(Topic::PLAYER);
-    }
-    else
-    {
-      // if we're in a database transaction, don't bother doing anything just yet
-      if (data.isMember("transaction") && data["transaction"].asBoolean())
-        return;
-
-      // if there was a database update, we set the update state
-      // to PENDING to fire off a new job in the next update
-      if (message == "OnScanFinished" || message == "OnCleanFinished" || message == "OnUpdate" ||
-          message == "OnRemove" || message == "OnRefresh")
-        OnEventPublished();
-    }
+    // if there was a database update, we set the update state
+    // to PENDING to fire off a new job in the next update
+    if (std::holds_alternative<LIBRARY::ScanFinished>(event) ||
+        std::holds_alternative<LIBRARY::CleanFinished>(event) ||
+        std::holds_alternative<LIBRARY::Update>(event) ||
+        std::holds_alternative<LIBRARY::Remove>(event) ||
+        std::holds_alternative<LIBRARY::Refresh>(event))
+      OnEventPublished();
   }
 
   CCriticalSection m_critSection;
@@ -295,7 +305,7 @@ public:
           CFileItem item(m_url, true);
           item.SetLabel(
               CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(22082)); // More...
-          item.SetArt(ART::TYPE::ICON, "DefaultFolder.png");
+          item.SetArt(ART::TYPE::ICON, ART::DEFAULT::FOLDER);
           item.SetProperty("node.target", m_target);
           item.SetProperty("node.type", "target_folder"); // make item identifiable, e.g. by skins
 

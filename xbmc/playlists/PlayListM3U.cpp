@@ -246,7 +246,7 @@ bool CPlayListM3U::Load(const std::string& strFileName)
 
 void CPlayListM3U::Save(const std::string& strFileName) const
 {
-  if (m_vecItems.empty())
+  if (m_items.empty())
     return;
   bool utf8 = false;
   if (URIUtils::GetExtension(strFileName) == ".m3u8")
@@ -262,9 +262,9 @@ void CPlayListM3U::Save(const std::string& strFileName) const
   if (file.Write(strLine.c_str(), strLine.size()) != static_cast<ssize_t>(strLine.size()))
     return; // error
 
-  for (int i = 0; i < (int)m_vecItems.size(); ++i)
+  for (int i = 0; i < (int)m_items.size(); ++i)
   {
-    CFileItemPtr item = m_vecItems[i];
+    CFileItemPtr item = m_items[i];
     std::string strDescription=item->GetLabel();
     if (!utf8)
       g_charsetConverter.utf8ToStringCharset(strDescription);
