@@ -82,11 +82,6 @@ float4 YUV2RGB(VS_OUTPUT In) : SV_TARGET
                     , g_Texture[1].Sample(YUVSampler, In.TextureUV).r
                     , g_Texture[2].Sample(YUVSampler, In.TextureUV).r
                     , 1.0);
-#elif defined(XBMC_GBRP)
-  float4 YUV = float4(g_Texture[0].Sample(YUVSampler, In.TextureY).r
-                    , g_Texture[1].Sample(YUVSampler, In.TextureY).r
-                    , g_Texture[2].Sample(YUVSampler, In.TextureY).r
-                    , 1.0);
 #elif defined(XBMC_NV12)
   float4 YUV = float4(g_Texture[0].Sample(YUVSampler, In.TextureY).r
   #if defined(NV12_SNORM_UV)
