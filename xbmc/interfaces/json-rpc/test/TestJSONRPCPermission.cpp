@@ -71,3 +71,11 @@ TEST(TestJSONRPCPermission, NotificationPermissionIsAllButReadData)
 {
   EXPECT_EQ(OPERATION_PERMISSION_ALL & ~ReadData, OPERATION_PERMISSION_NOTIFICATION);
 }
+
+TEST(TestJSONRPCPermission, ThePermissionMethodDeclaresEveryPermission)
+{
+  const CVariant declared = ShippedMethods().at("JSONRPC.Permission")["returns"]["properties"];
+  for (const auto permission : PERMISSIONS)
+    EXPECT_TRUE(declared.isMember(PermissionToString(permission)))
+        << PermissionToString(permission);
+}

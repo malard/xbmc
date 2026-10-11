@@ -246,6 +246,9 @@
             },
             "ControlPVR": {
               "type": "boolean"
+            },
+            "WriteSetting": {
+              "type": "boolean"
             }
           },
           "required": [
@@ -261,7 +264,8 @@
             "ControlGUI",
             "ManageAddon",
             "ExecuteAddon",
-            "ControlPVR"
+            "ControlPVR",
+            "WriteSetting"
           ]
         }
       },
