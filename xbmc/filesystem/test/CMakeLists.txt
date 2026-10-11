@@ -15,6 +15,7 @@ set(SOURCES TestAddonsPaths.cpp
 
 if(TARGET ${APP_NAME_LC}::Bluray)
   list(APPEND SOURCES TestBlurayDirectory.cpp
+                      TestBlurayDiscCache.cpp
                       TestBlurayPlaylistHints.cpp
                       TestDiscDirectoryHelperProject.cpp
                       TestProjectParser.cpp

@@ -334,35 +334,24 @@ void CSetting::Copy(const CSetting &setting)
 }
 
 template<class TSetting, typename TValue, typename TValidate>
-bool CSetting::ApplyValue(TValue& storage,
-                          const TValue& value,
-                          const TValue& defaultValue,
-                          TValidate validate)
+CSetting::ApplyResult CSetting::ApplyValue(TValue& storage, const TValue& value, TValidate validate)
 {
-  std::unique_lock writer(m_writeSection);
   TValue oldValue;
   {
     std::unique_lock lock(m_critical);
 
     if (storage == value)
-      return true;
+      return ApplyResult::Unchanged;
 
     if (!validate())
-      return false;
+      return ApplyResult::Rejected;
 
     oldValue = storage;
     storage = value;
   }
 
   if (OnSettingChanging(shared_from_base<TSetting>()))
-  {
-    {
-      std::unique_lock lock(m_critical);
-      m_changed = storage != defaultValue;
-    }
-    OnSettingChanged(shared_from_base<TSetting>());
-    return true;
-  }
+    return ApplyResult::Applied;
 
   {
     std::unique_lock lock(m_critical);
@@ -374,7 +363,7 @@ bool CSetting::ApplyValue(TValue& storage,
   // callback so we need to let all the callback handlers
   // know that the setting hasn't changed
   OnSettingChanging(shared_from_base<TSetting>());
-  return false;
+  return ApplyResult::Rejected;
 }
 
 Logger CSettingList::s_logger;
@@ -801,7 +790,17 @@ bool CSettingBool::CheckValidity(const std::string &value) const
 
 bool CSettingBool::SetValue(bool value)
 {
-  return ApplyValue<CSettingBool>(m_value, value, m_default, [] { return true; });
+  std::unique_lock writer(m_writeSection);
+  const ApplyResult result{ApplyValue<CSettingBool>(m_value, value, [] { return true; })};
+  if (result != ApplyResult::Applied)
+    return result == ApplyResult::Unchanged;
+
+  {
+    std::unique_lock lock(m_critical);
+    m_changed = m_value != m_default;
+  }
+  OnSettingChanged(shared_from_base<CSettingBool>());
+  return true;
 }
 
 void CSettingBool::SetDefault(bool value)
@@ -1058,7 +1057,18 @@ bool CSettingInt::CheckValidity(int value) const
 
 bool CSettingInt::SetValue(int value)
 {
-  return ApplyValue<CSettingInt>(m_value, value, m_default, [&] { return CheckValidity(value); });
+  std::unique_lock writer(m_writeSection);
+  const ApplyResult result{
+      ApplyValue<CSettingInt>(m_value, value, [&] { return CheckValidity(value); })};
+  if (result != ApplyResult::Applied)
+    return result == ApplyResult::Unchanged;
+
+  {
+    std::unique_lock lock(m_critical);
+    m_changed = m_value != m_default;
+  }
+  OnSettingChanged(shared_from_base<CSettingInt>());
+  return true;
 }
 
 void CSettingInt::SetDefault(int value)
@@ -1304,8 +1314,18 @@ bool CSettingNumber::CheckValidity(double value) const
 
 bool CSettingNumber::SetValue(double value)
 {
-  return ApplyValue<CSettingNumber>(m_value, value, m_default,
-                                    [&] { return CheckValidity(value); });
+  std::unique_lock writer(m_writeSection);
+  const ApplyResult result{
+      ApplyValue<CSettingNumber>(m_value, value, [&] { return CheckValidity(value); })};
+  if (result != ApplyResult::Applied)
+    return result == ApplyResult::Unchanged;
+
+  {
+    std::unique_lock lock(m_critical);
+    m_changed = m_value != m_default;
+  }
+  OnSettingChanged(shared_from_base<CSettingNumber>());
+  return true;
 }
 
 void CSettingNumber::SetDefault(double value)
@@ -1503,8 +1523,18 @@ bool CSettingString::CheckValidity(const std::string &value) const
 
 bool CSettingString::SetValue(const std::string &value)
 {
-  return ApplyValue<CSettingString>(m_value, value, m_default,
-                                    [&] { return CheckValidity(value); });
+  std::unique_lock writer(m_writeSection);
+  const ApplyResult result{
+      ApplyValue<CSettingString>(m_value, value, [&] { return CheckValidity(value); })};
+  if (result != ApplyResult::Applied)
+    return result == ApplyResult::Unchanged;
+
+  {
+    std::unique_lock lock(m_critical);
+    m_changed = m_value != m_default;
+  }
+  OnSettingChanged(shared_from_base<CSettingString>());
+  return true;
 }
 
 void CSettingString::SetDefault(const std::string &value)

@@ -367,7 +367,7 @@ protected:
       default:
         return "unknown";
       }
-  }
+    }
 
     /*!
      \brief Checks if the given json value is of the given type

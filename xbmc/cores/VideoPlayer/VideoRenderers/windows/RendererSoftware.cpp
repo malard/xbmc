@@ -64,7 +64,8 @@ const DirectFormat* FindDirectFormat(AVPixelFormat format)
   return it != std::end(DIRECT_FORMATS) ? &*it : nullptr;
 }
 
-void WriteDirect(const DirectFormat& format, CRenderBuffer& buf, const CD3DTexture& target)
+//! \return False when nothing was written
+bool WriteDirect(const DirectFormat& format, CRenderBuffer& buf, const CD3DTexture& target)
 {
   uint8_t* planes[YuvImage::MAX_PLANES];
   int strides[YuvImage::MAX_PLANES];
@@ -74,7 +75,7 @@ void WriteDirect(const DirectFormat& format, CRenderBuffer& buf, const CD3DTextu
   if (!target.LockRect(0, &mapping, D3D11_MAP_WRITE_DISCARD))
   {
     CLog::LogF(LOGERROR, "failed to lock swtarget texture into memory.");
-    return;
+    return false;
   }
 
   const uint8_t* src = planes[0];
@@ -84,6 +85,7 @@ void WriteDirect(const DirectFormat& format, CRenderBuffer& buf, const CD3DTextu
     format.writeRow(src, dst, buf.GetWidth());
 
   target.UnlockRect(0);
+  return true;
 }
 
 SwsContext* CreateScaler(int width,
@@ -254,12 +256,20 @@ void CRendererSoftware::RenderImpl(CD3DTexture& target, CRect& sourceRect, CPoin
   if (!m_outputShader)
     return;
 
+  // same picture as last render, the target still holds the converted picture
+  if (m_reuseIntermediate)
+  {
+    ReorderDrawPoints(CRect(destPoints[0], destPoints[2]), destPoints);
+    return;
+  }
+
   CRenderBuffer* buf = m_renderBuffers[m_iBufferIndex];
 
   const DirectFormat* direct = FindDirectFormat(buf->av_format);
   if (direct && direct->texture == target.GetFormat())
   {
-    WriteDirect(*direct, *buf, target);
+    if (!WriteDirect(*direct, *buf, target))
+      m_intermediateState = {};
     ReorderDrawPoints(CRect(destPoints[0], destPoints[2]), destPoints);
     return;
   }
@@ -305,7 +315,10 @@ void CRendererSoftware::RenderImpl(CD3DTexture& target, CRect& sourceRect, CPoin
   }
 
   if (!m_sw_scale_ctx)
+  {
+    m_intermediateState = {};
     return;
+  }
 
   // swscale takes an RGB source through YUV and back, so both ways must use the same coefficients
   const bool rgb = (av_pix_fmt_desc_get(buf->av_format)->flags & AV_PIX_FMT_FLAG_RGB) != 0;
@@ -340,7 +353,10 @@ void CRendererSoftware::RenderImpl(CD3DTexture& target, CRect& sourceRect, CPoin
       CLog::LogF(LOGERROR, "failed to unlock swtarget texture.");
   }
   else
+  {
     CLog::LogF(LOGERROR, "failed to lock swtarget texture into memory.");
+    m_intermediateState = {};
+  }
 
   // rotate initial rect
   ReorderDrawPoints(CRect(destPoints[0], destPoints[2]), destPoints);

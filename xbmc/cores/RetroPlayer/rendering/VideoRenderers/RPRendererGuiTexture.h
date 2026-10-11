@@ -13,6 +13,10 @@
 #include "cores/RetroPlayer/buffers/BaseRenderBufferPool.h"
 #include "cores/RetroPlayer/process/RPProcessInfo.h"
 
+#if defined(HAS_GLES)
+#include "utils/GLBufferObject.h"
+#endif
+
 namespace KODI
 {
 namespace RETRO
@@ -22,7 +26,7 @@ class CRendererFactoryGuiTexture : public IRendererFactory
 public:
   ~CRendererFactoryGuiTexture() override = default;
 
-  // implementation of IRendererFactory
+  // Implementation of IRendererFactory
   std::string RenderSystemName() const override;
   CRPBaseRenderer* CreateRenderer(const CRenderSettings& settings,
                                   CRenderContext& context,
@@ -36,10 +40,10 @@ public:
   CRenderBufferPoolGuiTexture(SCALINGMETHOD scalingMethod);
   ~CRenderBufferPoolGuiTexture() override = default;
 
-  // implementation of IRenderBufferPool via CBaseRenderBufferPool
+  // Implementation of IRenderBufferPool via CBaseRenderBufferPool
   bool IsCompatible(const CRenderVideoSettings& renderSettings) const override;
 
-  // implementation of CBaseRenderBufferPool
+  // Implementation of CBaseRenderBufferPool
   IRenderBuffer* CreateRenderBuffer(void* header = nullptr) override;
 
 private:
@@ -54,13 +58,20 @@ public:
                         std::shared_ptr<IRenderBufferPool> bufferPool);
   ~CRPRendererGuiTexture() override = default;
 
-  // public implementation of CRPBaseRenderer
+  // Public implementation of CRPBaseRenderer
   bool Supports(RENDERFEATURE feature) const override;
   SCALINGMETHOD GetDefaultScalingMethod() const override { return SCALINGMETHOD::NEAREST; }
 
 protected:
-  // protected implementation of CRPBaseRenderer
-  void RenderInternal(bool clear, uint8_t alpha) override;
+  // Protected implementation of CRPBaseRenderer
+  void RenderInternal(uint8_t alpha) override;
+
+private:
+#if defined(HAS_GLES)
+  KODI::UTILS::GL::CGLBufferObject m_posVBO{GL_ARRAY_BUFFER};
+  KODI::UTILS::GL::CGLBufferObject m_texVBO{GL_ARRAY_BUFFER};
+  KODI::UTILS::GL::CGLBufferObject m_IBO{GL_ELEMENT_ARRAY_BUFFER};
+#endif
 };
 } // namespace RETRO
 } // namespace KODI
