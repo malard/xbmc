@@ -2100,19 +2100,8 @@ bool CGUIDialogVideoInfo::LinkMovieToTvShow(const std::shared_ptr<CFileItem>& it
     if (!database.GetLinksToTvShow(dbId, ids))
       return false;
 
-    for (int i = 0; i < list.Size(); )
-    {
-      size_t j;
-      for (j = 0; j < ids.size(); ++j)
-      {
-        if (list[i]->GetVideoInfoTag()->m_iDbId == ids[j])
-          break;
-      }
-      if (j == ids.size())
-        i++;
-      else
-        list.Remove(i);
-    }
+    erase_if(list, [&ids](const std::shared_ptr<CFileItem>& show)
+             { return std::ranges::find(ids, show->GetVideoInfoTag()->m_iDbId) != ids.end(); });
   }
 
   int iSelectedLabel = 0;
