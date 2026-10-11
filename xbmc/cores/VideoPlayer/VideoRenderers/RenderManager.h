@@ -230,6 +230,8 @@ protected:
   std::deque<int> m_discard;
 
   std::unique_ptr<VideoPicture> m_pConfigPicture;
+  //! m_pConfigPicture differs from the pictures before it in size alone
+  bool m_configSizeOnly = false;
 
   VideoPicture m_picture{};
 
