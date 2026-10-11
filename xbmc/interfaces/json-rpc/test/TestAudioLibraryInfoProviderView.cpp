@@ -67,9 +67,10 @@ TEST(TestAudioLibraryInfoProviderView, AListingDropsTheItemItNamesAndKeepsItsFil
   const ViewCase cases[] = {
       // The id that names one item in the listing is what the view scope drops. On an albums
       // listing that is albumid: a path naming a single album is not a view of one album.
-      {"musicdb://albums/?albumid=3", ADDON::ContentType::ALBUMS, "musicdb://albums/", "albumid"},
+      {"musicdb://albums/?albumid=3", ADDON::ContentType::ALBUMS, "musicdb://albums/", "albumid",
+       "", ""},
       {"musicdb://artists/?artistid=5", ADDON::ContentType::ARTISTS, "musicdb://artists/",
-       "artistid"},
+       "artistid", "", ""},
       // artistid on an albums listing is a filter, not the name of a single album, and
       // CMusicDatabase::GetFilter applies it. Dropping it turns "this artist's albums" into every
       // album in the library, which is what SetScraperAll would then rewrite.

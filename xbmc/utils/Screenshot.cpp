@@ -293,7 +293,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
   if (dir.empty())
   {
     CLog::Log(LOGWARNING, "No screenshot path configured");
-    return {ScreenshotError::NO_FOLDER};
+    return {ScreenshotError::NO_FOLDER, {}, {}};
   }
 
   const std::string composite =
@@ -303,9 +303,9 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
     if (target.empty())
     {
       CLog::Log(LOGWARNING, "Too many screen shots or invalid folder");
-      return {ScreenshotError::FAILED};
+      return {ScreenshotError::FAILED, {}, {}};
     }
-    return {ScreenshotError::BAD_TARGET};
+    return {ScreenshotError::BAD_TARGET, {}, {}};
   }
 
   const bool both = content == CaptureContent::BOTH;
@@ -315,7 +315,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
   if (!captureService)
   {
     CLog::Log(LOGERROR, "Screenshot failed: no capture service");
-    return {ScreenshotError::FAILED};
+    return {ScreenshotError::FAILED, {}, {}};
   }
 
   CaptureSpec spec;
@@ -350,7 +350,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeScreenshotSync(
   if (!pending->done.Wait(SCREENSHOT_TIMEOUT) || pending->written != expected)
   {
     CLog::Log(LOGERROR, "Screenshot {} did not complete", CURL::GetRedacted(composite));
-    return {ScreenshotError::FAILED};
+    return {ScreenshotError::FAILED, {}, {}};
   }
 
   // answered as special://screenshots so the caller holds a path that survives
