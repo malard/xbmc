@@ -577,7 +577,11 @@
       "InvalidParams",
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing"
+      ]
+    }
   },
   "Player.SetProperties": {
     "type": "method",
@@ -681,7 +685,11 @@
       "InternalError",
       "FailedToExecute"
     ],
-    "reasons": {}
+    "reasons": {
+      "FailedToExecute": [
+        "nothing-playing"
+      ]
+    }
   },
   "Player.PlayPause": {
     "type": "method",

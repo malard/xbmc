@@ -956,7 +956,8 @@
       "videoStreams",
       "cachePercentage",
       "playerType",
-      "contentRect"
+      "contentRect",
+      "hasMedia"
     ]
   },
   "Player.Property.Value": {
@@ -1087,6 +1088,10 @@
       "contentRect": {
         "$ref": "#/$defs/Video.ContentRect",
         "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
+      },
+      "hasMedia": {
+        "type": "boolean",
+        "description": "Whether anything is playing, a slideshow included, or with a playlist named, whether it plays through that one. Answered whether or not anything plays."
       }
     }
   },

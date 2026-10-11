@@ -43,6 +43,9 @@
         "Player.OnAVChange": {
           "$ref": "#/components/messages/Player.OnAVChange"
         },
+        "Player.OnAudioFormatHold": {
+          "$ref": "#/components/messages/Player.OnAudioFormatHold"
+        },
         "Player.OnContentGeometryChange": {
           "$ref": "#/components/messages/Player.OnContentGeometryChange"
         },
@@ -197,6 +200,17 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/Player.OnAVChange"
+        }
+      ]
+    },
+    "Player.OnAudioFormatHold": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Player.OnAudioFormatHold"
         }
       ]
     },
@@ -735,6 +749,61 @@
                 },
                 "data": {
                   "$ref": "#/components/schemas/Player.Notifications.Data"
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Player.OnAudioFormatHold": {
+        "name": "Player.OnAudioFormatHold",
+        "summary": "Playback is being held while the audio chain acquires a new format. The hold ends when Player.NotifyAudioChainReady is called, or after the timeout.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Player.OnAudioFormatHold"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "realtime": {
+                      "type": "boolean",
+                      "description": "Whether what is playing is a realtime stream, which falls behind its source for as long as it is held."
+                    },
+                    "passthrough": {
+                      "type": "boolean",
+                      "description": "Whether the audio is passed through to the audio device, as opposed to decoded by Kodi."
+                    },
+                    "timeout": {
+                      "type": "number",
+                      "description": "The longest the hold lasts, in seconds."
+                    }
+                  },
+                  "required": [
+                    "realtime",
+                    "passthrough",
+                    "timeout"
+                  ]
                 }
               },
               "required": [
@@ -2847,6 +2916,10 @@
           "contentRect": {
             "$ref": "#/components/schemas/Video.ContentRect",
             "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
+          },
+          "hasMedia": {
+            "type": "boolean",
+            "description": "Whether anything is playing, a slideshow included, or with a playlist named, whether it plays through that one. Answered whether or not anything plays."
           }
         }
       },

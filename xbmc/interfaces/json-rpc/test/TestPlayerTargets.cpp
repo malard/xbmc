@@ -7,8 +7,12 @@
  */
 
 #include "JSONRPCTestUtils.h"
+#include "ServiceBroker.h"
+#include "application/ApplicationPlayLists.h"
 #include "interfaces/json-rpc/PlayerOperations.h"
 #include "utils/Variant.h"
+
+#include <initializer_list>
 
 #include <gtest/gtest.h>
 
@@ -20,6 +24,15 @@ CVariant Named(const char* playlist)
 {
   CVariant params(CVariant::VariantTypeObject);
   params["playlist"] = playlist;
+  return params;
+}
+
+CVariant Properties(std::initializer_list<const char*> names)
+{
+  CVariant params(CVariant::VariantTypeObject);
+  params["properties"] = CVariant(CVariant::VariantTypeArray);
+  for (const char* name : names)
+    params["properties"].push_back(name);
   return params;
 }
 } // namespace
@@ -101,4 +114,58 @@ TEST(TestPlayerTargets, AVerbOnAnIdleSlideshowIsNothingPlaying)
   EXPECT_EQ(FailedToExecute, CPlayerOperations::Stop(Named("picture"), result));
   EXPECT_EQ("nothing-playing", result["reason"].asString());
   EXPECT_EQ("picture", result["target"]["playlist"].asString());
+}
+
+//! \brief An idle player refuses what only playback can answer rather than answering defaults
+TEST(TestPlayerTargets, APlaybackPropertyIsNothingPlayingWhenNothingPlays)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute,
+            CPlayerOperations::GetProperties(Properties({"hasMedia", "speed", "type"}), result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
+  EXPECT_FALSE(result.isMember("target"));
+}
+
+TEST(TestPlayerTargets, APlaybackPropertyOfAnIdleNamedPlayListIsNothingPlaying)
+{
+  CVariant params = Properties({"speed"});
+  params["playlist"] = "audio";
+
+  CVariant result;
+  EXPECT_EQ(FailedToExecute, CPlayerOperations::GetProperties(params, result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
+  EXPECT_EQ("audio", result["target"]["playlist"].asString());
+}
+
+TEST(TestPlayerTargets, HasMediaAnswersWhenNothingPlays)
+{
+  CVariant result;
+  ASSERT_EQ(OK, CPlayerOperations::GetProperties(Properties({"hasMedia"}), result));
+  EXPECT_FALSE(result["hasMedia"].asBoolean(true));
+}
+
+TEST(TestPlayerTargets, HasMediaIsTrueForARunningSlideshow)
+{
+  const auto playLists = CServiceBroker::GetPlayLists();
+  playLists->SetSlideShowRunning(true);
+
+  CVariant result;
+  EXPECT_EQ(OK, CPlayerOperations::GetProperties(Properties({"hasMedia", "type"}), result));
+  EXPECT_TRUE(result["hasMedia"].asBoolean());
+  EXPECT_EQ("picture", result["type"].asString());
+
+  CVariant params = Properties({"hasMedia"});
+  params["playlist"] = "audio";
+  EXPECT_EQ(OK, CPlayerOperations::GetProperties(params, result));
+  EXPECT_FALSE(result["hasMedia"].asBoolean(true));
+
+  playLists->SetSlideShowRunning(false);
+}
+
+TEST(TestPlayerTargets, TheItemIsNothingPlayingWhenNothingPlays)
+{
+  CVariant result;
+  EXPECT_EQ(FailedToExecute,
+            CPlayerOperations::GetItem(CVariant(CVariant::VariantTypeObject), result));
+  EXPECT_EQ("nothing-playing", result["reason"].asString());
 }

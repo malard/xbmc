@@ -38,7 +38,8 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `Player` methods take an optional `playlist`, a `Player.Target`, in place of the required
   `playerid`: `playing` (the default), `video`, `audio` or `picture`, the slideshow. With `playing`
   they act on everything playing; an idle named playlist is `FailedToExecute`.
-- `Player.GetActivePlayers` is removed. `Player.GetProperties` reports `playlist` and `playertype`.
+- `Player.GetActivePlayers` is removed. `Player.GetProperties` reports `playlist` and `playertype`,
+  and `hasMedia`, whether anything is playing.
 - `Player.On*` notifications carry `players` in place of `playerid`.
 - `Playlist.GetItems` returns `Playlist.Entry` with `position` and `displayorder`.
   `Player.GetProperties` reports `displayorder`.
@@ -58,9 +59,10 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   `Playlist.OnPropertiesChanged`.
 - `Application.SetVolume` and `Application.SetMute` are removed, and `Application.GetProperties`
   no longer reports `volume`, `muted` or `contentrect`. `Player` is what is seen and heard: its
-  `GetProperties` answers `volume`, `muted` and `contentrect` whether or not anything plays,
-  `Player.SetProperties` sets `volume` and `muted`, and `Player.VolumeUp` and `Player.VolumeDown`
-  step the volume.
+  `GetProperties` answers `volume`, `muted`, `contentrect` and `hasMedia` whether or not anything
+  plays, and any other property with nothing playing is `FailedToExecute` (`nothing-playing`), as
+  is `Player.GetItem`. `Player.SetProperties` sets `volume` and `muted`, and `Player.VolumeUp` and
+  `Player.VolumeDown` step the volume.
 - `Player.OnPropertyChanged` and `Playlist.OnPropertyChanged` are `Player.OnPropertiesChanged` and
   `Playlist.OnPropertiesChanged`, carrying what changed under `data.properties` in place of
   `data.property`. `Application.OnVolumeChanged` is removed: a volume or mute change is
@@ -197,7 +199,7 @@ Properties and types:
 - `AccessDenied` (-32096)
 - `Application.GetProperties`: `loglevel`
 - `GUI.GetProperties`: `ready`
-- `Player.GetProperties`: `contentrect`; video streams: `contentrect`
+- `Player.GetProperties`: `contentrect`, `hasMedia`; video streams: `contentrect`
 - `Player.Audio.Stream`: `bitspersample`; `Player.Subtitle`: `codec`
 - `Playlist.GetProperties`: `shuffled`, `repeat`
 - `List.Item.Base`: `stationname`; `List.Fields.All`: `episodename`, `episodepart`

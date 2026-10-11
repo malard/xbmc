@@ -99,8 +99,15 @@ private:
    * player would act on.
    */
   static std::vector<PlayerType> GetTargets(const CVariant & playlist);
-  //! The player a query answers for: the first of GetTargets().
+  /*!
+   * \brief The player a query answers for: the first of GetTargets(), or None when nothing plays
+   * or \p playlist names one that is idle.
+   */
   static PlayerType GetTarget(const CVariant& playlist);
+  //! Whether \p playlist names one that nothing is playing through.
+  static bool IsNamedIdle(const CVariant& playlist);
+  //! Fails for the reason nothing-playing, concerning \p playlist when it names an idle one.
+  static JSONRPC_STATUS FailNothingPlaying(const CVariant& playlist, CVariant& result);
   /*!
    * \brief Run a verb on the player for each target; it succeeds if it succeeds for any of them.
    * A named playlist that is not playing fails, and so does a verb with nothing playing, for the
@@ -127,6 +134,8 @@ private:
   static std::optional<KODI::PLAYLIST::Type> GetPlayList(PlayerType player, const CVariant& named);
     static JSONRPC_STATUS StartSlideshow(const std::string& path, bool recursive, bool random, const std::string &firstPicturePath = "");
     static void SendSlideshowAction(int actionID);
+  //! The value of a property answered without a player, InvalidParams when \p property is not one.
+  static JSONRPC_STATUS GetOutputValue(const std::string& property, CVariant& result);
     static JSONRPC_STATUS GetPropertyValue(PlayerType player, const std::string &property, CVariant &result,
                                          const CVariant& named = CVariant());
     static bool IsPVRChannel();

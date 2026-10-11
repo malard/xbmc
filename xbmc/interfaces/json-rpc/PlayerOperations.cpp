@@ -237,9 +237,20 @@ JSONRPC_STATUS CPlayerOperations::GetProperties(const CVariant& parameterObject,
 {
   const CVariant& playlist = parameterObject["playlist"];
   const PlayerType player = GetTarget(playlist);
-  return GetNamedProperties(parameterObject, result,
-                            [player, &playlist](const std::string & property, CVariant& value)
-                            { return GetPropertyValue(player, property, value, playlist); });
+  const auto getValue = [&](const std::string& property, CVariant& value)
+  {
+    if (property == "hasMedia")
+    {
+      value = player != None;
+      return OK;
+    }
+    if (const JSONRPC_STATUS status = GetOutputValue(property, value); status != InvalidParams)
+      return status;
+    if (player == None)
+      return FailNothingPlaying(playlist, result);
+    return GetPropertyValue(player, property, value, playlist);
+  };
+  return GetNamedProperties(parameterObject, result, getValue);
 }
 
 JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant &parameterObject, CVariant &result)
@@ -347,7 +358,7 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant &parameterObject, CVari
 
     case None:
     default:
-      return FailedToExecute;
+      return FailNothingPlaying(parameterObject["playlist"], result);
   }
 
   HandleFileItem("id", !IsPVRChannel(), "item", fileItem, parameterObject, parameterObject["properties"], result, false);
@@ -379,8 +390,7 @@ JSONRPC_STATUS CPlayerOperations::SetProperties(const CVariant &parameterObject,
     if (!property->second.isNull())
       named["properties"].push_back(property->first);
   }
-  return GetNamedProperties(named, result, [](const std::string& property, CVariant& value)
-                            { return GetPropertyValue(None, property, value); });
+  return GetNamedProperties(named, result, GetOutputValue);
 }
 
 JSONRPC_STATUS CPlayerOperations::VolumeUp(const CVariant& parameterObject, CVariant& result)
@@ -400,7 +410,7 @@ JSONRPC_STATUS CPlayerOperations::StepVolume(int action, CVariant& result)
     return status;
 
   CServiceBroker::GetAppMessenger()->PostMsg(TMSG_VOLUME_SHOW, action);
-  return GetPropertyValue(None, "volume", result["volume"]);
+  return GetOutputValue("volume", result["volume"]);
 }
 
 JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVariant& result)
@@ -1599,7 +1609,26 @@ std::vector<PlayerType> CPlayerOperations::GetTargets(const CVariant& playlist)
 
 PlayerType CPlayerOperations::GetTarget(const CVariant& playlist)
 {
+  if (IsNamedIdle(playlist) || !IsAnythingPlaying())
+    return None;
   return GetTargets(playlist).front();
+}
+
+bool CPlayerOperations::IsNamedIdle(const CVariant& playlist)
+{
+  const auto playLists = CServiceBroker::GetPlayLists();
+  const std::string& name = playlist.asString();
+  const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
+  return named ? playLists->GetPlayingType() != named &&
+                     !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
+               : name == PLAYLIST::PICTURE_NAME && !playLists->IsSlideShowRunning();
+}
+
+JSONRPC_STATUS CPlayerOperations::FailNothingPlaying(const CVariant& playlist, CVariant& result)
+{
+  if (IsNamedIdle(playlist))
+    return Fail(result, FailedToExecute, Reason::NothingPlaying, Target("playlist", playlist));
+  return Fail(result, FailedToExecute, Reason::NothingPlaying);
 }
 
 JSONRPC_STATUS CPlayerOperations::ForEachTarget(
@@ -1608,13 +1637,7 @@ JSONRPC_STATUS CPlayerOperations::ForEachTarget(
     const std::function<JSONRPC_STATUS(PlayerType)>& verb)
 {
   // a named playlist that is not playing has no player to act on
-  const auto playLists = CServiceBroker::GetPlayLists();
-  const std::string& name = parameterObject["playlist"].asString();
-  const std::optional<PLAYLIST::Type> named = PLAYLIST::TypeFromName(name);
-  const bool idle = named ? playLists->GetPlayingType() != named &&
-                                !(*named == PLAYLIST::Video && playLists->IsSlideShowRunning())
-                          : name == PLAYLIST::PICTURE_NAME && !playLists->IsSlideShowRunning();
-  if (idle)
+  if (IsNamedIdle(parameterObject["playlist"]))
     return Fail(result, FailedToExecute, Reason::NothingPlaying,
                 Target("playlist", parameterObject["playlist"]));
 
@@ -1716,15 +1739,9 @@ void CPlayerOperations::SendSlideshowAction(int actionID)
       TransferToMessenger(std::make_unique<CAction>(actionID)));
 }
 
-JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
-                                                   const std::string &property,
-                                                   CVariant &result,
-                                                   const CVariant& named /* = CVariant() */)
+JSONRPC_STATUS CPlayerOperations::GetOutputValue(const std::string& property, CVariant& result)
 {
-  using PlayList = std::optional<PLAYLIST::Type>;
-  //! A property's value, or nothing when it cannot be read
   using Value = std::optional<CVariant>;
-  using Getter = Value (*)(PlayerType player, const PlayList& playList);
 
   // what is seen and heard whether or not anything plays
   static const std::unordered_map<std::string_view, Value (*)()> output{
@@ -1742,17 +1759,26 @@ JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
          return rect;
        }},
   };
-  if (const auto getter = output.find(property); getter != output.end())
-  {
-    Value value = getter->second();
-    if (!value)
-      return FailedToExecute;
-    result = std::move(*value);
-    return OK;
-  }
+  const auto getter = output.find(property);
+  if (getter == output.end())
+    return InvalidParams;
 
-  if (player == None)
+  Value value = getter->second();
+  if (!value)
     return FailedToExecute;
+  result = std::move(*value);
+  return OK;
+}
+
+JSONRPC_STATUS CPlayerOperations::GetPropertyValue(PlayerType player,
+                                                   const std::string &property,
+                                                   CVariant &result,
+                                                   const CVariant& named /* = CVariant() */)
+{
+  using PlayList = std::optional<PLAYLIST::Type>;
+  //! A property's value, or nothing when it cannot be read
+  using Value = std::optional<CVariant>;
+  using Getter = Value (*)(PlayerType player, const PlayList& playList);
 
   static const auto timeObject = [](int milliseconds)
   {

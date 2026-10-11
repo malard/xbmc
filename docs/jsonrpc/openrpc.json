@@ -882,7 +882,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -1089,7 +1095,13 @@
         }
       ],
       "x-kodi-permission": "ReadData",
-      "x-kodi-reasons": {},
+      "x-kodi-reasons": {
+        "FailedToExecute": [
+          {
+            "$ref": "#/components/x-kodi-reasons/nothing-playing"
+          }
+        ]
+      },
       "x-kodi-transport": "Response"
     },
     {
@@ -13913,7 +13925,8 @@
           "videoStreams",
           "cachePercentage",
           "playerType",
-          "contentRect"
+          "contentRect",
+          "hasMedia"
         ]
       },
       "Player.Property.Value": {
@@ -14044,6 +14057,10 @@
           "contentRect": {
             "$ref": "#/components/schemas/Video.ContentRect",
             "description": "The shape on the screen: the picture while something plays, and the shape Kodi rests at otherwise. Answered whether or not anything plays."
+          },
+          "hasMedia": {
+            "type": "boolean",
+            "description": "Whether anything is playing, a slideshow included, or with a playlist named, whether it plays through that one. Answered whether or not anything plays."
           }
         }
       },

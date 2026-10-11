@@ -293,10 +293,10 @@ is playing through answers `FailedToExecute`.
 + {"method": "Player.Stop"}
 ```
 
-`Player.GetActivePlayers` is removed. `Player.GetProperties` reports the
-`playlist` being played and the `playertype`, and the `player` object of every
-`Player.On*` notification carries `players`, the playlists the playback holds,
-in place of `playerid`.
+`Player.GetActivePlayers` is removed. `Player.GetProperties` reports
+`hasMedia`, whether anything is playing, the `playlist` being played and the
+`playertype`, and the `player` object of every `Player.On*` notification
+carries `players`, the playlists the playback holds, in place of `playerid`.
 
 `Playlist.GetItems` answers each entry with its `position` in the list and its
 `displayorder`, its place in play order; the two differ while the playlist is
@@ -306,7 +306,8 @@ shuffled. `Player.GoTo` and `Playlist.Remove` take a `position`.
 **What to do.** Send playlist names where you sent numbers. Drop `playerid`
 from `Player` calls, or send the `playlist` you mean. Read what is playing
 from `Player.GetProperties` or from the notification's `players` rather than
-from `Player.GetActivePlayers`.
+from `Player.GetActivePlayers`. Where an empty list told you nothing was
+playing, read `hasMedia`.
 
 ## 12. Settings writes need the `WriteSetting` permission
 
@@ -391,9 +392,10 @@ them through `Playlist.OnPropertiesChanged`. The playlist being played is the
 ```
 
 `Player.SetProperties` changes only the properties named and answers with
-their values now in force. `Player.GetProperties` answers `volume`, `muted`
-and `contentrect` with nothing playing; every other property still needs
-something to play.
+their values now in force. `Player.GetProperties` answers `volume`, `muted`,
+`contentrect` and `hasMedia` with nothing playing; every other property still
+needs something to play, and a call asking for one without it answers
+`FailedToExecute` with the reason `nothing-playing`, as `Player.GetItem` does.
 
 **What to do.** Read volume, mute and `contentrect` from
 `Player.GetProperties`. There is no toggle: send the `muted` value you want.
