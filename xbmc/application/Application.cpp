@@ -627,7 +627,9 @@ bool CApplication::Initialize()
 
   KODI::UTILS::CAspectRatioVocabulary::Load();
 
-  GetComponent<CApplicationContentGeometry>()->RefreshAtRest();
+  const auto contentGeometry = GetComponent<CApplicationContentGeometry>();
+  contentGeometry->RefreshOsdPlacement();
+  contentGeometry->RefreshAtRest();
 
   // initialize (and update as needed) our databases
   CDatabaseManager &databaseManager = m_ServiceManager->GetDatabaseManager();
