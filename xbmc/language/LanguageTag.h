@@ -143,6 +143,16 @@ public:
   bool IsUndetermined() const;
 
   /*!
+   * \brief Whether text in the language is written right to left.
+   * \note A script subtag decides it where the tag states one, as it names the writing system
+   *       outright: ku-Arab is written right to left, ku is not. Otherwise the script the
+   *       language is usually written in decides it.
+   * \return true for Hebrew, Arabic, Persian, Urdu and the other languages written in a
+   *         right-to-left script. false for a tag naming no language.
+   */
+  bool IsRightToLeft() const;
+
+  /*!
    * \brief The canonical form, which is a BCP 47 language tag.
    * \note Unrecognized text is answered as it was given, so this is a BCP 47 tag only where
    *       IsValid is true. An interface contracting to serve BCP 47 needs that first.
@@ -269,15 +279,21 @@ private:
    * \param[in] tag The canonical form.
    * \param[in] languageLength The length of the primary language subtag, which the tag starts
    *            with.
+   * \param[in] scriptOffset Where the script subtag starts, or 0 where there is none.
+   * \param[in] scriptLength The length of the script subtag, or 0 where there is none.
    * \param[in] regionOffset Where the region subtag starts, or 0 where there is none.
    * \param[in] regionLength The length of the region subtag, or 0 where there is none.
    */
   CLanguageTag(std::string tag,
                std::size_t languageLength,
+               std::size_t scriptOffset,
+               std::size_t scriptLength,
                std::size_t regionOffset,
                std::size_t regionLength)
     : m_tag(std::move(tag)),
       m_languageLength(languageLength),
+      m_scriptOffset(scriptOffset),
+      m_scriptLength(scriptLength),
       m_regionOffset(regionOffset),
       m_regionLength(regionLength),
       m_valid(true)
@@ -287,12 +303,17 @@ private:
   //! Text that named no language, kept as it was given
   explicit CLanguageTag(std::string text) : m_tag(std::move(text)) {}
 
+  //! The script subtag, as canonical BCP 47 spells it, or empty where the tag states none
+  std::string_view Script() const { return {m_tag.data() + m_scriptOffset, m_scriptLength}; }
+
   //! The region subtag, as canonical BCP 47 spells it, or empty where the tag states none
   std::string_view Region() const { return {m_tag.data() + m_regionOffset, m_regionLength}; }
 
   std::string m_tag;
   //! Where the parse found the subtags, so that nothing has to take the tag apart again
   std::size_t m_languageLength{0};
+  std::size_t m_scriptOffset{0};
+  std::size_t m_scriptLength{0};
   std::size_t m_regionOffset{0};
   std::size_t m_regionLength{0};
   bool m_valid{false};

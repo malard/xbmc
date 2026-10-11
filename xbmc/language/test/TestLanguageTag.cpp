@@ -419,6 +419,23 @@ TEST(TestLanguageTag, DoesNotReadARegionCodeAsALanguage)
   EXPECT_FALSE(CLanguageTag::TryParse("zzz").has_value());
 }
 
+TEST(TestLanguageTag, KnowsWhichLanguagesAreWrittenRightToLeft)
+{
+  for (const auto* text : {"he", "he-IL", "iw", "ar", "ar-EG", "fa", "ur", "yi", "ckb"})
+    EXPECT_TRUE(CLanguageTag::Parse(text).IsRightToLeft()) << text;
+
+  for (const auto* text : {"en", "en-GB", "de", "ru", "ja", "zh-Hant-TW", "ku"})
+    EXPECT_FALSE(CLanguageTag::Parse(text).IsRightToLeft()) << text;
+
+  // A script subtag decides it over the script the language is usually written in
+  EXPECT_TRUE(CLanguageTag::Parse("ku-Arab").IsRightToLeft());
+  EXPECT_FALSE(CLanguageTag::Parse("sd-Deva").IsRightToLeft());
+  EXPECT_FALSE(CLanguageTag::Parse("az-Latn").IsRightToLeft());
+
+  // A tag naming no language is not written in any direction
+  EXPECT_FALSE(CLanguageTag().IsRightToLeft());
+}
+
 namespace
 {
 //! \brief Stands an uninitialised service manager in, and puts the real one back on every path

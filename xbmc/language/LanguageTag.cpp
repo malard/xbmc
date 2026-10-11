@@ -111,6 +111,8 @@ struct Parsed
 {
   std::string tag;
   std::size_t languageLength{0};
+  std::size_t scriptOffset{0};
+  std::size_t scriptLength{0};
   std::size_t regionOffset{0};
   std::size_t regionLength{0};
 };
@@ -145,6 +147,15 @@ Parsed Read(const CBcp47& tag)
 
   // Canonical BCP 47 leads with the primary language subtag, so its length places it
   parsed.languageLength = tag.GetLanguage().size();
+
+  if (const std::string& script = tag.GetScript(); !script.empty())
+  {
+    if (const std::size_t at = FindSubtag(parsed.tag, script); at != std::string::npos)
+    {
+      parsed.scriptOffset = at;
+      parsed.scriptLength = script.size();
+    }
+  }
 
   if (const std::string& region = tag.GetRegion(); !region.empty())
   {
@@ -300,12 +311,12 @@ std::optional<Parsed> CanonicalBcp47(const std::string& text)
 
 CLanguageTag CLanguageTag::Undetermined()
 {
-  return CLanguageTag(std::string{UNDETERMINED}, UNDETERMINED.size(), 0, 0);
+  return CLanguageTag(std::string{UNDETERMINED}, UNDETERMINED.size(), 0, 0, 0, 0);
 }
 
 CLanguageTag CLanguageTag::English()
 {
-  return CLanguageTag(std::string{ENGLISH}, ENGLISH.size(), 0, 0);
+  return CLanguageTag(std::string{ENGLISH}, ENGLISH.size(), 0, 0, 0, 0);
 }
 
 bool CLanguageTag::IsEnglish() const
@@ -324,6 +335,39 @@ bool CLanguageTag::IsUndetermined() const
   return m_tag.empty() || m_tag == UNDETERMINED;
 }
 
+bool CLanguageTag::IsRightToLeft() const
+{
+  if (!m_valid)
+    return false;
+
+  // ISO 15924 codes of the scripts written right to left
+  static constexpr std::array<std::string_view, 10> rightToLeftScripts = {
+      "Adlm", "Arab", "Hebr", "Mand", "Mend", "Nkoo", "Rohg", "Samr", "Syrc", "Thaa",
+  };
+
+  if (const std::string_view script{Script()}; !script.empty())
+    return std::ranges::any_of(rightToLeftScripts, [script](std::string_view rightToLeft)
+                               { return StringUtils::EqualsNoCase(script, rightToLeft); });
+
+  // Languages usually written in a right-to-left script, by their primary subtag as canonical
+  // BCP 47 spells it. Canonicalization has already replaced the deprecated iw and ji.
+  static constexpr std::array<std::string_view, 11> rightToLeftLanguages = {
+      "ar", // Arabic
+      "ckb", // Central Kurdish
+      "dv", // Dhivehi
+      "fa", // Persian
+      "he", // Hebrew
+      "ps", // Pashto
+      "sd", // Sindhi
+      "syr", // Syriac
+      "ug", // Uyghur
+      "ur", // Urdu
+      "yi", // Yiddish
+  };
+  return std::ranges::any_of(rightToLeftLanguages,
+                             [this](std::string_view language) { return IsLanguage(language); });
+}
+
 CLanguageTag CLanguageTag::Parse(const std::string& text)
 {
   if (text.empty())
@@ -331,8 +375,8 @@ CLanguageTag CLanguageTag::Parse(const std::string& text)
 
   if (auto parsed = CanonicalBcp47(text); parsed.has_value())
   {
-    return CLanguageTag(std::move(parsed->tag), parsed->languageLength, parsed->regionOffset,
-                        parsed->regionLength);
+    return CLanguageTag(std::move(parsed->tag), parsed->languageLength, parsed->scriptOffset,
+                        parsed->scriptLength, parsed->regionOffset, parsed->regionLength);
   }
 
   return CLanguageTag(text);
