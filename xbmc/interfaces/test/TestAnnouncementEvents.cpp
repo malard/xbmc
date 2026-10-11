@@ -53,6 +53,7 @@ TEST(TestAnnouncementEvents, PlayerEventsKeepTheirMessages)
   EXPECT_STREQ("OnPropertiesChanged", MessageOf(PlayerEvent{EVENT::PLAYER::PropertiesChanged{}}));
   EXPECT_STREQ("OnContentGeometryChange",
                MessageOf(PlayerEvent{EVENT::PLAYER::ContentGeometryChange{}}));
+  EXPECT_STREQ("OnAudioFormatHold", MessageOf(PlayerEvent{EVENT::PLAYER::AudioFormatHold{}}));
   EXPECT_EQ(Player, FlagOf(PlayerEvent{EVENT::PLAYER::Play{}}));
   EXPECT_EQ(Playlist, FlagOf(PlaylistEvent{EVENT::PLAYLIST::Clear{}}));
 }
@@ -141,6 +142,8 @@ TEST(TestAnnouncementEvents, PlayerOtherData)
              R"({"aspect":2.39,"player":{"players":["video"]}})");
   ExpectData(PlayerEvent{Commercial{"01:30"}}, R"("01:30")");
   ExpectData(PlayerEvent{ToggleSkipCommercials{true}}, "true");
+  ExpectData(PlayerEvent{AudioFormatHold{true, false, 20.0}},
+             R"({"realtime":true,"passthrough":false,"timeout":20.0})");
   EXPECT_TRUE(EventDataOf(PlayerEvent{ProcessInfo{}}).isNull());
   EXPECT_TRUE(EventDataOf(PlayerEvent{Menu{}}).isNull());
   EXPECT_TRUE(EventDataOf(PlayerEvent{BlurayMenuError{}}).isNull());

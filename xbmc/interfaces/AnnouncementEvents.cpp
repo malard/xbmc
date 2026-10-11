@@ -155,7 +155,15 @@ CVariant DataOfEvent(const PlayerEvent& event)
                  [](const ProcessInfo&) { return CVariant{}; }, [](const Menu&)
                  { return CVariant{}; }, [](const BlurayMenuError&) { return CVariant{}; },
                  [](const BlurayEncryptedError&) { return CVariant{}; },
-                 [](const SourceSlow&) { return CVariant{}; }},
+                 [](const SourceSlow&) { return CVariant{}; },
+                 [](const AudioFormatHold& e)
+                 {
+                   CVariant data(CVariant::VariantTypeObject);
+                   data["realtime"] = e.realtime;
+                   data["passthrough"] = e.passthrough;
+                   data["timeout"] = e.timeout;
+                   return data;
+                 }},
       static_cast<const PlayerEvent::variant&>(event));
 }
 

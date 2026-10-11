@@ -184,6 +184,18 @@ struct SourceSlow
 {
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::SOURCE_SLOW;
 };
+
+//! Playback is held while the audio chain acquires a new format. It resumes when the chain is
+//! reported ready or the time is up.
+struct AudioFormatHold
+{
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_AUDIO_FORMAT_HOLD;
+
+  bool realtime{false};
+  bool passthrough{false};
+  //! The longest the hold lasts, in seconds.
+  double timeout{0.0};
+};
 //! Whether the item is announced as a picture rather than as a video, song or channel.
 bool IsPicture(const CFileItem* item);
 } // namespace EVENT::PLAYER
@@ -205,7 +217,8 @@ struct PlayerEvent : std::variant<EVENT::PLAYER::Play,
                                   EVENT::PLAYER::Menu,
                                   EVENT::PLAYER::BlurayMenuError,
                                   EVENT::PLAYER::BlurayEncryptedError,
-                                  EVENT::PLAYER::SourceSlow>
+                                  EVENT::PLAYER::SourceSlow,
+                                  EVENT::PLAYER::AudioFormatHold>
 {
   using variant::variant;
   static constexpr AnnouncementFlag FLAG = Player;

@@ -6249,6 +6249,11 @@ void CVideoPlayer::HoldForAudioFormatChange()
   CLog::Log(LOGINFO, "VideoPlayer: holding playback {:.1f}s for the audio format change",
             static_cast<double>(tenths) / 10.0);
 
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{
+      ANNOUNCEMENT::EVENT::PLAYER::AudioFormatHold{m_pInputStream && m_pInputStream->IsRealtime(),
+                                                   IsPassthrough(),
+                                                   static_cast<double>(tenths) / 10.0}});
+
   if (m_VideoPlayerAudio->IsInited())
     m_VideoPlayerAudio->SendMessage(
         std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, true), 1);

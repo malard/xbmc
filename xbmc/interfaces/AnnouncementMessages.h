@@ -15,6 +15,7 @@ namespace ANNOUNCEMENT::MESSAGE
 
 inline constexpr char ON_ADD[] = "OnAdd";
 inline constexpr char ON_ADDED[] = "OnAdded";
+inline constexpr char ON_AUDIO_FORMAT_HOLD[] = "OnAudioFormatHold";
 inline constexpr char ON_AV_CHANGE[] = "OnAVChange";
 inline constexpr char ON_AV_START[] = "OnAVStart";
 inline constexpr char ON_BLURAY_ENCRYPTED_ERROR[] = "OnBlurayEncryptedError";

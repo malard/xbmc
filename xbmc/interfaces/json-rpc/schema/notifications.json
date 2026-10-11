@@ -62,6 +62,46 @@
     ],
     "returns": null
   },
+  "Player.OnAudioFormatHold": {
+    "type": "notification",
+    "description": "Playback is being held while the audio chain acquires a new format. The hold ends when Player.NotifyAudioChainReady is called, or after the timeout.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "realtime": {
+              "type": "boolean",
+              "description": "Whether what is playing is a realtime stream, which falls behind its source for as long as it is held."
+            },
+            "passthrough": {
+              "type": "boolean",
+              "description": "Whether the audio is passed through to the audio device, as opposed to decoded by Kodi."
+            },
+            "timeout": {
+              "type": "number",
+              "description": "The longest the hold lasts, in seconds."
+            }
+          },
+          "required": [
+            "realtime",
+            "passthrough",
+            "timeout"
+          ]
+        }
+      }
+    ],
+    "returns": null
+  },
   "Player.OnContentGeometryChange": {
     "type": "notification",
     "description": "The picture rectangle in force has changed. Sent when playback starts, when a confirmed change occurs partway through a title, when the picture moves on the screen, and when playback ends - the last carrying the geometry of the GUI, because that is then what is on the screen. Carries the rectangles themselves, so that acting on them needs no further call. The picture moving is a change in its own right: an instruction can move it without changing what the content is, and a display mode switch or a resized window moves it with no instruction at all.",
