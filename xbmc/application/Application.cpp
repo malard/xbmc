@@ -627,6 +627,9 @@ bool CApplication::Initialize()
 
   KODI::UTILS::CAspectRatioVocabulary::Load();
 
+  // The raster was shaped before the viewer's own ratios were known
+  ApplyRasterSettings();
+
   const auto contentGeometry = GetComponent<CApplicationContentGeometry>();
   contentGeometry->RefreshOsdPlacement();
   contentGeometry->RefreshAtRest();
