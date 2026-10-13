@@ -182,7 +182,6 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
                               const CGUIInfo& info,
                               std::string* fallback) const
 {
-  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   switch (info.GetInfo())
   {
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,7 +378,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     case PLAYER_PROCESS_AUDIO_LIVE_BITRATE:
       value = StringUtils::FormatNumber(CServiceBroker::GetDataCacheCore().GetAudioLiveBitRate() /
                                         1024);
-      value += " " + localizeStrings.Get(25019);
+      value += " " + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25019);
       return true;
     case PLAYER_PROCESS_AUDIO_QUEUE_LEVEL:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetAudioQueueLevel());
@@ -390,7 +389,7 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     case PLAYER_PROCESS_VIDEO_LIVE_BITRATE:
       value = StringUtils::Format(
           "{:.1f}", CServiceBroker::GetDataCacheCore().GetVideoLiveBitRate() / 1048576.0);
-      value += " " + localizeStrings.Get(25020);
+      value += " " + CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(25020);
       return true;
     case PLAYER_PROCESS_VIDEO_QUEUE_LEVEL:
       value = std::to_string(CServiceBroker::GetDataCacheCore().GetVideoQueueLevel());
@@ -411,15 +410,18 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     case PLAYLIST_RANDOM:
     {
       const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
-      value = localizeStrings.Get(type && m_playLists->IsShuffled(*type) ? 16041 : 591); // On, Off
+      // On, Off
+      value = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+          type && m_playLists->IsShuffled(*type) ? 16041 : 591);
       return true;
     }
     case PLAYLIST_REPEAT:
     {
       const std::optional<PLAYLIST::Type> type = InfoType(*m_playLists, info);
-      value = localizeStrings.Get(CApplicationPlayLists::RepeatLabel(
-          type ? m_playLists->GetRepeat(*type) : KODI::PLAYLIST::Repeat::Off,
-          CApplicationPlayLists::RepeatWording::State));
+      value = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
+          CApplicationPlayLists::RepeatLabel(
+              type ? m_playLists->GetRepeat(*type) : KODI::PLAYLIST::Repeat::Off,
+              CApplicationPlayLists::RepeatWording::State));
       return true;
     }
     default:

@@ -127,8 +127,6 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
                               const CGUIInfo& info,
                               std::string* fallback) const
 {
-  const auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
-  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   switch (info.GetInfo())
   {
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,12 +182,14 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
         const RESOLUTION_INFO& resInfo = winSystem->GetGfxContext().GetResInfo();
 
         if (winSystem->IsFullScreen())
-          value = StringUtils::Format("{}x{} @ {:.2f} Hz - {}", resInfo.iScreenWidth,
-                                      resInfo.iScreenHeight, resInfo.fRefreshRate,
-                                      localizeStrings.Get(244));
+          value = StringUtils::Format(
+              "{}x{} @ {:.2f} Hz - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
+              resInfo.fRefreshRate,
+              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(244));
         else
-          value = StringUtils::Format("{}x{} - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
-                                      localizeStrings.Get(242));
+          value = StringUtils::Format(
+              "{}x{} - {}", resInfo.iScreenWidth, resInfo.iScreenHeight,
+              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(242));
       }
       else
       {
@@ -264,11 +264,13 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
       {
         double fTime = g_alarmClock.GetRemaining("shutdowntimer");
         if (fTime > 60.0)
-          value = StringUtils::Format(localizeStrings.Get(13213),
-                                      g_alarmClock.GetRemaining("shutdowntimer") / 60.0);
+          value = StringUtils::Format(
+              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13213),
+              g_alarmClock.GetRemaining("shutdowntimer") / 60.0);
         else
-          value = StringUtils::Format(localizeStrings.Get(13214),
-                                      g_alarmClock.GetRemaining("shutdowntimer"));
+          value = StringUtils::Format(
+              CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13214),
+              g_alarmClock.GetRemaining("shutdowntimer"));
       }
       return true;
     case SYSTEM_PROFILENAME:
@@ -288,7 +290,7 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
           CServiceBroker::GetSettingsComponent()->GetProfileManager();
       int iProfileId = profileManager->GetAutoLoginProfileId();
       if ((iProfileId < MASTER_PROFILE_ID) || !profileManager->GetProfileName(iProfileId, value))
-        value = localizeStrings.Get(
+        value = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
             37014); // Last used profile
       return true;
     }
@@ -305,7 +307,7 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
       value = KODI::LANGUAGE::CLanguage::GetInstance().PackName();
       return true;
     case SYSTEM_TEMPERATURE_UNITS:
-      value = langInfo.GetTemperatureUnitString();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetTemperatureUnitString();
       return true;
     case SYSTEM_FRIENDLY_NAME:
       value = CSysInfo::GetDeviceName();
@@ -365,13 +367,13 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
 
     case SYSTEM_LOCALE_REGION:
     {
-      value = langInfo.GetCurrentRegion();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetCurrentRegion();
       return true;
     }
 
     case SYSTEM_LOCALE:
     {
-      value = langInfo.GetRegionTerritory().ToString();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetRegionTerritory().ToString();
       return true;
     }
     default:

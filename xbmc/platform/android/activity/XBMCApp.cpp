@@ -1356,7 +1356,6 @@ void CXBMCApp::OnWakeup()
 
 void CXBMCApp::onNewIntent(CJNIIntent intent)
 {
-  const auto appMessenger{CServiceBroker::GetAppMessenger()};
   if (!intent)
   {
     CLog::Log(LOGINFO, "CXBMCApp::onNewIntent - Got invalid intent.");
@@ -1384,7 +1383,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0, nullptr, "", params);
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_VIDEO_NAV, 0,
+                                                   nullptr, "", params);
       }
       else if (targeturl.IsProtocol("musicdb")
                || (targeturl.IsProtocol("special") && targetFile.find("playlists/music") != std::string::npos))
@@ -1392,7 +1392,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
         std::vector<std::string> params;
         params.push_back(targeturl.Get());
         params.emplace_back("return");
-        appMessenger->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0, nullptr, "", params);
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_GUI_ACTIVATE_WINDOW, WINDOW_MUSIC_NAV, 0,
+                                                   nullptr, "", params);
       }
     }
     else
@@ -1421,7 +1422,8 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
           item->SetPath(item->GetVideoInfoTag()->m_strFileNameAndPath);
         }
 
-        appMessenger->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0, static_cast<void*>(item));
+        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0,
+                                                   static_cast<void*>(item));
       }
     }
   }
@@ -1432,7 +1434,7 @@ void CXBMCApp::onNewIntent(CJNIIntent intent)
       if (m_playback_state & PLAYBACK_STATE_VIDEO)
         RequestVisibleBehind(true);
       if (!(m_playback_state & PLAYBACK_STATE_PLAYING))
-        appMessenger->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+        CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1,
                                                    static_cast<void*>(new CAction(ACTION_PAUSE)));
     }
   }
