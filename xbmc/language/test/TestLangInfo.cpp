@@ -94,18 +94,6 @@ TEST(TestLangInfo, Load)
   EXPECT_EQ(langInfo.GetTemperatureUnit(), CTemperature::UnitFahrenheit);
 }
 
-TEST(TestLangInfo, RegionalDateFormatsAreTheRegions)
-{
-  CLangInfoTest langInfo;
-
-  langInfo.SetShortDateFormat("regional");
-
-  langInfo.SetLongDateFormat("regional");
-
-  EXPECT_EQ(langInfo.GetShortDateFormat(), "DD/MM/YYYY");
-  EXPECT_EQ(langInfo.GetLongDateFormat(), "DDDD, D MMMM YYYY");
-}
-
 TEST(TestLangInfo, PlatformLocaleNamePairsLanguageAndPlace)
 {
   using KODI::LANGUAGE::CTerritory;
@@ -128,4 +116,16 @@ TEST(TestLangInfo, PlatformLocaleNamePairsLanguageAndPlace)
 
   // Without a place, the platform's own locale
   EXPECT_TRUE(CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("de"), CTerritory{}).empty());
+}
+
+TEST(TestLangInfo, RegionalDateFormatsAreTheRegions)
+{
+  CLangInfoTest langInfo;
+
+  langInfo.SetShortDateFormat("regional");
+
+  langInfo.SetLongDateFormat("regional");
+
+  EXPECT_EQ(langInfo.GetShortDateFormat(), "DD/MM/YYYY");
+  EXPECT_EQ(langInfo.GetLongDateFormat(), "DDDD, D MMMM YYYY");
 }

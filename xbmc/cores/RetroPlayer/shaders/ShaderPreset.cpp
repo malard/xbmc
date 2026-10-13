@@ -17,6 +17,8 @@
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 
+#include <cmath>
+
 using namespace KODI::SHADER;
 
 CShaderPreset::CShaderPreset(RETRO::CRenderContext& context,
@@ -69,7 +71,8 @@ bool CShaderPreset::RenderUpdate(IShaderTexture& sourceTexture, IShaderTexture& 
   m_context.SetViewPort(viewPort);
   m_context.SetScissors(viewPort);
 
-  m_frameCount += static_cast<float>(m_speed);
+  // Frames played in reverse still pass
+  m_frameCount += static_cast<float>(std::abs(m_speed));
   return true;
 }
 
@@ -233,6 +236,11 @@ void CShaderPreset::CalculateScaledSize(const KODI::SHADER::ShaderPass& pass,
           pass.fbo.scaleY.scale != 0.0f ? pass.fbo.scaleY.scale * prevSize.y : prevSize.y;
       break;
   }
+
+  // The pass renders to a texture of whole pixels, so its shaders must be
+  // given that size rather than a fractional one
+  scaledSize.x = std::floor(scaledSize.x);
+  scaledSize.y = std::floor(scaledSize.y);
 }
 
 void CShaderPreset::DisposeShaders()

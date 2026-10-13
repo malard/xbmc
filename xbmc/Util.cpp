@@ -36,7 +36,6 @@
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
-#include "utils/DefaultArt.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -86,6 +85,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "storage/MediaManager.h"
+#include "utils/DefaultArt.h"
 #include "utils/Digest.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/RegExp.h"
@@ -1362,9 +1362,11 @@ std::string CUtil::TranslateSpecialSource(const std::string &strSpecial)
     else if (StringUtils::StartsWithNoCase(strSpecial, "$screenshots"))
       return URIUtils::AddFileToFolder("special://screenshots/", strSpecial.substr(12));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$musicplaylists"))
-      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC),
+                                       strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$videoplaylists"))
-      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), strSpecial.substr(15));
+      return URIUtils::AddFileToFolder(PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO),
+                                       strSpecial.substr(15));
     else if (StringUtils::StartsWithNoCase(strSpecial, "$cdrips"))
       return URIUtils::AddFileToFolder("special://cdrips/", strSpecial.substr(7));
     // this one will be removed post 2.0
@@ -2127,8 +2129,20 @@ void CUtil::ScanForExternalSubtitles(const std::string& strMovie, std::vector<st
   auto start = std::chrono::steady_clock::now();
 
   CFileItem item(strMovie, false);
-  if ((NETWORK::IsInternetStream(item) && !URIUtils::IsOnLAN(item.GetDynPath())) ||
-      PLAYLIST::IsPlayList(item) || item.IsPVR() || !VIDEO::IsVideo(item))
+  // A local .strm is the anchor we want to scan around, not the playlist/stream we want to reject.
+  const bool isStrmAnchor = item.IsStrm() && !item.IsPlugin();
+  const bool isInternetStream = NETWORK::IsInternetStream(item);
+  const bool isOnLAN = URIUtils::IsOnLAN(item.GetDynPath());
+  const bool isPlayList = PLAYLIST::IsPlayList(item);
+  const bool isVideo = VIDEO::IsVideo(item);
+  const bool isPvr = item.IsPVR();
+  CLog::Log(LOGDEBUG,
+            "STRM-SUBS scan anchor path='{}' dyn='{}' isStrm={} isPlaylist={} isVideo={} "
+            "isInternetStream={} isOnLAN={} isPvr={}",
+            CURL::GetRedacted(item.GetPath()), CURL::GetRedacted(item.GetDynPath()), isStrmAnchor,
+            isPlayList, isVideo, isInternetStream, isOnLAN, isPvr);
+  if ((isInternetStream && !isOnLAN) || (!isStrmAnchor && isPlayList) || isPvr ||
+      (!isStrmAnchor && !isVideo))
     return;
 
   CLog::Log(LOGDEBUG, "{}: Searching for subtitles...", __FUNCTION__);

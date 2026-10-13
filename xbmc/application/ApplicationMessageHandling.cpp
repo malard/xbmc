@@ -535,8 +535,9 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
         CFileItemPtr item = std::static_pointer_cast<CFileItem>(message.GetItem());
         if (m_app.CurrentFileItem().IsSamePath(item.get()))
         {
-          m_app.CurrentFileItem().UpdateInfo(*item);
-          CServiceBroker::GetGUI()->GetInfoManager().UpdateCurrentItem(*item);
+          const bool replaceLabels = !(message.GetParam2() & GUI_MSG_FLAG_KEEP_CURRENT_LABELS);
+          m_app.CurrentFileItem().UpdateInfo(*item, replaceLabels);
+          CServiceBroker::GetGUI()->GetInfoManager().UpdateCurrentItem(*item, replaceLabels);
         }
       }
     }
@@ -695,7 +696,9 @@ bool CApplicationMessageHandling::OnMessage(const CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_ERROR:
     {
-      MESSAGING::HELPERS::ShowOKDialogText(CVariant{16026}, CVariant{16027});
+      // The slideshow skips a video that won't play
+      if (!CServiceBroker::GetGUI()->GetWindowManager().IsWindowActive(WINDOW_SLIDESHOW))
+        MESSAGING::HELPERS::ShowOKDialogText(CVariant{16026}, CVariant{16027});
       return true;
     }
 

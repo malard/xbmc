@@ -16290,7 +16290,6 @@ msgid "Last updated {0:s}"
 msgstr ""
 
 #. Used as a title in the progress dialog when installing an add-on
-#: xbmc/addons/AddonInstaller.cpp
 #: xbmc/games/controllers/windows/ControllerInstaller.cpp
 msgctxt "#24057"
 msgid "Installing {0:s}..."
@@ -16962,7 +16961,19 @@ msgctxt "#24187"
 msgid "Failed to initialise databases - exiting in {} seconds."
 msgstr ""
 
-#empty strings from id 24188 to 24990
+#. Progress text while extracting an add-on package
+#: xbmc/addons/AddonInstaller.cpp
+msgctxt "#24188"
+msgid "Unpacking add-on..."
+msgstr ""
+
+#. Header of the background progress bar when installing an add-on, followed by the percentage
+#: xbmc/addons/AddonInstaller.cpp
+msgctxt "#24189"
+msgid "Installing {0:s}"
+msgstr ""
+
+#empty strings from id 24190 to 24990
 
 #. Used as error message in add-on browser when add-on repository data could not be downloaded
 #: xbmc/filesystem/AddonsDirectory.cpp
@@ -20453,7 +20464,16 @@ msgctxt "#36116"
 msgid "Choose which character set is used for displaying text in the user interface. This doesn't change the character set used for subtitles, for that go to Player > Language."
 msgstr ""
 
-#empty strings from id 36117 to 36118
+#: system/settings/win32.xml
+msgctxt "#36117"
+msgid "Render on high-performance GPU"
+msgstr ""
+
+#. Description of setting with label #36117 "Render on high-performance GPU"
+#: system/settings/win32.xml
+msgctxt "#36118"
+msgid "On laptops with two GPUs, render on the high-performance GPU even when the display is connected to the other GPU. Frees the CPU's power and memory bandwidth for decoding, but uses more power. Exclusive fullscreen is not available in this mode."
+msgstr ""
 
 #. Description of setting with label #285 "Preferred audio language"
 #: system/settings/settings.xml
@@ -23111,7 +23131,21 @@ msgctxt "#36642"
 msgid "No orphaned add-ons to remove."
 msgstr ""
 
-#empty strings from id 36643 to 36898
+#empty strings from id 36643 to 36644
+
+#. Label of setting "Pictures -> Slideshow -> Show date and time metadata on screen"
+#: system/settings/settings.xml
+msgctxt "#36645"
+msgid "Show date and time metadata on screen"
+msgstr ""
+
+#. Description of setting "Pictures -> Slideshow -> Show date and time metadata on screen" with label #36645
+#: system/settings/settings.xml
+msgctxt "#36646"
+msgid "During a slideshow, show the date and time from a picture's EXIF metadata, if it has them. Not every skin supports this."
+msgstr ""
+
+#empty strings from id 36647 to 36898
 
 #. Description of setting with label #729 "Enable SSL"
 #: system/settings/settings.xml

@@ -460,7 +460,8 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
         object.m_Recorded.series_title = tag.m_strShowTitle.c_str();
         object.m_ObjectClass.type = "object.item.videoItem.videoBroadcast";
         object.m_Recorded.program_title =
-            StringUtils::Format("S{:02}E{:02} : {}", tag.m_iSeason, tag.m_iEpisode, tag.m_strTitle).c_str();
+            StringUtils::Format("S{:02}E{:02} : {}", tag.m_iSeason, tag.m_iEpisode, tag.m_strTitle)
+                .c_str();
         object.m_Recorded.episode_number = tag.m_iEpisode;
         object.m_Recorded.episode_season = tag.m_iSeason;
         object.m_Title = object.m_Recorded.series_title + " - " + object.m_Recorded.program_title;
