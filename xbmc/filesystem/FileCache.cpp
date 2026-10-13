@@ -362,19 +362,24 @@ void CFileCache::Process()
     // check for seek events
     if (seekRequested)
     {
-      // Only safe here: the reader is held in Seek or GrowCacheForRate until the seek completes
+      // The grown cache takes over once the source has seeked for it, so a seek that fails
+      // leaves what the current one holds
+      std::unique_ptr<CCacheStrategy> grown;
+      const size_t grownSize = m_pendingCacheSize;
       if (m_pendingCacheSize)
       {
-        std::unique_ptr<CCacheStrategy> grown = CreateMemoryCache(m_pendingCacheSize);
-        if (grown->Open() == CACHE_RC_OK)
-          SetMemoryCache(std::move(grown), m_pendingCacheSize);
-        else
+        grown = CreateMemoryCache(m_pendingCacheSize);
+        if (grown->Open() != CACHE_RC_OK)
+        {
           CLog::LogF(LOGERROR, "<{}> could not allocate the grown cache, keeping the current one",
                      m_sourcePath);
+          grown.reset();
+        }
         m_pendingCacheSize = 0;
       }
 
-      const int64_t cacheMaxPos = m_pCache->CachedDataEndPosIfSeekTo(m_seekPos);
+      const int64_t cacheMaxPos =
+          (grown ? grown.get() : m_pCache.get())->CachedDataEndPosIfSeekTo(m_seekPos);
       // A length of 0 is unknown, not an end the cache has reached
       const bool cacheReachEOF = m_fileSize > 0 && cacheMaxPos == m_fileSize;
 
@@ -395,6 +400,7 @@ void CFileCache::Process()
             m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, nullptr);
           sourceSeekFailed = true;
           m_sourcePositionValid = false;
+          grown.reset();
 
           if (m_pCache->Seek(m_readPos) != m_readPos)
           {
@@ -414,6 +420,10 @@ void CFileCache::Process()
 
       if (!sourceSeekFailed)
       {
+        // Only safe here: the reader is held in Seek or GrowCacheForRate until the seek completes
+        if (grown)
+          SetMemoryCache(std::move(grown), grownSize);
+
         m_pCache->ClearEndOfInput();
         const bool bCompleteReset = m_pCache->Reset(m_seekPos);
         m_readPos = m_seekPos;
