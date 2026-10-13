@@ -171,6 +171,10 @@ public:
   //! special://videoplaylists/. Empty for a section without playlists of its own.
   static std::string PlaylistsPathOf(KODI::MEDIA::MediaSection section);
 
+  //! \brief Whether \p path lists the playlists of \p section, as its special:// path or the
+  //! location that path resolves to.
+  static bool IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection section);
+
   //! \brief Whether \p path lies in the playlists folder of \p section, under its special:// path or
   //! the folders that path resolves to, wherever the user keeps playlists.
   static bool IsInPlaylistsFolder(const std::string& path, KODI::MEDIA::MediaSection section);

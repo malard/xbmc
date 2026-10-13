@@ -15,6 +15,7 @@
 #include "settings/lib/ISettingCallback.h"
 #include "settings/lib/ISettingsHandler.h"
 #include "threads/CriticalSection.h"
+#include "utils/ContentNames.h"
 
 #include <map>
 #include <string>
@@ -23,6 +24,11 @@ constexpr int VOLUME_DRC_MINIMUM = 0; // 0dB
 constexpr int VOLUME_DRC_MAXIMUM = 6000; // 60dB
 
 class TiXmlNode;
+
+namespace KODI::PLAYLIST
+{
+enum class Type;
+} // namespace KODI::PLAYLIST
 
 enum class WatchedMode
 {
@@ -80,11 +86,11 @@ public:
    */
   std::string LocalizeWatchedMode(WatchedMode mode);
 
-  void SetMusicPlaylistRepeat(bool repeats) { m_musicPlaylistRepeat = repeats; }
-  void SetMusicPlaylistShuffled(bool shuffled) { m_musicPlaylistShuffle = shuffled; }
-
-  void SetVideoPlaylistRepeat(bool repeats) { m_videoPlaylistRepeat = repeats; }
-  void SetVideoPlaylistShuffled(bool shuffled) { m_videoPlaylistShuffle = shuffled; }
+  //! The saved setting only records whether the playlist repeats all.
+  bool GetPlayListRepeat(KODI::PLAYLIST::Type type) const;
+  void SetPlayListRepeat(KODI::PLAYLIST::Type type, bool repeats);
+  bool GetPlayListShuffled(KODI::PLAYLIST::Type type) const;
+  void SetPlayListShuffled(KODI::PLAYLIST::Type type, bool shuffled);
 
   bool DoesMediaStartWindowed() const { return m_mediaStartWindowed; }
   void SetMediaStartWindowed(bool windowed) { m_mediaStartWindowed = windowed; }
@@ -124,9 +130,9 @@ private:
 
   using WatchedModes = std::map<std::string, WatchedMode, std::less<>>;
   WatchedModes m_watchedModes{{"files", WatchedMode::ALL},
-                              {"movies", WatchedMode::ALL},
-                              {"tvshows", WatchedMode::ALL},
-                              {"musicvideos", WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::MOVIES, WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::TVSHOWS, WatchedMode::ALL},
+                              {KODI::MEDIA::CONTENT::MUSICVIDEOS, WatchedMode::ALL},
                               {"recordings", WatchedMode::ALL}};
 
   bool m_musicPlaylistRepeat{false};

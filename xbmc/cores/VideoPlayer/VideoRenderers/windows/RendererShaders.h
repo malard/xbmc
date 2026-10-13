@@ -34,9 +34,15 @@ public:
 
   bool Supports(ESCALINGMETHOD method) const override;
   bool Configure(const VideoPicture& picture, float fps, unsigned orientation) override;
+  bool ChangePictureSize(const VideoPicture& picture) override;
 
   static CRendererBase* Create(CVideoSettings& videoSettings);
   static void GetWeight(std::map<RenderMethod, int>& weights, const VideoPicture& picture);
+
+  /*!
+   * \brief The formats the renderer draws as they are, which a decoder need not convert first.
+   */
+  static std::vector<AVPixelFormat> GetRenderFormats();
 
 protected:
   explicit CRendererShaders(CVideoSettings& videoSettings);

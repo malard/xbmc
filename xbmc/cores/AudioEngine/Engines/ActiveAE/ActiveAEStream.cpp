@@ -386,9 +386,9 @@ double CActiveAEStream::GetMaxDelay()
   return static_cast<double>(m_activeAE->GetMaxDelay());
 }
 
-void CActiveAEStream::Pause()
+void CActiveAEStream::Pause(bool keepOutput)
 {
-  m_activeAE->PauseStream(this, true);
+  m_activeAE->PauseStream(this, true, keepOutput);
 }
 
 void CActiveAEStream::Resume()
@@ -570,6 +570,11 @@ unsigned int CActiveAEStream::GetSampleRate() const
 enum AEDataFormat CActiveAEStream::GetDataFormat() const
 {
   return m_format.m_dataFormat;
+}
+
+bool CActiveAEStream::HasSinkFormatChanged() const
+{
+  return m_sinkFormatChanged;
 }
 
 void CActiveAEStream::RegisterAudioCallback(IAudioCallback* pCallback)

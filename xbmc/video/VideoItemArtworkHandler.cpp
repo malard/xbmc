@@ -562,7 +562,7 @@ std::unique_ptr<IVideoItemArtworkHandler> IVideoItemArtworkHandlerFactory::Creat
     artHandler = std::make_unique<CVideoItemArtworkFanartHandler>(item, artType);
   else if (mediaType == NameOf(MEDIA::TYPE::ARTIST))
     artHandler = std::make_unique<CVideoItemArtworkArtistHandler>(item, artType);
-  else if (mediaType == "actor")
+  else if (mediaType == KODI::VIDEO::DB_TABLE::ACTOR)
     artHandler = std::make_unique<CVideoItemArtworkActorHandler>(item, artType);
   else if (mediaType == NameOf(MEDIA::TYPE::SEASON))
     artHandler = std::make_unique<CVideoItemArtworkSeasonHandler>(item, artType);

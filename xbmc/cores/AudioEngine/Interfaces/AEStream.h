@@ -121,8 +121,11 @@ public:
 
   /**
    * Pauses the stream playback
+   * @param keepOutput keep the output alive, as while a downstream device acquires a new
+   * format; with audiooutput.silencefiller it keeps repeating the last frame of passthrough
+   * audio
    */
-  virtual void Pause() = 0;
+  virtual void Pause(bool keepOutput = false) = 0;
 
   /**
    * Resumes the stream after pausing
@@ -217,6 +220,15 @@ public:
    * @return The stream's data format (eg, AE_FMT_S16LE)
    */
   virtual enum AEDataFormat GetDataFormat() const = 0;
+
+  /**
+   * Whether the sink was reconfigured to carry this stream, so that the format on the wire
+   * changed and a downstream device has to acquire it again.
+   * @note Latched for the life of the stream. False where the engine reused the existing sink
+   *       configuration, as a fixed output configuration does when only the source rate changed.
+   * @return True when the wire format changed
+   */
+  virtual bool HasSinkFormatChanged() const = 0;
 
   /**
    * Return the resample ratio

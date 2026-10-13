@@ -85,6 +85,12 @@ public:
   virtual void RenderUpdate(
       int index, int index2, bool clear, unsigned int flags, unsigned int alpha) = 0;
   virtual bool ConfigChanged(const VideoPicture &picture) = 0;
+  /*!
+   * \brief Take pictures of another size from here on, keeping all else Configure() set up.
+   * The pictures the renderer holds are released.
+   * \return false if the renderer has to be configured again for them
+   */
+  virtual bool ChangePictureSize(const VideoPicture& picture) { return false; }
 
   // Feature support
   virtual bool SupportsMultiPassRendering() = 0;
@@ -95,6 +101,10 @@ public:
 
   void SetFps(float fps) { m_fps = fps; }
   void SetViewMode(int viewMode);
+
+  //! \brief Take VideoPicture::contentRect for the frame about to be drawn. Empty leaves the
+  //! stored measurement in charge.
+  void SetFrameContentRect(const CRectInt& rect) { m_frameContentRect = rect; }
 
   /*! \brief Get video rectangle and view window
   \param source is original size of the video
@@ -127,6 +137,10 @@ protected:
                             float inputFrameRatio, float zoomAmount, float verticalShift);
   void CalculateFrameAspectRatio(unsigned int desired_width, unsigned int desired_height);
   virtual void ManageRenderArea();
+
+  //! \brief The content geometry's part of ManageRenderArea(): cut to the frame's own
+  //! measurement, fit the mask opening, then honour a maintained ratio.
+  CRect ApplyContentGeometry(float& contentRatio);
   virtual void ReorderDrawPoints();
   virtual EShaderFormat GetShaderFormat();
   void MarkDirty();
@@ -152,6 +166,7 @@ protected:
   CRect m_destRect;
   CRect m_sourceRect;
   CRect m_viewRect;
+  CRectInt m_frameContentRect;
 
   // rendering flags
   unsigned m_iFlags = 0;

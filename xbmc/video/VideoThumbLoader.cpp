@@ -442,7 +442,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       item.SetArt(artwork);
     database.Close();
   }
-  else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
+  else if (tag.m_type == KODI::VIDEO::DB_TABLE::ACTOR && !tag.m_artist.empty() &&
            item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) == NameOf(MEDIA::TYPE::ARTIST))
   {
     // Try to match artist in music db on name, get bio if available and fetch artist art
@@ -483,7 +483,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
     {
       item.AppendArt(artwork);
     }
-    else if (tag.m_type == "actor" && !tag.m_artist.empty() &&
+    else if (tag.m_type == KODI::VIDEO::DB_TABLE::ACTOR && !tag.m_artist.empty() &&
              item.GetProperty(ITEM::PROPERTY::MUSICVIDEO_MEDIA_TYPE) != NameOf(MEDIA::TYPE::ARTIST))
     {
       // Fallback to music library for actors without art
@@ -646,14 +646,14 @@ void CVideoThumbLoader::DetectAndAddMissingItemData(CFileItem &item)
       std::string index = std::to_string(i);
       item.SetProperty("AudioChannels." + index, details.GetAudioChannels(i));
       item.SetProperty("AudioCodec."    + index, details.GetAudioCodec(i).c_str());
-      item.SetProperty("AudioLanguage." + index, details.GetAudioLanguage(i).c_str());
+      item.SetProperty("AudioLanguage." + index, details.GetAudioLanguage(i).ToString());
     }
 
     // add subtitle language properties
     for (int i = 1; i <= details.GetSubtitleStreamCount(); i++)
     {
       std::string index = std::to_string(i);
-      item.SetProperty("SubtitleLanguage." + index, details.GetSubtitleLanguage(i).c_str());
+      item.SetProperty("SubtitleLanguage." + index, details.GetSubtitleLanguage(i).ToString());
     }
   }
 

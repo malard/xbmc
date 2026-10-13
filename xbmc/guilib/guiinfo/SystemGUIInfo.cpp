@@ -23,6 +23,7 @@
 #include "guilib/guiinfo/GUIInfoHelper.h"
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "language/LangInfo.h"
+#include "language/Language.h"
 #include "powermanagement/PowerManager.h"
 #include "profiles/ProfileManager.h"
 #include "rendering/RenderSystem.h"
@@ -58,6 +59,7 @@ CSystemGUIInfo::CSystemGUIInfo()
 
 std::string CSystemGUIInfo::GetSystemHeatInfo(int info) const
 {
+  const auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   if (CTimeUtils::GetFrameTime() - m_lastSysHeatInfoTime >= SYSTEM_HEAT_UPDATE_INTERVAL)
   {
     m_lastSysHeatInfoTime = CTimeUtils::GetFrameTime();
@@ -72,12 +74,12 @@ std::string CSystemGUIInfo::GetSystemHeatInfo(int info) const
   switch (info)
   {
     case SYSTEM_CPU_TEMPERATURE:
-      return m_cpuTemp.IsValid() ? g_langInfo.GetTemperatureAsString(m_cpuTemp)
+      return m_cpuTemp.IsValid() ? langInfo.GetTemperatureAsString(m_cpuTemp)
                                  : CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
                                        10005); // Not available
     case SYSTEM_GPU_TEMPERATURE:
       return m_gpuTemp.IsValid()
-                 ? g_langInfo.GetTemperatureAsString(m_gpuTemp)
+                 ? langInfo.GetTemperatureAsString(m_gpuTemp)
                  : CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(10005);
     case SYSTEM_FAN_SPEED:
       text = StringUtils::Format("{}%", m_fanSpeed * 2);
@@ -302,10 +304,10 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
       return true;
     }
     case SYSTEM_LANGUAGE:
-      value = g_langInfo.GetEnglishLanguageName();
+      value = KODI::LANGUAGE::CLanguage::GetInstance().PackName();
       return true;
     case SYSTEM_TEMPERATURE_UNITS:
-      value = g_langInfo.GetTemperatureUnitString();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetTemperatureUnitString();
       return true;
     case SYSTEM_FRIENDLY_NAME:
       value = CSysInfo::GetDeviceName();
@@ -342,12 +344,13 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
 #endif
     case SYSTEM_SUPPORTED_HDR_TYPES:
     {
-      if (CServiceBroker::GetWinSystem()->IsHDRDisplay())
+      CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+      if (winSystem->IsHDRDisplay())
       {
         // Assumes HDR10 minimum requirement for HDR
         std::string types = "HDR10";
 
-        const CHDRCapabilities caps = CServiceBroker::GetWinSystem()->GetDisplayHDRCapabilities();
+        const CHDRCapabilities caps = winSystem->GetDisplayHDRCapabilities();
 
         if (caps.SupportsHLG())
           types += ", HLG";
@@ -364,13 +367,13 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
 
     case SYSTEM_LOCALE_REGION:
     {
-      value = g_langInfo.GetCurrentRegion();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetCurrentRegion();
       return true;
     }
 
     case SYSTEM_LOCALE:
     {
-      value = g_langInfo.GetRegionLocale();
+      value = CServiceBroker::GetResourcesComponent().GetLangInfo().GetRegionTerritory().ToString();
       return true;
     }
     default:
@@ -614,6 +617,9 @@ bool CSystemGUIInfo::GetBool(bool& value,
       return true;
     case SYSTEM_ISSTANDALONE:
       value = CServiceBroker::GetAppParams()->IsStandAlone();
+      return true;
+    case SYSTEM_IS_RTL:
+      value = KODI::LANGUAGE::CLanguage::GetInstance().UI().IsRightToLeft();
       return true;
     case SYSTEM_HAS_SHUTDOWN:
       value = (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(

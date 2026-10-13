@@ -16,8 +16,10 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <condition_variable>
 #include <queue>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -273,9 +275,23 @@ private:
   std::array<JobQueue, CJob::PRIORITY_DEDICATED + 1> m_jobQueue;
   bool m_pauseJobs{false};
   Processing m_processing;
-  // Jobs out of m_processing whose callbacks are still running, by priority
-  std::array<size_t, CJob::PRIORITY_DEDICATED + 1> m_completing{};
   Workers m_workers;
+  // Incremented only across the m_jobEvent wait, always under m_section.
+  size_t m_idleWorkers{0};
+
+  // Jobs CancelJobs has taken off the queues whose abort callbacks have not run yet.
+  JobQueue m_aborting;
+
+  // Jobs whose abort or completion callback is running, which an owner cancelling one has to
+  // outlive. A completing job is out of m_processing but still holds its worker.
+  struct CallbackInFlight
+  {
+    std::thread::id thread;
+    CJob::PRIORITY priority;
+    bool completing;
+  };
+  std::unordered_map<unsigned int, CallbackInFlight> m_inCallback;
+  std::condition_variable_any m_callbackDone;
 
   mutable CCriticalSection m_section;
   CEvent m_jobEvent;

@@ -86,7 +86,8 @@ CMusicInfoScanner::~CMusicInfoScanner() = default;
 
 void CMusicInfoScanner::Process()
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnScanStarted");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanStarted{}});
   try
   {
     if (m_showDialog && !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_MUSICLIBRARY_BACKGROUNDUPDATE))
@@ -288,7 +289,8 @@ void CMusicInfoScanner::Process()
   CLog::Log(LOGDEBUG, "{} - Finished scan", __FUNCTION__);
 
   m_bRunning = false;
-  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnScanFinished");
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanFinished{}});
 
   // we need to clear the musicdb cache and update any active lists
   CUtil::DeleteMusicDatabaseDirectoryCache();
@@ -1320,6 +1322,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
     bool bAllowSelection,
     CGUIDialogProgress* pDialog /* = NULL */)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   if (!scraper)
     return InfoRet::INFO_ERROR;
 
@@ -1341,7 +1344,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
         std::string strTempAlbum(album.strAlbum);
         if (!CGUIKeyboardFactory::ShowAndGetInput(
                 strTempAlbum,
-                CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16011)},
+                CVariant{localizeStrings.Get(16011)},
                 false))
           albumDownloadStatus = InfoRet::CANCELLED;
         else
@@ -1349,7 +1352,7 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
           std::string strTempArtist(album.GetAlbumArtistString());
           if (!CGUIKeyboardFactory::ShowAndGetInput(
                   strTempArtist,
-                  CVariant{CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16025)},
+                  CVariant{localizeStrings.Get(16025)},
                   false))
             albumDownloadStatus = InfoRet::CANCELLED;
           else
@@ -1366,9 +1369,8 @@ CInfoScanner::InfoRet CMusicInfoScanner::UpdateDatabaseAlbumInfo(
         if (eventLog)
           eventLog->Add(EventPtr(new CMediaLibraryEvent(
               MEDIA::TYPE::ALBUM, album.strPath, 24146,
-              StringUtils::Format(
-                  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(24147),
-                  MEDIA::NameOf(MEDIA::TYPE::ALBUM), album.strAlbum),
+              StringUtils::Format(localizeStrings.Get(24147), MEDIA::NameOf(MEDIA::TYPE::ALBUM),
+                                  album.strAlbum),
               CScraperUrl::GetThumbUrl(album.thumbURL.GetFirstUrlByType()),
               CURL::GetRedacted(album.strPath), EventLevel::Warning)));
       }

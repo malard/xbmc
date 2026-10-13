@@ -83,7 +83,7 @@ bool CVideoPlayerAudio::OpenStream(CDVDStreamInfo hints)
 {
   CLog::Log(LOGINFO, "Finding audio codec for: {}", hints.codec);
   bool allowpassthrough = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK);
-  if (m_processInfo.IsRealtimeStream())
+  if (MustDecodeRealtime())
     allowpassthrough = false;
 
   CAEStreamInfo::DataType streamType =
@@ -350,6 +350,7 @@ void CVideoPlayerAudio::Process()
       m_stalled = true;
       m_audioClock = 0;
       audioframe.nb_frames = 0;
+      m_holdPending = false;
 
       if (sync)
       {
@@ -395,6 +396,15 @@ void CVideoPlayerAudio::Process()
     {
       m_paused = std::static_pointer_cast<CDVDMsgBool>(pMsg)->m_value;
       CLog::Log(LOGDEBUG, "CVideoPlayerAudio - CDVDMsg::GENERAL_PAUSE: {}", m_paused);
+    }
+    else if (pMsg->IsType(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD))
+    {
+      // GENERAL_PAUSE only stops this thread; the output has to stop too, or the audio already
+      // buffered downstream plays into a receiver that is still acquiring the format.
+      if (std::static_pointer_cast<CDVDMsgBool>(pMsg)->m_value)
+        m_audioSink.Hold();
+      else if (m_syncState == IDVDStreamPlayer::SYNC_INSYNC && m_speed != DVD_PLAYSPEED_PAUSE)
+        m_audioSink.Resume();
     }
     else if (pMsg->IsType(CDVDMsg::PLAYER_REQUEST_STATE))
     {
@@ -488,7 +498,8 @@ bool CVideoPlayerAudio::ProcessDecoderOutput(DVDAudioFrame &audioframe)
 
     // if stream switches to realtime, disable pass through
     // or switch to resample
-    if (m_processInfo.IsRealtimeStream() && m_synctype != SYNC_RESAMPLE)
+    if (m_processInfo.IsRealtimeStream() && m_synctype != SYNC_RESAMPLE &&
+        !(m_pAudioCodec->NeedPassthrough() && !MustDecodeRealtime()))
     {
       m_synctype = SYNC_RESAMPLE;
       if (SwitchCodecIfNeeded())
@@ -523,6 +534,13 @@ bool CVideoPlayerAudio::ProcessDecoderOutput(DVDAudioFrame &audioframe)
 
       if (!m_audioSink.Create(audioframe, m_streaminfo.codec, m_synctype == SYNC_RESAMPLE))
         CLog::Log(LOGERROR, "{} - failed to create audio renderer", __FUNCTION__);
+      else
+      {
+        // Armed here, resolved once real audio has reached the sink: whether the wire format
+        // changed is the engine's to answer, and it has not configured the sink yet.
+        m_holdPending = true;
+        m_holdDelivered = 0.0;
+      }
 
       m_prevsynctype = -1;
 
@@ -563,6 +581,20 @@ bool CVideoPlayerAudio::ProcessDecoderOutput(DVDAudioFrame &audioframe)
   m_audioClock += audioframe.duration * ((double)framesOutput / audioframe.nb_frames);
 
   audioframe.framesOut += framesOutput;
+
+  // INSYNC, not AddPackets: the sink is paused until the player syncs.
+  if (m_holdPending && m_syncState == IDVDStreamPlayer::SYNC_INSYNC && framesOutput > 0 &&
+      audioframe.nb_frames > 0)
+  {
+    m_holdDelivered +=
+        audioframe.duration * (static_cast<double>(framesOutput) / audioframe.nb_frames);
+    if (m_holdDelivered >= DVD_MSEC_TO_TIME(250))
+    {
+      m_holdPending = false;
+      if (m_audioSink.HasSinkFormatChanged())
+        m_messageParent.Put(std::make_shared<CDVDMsg>(CDVDMsg::PLAYER_AUDIO_FORMAT_CHANGE));
+    }
+  }
 
   // signal to our parent that we have initialized
   if (m_syncState == IDVDStreamPlayer::SYNC_STARTING)
@@ -649,6 +681,11 @@ bool CVideoPlayerAudio::AcceptsData() const
   return !full;
 }
 
+bool CVideoPlayerAudio::MustDecodeRealtime()
+{
+  return m_processInfo.IsRealtimeStream() && !m_processInfo.IsRealtimeAudioPassthroughAllowed();
+}
+
 bool CVideoPlayerAudio::SwitchCodecIfNeeded()
 {
   if (m_displayReset)
@@ -659,7 +696,8 @@ bool CVideoPlayerAudio::SwitchCodecIfNeeded()
   m_displayReset = false;
 
   bool allowpassthrough = !CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK);
-  if (m_processInfo.IsRealtimeStream() || m_synctype == SYNC_RESAMPLE)
+  // A realtime stream resamples until it is passing through, so that alone does not rule it out
+  if (MustDecodeRealtime() || (m_synctype == SYNC_RESAMPLE && !m_processInfo.IsRealtimeStream()))
     allowpassthrough = false;
 
   CAEStreamInfo::DataType streamType = m_audioSink.GetPassthroughStreamType(

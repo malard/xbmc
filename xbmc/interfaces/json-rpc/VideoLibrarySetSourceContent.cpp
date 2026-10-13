@@ -67,7 +67,7 @@ JSONRPC_STATUS ParseSetSourceContentParams(const CVariant& parameterObject,
 
   if (parsed.content == ADDON::ContentType::NONE)
   {
-    if (!ParseClearMode(parameterObject["clearmode"].asString("clear"), parsed.clearMode))
+    if (!ParseClearMode(parameterObject["clearMode"].asString("clear"), parsed.clearMode))
     {
       return InvalidParams;
     }
@@ -76,20 +76,20 @@ JSONRPC_STATUS ParseSetSourceContentParams(const CVariant& parameterObject,
     return OK;
   }
 
-  parsed.scraperId = parameterObject["scraperid"].asString();
+  parsed.scraperId = parameterObject["scraperId"].asString();
   if (parsed.scraperId.empty())
   {
     return InvalidParams;
   }
 
-  parsed.scraperSettings = parameterObject["scrapersettings"].asString();
+  parsed.scraperSettings = parameterObject["scraperSettings"].asString();
 
-  const bool scanRecursive = parameterObject["scanrecursive"].asBoolean(true);
-  const bool useDirectoryNames = parameterObject["usedirectorynames"].asBoolean(false);
-  const bool containsSingleItem = parameterObject["containssingleitem"].asBoolean(false);
+  const bool scanRecursive = parameterObject["scanRecursive"].asBoolean(true);
+  const bool useDirectoryNames = parameterObject["useDirectoryNames"].asBoolean(false);
+  const bool containsSingleItem = parameterObject["containsSingleItem"].asBoolean(false);
 
   parsed.settings.exclude = false;
-  parsed.settings.noupdate = parameterObject["noupdate"].asBoolean(false);
+  parsed.settings.noupdate = parameterObject["noUpdate"].asBoolean(false);
 
   if (parsed.content == ADDON::ContentType::TVSHOWS)
   {

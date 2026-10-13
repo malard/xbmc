@@ -48,6 +48,7 @@
 #include "storage/MediaManager.h"
 #include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/DefaultArt.h"
 #include "utils/FileExtensionProvider.h"
 #include "utils/FileUtils.h"
@@ -63,6 +64,8 @@ using namespace MUSICDATABASEDIRECTORY;
 using namespace KODI;
 using namespace KODI::MESSAGING;
 using KODI::MEDIA::MediaSection;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 
 #define CONTROL_BTN_REFRESH      6
 #define CONTROL_USERRATING       7
@@ -344,6 +347,7 @@ CGUIDialogMusicInfo::~CGUIDialogMusicInfo(void)
 
 bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
 {
+  auto& windowManager{CServiceBroker::GetGUI()->GetWindowManager()};
   switch ( message.GetMessage() )
   {
   case GUI_MSG_WINDOW_DEINIT:
@@ -366,7 +370,7 @@ bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
         // The music lib window item is updated to but changes to the rating when it is the sort
         // do not show on screen until refresh() that fetches the list from scratch, sorts etc.
         CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, 0, m_item);
-        CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+        windowManager.SendMessage(msg);
       }
 
       CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), CONTROL_LIST);
@@ -414,7 +418,7 @@ bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
         if (m_bArtistInfo && (ACTION_SELECT_ITEM == iAction || ACTION_MOUSE_LEFT_CLICK == iAction))
         {
           CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), iControl);
-          CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+          windowManager.SendMessage(msg);
           int iItem = msg.GetParam1();
           int id = -1;
           if (iItem >= 0 && iItem < m_albumSongs->Size())
@@ -439,7 +443,7 @@ bool CGUIDialogMusicInfo::OnMessage(CGUIMessage& message)
         else
         {
           CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), iControl);
-          CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+          windowManager.SendMessage(msg);
           const int iItem = msg.GetParam1();
           if (iItem >= 0 && iItem < m_albumSongs->Size())
           {
@@ -715,9 +719,9 @@ CFileItemPtr CGUIDialogMusicInfo::GetCurrentListItem(int offset)
 std::string CGUIDialogMusicInfo::GetContent()
 {
   if (m_item->GetMusicInfoTag()->GetMediaType() == MEDIA::TYPE::ARTIST)
-    return "artists";
+    return CONTENT::ARTISTS;
   else
-    return "albums";
+    return CONTENT::ALBUMS;
 }
 
 void CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(std::vector<CMediaSource>& sources,
@@ -778,6 +782,7 @@ For each type of art the options are:
 */
 void CGUIDialogMusicInfo::OnGetArt()
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   std::string type = MUSIC_UTILS::ShowSelectArtTypeDialog(*m_artTypeList);
   if (type.empty())
     return; // Cancelled
@@ -798,10 +803,10 @@ void CGUIDialogMusicInfo::OnGetArt()
   {
     // Add item for current artwork
     // For album it could be a fallback from artist
-    CFileItemPtr item(new CFileItem(IMAGE_CHOICE::CURRENT, false));
+    CFileItemPtr item(new CFileItem(ART::CHOICE::CURRENT, false));
     item->SetArt(ART::TYPE::THUMB, m_item->GetArt(type));
     item->SetArt(ART::TYPE::ICON, ART::DEFAULT::PICTURE);
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13512));
+    item->SetLabel(localizeStrings.Get(13512));
     items.Add(item);
   }
 
@@ -817,10 +822,10 @@ void CGUIDialogMusicInfo::OnGetArt()
 
   for (unsigned int i = 0; i < remotethumbs.size(); ++i)
   {
-    CFileItemPtr item(new CFileItem(IMAGE_CHOICE::RemoteOf(i), false));
+    CFileItemPtr item(new CFileItem(ART::CHOICE::RemoteOf(i), false));
     item->SetArt(ART::TYPE::THUMB, remotethumbs[i]);
     item->SetArt(ART::TYPE::ICON, ART::DEFAULT::PICTURE);
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13513));
+    item->SetLabel(localizeStrings.Get(13513));
 
     items.Add(item);
   }
@@ -873,8 +878,7 @@ void CGUIDialogMusicInfo::OnGetArt()
   {
     CFileItemPtr item(new CFileItem("Local Art: " + localArt, false));
     item->SetArt(ART::TYPE::THUMB, localArt);
-    item->SetLabel(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13514)); // "Local art"
+    item->SetLabel(localizeStrings.Get(13514)); // "Local art"
     items.Add(item);
   }
 
@@ -882,12 +886,12 @@ void CGUIDialogMusicInfo::OnGetArt()
   if (bHasArt && !bFallback)
   { // Actually has this type of art (not a fallback) so
     // allow the user to delete it by selecting "no art".
-    CFileItemPtr item(new CFileItem(IMAGE_CHOICE::NONE, false));
+    CFileItemPtr item(new CFileItem(ART::CHOICE::NONE, false));
     if (m_bArtistInfo)
       item->SetArt(ART::TYPE::ICON, ART::DEFAULT::ARTIST);
     else
       item->SetArt(ART::TYPE::ICON, ART::DEFAULT::ALBUM_COVER);
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13515));
+    item->SetLabel(localizeStrings.Get(13515));
     items.Add(item);
   }
 
@@ -898,7 +902,7 @@ void CGUIDialogMusicInfo::OnGetArt()
   for (auto& item : items)
   {
     // Skip images from remote sources, recache done by refresh (could be slow)
-    if (IMAGE_CHOICE::RemoteIndexOf(item->GetPath()))
+    if (ART::CHOICE::RemoteIndexOf(item->GetPath()))
       continue;
     std::string thumb(item->GetArt(ART::TYPE::THUMB));
     if (thumb.empty())
@@ -920,17 +924,15 @@ void CGUIDialogMusicInfo::OnGetArt()
       CMediaSourceSettings::GetInstance().GetSources(MediaSection::MUSIC));
   CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_item);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
-  if (CGUIDialogFileBrowser::ShowAndGetImage(
-          items, sources, CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13511),
-          result) &&
-      result != IMAGE_CHOICE::CURRENT)
+  if (CGUIDialogFileBrowser::ShowAndGetImage(items, sources, localizeStrings.Get(13511), result) &&
+      result != ART::CHOICE::CURRENT)
   {
     // User didn't choose the one they have.
     // Overwrite with the new art or clear it
     std::string newArt;
-    if (const auto index = IMAGE_CHOICE::RemoteIndexOf(result))
+    if (const auto index = ART::CHOICE::RemoteIndexOf(result))
       newArt = remotethumbs[*index];
-    else if (result == IMAGE_CHOICE::THUMB)
+    else if (result == ART::CHOICE::THUMB)
       newArt = m_item->GetArt(ART::TYPE::THUMB);
     else if (StringUtils::StartsWith(result, "Local Art: "))
       newArt = localArt;
@@ -1048,7 +1050,7 @@ void CGUIDialogMusicInfo::ShowFor(CFileItem* pItem)
         {
           auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
           if (window)
-            window->RefreshContent("albums");
+            window->RefreshContent(CONTENT::ALBUMS);
         }
       }
     }

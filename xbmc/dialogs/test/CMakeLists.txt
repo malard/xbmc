@@ -1,4 +1,5 @@
 set(SOURCES TestGUIDialogBusy.cpp
+            TestGUIDialogNumeric.cpp
             TestImageChoices.cpp)
 set(HEADERS)
 
