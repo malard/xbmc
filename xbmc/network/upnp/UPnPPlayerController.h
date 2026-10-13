@@ -135,9 +135,6 @@ public:
 
   PLT_PositionInfo GetPosition() const;
 
-  //! Whether the renderer refused the file last queued to play next.
-  std::atomic<bool> m_nextRefused{false};
-
 private:
   // Platinum never replies to a request it did not accept, so waiting for one would hold the action
   // for the life of the player.

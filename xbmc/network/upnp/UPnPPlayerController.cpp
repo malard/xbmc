@@ -159,7 +159,6 @@ void CUPnPPlayerController::CAction::OnSetNextAVTransportURIResult(NPT_Result re
                                                                    PLT_DeviceDataReference& device,
                                                                    void* userdata)
 {
-  m_owner.m_nextRefused = NPT_FAILED(res);
   Complete(res, "OnSetNextAVTransportURIResult");
 }
 
