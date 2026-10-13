@@ -1315,6 +1315,10 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
       if (recursive)
         ListSlideshowDirectory(item->GetPath(), true, pictures, media);
     }
+    else if (URIUtils::IsRAR(item->GetPath()) || URIUtils::IsZIP(item->GetPath()))
+    {
+      // The slideshow window passes over an archive, and it is not media to play either
+    }
     else if (item->IsPicture())
       pictures.Add(item);
     else if (VIDEO::IsVideo(*item) || MUSIC::IsAudio(*item))

@@ -99,6 +99,20 @@ TEST_F(TestPlayerOpenDirectory, OnePictureMakesItASlideshowSource)
   EXPECT_EQ((std::vector<std::string>{"a.mp4"}), Names(media));
 }
 
+TEST_F(TestPlayerOpenDirectory, AnArchiveIsNeitherAPictureNorMedia)
+{
+  Touch("movie.mkv");
+  Touch("backup.zip");
+  Touch("scans.rar");
+
+  CFileItemList pictures;
+  CFileItemList media;
+  ASSERT_TRUE(CTestPlayerOperations::List(m_root, true, pictures, media));
+
+  EXPECT_EQ(0, pictures.Size());
+  EXPECT_EQ((std::vector<std::string>{"movie.mkv"}), Names(media));
+}
+
 TEST_F(TestPlayerOpenDirectory, SubdirectoriesAreOnlyFollowedWhenAsked)
 {
   Touch("a.mp4");
