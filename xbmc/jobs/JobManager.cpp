@@ -16,8 +16,8 @@
 #include <cassert>
 #include <chrono>
 #include <mutex>
+#include <numeric>
 #include <optional>
-#include <ranges>
 #include <stdexcept>
 #include <thread>
 
@@ -104,56 +104,33 @@ void CJobManager::Restart()
 
 void CJobManager::CancelJobs()
 {
+  std::unique_lock lock(m_section);
+  m_running = false;
+
+  // clear any pending jobs
+  for (unsigned int priority = CJob::PRIORITY_LOW_PAUSABLE; priority <= CJob::PRIORITY_DEDICATED;
+       ++priority)
   {
-    std::unique_lock lock(m_section);
-    m_running = false;
-
-    // queued jobs are aborted below, outside the lock; CancelJob still finds them in m_aborting
-    for (auto& queue : m_jobQueue)
-    {
-      for (auto& wi : queue)
-        m_aborting.emplace_back(std::move(wi));
-      queue.clear();
-    }
-
-    // These stay under the lock: the job is owned by its worker, which may complete and
-    // free it the moment the lock is released.
-    std::ranges::for_each(m_processing,
+    std::ranges::for_each(m_jobQueue[priority],
                           [](CWorkItem& wi)
                           {
                             for (auto* callback : wi.GetCallbacks())
                               callback->OnJobAbort(wi.GetId(), wi.GetJob());
-                            wi.Cancel();
+                            wi.FreeJob();
                           });
+    m_jobQueue[priority].clear();
   }
 
-  while (true)
-  {
-    std::optional<CWorkItem> item;
-    {
-      std::unique_lock lock(m_section);
-      if (m_aborting.empty())
-        break;
-
-      item.emplace(std::move(m_aborting.front()));
-      m_aborting.pop_front();
-      m_inCallback.emplace(
-          item->GetId(), CallbackInFlight{std::this_thread::get_id(), item->GetPriority(), false});
-    }
-
-    for (auto* callback : item->GetCallbacks())
-      callback->OnJobAbort(item->GetId(), item->GetJob());
-    item->FreeJob();
-
-    {
-      std::unique_lock lock(m_section);
-      m_inCallback.erase(item->GetId());
-    }
-    m_callbackDone.notify_all();
-  }
+  // cancel any callbacks on jobs still processing
+  std::ranges::for_each(m_processing,
+                        [](CWorkItem& wi)
+                        {
+                          for (auto* callback : wi.GetCallbacks())
+                            callback->OnJobAbort(wi.GetId(), wi.GetJob());
+                          wi.Cancel();
+                        });
 
   // tell our workers to finish
-  std::unique_lock lock(m_section);
   while (!m_workers.empty())
   {
     lock.unlock();
@@ -227,23 +204,6 @@ void CJobManager::CancelJob(unsigned int jobID)
       return;
     }
   }
-  // or CancelJobs holds it for its abort callback
-  const auto aborting =
-      std::ranges::find_if(m_aborting, [jobID](const auto& wi) { return wi.GetId() == jobID; });
-  if (aborting != m_aborting.cend())
-  {
-    aborting->Cancel();
-    return;
-  }
-
-  // or its abort or completion callback is running on another thread, which the owner must outlive
-  const auto inCallback = m_inCallback.find(jobID);
-  if (inCallback != m_inCallback.cend() && inCallback->second.thread != std::this_thread::get_id())
-  {
-    m_callbackDone.wait(lock, [this, jobID] { return !m_inCallback.contains(jobID); });
-    return;
-  }
-
   // or if we're processing it
   const auto it =
       std::ranges::find_if(m_processing, [jobID](const auto& wi) { return wi.GetId() == jobID; });
@@ -259,29 +219,23 @@ void CJobManager::StartWorkers(CJob::PRIORITY priority)
   if (!CanStart(priority))
     return;
 
+  // Workers neither running a job nor in its callbacks (ie waiting for one, or between jobs and
+  // about to ask for the next)
+  const size_t busy{GetBusyCount()};
+  const size_t free{m_workers.size() > busy ? m_workers.size() - busy : 0};
+
   // Each job already waiting has a claim on those ahead of this one
   const size_t wanted{std::min<size_t>(CountQueuedJobs(), GetMaxWorkers(priority))};
 
   // Do we have any sleeping threads?
-  if (m_idleWorkers > 0)
-    m_jobEvent.Set();
-
-  // A worker that is not busy is parked, starting up or returning from a callback, and will take a
-  // queued job; one that has timed out but not yet removed itself will not, which is a known gap.
-  const size_t busy{GetBusyCount()};
-  const size_t free{m_workers.size() > busy ? m_workers.size() - busy : 0};
   if (free >= wanted)
+  {
+    m_jobEvent.Set();
     return;
+  }
 
   // Everyone is busy - we need more workers
   m_workers.emplace_back(new CJobWorker(*this));
-}
-
-size_t CJobManager::GetBusyCount() const
-{
-  return m_processing.size() +
-         static_cast<size_t>(std::ranges::count_if(m_inCallback, [](const auto& entry)
-                                                   { return entry.second.completing; }));
 }
 
 size_t CJobManager::CountQueuedJobs() const
@@ -379,11 +333,9 @@ CJob* CJobManager::GetNextJob()
     if (job)
       return job;
     // no jobs are left - sleep for 30 seconds to allow new jobs to come in
-    ++m_idleWorkers;
     lock.unlock();
     bool newJob = m_jobEvent.Wait(30000ms);
     lock.lock();
-    --m_idleWorkers;
     if (!newJob)
       break;
   }
@@ -424,8 +376,7 @@ void CJobManager::OnJobComplete(bool success, CJob* job)
       // when another thread modifies m_processing during callback execution
       item.emplace(std::move(*i));
       m_processing.erase(i);
-      m_inCallback.emplace(item->GetId(),
-                           CallbackInFlight{std::this_thread::get_id(), item->GetPriority(), true});
+      ++m_completing[item->GetPriority()];
     }
     return item;
   }();
@@ -467,14 +418,10 @@ void CJobManager::OnJobComplete(bool success, CJob* job)
       }
     }
 
-    const unsigned int id = item->GetId();
     item->FreeJob();
 
-    {
-      std::unique_lock lock(m_section);
-      m_inCallback.erase(id);
-    }
-    m_callbackDone.notify_all();
+    std::unique_lock lock(m_section);
+    --m_completing[item->GetPriority()];
   }
 }
 
@@ -519,18 +466,19 @@ unsigned int CJobManager::GetMaxPausableWorkers()
 bool CJobManager::CanStart(CJob::PRIORITY priority) const
 {
   // PRIORITY_LOW_PAUSABLE is background work that spends its time waiting on a source rather than
-  // on a core. Currently only used for texture cache. A job finishing still holds its worker.
-  auto pausable{static_cast<size_t>(
+  // on a core. Currently only used for texture cache.
+  const auto running{static_cast<size_t>(
       std::ranges::count_if(m_processing, [](const CWorkItem& item)
                             { return item.GetPriority() == CJob::PRIORITY_LOW_PAUSABLE; }))};
-  for (const auto& entry : m_inCallback | std::views::values)
-  {
-    if (entry.completing && entry.priority == CJob::PRIORITY_LOW_PAUSABLE)
-      ++pausable;
-  }
+  const size_t pausable{running + m_completing[CJob::PRIORITY_LOW_PAUSABLE]};
 
   if (priority == CJob::PRIORITY_LOW_PAUSABLE)
     return pausable < GetMaxWorkers(priority);
 
   return GetBusyCount() - pausable < GetMaxWorkers(priority);
+}
+
+size_t CJobManager::GetBusyCount() const
+{
+  return std::accumulate(m_completing.begin(), m_completing.end(), m_processing.size());
 }
