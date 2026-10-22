@@ -204,6 +204,9 @@ bool CPlayerGUIInfo::GetLabel(std::string& value,
     case PLAYER_PROGRESS_CACHE:
       value = std::to_string(std::lrintf(g_application.GetCachePercentage()));
       return true;
+    case PLAYER_WAITING_FOR_AUDIO_REMAINING:
+      value = std::to_string(m_appPlayer->GetWaitingForAudioRemaining());
+      return true;
     case PLAYER_VOLUME:
       value =
           StringUtils::Format("{:2.1f} dB", CAEUtil::PercentToGain(m_appVolume->GetVolumeRatio()));
@@ -456,6 +459,9 @@ bool CPlayerGUIInfo::GetInt(int& value,
     case PLAYER_CACHELEVEL:
       value = m_appPlayer->GetCacheLevel();
       return true;
+    case PLAYER_WAITING_FOR_AUDIO_REMAINING:
+      value = m_appPlayer->GetWaitingForAudioRemaining();
+      return true;
     case PLAYER_CHAPTER:
       value = m_appPlayer->GetChapter();
       return true;
@@ -588,6 +594,9 @@ bool CPlayerGUIInfo::GetBool(bool& value,
       return true;
     case PLAYER_CACHING:
       value = m_appPlayer->IsCaching();
+      return true;
+    case PLAYER_WAITING_FOR_AUDIO:
+      value = m_appPlayer->IsWaitingForAudio();
       return true;
     case PLAYER_SEEKBAR:
     {

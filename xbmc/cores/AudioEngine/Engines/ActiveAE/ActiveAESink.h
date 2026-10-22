@@ -166,15 +166,6 @@ protected:
   bool m_silenceFiller{false};
   //! \brief Armed when a stream is held for a format change, dropped by the next content.
   bool m_fillerArmed{false};
-  //! \brief What the last passthrough write sent, logged when it changes.
-  enum class RawOut
-  {
-    NONE,
-    DATA,
-    FILLER,
-    PAUSE
-  };
-  RawOut m_lastRawOut{RawOut::NONE};
   bool m_streamNoise;
 };
 

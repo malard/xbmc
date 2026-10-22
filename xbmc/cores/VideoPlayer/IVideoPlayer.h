@@ -129,4 +129,6 @@ public:
   virtual bool IsPassthrough() const = 0;
   virtual float GetDynamicRangeAmplification() const = 0;
   virtual bool IsEOS() { return false; }
+  //! The next audio this player outputs starts a playback
+  virtual void OnPlaybackStart() {}
 };
