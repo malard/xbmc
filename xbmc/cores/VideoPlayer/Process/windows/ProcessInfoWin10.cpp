@@ -8,8 +8,12 @@
 
 #include "ProcessInfoWin10.h"
 
+#include "ServiceBroker.h"
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
+#include "cores/VideoPlayer/VideoRenderers/windows/DolbyVisionEffect.h"
 #include "cores/VideoPlayer/VideoRenderers/windows/RendererShaders.h"
+#include "settings/Settings.h"
+#include "settings/SettingsComponent.h"
 
 #include <set>
 
@@ -33,4 +37,14 @@ EINTERLACEMETHOD CProcessInfoWin10::GetFallbackDeintMethod()
 std::vector<AVPixelFormat> CProcessInfoWin10::GetRenderFormats()
 {
   return CRendererShaders::GetRenderFormats();
+}
+
+bool CProcessInfoWin10::WantsDolbyVisionRpu()
+{
+  if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+          "videoplayer.usemfdolbyvision"))
+    return false;
+
+  static const bool effectAvailable = CDolbyVisionEffect::IsAvailable();
+  return effectAvailable;
 }

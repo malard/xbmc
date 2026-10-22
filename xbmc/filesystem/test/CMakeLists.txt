@@ -22,6 +22,10 @@ if(TARGET ${APP_NAME_LC}::Bluray)
                       TestStreamParser.cpp)
 endif()
 
+if(TARGET ${APP_NAME_LC}::Udfread)
+  list(APPEND SOURCES TestUDFBlockInput.cpp)
+endif()
+
 if(TARGET ${APP_NAME_LC}::MicroHttpd)
   list(APPEND SOURCES TestHTTPDirectory.cpp
                       TestCurlHttpClientNetwork.cpp)

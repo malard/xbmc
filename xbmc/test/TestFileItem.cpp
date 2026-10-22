@@ -1550,3 +1550,15 @@ TEST(TestFileItemPlayListOrder, SortingByPlayListOrderRestoresTheSourceOrder)
   EXPECT_EQ("a", items[1]->GetLabel());
   EXPECT_EQ("b", items[2]->GetLabel());
 }
+
+TEST(TestFileItemList, AddSortMethodLeavesTheSortOrderToTheView)
+{
+  CFileItemList items;
+  items.AddSortMethod(SortBy::DATE, 552, LABEL_MASKS());
+  items.AddSortMethod(SortBy::LABEL, SortAttributeNone, 551, LABEL_MASKS());
+
+  const auto& details = items.GetSortDetails();
+  ASSERT_EQ(2u, details.size());
+  for (const auto& sort : details)
+    EXPECT_EQ(SortOrder::NONE, sort.m_sortDescription.sortOrder);
+}

@@ -90,7 +90,8 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
         lockInfo.ResetBadPasswordCount();
         lockInfo.SetState(LOCK_STATE_LOCK_BUT_UNLOCKED);
         g_passwordManager.LockSource(section, strLabel, false);
-        mediaSources.UpdateSource(section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
+        mediaSources.UpdateSource(
+            section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
         mediaSources.Save();
 
         // a mediasource has been unlocked successfully
@@ -104,7 +105,8 @@ bool CGUIPassword::IsItemUnlocked(T pItem,
         KODI::UTILS::CLockInfo& lockInfo{pItem->GetLockInfo()};
         if (0 != settings->GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES))
           lockInfo.IncrementBadPasswordCount();
-        mediaSources.UpdateSource(section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
+        mediaSources.UpdateSource(
+            section, strLabel, "badpwdcount", std::to_string(lockInfo.GetBadPasswordCount()));
         mediaSources.Save();
         break;
       }

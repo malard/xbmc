@@ -638,18 +638,20 @@ bool CApplication::Initialize()
   CDatabaseManager &databaseManager = m_ServiceManager->GetDatabaseManager();
 
   bool allDatabasesInitialized{false};
-  CEvent event(true);
+  // Shared so the jobs below keep the event alive until CEvent::Set() returns: Set() still
+  // touches the event after waking the waiter, and Initialize() may return before that.
+  auto event = std::make_shared<CEvent>(true);
   CServiceBroker::GetJobManager()->Submit(
-      [&allDatabasesInitialized, &databaseManager, &event]()
+      [&allDatabasesInitialized, &databaseManager, event]()
       {
         allDatabasesInitialized = databaseManager.Initialize();
-        event.Set();
+        event->Set();
       });
 
   const std::string& connecting{localizeStrings.Get(24186)};
   const std::string& updating{localizeStrings.Get(24150)};
   int iDots = 1;
-  while (!event.Wait(1000ms))
+  while (!event->Wait(1000ms))
   {
     if (databaseManager.IsConnecting() || databaseManager.IsUpgrading())
     {
@@ -685,16 +687,18 @@ bool CApplication::Initialize()
 
   // Initialize GUI font manager to build/update fonts cache
   //! @todo Move GUIFontManager into service broker and drop the global reference
-  event.Reset();
+  event->Reset();
   GUIFontManager& guiFontManager = g_fontManager;
-  CServiceBroker::GetJobManager()->Submit([&guiFontManager, &event]() {
-    guiFontManager.Initialize();
-    event.Set();
-  });
+  CServiceBroker::GetJobManager()->Submit(
+      [&guiFontManager, event]()
+      {
+        guiFontManager.Initialize();
+        event->Set();
+      });
 
   std::string localizedStr{localizeStrings.Get(39175)};
   iDots = 1;
-  while (!event.Wait(1000ms))
+  while (!event->Wait(1000ms))
   {
     if (g_fontManager.IsUpdating())
       CServiceBroker::GetRenderSystem()->ShowSplash(std::string(iDots, ' ') + localizedStr +
@@ -726,7 +730,7 @@ bool CApplication::Initialize()
     skinHandling->m_confirmSkinChange = false;
 
     std::vector<AddonInfoPtr> incompatibleAddons;
-    event.Reset();
+    event->Reset();
 
     // Addon migration
     auto& addonMgr{CServiceBroker::GetAddonMgr()};
@@ -735,17 +739,18 @@ bool CApplication::Initialize()
       if (CAddonSystemSettings::GetInstance().GetAddonAutoUpdateMode() == AUTO_UPDATES_ON)
       {
         CServiceBroker::GetJobManager()->Submit(
-            [&event, &incompatibleAddons]() {
+            [event, &incompatibleAddons]()
+            {
               if (CServiceBroker::GetRepositoryUpdater().CheckForUpdates())
                 CServiceBroker::GetRepositoryUpdater().Await();
 
               incompatibleAddons = CServiceBroker::GetAddonMgr().MigrateAddons();
-              event.Set();
+              event->Set();
             },
             CJob::PRIORITY_DEDICATED);
         localizedStr = localizeStrings.Get(24151);
         iDots = 1;
-        while (!event.Wait(1000ms))
+        while (!event->Wait(1000ms))
         {
           CServiceBroker::GetRenderSystem()->ShowSplash(std::string(iDots, ' ') + localizedStr +
                                                         std::string(iDots, '.'));

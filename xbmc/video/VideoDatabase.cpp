@@ -152,6 +152,23 @@ std::string GetSourcePathOfFile(const CMediaSource& source, const std::string& f
 
   return {};
 }
+
+// Whether a scan caches art of this type, being on the art list
+bool IsCachedByScan(MEDIA::TYPE mediaType, const std::string& artType)
+{
+  const std::vector<std::string> artTypes{CVideoThumbLoader::GetArtTypes(mediaType)};
+  return std::ranges::find(artTypes, artType) != artTypes.end();
+}
+
+// What an export does with art not cached yet. Art a scan caches is cached, rather than copied
+// from its source
+CTextureCache::UncachedImage UncachedArt(bool cachedByScan)
+{
+  if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+          CSettings::SETTING_VIDEOLIBRARY_RETRIEVEALLARTONEXPORT))
+    return CTextureCache::UncachedImage::SKIP;
+  return cachedByScan ? CTextureCache::UncachedImage::CACHE : CTextureCache::UncachedImage::COPY;
+}
 } // unnamed namespace
 
 CVideoDatabase::FileInformation::FileInformation(std::string&& newPath,
@@ -5002,8 +5019,8 @@ bool CVideoDatabase::GetStreamDetails(CVideoInfoTag& tag)
 
   bool retVal = false;
 
-  CStreamDetails& details = tag.m_streamDetails;
-  details.Reset();
+  // Filled locally and published once, so the GUI never sees the details empty or half filled
+  CStreamDetails details;
 
   std::unique_ptr<Dataset> pDS(m_pDB->CreateDataset());
   try
@@ -5023,10 +5040,11 @@ bool CVideoDatabase::GetStreamDetails(CVideoInfoTag& tag)
   {
     CLog::LogF(LOGERROR, "({}) failed", tag.m_iFileId);
   }
-  details.DetermineBestStreams();
+  // Assigning determines the best streams, which GetVideoDuration() reads
+  tag.m_streamDetails = details;
 
-  if (details.GetVideoDuration() > 0)
-    tag.SetDuration(details.GetVideoDuration());
+  if (const int duration{tag.m_streamDetails.GetVideoDuration()}; duration > 0)
+    tag.SetDuration(duration);
 
   // Unverified: the identity check needs the file stat'ing.
   if (auto stored{GetStoredContentGeometry(fileId)})
@@ -11084,6 +11102,8 @@ std::vector<int> CVideoDatabase::CleanMediaType(MEDIA::TYPE mediaType,
   std::map<int, std::pair<bool, bool> > sourcePathsDeleteDecisions;
   // Each source path is checked once, as loose assets don't share their decisions
   std::map<int, bool> sourcePathsExist;
+  // An episode is listed once for each folder of its show
+  std::set<int> cleaned;
   m_pDS2->query(sql);
   while (!m_pDS2->eof())
   {
@@ -11172,7 +11192,7 @@ std::vector<int> CVideoDatabase::CleanMediaType(MEDIA::TYPE mediaType,
         pathsDeleteDecisions.insert(std::make_pair(m_pDS2->fv(2).get_asInt(), del));
     }
 
-    if (del)
+    if (del && (!isEpisode || cleaned.insert(m_pDS2->fv(0).get_asInt()).second))
     {
       deletedFileIDs += m_pDS2->fv(1).get_asString() + ",";
       cleanedIDs.emplace_back(m_pDS2->fv(0).get_asInt());
@@ -11500,7 +11520,9 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
           for (const auto& [type, url] : artwork)
           {
             std::string savedThumb = ART::GetLocalArt(item, type, false);
-            if (CServiceBroker::GetTextureCache()->Export(url, savedThumb, overwrite))
+            if (CServiceBroker::GetTextureCache()->Export(
+                    url, savedThumb, overwrite,
+                    UncachedArt(IsCachedByScan(MEDIA::TYPE::MOVIE, type))))
               CLog::Log(LOGDEBUG, "Exported artwork '{}' to '{}' - overwrite {}", type, savedThumb,
                         overwrite);
           }
@@ -11619,7 +11641,9 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
             for (const auto& [arttype, arturl] : aw)
             {
               const std::string savedThumb = URIUtils::AddFileToFolder(itemPath, arttype);
-              if (CServiceBroker::GetTextureCache()->Export(arturl, savedThumb, overwrite))
+              if (CServiceBroker::GetTextureCache()->Export(
+                      arturl, savedThumb, overwrite,
+                      UncachedArt(IsCachedByScan(MEDIA::TYPE::VIDEO_COLLECTION, arttype))))
                 CLog::Log(LOGDEBUG, "Exported artwork '{}' to '{}' - overwrite {}", arturl,
                           savedThumb, overwrite);
             }
@@ -11721,7 +11745,9 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
         for (const auto& [type, url] : artwork)
         {
           const std::string savedThumb = ART::GetLocalArt(item, type, false);
-          if (CServiceBroker::GetTextureCache()->Export(url, savedThumb, overwrite))
+          if (CServiceBroker::GetTextureCache()->Export(
+                  url, savedThumb, overwrite,
+                  UncachedArt(IsCachedByScan(MEDIA::TYPE::MUSIC_VIDEO, type))))
             CLog::Log(LOGDEBUG, "Exported artwork '{}' to '{}' - overwrite {}", url, savedThumb,
                       overwrite);
         }
@@ -11828,14 +11854,15 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
         for (const auto& [type, url] : artwork)
         {
           const std::string savedThumb = ART::GetLocalArt(item, type, true);
-          CServiceBroker::GetTextureCache()->Export(url, savedThumb, overwrite);
+          CServiceBroker::GetTextureCache()->Export(
+              url, savedThumb, overwrite, UncachedArt(IsCachedByScan(MEDIA::TYPE::TV_SHOW, type)));
         }
 
         tvshowDir = tvshow.m_strPath;
         if (actorThumbs)
           ExportActorThumbs(actorsDir, singlePath, tvshow, !singleFile, overwrite);
 
-        // export season thumbs
+        // export season thumbs, all of which a scan caches
         for (const auto& [seasonNumber, art] : seasonArt)
         {
           std::string seasonThumb;
@@ -11848,8 +11875,8 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
           for (const auto& [type, url] : art)
           {
             const std::string savedThumb(ART::GetLocalArt(item, seasonThumb + "-" + type, true));
-            if (!art.empty() &&
-                CServiceBroker::GetTextureCache()->Export(url, savedThumb, overwrite))
+            if (!art.empty() && CServiceBroker::GetTextureCache()->Export(
+                                    url, savedThumb, overwrite, UncachedArt(true)))
               CLog::Log(LOGDEBUG, "Exported artwork '{}' to '{}' - overwrite {}", url, savedThumb,
                         overwrite);
           }
@@ -11965,7 +11992,7 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
         // Write art/actor images
         if (images)
         {
-          ExportArt(fileItem, episodeArtwork, overwrite);
+          ExportArt(fileItem, episodeArtwork, MEDIA::TYPE::EPISODE, overwrite);
           if (actorThumbs)
             ExportActorThumbs(actorsDir, singlePath, episode, !singleFile, overwrite, tvshowDir);
         }
@@ -12040,6 +12067,7 @@ void CVideoDatabase::ExportToXML(const std::string &path, bool singleFile /* = t
 
 void CVideoDatabase::ExportArt(const CFileItem& item,
                                const ART::Artwork& artwork,
+                               MEDIA::TYPE mediaType,
                                bool overwrite) const
 {
   for (const auto& [artType, artPath] : artwork)
@@ -12049,7 +12077,8 @@ void CVideoDatabase::ExportArt(const CFileItem& item,
                          item.GetProperty(MULTIPLE_EPISODES).asBoolean(false)
                              ? ART::AdditionalIdentifiers::SEASON_AND_EPISODE
                              : ART::AdditionalIdentifiers::NONE)};
-    if (CServiceBroker::GetTextureCache()->Export(artPath, savedThumb, overwrite))
+    if (CServiceBroker::GetTextureCache()->Export(artPath, savedThumb, overwrite,
+                                                  UncachedArt(IsCachedByScan(mediaType, artType))))
       CLog::Log(LOGDEBUG, "Exported artwork '{}' to '{}' - overwrite {}", artPath, savedThumb,
                 overwrite);
   }
@@ -12076,6 +12105,9 @@ void CVideoDatabase::ExportActorThumbs(const std::string& path,
     }
   }
 
+  // A scan caches the cast thumbs it fetches
+  const bool cachedByScan{CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_VIDEOLIBRARY_ACTORTHUMBS)};
   for (const auto& i : tag.m_cast)
   {
     CFileItem item;
@@ -12083,7 +12115,8 @@ void CVideoDatabase::ExportActorThumbs(const std::string& path,
     if (!i.thumb.empty())
     {
       std::string thumbFile(GetSafeFile(strPath, i.strName));
-      if (CServiceBroker::GetTextureCache()->Export(i.thumb, thumbFile, overwrite))
+      if (CServiceBroker::GetTextureCache()->Export(i.thumb, thumbFile, overwrite,
+                                                    UncachedArt(cachedByScan)))
         CLog::Log(LOGDEBUG, "Exported actor thumb '{}' to '{}' - overwrite {}", i.thumb, thumbFile,
                   overwrite);
     }
@@ -12231,6 +12264,8 @@ void CVideoDatabase::ImportFromXML(const std::string &path)
     std::string lastTitle;
     int lastMovieId{-1};
     KODI::REGEXP::RegExpCache regexpCache;
+    const int artworkLevel{CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+        CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL)};
     while (movie)
     {
       std::string currentTitle{};
@@ -12258,17 +12293,13 @@ void CVideoDatabase::ImportFromXML(const std::string &path)
                                                      LegalPath::WIN32_COMPAT));
           if (CDirectory::Exists(setPath))
           {
+            // As a scan finds it in the movie set information folder
+            URIUtils::AddSlashAtEnd(setPath);
             KODI::ART::Artwork setArt;
-            const CFileItem artItem2(setPath, true);
-            for (const auto& artType :
-                 CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION))
-            {
-              const std::string artPath = CVideoThumbLoader::GetLocalArt(artItem2, artType, true);
-              if (!artPath.empty())
-              {
-                setArt[artType] = artPath;
-              }
-            }
+            ART::AddLocalItemArtwork(
+                setArt, CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION), setPath,
+                artworkLevel == CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_ALL,
+                artworkLevel == CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_BASIC, true);
             item.AppendArt(setArt, "set");
           }
         }
@@ -13550,6 +13581,24 @@ bool CVideoDatabase::SetDefaultVideoVersion(VideoDbContentType itemType, int dbI
         m_pDS->exec(PrepareSQL(
             "UPDATE movie SET idFile = %i, c%02d = '%s', c%02d = %i WHERE idMovie = %i", idFile,
             VIDEODB_ID_BASEPATH, path.c_str(), VIDEODB_ID_PARENTPATHID, idParentPath, dbId));
+
+        // The selected version falls back to the movie art for any type it has none of, or has
+        // an empty url for, so give it that art before it becomes the movie art. Images taken
+        // from a video file are left out, for those of the new default to be taken below
+        m_pDS->exec(PrepareSQL("DELETE FROM art WHERE media_id = %i AND media_type = '%s' "
+                               "AND url = ''",
+                               idFile, NameOf(MEDIA::TYPE::VIDEO_VERSION).c_str()));
+        m_pDS->exec(PrepareSQL("INSERT INTO art (media_id, media_type, type, url) "
+                               "SELECT %i, '%s', movieart.type, movieart.url FROM art movieart "
+                               "  LEFT JOIN art versionart ON versionart.media_id = %i "
+                               "    AND versionart.media_type = '%s' "
+                               "    AND versionart.type = movieart.type "
+                               "WHERE movieart.media_id = %i AND movieart.media_type = '%s' "
+                               "AND versionart.art_id IS NULL "
+                               "AND movieart.url NOT LIKE 'image://video%%'",
+                               idFile, NameOf(MEDIA::TYPE::VIDEO_VERSION).c_str(), idFile,
+                               NameOf(MEDIA::TYPE::VIDEO_VERSION).c_str(), dbId,
+                               NameOf(MEDIA::TYPE::MOVIE).c_str()));
 
         // Swap art
         // media_id is idMovie for movies and idFile for videoversions

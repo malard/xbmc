@@ -426,6 +426,23 @@ public:
 
   //============================================================================
   /// @brief **Callback to Kodi Function**\n
+  /// Name a file the game client looked for and couldn't find, such as a
+  /// BIOS file, so Kodi can tell the user which one is missing.
+  ///
+  /// @param[in] path The file's path, relative to the system directory
+  ///
+  /// @remarks Call it before returning @ref GAME_ERROR_MISSING_FILES. It does
+  ///          nothing with a Kodi older than game API 8.3.0.
+  ///
+  void ReportMissingFile(const std::string& path)
+  {
+    if (IsInstanceAPIVersionAtLeast(8, 3, 0))
+      m_instanceData->toKodi->ReportMissingFile(m_instanceData->toKodi->kodiInstance, path.c_str());
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief **Callback to Kodi Function**\n
   /// Get the speed the game is being played back at
   ///
   /// @return The speed as a multiple of normal speed
@@ -466,6 +483,28 @@ public:
   void SetGameTiming(const game_system_timing& timingInfo)
   {
     m_instanceData->toKodi->SetGameTiming(m_instanceData->toKodi->kodiInstance, &timingInfo);
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief **Callback to Kodi Function**\n
+  /// Ask Kodi to fast-forward the game, or to stop a fast-forward it asked for
+  ///
+  /// @param[in] fastForward True to fast-forward, false to return to normal speed
+  /// @param[in] ratio The speed asked for if above 1, otherwise Kodi chooses
+  ///
+  /// For a game that wants to pass over a wait of its own, such as loading from
+  /// tape. Kodi leaves a speed the user chose alone: it only fast-forwards from
+  /// normal speed, and only returns to normal speed from the one it set.
+  ///
+  /// @remarks Only called from the add-on itself. It does nothing with a Kodi
+  ///          older than game API 8.4.0.
+  ///
+  void SetFastForwarding(bool fastForward, double ratio)
+  {
+    if (IsInstanceAPIVersionAtLeast(8, 4, 0))
+      m_instanceData->toKodi->SetFastForwarding(m_instanceData->toKodi->kodiInstance, fastForward,
+                                                ratio);
   }
   //----------------------------------------------------------------------------
 

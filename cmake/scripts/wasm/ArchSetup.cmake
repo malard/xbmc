@@ -63,7 +63,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     "SHELL:-sEXPORTED_RUNTIME_METHODS=ccall,cwrap"
     "SHELL:--pre-js ${CMAKE_SOURCE_DIR}/xbmc/platform/wasm/kodi_pre.js"
     "SHELL:--js-library ${CMAKE_SOURCE_DIR}/xbmc/windowing/wasm/webgl_commit.js"
+    # BSD sockets over the Tizen Sockets Extension; falls back to the upstream
+    # implementation in ordinary browsers.
+    "SHELL:--js-library ${CMAKE_SOURCE_DIR}/xbmc/platform/wasm/network/tizen_sockets.js"
+    "SHELL:--js-library ${CMAKE_SOURCE_DIR}/xbmc/cores/VideoPlayer/DVDCodecs/Video/webcodecs_bridge.js"
   )
+
+  # tizen_sockets.js returns one getaddrinfo() node per address, and older
+  # Emscripten freeaddrinfo() frees only the first one.
+  if(EMSCRIPTEN_VERSION AND EMSCRIPTEN_VERSION VERSION_LESS 6.0.10)
+    message(WARNING "Emscripten ${EMSCRIPTEN_VERSION} leaks getaddrinfo() results on Tizen; use 6.0.10 or later")
+  endif()
 
   # ---------------------------------------------------------------------------
   # Debug vs Release
@@ -123,4 +133,5 @@ set(ENABLE_DVDCSS OFF CACHE BOOL "libdvdcss disabled for WASM" FORCE)
 set(ENABLE_AIRTUNES OFF CACHE BOOL "AirTunes not available in browser" FORCE)
 set(ENABLE_EVENTCLIENTS OFF CACHE BOOL "Event clients not used for WASM" FORCE)
 set(ENABLE_INTERNAL_FFMPEG ON CACHE BOOL "No system FFmpeg for Emscripten" FORCE)
+set(ENABLE_INTERNAL_OPUS ON CACHE BOOL "Enable internal opus?")
 
