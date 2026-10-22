@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -81,11 +82,13 @@ namespace JSONRPC
 
 protected:
   //! Lists a directory as a slideshow would: pictures apart from the playable media, which stays
-  //! in file order.
+  //! in file order. \p visitedPaths holds the directories already listed, or is nullptr to start
+  //! a new listing.
   static bool ListSlideshowDirectory(const std::string& path,
                                      bool recursive,
                                      CFileItemList& pictures,
-                                     CFileItemList& media);
+                                     CFileItemList& media,
+                                     std::set<std::string>* visitedPaths = nullptr);
     static JSONRPC_STATUS PlayFileItemList(CFileItemList& list,
                                          const CVariant& options,
                                          CVariant& result);
