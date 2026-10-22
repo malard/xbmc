@@ -322,7 +322,7 @@ const CRect &CGraphicContext::GetScissors() const
 
 void CGraphicContext::ResetScissors()
 {
-  ClipToGui();
+  SetClip(ClipBounds());
 }
 
 const CRect CGraphicContext::GetViewWindow() const
@@ -364,7 +364,9 @@ float CGraphicContext::GetRasterAspect() const
 
 CRect CGraphicContext::ClipToGui()
 {
-  return SetClip(ClipBounds());
+  CRect clip = m_scissors;
+  clip.Intersect(ClipBounds());
+  return SetClip(clip);
 }
 
 CRect CGraphicContext::SetClip(const CRect& rect)
