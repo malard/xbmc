@@ -38,11 +38,7 @@ CEvent releaseRequest{true};
 std::atomic<bool> blockedRequestReturned{false};
 CEvent laterRequestStarted{true};
 
-JSONRPC_STATUS Block(const std::string& method,
-                     ITransportLayer* transport,
-                     IClient* client,
-                     const CVariant& parameterObject,
-                     CVariant& result)
+JSONRPC_STATUS Block(const CVariant& parameterObject, CVariant& result)
 {
   requestBlocked.Set();
   releaseRequest.Wait();
@@ -51,11 +47,7 @@ JSONRPC_STATUS Block(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS Record(const std::string& method,
-                      ITransportLayer* transport,
-                      IClient* client,
-                      const CVariant& parameterObject,
-                      CVariant& result)
+JSONRPC_STATUS Record(const CVariant& parameterObject, CVariant& result)
 {
   laterRequestStarted.Set();
   result = "OK";
@@ -64,11 +56,7 @@ JSONRPC_STATUS Record(const std::string& method,
 
 CEvent stoppedFromRequest{true};
 
-JSONRPC_STATUS Stop(const std::string& method,
-                    ITransportLayer* transport,
-                    IClient* client,
-                    const CVariant& parameterObject,
-                    CVariant& result)
+JSONRPC_STATUS Stop(const CVariant& parameterObject, CVariant& result)
 {
   // As a request changing the services settings does, through StopJSONRPCServer(true)
   CTCPServer::StopServer(true);
@@ -283,10 +271,10 @@ TEST_F(TestTCPServer, APeerThatStopsReadingHoldsUpNoAnnouncement)
   // Far more than the socket buffers hold
   const CVariant data(std::string(60000, 'x'));
   for (int i = 0; i < 400; ++i)
-    manager->Announce(ANNOUNCEMENT::Other, "test", "flood", data);
-  manager->Announce(ANNOUNCEMENT::Info, "test", "marker", CVariant{});
+    manager->Announce(ANNOUNCEMENT::OtherEvent{"test", "flood", data});
+  manager->Announce(ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
 
-  const bool delivered = ReadUntil(listener, "marker", 5s);
+  const bool delivered = ReadUntil(listener, "Info.OnChanged", 5s);
 
   std::promise<void> stopped;
   auto done = stopped.get_future();

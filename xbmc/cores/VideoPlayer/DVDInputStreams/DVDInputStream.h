@@ -186,6 +186,11 @@ public:
    */
   virtual void SetReadRate(uint32_t rate) {}
 
+  /*! \brief As SetReadRate, for a stream the rate is only a ceiling for, so a cache sized by
+   *  rate keeps its size
+   */
+  virtual void SetReadRateLimit(uint32_t rate) { SetReadRate(rate); }
+
   /*! \brief Get the cache status
    \return true when cache status was successfully obtained
    */
@@ -202,6 +207,8 @@ public:
   virtual bool IsStreaming() const;
 
   void SetRealtime(bool realtime) { m_realtime = realtime; }
+
+  bool AllowsRealtimeAudioPassthrough() const { return m_realtimeAudioPassthrough; }
 
   // interfaces
   virtual IDemux* GetIDemux() { return nullptr; }
@@ -287,4 +294,5 @@ protected:
   CFileItem m_item;
   bool m_contentLookup;
   bool m_realtime;
+  bool m_realtimeAudioPassthrough{false};
 };

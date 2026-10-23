@@ -60,7 +60,7 @@ namespace XBMCAddon
     class Player : public AddonCallback, public IPlayerCallback
     {
     private:
-      int iPlayList;
+      KODI::PLAYLIST::Type m_playList{KODI::PLAYLIST::Audio};
 
       void playStream(const String& item = emptyString, const XBMCAddon::xbmcgui::ListItem* listitem = NULL, bool windowed = false);
       void playPlaylist(const PlayList* playlist = NULL,
@@ -575,7 +575,8 @@ namespace XBMCAddon
       /// Get the language of the current subtitle stream.
       ///
       /// @return                    BCP 47 language tag of the stream, e.g. **en** or **en-AU**,
-      ///                            or the stream name when it declares no language
+      ///                            or the stream name where it declares no language or one that
+      ///                            names none
       ///
       /// @python_v22 Language values are BCP 47 tags; previously ISO 639-2 three letter codes.
       ///
@@ -591,7 +592,8 @@ namespace XBMCAddon
       /// Get the languages of the available subtitle streams.
       ///
       /// @return                    List of BCP 47 language tags, e.g. **en** or **en-AU**; a
-      ///                            stream that declares no language is listed by its name
+      ///                            stream declaring no language, or one that names none, is
+      ///                            listed by its name
       ///
       /// @python_v22 Language values are BCP 47 tags; previously ISO 639-2 three letter codes.
       ///
@@ -688,6 +690,39 @@ namespace XBMCAddon
       InfoTagVideo* getVideoInfoTag();
 #endif
 
+#ifdef DOXYGEN_SHOULD_USE_THIS
+      ///
+      /// \ingroup python_Player
+      /// @brief \python_func{ getContentGeometry() }
+      /// To get where the picture is inside the frame carrying it.
+      ///
+      /// Returns the content rectangle in force - what the film was shot at\, as against the
+      /// shape of the frame it is encoded in. A stored measurement\, a reading taken during
+      /// playback and a ratio the viewer declared all reach it\, and getSource() says which.
+      ///
+      /// Unlike the info tag getters this does not raise when nothing is playing\, reporting
+      /// the shape Kodi rests at with source `container` and no frame behind it.
+      ///
+      /// @return                    Content geometry snapshot
+      ///
+      ///
+      ///------------------------------------------------------------------------
+      /// @python_v22 New function added.
+      ///
+      /// **Example:**
+      /// ~~~~~~~~~~~~~{.py}
+      /// ...
+      /// geometry = xbmc.Player().getContentGeometry()
+      /// if geometry.getSource() != 'container':
+      ///     lens.select(geometry.getAspect())
+      /// ...
+      /// ~~~~~~~~~~~~~
+      ///
+      getContentGeometry();
+#else
+      ContentGeometry* getContentGeometry();
+#endif
+
       // Player_GetMusicInfoTag
 #ifdef DOXYGEN_SHOULD_USE_THIS
       ///
@@ -748,7 +783,8 @@ namespace XBMCAddon
       /// Get the languages of the available audio streams.
       ///
       /// @return                    List of BCP 47 language tags, e.g. **en** or **en-AU**; a
-      ///                            stream that declares no language is listed by its name
+      ///                            stream declaring no language, or one that names none, is
+      ///                            listed by its name
       ///
       /// @python_v22 Language values are BCP 47 tags; previously ISO 639-2 three letter codes.
       ///
@@ -787,7 +823,8 @@ namespace XBMCAddon
       /// Get the languages of the available video streams.
       ///
       /// @return                    List of BCP 47 language tags, e.g. **en** or **en-AU**; a
-      ///                            stream that declares no language is listed by its name
+      ///                            stream declaring no language, or one that names none, is
+      ///                            listed by its name
       ///
       /// @python_v22 Language values are BCP 47 tags; previously ISO 639-2 three letter codes.
       ///

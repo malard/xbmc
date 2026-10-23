@@ -1,6 +1,11 @@
-set(SOURCES AnnouncementManager.cpp)
+set(SOURCES AnnouncementEvents.cpp
+            AnnouncementManager.cpp
+            PlaybackValues.cpp)
 
-set(HEADERS AnnouncementManager.h
-            IAnnouncer.h)
+set(HEADERS AnnouncementEvents.h
+            AnnouncementManager.h
+            AnnouncementMessages.h
+            IAnnouncer.h
+            PlaybackValues.h)
 
 core_add_library(interfaces)

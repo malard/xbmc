@@ -12,6 +12,7 @@
 #include "cores/VideoPlayer/Buffers/VideoBuffer.h"
 #include "cores/VideoPlayer/Interface/DemuxPacket.h"
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
+#include "utils/Geometry.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -51,6 +52,12 @@ public:
   VideoPicture& SetParams(const VideoPicture &pic);
   void Reset(); // reinitialize members, videoBuffer will be released if set!
   bool IsSameParams(const VideoPicture& pic) const;
+
+  /*!
+   * \brief Whether \p pic differs from this picture in nothing IsSameParams() compares but its
+   * size and display size.
+   */
+  bool IsSameParamsExceptSize(const VideoPicture& pic) const;
 
   /*!
    * \brief Whether a picture of \p format is full range when its stream gives \p range. RGB with
@@ -96,6 +103,9 @@ public:
   unsigned int iHeight;
   unsigned int iDisplayWidth;           //< width of the picture without black bars
   unsigned int iDisplayHeight;          //< height of the picture without black bars
+
+  //! \brief Where the picture is inside the coded frame, empty when nothing measured it.
+  CRectInt contentRect;
 
 private:
   VideoPicture(VideoPicture const&) = default;

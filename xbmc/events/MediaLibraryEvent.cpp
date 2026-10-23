@@ -9,14 +9,61 @@
 #include "MediaLibraryEvent.h"
 
 #include "ServiceBroker.h"
+#include "filesystem/SourcesDirectory.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/WindowIDs.h"
 #include "music/MusicDbPaths.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/URIUtils.h"
 #include "video/VideoDbPaths.h"
+
+#include <optional>
+#include <string>
+
+
+namespace
+{
+struct Destination
+{
+  int window;
+  std::string root;
+};
+
+std::optional<Destination> DestinationFor(KODI::MEDIA::TYPE type)
+{
+  switch (type)
+  {
+    case KODI::MEDIA::TYPE::VIDEO:
+      return Destination{WINDOW_VIDEO_NAV,
+                         XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::VIDEO)};
+    case KODI::MEDIA::TYPE::MOVIE:
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_TITLES};
+    case KODI::MEDIA::TYPE::VIDEO_COLLECTION:
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MOVIE_SETS};
+    case KODI::MEDIA::TYPE::MUSIC_VIDEO:
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES};
+    case KODI::MEDIA::TYPE::TV_SHOW:
+    case KODI::MEDIA::TYPE::SEASON:
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
+    case KODI::MEDIA::TYPE::EPISODE:
+      return Destination{WINDOW_VIDEO_NAV, KODI::VIDEO::DB_PATH::TVSHOW_TITLES};
+    case KODI::MEDIA::TYPE::MUSIC:
+      return Destination{WINDOW_MUSIC_NAV,
+                         XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC)};
+    case KODI::MEDIA::TYPE::ARTIST:
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ARTISTS};
+    case KODI::MEDIA::TYPE::ALBUM:
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::ALBUMS};
+    case KODI::MEDIA::TYPE::SONG:
+      return Destination{WINDOW_MUSIC_NAV, KODI::MUSIC::DB_PATH::SONGS};
+    case KODI::MEDIA::TYPE::NONE:
+    case KODI::MEDIA::TYPE::VIDEO_VERSION:
+      break;
+  }
+  return {};
+}
+} // namespace
 
 CMediaLibraryEvent::CMediaLibraryEvent(KODI::MEDIA::TYPE mediaType, const std::string& mediaPath, const CVariant& label, const CVariant& description, EventLevel level /* = EventLevel::Information */)
   : CUniqueEvent(label, description, level),
@@ -44,64 +91,12 @@ bool CMediaLibraryEvent::Execute() const
   if (!CanExecute())
     return false;
 
-  int windowId = -1;
-  std::string path = m_mediaPath;
-  if (m_mediaType == KODI::MEDIA::TYPE::VIDEO || m_mediaType == KODI::MEDIA::TYPE::MOVIE || m_mediaType == KODI::MEDIA::TYPE::VIDEO_COLLECTION ||
-      m_mediaType == KODI::MEDIA::TYPE::TV_SHOW || m_mediaType == KODI::MEDIA::TYPE::SEASON || m_mediaType == KODI::MEDIA::TYPE::EPISODE ||
-      m_mediaType == KODI::MEDIA::TYPE::MUSIC_VIDEO)
-  {
-    if (path.empty())
-    {
-      if (m_mediaType == KODI::MEDIA::TYPE::VIDEO)
-        path = "sources://video/";
-      else if (m_mediaType == KODI::MEDIA::TYPE::MOVIE)
-        path = KODI::VIDEO::DB_PATH::MOVIE_TITLES;
-      else if (m_mediaType == KODI::MEDIA::TYPE::VIDEO_COLLECTION)
-        path = KODI::VIDEO::DB_PATH::MOVIE_SETS;
-      else if (m_mediaType == KODI::MEDIA::TYPE::MUSIC_VIDEO)
-        path = KODI::VIDEO::DB_PATH::MUSICVIDEO_TITLES;
-      else if (m_mediaType == KODI::MEDIA::TYPE::TV_SHOW || m_mediaType == KODI::MEDIA::TYPE::SEASON || m_mediaType == KODI::MEDIA::TYPE::EPISODE)
-        path = KODI::VIDEO::DB_PATH::TVSHOW_TITLES;
-    }
-    else
-    {
-      //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
-      if (m_mediaType == KODI::MEDIA::TYPE::MOVIE || m_mediaType == KODI::MEDIA::TYPE::MUSIC_VIDEO || m_mediaType == KODI::MEDIA::TYPE::EPISODE)
-        path = URIUtils::GetDirectory(path);
-    }
-
-    windowId = WINDOW_VIDEO_NAV;
-  }
-  else if (m_mediaType == KODI::MEDIA::TYPE::MUSIC || m_mediaType == KODI::MEDIA::TYPE::ARTIST ||
-           m_mediaType == KODI::MEDIA::TYPE::ALBUM || m_mediaType == KODI::MEDIA::TYPE::SONG)
-  {
-    if (path.empty())
-    {
-      if (m_mediaType == KODI::MEDIA::TYPE::MUSIC)
-        path = "sources://music/";
-      else if (m_mediaType == KODI::MEDIA::TYPE::ARTIST)
-        path = KODI::MUSIC::DB_PATH::ARTISTS;
-      else if (m_mediaType == KODI::MEDIA::TYPE::ALBUM)
-        path = KODI::MUSIC::DB_PATH::ALBUMS;
-      else if (m_mediaType == KODI::MEDIA::TYPE::SONG)
-        path = KODI::MUSIC::DB_PATH::SONGS;
-    }
-    else
-    {
-      //! @todo remove the filename for now as CGUIMediaWindow::GetDirectory() can't handle it
-      if (m_mediaType == KODI::MEDIA::TYPE::SONG)
-        path = URIUtils::GetDirectory(path);
-    }
-
-    windowId = WINDOW_MUSIC_NAV;
-  }
-
-  if (windowId < 0)
+  const std::optional<Destination> destination{DestinationFor(m_mediaType)};
+  if (!destination)
     return false;
 
-  std::vector<std::string> params;
-  params.push_back(path);
-  params.emplace_back("return");
-  CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(windowId, params);
+  const std::string path{m_mediaPath.empty() ? std::string{destination->root} : m_mediaPath};
+  CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(destination->window,
+                                                              {path, "return"});
   return true;
 }

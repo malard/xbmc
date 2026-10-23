@@ -417,6 +417,22 @@ bool CGUIPassword::CheckSettingLevelLock(const SettingLevel& level, bool enforce
 
 }
 
+bool CGUIPassword::IsSettingLevelUnlocked(const SettingLevel& level)
+{
+  const std::shared_ptr<CProfileManager> profileManager =
+      CServiceBroker::GetSettingsComponent()->GetProfileManager();
+
+  const SettingsLock lockLevel = profileManager->GetCurrentProfile().settingsLockLevel();
+
+  if (lockLevel == SettingsLock::NONE)
+    return true;
+
+  if (lockLevel == SettingsLock::ALL || static_cast<int>(lockLevel) - 1 <= static_cast<int>(level))
+    return IsMasterLockUnlocked(false);
+
+  return true;
+}
+
 bool IsSettingsWindow(int iWindowID)
 {
   return (iWindowID >= WINDOW_SCREEN_CALIBRATION && iWindowID <= WINDOW_SETTINGS_MYPVR)
@@ -616,7 +632,7 @@ bool CGUIPassword::IsMediaPathUnlocked(const std::shared_ptr<CProfileManager>& p
                                        MediaSection section) const
 {
   if (!StringUtils::StartsWithNoCase(m_strMediaSourcePath, "root") &&
-      !StringUtils::StartsWithNoCase(m_strMediaSourcePath, "library://"))
+      !URIUtils::IsLibraryFolder(m_strMediaSourcePath))
   {
     if (!g_passwordManager.bMasterUser &&
         profileManager->GetMasterProfile().getLockMode() != LockMode::EVERYONE)

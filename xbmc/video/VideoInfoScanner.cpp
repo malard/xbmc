@@ -63,11 +63,14 @@
 #include "video/VideoUtils.h"
 #include "video/dialogs/GUIDialogVideoManagerExtras.h"
 #include "video/dialogs/GUIDialogVideoManagerVersions.h"
+#include "video/geometry/ContentGeometryScanner.h"
+#include "video/geometry/GeometrySettings.h"
 
 #include <algorithm>
 #include <chrono>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <string>
@@ -216,8 +219,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
       CLog::Log(LOGINFO, "VideoInfoScanner: Starting scan .. (grouping of similar videos is {})",
                 SimilarVideoScanActionToStr(m_similarVideoAction));
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                         "OnScanStarted");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanStarted{}});
 
       // Database operations should not be canceled
       // using Interrupt() while scanning as it could
@@ -321,8 +324,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
     }
 
     m_bRunning = false;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                       "OnScanFinished");
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanFinished{}});
 
     if (m_handle)
       m_handle->MarkFinished();
@@ -2203,6 +2206,20 @@ CVideoInfoScanner::~CVideoInfoScanner()
         CLog::LogF(LOGDEBUG, "Filestream details already present for {}", CURL::GetRedacted(path));
     }
 
+    if (GEOMETRY::ContentGeometryNonLiveFromSettings() && !movieDetails.HasContentGeometry())
+    {
+      if (const std::optional<GEOMETRY::FileIdentity> identity{
+              GEOMETRY::MeasurableIdentity(*pItem)})
+      {
+        const std::optional<GEOMETRY::ContentGeometryRecord> geometry{
+            GEOMETRY::MeasureContentGeometry(*pItem, *identity, GEOMETRY::SamplingDepth::Normal,
+                                             [this]() { return m_bStop.load(); })};
+
+        if (geometry && geometry->HasReading())
+          movieDetails.m_contentGeometry = *geometry;
+      }
+    }
+
     CLog::Log(LOGDEBUG, "VideoInfoScanner: Adding new item to {}:{}", content,
               CURL::GetRedacted(path));
     long lResult = -1;
@@ -2372,13 +2389,12 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
     m_database.Close();
 
-    CFileItemPtr itemCopy = std::make_shared<CFileItem>(*pItem);
-    CVariant data;
-    data["added"] = true;
-    if (m_bRunning)
-      data["transaction"] = true;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
-                                                       itemCopy, data);
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
+        ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = movieDetails.GetMediaType(),
+                                             .id = movieDetails.m_iDbId,
+                                             .item = std::make_shared<CFileItem>(*pItem),
+                                             .transaction = m_bRunning,
+                                             .added = true}});
     return lResult;
   }
 
