@@ -97,6 +97,18 @@ TEST(TestAnnouncementToJSONRPC, AnEventKeepsItsName)
   EXPECT_EQ("movie", notification["params"]["data"]["item"]["type"].asString());
 }
 
+TEST(TestAnnouncementToJSONRPC, AnEventWithoutAPlayerGainsNone)
+{
+  CVariant data;
+  data["item"]["type"] = "movie";
+
+  const CVariant notification =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::Player, "OnAVStart", data);
+
+  EXPECT_EQ("Player.OnAVStart", notification["method"].asString());
+  EXPECT_FALSE(notification["params"]["data"].isMember("player"));
+}
+
 TEST(TestAnnouncementToJSONRPC, AnUpdatedLibraryItemIsThatItemsPropertiesChanging)
 {
   CVariant data;

@@ -67,7 +67,8 @@ void IJSONRPCAnnouncer::AsPropertiesChanged(ANNOUNCEMENT::AnnouncementFlag flag,
   if (flag != ANNOUNCEMENT::Player)
     return;
 
-  const CVariant& player = data["player"];
+  // indexing the non-const data would add a null player to every other player notification
+  const CVariant& player = std::as_const(data)["player"];
   CVariant properties(CVariant::VariantTypeObject);
   if (method == ANNOUNCEMENT::MESSAGE::ON_PAUSE || method == ANNOUNCEMENT::MESSAGE::ON_RESUME ||
       method == ANNOUNCEMENT::MESSAGE::ON_SPEED_CHANGED)
