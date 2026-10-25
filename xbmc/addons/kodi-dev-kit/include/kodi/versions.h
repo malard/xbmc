@@ -131,8 +131,8 @@
 #define ADDON_INSTANCE_VERSION_PERIPHERAL_DEPENDS     "addon-instance/Peripheral.h" \
                                                       "addon-instance/PeripheralUtils.h"
 
-#define ADDON_INSTANCE_VERSION_PVR                    "9.2.0"
-#define ADDON_INSTANCE_VERSION_PVR_MIN                "9.2.0"
+#define ADDON_INSTANCE_VERSION_PVR                    "9.3.0"
+#define ADDON_INSTANCE_VERSION_PVR_MIN                "9.3.0"
 #define ADDON_INSTANCE_VERSION_PVR_XML_ID             "kodi.binary.instance.pvr"
 #define ADDON_INSTANCE_VERSION_PVR_DEPENDS            "c-api/addon-instance/pvr.h" \
                                                       "c-api/addon-instance/pvr/pvr_channel_groups.h" \
@@ -181,7 +181,7 @@
 #define ADDON_INSTANCE_VERSION_VISUALIZATION_DEPENDS  "addon-instance/Visualization.h" \
                                                       "c-api/addon-instance/visualization.h"
 
-#define ADDON_INSTANCE_VERSION_VIDEOCODEC             "2.2.1"
+#define ADDON_INSTANCE_VERSION_VIDEOCODEC             "2.2.2"
 #define ADDON_INSTANCE_VERSION_VIDEOCODEC_MIN         "2.1.0"
 #define ADDON_INSTANCE_VERSION_VIDEOCODEC_XML_ID      "kodi.binary.instance.videocodec"
 #define ADDON_INSTANCE_VERSION_VIDEOCODEC_DEPENDS     "c-api/addon-instance/video_codec.h" \

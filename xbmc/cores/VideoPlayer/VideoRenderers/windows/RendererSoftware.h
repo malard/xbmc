@@ -22,6 +22,7 @@ public:
   ~CRendererSoftware();
 
   bool Configure(const VideoPicture& picture, float fps, unsigned orientation) override;
+  bool ChangePictureSize(const VideoPicture& picture) override;
   bool Supports(ESCALINGMETHOD method) const override;
 
   static CRendererBase* Create(CVideoSettings& videoSettings);
@@ -35,6 +36,9 @@ protected:
 
 private:
   SwsContext* m_sw_scale_ctx = nullptr;
+  // swscale rewrites some formats in the context, so what it was made for is kept here
+  AVPixelFormat m_scalerSrcFormat = AV_PIX_FMT_NONE;
+  AVPixelFormat m_scalerDstFormat = AV_PIX_FMT_NONE;
   SwsFilter* m_srcFilter = nullptr;
   bool m_restoreMultithreadProtectedOff = false;
 };

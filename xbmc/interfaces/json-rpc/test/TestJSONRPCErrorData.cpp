@@ -1,0 +1,107 @@
+/*
+ *  Copyright (C) 2026 Team Kodi
+ *  This file is part of Kodi - https://kodi.tv
+ *
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *  See LICENSES/README.md for more information.
+ */
+
+#include "JSONRPCTestUtils.h"
+#include "interfaces/json-rpc/JSONRPC.h"
+
+#include <string>
+
+#include <gtest/gtest.h>
+
+using namespace JSONRPC;
+
+namespace
+{
+JSONRPC_STATUS FailWithTarget(const CVariant& parameterObject, CVariant& result)
+{
+  result["partial"] = true;
+  return Fail(result, FailedToExecute, Reason::NothingPlaying, Target("playlist", "audio"));
+}
+
+JSONRPC_STATUS FailWithoutTarget(const CVariant& parameterObject, CVariant& result)
+{
+  return Fail(result, Unavailable, Reason::Unreachable);
+}
+
+JSONRPC_STATUS FailUnderAnotherStatus(const CVariant& parameterObject, CVariant& result)
+{
+  return Fail(result, NotFound, Reason::Unreachable);
+}
+
+JSONRPC_STATUS FailWithStatusAlone(const CVariant& parameterObject, CVariant& result)
+{
+  result["partial"] = true;
+  return FailedToExecute;
+}
+} // namespace
+
+class TestJSONRPCErrorData : public JSONServiceDescriptionTestBase
+{
+protected:
+  CVariant Respond(const std::string& name, JSONRPC::MethodCall::Handler handler)
+  {
+    EXPECT_TRUE(AddTestMethod("Test." + name, "[]", R"("errors": [])", handler));
+    return ParseJson(CJSONRPC::MethodCall(std::string{R"({"jsonrpc": "2.0", "method": "Test.)"} +
+                                              name + R"(", "id": 1})",
+                                          &m_transport, &m_client));
+  }
+};
+
+//! \brief A handler failing for a reason answers with the status it names and the reason in data
+TEST_F(TestJSONRPCErrorData, AReasonAndItsTargetReachErrorData)
+{
+  const CVariant response = Respond("FailWithTarget", FailWithTarget);
+
+  EXPECT_EQ(FailedToExecute, response["error"]["code"].asInteger());
+  const CVariant& data = response["error"]["data"];
+  EXPECT_EQ("nothing-playing", data["reason"].asString());
+  EXPECT_EQ("audio", data["target"]["playlist"].asString());
+  EXPECT_FALSE(data.isMember("partial")) << ToJson(data);
+}
+
+TEST_F(TestJSONRPCErrorData, AReasonWithoutATargetOmitsIt)
+{
+  const CVariant response = Respond("FailWithoutTarget", FailWithoutTarget);
+
+  EXPECT_EQ(Unavailable, response["error"]["code"].asInteger());
+  EXPECT_EQ("unreachable", response["error"]["data"]["reason"].asString());
+  EXPECT_FALSE(response["error"]["data"].isMember("target"));
+}
+
+//! \brief A reason is not tied to one status
+TEST_F(TestJSONRPCErrorData, TheSameReasonCanComeWithAnotherStatus)
+{
+  const CVariant response = Respond("FailUnderAnotherStatus", FailUnderAnotherStatus);
+
+  EXPECT_EQ(NotFound, response["error"]["code"].asInteger());
+  EXPECT_EQ("unreachable", response["error"]["data"]["reason"].asString());
+}
+
+//! \brief A status alone still fails the call, and what the handler had written stays private
+TEST_F(TestJSONRPCErrorData, AStatusAloneCarriesNoData)
+{
+  const CVariant response = Respond("FailWithStatusAlone", FailWithStatusAlone);
+
+  EXPECT_EQ(FailedToExecute, response["error"]["code"].asInteger());
+  EXPECT_FALSE(response["error"].isMember("data")) << ToJson(response);
+}
+
+//! \brief The validator's data is unchanged by reasons
+TEST_F(TestJSONRPCErrorData, TheValidatorStillDescribesInvalidParams)
+{
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Params", R"([{"name": "value", "required": true, "schema": {"type": "integer"}}])",
+      R"("errors": [])"));
+
+  const CVariant response = ParseJson(CJSONRPC::MethodCall(
+      R"({"jsonrpc": "2.0", "method": "Test.Params", "params": {"value": "x"}, "id": 1})",
+      &m_transport, &m_client));
+
+  EXPECT_EQ(InvalidParams, response["error"]["code"].asInteger());
+  EXPECT_EQ("Test.Params", response["error"]["data"]["method"].asString());
+}

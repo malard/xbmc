@@ -12,6 +12,9 @@
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "XBDateTime.h"
+#include "addons/Scraper.h"
+#include "addons/addoninfo/AddonInfoBuilder.h"
+#include "addons/addoninfo/AddonType.h"
 #include "cores/VideoSettings.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
@@ -41,6 +44,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -625,6 +629,28 @@ TEST_F(TestVideoDatabase, GetPathsForCleaningMatchesTheWholeLibraryByContentExac
   std::set<int> paths;
   ASSERT_TRUE(m_db.GetPathsForCleaning("", "movies", paths));
   EXPECT_TRUE(paths.empty());
+}
+
+TEST_F(TestVideoDatabase, GetSourcePathReadsTheScanSettingsOfAParentSource)
+{
+  KODI::VIDEO::SScanSettings stored;
+  stored.parent_name = false;
+  stored.recurse = 2;
+  const ADDON::AddonInfoPtr info{
+      ADDON::CAddonInfoBuilder::Generate("metadata.test", ADDON::AddonType::SCRAPER_MOVIES)};
+  m_db.SetScraperForPath("smb://server/movies/",
+                         std::make_shared<ADDON::CScraper>(info, ADDON::AddonType::SCRAPER_MOVIES),
+                         stored);
+
+  for (const std::string path : {"smb://server/movies/", "smb://server/movies/genre/film/"})
+  {
+    KODI::VIDEO::SScanSettings read;
+    std::string sourcePath;
+    ASSERT_TRUE(m_db.GetSourcePath(path, sourcePath, read)) << path;
+    EXPECT_EQ("smb://server/movies/", sourcePath) << path;
+    EXPECT_FALSE(read.parent_name) << path;
+    EXPECT_EQ(2, read.recurse) << path;
+  }
 }
 
 // The export must write the stored (scraped) runtime, not the stream duration that loading the
@@ -1224,14 +1250,16 @@ namespace
 class CQueuedAnnouncements : public ANNOUNCEMENT::CAnnouncementManager
 {
 public:
-  long CountRemoved(const std::string& type, int id) const
+  long CountRemoved(KODI::MEDIA::TYPE type, int id) const
   {
     return std::ranges::count_if(m_announcementQueue,
-                                 [&type, id](const CAnnounceData& announcement)
+                                 [type, id](const ANNOUNCEMENT::Announcement& announcement)
                                  {
-                                   return announcement.message == "OnRemove" &&
-                                          announcement.data["type"].asString() == type &&
-                                          announcement.data["id"].asInteger() == id;
+                                   const auto* library{
+                                       std::get_if<ANNOUNCEMENT::VideoLibraryEvent>(&announcement)};
+                                   const auto* removed{
+                                       std::get_if<ANNOUNCEMENT::EVENT::LIBRARY::Remove>(library)};
+                                   return removed && removed->type == type && removed->id == id;
                                  });
   }
 };
@@ -1265,7 +1293,7 @@ TEST_F(TestVideoDatabaseClean, AnnouncesAnEpisodeOfAShowWithTwoFoldersRemovedOnc
 
   EXPECT_EQ(0, m_db.GetSingleValueInt(
                    m_db.PrepareSQL("SELECT COUNT(*) FROM episode WHERE idEpisode=%i", idEpisode)));
-  EXPECT_EQ(1, announcements->CountRemoved("episode", idEpisode));
+  EXPECT_EQ(1, announcements->CountRemoved(KODI::MEDIA::TYPE::EPISODE, idEpisode));
 }
 
 TEST_F(TestVideoDatabaseClean, KeepsAVersionOutsideTheSourcesWhileItExists)

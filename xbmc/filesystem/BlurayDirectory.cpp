@@ -21,7 +21,7 @@
 #include "filesystem/BlurayCallback.h"
 #include "filesystem/Directory.h"
 #include "filesystem/DirectoryFactory.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #if defined(HAS_UDFREAD)
 #include "filesystem/UDFContext.h"
 #endif
@@ -401,7 +401,7 @@ void AddPlaylists(const CURL& url,
 template<typename Streams>
 std::string LanguagesOf(const Streams& streams)
 {
-  const auto language = [](const auto& stream) { return stream.language.AsBcp47(); };
+  const auto language = [](const auto& stream) { return stream.language.ToString(); };
   return fmt::format("{}", fmt::join(streams | std::views::transform(language), ","));
 }
 } // namespace
@@ -1005,7 +1005,7 @@ bool CBlurayDirectory::EnsureBlurayOpen()
     return false;
   }
 
-  const std::string menuLang{g_langInfo.GetDVDMenuLanguage().AsIso6392T()};
+  const std::string menuLang{KODI::LANGUAGE::CLanguage::GetInstance().UI().AsIso6392T()};
   bd_set_player_setting_str(m_bd, BLURAY_PLAYER_SETTING_MENU_LANG, menuLang.c_str());
 
   if (!bd_open_files(m_bd, &m_realPath, CBlurayCallback::dir_open, CBlurayCallback::file_open))

@@ -223,27 +223,27 @@ void CSong::Serialize(CVariant& value) const
   value["artist"] = GetArtist();
   value["artistsort"] = GetArtistSort();  // a string for the song not vector of values for each artist
   value["album"] = strAlbum;
-  value["albumartist"] = GetAlbumArtist();
+  value["albumArtist"] = GetAlbumArtist();
   value["genre"] = genre;
   value["duration"] = iDuration;
   value["track"] = iTrack;
   value["year"] = atoi(strReleaseDate.c_str());;
-  value["musicbrainztrackid"] = strMusicBrainzTrackID;
+  value["musicBrainzTrackId"] = strMusicBrainzTrackID;
   value["comment"] = strComment;
   value["mood"] = strMood;
   value["rating"] = rating;
-  value["userrating"] = userrating;
+  value["userRating"] = userrating;
   value["votes"] = votes;
   value["timesplayed"] = iTimesPlayed;
-  value["lastplayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDateTime() : "";
-  value["dateadded"] = dateAdded.IsValid() ? dateAdded.GetAsDBDateTime() : "";
-  value["albumid"] = idAlbum;
+  value["lastPlayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDateTime() : "";
+  value["dateAdded"] = dateAdded.IsValid() ? dateAdded.GetAsDBDateTime() : "";
+  value["albumId"] = idAlbum;
   value["albumreleasedate"] = strReleaseDate;
   value["bpm"] = iBPM;
   value["bitrate"] = iBitRate;
-  value["samplerate"] = iSampleRate;
+  value["sampleRate"] = iSampleRate;
   value["channels"] = iChannels;
-  value["songvideourl"] = songVideoURL;
+  value["songVideoUrl"] = songVideoURL;
 }
 
 void CSong::Clear()

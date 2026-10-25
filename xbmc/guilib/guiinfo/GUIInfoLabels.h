@@ -83,7 +83,9 @@ constexpr uint32_t PLAYER_SCENE_MARKERS              = 71;
 constexpr uint32_t PLAYER_HAS_SCENE_MARKERS          = 72;
 constexpr uint32_t PLAYER_BOOKMARKS                  = 73;
 constexpr uint32_t PLAYER_HAS_BOOKMARKS              = 74;
-// unused id 75 to 80
+constexpr uint32_t PLAYER_WAITING_FOR_AUDIO          = 75;
+constexpr uint32_t PLAYER_WAITING_FOR_AUDIO_REMAINING = 76;
+// unused id 77 to 80
 
 // Keep player infolabels that work with offset and position together
 constexpr uint32_t PLAYER_PATH                       = 81;
@@ -120,7 +122,7 @@ constexpr uint32_t SYSTEM_CPU_TEMPERATURE            = 112;
 constexpr uint32_t SYSTEM_GPU_TEMPERATURE            = 113;
 constexpr uint32_t SYSTEM_FAN_SPEED                  = 114;
 constexpr uint32_t SYSTEM_FREE_SPACE_C               = 115;
-//constexpr uint32_t SYSTEM_FREE_SPACE_D               = 116; // reserved for space on D
+// unused id 116
 constexpr uint32_t SYSTEM_FREE_SPACE_E               = 117;
 constexpr uint32_t SYSTEM_FREE_SPACE_F               = 118;
 constexpr uint32_t SYSTEM_FREE_SPACE_G               = 119;
@@ -302,6 +304,13 @@ constexpr uint32_t VIDEOPLAYER_AUDIOSTREAMCOUNT      = 295;
 constexpr uint32_t VIDEOPLAYER_VIDEOVERSION_NAME     = 296;
 constexpr uint32_t VIDEOPLAYER_VIDEOSTREAMCOUNT      = 297;
 constexpr uint32_t VIDEOPLAYER_HDR_DETAIL            = 298;
+constexpr uint32_t VIDEOPLAYER_VIDEO_ASPECT_NAME     = 299;
+
+// The infolabel numbering is one flat space shared by every group.
+constexpr uint32_t VIDEOPLAYER_CONTENT_ASPECT        = 425;
+constexpr uint32_t VIDEOPLAYER_CONTENT_ASPECT_NAME   = 426;
+constexpr uint32_t VIDEOPLAYER_CONTENT_ASPECT_COUNT  = 427;
+constexpr uint32_t VIDEOPLAYER_CONTENT_ASPECT_SOURCE = 428;
 
 // Videoplayer infobools
 constexpr uint32_t VIDEOPLAYER_HASSUBTITLES          = 300;
@@ -316,6 +325,7 @@ constexpr uint32_t VIDEOPLAYER_HAS_INFO              = 308;
 constexpr uint32_t VIDEOPLAYER_HASTELETEXT           = 309;
 constexpr uint32_t VIDEOPLAYER_IS_STEREOSCOPIC       = 310;
 constexpr uint32_t VIDEOPLAYER_HAS_VIDEOVERSIONS     = 311;
+constexpr uint32_t VIDEOPLAYER_CONTENT_ASPECT_VARIES = 429;
 
 // PVR infolabels
 constexpr uint32_t VIDEOPLAYER_TITLE_EXTRAINFO       = 312;
@@ -429,12 +439,11 @@ constexpr uint32_t CONTAINER_NUM_ALL_ITEMS           = 384;
 constexpr uint32_t CONTAINER_NUM_NONFOLDER_ITEMS     = 385;
 
 constexpr uint32_t MUSICPM_ENABLED                   = 390;
-constexpr uint32_t MUSICPM_SONGSPLAYED               = 391;
-constexpr uint32_t MUSICPM_MATCHINGSONGS             = 392;
-constexpr uint32_t MUSICPM_MATCHINGSONGSPICKED       = 393;
-constexpr uint32_t MUSICPM_MATCHINGSONGSLEFT         = 394;
-constexpr uint32_t MUSICPM_RELAXEDSONGSPICKED        = 395;
-constexpr uint32_t MUSICPM_RANDOMSONGSPICKED         = 396;
+// unused id 391
+constexpr uint32_t MUSICPM_MATCHINGENTRIES           = 392;
+// unused id 393
+constexpr uint32_t MUSICPM_MATCHINGENTRIESLEFT       = 394;
+// unused id 395 to 396
 
 constexpr uint32_t PLAYLIST_LENGTH                   = 400;
 constexpr uint32_t PLAYLIST_POSITION                 = 401;
@@ -460,6 +469,9 @@ constexpr uint32_t STRING_IS_EQUAL                   = 421;
 constexpr uint32_t STRING_STARTS_WITH                = 422;
 constexpr uint32_t STRING_ENDS_WITH                  = 423;
 constexpr uint32_t STRING_CONTAINS                   = 424;
+
+constexpr uint32_t VIDEOPLAYER_HASPREVIOUS           = 430;
+constexpr uint32_t VIDEOPLAYER_HASNEXT               = 431;
 
 constexpr uint32_t INTEGER_IS_EQUAL                  = 450;
 constexpr uint32_t INTEGER_GREATER_THAN              = 451;
@@ -586,7 +598,7 @@ constexpr uint32_t SLIDESHOW_EXIF_DESCRIPTION        = SLIDESHOW_LABELS_START + 
 constexpr uint32_t SLIDESHOW_EXIF_CAMERA_MAKE        = SLIDESHOW_LABELS_START + 22;
 constexpr uint32_t SLIDESHOW_EXIF_CAMERA_MODEL       = SLIDESHOW_LABELS_START + 23;
 constexpr uint32_t SLIDESHOW_EXIF_COMMENT            = SLIDESHOW_LABELS_START + 24;
-//empty label   = SLIDESHOW_LABELS_START + 25;
+// unused id SLIDESHOW_LABELS_START + 25
 constexpr uint32_t SLIDESHOW_EXIF_APERTURE           = SLIDESHOW_LABELS_START + 26;
 constexpr uint32_t SLIDESHOW_EXIF_FOCAL_LENGTH       = SLIDESHOW_LABELS_START + 27;
 constexpr uint32_t SLIDESHOW_EXIF_FOCUS_DIST         = SLIDESHOW_LABELS_START + 28;
@@ -643,7 +655,7 @@ constexpr uint32_t SYSTEM_PROFILEAUTOLOGIN           = 1004;
 constexpr uint32_t SYSTEM_HAS_CMS                    = 1006;
 constexpr uint32_t SYSTEM_BUILD_VERSION_CODE         = 1007;
 constexpr uint32_t SYSTEM_BUILD_VERSION_GIT          = 1008;
-// unused id 1009
+constexpr uint32_t SYSTEM_IS_RTL                     = 1009;
 // unused id 1010
 constexpr uint32_t SYSTEM_LOCALE_REGION              = 1011;
 constexpr uint32_t SYSTEM_LOCALE                     = 1012;
@@ -1086,6 +1098,12 @@ constexpr uint32_t LISTITEM_DEVELOPER                = LISTITEM_START + 234;
 constexpr uint32_t LISTITEM_PUBLISHER                = LISTITEM_START + 235;
 constexpr uint32_t LISTITEM_PLAYERS                  = LISTITEM_START + 236;
 constexpr uint32_t LISTITEM_AGERATING                = LISTITEM_START + 237;
+constexpr uint32_t LISTITEM_VIDEO_ASPECT_NAME        = LISTITEM_START + 238;
+constexpr uint32_t LISTITEM_CONTENT_ASPECT           = LISTITEM_START + 239;
+constexpr uint32_t LISTITEM_CONTENT_ASPECT_NAME      = LISTITEM_START + 240;
+constexpr uint32_t LISTITEM_CONTENT_ASPECT_COUNT     = LISTITEM_START + 241;
+constexpr uint32_t LISTITEM_CONTENT_ASPECT_SOURCE    = LISTITEM_START + 242;
+constexpr uint32_t LISTITEM_CONTENT_ASPECT_VARIES    = LISTITEM_START + 243;
 
 constexpr int      LISTITEM_END                      = LISTITEM_START + 2500;
 

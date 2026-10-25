@@ -33,9 +33,7 @@ set(SOURCES TestAlarmClock.cpp
             TestJSONVariantParser.cpp
             TestJSONVariantWriter.cpp
             TestLabelFormatter.cpp
-            TestLangCodeExpander.cpp
             TestLegacyPathTranslation.cpp
-            TestLocale.cpp
             Testlog.cpp
             TestMap.cpp
             TestMathUtils.cpp
@@ -48,6 +46,7 @@ set(SOURCES TestAlarmClock.cpp
             TestRssReader.cpp
             TestScraperParser.cpp
             TestScraperUrl.cpp
+            TestScreenshot.cpp
             TestSet.cpp
             TestSortUtils.cpp
             TestStopwatch.cpp

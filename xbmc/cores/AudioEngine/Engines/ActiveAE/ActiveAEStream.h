@@ -169,7 +169,7 @@ public:
   double GetCacheTotal() override;
   double GetMaxDelay() override;
 
-  void Pause() override;
+  void Pause(bool keepOutput = false) override;
   void Resume() override;
   void Drain(bool wait) override;
   bool IsDraining() override;
@@ -189,6 +189,7 @@ public:
 
   unsigned int GetSampleRate() const override ;
   enum AEDataFormat GetDataFormat() const override;
+  bool HasSinkFormatChanged() const override;
 
   double GetResampleRatio() override;
   void SetResampleRatio(double ratio) override;
@@ -251,6 +252,8 @@ protected:
   double m_clockSpeed;
   enum AVMatrixEncoding m_matrixEncoding;
   enum AVAudioServiceType m_audioServiceType;
+  //! Set by CActiveAE when it reinitialises the sink under this stream.
+  std::atomic<bool> m_sinkFormatChanged{false};
   bool m_forceResampler;
   IAEClockCallback *m_pClock;
   CSyncError m_syncError;

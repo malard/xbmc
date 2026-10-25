@@ -13,8 +13,11 @@
 #include "utils/Artwork.h"
 
 #include <array>
+#include <cstddef>
+#include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 class CFileItem;
@@ -41,6 +44,7 @@ enum JSONRPC_STATUS
   BadPermission = -32099,
   NotFound = -32098,
   Unavailable = -32097,
+  AccessDenied = -32096,
   FailedToExecute = -32100
 };
 
@@ -58,7 +62,7 @@ struct JsonRpcStatusDescription
   const char* name;
   const char* message;
   const char* description;
-  //! Whether responses with this status populate the optional "error.data" member
+  //! Whether responses with this status populate "error.data" even without a reason
   bool hasData;
 };
 
@@ -69,12 +73,13 @@ struct JsonRpcStatusDescription
  Every JSONRPC_STATUS that reaches a client as an error appears here exactly once. OK and
  ACK are absent because they produce a result rather than an error.
  */
-inline constexpr std::array<JsonRpcStatusDescription, 9> JSONRPC_STATUS_DESCRIPTIONS{{
+inline constexpr std::array<JsonRpcStatusDescription, 10> JSONRPC_STATUS_DESCRIPTIONS{{
     {ParseError, "ParseError", "Parse error.", "The request could not be parsed as JSON.", false},
     {InvalidRequest, "InvalidRequest", "Invalid request.",
      "The request parsed as JSON but is not a well-formed JSON-RPC 2.0 request object.", false},
     {MethodNotFound, "MethodNotFound", "Method not found.",
-     "The requested method does not exist, or the client lacks the permission to see it.", false},
+     "The requested method does not exist, the client lacks the permission to see it, or it is "
+     "not available over the transport the request arrived on.", false},
     {InvalidParams, "InvalidParams", "Invalid params.",
      "The given parameters do not validate against the schema of the method. The \"data\" member "
      "names the offending parameter and the constraint it failed.",
@@ -82,16 +87,17 @@ inline constexpr std::array<JsonRpcStatusDescription, 9> JSONRPC_STATUS_DESCRIPT
     {InternalError, "InternalError", "Internal error.",
      "The method failed for a reason that no other status describes.", false},
     {FailedToExecute, "FailedToExecute", "Failed to execute method.",
-     "The method was called correctly but the operation it requested did not succeed. Note that "
-     "-32100 sits one code point below the -32099..-32000 range that JSON-RPC 2.0 reserves for "
-     "implementation-defined server errors; this is long-standing and is retained for "
-     "compatibility with existing clients.",
+     "The method was called correctly but the operation it requested did not succeed. Its code "
+     "sits one below the -32099..-32000 range JSON-RPC 2.0 reserves for server errors.",
      false},
     {BadPermission, "BadPermission", "Bad client permission.",
      "The client does not hold every permission the method requires.", false},
     {NotFound, "NotFound", "Not found.", "The requested item does not exist.", false},
     {Unavailable, "Unavailable", "Requested item is unavailable.",
      "The requested item exists but cannot be provided at the moment.", false},
+    {AccessDenied, "AccessDenied", "Access denied.",
+     "What was asked for is locked on this installation: a path outside every source shared for "
+     "remote access, or a setting level the profile's settings lock keeps.", false},
 }};
 
 /*!
@@ -111,13 +117,182 @@ inline const JsonRpcStatusDescription* StatusToDescription(JSONRPC_STATUS status
 }
 
 /*!
- \brief Function pointer for JSON-RPC methods
+ \ingroup jsonrpc
+ \brief Why a call failed, reported to the client as "error.data.reason"
+
+ A reason refines the status a call fails with, and may refine more than one. A method declares
+ the reasons it can fail for under the errors they come with in methods.json.
  */
-typedef JSONRPC_STATUS (*MethodCall)(const std::string& method,
-                                     ITransportLayer* transport,
-                                     IClient* client,
-                                     const CVariant& parameterObject,
-                                     CVariant& result);
+enum class Reason
+{
+  NothingPlaying,
+  NotApplicable,
+  NotSeekable,
+  NotPausable,
+  TempoUnsupported,
+  Paused,
+  NoSuchStream,
+  Unreachable,
+  NoSuchItem,
+  NoSuchSource,
+  NotInLibrary,
+  AlreadyInLibrary,
+  NoSuchAddon,
+  NoSuchPath,
+  OutsideSources,
+  NotAFile,
+  NoSuchSetting,
+  SettingDisabled,
+  ChangeDeclined,
+  LevelLocked,
+  PvrNotStarted,
+  NotRecordable,
+  BackendRefused,
+  PlaybackRefused,
+  FeatureDisabled,
+  NoScreenshotFolder,
+  CaptureFailed,
+  DeleteFailed,
+  NotSupported,
+  DatabaseNotOpen,
+  MeasureFailed,
+  PartyModeElsewhere,
+  TimerExists,
+  NotPlayable,
+};
+
+struct JsonRpcReasonDescription
+{
+  Reason reason;
+  //! The stable name a client matches on
+  const char* name;
+  const char* description;
+};
+
+//! Every Reason, in declaration order
+inline constexpr JsonRpcReasonDescription JSONRPC_REASON_DESCRIPTIONS[] = {
+    {Reason::NothingPlaying, "nothing-playing",
+     "Nothing is playing, or not the playlist the call named."},
+    {Reason::NotApplicable, "not-applicable",
+     "The call does not apply to what it acts on, such as zooming a video, choosing a subtitle "
+     "for music or repeating the picture playlist."},
+    {Reason::NotSeekable, "not-seekable", "What is playing cannot seek."},
+    {Reason::NotPausable, "not-pausable", "What is playing cannot pause."},
+    {Reason::TempoUnsupported, "tempo-unsupported",
+     "The player of what is playing cannot change its tempo."},
+    {Reason::Paused, "paused", "The call needs playback that is not paused."},
+    {Reason::NoSuchStream, "no-such-stream", "What is playing has no stream at the given index."},
+    {Reason::Unreachable, "unreachable",
+     "The path cannot be read at the moment, as when its share is offline."},
+    {Reason::NoSuchItem, "no-such-item",
+     "Nothing has the given id: no library item, and no PVR channel, channel group, broadcast, "
+     "timer or recording."},
+    {Reason::NoSuchSource, "no-such-source", "The directory lies inside no source of the library."},
+    {Reason::NotInLibrary, "not-in-library", "The library holds nothing under the directory."},
+    {Reason::AlreadyInLibrary, "already-in-library",
+     "The library already holds an item at the path."},
+    {Reason::NoSuchAddon, "no-such-addon",
+     "No add-on has the given id, or none that is enabled where the call needs one."},
+    {Reason::NoSuchPath, "no-such-path", "Nothing exists at the given path."},
+    {Reason::OutsideSources, "outside-sources",
+     "The path lies outside every source shared for remote access."},
+    {Reason::NotAFile, "not-a-file", "The path names a directory, not a file."},
+    {Reason::NoSuchSetting, "no-such-setting", "No setting has the given id."},
+    {Reason::SettingDisabled, "setting-disabled",
+     "The setting is disabled by the settings it depends on, so it cannot change now."},
+    {Reason::ChangeDeclined, "change-declined",
+     "Kodi declined the change, as when a new display mode is not kept or a required add-on "
+     "would be disabled."},
+    {Reason::LevelLocked, "level-locked", "The profile's settings lock keeps the setting level."},
+    {Reason::PvrNotStarted, "pvr-not-started", "PVR is off, or has not finished starting."},
+    {Reason::NotRecordable, "not-recordable", "The channel cannot be recorded."},
+    {Reason::BackendRefused, "backend-refused",
+     "The PVR add-on refused the request or failed to carry it out."},
+    {Reason::PlaybackRefused, "playback-refused",
+     "Playback did not start, as when a parental lock is not unlocked or a prompt is cancelled."},
+    {Reason::FeatureDisabled, "feature-disabled",
+     "A setting on this installation turns the feature off."},
+    {Reason::NoScreenshotFolder, "no-screenshot-folder", "No screenshot folder is configured."},
+    {Reason::CaptureFailed, "capture-failed",
+     "The frame did not arrive, or the screenshot could not be written."},
+    {Reason::DeleteFailed, "delete-failed", "The file could not be deleted."},
+    {Reason::NotSupported, "not-supported",
+     "The system cannot do it, or its power settings do not allow it."},
+    {Reason::DatabaseNotOpen, "database-not-open",
+     "Kodi has not opened that database, because it is still starting or opening it failed."},
+    {Reason::MeasureFailed, "measure-failed", "The file could not be read or decoded to measure."},
+    {Reason::PartyModeElsewhere, "party-mode-elsewhere",
+     "Party mode is running on the other playlist."},
+    {Reason::TimerExists, "timer-exists", "A timer already exists for the broadcast."},
+    {Reason::NotPlayable, "not-playable",
+     "The item cannot go in the playlist, or holds nothing it can play."},
+};
+
+constexpr bool ReasonsAreDescribedInOrder()
+{
+  for (size_t index = 0; index < std::size(JSONRPC_REASON_DESCRIPTIONS); ++index)
+  {
+    if (JSONRPC_REASON_DESCRIPTIONS[index].reason != static_cast<Reason>(index))
+      return false;
+  }
+  return true;
+}
+static_assert(ReasonsAreDescribedInOrder());
+
+inline const JsonRpcReasonDescription& ReasonToDescription(Reason reason)
+{
+  return JSONRPC_REASON_DESCRIPTIONS[static_cast<size_t>(reason)];
+}
+
+/*!
+ \brief Fails a call for a declared reason, which the response carries in "error.data"
+ \param result The handler's result, replaced by the error data
+ \param status The status the call fails with
+ \param reason Why the call failed
+ \param target What the failure concerns, as the caller addresses it, e.g. {"movieId": 3}
+ \return status
+ */
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason);
+JSONRPC_STATUS Fail(CVariant& result, JSONRPC_STATUS status, Reason reason, const CVariant& target);
+
+//! A failure's target of one member, e.g. Target("playlist", "audio")
+CVariant Target(const std::string& key, const CVariant& value);
+
+/*!
+ \brief The handler of a JSON-RPC method
+
+ A handler takes the validated parameters and fills in the result. The few that answer
+ differently depending on who is asking also take the transport and the client.
+ */
+class MethodCall
+{
+public:
+  using Handler = JSONRPC_STATUS (*)(const CVariant& parameterObject, CVariant& result);
+  using CallerHandler = JSONRPC_STATUS (*)(ITransportLayer* transport,
+                                           IClient* client,
+                                           const CVariant& parameterObject,
+                                           CVariant& result);
+
+  constexpr MethodCall() = default;
+  constexpr MethodCall(Handler handler) : m_handler(handler) {}
+  constexpr MethodCall(CallerHandler handler) : m_callerHandler(handler) {}
+
+  explicit operator bool() const { return m_handler != nullptr || m_callerHandler != nullptr; }
+
+  JSONRPC_STATUS operator()(ITransportLayer* transport,
+                            IClient* client,
+                            const CVariant& parameterObject,
+                            CVariant& result) const
+  {
+    if (m_handler)
+      return m_handler(parameterObject, result);
+    return m_callerHandler(transport, client, parameterObject, result);
+  }
+
+private:
+  Handler m_handler = nullptr;
+  CallerHandler m_callerHandler = nullptr;
+};
 
 /*!
  \ingroup jsonrpc
@@ -141,16 +316,19 @@ enum OperationPermission
   ControlGUI = 0x200,
   ManageAddon = 0x400,
   ExecuteAddon = 0x800,
-  ControlPVR = 0x1000
+  ControlPVR = 0x1000,
+  WriteSetting = 0x2000
 };
 
 const int OPERATION_PERMISSION_ALL =
     (ReadData | ControlPlayback | ControlNotify | ControlPower | UpdateData | RemoveData |
-     Navigate | WriteFile | ControlSystem | ControlGUI | ManageAddon | ExecuteAddon | ControlPVR);
+     Navigate | WriteFile | ControlSystem | ControlGUI | ManageAddon | ExecuteAddon | ControlPVR |
+     WriteSetting);
 
 const int OPERATION_PERMISSION_NOTIFICATION =
     (ControlPlayback | ControlNotify | ControlPower | UpdateData | RemoveData | Navigate |
-     WriteFile | ControlSystem | ControlGUI | ManageAddon | ExecuteAddon | ControlPVR);
+     WriteFile | ControlSystem | ControlGUI | ManageAddon | ExecuteAddon | ControlPVR |
+     WriteSetting);
 
 /*!
  \brief Returns a string representation for the
@@ -188,20 +366,25 @@ inline const char* PermissionToString(const OperationPermission& permission)
       return "ExecuteAddon";
     case ControlPVR:
       return "ControlPVR";
+    case WriteSetting:
+      return "WriteSetting";
     default:
       return "Unknown";
     }
   }
 
-  /*!
-    \brief Returns a OperationPermission value for the given
+/*!
+    \brief Returns the OperationPermission value for the given
     string representation
     \param permission String representation of the OperationPermission
-    \return OperationPermission value of the given string representation
+    \return OperationPermission value of the given string representation, or
+    nothing for a string that is not the name of a permission
     */
-  inline OperationPermission StringToPermission(const std::string& permission)
+inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
   {
-    if (permission.compare("ControlPlayback") == 0)
+  if (permission.compare("ReadData") == 0)
+    return ReadData;
+  if (permission.compare("ControlPlayback") == 0)
       return ControlPlayback;
     if (permission.compare("ControlNotify") == 0)
       return ControlNotify;
@@ -225,8 +408,10 @@ inline const char* PermissionToString(const OperationPermission& permission)
       return ExecuteAddon;
     if (permission.compare("ControlPVR") == 0)
       return ControlPVR;
+  if (permission.compare("WriteSetting") == 0)
+    return WriteSetting;
 
-    return ReadData;
+  return std::nullopt;
   }
 
   class CJSONRPCUtils
@@ -236,4 +421,4 @@ inline const char* PermissionToString(const OperationPermission& permission)
     static void NotifyItemUpdated(const std::shared_ptr<CFileItem>& item);
     static void NotifyItemUpdated(const CVideoInfoTag& info, const KODI::ART::Artwork& artwork);
   };
-}
+} // namespace JSONRPC

@@ -72,6 +72,7 @@
 #include "filesystem/UPnPDirectory.h"
 #endif
 #include "guilib/TextureManager.h"
+#include "language/LanguageTag.h"
 #include "network/Network.h"
 #include "network/NetworkFileItemClassify.h"
 #include "platform/Environment.h"
@@ -338,6 +339,7 @@ std::string CUtil::GetTitleFromPath(const std::string& strFileNameAndPath, bool 
 
 std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false */)
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   // use above to get the filename
   std::string path(url.Get());
   URIUtils::RemoveSlashAtEnd(path);
@@ -370,10 +372,9 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
     const std::string strFileNameAndPath = url.Get();
     const size_t genre = strFileNameAndPath.find_first_of('=');
     if(genre == std::string::npos)
-      strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(260);
+      strFilename = localizeStrings.Get(260);
     else
-      strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(260) + " - " +
-                    strFileNameAndPath.substr(genre + 1).c_str();
+      strFilename = localizeStrings.Get(260) + " - " + strFileNameAndPath.substr(genre + 1).c_str();
   }
 
   // Windows SMB Network (SMB)
@@ -381,7 +382,7 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
   {
     if (url.GetHostName().empty())
     {
-      strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20171);
+      strFilename = localizeStrings.Get(20171);
     }
     else
     {
@@ -391,15 +392,15 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
 
   // Root file views
   else if (url.IsProtocol("sources"))
-    strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(744);
+    strFilename = localizeStrings.Get(744);
 
   // Music Playlists
-  else if (StringUtils::StartsWith(path, "special://musicplaylists"))
-    strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
+  else if (URIUtils::PathHasParent(path + "/", PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC)))
+    strFilename = localizeStrings.Get(136);
 
   // Video Playlists
-  else if (StringUtils::StartsWith(path, "special://videoplaylists"))
-    strFilename = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
+  else if (URIUtils::PathHasParent(path + "/", PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO)))
+    strFilename = localizeStrings.Get(136);
 
   else if (URIUtils::HasParentInHostname(url) && strFilename.empty())
   {
@@ -412,7 +413,9 @@ std::string CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false *
   if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
           CSettings::SETTING_FILELISTS_SHOWEXTENSIONS) &&
       !bIsFolder)
+  {
     URIUtils::RemoveExtension(strFilename);
+  }
 
   return strFilename;
 }
@@ -1410,6 +1413,18 @@ std::string CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection section)
   }
 }
 
+bool CUtil::IsPlaylistsPath(const std::string& path, KODI::MEDIA::MediaSection section)
+{
+  const std::string playlists{PlaylistsPathOf(section)};
+  if (playlists.empty())
+    return false;
+  if (URIUtils::PathEquals(path, playlists))
+    return true;
+  return URIUtils::PathEquals(path, section == KODI::MEDIA::MediaSection::MUSIC
+                                        ? MusicPlaylistsLocation()
+                                        : VideoPlaylistsLocation());
+}
+
 bool CUtil::IsInPlaylistsFolder(const std::string& path, KODI::MEDIA::MediaSection section)
 {
   const std::string playlists{PlaylistsPathOf(section)};
@@ -2247,21 +2262,6 @@ std::optional<StreamFlags> ExternalStreamFlagFromToken(std::string_view token)
 
   return it->second;
 }
-
-/*!
- * \brief The language a filename token states.
- * \param[in] token One token of the filename.
- * \return The language, or nullopt where the token states none.
- */
-std::optional<KODI::LANGUAGE::CLanguageTag> ExternalStreamLanguageFromToken(
-    const std::string& token)
-{
-  // _ stands in for the BCP 47 subtag separator, since - separates the filename's own tokens
-  std::string langCode{token};
-  std::ranges::replace(langCode, '_', '-');
-
-  return KODI::LANGUAGE::CLanguageTag::TryParse(langCode);
-}
 } // namespace
 
 ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string& videoPath, const std::string& associatedFile)
@@ -2298,6 +2298,7 @@ ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string
 
     // The tokens are read from the end of the filename towards the front, so of several languages
     // the one nearest the extension is the stream's and the rest belong to its name
+    bool languageFound{false};
     for (auto it = tokens.rbegin(); it != tokens.rend(); ++it)
     {
       if (const auto flag = ExternalStreamFlagFromToken(*it); flag.has_value())
@@ -2306,11 +2307,12 @@ ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string
         continue;
       }
 
-      if (info.language.IsEmpty())
+      if (!languageFound)
       {
-        if (const auto tag = ExternalStreamLanguageFromToken(*it); tag.has_value())
+        if (const auto tag = KODI::LANGUAGE::CLanguageTag::TryParse(*it); tag.has_value())
         {
           info.language = *tag;
+          languageFound = true;
           continue;
         }
       }
@@ -2325,8 +2327,8 @@ ExternalStreamInfo CUtil::GetExternalStreamDetailsFromFilename(const std::string
   if (info.flag == 0)
     info.flag = StreamFlags::FLAG_NONE;
 
-  CLog::Log(LOGDEBUG, "{} - Language = '{}' / Name = '{}' / Flag = '{}' from {}", __FUNCTION__,
-            info.language.AsBcp47(), info.name, info.flag, CURL::GetRedacted(associatedFile));
+  CLog::LogF(LOGDEBUG, "Language = '{}' / Name = '{}' / Flag = '{}' from {}",
+             info.language.ToString(), info.name, info.flag, CURL::GetRedacted(associatedFile));
 
   return info;
 }

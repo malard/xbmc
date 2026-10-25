@@ -7,8 +7,8 @@ set(SOURCES TestAutoSwitch.cpp
             TestFileItem.cpp
             TestMediaManager.cpp
             TestMediaSource.cpp
+            TestPartyMode.cpp
             TestPasswordManager.cpp
-            TestPlayListPlayer.cpp
             TestTextureCache.cpp
             TestTextureCacheJob.cpp
             TestURL.cpp

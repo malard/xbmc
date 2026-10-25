@@ -139,11 +139,10 @@ void CSaveFileState::DoWork(CFileItem& item,
                 if (newLastPlayed.IsValid())
                   item.GetVideoInfoTag()->m_lastPlayed = newLastPlayed;
 
-                CVariant data;
-                data["id"] = item.GetVideoInfoTag()->m_iDbId;
-                data["type"] = item.GetVideoInfoTag()->m_type;
-                CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                                   "OnUpdate", data);
+                CServiceBroker::GetAnnouncementManager()->Announce(
+                    ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+                        .type = item.GetVideoInfoTag()->GetMediaType(),
+                        .id = item.GetVideoInfoTag()->m_iDbId}});
               }
             }
           }
@@ -182,11 +181,10 @@ void CSaveFileState::DoWork(CFileItem& item,
             // however not if playcount is modified as that already announces
             if (item.HasVideoInfoTag() && !updatePlayCount)
             {
-              CVariant data;
-              data["id"] = item.GetVideoInfoTag()->m_iDbId;
-              data["type"] = item.GetVideoInfoTag()->m_type;
-              CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                                 "OnUpdate", data);
+              CServiceBroker::GetAnnouncementManager()->Announce(
+                  ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
+                      .type = item.GetVideoInfoTag()->GetMediaType(),
+                      .id = item.GetVideoInfoTag()->m_iDbId}});
             }
 
             updateListing = true;
@@ -344,11 +342,9 @@ void CSaveFileState::DoWork(CFileItem& item,
         // however not if playcount is modified as that already announces
         if (updated && MUSIC::IsMusicDb(item))
         {
-          CVariant data;
-          data["id"] = item.GetMusicInfoTag()->GetDatabaseId();
-          data["type"] = item.GetMusicInfoTag()->GetType();
-          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibrary, "OnUpdate",
-                                                             data);
+          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{
+              ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = item.GetMusicInfoTag()->GetMediaType(),
+                                                   .id = item.GetMusicInfoTag()->GetDatabaseId()}});
         }
       }
     }

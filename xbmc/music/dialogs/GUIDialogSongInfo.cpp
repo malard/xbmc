@@ -35,11 +35,14 @@
 #include "storage/MediaManager.h"
 #include "utils/ArtTypes.h"
 #include "utils/Artwork.h"
+#include "utils/ContentNames.h"
 #include "utils/DefaultArt.h"
 #include "utils/FileUtils.h"
 
 using namespace KODI;
 using KODI::MEDIA::MediaSection;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 
 #define CONTROL_BTN_REFRESH       6
 #define CONTROL_USERRATING        7
@@ -327,7 +330,7 @@ CFileItemPtr CGUIDialogSongInfo::GetCurrentListItem(int offset)
 
 std::string CGUIDialogSongInfo::GetContent()
 {
-  return "songs";
+  return CONTENT::SONGS;
 }
 
 /*
@@ -341,6 +344,7 @@ std::string CGUIDialogSongInfo::GetContent()
 */
 void CGUIDialogSongInfo::OnGetArt()
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   std::string type = MUSIC_UTILS::ShowSelectArtTypeDialog(m_artTypeList);
   if (type.empty())
     return; // Cancelled
@@ -363,8 +367,7 @@ void CGUIDialogSongInfo::OnGetArt()
     CFileItemPtr item(new CFileItem(ART::CHOICE::CURRENT, false));
     item->SetArt(ART::TYPE::THUMB, m_song->GetArt(type));
     item->SetArt(ART::TYPE::ICON, ART::DEFAULT::PICTURE);
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(
-        13512)); //! @todo: label fallback art so user knows?
+    item->SetLabel(localizeStrings.Get(13512)); //! @todo: label fallback art so user knows?
     items.Add(item);
   }
   else if (m_song->HasArt(ART::TYPE::THUMB))
@@ -375,7 +378,7 @@ void CGUIDialogSongInfo::OnGetArt()
       CFileItemPtr item(new CFileItem(ART::CHOICE::THUMB, false));
       item->SetArt(ART::TYPE::THUMB, m_song->GetArt(ART::TYPE::THUMB));
       item->SetArt(ART::TYPE::ICON, ART::DEFAULT::ALBUM_COVER);
-      item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21371));
+      item->SetLabel(localizeStrings.Get(21371));
       items.Add(item);
     }
   }
@@ -393,7 +396,7 @@ void CGUIDialogSongInfo::OnGetArt()
     {
       CFileItemPtr item(new CFileItem(ART::CHOICE::LOCAL, false));
       item->SetArt(ART::TYPE::THUMB, localThumb);
-      item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(20017));
+      item->SetLabel(localizeStrings.Get(20017));
       items.Add(item);
     }
   }
@@ -413,7 +416,7 @@ void CGUIDialogSongInfo::OnGetArt()
     // allow the user to delete it by selecting "no art".
     CFileItemPtr item(new CFileItem(ART::CHOICE::NONE, false));
     item->SetArt(ART::TYPE::THUMB, ART::DEFAULT::ALBUM_COVER);
-    item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13515));
+    item->SetLabel(localizeStrings.Get(13515));
     items.Add(item);
   }
 
@@ -434,7 +437,7 @@ void CGUIDialogSongInfo::OnGetArt()
     CGUIDialogMusicInfo::AddItemPathToFileBrowserSources(sources, *m_song);
   CServiceBroker::GetMediaManager().GetLocalDrives(sources);
   if (CGUIDialogFileBrowser::ShowAndGetImage(
-          items, sources, CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(13511),
+          items, sources, localizeStrings.Get(13511),
           result) &&
       result != ART::CHOICE::CURRENT)
   {
@@ -520,7 +523,7 @@ void CGUIDialogSongInfo::ShowFor(CFileItem* pItem)
       {
         auto window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIWindowMusicBase>(WINDOW_MUSIC_NAV);
         if (window)
-          window->RefreshContent("songs");
+          window->RefreshContent(CONTENT::SONGS);
       }
     }
   }

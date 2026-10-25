@@ -1,0 +1,26 @@
+{
+  "title": "Ask what is playing, and where it has got to",
+  "method": "Player.GetProperties",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "Player.GetProperties",
+    "params": {
+      "properties": ["playlist", "speed", "time"]
+    }
+  },
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+      "playlist": "video",
+      "speed": 1,
+      "time": {
+        "hours": 0,
+        "minutes": 42,
+        "seconds": 7,
+        "milliseconds": 0
+      }
+    }
+  }
+}

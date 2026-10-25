@@ -76,6 +76,12 @@ AVPixelFormat ConvertToPixelFormat(const VIDEOCODEC_FORMAT videoFormat)
     case VIDEOCODEC_FORMAT_XRGB16161616F:
       // Same situation for half-float RGB.
       return AV_PIX_FMT_RGBAF16LE;
+    case VIDEOCODEC_FORMAT_GBRP:
+      return AV_PIX_FMT_GBRP;
+    case VIDEOCODEC_FORMAT_GBRP10:
+      return AV_PIX_FMT_GBRP10;
+    case VIDEOCODEC_FORMAT_GBRP12:
+      return AV_PIX_FMT_GBRP12;
     case VIDEOCODEC_FORMAT_UNKNOWN:
       // Addon did not opt in to videoFormat; preserve pre-PR default.
       return AV_PIX_FMT_YUV420P;
@@ -443,11 +449,13 @@ CDVDVideoCodec::VCReturn CAddonVideoCodec::GetPicture(VideoPicture* pVideoPictur
     pVideoPicture->iDisplayHeight = pVideoPicture->iHeight;
     if (m_displayAspect > 0.0f)
     {
-      pVideoPicture->iDisplayWidth = ((int)lrint(pVideoPicture->iHeight * m_displayAspect)) & ~3;
+      pVideoPicture->iDisplayWidth =
+          static_cast<int>(lrint(pVideoPicture->iHeight * m_displayAspect));
       if (pVideoPicture->iDisplayWidth > pVideoPicture->iWidth)
       {
         pVideoPicture->iDisplayWidth = pVideoPicture->iWidth;
-        pVideoPicture->iDisplayHeight = ((int)lrint(pVideoPicture->iWidth / m_displayAspect)) & ~3;
+        pVideoPicture->iDisplayHeight =
+            static_cast<int>(lrint(pVideoPicture->iWidth / m_displayAspect));
       }
     }
 

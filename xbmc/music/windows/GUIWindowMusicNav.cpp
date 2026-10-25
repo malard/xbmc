@@ -12,7 +12,7 @@
 #include "FileItemList.h"
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "PartyModeManager.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "URL.h"
 #include "Util.h"
@@ -23,6 +23,7 @@
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
+#include "filesystem/SourcesDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/VideoDatabaseDirectory/QueryParams.h"
@@ -41,9 +42,10 @@
 #include "music/dialogs/GUIDialogInfoProviderSettings.h"
 #include "music/tags/MusicInfoTag.h"
 #include "network/NetworkFileItemClassify.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/PlayListTypes.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -148,23 +150,13 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
       int iControl = message.GetSenderId();
       if (iControl == CONTROL_BTNPARTYMODE)
       {
-        if (g_partyModeManager.IsEnabled())
-          g_partyModeManager.Disable();
-        else
+        if (!PARTYMODE::Toggle(PLAYLIST::Audio))
         {
-          if (!g_partyModeManager.Enable())
-          {
-            SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE,false);
-            return false;
-          }
-
-          // Playlist directory is the root of the playlist window
-          if (m_guiState)
-            m_guiState->SetPlaylistDirectory("playlistmusic://");
-
-          return true;
+          SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, false);
+          return false;
         }
         UpdateButtons();
+        return true;
       }
       else if (iControl == CONTROL_SEARCH)
       {
@@ -198,7 +190,7 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
   case GUI_MSG_PLAYLISTPLAYER_STOPPED:
   case GUI_MSG_PLAYBACK_STARTED:
     {
-      SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
+      SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, PARTYMODE::IsRunning(PLAYLIST::Audio));
     }
     break;
   case GUI_MSG_NOTIFY_ALL:
@@ -462,7 +454,8 @@ bool CGUIWindowMusicNav::GetDirectory(const std::string &strDirectory, CFileItem
       case NodeType::ALBUM_RECENTLY_ADDED:
       case NodeType::ALBUM_RECENTLY_PLAYED:
       case NodeType::ALBUM_TOP100:
-      case NodeType::DISC: // ! @todo: own content type "discs"??
+      //! @todo own content type "discs"
+      case NodeType::DISC:
         items.SetContent(MEDIA::CONTENT::ALBUMS);
         break;
       case NodeType::ARTIST:
@@ -495,7 +488,7 @@ bool CGUIWindowMusicNav::GetDirectory(const std::string &strDirectory, CFileItem
   }
   else if (PLAYLIST::IsPlayList(items))
     items.SetContent(MEDIA::CONTENT::SONGS);
-  else if (URIUtils::PathEquals(strDirectory, "special://musicplaylists/") ||
+  else if (URIUtils::PathEquals(strDirectory, CUtil::PlaylistsPathOf(MediaSection::MUSIC)) ||
            URIUtils::PathEquals(strDirectory, MEDIA::LIBRARY_PATH::MUSIC_PLAYLISTS))
     items.SetContent(MEDIA::CONTENT::PLAYLISTS);
   else if (URIUtils::PathEquals(strDirectory, "plugin://music/"))
@@ -538,7 +531,7 @@ void CGUIWindowMusicNav::UpdateButtons()
   std::string strLabel;
 
   // "Playlists"
-  if (m_vecItems->IsPath("special://musicplaylists/"))
+  if (m_vecItems->IsPath(CUtil::PlaylistsPathOf(MediaSection::MUSIC)))
     strLabel = CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136);
   // "{Playlist Name}"
   else if (PLAYLIST::IsPlayList(*m_vecItems))
@@ -556,17 +549,13 @@ void CGUIWindowMusicNav::UpdateButtons()
 
   SET_CONTROL_LABEL(CONTROL_FILTER, strLabel);
 
-  SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
+  SET_CONTROL_SELECTED(GetID(), CONTROL_BTNPARTYMODE, PARTYMODE::IsRunning(PLAYLIST::Audio));
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_UPDATE_LIBRARY, !m_vecItems->IsAddonsPath() && !m_vecItems->IsPlugin() && !m_vecItems->IsScript());
 }
 
 void CGUIWindowMusicNav::PlayItem(int iItem)
 {
-  // unlike additemtoplaylist, we need to check the items here
-  // before calling it since the current playlist will be stopped
-  // and cleared!
-
   // root is not allowed
   if (m_vecItems->IsVirtualDirectoryRoot() && !m_vecItems->Get(iItem)->IsDVD())
     return;
@@ -598,10 +587,9 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
     const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
     // are we in the playlists location?
-    bool inPlaylists = m_vecItems->IsPath(CUtil::MusicPlaylistsLocation()) ||
-      m_vecItems->IsPath("special://musicplaylists/");
+    const bool inPlaylists{CUtil::IsPlaylistsPath(m_vecItems->GetPath(), MediaSection::MUSIC)};
 
-    if (m_vecItems->IsPath("sources://music/"))
+    if (m_vecItems->IsPath(CSourcesDirectory::PathOf(MediaSection::MUSIC)))
     {
       // get the usual music shares, and anything for all media windows
       CGUIDialogContextMenu::GetContextButtons(MediaSection::MUSIC, item, buttons);
@@ -833,7 +821,7 @@ bool CGUIWindowMusicNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
       database.Open();
       CVideoInfoTag details;
       database.GetMusicVideoInfo("", details, database.GetMatchingMusicVideo(item->GetMusicInfoTag()->GetArtistString(), item->GetMusicInfoTag()->GetAlbum(), item->GetMusicInfoTag()->GetTitle()));
-      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, 0, 0,
+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0,
                                                  static_cast<void*>(new CFileItem(details)));
       return true;
     }
@@ -887,22 +875,13 @@ bool CGUIWindowMusicNav::GetSongsFromPlayList(const std::string& strPlayList, CF
   items.SetPath(strPlayList);
   CLog::Log(LOGDEBUG, "CGUIWindowMusicNav, opening playlist [{}]", strPlayList);
 
-  std::unique_ptr<PLAYLIST::CPlayList> pPlayList(PLAYLIST::CPlayListFactory::Create(strPlayList));
-  if (nullptr != pPlayList)
+  const auto playList = PLAYLIST::CPlayListFactory::Load(strPlayList);
+  if (!playList)
   {
-    // load it
-    if (!pPlayList->Load(strPlayList))
-    {
-      HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
-      return false; //hmmm unable to load playlist?
-    }
-    PLAYLIST::CPlayList playlist = *pPlayList;
-    // convert playlist items to songs
-    for (int i = 0; i < playlist.size(); ++i)
-    {
-      items.Add(playlist[i]);
-    }
+    HELPERS::ShowOKDialogText(CVariant{6}, CVariant{477});
+    return false;
   }
+  playList->GetItems(items);
 
   return true;
 }
@@ -981,8 +960,8 @@ std::string CGUIWindowMusicNav::GetStartFolder(const std::string &dir)
       {"albums", MUSIC::DB_PATH::ALBUMS},
       {"artists", MUSIC::DB_PATH::ARTISTS},
       {"boxsets", MUSIC::DB_PATH::BOX_SETS},
-      {"compilations", "musicdb://compilations/"},
-      {"files", "sources://music/"},
+      {"compilations", MUSIC::DB_PATH::COMPILATIONS},
+      {"files", CSourcesDirectory::PathOf(MediaSection::MUSIC)},
       {"genres", MUSIC::DB_PATH::GENRES},
       {"recentlyaddedalbums", MUSIC::DB_PATH::RECENTLY_ADDED_ALBUMS},
       {"recentlyplayedalbums", MUSIC::DB_PATH::RECENTLY_PLAYED_ALBUMS},
