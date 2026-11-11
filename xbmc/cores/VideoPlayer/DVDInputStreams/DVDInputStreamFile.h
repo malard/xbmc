@@ -24,14 +24,10 @@ public:
   BitstreamStats GetBitstreamStats() const override ;
   int GetBlockSize() override;
   void SetReadRate(uint32_t rate) override;
-  void SetReadRateLimit(uint32_t rate) override;
   bool GetCacheStatus(XFILE::SCacheStatus *status) override;
 
 protected:
   XFILE::CFile* m_pFile = nullptr;
   bool m_eof = false;
   unsigned int m_flags = 0;
-
-private:
-  void SetCacheRate(XFILE::IOControl request, uint32_t rate);
 };

@@ -14,9 +14,7 @@
 #include "URL.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
-#include "settings/lib/Setting.h"
 #include "threads/Thread.h"
-#include "utils/MemUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/log.h"
 
@@ -53,12 +51,6 @@ public:
 private:
   CFile m_file;
 };
-
-//! The forward part of a memory cache, which is three quarters of it
-size_t ForwardCacheSize(size_t cacheSize)
-{
-  return cacheSize - cacheSize / 4;
-}
 
 //! The rate data is written at since the last reset
 class CWriteRate
@@ -124,31 +116,6 @@ IFile *CFileCache::GetFileImp()
   return m_source->GetImplementation();
 }
 
-std::unique_ptr<CCacheStrategy> CFileCache::CreateMemoryCache(size_t cacheSize) const
-{
-  const size_t front = ForwardCacheSize(cacheSize);
-  return ForStreams(std::make_unique<CCircularCache>(front, cacheSize - front));
-}
-
-std::unique_ptr<CCacheStrategy> CFileCache::ForStreams(std::unique_ptr<CCacheStrategy> cache) const
-{
-  // NOTE: READ_MULTI_STREAM is only used with READ_AUDIO_VIDEO, and needs double buffering
-  if (m_flags & READ_MULTI_STREAM)
-    return std::make_unique<CDoubleCache>(cache.release());
-  return cache;
-}
-
-void CFileCache::SetMemoryCache(std::unique_ptr<CCacheStrategy> cache, size_t cacheSize)
-{
-  CLog::LogF(LOGDEBUG, "<{}> using a {} memory cache sized {} bytes per buffer", m_sourcePath,
-             (m_flags & READ_MULTI_STREAM) ? "double" : "single", cacheSize);
-
-  m_pCache = std::move(cache);
-  m_forwardCacheSize = ForwardCacheSize(cacheSize);
-  m_maxForward = m_forwardCacheSize;
-  m_memoryCacheSize = cacheSize;
-}
-
 bool CFileCache::OpenSource(const CURL& url)
 {
   // The READ_NO_CACHE and READ_NO_BUFFER flags are required to avoid create other instances of
@@ -163,54 +130,6 @@ bool CFileCache::OpenSource(const CURL& url)
 
   m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, nullptr);
   return true;
-}
-
-size_t CFileCache::CacheSizeForRate(uint32_t bytesPerSecond) const
-{
-  constexpr int64_t secondsForward = 60;
-
-  // Only three quarters of the cache is forward
-  const int64_t wanted = static_cast<int64_t>(bytesPerSecond) * secondsForward * 4 / 3;
-
-  // Bounded by installed memory, so the size does not depend on what is resident at the time
-  KODI::MEMORY::MemoryStatus memory{};
-  KODI::MEMORY::GetMemoryStatus(&memory);
-  int64_t budget = static_cast<int64_t>(memory.totalPhys / 16);
-  // A 32-bit process has a few GiB of address space, however much memory is installed
-  if constexpr (sizeof(void*) < 8)
-    budget = std::min<int64_t>(budget, 256 * 1024 * 1024);
-  if (m_flags & READ_MULTI_STREAM)
-    budget /= 2;
-
-  return static_cast<size_t>(std::min(wanted, budget));
-}
-
-void CFileCache::GrowCacheForRate(uint32_t bytesPerSecond)
-{
-  // Rebuilding refetches the cached content, which needs a source that can seek back to it
-  if (!m_autoSizeCache || !m_seekPossible || bytesPerSecond == 0 || m_memoryCacheSize == 0 ||
-      !CThread::IsRunning())
-    return;
-
-  const size_t wanted = CacheSizeForRate(bytesPerSecond);
-  if (wanted <= m_memoryCacheSize)
-    return;
-
-  // Rebuilt by the fill thread at the read position, the way a seek rebuilds it
-  std::unique_lock lock(m_sync);
-
-  CLog::LogF(LOGINFO, "<{}> growing the cache from {} to {} bytes for {} bytes per second",
-             m_sourcePath, m_memoryCacheSize, wanted, bytesPerSecond);
-
-  m_pendingCacheSize = wanted;
-  m_seekPos = m_readPos;
-  m_seekEnded.Reset();
-  m_seekEvent.Set();
-  while (!m_seekEnded.Wait(100ms))
-  {
-    if (!CThread::IsRunning())
-      return;
-  }
 }
 
 bool CFileCache::Open(const CURL& url)
@@ -256,7 +175,7 @@ bool CFileCache::Open(const CURL& url)
     if (cacheMemSize == 0)
     {
       // Use cache on disk
-      m_pCache = ForStreams(std::make_unique<CSimpleFileCache>());
+      m_pCache = std::make_unique<CSimpleFileCache>();
       m_forwardCacheSize = 0;
       m_maxForward = m_fileSize;
     }
@@ -289,11 +208,21 @@ bool CFileCache::Open(const CURL& url)
           cacheSize = m_chunkSize * 2;
       }
 
-      SetMemoryCache(CreateMemoryCache(cacheSize), cacheSize);
+      CLog::LogF(LOGDEBUG, "<{}> using a {} memory cache sized {} bytes per buffer", m_sourcePath,
+                 (m_flags & READ_MULTI_STREAM) ? "double" : "single", cacheSize);
 
-      // A size the user chose is left as chosen
-      const auto sizeSetting = settings->GetSetting(CSettings::SETTING_FILECACHE_MEMORYSIZE);
-      m_autoSizeCache = sizeSetting && sizeSetting->IsDefault();
+      const size_t back = cacheSize / 4;
+      const size_t front = cacheSize - back;
+
+      m_pCache = std::make_unique<CCircularCache>(front, back);
+      m_forwardCacheSize = front;
+      m_maxForward = m_forwardCacheSize;
+    }
+
+    if (m_flags & READ_MULTI_STREAM)
+    {
+      // If READ_MULTI_STREAM flag is set: Double buffering is required
+      m_pCache = std::make_unique<CDoubleCache>(m_pCache.release());
     }
   }
 
@@ -362,24 +291,7 @@ void CFileCache::Process()
     // check for seek events
     if (seekRequested)
     {
-      // The grown cache takes over once the source has seeked for it, so a seek that fails
-      // leaves what the current one holds
-      std::unique_ptr<CCacheStrategy> grown;
-      const size_t grownSize = m_pendingCacheSize;
-      if (m_pendingCacheSize)
-      {
-        grown = CreateMemoryCache(m_pendingCacheSize);
-        if (grown->Open() != CACHE_RC_OK)
-        {
-          CLog::LogF(LOGERROR, "<{}> could not allocate the grown cache, keeping the current one",
-                     m_sourcePath);
-          grown.reset();
-        }
-        m_pendingCacheSize = 0;
-      }
-
-      const int64_t cacheMaxPos =
-          (grown ? grown.get() : m_pCache.get())->CachedDataEndPosIfSeekTo(m_seekPos);
+      const int64_t cacheMaxPos = m_pCache->CachedDataEndPosIfSeekTo(m_seekPos);
       // A length of 0 is unknown, not an end the cache has reached
       const bool cacheReachEOF = m_fileSize > 0 && cacheMaxPos == m_fileSize;
 
@@ -400,7 +312,6 @@ void CFileCache::Process()
             m_seekPossible = m_source->IoControl(IOControl::SEEK_POSSIBLE, nullptr);
           sourceSeekFailed = true;
           m_sourcePositionValid = false;
-          grown.reset();
 
           if (m_pCache->Seek(m_readPos) != m_readPos)
           {
@@ -420,10 +331,6 @@ void CFileCache::Process()
 
       if (!sourceSeekFailed)
       {
-        // Only safe here: the reader is held in Seek or GrowCacheForRate until the seek completes
-        if (grown)
-          SetMemoryCache(std::move(grown), grownSize);
-
         m_pCache->ClearEndOfInput();
         const bool bCompleteReset = m_pCache->Reset(m_seekPos);
         m_readPos = m_seekPos;
@@ -896,7 +803,7 @@ int CFileCache::IoControl(IOControl request, void* param)
     return 0;
   }
 
-  if (request == IOControl::CACHE_SETRATE || request == IOControl::CACHE_SETRATE_KEEPSIZE)
+  if (request == IOControl::CACHE_SETRATE)
   {
     m_writeRate = *static_cast<uint32_t*>(param);
 
@@ -910,9 +817,6 @@ int CFileCache::IoControl(IOControl request, void* param)
 
     CLog::LogF(LOGDEBUG, "setting maxRate to {:.2f} Mbit/s with processWait of {} ms", mBits,
                wait);
-
-    if (request == IOControl::CACHE_SETRATE)
-      GrowCacheForRate(m_writeRate);
     return 0;
   }
 

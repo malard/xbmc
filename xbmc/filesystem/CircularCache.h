@@ -12,8 +12,6 @@
 #include "threads/CriticalSection.h"
 #include "threads/Event.h"
 
-#include "PlatformDefs.h"
-
 namespace XFILE {
 
 class CCircularCache : public CCacheStrategy
