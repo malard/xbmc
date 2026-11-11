@@ -364,6 +364,12 @@ TEST(TestLanguageTag, PrefersTheCurrentCodeOverTheDeprecatedOne)
   EXPECT_TRUE(CLanguageTag::Parse("iw").Matches(CLanguageTag::Parse("he")));
 }
 
+TEST(TestLanguageTag, WritesSerboCroatianAsScr)
+{
+  // ISO 639-2 withdrew scr, but it is still the code Serbo-Croatian is written with
+  EXPECT_EQ(CLanguageTag::Parse("scr").AsIso6392B(), "scr");
+}
+
 TEST(TestLanguageTag, NarrowingDropsTheRegionFromTheEnglishName)
 {
   // A subtitle service addon is given a language by name, and knows the bare language only
