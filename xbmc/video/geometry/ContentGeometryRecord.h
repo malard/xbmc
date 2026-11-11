@@ -16,8 +16,15 @@
 #include <vector>
 
 class CArchive;
+
 class TiXmlElement;
 class TiXmlNode;
+
+namespace tinyxml2
+{
+class XMLElement;
+class XMLNode;
+} // namespace tinyxml2
 
 namespace KODI::VIDEO::GEOMETRY
 {
@@ -91,9 +98,15 @@ void Archive(CArchive& ar, SharedContentGeometry& shared);
 
 //! \brief Write the ratios under \p movie as a <contentgeometry> element, nothing when the
 //! record has no reading.
-void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& record);
+void SaveContentGeometryXML(tinyxml2::XMLNode& movie, const ContentGeometryRecord& record);
 
 //! \brief Read SaveContentGeometryXML() back. Nothing when \p movie names no ratio.
+std::optional<ContentGeometryRecord> LoadContentGeometryXML(const tinyxml2::XMLElement& movie);
+
+//! \brief SaveContentGeometryXML() for a TinyXML document.
+void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& record);
+
+//! \brief LoadContentGeometryXML() for a TinyXML document.
 std::optional<ContentGeometryRecord> LoadContentGeometryXML(const TiXmlElement& movie);
 
 //! \brief What a lookup found.

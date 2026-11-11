@@ -26,11 +26,13 @@ enum AnnouncementFlag
   Other = 0x200,
   Info = 0x400,
   Sources = 0x800,
-  Settings = 0x1000
+  Files = 0x1000,
+  Settings = 0x2000
 };
 
-const auto ANNOUNCE_ALL = (Player | Playlist | GUI | System | VideoLibrary | AudioLibrary |
-                           Application | Input | ANNOUNCEMENT::PVR | Other | Info | Sources | Settings);
+const auto ANNOUNCE_ALL =
+    (Player | Playlist | GUI | System | VideoLibrary | AudioLibrary | Application | Input |
+     ANNOUNCEMENT::PVR | Other | Info | Sources | Files | Settings);
 
 /*!
     \brief Returns a string representation for the
@@ -66,6 +68,8 @@ inline const char* AnnouncementFlagToString(const AnnouncementFlag& notification
       return "Info";
     case Sources:
       return "Sources";
+    case Files:
+      return "Files";
     case Settings:
       return "Settings";
     default:
@@ -84,6 +88,7 @@ struct InputEvent;
 struct PVREvent;
 struct InfoEvent;
 struct SourcesEvent;
+struct FilesEvent;
 struct SettingsEvent;
 struct OtherEvent;
 struct Announcement;
@@ -110,6 +115,7 @@ struct Announcement;
     virtual void OnPVREvent(const PVREvent& event) {}
     virtual void OnInfoEvent(const InfoEvent& event) {}
     virtual void OnSourcesEvent(const SourcesEvent& event) {}
+    virtual void OnFilesEvent(const FilesEvent& event) {}
     virtual void OnSettingsEvent(const SettingsEvent& event) {}
     virtual void OnOtherEvent(const OtherEvent& event) {}
   };

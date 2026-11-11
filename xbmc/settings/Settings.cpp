@@ -439,6 +439,9 @@ void CSettings::InitializeOptionFillers()
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller("rendermethods", CBaseRenderer::SettingOptionsRenderMethodsFiller);
+  GetSettingsManager()->RegisterSettingOptionsFiller(
+      "imageadjustmentgranularities",
+      CMediaSettings::SettingOptionsImageAdjustmentGranularitiesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("modes", CDisplaySettings::SettingOptionsModesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("resolutions", CDisplaySettings::SettingOptionsResolutionsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("screens", CDisplaySettings::SettingOptionsDispModeFiller);
@@ -503,6 +506,7 @@ void CSettings::UninitializeOptionFillers()
   GetSettingsManager()->UnregisterSettingOptionsFiller("speedunits");
   GetSettingsManager()->UnregisterSettingOptionsFiller("temperatureunits");
   GetSettingsManager()->UnregisterSettingOptionsFiller("rendermethods");
+  GetSettingsManager()->UnregisterSettingOptionsFiller("imageadjustmentgranularities");
   GetSettingsManager()->UnregisterSettingOptionsFiller("resolutions");
   GetSettingsManager()->UnregisterSettingOptionsFiller("screens");
   GetSettingsManager()->UnregisterSettingOptionsFiller("stereoscopicmodes");

@@ -309,6 +309,25 @@ CVariant DataOfEvent(const SourcesEvent& event)
                     static_cast<const SourcesEvent::variant&>(event));
 }
 
+CVariant DataOfEvent(const FilesEvent& event)
+{
+  using namespace EVENT::FILES;
+  CVariant data(CVariant::VariantTypeObject);
+  std::visit(Overloaded{[&data](const PlayCountChanged& e)
+                        {
+                          data["playcount"] = e.playCount;
+                          data["file"] = e.file;
+                        },
+                        [&data](const ResumePointChanged& e)
+                        {
+                          data["resume"]["position"] = e.position;
+                          data["resume"]["total"] = e.total;
+                          data["file"] = e.file;
+                        }},
+             static_cast<const FilesEvent::variant&>(event));
+  return data;
+}
+
 CVariant DataOfEvent(const SettingsEvent& event)
 {
   CVariant data(CVariant::VariantTypeObject);

@@ -315,12 +315,19 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
       if (message.GetParam1() == GUI_MSG_WINDOW_RESET)
       {
         m_vecItems->SetPath("?");
+        m_libraryFilterNodePath.clear();
+        m_libraryFilterDbPath.clear();
         return true;
       }
       else if ( message.GetParam1() == GUI_MSG_REFRESH_THUMBS )
       {
+        // an item sent along limits the refresh to the list items showing it
+        const auto item{std::static_pointer_cast<CFileItem>(message.GetItem())};
         for (int i = 0; i < m_vecItems->Size(); i++)
-          m_vecItems->Get(i)->FreeMemory(true);
+        {
+          if (!item || m_vecItems->Get(i)->IsSamePath(item.get()))
+            m_vecItems->Get(i)->FreeMemory(true);
+        }
         break;  // the window will take care of any info images
       }
       else if (message.GetParam1() == GUI_MSG_REMOVED_MEDIA)
@@ -535,6 +542,8 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
         }
         if (resetHistory)
         {
+          m_libraryFilterNodePath.clear();
+          m_libraryFilterDbPath.clear();
           m_vecItems->RemoveDiscCache(GetID());
           // only compute the history for the provided path if "return" is not defined
           // (otherwise the root level for the path will be added by default to the path history
@@ -746,11 +755,32 @@ bool CGUIMediaWindow::GetDirectory(const std::string &strDirectory, CFileItemLis
       SetupShares();
 
     CFileItemList dirItems;
-    if (!GetDirectoryItems(pathToUrl, dirItems, UseFileDirectories()))
+    CFileItemList nodeItems;
+    bool viaNode{false};
+    if (!m_libraryFilterDbPath.empty() && strDirectory == m_libraryFilterDbPath)
+    {
+      CURL nodeUrl{m_libraryFilterNodePath};
+      viaNode = GetDirectoryItems(nodeUrl, nodeItems, UseFileDirectories());
+      if (viaNode)
+      {
+        m_libraryFilterDbPath = nodeItems.GetPath();
+      }
+      else if (XFILE::CDirectory::Exists(m_libraryFilterNodePath, false))
+      {
+        // still there, so cancelled or hidden: don't load the db path in its place
+        return false;
+      }
+      else
+      {
+        m_libraryFilterNodePath.clear();
+        m_libraryFilterDbPath.clear();
+      }
+    }
+    if (!viaNode && !GetDirectoryItems(pathToUrl, dirItems, UseFileDirectories()))
       return false;
 
     // assign fetched directory items
-    items.Assign(dirItems);
+    items.Assign(viaNode ? nodeItems : dirItems);
 
     // took over a second, and not normally cached, so cache it
     auto end = std::chrono::steady_clock::now();
@@ -872,6 +902,14 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
     // Return false to be able to eg. show
     // an error message.
     return false;
+  }
+
+  if (URIUtils::IsLibraryFolder(pathNoFilter) &&
+      m_vecItems->GetProperty(ITEM::PROPERTY::LIBRARY_FILTER).asBoolean() &&
+      m_vecItems->GetPath() != pathNoFilter)
+  {
+    m_libraryFilterNodePath = pathNoFilter;
+    m_libraryFilterDbPath = m_vecItems->GetPath();
   }
 
   if (m_vecItems->GetLabel().empty())
@@ -1920,6 +1958,9 @@ void CGUIMediaWindow::OnFilterItems(const std::string &filter)
     if (pItem->IsFolder())
     {
       CURL itemUrl(pItem->GetPath());
+      if (itemUrl.IsLosslessURI())
+        continue;
+
       if (!filterOption.empty())
         itemUrl.SetOption("filter", filterOption);
       else
@@ -1931,12 +1972,14 @@ void CGUIMediaWindow::OnFilterItems(const std::string &filter)
   SetProperty("filter", filter);
   if (filtered && m_canFilterAdvanced)
   {
+    CURL curUrl;
     // to be able to select the same item as before we need to adjust
     // the path of the item i.e. add or remove the "filter=" URL option
     // but that's only necessary for folder items
-    if (currentItem.get() && currentItem->IsFolder())
+    if (currentItem.get() && currentItem->IsFolder() &&
+        !(curUrl = CURL{currentItemPath}).IsLosslessURI())
     {
-      CURL curUrl(currentItemPath), newUrl(m_strFilterPath);
+      CURL newUrl{m_strFilterPath};
       if (newUrl.HasOption("filter"))
         curUrl.SetOption("filter", newUrl.GetOption("filter"));
       else if (curUrl.HasOption("filter"))

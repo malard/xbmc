@@ -580,6 +580,32 @@ struct SourcesEvent
   static constexpr AnnouncementFlag FLAG = Sources;
 };
 
+namespace EVENT::FILES
+{
+struct PlayCountChanged
+{
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_PLAY_COUNT_CHANGED;
+
+  std::string file;
+  int playCount{0};
+};
+
+struct ResumePointChanged
+{
+  static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_RESUME_POINT_CHANGED;
+
+  std::string file;
+  double position{0.0};
+  double total{0.0};
+};
+} // namespace EVENT::FILES
+
+struct FilesEvent : std::variant<EVENT::FILES::PlayCountChanged, EVENT::FILES::ResumePointChanged>
+{
+  using variant::variant;
+  static constexpr AnnouncementFlag FLAG = Files;
+};
+
 namespace EVENT::SETTINGS
 {
 struct LevelChanged
@@ -616,6 +642,7 @@ struct Announcement : std::variant<PlayerEvent,
                                    PVREvent,
                                    InfoEvent,
                                    SourcesEvent,
+                                   FilesEvent,
                                    SettingsEvent,
                                    OtherEvent>
 {

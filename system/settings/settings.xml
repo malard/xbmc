@@ -302,6 +302,14 @@
           <default>true</default>
           <control type="toggle" />
         </setting>
+        <setting id="videoplayer.imageadjustmentgranularity" type="integer" label="13602" help="36059">
+          <level>2</level>
+          <default>100</default> <!-- hundredths -->
+          <constraints>
+            <options>imageadjustmentgranularities</options>
+          </constraints>
+          <control type="list" format="string" />
+        </setting>
       </group>
       <group id="4" label="14232">
         <setting id="videoplayer.stereoscopicplaybackmode" type="integer" label="36520" help="36537">
@@ -2882,6 +2890,47 @@
             <formatlabel>14045</formatlabel>
           </control>
         </setting>
+        <setting id="gamesgeneral.synctodisplay" type="boolean" label="13510" help="35202">
+          <level>1</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="gamesgeneral.synctodisplaylimit" type="integer" label="35242" help="35243">
+          <level>2</level>
+          <default>2</default>
+          <constraints>
+            <minimum>1</minimum>
+            <step>1</step>
+            <maximum>20</maximum>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="gamesgeneral.synctodisplay">true</dependency>
+          </dependencies>
+          <control type="spinner" format="string">
+            <formatlabel>14047</formatlabel>
+          </control>
+        </setting>
+        <setting id="gamesgeneral.enablerunahead" type="boolean" label="35378" help="35379">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="gamesgeneral.runaheadframes" type="integer" label="35380" help="35381">
+          <level>0</level>
+          <default>1</default>
+          <constraints>
+            <minimum>1</minimum>
+            <step>1</step>
+            <maximum>3</maximum>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="gamesgeneral.enablerunahead">true</dependency>
+          </dependencies>
+          <control type="slider" format="integer">
+            <popup>true</popup>
+            <formatlabel>35382</formatlabel>
+          </control>
+        </setting>
       </group>
       <group id="2" label="35320">
         <setting id="gamesgeneral.cheatspath" type="path" label="35321" help="35322">
@@ -2893,6 +2942,13 @@
           <control type="button" format="path">
             <heading>35321</heading>
           </control>
+        </setting>
+      </group>
+      <group id="3" label="744">
+        <setting id="gamesgeneral.replacelabels" type="boolean" label="35716" help="35717">
+          <level>1</level>
+          <default>true</default>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
@@ -2930,6 +2986,14 @@
           </constraints>
           <control type="edit" format="string"/>
         </setting>
+        <setting id="gamesachievements.disabledsets" type="string">
+          <visible>false</visible>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string"/>
+        </setting>
         <setting id="gamesachievements.loggedin" type="boolean" label="35268" help="35269">
           <visible>true</visible>
           <level>0</level>
@@ -2939,8 +3003,6 @@
       </group>
       <group id="3" label="35201">
         <setting id="gamesachievements.hardcore" type="boolean" label="35700" help="35302">
-          <!-- Shown once RetroAchievements have approved Kodi for hardcore -->
-          <visible>false</visible>
           <level>0</level>
           <default>false</default>
           <control type="toggle" />

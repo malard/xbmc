@@ -158,6 +158,9 @@
       "Sources": {
         "type": "boolean"
       },
+      "Files": {
+        "type": "boolean"
+      },
       "Settings": {
         "type": "boolean"
       }
@@ -175,6 +178,7 @@
       "Other",
       "Info",
       "Sources",
+      "Files",
       "Settings"
     ],
     "additionalProperties": false

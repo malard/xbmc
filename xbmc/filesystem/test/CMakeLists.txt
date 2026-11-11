@@ -1,5 +1,7 @@
 set(SOURCES TestAddonsPaths.cpp
             TestAudioBookFileDirectory.cpp
+            TestDataFile.cpp
+            TestDataURI.cpp
             TestDirectory.cpp
             TestDirectoryCache.cpp
             TestDiscDirectoryHelper.cpp
@@ -18,6 +20,9 @@ if(TARGET ${APP_NAME_LC}::Bluray)
                       TestBlurayDiscCache.cpp
                       TestBlurayPlaylistHints.cpp
                       TestDiscDirectoryHelperProject.cpp
+                      TestM2TSParser.cpp
+                      TestMovieObjectParser.cpp
+                      TestNavigationCommand.cpp
                       TestProjectParser.cpp
                       TestStreamParser.cpp)
 endif()

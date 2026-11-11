@@ -1127,6 +1127,25 @@ bool CDVDVideoCodecFFmpeg::GetPictureCommon(VideoPicture* pVideoPicture)
 
   pVideoPicture->hdrType = m_hints.hdrType;
 
+#if defined(TARGET_DARWIN_TVOS)
+  // Adaptive manifests may omit HDR signaling even when the decoded HEVC
+  // picture identifies an HDR10/HLG base layer. A Dolby Vision fallback is
+  // valid only when its profile and compatibility ID say so explicitly.
+  if ((pVideoPicture->hdrType == StreamHdrType::HDR_TYPE_NONE ||
+       pVideoPicture->hdrType == StreamHdrType::HDR_TYPE_DOLBYVISION) &&
+      pVideoPicture->color_primaries == AVCOL_PRI_BT2020)
+  {
+    const bool noDolbyVision =
+        pVideoPicture->hdrType == StreamHdrType::HDR_TYPE_NONE && m_hints.dovi.dv_profile == 0;
+    if (pVideoPicture->color_transfer == AVCOL_TRC_SMPTE2084 &&
+        (noDolbyVision || m_hints.HasHDR10DolbyVisionBaseLayer()))
+      pVideoPicture->hdrType = StreamHdrType::HDR_TYPE_HDR10;
+    else if (pVideoPicture->color_transfer == AVCOL_TRC_ARIB_STD_B67 &&
+             (noDolbyVision || m_hints.HasHLGDolbyVisionBaseLayer()))
+      pVideoPicture->hdrType = StreamHdrType::HDR_TYPE_HLG;
+  }
+#endif
+
   AVFrameSideData* sd;
 
   // https://github.com/FFmpeg/FFmpeg/blob/991d417692/doc/APIchanges#L18-L20
@@ -1311,6 +1330,9 @@ int CDVDVideoCodecFFmpeg::FilterOpen(const std::string& filters, bool scale)
     CLog::Log(LOGERROR, "CDVDVideoCodecFFmpeg::FilterOpen - unable to alloc filter graph");
     return -1;
   }
+
+  if (m_decoderState == STATE_SW_SINGLE)
+    m_pFilterGraph->nb_threads = 1;
 
   const AVFilter* srcFilter = avfilter_get_by_name("buffer");
   const AVFilter* outFilter = avfilter_get_by_name("buffersink"); // should be last filter in the graph for now

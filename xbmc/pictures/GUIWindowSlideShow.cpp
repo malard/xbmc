@@ -21,6 +21,7 @@
 #include "application/ApplicationPowerHandling.h"
 #include "application/PlaybackAnnouncer.h"
 #include "filesystem/Directory.h"
+#include "filesystem/File.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUILabelControl.h"
 #include "guilib/GUIWindowManager.h"
@@ -31,6 +32,7 @@
 #include "input/mouse/MouseEvent.h"
 #include "interfaces/AnnouncementManager.h"
 #include "pictures/GUIViewStatePictures.h"
+#include "pictures/MotionPhoto.h"
 #include "pictures/PictureThumbLoader.h"
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
@@ -53,6 +55,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -110,6 +113,9 @@ void CBackgroundPicLoader::Process()
         auto start = std::chrono::steady_clock::now();
         std::unique_ptr<CTexture> texture =
             CTexture::LoadFromFile(m_strFileName, m_maxWidth, m_maxHeight);
+        std::string motionClip;
+        if (texture && m_checkMotion)
+          motionClip = KODI::PICTURE::ExtractMotionPhotoClip(m_strFileName);
 
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -132,8 +138,8 @@ void CBackgroundPicLoader::Process()
               bFullSize = true;
           }
         }
-        m_pCallback->OnLoadPic(m_iPic, m_iSlideNumber, m_strFileName, std::move(texture),
-                               bFullSize);
+        m_pCallback->OnLoadPic(m_iPic, m_iSlideNumber, m_strFileName, std::move(texture), bFullSize,
+                               motionClip);
         m_isLoading = false;
       }
     }
@@ -143,13 +149,19 @@ void CBackgroundPicLoader::Process()
               totalTime.count(), totalTime.count() / count);
 }
 
-void CBackgroundPicLoader::LoadPic(int iPic, int iSlideNumber, const std::string &strFileName, const int maxWidth, const int maxHeight)
+void CBackgroundPicLoader::LoadPic(int iPic,
+                                   int iSlideNumber,
+                                   const std::string& strFileName,
+                                   const int maxWidth,
+                                   const int maxHeight,
+                                   bool checkMotion)
 {
   m_iPic = iPic;
   m_iSlideNumber = iSlideNumber;
   m_strFileName = strFileName;
   m_maxWidth = maxWidth;
   m_maxHeight = maxHeight;
+  m_checkMotion = checkMotion;
   m_isLoading = true;
   m_loadPic.Set();
 }
@@ -225,12 +237,20 @@ bool CGUIWindowSlideShow::IsPlaying() const
 
 void CGUIWindowSlideShow::Reset()
 {
+  CloseMotionClip();
   m_bSlideShow = false;
   m_bShuffled = false;
   m_bPause = false;
   m_bPlayingVideo = false;
   m_iVideoSlide = -1;
+  m_bPlayingMotion = false;
+  m_iMotionSlide = -1;
+  m_iMotionClipsSlide = -1;
   m_bErrorMessage = false;
+  {
+    std::unique_lock lock(m_motionClipsSection);
+    m_motionClips.clear();
+  }
 
   if (m_Image[0])
   {
@@ -265,6 +285,13 @@ void CGUIWindowSlideShow::Reset()
 
 void CGUIWindowSlideShow::OnDeinitWindow(int nextWindowID)
 {
+  if (m_bPlayingMotion)
+  {
+    // The clip is part of the photo, so it ends with the slideshow
+    CloseMotionClip();
+    EndMotion();
+  }
+
   if (nextWindowID != WINDOW_FULLSCREEN_VIDEO &&
       nextWindowID != WINDOW_FULLSCREEN_GAME)
   {
@@ -283,6 +310,12 @@ void CGUIWindowSlideShow::OnDeinitWindow(int nextWindowID)
     // and close the images.
     m_Image[0]->Close();
     m_Image[1]->Close();
+
+    {
+      std::unique_lock lock(m_motionClipsSection);
+      m_motionClips.clear();
+    }
+    KODI::PICTURE::ClearMotionPhotoClips();
   }
   CServiceBroker::GetGUI()->GetInfoManager().GetInfoProviders().GetPicturesInfoProvider().SetCurrentSlide(nullptr);
   m_bSlideShow = false;
@@ -541,7 +574,8 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
       GetCheckedSize((float)res.iWidth * m_fZoom,
         (float)res.iHeight * m_fZoom,
         maxWidth, maxHeight);
-      m_pBackgroundLoader->LoadPic(m_iCurrentPic, m_iCurrentSlide, picturePath, maxWidth, maxHeight);
+      m_pBackgroundLoader->LoadPic(m_iCurrentPic, m_iCurrentSlide, picturePath, maxWidth, maxHeight,
+                                   !IsVideo(*item));
       m_iLastFailedNextSlide = -1;
       m_bLoadNextPic = false;
     }
@@ -571,7 +605,8 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
       GetCheckedSize((float)res.iWidth * m_fZoom,
                      (float)res.iHeight * m_fZoom,
                      maxWidth, maxHeight);
-      m_pBackgroundLoader->LoadPic(1 - m_iCurrentPic, m_iNextSlide, picturePath, maxWidth, maxHeight);
+      m_pBackgroundLoader->LoadPic(1 - m_iCurrentPic, m_iNextSlide, picturePath, maxWidth,
+                                   maxHeight, !IsVideo(*item));
     }
   }
 
@@ -613,6 +648,7 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
       if (appPlayer->IsPlayingVideo())
         appPlayer->ClosePlayer();
       m_bPlayingVideo = false;
+      m_bPlayingMotion = false;
       m_iVideoSlide = -1;
 
       // first time render the next image, make sure using current display effect.
@@ -692,6 +728,39 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
   if (bPlayVideo && !PlayVideo())
       return;
 
+  // Only the current and next pictures' clips can still play
+  if (m_iMotionClipsSlide != m_iCurrentSlide)
+  {
+    m_iMotionClipsSlide = m_iCurrentSlide;
+    const std::string& current = m_slides.at(m_iCurrentSlide)->GetDynPath();
+    const std::string& next = m_slides.at(m_iNextSlide)->GetDynPath();
+    std::unique_lock lock(m_motionClipsSection);
+    std::erase_if(m_motionClips,
+                  [&current, &next](const auto& clip)
+                  {
+                    if (clip.first == current || clip.first == next)
+                      return false;
+                    XFILE::CFile::Delete(clip.second);
+                    return true;
+                  });
+  }
+
+  // A new visit to a moving photo plays its clip again, even if a video was showing in between
+  if (m_iMotionSlide != m_iCurrentSlide)
+    m_iMotionSlide = -1;
+
+  // While browsing by hand, a moving photo plays its clip each time it comes up
+  if ((!m_bSlideShow || m_bPause) && !m_bPlayingVideo && m_iMotionSlide != m_iCurrentSlide &&
+      m_Image[m_iCurrentPic]->IsLoaded() &&
+      m_Image[m_iCurrentPic]->SlideNumber() == m_iCurrentSlide &&
+      !m_Image[m_iCurrentPic]->DrawNextImage())
+  {
+    m_iMotionSlide = m_iCurrentSlide;
+    // The clip would take the player from any music playing, and the music wouldn't come back
+    if (!appPlayer || !appPlayer->IsPlayingAudio())
+      PlayMotion();
+  }
+
   if (m_Image[m_iCurrentPic]->IsLoaded())
     CServiceBroker::GetGUI()->GetInfoManager().GetInfoProviders().GetPicturesInfoProvider().SetCurrentSlide(m_slides.at(m_iCurrentSlide).get());
 
@@ -700,7 +769,9 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
   // render pass): MarkDirty every frame to keep the render pass running.
   // D2P (video has its own hardware plane): video updates independently
   // of the render pass.
-  if (IsVideo(*m_slides.at(m_iCurrentSlide)) && appPlayer && !appPlayer->IsRenderingVideoLayer())
+  if ((IsVideo(*m_slides.at(m_iCurrentSlide)) && appPlayer &&
+       !appPlayer->IsRenderingVideoLayer()) ||
+      m_bPlayingMotion)
   {
     MarkDirtyRegion();
   }
@@ -715,18 +786,16 @@ void CGUIWindowSlideShow::Render()
 
   CGraphicContext& gfxCtx = CServiceBroker::GetWinSystem()->GetGfxContext();
   // HDR video is drawn underneath the GUI, by the window below the slideshow
-  const bool hdrVideo =
-      IsVideo(*m_slides.at(m_iCurrentSlide)) && CServiceBroker::GetWinSystem()->IsHdrComposite();
+  const bool hdrVideo = IsShowingVideo() && CServiceBroker::GetWinSystem()->IsHdrComposite();
   gfxCtx.Clear(hdrVideo ? 0 : 0xff000000);
 
-  auto& components = CServiceBroker::GetAppComponents();
-  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
-
-  // Keep the video's thumbnail up until its first frame
-  if (IsVideo(*m_slides.at(m_iCurrentSlide)) && appPlayer->IsRenderingVideo())
+  if (IsShowingVideo())
   {
     gfxCtx.SetViewWindow(0, 0, m_coordsRes.iWidth, m_coordsRes.iHeight);
     gfxCtx.SetRenderingResolution(gfxCtx.GetVideoResolution(), false);
+
+    auto& components = CServiceBroker::GetAppComponents();
+    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 
     if (appPlayer->IsRenderingVideoLayer())
     {
@@ -760,7 +829,7 @@ void CGUIWindowSlideShow::Render()
 
 void CGUIWindowSlideShow::RenderEx()
 {
-  if (IsVideo(*m_slides.at(m_iCurrentSlide)))
+  if (IsShowingVideo())
   {
     auto& components = CServiceBroker::GetAppComponents();
     const auto appPlayer = components.GetComponent<CApplicationPlayer>();
@@ -935,6 +1004,12 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
     }
     else if (!m_bSlideShow || m_bPause)
     {
+      // A running slideshow shows moving photos as stills
+      if (m_bPlayingMotion)
+      {
+        CloseMotionClip();
+        EndMotion();
+      }
       m_bSlideShow = true;
       m_bPause = false;
       SetDirection(1);
@@ -1099,6 +1174,11 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_STOPPED:
       {
+        if (m_bPlayingMotion)
+        {
+          EndMotion();
+          break;
+        }
         if (m_bPlayingVideo)
         {
           m_bPlayingVideo = false;
@@ -1111,6 +1191,11 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
 
     case GUI_MSG_PLAYBACK_ENDED:
       {
+        if (m_bPlayingMotion)
+        {
+          EndMotion();
+          break;
+        }
         if (m_bPlayingVideo)
         {
           m_bPlayingVideo = false;
@@ -1134,6 +1219,13 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
       break;
 
       case GUI_MSG_PLAYBACK_ERROR:
+        // A moving photo whose clip won't play stays in the slideshow as a photo
+        if (m_bPlayingMotion &&
+            !CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->IsPlaying())
+        {
+          EndMotion();
+          break;
+        }
         // While a player is running, the error is a late one from a video already left behind
         if (m_bPlayingVideo && m_iVideoSlide >= 0 &&
             m_iVideoSlide < static_cast<int>(m_slides.size()) &&
@@ -1242,6 +1334,67 @@ bool CGUIWindowSlideShow::PlayVideo()
   return false;
 }
 
+bool CGUIWindowSlideShow::PlayMotion()
+{
+  const std::string clip = GetMotionClip(*m_slides.at(m_iCurrentSlide));
+  if (clip.empty())
+    return false;
+
+  CLog::Log(LOGDEBUG, "Playing the clip of moving photo {}",
+            m_slides.at(m_iCurrentSlide)->GetPath());
+  m_bPlayingVideo = true;
+  m_bPlayingMotion = true;
+  m_motionClip = clip;
+  m_iVideoSlide = m_iCurrentSlide;
+  // The clip is part of the photo, so it mustn't switch the display mode like a film
+  const bool startWindowed = CMediaSettings::GetInstance().DoesMediaStartWindowed();
+  CMediaSettings::GetInstance().SetMediaStartWindowed(true);
+  const bool ret =
+      g_application.PlayFile(CFileItem(clip, false), "") == CApplication::PlayResult::Started;
+  CMediaSettings::GetInstance().SetMediaStartWindowed(startWindowed);
+  if (!ret)
+    EndMotion();
+  return ret;
+}
+
+void CGUIWindowSlideShow::EndMotion()
+{
+  m_bPlayingMotion = false;
+  m_motionClip.clear();
+  m_bPlayingVideo = false;
+  m_iVideoSlide = -1;
+  MarkDirtyRegion();
+}
+
+void CGUIWindowSlideShow::CloseMotionClip()
+{
+  // Another video can take over the player without the clip being stopped first
+  if (m_bPlayingMotion && g_application.CurrentFile() == m_motionClip)
+    CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()->ClosePlayer();
+}
+
+bool CGUIWindowSlideShow::IsShowingVideo() const
+{
+  // A reset slideshow has no current slide
+  if (m_iCurrentSlide < 0 || m_iCurrentSlide >= static_cast<int>(m_slides.size()))
+    return false;
+  // A video's thumbnail, or a moving photo, stays on screen until the clip has a picture to show
+  if (!IsVideo(*m_slides.at(m_iCurrentSlide)) && !m_bPlayingMotion)
+    return false;
+  const auto appPlayer = CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>();
+  return appPlayer->IsRenderingVideo();
+}
+
+std::string CGUIWindowSlideShow::GetMotionClip(const CFileItem& item) const
+{
+  if (item.HasProperty("motionclip"))
+    return item.GetProperty("motionclip").asString();
+
+  std::unique_lock lock(m_motionClipsSection);
+  const auto clip = m_motionClips.find(item.GetDynPath());
+  return clip != m_motionClips.end() ? clip->second : "";
+}
+
 CSlideShowPic::DISPLAY_EFFECT CGUIWindowSlideShow::GetDisplayEffect(int iSlideNumber) const
 {
   if (m_bSlideShow && !m_bPause && !IsVideo(*m_slides.at(iSlideNumber)))
@@ -1254,7 +1407,8 @@ void CGUIWindowSlideShow::OnLoadPic(int iPic,
                                     int iSlideNumber,
                                     const std::string& strFileName,
                                     std::unique_ptr<CTexture> pTexture,
-                                    bool bFullSize)
+                                    bool bFullSize,
+                                    const std::string& motionClip)
 {
   if (pTexture)
   {
@@ -1265,6 +1419,12 @@ void CGUIWindowSlideShow::OnLoadPic(int iPic,
     }
     CLog::Log(LOGDEBUG, "Finished background loading slot {}, {}: {}", iPic, iSlideNumber,
               m_slides.at(iSlideNumber)->GetPath());
+    // Process() looks for the clip as soon as the picture is loaded
+    if (!motionClip.empty())
+    {
+      std::unique_lock lock(m_motionClipsSection);
+      m_motionClips[strFileName] = motionClip;
+    }
     m_Image[iPic]->SetOriginalSize(pTexture->GetOriginalWidth(), pTexture->GetOriginalHeight(),
                                    bFullSize);
     m_Image[iPic]->SetTexture(iSlideNumber, std::move(pTexture), GetDisplayEffect(iSlideNumber));
@@ -1409,6 +1569,8 @@ void CGUIWindowSlideShow::AddItems(const std::string &strPath, path_set *recursi
   // fetch directory and sort accordingly
   if (!CDirectory::GetDirectory(strPath, items, viewState.GetExtensions(), DIR_FLAG_NO_FILE_DIRS))
     return;
+
+  KODI::PICTURE::GroupLivePhotos(items);
 
   items.Sort(method, order, sortAttributes);
 

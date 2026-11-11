@@ -157,6 +157,7 @@ Notifications:
 - `Player.OnPlaybackFailed`
 - `Player.OnContentGeometryChange`
 - `Playlist.OnPropertiesChanged`
+- `Files.OnPlayCountChanged`, `Files.OnResumePointChanged`
 - `Settings.OnLevelChanged`
 
 Failure reasons:
@@ -219,7 +220,7 @@ Properties and types:
 ### Changed
 
 - `Settings.GetSections`, `GetCategories` and `GetSettings` answer the `level` they filtered at.
-- `Configuration.Notifications` declares `Info`, `Sources` and `Settings`.
+- `Configuration.Notifications` declares `Info`, `Sources`, `Files` and `Settings`.
 - `Player.OnPropertiesChanged` carries every member `Player.Property.Value` declares.
 - PVR images are `/image/` URLs, not local paths.
 - A PVR channel's `icon` and `thumbnail` are its own logo; programme art is under `broadcastnow`.

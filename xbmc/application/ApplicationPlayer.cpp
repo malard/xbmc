@@ -380,6 +380,15 @@ bool CApplicationPlayer::SeekScene(Direction seekDirection)
   return (player && player->SeekScene(seekDirection));
 }
 
+void CApplicationPlayer::SeekChapterOrSceneOrBigStep(Direction direction)
+{
+  m_seekHandler.ResetAndClearSeekStepValue();
+
+  std::shared_ptr<IPlayer> player = GetInternal();
+  if (player)
+    player->SeekChapterOrSceneOrBigStep(direction);
+}
+
 void CApplicationPlayer::SeekTime(int64_t iTime)
 {
   m_seekHandler.ResetAndClearSeekStepValue();
@@ -1082,6 +1091,12 @@ void CApplicationPlayer::Render(bool clear, uint32_t alpha, bool gui)
   std::shared_ptr<IPlayer> player = GetInternal();
   if (player)
     player->Render(clear, alpha, gui);
+}
+
+bool CApplicationPlayer::CompositeVideoCapture(KODI::RENDERING::CAPTURE::CaptureResult& result)
+{
+  const std::shared_ptr<IPlayer> player = GetInternal();
+  return !player || player->CompositeVideoCapture(result);
 }
 
 void CApplicationPlayer::FlushRenderer()

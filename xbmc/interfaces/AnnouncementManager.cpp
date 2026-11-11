@@ -74,6 +74,11 @@ void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SourcesEvent& event)
   announcer.OnSourcesEvent(event);
 }
 
+void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::FilesEvent& event)
+{
+  announcer.OnFilesEvent(event);
+}
+
 void Deliver(IAnnouncer& announcer, const ANNOUNCEMENT::SettingsEvent& event)
 {
   announcer.OnSettingsEvent(event);

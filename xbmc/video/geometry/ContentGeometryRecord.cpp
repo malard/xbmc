@@ -12,6 +12,7 @@
 #include "utils/Archive.h"
 #include "utils/StringUtils.h"
 #include "utils/XBMCTinyXML.h"
+#include "utils/XBMCTinyXML2.h"
 
 #include <algorithm>
 #include <cmath>
@@ -163,6 +164,47 @@ void Archive(CArchive& ar, SharedContentGeometry& shared)
   Archive(ar, record);
   if (!ar.IsStoring())
     shared.Set(std::move(record));
+}
+
+void SaveContentGeometryXML(tinyxml2::XMLNode& movie, const ContentGeometryRecord& record)
+{
+  if (!record.HasReading())
+    return;
+
+  tinyxml2::XMLDocument* doc = movie.GetDocument();
+  tinyxml2::XMLElement* geometry = doc->NewElement("contentgeometry");
+  for (const float aspect : record.aspects)
+  {
+    tinyxml2::XMLElement* element = doc->NewElement("aspect");
+    element->InsertEndChild(doc->NewText(StringUtils::Format("{:.2f}", aspect).c_str()));
+    geometry->InsertEndChild(element);
+  }
+
+  movie.InsertEndChild(geometry);
+}
+
+std::optional<ContentGeometryRecord> LoadContentGeometryXML(const tinyxml2::XMLElement& movie)
+{
+  const tinyxml2::XMLElement* geometry{movie.FirstChildElement("contentgeometry")};
+  if (!geometry)
+    return std::nullopt;
+
+  ContentGeometryRecord record;
+  for (const tinyxml2::XMLElement* element = geometry->FirstChildElement("aspect"); element;
+       element = element->NextSiblingElement("aspect"))
+  {
+    if (!element->GetText())
+      continue;
+
+    const float aspect{StoredAspect(StringUtils::ToFloat(element->GetText()))};
+    if (IsRatio(aspect))
+      record.aspects.push_back(aspect);
+  }
+
+  if (!record.HasReading())
+    return std::nullopt;
+
+  return record;
 }
 
 void SaveContentGeometryXML(TiXmlNode& movie, const ContentGeometryRecord& record)

@@ -123,5 +123,8 @@ constexpr const int GUI_MSG_PLAYBACK_RESUMED = GUI_MSG_USER + 48;
 constexpr const int GUI_MSG_PLAYBACK_SEEKED = GUI_MSG_USER + 49;
 constexpr const int GUI_MSG_PLAYBACK_SPEED_CHANGED = GUI_MSG_USER + 50;
 
+// Sent to PVR windows to select the channel with number param1 and subchannel number param2
+constexpr const int GUI_MSG_PVR_SELECT_CHANNEL_NUMBER = GUI_MSG_USER + 51;
+
 // Sent as GUI_MSG_NOTIFY_ALL when the setting level in force has changed
-constexpr const int GUI_MSG_SETTING_LEVEL_CHANGED = GUI_MSG_USER + 51;
+constexpr const int GUI_MSG_SETTING_LEVEL_CHANGED = GUI_MSG_USER + 52;

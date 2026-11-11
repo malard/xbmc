@@ -248,6 +248,9 @@
             "Sources": {
               "$ref": "#/$defs/Optional.Boolean"
             },
+            "Files": {
+              "$ref": "#/$defs/Optional.Boolean"
+            },
             "Settings": {
               "$ref": "#/$defs/Optional.Boolean"
             }

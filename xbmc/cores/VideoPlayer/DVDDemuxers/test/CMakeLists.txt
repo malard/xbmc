@@ -1,4 +1,5 @@
-set(SOURCES TestDVDDemuxClient.cpp
+set(SOURCES TestCCBitstreamParser.cpp
+            TestDVDDemuxClient.cpp
             TestDVDDemuxFFmpeg.cpp
             TestDVDDemuxUtils.cpp)
 

@@ -115,6 +115,8 @@ public:
     return m_triggerEvent.Wait(std::chrono::milliseconds(milliSeconds));
   }
 
+  void Wake() { m_triggerEvent.Set(); }
+
 private:
   CCriticalSection m_critSection;
   CEvent m_triggerEvent{false};
@@ -404,6 +406,7 @@ void CPVRManager::Stop(bool bRestart /* = false */)
   CLog::Log(LOGINFO, "PVR Manager: Stopping");
   SetState(ManagerState::STATE_STOPPING);
 
+  m_pendingUpdates->Wake();
   StopThread();
 }
 

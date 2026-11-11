@@ -2,7 +2,7 @@
   "asyncapi": "3.0.0",
   "info": {
     "title": "Kodi JSON-RPC notifications",
-    "version": "14.1.0",
+    "version": "14.2.0",
     "description": "Server-initiated notifications of Kodi's JSON-RPC 2.0 API. Kodi pushes these over the WebSocket and raw TCP transports only; they are never delivered over HTTP. Request/response methods are documented separately in openrpc.json.",
     "license": {
       "name": "GPL-2.0-or-later"
@@ -120,6 +120,12 @@
         },
         "VideoLibrary.OnRefresh": {
           "$ref": "#/components/messages/VideoLibrary.OnRefresh"
+        },
+        "Files.OnPlayCountChanged": {
+          "$ref": "#/components/messages/Files.OnPlayCountChanged"
+        },
+        "Files.OnResumePointChanged": {
+          "$ref": "#/components/messages/Files.OnResumePointChanged"
         },
         "System.OnQuit": {
           "$ref": "#/components/messages/System.OnQuit"
@@ -486,6 +492,28 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/VideoLibrary.OnRefresh"
+        }
+      ]
+    },
+    "Files.OnPlayCountChanged": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Files.OnPlayCountChanged"
+        }
+      ]
+    },
+    "Files.OnResumePointChanged": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Files.OnResumePointChanged"
         }
       ]
     },
@@ -1924,6 +1952,103 @@
           ]
         }
       },
+      "Files.OnPlayCountChanged": {
+        "name": "Files.OnPlayCountChanged",
+        "summary": "The play count of a file has changed, in or outside the library.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Files.OnPlayCountChanged"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "playcount": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "playcount"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Files.OnResumePointChanged": {
+        "name": "Files.OnResumePointChanged",
+        "summary": "The resume point of a file has changed, in or outside the library. A position of 0 means it has been reset.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Files.OnResumePointChanged"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "resume": {
+                      "$ref": "#/components/schemas/Video.Resume"
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "resume"
+                  ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
       "System.OnQuit": {
         "name": "System.OnQuit",
         "summary": "Kodi will be closed.",
@@ -3297,6 +3422,20 @@
           "source",
           "sections"
         ]
+      },
+      "Video.Resume": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "number",
+            "minimum": 0.0
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0.0
+          }
+        },
+        "additionalProperties": false
       },
       "Setting.Level": {
         "type": "string",

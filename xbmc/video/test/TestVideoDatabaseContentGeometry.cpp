@@ -367,20 +367,20 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
                                        "contentgeometry";
 }
 
-//! The real 150 to 152 upgrade, driven through CDatabaseManager.
-TEST(TestVideoDatabaseMigration, UpgradingFrom150AddsTheTableAndItsCascade)
+//! The real 154 to 155 upgrade, driven through CDatabaseManager.
+TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndItsCascade)
 {
   const DatabaseSettings settings{TestDatabaseSettings()};
 
-  // Started at 150 rather than earlier because 150 is upstream's set sort title migration, and
-  // replaying it over a table the current schema already built adds a duplicate column and
-  // aborts. This test is about the 152 upgrade.
+  // Started at 154 rather than earlier because the upgrades before it add columns, and replaying
+  // one over a table the current schema already built adds a duplicate column and aborts. This
+  // test is about the 155 upgrade.
   {
     CVideoDatabase old;
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-              old.Connect("MyVideosMigration150", settings, true));
-    RestateVideo150(old);
-    ASSERT_TRUE(old.ExecuteQuery("UPDATE version SET idVersion=150"));
+              old.Connect("MyVideosMigration154", settings, true));
+    RestateVideo154(old);
+    ASSERT_TRUE(old.ExecuteQuery("UPDATE version SET idVersion=154"));
     old.Close();
   }
 
@@ -389,9 +389,9 @@ TEST(TestVideoDatabaseMigration, UpgradingFrom150AddsTheTableAndItsCascade)
 
   CVideoDatabase migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-            migrated.Connect("MyVideosMigration152", settings, false));
+            migrated.Connect("MyVideosMigration155", settings, false));
 
-  EXPECT_EQ(152, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
+  EXPECT_EQ(155, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
 
   // The same upgrade carries the declaration columns, which live with the other per-file
   // overrides rather than in the cache.
@@ -442,7 +442,8 @@ TEST_F(TestVideoDatabaseContentGeometry, AVersionStoresTheMeasurementItWasAddedW
   CFileItem version{"/test/contentgeometry/movie extended.mkv", false};
   version.GetVideoInfoTag()->m_contentGeometry.Set(MakeRecord());
   ASSERT_TRUE(m_db.AddVideoAsset(VideoDbContentType::MOVIES, idMovie,
-                                 m_db.AddOrValidateVideoVersionType("Extended"),
+                                 m_db.AddOrValidateVideoVersionType("Extended",
+                                                                    VideoAssetType::VERSION),
                                  VideoAssetType::VERSION, version));
 
   const std::optional<ContentGeometryRecord> stored{

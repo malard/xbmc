@@ -54,6 +54,7 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoLibraryQueue.h"
 #include "video/VideoThumbLoader.h"
+#include "video/VideoUtils.h"
 #include "view/GUIViewState.h"
 
 #include <memory>
@@ -1380,7 +1381,10 @@ NPT_Result CUPnPServer::OnUpdateObject(PLT_ActionReference& action,
       NPT_CHECK_LABEL(position.ToInteger32(resume), args);
 
       if (resume <= 0)
+      {
         db.ClearBookMarksOfFile(file_path, CBookmark::RESUME);
+        VIDEO::UTILS::AnnounceResumePointChanged(file_path, {});
+      }
       else
       {
         CBookmark bookmark;
@@ -1389,6 +1393,7 @@ NPT_Result CUPnPServer::OnUpdateObject(PLT_ActionReference& action,
         bookmark.playerState = new_vals["lastPlayerState"];
 
         db.AddBookMarkToFile(file_path, bookmark, CBookmark::RESUME);
+        VIDEO::UTILS::AnnounceResumePointChanged(file_path, bookmark);
       }
       if (playCount.IsEmpty())
       {
@@ -1410,6 +1415,7 @@ NPT_Result CUPnPServer::OnUpdateObject(PLT_ActionReference& action,
         lastPlayedObj.SetFromW3CDateTime(lastPlayed.GetChars());
 
       db.SetPlayCount(updated, count, lastPlayedObj);
+      VIDEO::UTILS::AnnouncePlayCountChanged(file_path, count);
       updatelisting = true;
     }
 
@@ -1476,8 +1482,12 @@ failure:
 NPT_Result CUPnPServer::ServeFile(const NPT_HttpRequest& request,
                                   const NPT_HttpRequestContext& context,
                                   NPT_HttpResponse& response,
-                                  const NPT_String& md5)
+                                  const NPT_String& requested_path)
 {
+  // Platinum joins the requested hash to the "/" file root
+  const NPT_String md5(requested_path.StartsWith("/") ? requested_path.SubString(1)
+                                                      : requested_path);
+
   // Translate hash to filename
   NPT_String file_path(md5), *file_path2;
   {
