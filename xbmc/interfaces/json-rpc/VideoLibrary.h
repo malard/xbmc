@@ -132,6 +132,13 @@ protected:
                                 CVideoInfoTag& details,
                                 CVideoDatabase& videodatabase);
 
+  //! Whether the item is watched once \p properties are stored: for a show, any of its episodes
+  static bool EndsUpWatched(VideoKind kind,
+                            int id,
+                            const CVariant& properties,
+                            const CVideoInfoTag& details,
+                            CVideoDatabase& videodatabase);
+
 public:
     static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
 

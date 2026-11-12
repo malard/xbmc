@@ -1749,7 +1749,8 @@ JSONRPC_STATUS CPlayerOperations::StartSlideshow(const std::string& path, bool r
 
 void CPlayerOperations::SendSlideshowAction(int actionID)
 {
-  CServiceBroker::GetAppMessenger()->SendMsg(TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
+  CServiceBroker::GetAppMessenger()->SendMsg(
+      TMSG_GUI_ACTION, WINDOW_SLIDESHOW, -1,
       TransferToMessenger(std::make_unique<CAction>(actionID)));
 }
 

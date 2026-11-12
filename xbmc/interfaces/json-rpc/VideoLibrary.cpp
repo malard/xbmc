@@ -21,6 +21,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "utils/ArtTypes.h"
 #include "utils/ContentNames.h"
+#include "utils/ItemProperties.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -157,6 +158,13 @@ JSONRPC_STATUS CheckForKind(const KindTraits& traits,
     return CFileItemHandler::RefuseForKind("season", traits.type, errorData);
 
   return OK;
+}
+
+// A last played date can only be cleared from an item that ends up unwatched
+bool ClearsLastPlayed(const CVariant& properties)
+{
+  const CVariant& lastPlayed = properties["lastPlayed"];
+  return lastPlayed.isString() && lastPlayed.empty();
 }
 } // unnamed namespace
 
@@ -325,6 +333,9 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
 
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
   const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
+  if (ClearsLastPlayed(properties) &&
+      EndsUpWatched(traits->kind, id, properties, infos, videodatabase))
+    return InvalidParams;
 
   JSONRPC_STATUS status{InternalError};
   switch (traits->kind)
@@ -1297,6 +1308,21 @@ void CVideoLibrary::StorePlaybackEdit(const CVariant& parameterObject,
   }
 
   UpdateResumePoint(parameterObject, details, videodatabase);
+}
+
+bool CVideoLibrary::EndsUpWatched(VideoKind kind,
+                                  int id,
+                                  const CVariant& properties,
+                                  const CVideoInfoTag& details,
+                                  CVideoDatabase& videodatabase)
+{
+  if (kind != VideoKind::TVShow || ParameterNotNull(properties, "playCount"))
+    return details.GetPlayCount() > 0;
+
+  CVideoInfoTag show;
+  CFileItem showItem;
+  return videodatabase.GetTvShowInfo("", show, id, &showItem) &&
+         showItem.GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger() > 0;
 }
 
 void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase)

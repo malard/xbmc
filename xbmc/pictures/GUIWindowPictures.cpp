@@ -455,7 +455,8 @@ void CGUIWindowPictures::GetContextButtons(int itemNumber, CContextButtons &butt
 
   if (item)
   {
-    if ( m_vecItems->IsVirtualDirectoryRoot() || m_vecItems->GetPath() == CSourcesDirectory::PathOf(MediaSection::PICTURES))
+    if (m_vecItems->IsVirtualDirectoryRoot() ||
+        m_vecItems->GetPath() == CSourcesDirectory::PathOf(MediaSection::PICTURES))
     {
       CGUIDialogContextMenu::GetContextButtons(MediaSection::PICTURES, item, buttons);
     }

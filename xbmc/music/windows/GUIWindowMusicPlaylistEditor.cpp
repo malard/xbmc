@@ -187,7 +187,8 @@ bool CGUIWindowMusicPlaylistEditor::GetDirectory(const std::string &strDirectory
   items.Clear();
   if (strDirectory.empty())
   { // root listing - list files:// and musicdb://
-    CFileItemPtr files(new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
+    CFileItemPtr files(
+        new CFileItem(XFILE::CSourcesDirectory::PathOf(KODI::MEDIA::MediaSection::MUSIC), true));
     files->SetLabel(localizeStrings.Get(744));
     files->SetLabelPreformatted(true);
     files->SetIsShareOrDrive(true);

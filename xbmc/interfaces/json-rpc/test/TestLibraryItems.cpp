@@ -11,6 +11,7 @@
 #include "JSONRPCTestUtils.h"
 #include "ServiceBroker.h"
 #include "Util.h"
+#include "XBDateTime.h"
 #include "guilib/test/TestGUIStubs.h"
 #include "interfaces/AnnouncementManager.h"
 #include "music/MusicDatabase.h"
@@ -170,6 +171,46 @@ public:
     m_videos.SetPlayCount(CFileItem(watched), 1);
     return idShow;
   }
+
+  static constexpr const char* LAST_PLAYED = "2026-09-02 20:00:00";
+
+  //! Records \p fileAndPath as played \p playCount times, last at LAST_PLAYED
+  void Play(const std::string& fileAndPath, int playCount)
+  {
+    CDateTime lastPlayed;
+    lastPlayed.SetFromDBDateTime(LAST_PLAYED);
+    m_videos.SetPlayCount(CFileItem(fileAndPath, false), playCount, lastPlayed);
+  }
+
+  //! The playcount and last played date stored for \p fileAndPath, the date empty if there is none
+  std::pair<int, std::string> Played(const std::string& fileAndPath)
+  {
+    const CDateTime lastPlayed{m_videos.GetLastPlayed(fileAndPath)};
+    return {m_videos.GetPlayCount(fileAndPath),
+            lastPlayed.IsValid() ? lastPlayed.GetAsDBDateTime() : ""};
+  }
+
+  JSONRPC_STATUS SetProperties(const char* kind, int id, const std::string& properties)
+  {
+    CVariant result;
+    return Invoke("VideoLibrary.SetItemProperties",
+                  R"({"item": {"kind": ")" + std::string(kind) + R"(", "id": )" +
+                      std::to_string(id) + R"(}, "properties": )" + properties + "}",
+                  result);
+  }
+
+  std::string TitleOf(const char* kind, int id)
+  {
+    CVariant result;
+    Invoke("VideoLibrary.GetItemProperties",
+           R"({"item": {"kind": ")" + std::string(kind) + R"(", "id": )" + std::to_string(id) +
+               R"(}, "properties": ["title"]})",
+           result);
+    return result["title"].asString();
+  }
+
+  static constexpr const char* MOVIE_FILE = "/jsonrpc-test/library/Set Member (2001).mkv";
+  static constexpr const char* EPISODE_FILE = "/jsonrpc-test/library/Show/Show.S01E01.mkv";
 
   //! Calls \p listMethod and GetItems for \p kind with the same parameters, and expects one answer
   void ExpectTheQueryAnswersAsTheListMethod(const char* libraryNamespace,
@@ -552,6 +593,91 @@ TEST_F(TestLibraryItemsInDatabase, APlayCountSetIsAnnouncedOnce)
   const std::vector<CVariant> song{listener.UpdatesTo("song", m_songId)};
   ASSERT_EQ(1u, song.size());
   EXPECT_EQ(4, song[0]["properties"]["playCount"].asInteger());
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedMovieIsRefused)
+{
+  Play(MOVIE_FILE, 2);
+  const std::string title{TitleOf("movie", m_movieId)};
+
+  EXPECT_EQ(InvalidParams,
+            SetProperties("movie", m_movieId, R"({"title": "Changed", "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(MOVIE_FILE));
+  EXPECT_EQ(title, TitleOf("movie", m_movieId));
+}
+
+TEST_F(TestLibraryItemsInDatabase, MarkingAMovieWatchedWithNoLastPlayedDateIsRefused)
+{
+  Play(MOVIE_FILE, 0);
+
+  EXPECT_EQ(InvalidParams,
+            SetProperties("movie", m_movieId, R"({"playCount": 1, "lastPlayed": ""})"));
+
+  EXPECT_EQ(0, Played(MOVIE_FILE).first);
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingAMovieWithPlayCountZeroClearsBoth)
+{
+  Play(MOVIE_FILE, 2);
+
+  EXPECT_EQ(OK, SetProperties("movie", m_movieId, R"({"playCount": 0, "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(0, std::string()), Played(MOVIE_FILE));
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedEpisodeIsRefused)
+{
+  Play(EPISODE_FILE, 2);
+  const std::string title{TitleOf("episode", m_episodeId)};
+
+  EXPECT_EQ(InvalidParams,
+            SetProperties("episode", m_episodeId, R"({"title": "Changed", "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(EPISODE_FILE));
+  EXPECT_EQ(title, TitleOf("episode", m_episodeId));
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedMusicVideoIsRefused)
+{
+  const std::string file{"/jsonrpc-test/library/Watched Clip.mkv"};
+  CVideoInfoTag tag{Tag(file)};
+  const int id{m_videos.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{})};
+  ASSERT_GT(id, 0);
+  Play(file, 2);
+  const std::string title{TitleOf("musicvideo", id)};
+
+  EXPECT_EQ(InvalidParams,
+            SetProperties("musicvideo", id, R"({"title": "Changed", "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(file));
+  EXPECT_EQ(title, TitleOf("musicvideo", id));
+  m_videos.DeleteMusicVideo(id);
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAShowWithAWatchedEpisodeIsRefused)
+{
+  Play(EPISODE_FILE, 2);
+  const std::string title{TitleOf("tvshow", m_showId)};
+
+  EXPECT_EQ(InvalidParams,
+            SetProperties("tvshow", m_showId, R"({"title": "Changed", "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(EPISODE_FILE));
+  EXPECT_EQ(title, TitleOf("tvshow", m_showId));
+}
+
+TEST_F(TestLibraryItemsInDatabase, ClearingAShowWithPlayCountZeroClearsEveryEpisode)
+{
+  const std::string second{"/jsonrpc-test/library/Show/Show.S01E02.mkv"};
+  ASSERT_GT(AddEpisode(m_showId, second, 2), 0);
+  Play(EPISODE_FILE, 2);
+  Play(second, 1);
+
+  EXPECT_EQ(OK, SetProperties("tvshow", m_showId, R"({"playCount": 0, "lastPlayed": ""})"));
+
+  EXPECT_EQ(std::pair(0, std::string()), Played(EPISODE_FILE));
+  EXPECT_EQ(std::pair(0, std::string()), Played(second));
 }
 
 TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)

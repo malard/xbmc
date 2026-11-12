@@ -3300,6 +3300,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "lastPlayed": {
+        "description": "An empty string clears it, which is only allowed when the resulting playCount is 0.",
         "$ref": "#/$defs/Optional.String"
       },
       "originalTitle": {
@@ -3524,6 +3525,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "lastPlayed": {
+        "description": "An empty string clears it, which is only allowed when every episode's resulting playCount is 0.",
         "$ref": "#/$defs/Optional.String"
       },
       "originalTitle": {
@@ -3725,6 +3727,7 @@
         "$ref": "#/$defs/Optional.String"
       },
       "lastPlayed": {
+        "description": "An empty string clears it, which is only allowed when the resulting playCount is 0.",
         "$ref": "#/$defs/Optional.String"
       },
       "writer": {
@@ -3860,6 +3863,7 @@
         "$ref": "#/$defs/Optional.Integer"
       },
       "lastPlayed": {
+        "description": "An empty string clears it, which is only allowed when the resulting playCount is 0.",
         "$ref": "#/$defs/Optional.String"
       },
       "thumbnail": {

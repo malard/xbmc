@@ -258,6 +258,9 @@ Properties and types:
 - `Files.GetFileDetails` reports `file` and `filetype`.
 - `Files.PrepareDownload` reports `https` when the client used it.
 - `VideoLibrary.SetTVShowDetails` applies `playcount` and `lastplayed` to the episodes.
+- `VideoLibrary.SetItemProperties` answers `InvalidParams` for an empty `lastPlayed` on an item it
+  leaves watched, where it stored the current time instead; a show is watched while any of its
+  episodes is.
 - `VideoLibrary.Clean` honours `directory`.
 - A hidden subtitle keeps its selection when its stream closes.
 - `broadcastnow` and `broadcastnext` carry `label` and exactly the `PVR.Fields.Broadcast` fields.

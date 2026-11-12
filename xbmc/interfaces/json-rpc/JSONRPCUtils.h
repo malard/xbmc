@@ -373,18 +373,18 @@ inline const char* PermissionToString(const OperationPermission& permission)
     }
   }
 
-/*!
+  /*!
     \brief Returns the OperationPermission value for the given
     string representation
     \param permission String representation of the OperationPermission
     \return OperationPermission value of the given string representation, or
     nothing for a string that is not the name of a permission
     */
-inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
+  inline std::optional<OperationPermission> StringToPermission(const std::string& permission)
   {
-  if (permission.compare("ReadData") == 0)
-    return ReadData;
-  if (permission.compare("ControlPlayback") == 0)
+    if (permission.compare("ReadData") == 0)
+      return ReadData;
+    if (permission.compare("ControlPlayback") == 0)
       return ControlPlayback;
     if (permission.compare("ControlNotify") == 0)
       return ControlNotify;
@@ -408,10 +408,10 @@ inline std::optional<OperationPermission> StringToPermission(const std::string& 
       return ExecuteAddon;
     if (permission.compare("ControlPVR") == 0)
       return ControlPVR;
-  if (permission.compare("WriteSetting") == 0)
-    return WriteSetting;
+    if (permission.compare("WriteSetting") == 0)
+      return WriteSetting;
 
-  return std::nullopt;
+    return std::nullopt;
   }
 
   class CJSONRPCUtils
