@@ -280,7 +280,6 @@ private:
   /*!
    \brief Take note of where the picture has just been drawn, and confine the GUI to it if the
    viewer asked for that.
-
    The rectangle is read from the renderer rather than computed, so what is published is what
    happened. Runs before the window manager processes, which computes its dirty regions through
    the same transform it later renders through: changing the confinement between the two would

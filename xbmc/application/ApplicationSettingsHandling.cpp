@@ -28,7 +28,6 @@
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
 #include "settings/lib/SettingsManager.h"
-#include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
 
 #if defined(TARGET_DARWIN_OSX)
@@ -73,6 +72,8 @@ void CApplicationSettingsHandling::RegisterSettings()
                                           CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS,
                                       });
 
+  ApplyRasterSettings();
+
   auto& components = CServiceBroker::GetAppComponents();
   settingsMgr->RegisterCallback(
       components.GetComponent<CApplicationSkinHandling>().get(),
@@ -88,8 +89,6 @@ void CApplicationSettingsHandling::RegisterSettings()
                                 {CSettings::SETTING_SCREENSAVER_MODE,
                                  CSettings::SETTING_SCREENSAVER_PREVIEW,
                                  CSettings::SETTING_SCREENSAVER_SETTINGS});
-
-  ApplyRasterSettings();
 
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
   if (!appPlayer)

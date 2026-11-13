@@ -14,7 +14,6 @@
 #include "threads/Event.h"
 
 #include <mutex>
-#include <utility>
 #include <vector>
 
 #include <d3d11_4.h>

@@ -100,7 +100,6 @@ protected:
                                 std::chrono::milliseconds timeout,
                                 int& priority);
 
-  //! \brief The picture is stamped with the shape it was measured to be.
   EOutputState OutputPicture(VideoPicture* src);
   void ProcessOverlays(const VideoPicture* pSource, double pts);
   void OpenStream(CDVDStreamInfo& hint, std::unique_ptr<CDVDVideoCodec> codec);

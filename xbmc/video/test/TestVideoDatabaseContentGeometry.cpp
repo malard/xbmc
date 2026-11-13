@@ -372,9 +372,9 @@ TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndI
 {
   const DatabaseSettings settings{TestDatabaseSettings()};
 
-  // Started at 154 rather than earlier because the upgrades before it add columns, and replaying
-  // one over a table the current schema already built adds a duplicate column and aborts. This
-  // test is about the 155 upgrade.
+  // Started at 154 rather than earlier because replaying upstream's upgrades, such as 153 adding
+  // the hue and saturation columns, over tables the current schema already built adds a
+  // duplicate column and aborts. This test is about the 155 upgrade.
   {
     CVideoDatabase old;
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
@@ -441,10 +441,10 @@ TEST_F(TestVideoDatabaseContentGeometry, AVersionStoresTheMeasurementItWasAddedW
 
   CFileItem version{"/test/contentgeometry/movie extended.mkv", false};
   version.GetVideoInfoTag()->m_contentGeometry.Set(MakeRecord());
-  ASSERT_TRUE(m_db.AddVideoAsset(VideoDbContentType::MOVIES, idMovie,
-                                 m_db.AddOrValidateVideoVersionType("Extended",
-                                                                    VideoAssetType::VERSION),
-                                 VideoAssetType::VERSION, version));
+  ASSERT_TRUE(
+      m_db.AddVideoAsset(VideoDbContentType::MOVIES, idMovie,
+                         m_db.AddOrValidateVideoVersionType("Extended", VideoAssetType::VERSION),
+                         VideoAssetType::VERSION, version));
 
   const std::optional<ContentGeometryRecord> stored{
       m_db.GetStoredContentGeometry(version.GetVideoInfoTag()->m_iFileId)};

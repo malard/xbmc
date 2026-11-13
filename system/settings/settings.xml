@@ -3544,7 +3544,7 @@
           </constraints>
           <control type="list" format="string" />
         </setting>
-        <setting id="videoscreen.variablecontentgeometry" type="integer" label="40805" help="40806">
+        <setting id="videoscreen.variablecontentgeometry" type="integer" label="40865" help="40866">
           <level>2</level>
           <default>0</default> <!-- show all of the picture -->
           <constraints>
@@ -3854,7 +3854,7 @@
           </dependencies>
           <control type="toggle" />
         </setting>
-        <setting id="audiooutput.passthroughvolumecontrol" type="boolean" label="40865" help="40866">
+        <setting id="audiooutput.passthroughvolumecontrol" type="boolean" label="40805" help="40806">
           <level>2</level>
           <default>false</default>
           <dependencies>

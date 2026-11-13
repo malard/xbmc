@@ -66,12 +66,6 @@
 
 namespace
 {
-std::shared_ptr<CSetting> CalibrationSetting()
-{
-  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(
-      CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
-}
-
 // picture adjustments are integer sliders, or float ones with a finer granularity
 float GetAdjustmentValue(const std::shared_ptr<const CSetting>& setting)
 {
@@ -83,7 +77,7 @@ float GetAdjustmentValue(const std::shared_ptr<const CSetting>& setting)
       std::round(std::static_pointer_cast<const CSettingNumber>(setting)->GetValue() * 100.0) /
       100.0);
 }
-} // unnamed namespace
+} // namespace
 
 CGUIDialogVideoSettings::CGUIDialogVideoSettings()
     : CGUIDialogSettingsManualBase(WINDOW_DIALOG_VIDEO_OSD_SETTINGS, "DialogSettings.xml")
@@ -256,7 +250,15 @@ void CGUIDialogVideoSettings::OnSettingAction(const std::shared_ptr<const CSetti
   {
     const std::shared_ptr<CProfileManager> profileManager = CServiceBroker::GetSettingsComponent()->GetProfileManager();
 
-    const std::shared_ptr<CSetting> calibsetting = CalibrationSetting();
+    auto settingsComponent = CServiceBroker::GetSettingsComponent();
+    if (!settingsComponent)
+      return;
+
+    auto settings = settingsComponent->GetSettings();
+    if (!settings)
+      return;
+
+    auto calibsetting = settings->GetSetting(CSettings::SETTING_VIDEOSCREEN_GUICALIBRATION);
     if (!calibsetting)
     {
       CLog::Log(LOGERROR, "Failed to load setting for: {}",
@@ -516,7 +518,7 @@ void CGUIDialogVideoSettings::InitializeSettings()
 
   // general settings
   AddButton(groupSaveAsDefault, SETTING_VIDEO_MAKE_DEFAULT, 12376, SettingLevel::Basic);
-  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, CalibrationSetting()->GetLevel());
+  AddButton(groupSaveAsDefault, SETTING_VIDEO_CALIBRATION, 214, SettingLevel::Basic);
 }
 
 void CGUIDialogVideoSettings::AddVideoStreams(const std::shared_ptr<CSettingGroup>& group,

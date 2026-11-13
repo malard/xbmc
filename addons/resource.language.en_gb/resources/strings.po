@@ -996,7 +996,7 @@ msgstr ""
 #: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
 #: skins/xml/SettingsScreenCalibration.xml
 msgctxt "#214"
-msgid "Overscan alignment"
+msgid "Video calibration"
 msgstr ""
 
 msgctxt "#215"
@@ -5191,10 +5191,7 @@ msgctxt "#10022"
 msgid "Settings - Games"
 msgstr ""
 
-#. Title of the screen alignment window, which is the string with the window's own number
-msgctxt "#10023"
-msgid "Screen alignment"
-msgstr ""
+#empty string with id 10023
 
 #: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeMoviesOverview.cpp
 #: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeMusicVideosOverview.cpp
@@ -20956,13 +20953,13 @@ msgstr ""
 #. Description of setting with label #22021 "Minimise black bars"
 #: system/settings/settings.xml
 msgctxt "#36170"
-msgid "Stretch the video up to the set percentage in order to minimise black bars. Ignored while \"Screen aspect ratio\" states a shape - the picture is then fitted to its content and never stretched, so that it corresponds to a mask or a lens."
+msgid "Stretch the video up to the set percentage in order to minimise black bars."
 msgstr ""
 
 #. Description of setting with label #173 "Display 4:3 videos as"
 #: system/settings/settings.xml
 msgctxt "#36171"
-msgid "Select the zoom level that 4:3 videos are shown on widescreen displays. Ignored while \"Screen aspect ratio\" states a shape - the picture is then fitted to its content and never stretched, so that it corresponds to a mask or a lens."
+msgid "Select the zoom level that 4:3 videos are shown on widescreen displays."
 msgstr ""
 
 #. Description of setting with label #13430 "Allow hardware acceleration - PRIME"
@@ -26284,25 +26281,25 @@ msgctxt "#40804"
 msgid "{0:.1f} dB"
 msgstr ""
 
-#. Label for the setting deciding what is reported for a title whose aspect ratio changes partway through
+#. Setting "audiooutput.passthroughvolumecontrol"
 #: system/settings/settings.xml
 msgctxt "#40805"
-msgid "Variable aspect ratio content"
+msgid "Volume control during passthrough"
 msgstr ""
 
-#. Description of setting with label #40805 "Variable aspect ratio content"
+#. Help of setting "audiooutput.passthroughvolumecontrol"
 #: system/settings/settings.xml
 msgctxt "#40806"
-msgid "What to report for a title whose picture changes shape partway through."
+msgid "Adjust and display the volume level while audio is passed through. The level is not applied to the bitstream, but every change is announced, so an add-on or automation can apply it to an external audio processor."
 msgstr ""
 
-#. Option for setting with label #40805 "Variable aspect ratio content"
+#. Option for setting with label #40865 "Variable aspect ratio content"
 #: system/settings/settings.xml
 msgctxt "#40807"
 msgid "Use envelope ratio + bars"
 msgstr ""
 
-#. Option for setting with label #40805 "Variable aspect ratio content"
+#. Option for setting with label #40865 "Variable aspect ratio content"
 #: system/settings/settings.xml
 msgctxt "#40808"
 msgid "Use dominant ratio + clip"
@@ -26619,14 +26616,14 @@ msgctxt "#40864"
 msgid "Report the interface's shape"
 msgstr ""
 
-#. Setting "audiooutput.passthroughvolumecontrol"
+#. Label for the setting deciding what is reported for a title whose aspect ratio changes partway through
 #: system/settings/settings.xml
 msgctxt "#40865"
-msgid "Volume control during passthrough"
+msgid "Variable aspect ratio content"
 msgstr ""
 
-#. Help of setting "audiooutput.passthroughvolumecontrol"
+#. Description of setting with label #40865 "Variable aspect ratio content"
 #: system/settings/settings.xml
 msgctxt "#40866"
-msgid "Adjust and display the volume level while audio is passed through. The level is not applied to the bitstream, but every change is announced, so an add-on or automation can apply it to an external audio processor."
+msgid "What to report for a title whose picture changes shape partway through."
 msgstr ""

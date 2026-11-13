@@ -6121,19 +6121,18 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
           setting.m_PostProcess, setting.m_ScalingMethod);
       std::string strSQL2;
 
-      strSQL2 = PrepareSQL("ResumeTime=%i,StereoMode=%i,StereoInvert=%i,VideoStream=%i,"
-                           "TonemapMethod=%i,TonemapParam=%f,Orientation=%i,CenterMixLevel=%i,"
-                           "Hue=%f,Saturation=%f,"
-                           "DeclaredAspect=%f,DeclaredOn='%s',DetectedWhenDeclared=%f"
-                           " where idFile=%i\n",
-                           setting.m_ResumeTime, setting.m_StereoMode, setting.m_StereoInvert,
-                           setting.m_VideoStream, setting.m_ToneMapMethod,
-                           static_cast<double>(setting.m_ToneMapParam), setting.m_Orientation,
-                           setting.m_CenterMixLevel, static_cast<double>(setting.m_Hue),
-                           static_cast<double>(setting.m_Saturation),
-                           static_cast<double>(setting.m_declaredAspect),
-                           setting.m_declaredOn.c_str(),
-                           static_cast<double>(setting.m_detectedWhenDeclared), idFile);
+      strSQL2 = PrepareSQL(
+          "ResumeTime=%i,StereoMode=%i,StereoInvert=%i,VideoStream=%i,"
+          "TonemapMethod=%i,TonemapParam=%f,Orientation=%i,CenterMixLevel=%i,"
+          "Hue=%f,Saturation=%f,"
+          "DeclaredAspect=%f,DeclaredOn='%s',DetectedWhenDeclared=%f "
+          "where idFile=%i\n",
+          setting.m_ResumeTime, setting.m_StereoMode, setting.m_StereoInvert, setting.m_VideoStream,
+          setting.m_ToneMapMethod, static_cast<double>(setting.m_ToneMapParam),
+          setting.m_Orientation, setting.m_CenterMixLevel, static_cast<double>(setting.m_Hue),
+          static_cast<double>(setting.m_Saturation), static_cast<double>(setting.m_declaredAspect),
+          setting.m_declaredOn.c_str(), static_cast<double>(setting.m_detectedWhenDeclared),
+          idFile);
       strSQL += strSQL2;
       m_pDS->exec(strSQL);
       return ;
@@ -6167,9 +6166,8 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
           setting.m_StereoMode, setting.m_StereoInvert, setting.m_VideoStream,
           setting.m_ToneMapMethod, static_cast<double>(setting.m_ToneMapParam),
           setting.m_Orientation, setting.m_CenterMixLevel, static_cast<double>(setting.m_Hue),
-          static_cast<double>(setting.m_Saturation),
-          static_cast<double>(setting.m_declaredAspect), setting.m_declaredOn.c_str(),
-          static_cast<double>(setting.m_detectedWhenDeclared));
+          static_cast<double>(setting.m_Saturation), static_cast<double>(setting.m_declaredAspect),
+          setting.m_declaredOn.c_str(), static_cast<double>(setting.m_detectedWhenDeclared));
       m_pDS->exec(strSQL);
     }
   }

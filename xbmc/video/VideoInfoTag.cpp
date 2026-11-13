@@ -28,7 +28,6 @@
 #include "video/geometry/GeometrySettings.h"
 
 #include <algorithm>
-#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <string_view>

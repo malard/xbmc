@@ -47,7 +47,6 @@
 #include "video/VideoUtils.h"
 #include "video/geometry/ContentGeometryRecord.h"
 
-#include <algorithm>
 #include <chrono>
 #include <memory>
 
@@ -376,7 +375,7 @@ bool UpdatePlayCount(const CFileItem& fileItem, const CBookmark& bookmark)
 
   return false;
 }
-} // unnamed namespace
+} // namespace
 
 void CApplicationPlayerCallback::OnPlayerCloseFile(const CFileItem& file,
                                                    const CBookmark& bookmarkParam)
