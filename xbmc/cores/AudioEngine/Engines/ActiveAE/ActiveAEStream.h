@@ -169,7 +169,8 @@ public:
   double GetCacheTotal() override;
   double GetMaxDelay() override;
 
-  void Pause(bool keepOutput = false) override;
+  void Pause() override;
+  void Hold() override;
   void Resume() override;
   void Drain(bool wait) override;
   bool IsDraining() override;

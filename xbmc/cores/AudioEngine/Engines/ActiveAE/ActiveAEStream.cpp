@@ -386,9 +386,14 @@ double CActiveAEStream::GetMaxDelay()
   return static_cast<double>(m_activeAE->GetMaxDelay());
 }
 
-void CActiveAEStream::Pause(bool keepOutput)
+void CActiveAEStream::Pause()
 {
-  m_activeAE->PauseStream(this, true, keepOutput);
+  m_activeAE->PauseStream(this, true);
+}
+
+void CActiveAEStream::Hold()
+{
+  m_activeAE->HoldStream(this);
 }
 
 void CActiveAEStream::Resume()

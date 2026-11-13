@@ -42,7 +42,8 @@ public:
   double GetCacheTime() override { return 0.0; }
   double GetCacheTotal() override { return 1.0; }
   double GetMaxDelay() override { return 1.0; }
-  void Pause(bool keepOutput) override {}
+  void Pause() override {}
+  void Hold() override {}
   void Resume() override {}
   void Drain(bool wait) override {}
   bool IsDraining() override { return false; }

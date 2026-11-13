@@ -306,7 +306,7 @@ void CActiveAESink::StateMachine(int signal, Protocol *port, Message *msg)
 
         case CSinkControlProtocol::FLUSH:
           ReturnBuffers();
-          // Pause also clears AE queues: only explicit stream flush discards device audio.
+          // Only discards device audio when asked to, as on a stream flush or pause.
           if (m_sink && *reinterpret_cast<const bool*>(msg->data))
             m_sink->Flush();
           msg->Reply(CSinkControlProtocol::ACC);
@@ -1054,8 +1054,9 @@ void CActiveAESink::OpenSink()
     m_sampleOfSilence.pkt->pause_burst_ms = m_sinkFormat.m_streamInfo.GetDuration();
   }
 
-  m_silenceFiller = passthrough && CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-                                       CSettings::SETTING_AUDIOOUTPUT_SILENCEFILLER);
+  const auto settingsComponent = CServiceBroker::GetSettingsComponent();
+  const auto settings = settingsComponent ? settingsComponent->GetSettings() : nullptr;
+  m_silenceFiller = passthrough && settings && settings->GetBool("audiooutput.silencefiller");
   m_fillerArmed = false;
 
   m_swapState = CHECK_SWAP;

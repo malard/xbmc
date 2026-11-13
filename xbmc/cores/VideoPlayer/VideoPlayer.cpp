@@ -70,6 +70,7 @@
 #include "windowing/WinSystem.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <iterator>
@@ -1647,10 +1648,15 @@ void CVideoPlayer::Process()
       continue;
     }
 
-    // Does not service messages, like the display-lost guard above.
+    // Does not service messages, like the display-lost guard above. A request from the user ends
+    // the hold instead of waiting behind it.
     if (IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE))
     {
-      if (!m_bAbortRequest && !m_audioFormatHoldTimer.IsTimePast() && !m_audioChainReady.load())
+      if (m_audioFormatHoldRestart.exchange(false))
+        m_audioFormatHoldTimer.Set(m_audioFormatHoldTimer.GetInitialTimeoutValue());
+
+      if (!m_bAbortRequest && !m_audioFormatHoldTimer.IsTimePast() && !m_audioChainReady.load() &&
+          !HasPendingPlaybackRequest())
       {
         // Published from here: this guard skips the UpdatePlayState below it.
         UpdatePlayState(200);
@@ -6489,10 +6495,19 @@ void CVideoPlayer::OnLostDisplay()
 
 void CVideoPlayer::OnResetDisplay()
 {
-  if (!ResumePresentation(SuspendReason::DISPLAY_LOST))
+  if (!IsPresentationSuspended(SuspendReason::DISPLAY_LOST))
     return;
 
   CLog::Log(LOGINFO, "VideoPlayer: OnResetDisplay received");
+
+  // The HDMI sink was closed with the display, so the format hold has the format to acquire again.
+  if (IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE))
+  {
+    m_audioChainReady = false;
+    m_audioFormatHoldRestart = true;
+  }
+  // Last: the player loop judges the hold as soon as it sees the display back
+  ResumePresentation(SuspendReason::DISPLAY_LOST);
   m_VideoPlayerAudio->SendMessage(std::make_shared<CDVDMsg>(CDVDMsg::PLAYER_DISPLAY_RESET), 1);
 }
 
@@ -6549,6 +6564,17 @@ void CVideoPlayer::SendPresentationState(IDVDStreamPlayer& player)
                      1);
 }
 
+bool CVideoPlayer::HasPendingPlaybackRequest()
+{
+  static constexpr std::array requests{
+      CDVDMsg::PLAYER_SEEK,        CDVDMsg::PLAYER_SEEK_CHAPTER,    CDVDMsg::PLAYER_SETSPEED,
+      CDVDMsg::PLAYER_OPENFILE,    CDVDMsg::PLAYER_SET_STATE,       CDVDMsg::PLAYER_FRAME_ADVANCE,
+      CDVDMsg::PLAYER_SET_PROGRAM, CDVDMsg::PLAYER_SET_AUDIOSTREAM, CDVDMsg::PLAYER_SET_VIDEOSTREAM,
+  };
+  return std::ranges::any_of(requests, [this](CDVDMsg::Message type)
+                             { return m_messenger.GetPacketCount(type) > 0; });
+}
+
 void CVideoPlayer::HoldForAudioFormatChange()
 {
   const int tenths = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
@@ -6581,16 +6607,19 @@ void CVideoPlayer::ReleaseAudioFormatHold()
   if (!IsPresentationSuspended(SuspendReason::AUDIO_FORMAT_CHANGE))
     return;
 
-  const bool early = m_audioChainReady.load();
+  const char* why = m_audioChainReady.load()              ? "chain reported ready"
+                    : m_audioFormatHoldTimer.IsTimePast() ? "timed out"
+                                                          : "ended early";
   CLog::Log(LOGINFO, "VideoPlayer: audio format hold released after {:.1f}s ({})",
             static_cast<double>((m_audioFormatHoldTimer.GetInitialTimeoutValue() -
                                  m_audioFormatHoldTimer.GetTimeLeft())
                                     .count()) /
                 1000.0,
-            early ? "chain reported ready" : "timed out");
+            why);
   m_VideoPlayerAudio->SendMessage(
       std::make_shared<CDVDMsgBool>(CDVDMsg::PLAYER_AUDIO_FORMAT_HOLD, false), 1);
   ResumePresentation(SuspendReason::AUDIO_FORMAT_CHANGE);
+  m_audioFormatHoldRestart = false;
   m_audioChainReady = false;
 }
 

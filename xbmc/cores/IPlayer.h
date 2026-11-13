@@ -131,7 +131,7 @@ public:
   /*!
    \brief Report that the downstream audio chain has finished settling
 
-   Ends an audio format hold early. The player cannot see the chain, so this is
+   Ends a pass-through hold early. The player cannot see the chain, so this is
    for an add-on that can - one per device. Ignored when nothing is holding.
    */
   virtual void NotifyAudioChainReady() {}

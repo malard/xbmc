@@ -407,11 +407,17 @@ public:
   void OnResetDisplay() override;
 
   /*!
-   \brief Hold presentation after the audio format on the wire changes, until the downstream
-   chain reports ready or the delay setting expires.
+   \brief Hold presentation while a passthrough format change settles downstream
+
+   Opening a passthrough stream re-trains the HDMI link. On a chain with a matrix
+   or an AV processor in it the picture and sound can take many seconds to return,
+   and playback runs on regardless — the opening of the film is neither seen nor
+   heard. This is the audio-side counterpart of videoscreen.delayrefreshchange,
+   which only ever arms on a display mode change.
    */
   void HoldForAudioFormatChange();
   void ReleaseAudioFormatHold();
+  bool HasPendingPlaybackRequest();
   void NotifyAudioChainReady() override;
 
   bool IsCaching() const override;
@@ -641,6 +647,8 @@ protected:
   std::atomic<unsigned> m_suspendReasons{0};
   CCriticalSection m_suspendSection;
   XbmcThreads::EndTime<> m_audioFormatHoldTimer;
+  //! Set by a display reset during the hold; the player thread owns the timer.
+  std::atomic<bool> m_audioFormatHoldRestart{false};
   std::atomic<bool> m_audioChainReady{false};
 
   std::unique_ptr<CProcessInfo> m_processInfo;

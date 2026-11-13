@@ -756,21 +756,32 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
           return;
         case CActiveAEControlProtocol::PAUSESTREAM:
           CActiveAEStream *stream;
-          MsgStreamPause* pauseMsg;
-          pauseMsg = reinterpret_cast<MsgStreamPause*>(msg->data);
-          stream = pauseMsg->stream;
+          stream = *(CActiveAEStream**)msg->data;
+          if (!stream->m_paused && m_streams.size() == 1)
+          {
+            // A RAW AudioTrack would otherwise play its queued audio on resume, ahead of the sync
+            // correction. Discarding it makes resume start on an empty sink, as after a seek. As
+            // that lengthens the gap on resume, only where the queued audio disturbs it.
+            const CAEStreamInfo::DataType type{m_sinkFormat.m_streamInfo.m_type};
+            const bool discard =
+                m_mode == MODE_TRANSCODE ||
+                (m_mode == MODE_RAW && (type == CAEStreamInfo::STREAM_TYPE_TRUEHD ||
+                                        type == CAEStreamInfo::STREAM_TYPE_DTSHD_MA ||
+                                        type == CAEStreamInfo::STREAM_TYPE_DTSHD));
+            FlushEngine(discard);
+            streaming = false;
+            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming, sizeof(bool));
+          }
+          stream->m_paused = true;
+          return;
+        case CActiveAEControlProtocol::HOLDSTREAM:
+          // A pause that leaves STREAMING set, so the sink keeps the wire alive for the hold.
+          stream = *(CActiveAEStream**)msg->data;
+          // The filler repeats the last burst, so only into a gap this stream alone left.
           if (!stream->m_paused && m_streams.size() == 1)
           {
             FlushEngine();
-            // Kept output leaves STREAMING set, so the sink keeps the wire alive. The filler repeats
-            // the last burst, so it is armed only into a gap this stream alone left.
-            if (pauseMsg->keepOutput)
-              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
-            else
-            {
-              streaming = false;
-              m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::STREAMING, &streaming, sizeof(bool));
-            }
+            m_sink.m_controlPort.SendOutMessage(CSinkControlProtocol::ARMFILLER);
           }
           stream->m_paused = true;
           return;
@@ -3767,17 +3778,21 @@ void CActiveAE::FlushStream(CActiveAEStream *stream)
   }
 }
 
-void CActiveAE::PauseStream(CActiveAEStream *stream, bool pause, bool keepOutput)
+void CActiveAE::PauseStream(CActiveAEStream *stream, bool pause)
 {
   //! @todo pause sink, needs api change
   if (pause)
-  {
-    MsgStreamPause msg{stream, keepOutput};
-    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM, &msg, sizeof(MsgStreamPause));
-  }
+    m_controlPort.SendOutMessage(CActiveAEControlProtocol::PAUSESTREAM,
+                                   &stream, sizeof(CActiveAEStream*));
   else
     m_controlPort.SendOutMessage(CActiveAEControlProtocol::RESUMESTREAM,
                                    &stream, sizeof(CActiveAEStream*));
+}
+
+void CActiveAE::HoldStream(CActiveAEStream* stream)
+{
+  m_controlPort.SendOutMessage(CActiveAEControlProtocol::HOLDSTREAM, &stream,
+                               sizeof(CActiveAEStream*));
 }
 
 void CActiveAE::SetStreamAmplification(CActiveAEStream *stream, float amplify)
