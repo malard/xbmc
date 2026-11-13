@@ -177,7 +177,6 @@ public:
   bool GetSong(int idSong, CSong& song);
 
   GetResult TryGetSong(int idSong, CSong& song);
-
   /*! \brief Update a song and all its nested entities (genres, artists, contributors)
     \param song [in/out] the song to update, artist ids are returned in artist credits
     \param bArtists to update artist credits and contributors, default is true
@@ -392,7 +391,6 @@ public:
 
   //! fetchAll also retrieves the discography and video links.
   GetResult TryGetArtist(int idArtist, CArtist& artist, bool fetchAll = false);
-
   bool GetArtistExists(int idArtist);
 
   GetResult TryGetArtistExists(int idArtist);
