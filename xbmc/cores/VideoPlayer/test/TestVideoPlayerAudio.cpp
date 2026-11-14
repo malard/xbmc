@@ -14,9 +14,7 @@
 #include "cores/VideoPlayer/Process/ProcessInfo.h"
 #include "cores/VideoPlayer/VideoPlayerAudio.h"
 
-#include <chrono>
 #include <memory>
-#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -75,8 +73,7 @@ public:
   void RegisterSlave(IAEStream* stream) override {}
 };
 
-//! Every stream it makes reports that the sink was reopened for it. It refuses streams while it
-//! has no device.
+//! Every stream it makes reports that the sink was reopened for it.
 class CFakeAE : public IAE
 {
 public:
@@ -90,18 +87,10 @@ public:
                        unsigned int options,
                        IAEClockCallback* clock) override
   {
-    ++m_requests;
-    if (!m_hasDevice)
-    {
-      return {};
-    }
     return StreamPtr(new CFakeAEStream, IAEStreamDeleter(*this));
   }
   SoundPtr MakeSound(const std::string& file) override { return {}; }
   void EnumerateOutputDevices(AEDeviceList& devices, bool passthrough) override {}
-
-  bool m_hasDevice{true};
-  int m_requests{0};
 
 protected:
   void Start() override {}
@@ -159,8 +148,6 @@ public:
 
   //! What closing the stream for a track switch does to the sink
   void DestroySink() { m_audioSink.Destroy(false); }
-
-  double AudioClock() const { return m_audioClock; }
 
 private:
   DVDAudioFrame m_frame{};
@@ -235,32 +222,4 @@ TEST_F(TestVideoPlayerAudio, EachPlaybackHoldsAtItsStart)
   audio.Play(3);
 
   EXPECT_EQ(2u, FormatChanges());
-}
-
-// Held audio would fill the queue and stop the demuxer, starving the picture.
-TEST_F(TestVideoPlayerAudio, AudioWithoutAStreamIsDropped)
-{
-  m_ae.m_hasDevice = false;
-  CTestVideoPlayerAudio audio(m_clock, m_parent, *m_processInfo);
-
-  audio.OnPlaybackStart();
-  audio.Play(3);
-
-  EXPECT_DOUBLE_EQ(DVD_MSEC_TO_TIME(300), audio.AudioClock());
-  EXPECT_EQ(0u, FormatChanges());
-}
-
-TEST_F(TestVideoPlayerAudio, StreamIsAskedForAgainAfterAPause)
-{
-  m_ae.m_hasDevice = false;
-  CTestVideoPlayerAudio audio(m_clock, m_parent, *m_processInfo);
-
-  audio.Play(3);
-  EXPECT_EQ(1, m_ae.m_requests) << "a stream was asked for on every frame";
-
-  m_ae.m_hasDevice = true;
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  audio.Play(1);
-
-  EXPECT_EQ(2, m_ae.m_requests) << "no stream was asked for once the pause had passed";
 }

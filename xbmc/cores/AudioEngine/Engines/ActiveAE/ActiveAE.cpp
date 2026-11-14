@@ -566,17 +566,6 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
             break;
         }
       }
-      else if (port == &m_dataPort)
-      {
-        switch (signal)
-        {
-          case CActiveAEDataProtocol::NEWSTREAM:
-            msg->Reply(CActiveAEDataProtocol::ERR);
-            return;
-          default:
-            break;
-        }
-      }
       else if (port == NULL) // timeout
       {
         switch (signal)
@@ -1079,6 +1068,17 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
         case CActiveAEControlProtocol::TIMEOUT:
           ResampleSounds();
           ClearDiscardedBuffers();
+          if (m_sinkFallback && m_fallbackRetry.IsTimePast())
+          {
+            UnconfigureSink();
+            Configure();
+            if (m_extError)
+            {
+              m_state = AE_TOP_ERROR;
+              m_extTimeout = 500ms;
+              return;
+            }
+          }
           if (m_extDrain)
           {
             if (m_extDrainTimer.IsTimePast())
@@ -1099,7 +1099,8 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
               m_extTimeout = m_extDrainTimer.GetTimeLeft();
           }
           else
-            m_extTimeout = 5000ms;
+            m_extTimeout =
+                m_sinkFallback ? std::min(5000ms, m_fallbackRetry.GetTimeLeft()) : 5000ms;
           return;
         default:
           break;
@@ -1113,6 +1114,11 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
         switch (signal)
         {
         case CActiveAEControlProtocol::TIMEOUT:
+          if (m_sinkFallback && m_fallbackRetry.IsTimePast())
+          {
+            UnconfigureSink();
+            Configure();
+          }
           if (m_extError)
           {
             m_state = AE_TOP_ERROR;
@@ -2022,6 +2028,15 @@ bool CActiveAE::InitSink()
         m_openedDevice = openedDevice.name;
       }
       m_sinkHasVolume = data->hasVolume;
+      m_sinkFallback = data->fallback;
+      if (m_sinkFallback)
+      {
+        m_fallbackRetry.Set(ErrorRetryDelay(++m_extErrorRetries));
+      }
+      else
+      {
+        m_extErrorRetries = 0;
+      }
       m_stats.SetSinkCacheTotal(data->cacheTotal);
       m_stats.SetSinkLatency(data->latency);
       m_stats.SetCurrentSinkFormat(m_sinkFormat);
@@ -3747,8 +3762,6 @@ IAE::StreamPtr CActiveAE::MakeStream(AEAudioFormat& audioFormat,
       return stream;
     }
     reply->Release();
-    // A refusal is the caller's to report
-    return nullptr;
   }
 
   CLog::Log(LOGERROR, "ActiveAE::{} - could not create stream", __FUNCTION__);
