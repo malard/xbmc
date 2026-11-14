@@ -10,6 +10,7 @@
 
 #include "DatabaseManager.h"
 #include "ServiceBroker.h"
+#include "addons/AddonEvents.h"
 #include "addons/AddonManager.h"
 #include "addons/LanguageResource.h"
 #include "addons/addoninfo/AddonType.h"
@@ -41,6 +42,14 @@ using namespace KODI::LANGUAGE::I18N;
 
 namespace
 {
+//! An addon may name a language Kodi's own tables do not
+void DeclareAddonLanguageNames()
+{
+  std::map<std::string, std::string> addonLanguages;
+  CLanguageLoader::GetAddonsLanguageCodes(addonLanguages);
+  CLanguageTable::GetInstance().DeclareNames(addonLanguages);
+}
+
 struct SpecialLanguageSetting
 {
   std::string_view m_code;
@@ -218,10 +227,7 @@ bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices 
 
   CLanguage::GetInstance().SetPack(pack);
 
-  // An addon may name a language Kodi's own tables do not
-  std::map<std::string, std::string> addonLanguages;
-  GetAddonsLanguageCodes(addonLanguages);
-  CLanguageTable::GetInstance().DeclareNames(addonLanguages);
+  DeclareAddonLanguageNames();
 
   CLog::Log(LOGINFO, "CLanguageLoader: loading {} language information...", language);
   if (!CServiceBroker::GetResourcesComponent().GetLangInfo().Load(GetLanguageInfoPath(language)))
@@ -256,6 +262,17 @@ bool CLanguageLoader::Load(std::string language /* = "" */, bool reloadServices 
   }
 
   return true;
+}
+
+void CLanguageLoader::OnAddonEvent(const ADDON::AddonEvent& event)
+{
+  // Installing or updating an addon reloads it, which is announced as one of these two
+  if ((typeid(event) == typeid(ADDON::AddonEvents::Enabled) ||
+       typeid(event) == typeid(ADDON::AddonEvents::ReInstalled)) &&
+      CServiceBroker::GetAddonMgr().HasType(event.addonId, ADDON::AddonType::RESOURCE_LANGUAGE))
+  {
+    DeclareAddonLanguageNames();
+  }
 }
 
 std::string CLanguageLoader::GetLanguagePath(const std::string& language)

@@ -6,9 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "addons/AddonEvents.h"
 #include "language/LangInfo.h"
 #include "language/Language.h"
 #include "language/LanguageLoader.h"
+#include "language/i18n/LanguageTable.h"
 
 #include <algorithm>
 
@@ -116,6 +118,31 @@ TEST(TestLangInfo, PlatformLocaleNamePairsLanguageAndPlace)
 
   // Without a place, the platform's own locale
   EXPECT_TRUE(CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("de"), CTerritory{}).empty());
+}
+
+TEST(TestLangInfo, ALanguageAddonInstalledOrEnabledLaterNamesItsLanguage)
+{
+  // The language settings offer every installed language addon by name, so one installed,
+  // updated or enabled after the language loaded must name its language too
+  auto& loader{KODI::LANGUAGE::CLanguageLoader::GetInstance()};
+  auto& table{KODI::LANGUAGE::I18N::CLanguageTable::GetInstance()};
+  const std::string addon{"resource.language.en_gb"};
+
+  for (const bool enabled : {true, false})
+  {
+    ASSERT_FALSE(table.NameOf("en-GB").has_value());
+    if (enabled)
+      loader.OnAddonEvent(ADDON::AddonEvents::Enabled(addon));
+    else
+      loader.OnAddonEvent(ADDON::AddonEvents::ReInstalled(addon));
+
+    EXPECT_EQ(CLanguageTag::Parse("en-GB").ToEnglishName(), "English");
+    table.Reset();
+  }
+
+  // Nothing is declared for another kind of event
+  loader.OnAddonEvent(ADDON::AddonEvents::Disabled(addon));
+  EXPECT_FALSE(table.NameOf("en-GB").has_value());
 }
 
 TEST(TestLangInfo, RegionalDateFormatsAreTheRegions)

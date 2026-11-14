@@ -17,6 +17,11 @@
 
 struct StringSettingOption;
 
+namespace ADDON
+{
+struct AddonEvent;
+}
+
 namespace KODI::LANGUAGE
 {
 /*!
@@ -39,6 +44,13 @@ public:
    * \return True when the language is in use.
    */
   bool Load(std::string language = "", bool reloadServices = true);
+
+  /*!
+   * \brief Take in the language a language addon names when one is installed, updated or
+   *        enabled after the language loaded, as the language settings already offer its name.
+   * \param[in] event The addon manager's event.
+   */
+  void OnAddonEvent(const ADDON::AddonEvent& event);
 
   //! \brief Where the installed language packs live.
   static std::string GetLanguagePath() { return "resource://"; }

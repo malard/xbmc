@@ -26,6 +26,7 @@
 #include "input/InputManager.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "interfaces/python/XBPython.h"
+#include "language/LanguageLoader.h"
 #include "network/Network.h"
 #include "peripherals/Peripherals.h"
 #if defined(HAS_FILESYSTEM_SMB)
@@ -156,6 +157,10 @@ bool CServiceManager::InitStageTwo(const std::string& profilesUserDataFolder)
     CLog::Log(LOGFATAL, "CServiceManager::{}: Unable to start CAddonMgr", __FUNCTION__);
     return false;
   }
+
+  auto& languageLoader{KODI::LANGUAGE::CLanguageLoader::GetInstance()};
+  m_addonMgr->Events().Subscribe(&languageLoader, [&languageLoader](const ADDON::AddonEvent& event)
+                                 { languageLoader.OnAddonEvent(event); });
 
   m_repositoryUpdater = std::make_unique<ADDON::CRepositoryUpdater>(*m_addonMgr);
 
@@ -294,6 +299,7 @@ void CServiceManager::DeinitStageTwo()
   m_vfsAddonCache.reset();
   m_repositoryUpdater.reset();
   m_binaryAddonManager.reset();
+  m_addonMgr->Events().Unsubscribe(&KODI::LANGUAGE::CLanguageLoader::GetInstance());
   m_addonMgr.reset();
   m_databaseManager.reset();
 
