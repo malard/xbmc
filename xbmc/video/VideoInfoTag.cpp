@@ -39,28 +39,24 @@ namespace
 {
 /*!
  * \brief Read the <language> of one stream in an NFO.
- * \note Kept as written even where it names no language - unlike a language a container states,
- *       which becomes und, an NFO is the user's own file and rewriting it must not silently
- *       discard what its author put there. The warning is the only way they learn that a value
- *       they wrote states nothing.
+ * \note Text naming no language is read as und, as it is from a container. The warning is the
+ *       only way the author learns that, and how to declare a language Kodi does not know.
  * \param value The text of the element.
  * \param streamType The kind of stream it describes, for the warning.
  * \return The language.
  */
 KODI::LANGUAGE::CLanguageTag LanguageFromNfo(const std::string& value, std::string_view streamType)
 {
-  // Trimmed and lower case whether or not it names a language: that is the form the
-  // streamdetails column holds, and a smart playlist rule compares against the column as stored
-  std::string text{StringUtils::ToLower(value)};
-  StringUtils::Trim(text);
+  std::string text{value};
+  if (StringUtils::Trim(text).empty())
+    return {};
 
-  KODI::LANGUAGE::CLanguageTag language{KODI::LANGUAGE::CLanguageTag::Parse(text)};
-  if (!language.IsValid())
-  {
-    CLog::Log(LOGWARNING, "CVideoInfoTag: {} stream: unknown language '{}'", streamType, value);
-  }
+  if (const auto language = KODI::LANGUAGE::CLanguageTag::TryParse(text); language.has_value())
+    return *language;
 
-  return language;
+  CLog::Log(LOGWARNING, "CVideoInfoTag: {} stream: '{}' names no language and is read as und",
+            streamType, value);
+  return KODI::LANGUAGE::CLanguageTag::Undetermined();
 }
 
 /*!

@@ -1023,10 +1023,10 @@ TEST(TestStreamDetails, SerializeWidensLanguageToBcp47)
   subtitle.Serialize(value);
   EXPECT_EQ(value["language"].asString(), "ady");
 
-  // Anything the standards do not know is passed through rather than dropped
+  // Text naming no language is served as und, which BCP 47 says for a language not known
   video.m_language = CLanguageTag::Parse("not a language");
   video.Serialize(value);
-  EXPECT_EQ(value["language"].asString(), "not a language");
+  EXPECT_EQ(value["language"].asString(), "und");
 
   subtitle.m_language = CLanguageTag::Parse("");
   subtitle.Serialize(value);

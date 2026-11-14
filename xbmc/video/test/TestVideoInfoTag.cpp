@@ -10,6 +10,7 @@
 #include "filesystem/File.h"
 #include "language/Language.h"
 #include "language/LanguageTag.h"
+#include "language/i18n/LanguageTable.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "test/TestUtils.h"
@@ -198,11 +199,18 @@ TEST(TestVideoInfoTag, ReadStreamDetailLanguageThatNamesNone)
   CVideoInfoTag details;
   EXPECT_TRUE(details.Load(doc.RootElement(), true, false));
 
-  // Kept as written so the NFO round-trips, but in the form the streamdetails table holds and
-  // smart playlist rules compare against: trimmed and lower case
   const CStreamDetails& streams = details.m_streamDetails;
-  EXPECT_EQ(streams.GetAudioLanguage(1).AsIso6392B(), "high valyrian");
-  EXPECT_EQ(streams.GetSubtitleLanguage(1).AsIso6392B(), "high valyrian");
+  EXPECT_EQ(streams.GetAudioLanguage(1), CLanguageTag::Undetermined());
+  EXPECT_EQ(streams.GetSubtitleLanguage(1), CLanguageTag::Undetermined());
+
+  // Declared in <languagecodes>, it is a language, and its code is what the streamdetails table
+  // holds and a smart playlist rule compares against
+  KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Declare({{"hva", "High Valyrian"}});
+  CVideoInfoTag declared;
+  EXPECT_TRUE(declared.Load(doc.RootElement(), true, false));
+  EXPECT_EQ(declared.m_streamDetails.GetAudioLanguage(1).AsIso6392B(), "hva");
+  EXPECT_EQ(declared.m_streamDetails.GetSubtitleLanguage(1).AsIso6392B(), "hva");
+  KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Reset();
 }
 
 TEST(TestVideoInfoTag, WriteStreamDetailFlags)
