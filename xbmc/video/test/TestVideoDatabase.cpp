@@ -13,6 +13,9 @@
 #include "URL.h"
 #include "Util.h"
 #include "XBDateTime.h"
+#include "addons/Scraper.h"
+#include "addons/addoninfo/AddonInfoBuilder.h"
+#include "addons/addoninfo/AddonType.h"
 #include "cores/VideoSettings.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
@@ -20,7 +23,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
-#include "language/LangInfo.h"
+#include "language/LanguageLoader.h"
 #include "playlists/SmartPlayList.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -54,6 +57,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -744,6 +748,28 @@ TEST_F(TestVideoDatabase, GetPathsForCleaningMatchesTheWholeLibraryByContentExac
   EXPECT_TRUE(paths.empty());
 }
 
+TEST_F(TestVideoDatabase, GetSourcePathReadsTheScanSettingsOfAParentSource)
+{
+  KODI::VIDEO::SScanSettings stored;
+  stored.parent_name = false;
+  stored.recurse = 2;
+  const ADDON::AddonInfoPtr info{
+      ADDON::CAddonInfoBuilder::Generate("metadata.test", ADDON::AddonType::SCRAPER_MOVIES)};
+  m_db.SetScraperForPath("smb://server/movies/",
+                         std::make_shared<ADDON::CScraper>(info, ADDON::AddonType::SCRAPER_MOVIES),
+                         stored);
+
+  for (const std::string path : {"smb://server/movies/", "smb://server/movies/genre/film/"})
+  {
+    KODI::VIDEO::SScanSettings read;
+    std::string sourcePath;
+    ASSERT_TRUE(m_db.GetSourcePath(path, sourcePath, read)) << path;
+    EXPECT_EQ("smb://server/movies/", sourcePath) << path;
+    EXPECT_FALSE(read.parent_name) << path;
+    EXPECT_EQ(2, read.recurse) << path;
+  }
+}
+
 // The export must write the stored (scraped) runtime, not the stream duration that loading the
 // streamdetails puts in its place
 TEST_F(TestVideoDatabase, ExportToXMLWritesStoredRuntime)
@@ -1411,28 +1437,46 @@ namespace
 class CQueuedAnnouncements : public ANNOUNCEMENT::CAnnouncementManager
 {
 public:
-  long CountRemoved(const std::string& type, int id) const { return Count("OnRemove", type, id); }
-
-  long CountUpdated(const std::string& type, int id) const { return Count("OnUpdate", type, id); }
-
-  std::vector<CAnnounceData> Files() const
+  long CountRemoved(KODI::MEDIA::TYPE type, int id) const
   {
-    std::vector<CAnnounceData> files;
-    std::ranges::copy_if(m_announcementQueue, std::back_inserter(files),
-                         [](const CAnnounceData& announcement)
-                         { return announcement.flag == ANNOUNCEMENT::Files; });
+    return Count<ANNOUNCEMENT::EVENT::LIBRARY::Remove>(type, id);
+  }
+
+  long CountUpdated(KODI::MEDIA::TYPE type, int id) const
+  {
+    return Count<ANNOUNCEMENT::EVENT::LIBRARY::Update>(type, id);
+  }
+
+  //! A Files announcement, as its message and the data JSON-RPC and Python are given
+  struct FileAnnouncement
+  {
+    std::string message;
+    CVariant data;
+  };
+
+  std::vector<FileAnnouncement> Files() const
+  {
+    std::vector<FileAnnouncement> files;
+    for (const ANNOUNCEMENT::Announcement& announcement : m_announcementQueue)
+    {
+      if (ANNOUNCEMENT::FlagOf(announcement) == ANNOUNCEMENT::Files)
+        files.push_back({ANNOUNCEMENT::MessageOf(announcement),
+                         ANNOUNCEMENT::EventDataOf(announcement)});
+    }
     return files;
   }
 
 private:
-  long Count(const std::string& message, const std::string& type, int id) const
+  template<class Event>
+  long Count(KODI::MEDIA::TYPE type, int id) const
   {
     return std::ranges::count_if(m_announcementQueue,
-                                 [&message, &type, id](const CAnnounceData& announcement)
+                                 [type, id](const ANNOUNCEMENT::Announcement& announcement)
                                  {
-                                   return announcement.message == message &&
-                                          announcement.data["type"].asString() == type &&
-                                          announcement.data["id"].asInteger() == id;
+                                   const auto* library{
+                                       std::get_if<ANNOUNCEMENT::VideoLibraryEvent>(&announcement)};
+                                   const auto* event{std::get_if<Event>(library)};
+                                   return event && event->type == type && event->id == id;
                                  });
   }
 };
@@ -1466,7 +1510,7 @@ TEST_F(TestVideoDatabaseClean, AnnouncesAnEpisodeOfAShowWithTwoFoldersRemovedOnc
 
   EXPECT_EQ(0, m_db.GetSingleValueInt(
                    m_db.PrepareSQL("SELECT COUNT(*) FROM episode WHERE idEpisode=%i", idEpisode)));
-  EXPECT_EQ(1, announcements->CountRemoved("episode", idEpisode));
+  EXPECT_EQ(1, announcements->CountRemoved(KODI::MEDIA::TYPE::EPISODE, idEpisode));
 }
 
 // No file is left for the clean to start from
@@ -1556,8 +1600,8 @@ TEST_F(TestVideoDatabaseClean, AnnouncesAMovieWhoseDefaultFileHasGoneFromTheLibr
   Clean();
 
   EXPECT_EQ(idVersion, m_db.GetFileIdByMovie(idMovie));
-  EXPECT_EQ(1, announcements->CountUpdated("movie", idMovie));
-  EXPECT_EQ(0, announcements->CountRemoved("movie", idMovie));
+  EXPECT_EQ(1, announcements->CountUpdated(KODI::MEDIA::TYPE::MOVIE, idMovie));
+  EXPECT_EQ(0, announcements->CountRemoved(KODI::MEDIA::TYPE::MOVIE, idMovie));
 }
 
 // A version is only reached through its own table once its file has gone
@@ -1580,7 +1624,7 @@ TEST_F(TestVideoDatabaseClean, RemovesAVersionWhoseFileHasGoneFromTheLibrary)
 
   EXPECT_EQ(0, m_db.GetSingleValueInt("SELECT COUNT(*) FROM videoversion WHERE idFile=999999"));
   EXPECT_GT(m_db.GetMovieId(File(film, "Film (2010).mkv")), 0);
-  EXPECT_EQ(1, announcements->CountUpdated("movie", idMovie));
+  EXPECT_EQ(1, announcements->CountUpdated(KODI::MEDIA::TYPE::MOVIE, idMovie));
 }
 
 // Another client of a shared library can have a source this one hasn't
@@ -2228,7 +2272,7 @@ TEST_F(TestVideoDatabase, KindsOfExtraAreBuiltInExtraTypes)
 {
   // The types were named when the database was made, before any strings were loaded
   auto& strings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
-  ASSERT_TRUE(strings.Load(g_langInfo.GetLanguagePath(), "resource.language.en_gb"));
+  ASSERT_TRUE(strings.Load(KODI::LANGUAGE::CLanguageLoader::GetLanguagePath(), "resource.language.en_gb"));
   m_db.UpdateVideoVersionTypeTable();
 
   const auto names{[this](VideoAssetType assetType)
@@ -2303,7 +2347,7 @@ TEST_F(TestVideoDatabase, VideoVersionTypeIsLookedUpByItemType)
 TEST_F(TestVideoDatabase, AnExtrasTypeGoesWithItsLastExtra)
 {
   auto& strings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
-  ASSERT_TRUE(strings.Load(g_langInfo.GetLanguagePath(), "resource.language.en_gb"));
+  ASSERT_TRUE(strings.Load(KODI::LANGUAGE::CLanguageLoader::GetLanguagePath(), "resource.language.en_gb"));
   m_db.UpdateVideoVersionTypeTable();
 
   const int idMovie{AddMovie("/movies/Movie (2020)/movie.mkv")};

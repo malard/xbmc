@@ -36,9 +36,9 @@ namespace JSONRPC
   public:
     JSONSchemaTypeDefinition();
 
-    bool Parse(const CVariant &value, bool isParameter = false);
+    bool Parse(const CVariant &value);
     JSONRPC_STATUS Check(const CVariant& value, CVariant& outputValue, CVariant& errorData) const;
-    void Print(bool isParameter, bool isGlobal, bool printDefault, bool printDescriptions, CVariant &output) const;
+    void Print(bool isGlobal, bool printDefault, bool printDescriptions, CVariant &output) const;
     void ResolveReference();
 
     std::string missingReference;
@@ -68,7 +68,12 @@ namespace JSONRPC
      */
     bool referencedTypeSet = false;
 
-    /*!
+  /*!
+     \brief False only while AddType has the type registered ahead of parsing it
+     */
+  bool parsed = true;
+
+  /*!
      \brief Array of reference types
      which are extended by this type.
      */
@@ -78,6 +83,11 @@ namespace JSONRPC
      \brief Description of the parameter
      */
     std::string description;
+
+  /*!
+     \brief Valid on any schema, so a single property of a type can carry it
+     */
+  bool deprecated = false;
 
     /*!
      \brief JSON schema type of the parameter's value
@@ -90,11 +100,11 @@ namespace JSONRPC
      */
     std::vector<JSONSchemaTypeDefinitionPtr> unionTypes;
 
-    /*!
-     \brief Whether or not the parameter is
-     optional
+  /*!
+     \brief Set by whatever contains the schema: an object's "required" array, a method
+     parameter's "required" flag, or a union; never by the schema itself
      */
-    bool optional = true;
+  bool optional = true;
 
     /*!
      \brief Default value of the parameter
@@ -114,24 +124,6 @@ namespace JSONRPC
     double maximum;
 
     /*!
-     \brief Whether to exclude the defined Minimum
-     value from the valid range or not
-     */
-    bool exclusiveMinimum = false;
-
-    /*!
-     \brief  Whether to exclude the defined Maximum
-     value from the valid range or not
-     */
-    bool exclusiveMaximum = false;
-
-    /*!
-     \brief Integer by which the value (of type
-     Integer) must be divisible without rest
-     */
-    unsigned int divisibleBy = 0;
-
-    /*!
      \brief Minimum length for String types
      */
     int minLength = -1;
@@ -147,10 +139,10 @@ namespace JSONRPC
      */
     std::vector<CVariant> enums;
 
-    /*!
-     \brief List of possible values in an array
+  /*!
+     \brief Schema every value in an array must match
      */
-    std::vector<JSONSchemaTypeDefinitionPtr> items;
+  JSONSchemaTypeDefinitionPtr items;
 
     /*!
      \brief Minimum amount of items in the array
@@ -167,13 +159,6 @@ namespace JSONRPC
      must be unique or not
      */
     bool uniqueItems = false;
-
-    /*!
-     \brief List of json schema definitions for
-     additional items in an array with tuple
-     typing (defined schemas in "items")
-     */
-    std::vector<JSONSchemaTypeDefinitionPtr> additionalItems;
 
     /*!
      \brief Maps a properties name to its
@@ -255,7 +240,11 @@ namespace JSONRPC
      \brief Description of the method
      */
     std::string description;
-    /*!
+  /*!
+     \brief Whether the method still works but should no longer be called
+     */
+  bool deprecated = false;
+  /*!
      \brief List of accepted parameters
      */
     std::vector<JSONSchemaTypeDefinitionPtr> parameters;
@@ -263,9 +252,21 @@ namespace JSONRPC
      \brief Definition of the return value
      */
     JSONSchemaTypeDefinitionPtr returns;
+  /*!
+     \brief Errors this method can return, beyond those any request can receive
+     */
+  std::vector<const JsonRpcStatusDescription*> errors;
+  /*!
+     \brief Reasons this method can fail for, under the error each comes with
+     */
+  std::vector<
+      std::pair<const JsonRpcStatusDescription*, std::vector<const JsonRpcReasonDescription*>>>
+      reasons;
 
-  private:
-    bool parseParameter(const CVariant& value, const JSONSchemaTypeDefinitionPtr& parameter);
+private:
+  bool parseErrors(const CVariant& value);
+  bool parseReasons(const CVariant& value);
+  bool parseParameter(const CVariant& value, const JSONSchemaTypeDefinitionPtr& parameter);
     bool parseReturn(const CVariant &value);
     static JSONRPC_STATUS checkParameter(const CVariant& requestParameters,
                                          const JSONSchemaTypeDefinitionPtr& type,
@@ -394,9 +395,10 @@ namespace JSONRPC
     static bool prepareDescription(std::string &description, CVariant &descriptionObject, std::string &name);
     static bool addMethod(const std::string &jsonMethod, MethodCall method);
     static void parseHeader(const CVariant &descriptionObject);
-    static bool parseJSONSchemaType(const CVariant &value, std::vector<JSONSchemaTypeDefinitionPtr>& typeDefinitions, JSONSchemaType &schemaType, std::string &missingReference);
+    static bool parseJSONSchemaType(const CVariant &value, JSONSchemaType &schemaType);
     static void addReferenceTypeDefinition(const JSONSchemaTypeDefinitionPtr& typeDefinition);
-    static void removeReferenceTypeDefinition(const std::string &typeID);
+    static void removeReferenceTypeDefinition(const std::string& typeID);
+  static void replayIncompleteDefinitions(const std::string &typeID);
 
     static void getReferencedTypes(const JSONSchemaTypeDefinitionPtr& type,
                                    std::vector<std::string>& referencedTypes);
@@ -436,7 +438,8 @@ namespace JSONRPC
       MethodCall Method;
     } IncompleteSchemaDefinition;
 
-    typedef std::map<std::string, std::vector<IncompleteSchemaDefinition> > IncompleteSchemaDefinitionMap;
+    typedef std::map<std::string, std::vector<IncompleteSchemaDefinition>>
+      IncompleteSchemaDefinitionMap;
     static IncompleteSchemaDefinitionMap m_incompleteDefinitions;
   };
-}
+} // namespace JSONRPC

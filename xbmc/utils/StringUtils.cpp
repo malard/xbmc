@@ -33,6 +33,10 @@
 #include "StringUtils.h"
 #include "XBDateTime.h"
 #include "language/LangInfo.h"
+#include "language/Language.h"
+#include "language/LanguageTag.h"
+#include "language/i18n/Collation.h"
+#include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
 
@@ -46,6 +50,7 @@
 #include <math.h>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -431,7 +436,7 @@ void StringUtils::ToCapitalize(std::string& str) noexcept
 
 void StringUtils::ToCapitalize(std::wstring& str) noexcept
 {
-  const std::locale& loc = g_langInfo.GetSystemLocale();
+  const std::locale& loc = CServiceBroker::GetResourcesComponent().GetLangInfo().GetSystemLocale();
   bool isFirstLetter = true;
   for (std::wstring::iterator it = str.begin(); it < str.end(); ++it)
   {
@@ -980,55 +985,6 @@ static const uint16_t* const planemap[256] = {
 };
 // clang-format on
 
-wchar_t StringUtils::GetNordicCollationWeight(std::string_view languageCode,
-                                              wchar_t codepoint) noexcept
-{
-  if (languageCode == "nor" || languageCode == "nob" || languageCode == "nno" ||
-      languageCode == "dan")
-  {
-    // Norwegian/Danish alphabet order: ... x y z æ ø å
-    // ä sorts with æ and ö sorts with ø, so imported Swedish/Finnish names keep their
-    // Nordic end-of-alphabet position instead of folding to a/o
-    switch (codepoint)
-    {
-      case 0x00C6:
-      case 0x00E6: // Æ / æ
-      case 0x00C4:
-      case 0x00E4: // Ä / ä
-        return L'z' + 1;
-      case 0x00D8:
-      case 0x00F8: // Ø / ø
-      case 0x00D6:
-      case 0x00F6: // Ö / ö
-        return L'z' + 2;
-      case 0x00C5:
-      case 0x00E5: // Å / å
-        return L'z' + 3;
-      default:
-        return 0;
-    }
-  }
-  if (languageCode == "swe" || languageCode == "fin")
-  {
-    // Swedish/Finnish alphabet order: ... x y z å ä ö
-    switch (codepoint)
-    {
-      case 0x00C5:
-      case 0x00E5: // Å / å
-        return L'z' + 1;
-      case 0x00C4:
-      case 0x00E4: // Ä / ä
-        return L'z' + 2;
-      case 0x00D6:
-      case 0x00F6: // Ö / ö
-        return L'z' + 3;
-      default:
-        return 0;
-    }
-  }
-  return 0;
-}
-
 namespace
 {
 // True when the accent-folding fallback is in use to mirror the utf8_general_ci ordering
@@ -1051,7 +1007,7 @@ static bool CollationMirrorsMySql()
 static wchar_t GetCollationWeight(const wchar_t& r)
 {
   // Nordic languages order some accented vowels as distinct letters at the end of their
-  // alphabet rather than as accented variants of a/o (see StringUtils::GetNordicCollationWeight).
+  // alphabet rather than as accented variants of a/o (see I18N::NordicCollationWeight).
   // Apply that override, when applicable, ahead of the generic accent-folding table below.
   //
   //! @todo: This is a temporary workaround for the lack of language-specific collation facets
@@ -1060,8 +1016,8 @@ static wchar_t GetCollationWeight(const wchar_t& r)
   //! longer needed.
   if (!CollationMirrorsMySql())
   {
-    const wchar_t nordicWeight = StringUtils::GetNordicCollationWeight(
-        g_langInfo.GetLanguageAs(CLangCodeExpander::ISO_639_2, false), r);
+    const wchar_t nordicWeight = KODI::LANGUAGE::I18N::NordicCollationWeight(
+        KODI::LANGUAGE::CLanguage::GetInstance().UI(), r);
     if (nordicWeight != 0)
       return nordicWeight;
   }
@@ -1084,6 +1040,7 @@ static wchar_t GetCollationWeight(const wchar_t& r)
 // See also the equivalent StringUtils::AlphaNumericCollation() for UFT8 data
 int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_view right) noexcept
 {
+  auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   auto l{left.cbegin()};
   auto r{right.cbegin()};
   while (l != left.end() && r != right.end())
@@ -1140,7 +1097,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
         continue;
       }
     }
-    if (!g_langInfo.UseLocaleCollation())
+    if (!langInfo.UseLocaleCollation())
     {
       // Apply case sensitive accent folding collation to non-ascii chars.
       // This mimics utf8_general_ci collation, and provides simple collation of LATIN-1 chars
@@ -1158,7 +1115,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
 
     if (lc != rc)
     {
-      if (!g_langInfo.UseLocaleCollation())
+      if (!langInfo.UseLocaleCollation())
       {
         // Compare unicode (having applied accent folding collation to non-ascii chars).
         int i = wcsncmp(&lc, &rc, 1);
@@ -1169,7 +1126,7 @@ int64_t StringUtils::AlphaNumericCompare(std::wstring_view left, std::wstring_vi
         // Fetch collation facet from locale to do comparison of wide char although on some
         // platforms this is not language specific but just compares unicode
         const std::collate<wchar_t>& coll =
-            std::use_facet<std::collate<wchar_t>>(g_langInfo.GetSystemLocale());
+            std::use_facet<std::collate<wchar_t>>(langInfo.GetSystemLocale());
         int cmp_res = coll.compare(&lc, &lc + 1, &rc, &rc + 1);
         if (cmp_res != 0)
           return cmp_res;
@@ -1249,6 +1206,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
                                        int nKey2,
                                        const void* pKey2) noexcept
 {
+  auto& langInfo{CServiceBroker::GetResourcesComponent().GetLangInfo()};
   // Get exact matches of shorter text to start of larger test fast
   int n = std::min(nKey1, nKey2);
   int r = memcmp(pKey1, pKey2, n);
@@ -1325,7 +1283,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
     i += bytes;
     rc = UTF8ToUnicode(&zB[j], nKey2 - j, bytes);
     j += bytes;
-    if (!g_langInfo.UseLocaleCollation())
+    if (!langInfo.UseLocaleCollation())
     {
       // Apply case sensitive accent folding collation to non-ascii chars.
       // This mimics utf8_general_ci collation, and provides simple collation of LATIN-1 chars
@@ -1343,7 +1301,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
 
     if (lc != rc)
     {
-      if (!g_langInfo.UseLocaleCollation() || (lc <= 128 && rc <= 128))
+      if (!langInfo.UseLocaleCollation() || (lc <= 128 && rc <= 128))
         // Compare unicode (having applied accent folding collation to non-ascii chars).
         return static_cast<int>(lc) - static_cast<int>(rc);
       else
@@ -1351,7 +1309,7 @@ int StringUtils::AlphaNumericCollation(int nKey1,
         // Fetch collation facet from locale to do comparison of wide char although on some
         // platforms this is not language specific but just compares unicode
         const std::collate<wchar_t>& coll =
-            std::use_facet<std::collate<wchar_t>>(g_langInfo.GetSystemLocale());
+            std::use_facet<std::collate<wchar_t>>(langInfo.GetSystemLocale());
         int cmp_res = coll.compare(&lc, &lc + 1, &rc, &rc + 1);
         if (cmp_res != 0)
           return cmp_res;
@@ -1933,7 +1891,7 @@ bool StringUtils::Contains(std::string_view str,
 
 const std::locale& StringUtils::GetOriginalLocale() noexcept
 {
-  return g_langInfo.GetOriginalLocale();
+  return CServiceBroker::GetResourcesComponent().GetLangInfo().GetOriginalLocale();
 }
 
 std::string StringUtils::CreateFromCString(const char* cstr)

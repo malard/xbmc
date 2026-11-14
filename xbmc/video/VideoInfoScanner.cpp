@@ -219,8 +219,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
       CLog::Log(LOGINFO, "VideoInfoScanner: Starting scan .. (grouping of similar videos is {})",
                 SimilarVideoScanActionToStr(m_similarVideoAction));
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                         "OnScanStarted");
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanStarted{}});
 
       // Database operations should not be canceled
       // using Interrupt() while scanning as it could
@@ -325,8 +325,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
     }
 
     m_bRunning = false;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary,
-                                                       "OnScanFinished");
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::ScanFinished{}});
 
     if (m_handle)
       m_handle->MarkFinished();
@@ -2661,13 +2661,12 @@ CVideoInfoScanner::~CVideoInfoScanner()
       m_summary.added.push_back({type, path, strTitle});
     }
 
-    CFileItemPtr itemCopy = std::make_shared<CFileItem>(*pItem);
-    CVariant data;
-    data["added"] = true;
-    if (m_bRunning)
-      data["transaction"] = true;
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnUpdate",
-                                                       itemCopy, data);
+    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
+        ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = movieDetails.GetMediaType(),
+                                             .id = movieDetails.m_iDbId,
+                                             .item = std::make_shared<CFileItem>(*pItem),
+                                             .transaction = m_bRunning,
+                                             .added = true}});
     return lResult;
   }
 

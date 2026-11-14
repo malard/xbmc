@@ -24,6 +24,7 @@
 #include "utils/Variant.h"
 
 #include <cmath>
+#include <variant>
 
 using namespace KODI;
 using namespace GAME;
@@ -76,7 +77,7 @@ void CDialogGameVolume::OnInitWindow()
   if (dialogVolumeBar != nullptr)
     dialogVolumeBar->RegisterCallback(this);
 
-  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Application);
+  CServiceBroker::GetAnnouncementManager()->AddAnnouncer(this, ANNOUNCEMENT::Player);
 }
 
 void CDialogGameVolume::OnDeinitWindow(int nextWindowID)
@@ -109,14 +110,12 @@ bool CDialogGameVolume::IsShown() const
   return m_active;
 }
 
-void CDialogGameVolume::Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                                 const std::string& sender,
-                                 const std::string& message,
-                                 const CVariant& data)
+void CDialogGameVolume::OnPlayerEvent(const ANNOUNCEMENT::PlayerEvent& event)
 {
-  if (message == "OnVolumeChanged")
+  const auto* changed = std::get_if<ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged>(&event);
+  if (changed && changed->volume)
   {
-    const float volumePercent = static_cast<float>(data["volume"].asDouble());
+    const float volumePercent = static_cast<float>(*changed->volume);
 
     if (std::fabs(volumePercent - m_volumePercent) > 0.1f)
     {

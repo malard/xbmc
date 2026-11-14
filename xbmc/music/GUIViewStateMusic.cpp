@@ -11,10 +11,12 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
+#include "Util.h"
 #include "filesystem/Directory.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
+#include "filesystem/PlaylistDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory/QueryParams.h"
 #include "guilib/WindowIDs.h"
@@ -35,6 +37,7 @@
 using namespace KODI;
 using namespace XFILE;
 using namespace MUSICDATABASEDIRECTORY;
+using KODI::MEDIA::MediaSection;
 
 namespace
 {
@@ -69,9 +72,9 @@ std::string AlbumFormat()
 }
 } // namespace
 
-PLAYLIST::Id CGUIViewStateWindowMusic::GetPlaylist() const
+std::optional<PLAYLIST::Type> CGUIViewStateWindowMusic::GetPlayListType() const
 {
-  return PLAYLIST::Id::TYPE_MUSIC;
+  return PLAYLIST::Audio;
 }
 
 bool CGUIViewStateWindowMusic::AutoPlayNextItem()
@@ -566,7 +569,7 @@ CGUIViewStateWindowMusicNav::CGUIViewStateWindowMusicNav(const CFileItemList& it
 
     SetSortOrder(SortOrder::NONE);
   }
-  else if (items.GetPath() == "special://musicplaylists/")
+  else if (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC))
   { // playlists list sorts by label only, ignoring folders
     AddSortMethod(SortBy::LABEL, SortAttributeIgnoreFolders, 551,
                   LABEL_MASKS("%F", "%D", "%L", "")); // Filename, Duration | Foldername, empty
@@ -691,9 +694,9 @@ void CGUIViewStateWindowMusicPlaylist::SaveViewState()
   SaveViewToDb(m_items.GetPath(), WINDOW_MUSIC_PLAYLIST);
 }
 
-PLAYLIST::Id CGUIViewStateWindowMusicPlaylist::GetPlaylist() const
+std::optional<PLAYLIST::Type> CGUIViewStateWindowMusicPlaylist::GetPlayListType() const
 {
-  return PLAYLIST::Id::TYPE_MUSIC;
+  return PLAYLIST::Audio;
 }
 
 bool CGUIViewStateWindowMusicPlaylist::AutoPlayNextItem()
@@ -711,7 +714,7 @@ std::vector<CMediaSource>& CGUIViewStateWindowMusicPlaylist::GetSources()
   m_sources.clear();
   //  Playlist share
   CMediaSource share;
-  share.strPath = "playlistmusic://";
+  share.strPath = CPlaylistDirectory::PathOf(PLAYLIST::Audio);
   share.m_iDriveType = SourceType::LOCAL;
   m_sources.push_back(share);
 

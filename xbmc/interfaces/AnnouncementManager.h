@@ -9,18 +9,15 @@
 #pragma once
 
 #include "IAnnouncer.h"
+#include "interfaces/AnnouncementEvents.h"
 #include "threads/Condition.h"
 #include "threads/CriticalSection.h"
 #include "threads/Event.h"
 #include "threads/Thread.h"
-#include "utils/Variant.h"
 
 #include <list>
-#include <memory>
+#include <string>
 #include <unordered_map>
-
-class CFileItem;
-class CVariant;
 
 namespace ANNOUNCEMENT
 {
@@ -37,26 +34,10 @@ namespace ANNOUNCEMENT
     void AddAnnouncer(IAnnouncer* listener, int flagMask);
     void RemoveAnnouncer(IAnnouncer *listener);
 
-    void Announce(AnnouncementFlag flag, const std::string& message);
-    void Announce(AnnouncementFlag flag, const std::string& message, const CVariant& data);
-    void Announce(AnnouncementFlag flag,
-                  const std::string& message,
-                  const std::shared_ptr<const CFileItem>& item);
-    void Announce(AnnouncementFlag flag,
-                  const std::string& message,
-                  const std::shared_ptr<const CFileItem>& item,
-                  const CVariant& data);
-
-    void Announce(AnnouncementFlag flag, const std::string& sender, const std::string& message);
-    void Announce(AnnouncementFlag flag,
-                  const std::string& sender,
-                  const std::string& message,
-                  const CVariant& data);
-    void Announce(AnnouncementFlag flag,
-                  const std::string& sender,
-                  const std::string& message,
-                  const std::shared_ptr<const CFileItem>& item,
-                  const CVariant& data);
+    /*!
+     * \brief Announce an event. Its item is copied now, and listeners receive the copy.
+     */
+    void Announce(const Announcement& announcement);
 
     // The sender is not related to the application name.
     // Also it's part of Kodi's API - changing it will break
@@ -65,25 +46,9 @@ namespace ANNOUNCEMENT
 
   protected:
     void Process() override;
-    void DoAnnounce(AnnouncementFlag flag,
-                    const std::string& sender,
-                    const std::string& message,
-                    const std::shared_ptr<CFileItem>& item,
-                    const CVariant& data);
-    void DoAnnounce(AnnouncementFlag flag,
-                    const std::string& sender,
-                    const std::string& message,
-                    const CVariant& data);
+    void DoAnnounce(const Announcement& announcement);
 
-    struct CAnnounceData
-    {
-      AnnouncementFlag flag;
-      std::string sender;
-      std::string message;
-      std::shared_ptr<CFileItem> item;
-      CVariant data;
-    };
-    std::list<CAnnounceData> m_announcementQueue;
+    std::list<Announcement> m_announcementQueue;
     CEvent m_queueEvent;
 
   private:

@@ -58,6 +58,26 @@ namespace KODI::VIDEO
   struct SScanSettings;
 }
 
+/*!
+ * \brief The details an edit changed, as passed to CVideoDatabase::UpdateDetailsForMovie.
+ */
+namespace KODI::VIDEO::UPDATED_DETAIL
+{
+inline constexpr char ART[] = "art.altered";
+inline constexpr char ARTIST[] = "artist";
+inline constexpr char COUNTRY[] = "country";
+inline constexpr char DATE_ADDED[] = "dateadded";
+inline constexpr char DIRECTOR[] = "director";
+inline constexpr char GENRE[] = "genre";
+inline constexpr char RATINGS[] = "ratings";
+inline constexpr char SET[] = "set";
+inline constexpr char SHOW_LINK[] = "showlink";
+inline constexpr char STUDIO[] = "studio";
+inline constexpr char TAG[] = "tag";
+inline constexpr char UNIQUE_ID[] = "uniqueid";
+inline constexpr char WRITER[] = "writer";
+} // namespace KODI::VIDEO::UPDATED_DETAIL
+
 enum VideoDbDetails
 {
   VideoDbDetailsNone     = 0x00,
@@ -382,6 +402,7 @@ public:
   int GetTvShowId(const std::string& strPath);
   // input value is episode/season number hint - for multiparters
   int GetEpisodeId(const std::string& strFilenameAndPath, int episode = -1, int season = -1);
+  int GetMusicVideoId(const std::string& strFilenameAndPath);
   int GetSeasonId(int idShow, int season) const;
 
   void GetEpisodesByBlurayPath(const std::string& path, std::vector<CVideoInfoTag>& episodes);
@@ -556,38 +577,38 @@ public:
    */
   bool GetVideoSettings(const std::string &filePath, CVideoSettings &settings);
 
-  /*! \brief Set video settings for the specified file path
-   \param fileItem to set the settings for
+  /*! \brief Set video settings for the specified item
+   \param item to set the settings for
    \sa GetVideoSettings
    */
   void SetVideoSettings(const CFileItem &item, const CVideoSettings &settings);
 
-  /*! \brief Set video settings for the specified file path
-   \param fileId to set the settings for
+  /*! \brief Set video settings for the specified file id
+   \param idFile to set the settings for
    \sa GetVideoSettings
    */
   void SetVideoSettings(int idFile, const CVideoSettings &settings);
 
-  /**
-   * Erases video settings for file item
-   * @param fileitem
+  /*!
+   * \brief Erases video settings for file item
+   * \param item the item to erase the settings of
    */
   void EraseVideoSettings(const CFileItem &item);
 
-  /**
-   * Erases all video settings
+  /*!
+   * \brief Erases all video settings
    */
   void EraseAllVideoSettings();
 
-  /**
-   * Erases video settings for files starting with path
-   * @param path pattern
+  /*!
+   * \brief Erases video settings for files starting with path
+   * \param path pattern
    */
   void EraseAllVideoSettings(const std::string& path);
 
-  /**
-   * Erases all entries for files starting with path, including the files and path entries
-   * @param path pattern
+  /*!
+   * \brief Erases all entries for files starting with path, including the files and path entries
+   * \param path pattern
    */
   void EraseAllForPath(const std::string& path);
 
@@ -649,6 +670,17 @@ public:
    */
   bool GetFileMetadataForPath(const std::string& strPath,
                               std::map<std::string, CVideoInfoTag>& metadata);
+  /*! \brief The details of the library item of \p type with \p id.
+   \param item when given, filled as the library lists a set, show or season
+   \param idVersion, idFile for a movie, the version to read, as TryGetMovieInfo takes them
+   */
+  GetResult TryGetDetailsByTypeAndId(KODI::MEDIA::TYPE type,
+                                     int id,
+                                     CVideoInfoTag& details,
+                                     CFileItem* item = nullptr,
+                                     int getDetails = VideoDbDetailsAll,
+                                     int idVersion = -1,
+                                     int idFile = -1);
   bool GetDetailsByTypeAndId(CFileItem& item, VideoDbContentType type, int id);
   CVideoInfoTag GetDetailsByTypeAndId(VideoDbContentType type, int id);
 
@@ -1023,11 +1055,12 @@ public:
   // partymode
   /*! \brief Gets music video IDs in random order that match the where clause
   \param strWhere the SQL where clause to apply in the query
-  \param songIDs a vector of <2, id> pairs suited to party mode use
+  \param musicVideoIDs [out] the matching music video ids
   \return count of music video IDs found.
   */
-  unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<std::pair<int, int> > &songIDs);
+  unsigned int GetRandomMusicVideoIDs(const std::string& strWhere, std::vector<int>& musicVideoIDs);
 
+  //! \brief Announce the art of an item changed, by the stored media type its art rows carry.
   void UpdateArtForItem(int mediaId, const std::string& mediaType) const;
 
   /*!
@@ -1037,7 +1070,7 @@ public:
    * \param fallback optionally request fallback to the art of the parent/owner for each art type
      that is not defined for the asset
    * \param art collection of the retrieved art
-   * \return 
+   * \return true on success, false on a database error
   */
   bool GetArtForAsset(int assetId, ArtFallbackOptions fallback, KODI::ART::Artwork& art);
   /*!
@@ -1133,12 +1166,12 @@ public:
   /*!
    * \brief Remove a video from the library and transfer all of its assets to another video of the
    * same type.
-   * \param itemType[in] Type of the video being converted
-   * \param dbIdSource[in] id of the video being converted
-   * \param dbIdTarget[in] id that the video will be attached to
-   * \param idVideoVersion[in] new versiontype of the default version of the video
-   *                           special value -1: keep the current versiontype of the video.
-   * \param assetType[in] new asset type of the default version of the video.
+   * \param[in] itemType Type of the video being converted
+   * \param[in] dbIdSource id of the video being converted
+   * \param[in] dbIdTarget id that the video will be attached to
+   * \param[in] idVideoVersion new versiontype of the default version of the video
+   *            special value -1: keep the current versiontype of the video.
+   * \param[in] assetType new asset type of the default version of the video.
    * \return true for success, false otherwise
    */
   bool ConvertVideoToVersion(VideoDbContentType itemType,
@@ -1149,10 +1182,11 @@ public:
 
   /*!
    * \brief Adds or updates a version of an existing movie to the database
-   * \param itemType type of the video being converted
-   * \param dbIdSource id of the video being converted
-   * \param idVideoVersion new versiontype of the default version of the video
-   * \param assetType new asset type of the default version of the video
+   * \param itemType type of the video the version belongs to
+   * \param dbIdSource id of the video the version belongs to
+   * \param idFile file id of the version
+   * \param idVideoVersion versiontype of the version
+   * \param assetType asset type of the version
    * \return true if success, false otherwise
    */
   bool AddOrUpdateVideoVersion(VideoDbContentType itemType,
@@ -1232,9 +1266,9 @@ public:
   std::string GetFileBasePathById(int idFile);
 
   /*!
-   * @brief Check the passed in list of images if used in this database. Used to clean the image cache.
-   * @param imagesToCheck
-   * @return a list of the passed in images used by this database.
+   * \brief Check the passed in list of images if used in this database. Used to clean the image cache.
+   * \param imagesToCheck the image URLs to check
+   * \return a list of the passed in images used by this database.
    */
   std::vector<std::string> GetUsedImages(const std::vector<std::string>& imagesToCheck);
 
@@ -1247,9 +1281,6 @@ public:
 protected:
   int AddNewMovie(CVideoInfoTag& details);
   int AddNewMusicVideo(CVideoInfoTag& details);
-
-  int GetMusicVideoId(const std::string& strFilenameAndPath);
-
   int GetFileId(const CVideoInfoTag& details);
 
   /*! \brief Get the id of the file of this item and store it in the item
@@ -1388,10 +1419,6 @@ protected:
   int SetFileForUnknown(const std::string& fileAndPath, int oldIdFile, int newIdFile);
 
 private:
-  //! \brief Announce an update for an item named by its stored media type, which an actor has
-  //! but no KODI::MEDIA::TYPE names.
-  static void AnnounceUpdate(const std::string& mediaType, int id);
-
   void CreateTables() override;
   void CreateAnalytics() override;
   void UpdateTables(int version) override;
@@ -1428,6 +1455,7 @@ private:
   /*! \brief Determine whether the path is using lookup using folders
    \param path the path to check
    \param shows whether this path is from a tvshow (defaults to false)
+   \return true if items under the path are looked up by folder name
    */
   bool LookupByFolders(const std::string &path, bool shows = false);
 
@@ -1438,8 +1466,8 @@ private:
    */
   int GetPlayCount(int iFileId);
 
-  /*! \brief Get the last played time of a filename and path
-   \param iFileId file id to get the playcount for
+  /*! \brief Get the last played time of a file id
+   \param iFileId file id to get the last played time for
    \return the last played time of the item, or an invalid CDateTime on error
    \sa UpdateLastPlayed
    */

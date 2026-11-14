@@ -56,13 +56,14 @@ void CApplicationVolumeHandling::SetHardwareVolume(float hardwareVolume)
     ae->SetVolume(m_volumeLevel);
 }
 
-void CApplicationVolumeHandling::VolumeChanged()
+void CApplicationVolumeHandling::VolumeChanged(Changed changed)
 {
-  CVariant data(CVariant::VariantTypeObject);
-  data["volume"] = static_cast<int>(std::lroundf(GetVolumePercent()));
-  data["muted"] = m_muted;
-  const auto announcementMgr = CServiceBroker::GetAnnouncementManager();
-  announcementMgr->Announce(ANNOUNCEMENT::Application, "OnVolumeChanged", data);
+  ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged properties;
+  if (changed == Changed::Volume)
+    properties.volume = static_cast<int>(std::lroundf(GetVolumePercent()));
+  else
+    properties.muted = m_muted;
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::PlayerEvent{properties});
 
   auto& components = CServiceBroker::GetAppComponents();
   const auto appPlayer = components.GetComponent<CApplicationPlayer>();
@@ -122,7 +123,7 @@ void CApplicationVolumeHandling::Mute()
   if (ae)
     ae->SetMute(true);
   m_muted = true;
-  VolumeChanged();
+  VolumeChanged(Changed::Muted);
 }
 
 void CApplicationVolumeHandling::UnMute()
@@ -134,7 +135,7 @@ void CApplicationVolumeHandling::UnMute()
   if (ae)
     ae->SetMute(false);
   m_muted = false;
-  VolumeChanged();
+  VolumeChanged(Changed::Muted);
 }
 
 void CApplicationVolumeHandling::SetVolume(float iValue, bool isPercentage)
@@ -145,7 +146,7 @@ void CApplicationVolumeHandling::SetVolume(float iValue, bool isPercentage)
     hardwareVolume /= 100.0f;
 
   SetHardwareVolume(hardwareVolume);
-  VolumeChanged();
+  VolumeChanged(Changed::Volume);
 }
 
 void CApplicationVolumeHandling::CacheReplayGainSettings(const CSettings& settings)

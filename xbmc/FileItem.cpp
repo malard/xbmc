@@ -34,8 +34,8 @@
 #include "music/tags/MusicInfoTagLoaderFactory.h"
 #include "network/NetworkFileItemClassify.h"
 #include "pictures/PictureInfoTag.h"
-#include "playlists/PlayList.h"
 #include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannel.h"
@@ -514,6 +514,7 @@ CFileItem& CFileItem::operator=(const CFileItem& item)
   m_strDVDLabel = item.m_strDVDLabel;
   m_strTitle = item.m_strTitle;
   m_programCount = item.m_programCount;
+  m_playListOrder = item.m_playListOrder;
   m_depth = item.m_depth;
   m_lockInfo = item.m_lockInfo;
   m_bCanQueue=item.m_bCanQueue;
@@ -542,6 +543,7 @@ void CFileItem::Archive(CArchive& ar)
     ar << m_strDVDLabel;
     ar << m_strTitle;
     ar << m_programCount;
+    ar << m_playListOrder;
     ar << m_depth;
     ar << m_lStartOffset;
     ar << m_lStartPartNumber;
@@ -599,6 +601,7 @@ void CFileItem::Archive(CArchive& ar)
     ar >> m_strDVDLabel;
     ar >> m_strTitle;
     ar >> m_programCount;
+    ar >> m_playListOrder;
     ar >> m_depth;
     ar >> m_lStartOffset;
     ar >> m_lStartPartNumber;
@@ -639,17 +642,14 @@ void CFileItem::Archive(CArchive& ar)
 
 void CFileItem::Serialize(CVariant& value) const
 {
-  //! @todo Why is this commented out? The implementation exists but will never be called.
-  //CGUIListItem::Serialize(value["CGUIListItem"]);
-
   value["strPath"] = m_strPath;
   value["dateTime"] = (m_dateTime.IsValid()) ? m_dateTime.GetAsRFC1123DateTime() : "";
-  value["lastmodified"] = m_dateTime.IsValid() ? m_dateTime.GetAsDBDateTime() : "";
+  value["lastModified"] = m_dateTime.IsValid() ? m_dateTime.GetAsDBDateTime() : "";
   value["size"] = m_dwSize;
   value["DVDLabel"] = m_strDVDLabel;
   value["title"] = m_strTitle;
-  value["mimetype"] = m_mimetype;
-  value["extrainfo"] = m_extrainfo;
+  value["mimeType"] = m_mimetype;
+  value["extraInfo"] = m_extrainfo;
 
   if (m_musicInfoTag)
     (*m_musicInfoTag).Serialize(value["musicInfoTag"]);
@@ -667,7 +667,7 @@ void CFileItem::Serialize(CVariant& value) const
   //! Why is this implemented here and not in CGUIListItem?
   if (HasProperties())
   {
-    auto& customProperties = value["customproperties"];
+    auto& customProperties = value["customProperties"];
     for (const auto& [propname, propval] : GetProperties())
       customProperties[propname] = propval;
   }
@@ -697,6 +697,9 @@ void CFileItem::ToSortable(SortItem &sortable, Field field) const
       break;
     case Field::PROGRAM_COUNT:
       sortable[Field::PROGRAM_COUNT] = m_programCount;
+      break;
+    case Field::PLAYLIST_ORDER:
+      sortable[Field::PLAYLIST_ORDER] = m_playListOrder;
       break;
     case Field::BITRATE:
       sortable[Field::BITRATE] = m_dwSize;
@@ -1482,7 +1485,7 @@ void CFileItem::UpdateInfo(const CFileItem& item,
 
 void CFileItem::MergeInfo(const CFileItem& item)
 {
-  // TODO: Currently merge the metadata/art info is implemented for video case only
+  //! @todo Merging metadata/art is implemented for video only
   if (item.HasVideoInfoTag())
   {
     if (item.m_videoInfoTag)
@@ -2187,7 +2190,6 @@ bool CFileItem::LoadGameTag()
   if (HasGameInfoTag() && m_gameInfoTag->IsLoaded())
     return true;
 
-  //! @todo
   GetGameInfoTag();
 
   m_gameInfoTag->SetLoaded(true);
@@ -2284,8 +2286,8 @@ bool CFileItem::LoadDetails()
 
   if (PLAYLIST::IsPlayList(*this) && IsType(".strm"))
   {
-    const std::unique_ptr<PLAYLIST::CPlayList> playlist(PLAYLIST::CPlayListFactory::Create(*this));
-    if (playlist && playlist->Load(GetPath()) && playlist->size() == 1)
+    const std::unique_ptr<PLAYLIST::CPlayListFile> playlist(PLAYLIST::CPlayListFactory::Create(*this));
+    if (playlist && playlist->Load(GetPath()) && playlist->Size() == 1)
     {
       const auto item{(*playlist)[0]};
       if (VIDEO::IsVideo(*item))

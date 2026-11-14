@@ -1,0 +1,21 @@
+{
+  "title": "Set the volume, leaving everything else as it is",
+  "method": "Player.SetProperties",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "Player.SetProperties",
+    "params": {
+      "properties": {
+        "volume": 75
+      }
+    }
+  },
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+      "volume": 75
+    }
+  }
+}

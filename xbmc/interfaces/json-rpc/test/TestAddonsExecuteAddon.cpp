@@ -24,7 +24,7 @@ constexpr const char* ADDON_ID = "script.toolbox";
 CVariant MakeRequest(const CVariant& params)
 {
   CVariant request(CVariant::VariantTypeObject);
-  request["addonid"] = ADDON_ID;
+  request["addonId"] = ADDON_ID;
   request["params"] = params;
   request["wait"] = false;
 
@@ -56,7 +56,7 @@ std::vector<std::string> ArgumentsSeenByTheAddon(const std::string& command)
 TEST(TestExecuteAddonParams, NoParamsGivesTheBareBuiltin)
 {
   CVariant request(CVariant::VariantTypeObject);
-  request["addonid"] = ADDON_ID;
+  request["addonId"] = ADDON_ID;
   request["params"] = "";
   request["wait"] = false;
 

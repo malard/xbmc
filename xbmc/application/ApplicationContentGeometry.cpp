@@ -12,6 +12,7 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationSettingsHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
 #include "cores/VideoSettings.h"
 #include "settings/Settings.h"
@@ -19,10 +20,14 @@
 #include "settings/lib/Setting.h"
 #include "utils/AspectRatioVocabulary.h"
 #include "utils/MathUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/log.h"
+#include "video/geometry/GeometryPublication.h"
 #include "video/geometry/GeometrySettings.h"
 #include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
+
+#include <chrono>
 
 using namespace KODI::UTILS;
 using namespace KODI::VIDEO::GEOMETRY;
@@ -72,24 +77,106 @@ CRect WholePixels(const CRect& rect)
 
 CApplicationContentGeometry::CApplicationContentGeometry() = default;
 
+void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
+                                           const DrawnGeometry& drawn)
+{
+  const auto announcer = CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>();
+  if (!announcer)
+    return;
+
+  CVariant data{CVariant::VariantTypeObject};
+  SerializeEffectiveGeometry(geometry, data["contentRect"]);
+
+  if (drawn.Drawn())
+    SerializeDrawnGeometry(drawn, data["screen"]);
+
+  announcer->OnContentGeometryChanged(std::move(data));
+}
+
 void CApplicationContentGeometry::Set(const EffectiveGeometry& geometry)
 {
-  std::unique_lock lock(m_section);
-  m_current = geometry;
+  bool differs = false;
+  {
+    std::unique_lock lock(m_section);
+    differs = PublishedGeometryDiffers(m_current, geometry);
+    m_current = geometry;
+  }
+
+  if (differs)
+    AnnounceThrottled();
+}
+
+void CApplicationContentGeometry::AnnounceThrottled()
+{
+  bool now = false;
+  {
+    std::unique_lock lock(m_announceSection);
+
+    const int64_t elapsed = CTimeUtils::MonotonicMs() - m_lastAnnounceMs;
+    if (elapsed >= ANNOUNCE_INTERVAL_MS)
+    {
+      m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+      now = true;
+    }
+    else if (!m_announcePending)
+    {
+      m_announcePending = true;
+
+      if (!m_announceTimer.Start(std::chrono::milliseconds(ANNOUNCE_INTERVAL_MS - elapsed)))
+      {
+        m_announcePending = false;
+        m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+        now = true;
+      }
+    }
+  }
+
+  if (now)
+    AnnounceNow();
+}
+
+void CApplicationContentGeometry::OnAnnounceTimer()
+{
+  {
+    std::unique_lock lock(m_announceSection);
+    m_announcePending = false;
+    m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+  }
+
+  AnnounceNow();
+}
+
+void CApplicationContentGeometry::AnnounceNow()
+{
+  const auto [geometry, drawn] = Snapshot();
+  Announce(geometry, drawn);
 }
 
 void CApplicationContentGeometry::SetDrawn(const DrawnGeometry& drawn)
 {
   const DrawnGeometry rounded{WholePixels(drawn.picture), WholePixels(drawn.raster)};
 
-  std::unique_lock lock(m_section);
-  m_drawn = rounded;
+  {
+    std::unique_lock lock(m_section);
+    if (rounded.picture == m_drawn.picture && rounded.raster == m_drawn.raster)
+      return;
+
+    m_drawn = rounded;
+  }
+
+  AnnounceThrottled();
 }
 
 DrawnGeometry CApplicationContentGeometry::Drawn() const
 {
   std::unique_lock lock(m_section);
   return m_drawn;
+}
+
+std::pair<EffectiveGeometry, DrawnGeometry> CApplicationContentGeometry::Snapshot() const
+{
+  std::unique_lock lock(m_section);
+  return {m_current, m_drawn};
 }
 
 void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cached)

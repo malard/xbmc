@@ -18,6 +18,7 @@
 #include "dialogs/GUIDialogContextMenu.h"
 #include "dialogs/GUIDialogMediaSource.h"
 #include "dialogs/GUIDialogProgress.h"
+#include "filesystem/AddonsDirectory.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "games/GameServices.h"
 #include "games/GameSettings.h"
@@ -376,7 +377,7 @@ std::string CGUIWindowGames::GetStartFolder(const std::string& dir)
 
   if (StringUtils::EqualsNoCase(dir, "plugins") || StringUtils::EqualsNoCase(dir, "addons"))
   {
-    return "addons://sources/game/";
+    return XFILE::CAddonsDirectory::SourcesPathOf(MEDIA::MediaSection::GAMES);
   }
 
   SetupShares();
@@ -426,12 +427,11 @@ bool CGUIWindowGames::PlayGame(const CFileItem& item)
     itemCopy.GetGameInfoTag();
   }
 
-  PLAYLIST::Id playlistId = PLAYLIST::Id::TYPE_NONE;
-  if (PLAYLIST::IsPlayList(item))
-    playlistId = PLAYLIST::Id::TYPE_GAME;
+  // a playlist of games plays on the Video playlist; anything else lets the item choose
+  const int playlist = PLAYLIST::IsPlayList(item) ? static_cast<int>(PLAYLIST::Video) : -1;
 
   CServiceBroker::GetAppMessenger()->PostMsg(
-      TMSG_APPLICATION_PLAY_MEDIA, static_cast<int>(playlistId), -1, new CFileItem(itemCopy), "");
+      TMSG_APPLICATION_PLAY_MEDIA, playlist, -1, new CFileItem(itemCopy), "");
   return true;
 }
 

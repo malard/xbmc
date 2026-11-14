@@ -12,9 +12,9 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "GUIPassword.h"
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "URL.h"
+#include "Util.h"
 #include "ViewDatabase.h"
 #include "addons/Addon.h"
 #include "addons/AddonManager.h"
@@ -30,6 +30,7 @@
 #include "music/GUIViewStateMusic.h"
 #include "pictures/GUIViewStatePictures.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/PlayListTypes.h"
 #include "profiles/ProfileManager.h"
 #include "programs/GUIViewStatePrograms.h"
 #include "pvr/windows/GUIViewStatePVR.h"
@@ -52,8 +53,6 @@ using namespace KODI;
 using namespace ADDON;
 using namespace PVR;
 using KODI::MEDIA::MediaSection;
-
-std::string CGUIViewState::m_strPlaylistDirectory;
 std::vector<CMediaSource> CGUIViewState::m_sources;
 
 CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& items)
@@ -108,7 +107,7 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
       return new CGUIViewStateMusicPlaylist(items);
   }
 
-  if (items.GetPath() == "special://musicplaylists/")
+  if (items.GetPath() == CUtil::PlaylistsPathOf(MediaSection::MUSIC))
     return new CGUIViewStateWindowMusicNav(items);
 
   if (url.IsProtocol("androidapp"))
@@ -200,7 +199,6 @@ CGUIViewState::CGUIViewState(const CFileItemList& items) : m_items(items)
 {
   m_currentViewAsControl = 0;
   m_currentSortMethod = 0;
-  m_playlist = PLAYLIST::Id::TYPE_NONE;
 }
 
 CGUIViewState::~CGUIViewState() = default;
@@ -434,31 +432,9 @@ bool CGUIViewState::DisableAddSourceButtons()
   return true;
 }
 
-PLAYLIST::Id CGUIViewState::GetPlaylist() const
+std::optional<PLAYLIST::Type> CGUIViewState::GetPlayListType() const
 {
-  return m_playlist;
-}
-
-const std::string& CGUIViewState::GetPlaylistDirectory()
-{
-  return m_strPlaylistDirectory;
-}
-
-void CGUIViewState::SetPlaylistDirectory(const std::string& strDirectory)
-{
-  m_strPlaylistDirectory = strDirectory;
-  URIUtils::RemoveSlashAtEnd(m_strPlaylistDirectory);
-}
-
-bool CGUIViewState::IsCurrentPlaylistDirectory(const std::string& strDirectory)
-{
-  if (CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist()!=GetPlaylist())
-    return false;
-
-  std::string strDir = strDirectory;
-  URIUtils::RemoveSlashAtEnd(strDir);
-
-  return m_strPlaylistDirectory == strDir;
+  return std::nullopt;
 }
 
 bool CGUIViewState::AutoPlayNextItem()
@@ -513,7 +489,7 @@ void CGUIViewState::SetSortOrder(SortOrder sortOrder)
 
 bool CGUIViewState::AutoPlayNextVideoItem() const
 {
-  if (GetPlaylist() != PLAYLIST::Id::TYPE_VIDEO)
+  if (GetPlayListType() != PLAYLIST::Video)
     return false;
 
   return VIDEO::UTILS::IsAutoPlayNextItem(m_items.GetContent());
@@ -595,22 +571,25 @@ CGUIViewStateFromItems::CGUIViewStateFromItems(const CFileItemList &items) : CGU
 
   SetViewAsControl(DEFAULT_VIEW_LIST);
 
-  if (items.IsPlugin())
-  {
-    CURL url(items.GetPath());
-    AddonPtr addon;
-    if (CServiceBroker::GetAddonMgr().GetAddon(url.GetHostName(), addon, AddonType::PLUGIN,
-                                               OnlyEnabled::CHOICE_YES))
-    {
-      const auto plugin = std::static_pointer_cast<CPluginSource>(addon);
-      if (plugin->Provides(CPluginSource::Content::AUDIO))
-        m_playlist = PLAYLIST::Id::TYPE_MUSIC;
-      if (plugin->Provides(CPluginSource::Content::VIDEO))
-        m_playlist = PLAYLIST::Id::TYPE_VIDEO;
-    }
-  }
-
   LoadViewState(items.GetPath(), CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow());
+}
+
+std::optional<PLAYLIST::Type> CGUIViewStateFromItems::GetPlayListType() const
+{
+  if (!m_items.IsPlugin())
+    return std::nullopt;
+
+  AddonPtr addon;
+  if (!CServiceBroker::GetAddonMgr().GetAddon(CURL(m_items.GetPath()).GetHostName(), addon,
+                                              AddonType::PLUGIN, OnlyEnabled::CHOICE_YES))
+    return std::nullopt;
+
+  const auto plugin = std::static_pointer_cast<CPluginSource>(addon);
+  const bool audio = plugin->Provides(CPluginSource::Content::AUDIO);
+  const bool video = plugin->Provides(CPluginSource::Content::VIDEO);
+  if (audio == video)
+    return std::nullopt;
+  return audio ? PLAYLIST::Audio : PLAYLIST::Video;
 }
 
 bool CGUIViewStateFromItems::AutoPlayNextItem()

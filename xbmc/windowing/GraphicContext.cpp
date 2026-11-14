@@ -322,8 +322,7 @@ const CRect &CGraphicContext::GetScissors() const
 
 void CGraphicContext::ResetScissors()
 {
-  m_scissors.SetRect(0, 0, (float)m_iScreenWidth, (float)m_iScreenHeight);
-  CServiceBroker::GetRenderSystem()->SetScissors(StereoCorrection(m_scissors));
+  SetClip(ClipBounds());
 }
 
 const CRect CGraphicContext::GetViewWindow() const
@@ -495,6 +494,8 @@ void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
 
 void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdate)
 {
+  CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
   RESOLUTION lastRes = m_Resolution;
 
   // If the user asked us to guess, go with desktop
@@ -504,51 +505,46 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
   }
 
   // If we are switching to the same resolution and same window/full-screen, no need to do anything
-  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
+  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == advancedSettings->m_fullScreen)
   {
     return;
   }
 
   if (res >= RES_DESKTOP)
   {
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen = true;
+    advancedSettings->m_fullScreen = true;
     m_bFullScreenRoot = true;
   }
   else
   {
-    CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen = false;
+    advancedSettings->m_fullScreen = false;
     m_bFullScreenRoot = false;
   }
 
   std::unique_lock lock(*this);
 
-  // FIXME Wayland windowing needs some way to "deny" resolution updates since what Kodi
-  // requests might not get actually set by the compositor.
-  // So in theory, m_iScreenWidth etc. would not need to be updated at all before the
-  // change is confirmed.
-  // But other windowing code expects these variables to be already set when
-  // SetFullScreen() is called, so set them anyway and remember the old values.
-  int origScreenWidth = m_iScreenWidth;
-  int origScreenHeight = m_iScreenHeight;
+  // FIXME Wayland windowing needs some way to "deny" resolution updates, since what Kodi
+  // requests might not get set by the compositor. Other windowing code expects the new
+  // state to be set when SetFullScreen() is called, so it is set before the switch anyway.
   float origFPSOverride = m_fFPSOverride;
 
   UpdateInternalStateWithResolution(res);
   RESOLUTION_INFO info_org  = CDisplaySettings::GetInstance().GetResolutionInfo(res);
 
   bool switched = false;
-  if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
+  if (advancedSettings->m_fullScreen)
   {
 #if defined (TARGET_DARWIN) || defined (TARGET_WINDOWS)
     bool blankOtherDisplays = CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOSCREEN_BLANKDISPLAYS);
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(true,  info_org, blankOtherDisplays);
+    switched = winSystem->SetFullScreen(true, info_org, blankOtherDisplays);
 #else
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(true,  info_org, false);
+    switched = winSystem->SetFullScreen(true, info_org, false);
 #endif
   }
   else if (lastRes >= RES_DESKTOP )
-    switched = CServiceBroker::GetWinSystem()->SetFullScreen(false, info_org, false);
+    switched = winSystem->SetFullScreen(false, info_org, false);
   else
-    switched = CServiceBroker::GetWinSystem()->ResizeWindow(info_org.iWidth, info_org.iHeight, -1, -1);
+    switched = winSystem->ResizeWindow(info_org.iWidth, info_org.iHeight, -1, -1);
 
   if (switched)
   {
@@ -566,23 +562,10 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
   }
   else
   {
-    // Reset old state
-    m_iScreenWidth = origScreenWidth;
-    m_iScreenHeight = origScreenHeight;
+    // FIXME: switching to a monitor with fewer resolutions can leave the last one invalid,
+    // and RES_DESKTOP is a guess until a real resolution arrives.
+    UpdateInternalStateWithResolution(IsValidResolution(lastRes) ? lastRes : RES_DESKTOP);
     m_fFPSOverride = origFPSOverride;
-    if (IsValidResolution(lastRes))
-    {
-      m_Resolution = lastRes;
-    }
-    else
-    {
-      // FIXME Resolution has become invalid
-      // This happens e.g. when switching monitors and the new monitor has fewer
-      // resolutions than the old one. Fall back to RES_DESKTOP and hope that
-      // the real resolution is set soon.
-      // Again, must be fixed as part of a greater refactor.
-      m_Resolution = RES_DESKTOP;
-    }
   }
 }
 

@@ -40,14 +40,11 @@ namespace
 class CFloodAnnouncer : public ANNOUNCEMENT::IAnnouncer
 {
 public:
-  void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                const std::string& sender,
-                const std::string& message,
-                const CVariant& data) override
+  void OnOtherEvent(const ANNOUNCEMENT::OtherEvent& event) override
   {
-    if (message == "flood")
+    if (event.message == "flood")
       m_announced.Set();
-    else if (message == "barrier")
+    else if (event.message == "barrier")
       m_barrierDispatched.Set();
   }
 
@@ -62,11 +59,7 @@ CEvent laterRequestStarted{true};
 std::promise<void> requestExited;
 std::atomic<bool> stopClaimed{false};
 
-JSONRPC_STATUS Block(const std::string& method,
-                     ITransportLayer* transport,
-                     IClient* client,
-                     const CVariant& parameterObject,
-                     CVariant& result)
+JSONRPC_STATUS Block(const CVariant& parameterObject, CVariant& result)
 {
   requestExited.set_value_at_thread_exit();
   requestBlocked.Set();
@@ -76,11 +69,7 @@ JSONRPC_STATUS Block(const std::string& method,
   return OK;
 }
 
-JSONRPC_STATUS Record(const std::string& method,
-                      ITransportLayer* transport,
-                      IClient* client,
-                      const CVariant& parameterObject,
-                      CVariant& result)
+JSONRPC_STATUS Record(const CVariant& parameterObject, CVariant& result)
 {
   laterRequestStarted.Set();
   result = "OK";
@@ -89,11 +78,7 @@ JSONRPC_STATUS Record(const std::string& method,
 
 CEvent stoppedFromRequest{true};
 
-JSONRPC_STATUS Stop(const std::string& method,
-                    ITransportLayer* transport,
-                    IClient* client,
-                    const CVariant& parameterObject,
-                    CVariant& result)
+JSONRPC_STATUS Stop(const CVariant& parameterObject, CVariant& result)
 {
   // Teardown and this callback must not stop the same server concurrently.
   if (!stopClaimed.exchange(true))
@@ -412,7 +397,7 @@ TEST_F(TestTCPServer, APeerThatStopsReadingHoldsUpNoAnnouncement)
   bool floodDispatched = true;
   for (int i = 0; i < 400; ++i)
   {
-    manager->Announce(ANNOUNCEMENT::Other, "test", "flood", data);
+    manager->Announce(ANNOUNCEMENT::OtherEvent{"test", "flood", data});
     // Time delivery after the flood, rather than timing the serialization of all its data.
     if (!m_progress.m_announced.Wait(5s))
     {
@@ -421,11 +406,11 @@ TEST_F(TestTCPServer, APeerThatStopsReadingHoldsUpNoAnnouncement)
     }
   }
   // A later queue entry proves all callbacks for the flood have finished.
-  manager->Announce(ANNOUNCEMENT::Other, "test", "barrier", CVariant{});
+  manager->Announce(ANNOUNCEMENT::OtherEvent{"test", "barrier", CVariant{}});
   const bool barrierDispatched = m_progress.m_barrierDispatched.Wait(5s);
-  manager->Announce(ANNOUNCEMENT::Info, "test", "marker", CVariant{});
+  manager->Announce(ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
 
-  const bool delivered = ReadUntil(listener, "marker", 5s);
+  const bool delivered = ReadUntil(listener, "Info.OnChanged", 5s);
 
   std::promise<void> stopped;
   auto done = stopped.get_future();

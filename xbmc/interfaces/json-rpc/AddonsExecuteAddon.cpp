@@ -58,7 +58,7 @@ std::string BuildArguments(const CVariant& params)
 
 ParsedExecuteAddon ParseExecuteAddonParams(const CVariant& parameterObject)
 {
-  const std::string id = parameterObject["addonid"].asString();
+  const std::string id = parameterObject["addonId"].asString();
   const CVariant& params = parameterObject["params"];
 
   ParsedExecuteAddon parsed;

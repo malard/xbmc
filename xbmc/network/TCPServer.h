@@ -42,13 +42,9 @@ namespace JSONRPC
     static unsigned int GetActiveWorkers();
 
     bool PrepareDownload(const char *path, CVariant &details, std::string &protocol) override;
-    bool Download(const char *path, CVariant &result) override;
     int GetCapabilities() override;
 
-    void Announce(ANNOUNCEMENT::AnnouncementFlag flag,
-                  const std::string& sender,
-                  const std::string& message,
-                  const CVariant& data) override;
+    void OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement) override;
 
   protected:
     void Process() override;

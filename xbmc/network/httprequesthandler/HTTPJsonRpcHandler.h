@@ -50,7 +50,6 @@ private:
 
     // implementations of JSONRPC::ITransportLayer
     bool PrepareDownload(const char *path, CVariant &details, std::string &protocol) override;
-    bool Download(const char *path, CVariant &result) override;
     int GetCapabilities() override;
 
   private:

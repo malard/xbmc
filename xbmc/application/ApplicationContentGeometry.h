@@ -11,9 +11,12 @@
 #include "application/IApplicationComponent.h"
 #include "settings/lib/ISettingCallback.h"
 #include "threads/CriticalSection.h"
+#include "threads/Timer.h"
 #include "video/geometry/EffectiveGeometry.h"
 
 #include <atomic>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 //! \brief The content rectangle in force, resolved once for the OSD, subtitle placement and
@@ -88,6 +91,7 @@ public:
   RenderInputs GetRenderInputs() const;
 
 private:
+  //! \brief Publish \p geometry, announcing it only when it differs from what is already out.
   void Set(const KODI::VIDEO::GEOMETRY::EffectiveGeometry& geometry);
 
   //! \brief The widest ratio the stored measurement holds, which the mask opens to. Zero when
@@ -96,6 +100,20 @@ private:
 
   //! \brief Carry a moved raster to the layout; nothing when it is already in force.
   void ApplyRaster();
+
+  static void Announce(const KODI::VIDEO::GEOMETRY::EffectiveGeometry& geometry,
+                       const KODI::VIDEO::GEOMETRY::DrawnGeometry& drawn);
+
+  //! \brief Announce the change, coalescing any within the interval. Get() is never held back.
+  void AnnounceThrottled();
+
+  void OnAnnounceTimer();
+
+  //! \brief Announce the shape in force at this moment, freshly snapshotted.
+  void AnnounceNow();
+
+  std::pair<KODI::VIDEO::GEOMETRY::EffectiveGeometry, KODI::VIDEO::GEOMETRY::DrawnGeometry>
+  Snapshot() const;
 
   mutable CCriticalSection m_section;
   KODI::VIDEO::GEOMETRY::GeometryInputs m_inputs;
@@ -113,4 +131,12 @@ private:
 
   //! \brief A promotion moved the raster and the layout has not been told yet.
   bool m_carryRaster{false};
+
+  //! \brief Shortest interval between two announcements.
+  static constexpr int64_t ANNOUNCE_INTERVAL_MS = 1000;
+
+  CCriticalSection m_announceSection;
+  int64_t m_lastAnnounceMs{0};
+  bool m_announcePending{false};
+  CTimer m_announceTimer{[this]() { OnAnnounceTimer(); }};
 };

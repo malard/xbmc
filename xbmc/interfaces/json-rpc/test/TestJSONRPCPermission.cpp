@@ -6,9 +6,8 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "ServiceDescription.h"
+#include "JSONRPCTestUtils.h"
 #include "interfaces/json-rpc/JSONRPCUtils.h"
-#include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
 #include <array>
@@ -76,16 +75,7 @@ TEST(TestJSONRPCPermission, NotificationPermissionIsAllButReadData)
 
 TEST(TestJSONRPCPermission, ThePermissionMethodDeclaresEveryPermission)
 {
-  CVariant declared;
-  for (const char* const entry : JSONRPC_SERVICE_METHODS)
-  {
-    // Each entry is one method without its enclosing braces
-    CVariant method;
-    if (CJSONVariantParser::Parse("{" + std::string(entry) + "}", method) &&
-        method.isMember("JSONRPC.Permission"))
-      declared = method["JSONRPC.Permission"]["returns"]["properties"];
-  }
-
+  const CVariant declared = ShippedMethods().at("JSONRPC.Permission")["returns"]["properties"];
   for (const auto permission : PERMISSIONS)
     EXPECT_TRUE(declared.isMember(PermissionToString(permission)))
         << PermissionToString(permission);

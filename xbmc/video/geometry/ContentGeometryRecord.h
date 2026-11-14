@@ -16,6 +16,7 @@
 #include <vector>
 
 class CArchive;
+
 class TiXmlElement;
 class TiXmlNode;
 

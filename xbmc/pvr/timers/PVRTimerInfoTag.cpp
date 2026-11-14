@@ -239,18 +239,18 @@ bool CPVRTimerInfoTag::operator==(const CPVRTimerInfoTag& right) const
 
 void CPVRTimerInfoTag::Serialize(CVariant& value) const
 {
-  value["channelid"] = m_channel != nullptr ? m_channel->ChannelID() : -1;
+  value["channelId"] = m_channel != nullptr ? m_channel->ChannelID() : -1;
   value["summary"] = m_strSummary;
-  value["isradio"] = m_bIsRadio;
-  value["preventduplicateepisodes"] = m_iPreventDupEpisodes;
-  value["starttime"] = m_StartTime.IsValid() ? m_StartTime.GetAsDBDateTime() : "";
-  value["endtime"] = m_StopTime.IsValid() ? m_StopTime.GetAsDBDateTime() : "";
-  value["startanytime"] = m_bStartAnyTime;
-  value["endanytime"] = m_bEndAnyTime;
+  value["isRadio"] = m_bIsRadio;
+  value["preventDuplicateEpisodes"] = m_iPreventDupEpisodes;
+  value["startTime"] = m_StartTime.IsValid() ? m_StartTime.GetAsDBDateTime() : "";
+  value["endTime"] = m_StopTime.IsValid() ? m_StopTime.GetAsDBDateTime() : "";
+  value["startAnytime"] = m_bStartAnyTime;
+  value["endAnytime"] = m_bEndAnyTime;
   value["runtime"] = m_StartTime.IsValid() && m_StopTime.IsValid()
                          ? (m_StopTime - m_StartTime).GetSecondsTotal()
                          : 0;
-  value["firstday"] = m_FirstDay.IsValid() ? m_FirstDay.GetAsDBDate() : "";
+  value["firstDay"] = m_FirstDay.IsValid() ? m_FirstDay.GetAsDBDate() : "";
 
   CVariant weekdays(CVariant::VariantTypeArray);
   if (m_iWeekdays & PVR_WEEKDAY_MONDAY)
@@ -273,10 +273,10 @@ void CPVRTimerInfoTag::Serialize(CVariant& value) const
   value["lifetime"] = m_iLifetime;
   value["title"] = m_strTitle;
   value["directory"] = m_strDirectory;
-  value["startmargin"] = m_iMarginStart;
-  value["endmargin"] = m_iMarginEnd;
+  value["startMargin"] = m_iMarginStart;
+  value["endMargin"] = m_iMarginEnd;
 
-  value["timerid"] = m_iTimerId;
+  value["timerId"] = m_iTimerId;
 
   switch (m_state)
   {
@@ -315,20 +315,20 @@ void CPVRTimerInfoTag::Serialize(CVariant& value) const
       break;
   }
 
-  value["istimerrule"] = m_timerType->IsTimerRule();
-  value["ismanual"] = m_timerType->IsManual();
-  value["isreadonly"] = m_timerType->IsReadOnly();
-  value["isreminder"] = m_timerType->IsReminder();
+  value["isTimerRule"] = m_timerType->IsTimerRule();
+  value["isManual"] = m_timerType->IsManual();
+  value["isReadOnly"] = m_timerType->IsReadOnly();
+  value["isReminder"] = m_timerType->IsReminder();
 
-  value["epgsearchstring"] = m_strEpgSearchString;
-  value["fulltextepgsearch"] = m_bFullTextEpgSearch;
-  value["recordinggroup"] = m_iRecordingGroup;
-  value["maxrecordings"] = m_iMaxRecordings;
-  value["epguid"] = m_iEpgUid;
-  value["broadcastid"] = m_epgTag ? m_epgTag->DatabaseID() : -1;
+  value["epgSearchString"] = m_strEpgSearchString;
+  value["fullTextEpgSearch"] = m_bFullTextEpgSearch;
+  value["recordingGroup"] = m_iRecordingGroup;
+  value["maxRecordings"] = m_iMaxRecordings;
+  value["epgUid"] = m_iEpgUid;
+  value["broadcastId"] = m_epgTag ? m_epgTag->DatabaseID() : -1;
   value["serieslink"] = m_strSeriesLink;
 
-  value["clientid"] = m_iClientId;
+  value["clientId"] = m_iClientId;
 }
 
 void CPVRTimerInfoTag::UpdateSummary()

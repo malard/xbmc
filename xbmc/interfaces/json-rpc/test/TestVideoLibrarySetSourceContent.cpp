@@ -27,7 +27,7 @@ CVariant MakeParams(const std::string& path,
   params["content"] = content;
   if (!scraperId.empty())
   {
-    params["scraperid"] = scraperId;
+    params["scraperId"] = scraperId;
   }
 
   return params;
@@ -48,7 +48,7 @@ TEST(TestSetSourceContentParams, RejectsMissingPath)
 {
   CVariant params(CVariant::VariantTypeObject);
   params["content"] = "movies";
-  params["scraperid"] = "metadata.themoviedb.org.python";
+  params["scraperId"] = "metadata.themoviedb.org.python";
 
   ParsedSetSourceContent parsed;
   EXPECT_EQ(InvalidParams, ParseSetSourceContentParams(params, parsed));
@@ -86,7 +86,7 @@ TEST(TestSetSourceContentParams, RejectsMissingScraperUnlessContentIsNone)
 TEST(TestSetSourceContentParams, RejectsEmptyScraperUnlessContentIsNone)
 {
   CVariant params = MakeParams("smb://nas/Movies/", "movies");
-  params["scraperid"] = "";
+  params["scraperId"] = "";
 
   ParsedSetSourceContent parsed;
   EXPECT_EQ(InvalidParams, ParseSetSourceContentParams(params, parsed));
@@ -95,7 +95,7 @@ TEST(TestSetSourceContentParams, RejectsEmptyScraperUnlessContentIsNone)
 TEST(TestSetSourceContentParams, RejectsUnknownClearMode)
 {
   CVariant params = MakeParams("smb://nas/Movies/", "none");
-  params["clearmode"] = "purge";
+  params["clearMode"] = "purge";
 
   ParsedSetSourceContent parsed;
   EXPECT_EQ(InvalidParams, ParseSetSourceContentParams(params, parsed));
@@ -104,8 +104,8 @@ TEST(TestSetSourceContentParams, RejectsUnknownClearMode)
 TEST(TestSetSourceContentParams, PassesThroughScraperAndFlags)
 {
   CVariant params = MovieParams();
-  params["scrapersettings"] = "<settings><setting id=\"language\">en</setting></settings>";
-  params["noupdate"] = true;
+  params["scraperSettings"] = "<settings><setting id=\"language\">en</setting></settings>";
+  params["noUpdate"] = true;
   params["refresh"] = true;
 
   ParsedSetSourceContent parsed;
@@ -141,7 +141,7 @@ TEST(TestSetSourceContentParams, MoviesDefaultToRecursiveWithoutDirectoryNames)
 TEST(TestSetSourceContentParams, MoviesNonRecursiveWithoutDirectoryNamesDoNotRecurse)
 {
   CVariant params = MovieParams();
-  params["scanrecursive"] = false;
+  params["scanRecursive"] = false;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -152,7 +152,7 @@ TEST(TestSetSourceContentParams, MoviesNonRecursiveWithoutDirectoryNamesDoNotRec
 TEST(TestSetSourceContentParams, MoviesWithDirectoryNamesRecurseWithoutLimit)
 {
   CVariant params = MovieParams();
-  params["usedirectorynames"] = true;
+  params["useDirectoryNames"] = true;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -165,8 +165,8 @@ TEST(TestSetSourceContentParams, MoviesWithDirectoryNamesStopOneLevelDownWhenNot
 {
   // One level, not none: a folder per movie is still a level below the source.
   CVariant params = MovieParams();
-  params["usedirectorynames"] = true;
-  params["scanrecursive"] = false;
+  params["useDirectoryNames"] = true;
+  params["scanRecursive"] = false;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -178,8 +178,8 @@ TEST(TestSetSourceContentParams, MoviesWithDirectoryNamesStopOneLevelDownWhenNot
 TEST(TestSetSourceContentParams, MoviesContainingASingleItemDoNotRecurse)
 {
   CVariant params = MovieParams();
-  params["usedirectorynames"] = true;
-  params["containssingleitem"] = true;
+  params["useDirectoryNames"] = true;
+  params["containsSingleItem"] = true;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -191,7 +191,7 @@ TEST(TestSetSourceContentParams, MoviesContainingASingleItemDoNotRecurse)
 TEST(TestSetSourceContentParams, MoviesIgnoreSingleItemWithoutDirectoryNames)
 {
   CVariant params = MovieParams();
-  params["containssingleitem"] = true;
+  params["containsSingleItem"] = true;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -203,8 +203,8 @@ TEST(TestSetSourceContentParams, MoviesIgnoreSingleItemWithoutDirectoryNames)
 TEST(TestSetSourceContentParams, MusicVideosMapAsMoviesDo)
 {
   CVariant params = MakeParams("smb://nas/MusicVideos/", "musicvideos", "metadata.local");
-  params["usedirectorynames"] = true;
-  params["scanrecursive"] = false;
+  params["useDirectoryNames"] = true;
+  params["scanRecursive"] = false;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -227,7 +227,7 @@ TEST(TestSetSourceContentParams, TvShowsNeverRecurse)
 TEST(TestSetSourceContentParams, TvShowsContainingASingleShowUseTheFolderName)
 {
   CVariant params = TvShowParams();
-  params["containssingleitem"] = true;
+  params["containsSingleItem"] = true;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -239,8 +239,8 @@ TEST(TestSetSourceContentParams, TvShowsContainingASingleShowUseTheFolderName)
 TEST(TestSetSourceContentParams, TvShowsIgnoreTheMovieOnlyFlags)
 {
   CVariant params = TvShowParams();
-  params["usedirectorynames"] = true;
-  params["scanrecursive"] = true;
+  params["useDirectoryNames"] = true;
+  params["scanRecursive"] = true;
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -261,7 +261,7 @@ TEST(TestSetSourceContentParams, ClearsWithoutExcludingByDefault)
 TEST(TestSetSourceContentParams, ExcludeClearModeExcludesThePath)
 {
   CVariant params = MakeParams("smb://nas/Movies/", "none");
-  params["clearmode"] = "exclude";
+  params["clearMode"] = "exclude";
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));
@@ -272,7 +272,7 @@ TEST(TestSetSourceContentParams, ExcludeClearModeExcludesThePath)
 TEST(TestSetSourceContentParams, RemoveClearModeDoesNotExcludeThePath)
 {
   CVariant params = MakeParams("smb://nas/Movies/", "none");
-  params["clearmode"] = "remove";
+  params["clearMode"] = "remove";
 
   ParsedSetSourceContent parsed;
   ASSERT_EQ(OK, ParseSetSourceContentParams(params, parsed));

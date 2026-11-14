@@ -12,7 +12,8 @@
 #include "URL.h"
 #include "application/AppParams.h"
 #include "filesystem/SpecialProtocol.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
+#include "language/i18n/LanguageTable.h"
 #include "network/DNSNameCache.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
@@ -22,7 +23,6 @@
 #include "settings/lib/Setting.h"
 #include "settings/lib/SettingsManager.h"
 #include "utils/FileUtils.h"
-#include "utils/LangCodeExpander.h"
 #include "utils/Set.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
@@ -35,12 +35,67 @@
 #include <climits>
 #include <regex>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using namespace ADDON;
 
 namespace
 {
+
+/*!
+ * \brief Take the languages declared in a <languagecodes> block into the language table.
+ * \param[in] element The block, or nullptr when the file has none.
+ */
+void LoadLanguageCodes(const TiXmlElement* element)
+{
+  if (element == nullptr)
+    return;
+
+  std::map<std::string, std::string> languages;
+  for (const TiXmlElement* code = element->FirstChildElement("code"); code != nullptr;
+       code = code->NextSiblingElement("code"))
+  {
+    const TiXmlNode* shortCode = code->FirstChildElement("short");
+    const TiXmlNode* longName = code->FirstChildElement("long");
+
+    if (shortCode != nullptr && shortCode->FirstChild() != nullptr && longName != nullptr &&
+        longName->FirstChild() != nullptr)
+    {
+      languages.emplace(shortCode->FirstChild()->Value(), longName->FirstChild()->Value());
+    }
+    else
+    {
+      CLog::Log(LOGWARNING, "<languagecodes>: a <code> needs both <short> and <long>, ignored");
+    }
+  }
+
+  KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Declare(languages);
+}
+
+/*!
+ * \brief Take the words a <sorttokens> block asks a sort to step over.
+ * \param[in] element The block, or nullptr when the file has none.
+ * \param[out] tokens The words, each stored once per separator it may be followed by.
+ */
+void LoadSortTokens(const TiXmlNode* element, KODI::LANGUAGE::CLanguage::Tokens& tokens)
+{
+  if (element == nullptr || element->NoChildren())
+    return;
+
+  for (const TiXmlElement* token = element->FirstChildElement("token"); token != nullptr;
+       token = token->NextSiblingElement())
+  {
+    if (token->FirstChild() == nullptr)
+      continue;
+
+    const char* separators = token->Attribute("separators");
+    KODI::LANGUAGE::CLanguage::AddSortToken(
+        tokens, token->FirstChild()->ValueStr(),
+        separators != nullptr ? std::string_view{separators}
+                              : KODI::LANGUAGE::CLanguage::DEFAULT_SORT_TOKEN_SEPARATORS);
+  }
+}
 
 bool ValidateVideoStackRegex(const CRegExp& regex)
 {
@@ -521,6 +576,7 @@ void CAdvancedSettings::Initialize()
 
   m_jsonOutputCompact = true;
   m_jsonTcpPort = 9090;
+  m_jsonAllowScreenshotDeletion = false;
 
   m_enableMultimediaKeys = false;
 
@@ -995,6 +1051,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
   {
     XMLUtils::GetBoolean(pElement, "compactoutput", m_jsonOutputCompact);
     XMLUtils::GetUInt(pElement, "tcpport", m_jsonTcpPort);
+    XMLUtils::GetBoolean(pElement, "allowscreenshotdeletion", m_jsonAllowScreenshotDeletion);
   }
 
   pElement = pRootElement->FirstChildElement("samba");
@@ -1114,8 +1171,9 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
   if (pExts)
     GetCustomExtensions(pExts, m_discStubExtensions);
 
-  m_vecTokens.clear();
-  CLangInfo::LoadTokens(pRootElement->FirstChild("sorttokens"), m_vecTokens);
+  KODI::LANGUAGE::CLanguage::Tokens sortTokens;
+  LoadSortTokens(pRootElement->FirstChild("sorttokens"), sortTokens);
+  KODI::LANGUAGE::CLanguage::GetInstance().DeclareSortTokens(std::move(sortTokens));
 
   //! @todo Should cache path be given in terms of our predefined paths??
   //! Are we even going to have predefined paths??
@@ -1124,7 +1182,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
     m_cachePath = tmp;
   URIUtils::AddSlashAtEnd(m_cachePath);
 
-  CLangCodeExpander::LoadUserCodes(pRootElement->FirstChildElement("languagecodes"));
+  LoadLanguageCodes(pRootElement->FirstChildElement("languagecodes"));
 
   // trailer matching regexps
   const TiXmlElement* pTrailerMatching = pRootElement->FirstChildElement("trailermatching");
@@ -1535,17 +1593,21 @@ void CAdvancedSettings::SetDebugMode(bool debug)
   if (debug)
   {
     int level = std::max(m_logLevelHint, LOG_LEVEL_DEBUG_FREEMEM);
-    m_logLevel = level;
-    CServiceBroker::GetLogging().SetLogLevel(level);
+    SetLogLevel(level);
     CLog::Log(LOGINFO, "Enabled debug logging due to GUI setting. Level {}.", level);
   }
   else
   {
     int level = std::min(m_logLevelHint, LOG_LEVEL_DEBUG/*LOG_LEVEL_NORMAL*/);
     CLog::Log(LOGINFO, "Disabled debug logging due to GUI setting. Level {}.", level);
-    m_logLevel = level;
-    CServiceBroker::GetLogging().SetLogLevel(level);
+    SetLogLevel(level);
   }
+}
+
+void CAdvancedSettings::SetLogLevel(int level)
+{
+  m_logLevel = level;
+  CServiceBroker::GetLogging().SetLogLevel(level);
 }
 
 void CAdvancedSettings::SetExtraArtwork(const TiXmlElement* arttypes,

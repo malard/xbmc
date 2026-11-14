@@ -251,19 +251,19 @@ bool CTextureDatabase::GetTextures(CVariant &items, const Filter &filter)
     while (!m_pDS->eof())
     {
       CVariant texture;
-      texture["textureid"] = m_pDS->fv(0).get_asInt();
+      texture["textureId"] = m_pDS->fv(0).get_asInt();
       texture["url"] = m_pDS->fv(1).get_asString();
-      texture["cachedurl"] = m_pDS->fv(2).get_asString();
-      texture["imagehash"] = m_pDS->fv(3).get_asString();
-      texture["lasthashcheck"] = m_pDS->fv(4).get_asString();
-      texture["lastlibrarycheck"] = m_pDS->fv(5).get_asString();
+      texture["cachedUrl"] = m_pDS->fv(2).get_asString();
+      texture["imageHash"] = m_pDS->fv(3).get_asString();
+      texture["lastHashCheck"] = m_pDS->fv(4).get_asString();
+      texture["lastLibraryCheck"] = m_pDS->fv(5).get_asString();
       CVariant size(CVariant::VariantTypeObject);
       // 6 is sizes.idtexture
       size["size"] = m_pDS->fv(7).get_asInt();
       size["width"] = m_pDS->fv(8).get_asInt();
       size["height"] = m_pDS->fv(9).get_asInt();
-      size["usecount"] = m_pDS->fv(10).get_asInt();
-      size["lastused"] = m_pDS->fv(11).get_asString();
+      size["useCount"] = m_pDS->fv(10).get_asInt();
+      size["lastUsed"] = m_pDS->fv(11).get_asString();
       texture["sizes"] = CVariant(CVariant::VariantTypeArray);
       texture["sizes"].push_back(size);
       items.push_back(texture);

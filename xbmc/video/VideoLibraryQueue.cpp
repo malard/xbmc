@@ -23,6 +23,7 @@
 #include "video/jobs/VideoLibraryScanningJob.h"
 
 #include <algorithm>
+#include <cstring>
 #include <mutex>
 #include <ranges>
 #include <utility>
