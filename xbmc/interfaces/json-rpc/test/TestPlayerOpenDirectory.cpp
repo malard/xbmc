@@ -14,6 +14,7 @@
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/json-rpc/PlayerOperations.h"
+#include "playlists/PlayListFileItemClassify.h"
 #include "utils/URIUtils.h"
 
 #include <memory>
@@ -118,6 +119,19 @@ TEST_F(TestPlayerOpenDirectory, AnArchiveIsNeitherAPictureNorMedia)
 
   EXPECT_EQ(0, pictures.Size());
   EXPECT_EQ((std::vector<std::string>{"movie.mkv"}), Names(media));
+}
+
+TEST_F(TestPlayerOpenDirectory, AFileThatCouldBeAudioOrVideoAsksForTheVideoPlayer)
+{
+  Touch("recording.wtv");
+  Touch("film.mkv");
+
+  CFileItemList pictures;
+  CFileItemList media;
+  ASSERT_TRUE(CTestPlayerOperations::List(m_root, true, pictures, media));
+
+  ASSERT_EQ((std::vector<std::string>{"film.mkv", "recording.wtv"}), Names(media));
+  EXPECT_EQ(KODI::PLAYLIST::Video, KODI::PLAYLIST::TypeFor(*media[1]));
 }
 
 TEST_F(TestPlayerOpenDirectory, SubdirectoriesAreOnlyFollowedWhenAsked)

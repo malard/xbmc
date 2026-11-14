@@ -386,7 +386,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeOwnScreenshotSync(
   if (dir.empty())
   {
     CLog::Log(LOGWARNING, "No screenshot path configured");
-    return {ScreenshotError::NO_FOLDER, {}, {}};
+    return {ScreenshotError::NO_FOLDER};
   }
 
   auto pending = std::make_shared<PendingScreenshot>();
@@ -394,14 +394,14 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeOwnScreenshotSync(
   {
     pending->composite = TargetScreenshotFile(dir, target);
     if (pending->composite.empty())
-      return {ScreenshotError::BAD_TARGET, {}, {}};
+      return {ScreenshotError::BAD_TARGET};
   }
 
   const auto captureService = CServiceBroker::GetCaptureService();
   if (!captureService)
   {
     CLog::Log(LOGERROR, "Screenshot failed: no capture service");
-    return {ScreenshotError::FAILED, {}, {}};
+    return {ScreenshotError::FAILED};
   }
 
   CaptureSpec spec;
@@ -507,7 +507,7 @@ CScreenShot::ScreenshotFiles CScreenShot::TakeOwnScreenshotSync(
         XFILE::CFile::Delete(staged);
     }
     CLog::Log(LOGERROR, "Screenshot did not complete");
-    return {ScreenshotError::FAILED, {}, {}};
+    return {ScreenshotError::FAILED};
   }
 
   // answered as special://screenshots so the caller holds a path that survives

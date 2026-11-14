@@ -46,9 +46,9 @@ public:
   {
     ScreenshotError error{ScreenshotError::NONE};
     //! the full display output; empty when only the video frame was asked for
-    std::string composite;
+    std::string composite{};
     //! the video frame alone; empty when only the composite was asked for
-    std::string video;
+    std::string video{};
   };
 
   //! \brief Screenshot of the given content, written before this returns; an unset folder is

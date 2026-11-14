@@ -1243,7 +1243,7 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
 
       if (playername != "default")
       {
-        const CPlayerCoreFactory &playerCoreFactory = CServiceBroker::GetPlayerCoreFactory();
+        const CPlayerCoreFactory& playerCoreFactory = CServiceBroker::GetPlayerCoreFactory();
 
         // check if the there's actually a player with the given name
         if (playerCoreFactory.GetPlayerType(playername).empty())

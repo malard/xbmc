@@ -81,9 +81,16 @@ namespace JSONRPC
     static JSONRPC_STATUS GetChapters(const CVariant& parameterObject, CVariant& result);
 
 protected:
-  //! Lists a directory as a slideshow would: pictures apart from the playable media, which stays
-  //! in file order. \p visitedPaths holds the directories already listed, or is nullptr to start
-  //! a new listing.
+  /*!
+   \brief List a directory the way a slideshow of it would, split into the pictures and the
+          playable media (video and audio) it holds
+   \param path The directory
+   \param recursive Whether to descend into subdirectories
+   \param pictures Receives the picture files
+   \param media Receives the video and audio files, in file order
+   \param visitedPaths The directories already listed, or nullptr to start a new listing
+   \return false if the directory could not be listed
+   */
   static bool ListSlideshowDirectory(const std::string& path,
                                      bool recursive,
                                      CFileItemList& pictures,
