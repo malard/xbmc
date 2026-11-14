@@ -292,7 +292,7 @@ private:
   std::vector<PlayListEntry> m_entries;
   EntryId m_lastId{NO_ENTRY};
   EntryId m_current{NO_ENTRY};
-  Wrap m_wrap{Wrap::None};
+  Wrap m_wrap{Wrap::Off};
   bool m_repeatCurrent{false};
   std::string m_sourcePath;
   std::shared_ptr<IFeed> m_feed;

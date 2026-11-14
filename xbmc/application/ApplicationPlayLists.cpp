@@ -300,7 +300,7 @@ bool CApplicationPlayLists::IsSingleItemNonRepeatPlaylist() const
 
   const CPlayList& playList = GetPlayList(*type);
   return IsPlayingChannel() ||
-         (playList.Size() <= 1 && !playList.IsRepeatCurrent() && playList.GetWrap() == Wrap::None);
+         (playList.Size() <= 1 && !playList.IsRepeatCurrent() && playList.GetWrap() == Wrap::Off);
 }
 
 bool CApplicationPlayLists::IsPlayingChannel() const
@@ -1077,7 +1077,7 @@ void CApplicationPlayLists::SetRepeat(Type type, Repeat repeat, Persist persist)
   CPlayList& playList = EditPlayList(type);
   m_composingRepeat = true;
   playList.SetRepeatCurrent(repeat == Repeat::One);
-  playList.SetWrap(repeat == Repeat::All ? Wrap::ToStart : Wrap::None);
+  playList.SetWrap(repeat == Repeat::All ? Wrap::ToStart : Wrap::Off);
   m_composingRepeat = false;
   if (ReportRepeat(type))
     ReportPlayListsChanged();
