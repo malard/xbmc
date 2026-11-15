@@ -50,7 +50,7 @@ public:
     FollowUI, //!< whichever language the interface is in
     MediaDefault, //!< whatever the media itself presents first - audio only
     Original, //!< the track carrying the work's original language
-    None, //!< nothing at all - subtitles only
+    Off, //!< nothing at all - subtitles only; not None, which X11 defines as a macro
     ForcedOnly, //!< only tracks marked forced - subtitles only
   };
 

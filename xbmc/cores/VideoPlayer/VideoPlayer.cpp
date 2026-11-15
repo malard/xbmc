@@ -137,7 +137,7 @@ public:
     // None, original and forced only name no language, so they are asked of the preference
     const CLanguagePreference& preference{CLanguage::GetInstance().SubtitlePreference()};
 
-    m_isSubNone = preference.Is(CLanguagePreference::Kind::None);
+    m_isSubNone = preference.Is(CLanguagePreference::Kind::Off);
     m_isPrefOriginal = preference.Is(CLanguagePreference::Kind::Original);
     m_isPrefForced = preference.Is(CLanguagePreference::Kind::ForcedOnly);
     m_isPrefHearingImp = settings->GetBool(CSettings::SETTING_ACCESSIBILITY_SUBHEARING);

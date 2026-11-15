@@ -405,7 +405,7 @@ void CGUIDialogSubtitles::Search(const std::string &search/*=""*/)
       break;
     }
 
-    case KODI::LANGUAGE::CLanguagePreference::Kind::None:
+    case KODI::LANGUAGE::CLanguagePreference::Kind::Off:
     case KODI::LANGUAGE::CLanguagePreference::Kind::ForcedOnly:
     case KODI::LANGUAGE::CLanguagePreference::Kind::MediaDefault:
       // Answered by a stream flag, or by wanting no subtitles at all. There is no language for a

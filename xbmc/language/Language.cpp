@@ -106,7 +106,7 @@ std::optional<CLanguagePreference> CLanguagePreference::ForAudio(const std::stri
 std::optional<CLanguagePreference> CLanguagePreference::ForSubtitles(const std::string& setting)
 {
   if (Names(setting, subtitleLanguageSettingNone))
-    return CLanguagePreference{Kind::None, {}};
+    return CLanguagePreference{Kind::Off, {}};
 
   if (Names(setting, subtitleLanguageSettingForcedOnly))
     return CLanguagePreference{Kind::ForcedOnly, {}};
