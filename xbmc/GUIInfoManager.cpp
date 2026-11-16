@@ -4105,7 +4105,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     @return The language of the audio of the currently playing video(possible
 ///     values: see \ref ListItem_AudioLanguage "ListItem.AudioLanguage").
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link VideoPlayer_AudioLanguage `VideoPlayer.AudioLanguage`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link VideoPlayer_AudioLanguage `VideoPlayer.AudioLanguage`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v13 **[New Infolabel]** \link VideoPlayer_AudioLanguage `VideoPlayer.AudioLanguage`\endlink
 ///     <p>
@@ -4134,7 +4134,7 @@ constexpr std::array<InfoMap, 46> musicplayer = {{
 ///     @note `VideoPlayer.SubtitlesLanguage` holds the language of the next available
 ///     subtitle stream if subtitles are disabled in the player
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link VideoPlayer_SubtitlesLanguage `VideoPlayer.SubtitlesLanguage`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link VideoPlayer_SubtitlesLanguage `VideoPlayer.SubtitlesLanguage`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v13 **[New Infolabel]** \link VideoPlayer_SubtitlesLanguage `VideoPlayer.SubtitlesLanguage`\endlink
 ///     <p>
@@ -7073,7 +7073,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The audio language of the currently selected video (a BCP 47 language tag:
 ///     e.g. en\, en-GB\, pt-BR)
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link ListItem_AudioLanguage `ListItem.AudioLanguage`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link ListItem_AudioLanguage `ListItem.AudioLanguage`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     <p>
 ///   }
@@ -7083,7 +7083,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The subtitle language of the currently selected video (a BCP 47 language tag:
 ///     e.g. en\, en-GB\, pt-BR)
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link ListItem_SubtitleLanguage `ListItem.SubtitleLanguage`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link ListItem_SubtitleLanguage `ListItem.SubtitleLanguage`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     <p>
 ///   }
@@ -7172,7 +7172,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The audio language of the currently selected video
 ///     @param n - the number of the audiostream (values: see \ref ListItem_AudioLanguage "ListItem.AudioLanguage")
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link ListItem_Property_AudioLanguage `ListItem.Property(AudioLanguage.[n])`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link ListItem_Property_AudioLanguage `ListItem.Property(AudioLanguage.[n])`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v16 **[New Infolabel]** \link ListItem_Property_AudioLanguage `ListItem.Property(AudioLanguage.[n])`\endlink
 ///     <p>
@@ -7183,7 +7183,7 @@ constexpr std::array<InfoMap, 3> container_str = {{
 ///     @return The subtitle language of the currently selected video
 ///     @param n - the number of the subtitle (values: see \ref ListItem_SubtitleLanguage "ListItem.SubtitleLanguage")
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link ListItem_Property_SubtitleLanguage `ListItem.Property(SubtitleLanguage.[n])`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link ListItem_Property_SubtitleLanguage `ListItem.Property(SubtitleLanguage.[n])`\endlink
 ///     now the language tag itself\, where it was an ISO 639-2 three character code
 ///     @skinning_v16 **[New Infolabel]** \link ListItem_Property_SubtitleLanguage `ListItem.Property(SubtitleLanguage.[n])`\endlink
 ///     <p>
@@ -9862,7 +9862,7 @@ constexpr std::array<InfoMap, 12> pvr_times = {{
 ///     @note A broadcaster sends an index into the language table EBU Tech 3244 Annex J
 ///     defines\, never text\, so an index the standard reserves is reported as und.
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
 ///     now the language tag itself\, where it was whatever the RDS table held
 ///     @skinning_v16 **[New Infolabel]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
 ///     <p>
@@ -9875,7 +9875,7 @@ constexpr std::array<InfoMap, 12> pvr_times = {{
 ///     @note A broadcaster sends a country as an index into the tables EBU Tech 3244
 ///     Annex D defines\, never text\, so an index the standard reserves is empty.
 ///     <p><hr>
-///     @skinning_v22 **[Infolabel Updated]** \link RDS_ChannelCountry `RDS.ChannelCountry`\endlink
+///     @skinning_v23 **[Infolabel Updated]** \link RDS_ChannelCountry `RDS.ChannelCountry`\endlink
 ///     empty where the table names no place\, where it was the raw table cell
 ///     @skinning_v16 **[New Infolabel]** \link RDS_ChannelCountry `RDS.ChannelCountry`\endlink
 ///     <p>
