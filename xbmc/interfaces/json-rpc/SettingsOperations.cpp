@@ -102,7 +102,7 @@ JSONRPC_STATUS CSettingsOperations::SetLevel(const CVariant& parameterObject, CV
   return OK;
 }
 
-JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant& parameterObject, CVariant& result)
 {
   SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   bool listCategories = !parameterObject["properties"].empty() && parameterObject["properties"][0].asString() == "categories";
@@ -142,7 +142,7 @@ JSONRPC_STATUS CSettingsOperations::GetSections(const CVariant &parameterObject,
   return OK;
 }
 
-JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant& parameterObject, CVariant& result)
 {
   SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   std::string strSection = parameterObject["section"].asString();
@@ -209,7 +209,7 @@ JSONRPC_STATUS CSettingsOperations::GetCategories(const CVariant &parameterObjec
   return OK;
 }
 
-JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant& parameterObject, CVariant& result)
 {
   SettingLevel level = SettingLevelFromString(parameterObject["level"].asString());
   const CVariant &filter = parameterObject["filter"];
@@ -276,7 +276,8 @@ JSONRPC_STATUS CSettingsOperations::GetSettings(const CVariant &parameterObject,
   return OK;
 }
 
-JSONRPC_STATUS CSettingsOperations::GetSettingValue(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSettingsOperations::GetSettingValue(const CVariant& parameterObject,
+                                                    CVariant& result)
 {
   const std::string settingId = parameterObject["setting"].asString();
 
@@ -442,7 +443,8 @@ JSONRPC_STATUS CSettingsOperations::SetSettingValue(const CVariant &parameterObj
   return OK;
 }
 
-JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSettingsOperations::ResetSettingValue(const CVariant& parameterObject,
+                                                      CVariant& result)
 {
   SettingPtr setting;
   if (const JSONRPC_STATUS status = FindEnabledSetting(parameterObject, result, setting);

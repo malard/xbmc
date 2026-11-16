@@ -44,39 +44,39 @@ namespace JSONRPC
   class CPlayerOperations : CFileItemHandler
   {
   public:
-    static JSONRPC_STATUS GetPlayers(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetProperties(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetPlayers(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetItem(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetProperties(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS VolumeUp(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS VolumeDown(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS PlayPause(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Stop(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS PlayPause(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Stop(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetAudioDelay(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS SetAudioDelay(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS NotifyAudioChainReady(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS SetSpeed(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS SetSpeed(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS SetTempo(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS Seek(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Seek(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Move(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Zoom(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetViewMode(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Move(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Zoom(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetViewMode(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetViewMode(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS SetGeometry(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetGeometry(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS GetDeclaredAspectRatio(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Rotate(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Rotate(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Open(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GoTo(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetPartymode(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Open(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GoTo(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetPartymode(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS SetAudioStream(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS AddSubtitle(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetSubtitle(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetVideoStream(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS SetAudioStream(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS AddSubtitle(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetSubtitle(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetVideoStream(const CVariant& parameterObject, CVariant& result);
 
     static JSONRPC_STATUS GetChapters(const CVariant& parameterObject, CVariant& result);
 

@@ -127,14 +127,17 @@ void CJSONRPC::Cleanup()
   m_initialized = false;
 }
 
-JSONRPC_STATUS CJSONRPC::Introspect(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::Introspect(ITransportLayer* transport,
+                                    IClient* client,
+                                    const CVariant& parameterObject,
+                                    CVariant& result)
 {
   return CJSONServiceDescription::Print(result, transport, client,
     parameterObject["getDescriptions"].asBoolean(), parameterObject["getMetadata"].asBoolean(), parameterObject["filterByTransport"].asBoolean(),
     parameterObject["filter"]["id"].asString(), parameterObject["filter"]["type"].asString(), parameterObject["filter"]["getReferences"].asBoolean());
 }
 
-JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant& result)
 {
   result["version"]["major"] = 0;
   result["version"]["minor"] = 0;
@@ -155,7 +158,10 @@ JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant &resu
   return OK;
 }
 
-JSONRPC_STATUS CJSONRPC::Permission(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::Permission(ITransportLayer* transport,
+                                    IClient* client,
+                                    const CVariant& parameterObject,
+                                    CVariant& result)
 {
   int flags = client->GetPermissionFlags();
 
@@ -165,14 +171,17 @@ JSONRPC_STATUS CJSONRPC::Permission(ITransportLayer *transport, IClient *client,
   return OK;
 }
 
-JSONRPC_STATUS CJSONRPC::Ping(const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::Ping(const CVariant& parameterObject, CVariant& result)
 {
   CVariant temp = "pong";
   result.swap(temp);
   return OK;
 }
 
-JSONRPC_STATUS CJSONRPC::GetConfiguration(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::GetConfiguration(ITransportLayer* transport,
+                                          IClient* client,
+                                          const CVariant& parameterObject,
+                                          CVariant& result)
 {
   int flags = client->GetAnnouncementFlags();
 
@@ -182,7 +191,10 @@ JSONRPC_STATUS CJSONRPC::GetConfiguration(ITransportLayer *transport, IClient *c
   return OK;
 }
 
-JSONRPC_STATUS CJSONRPC::SetConfiguration(ITransportLayer *transport, IClient *client, const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::SetConfiguration(ITransportLayer* transport,
+                                          IClient* client,
+                                          const CVariant& parameterObject,
+                                          CVariant& result)
 {
   int flags = 0;
   const int oldFlags = client->GetAnnouncementFlags();
@@ -208,7 +220,7 @@ JSONRPC_STATUS CJSONRPC::SetConfiguration(ITransportLayer *transport, IClient *c
   return GetConfiguration(transport, client, parameterObject, result);
 }
 
-JSONRPC_STATUS CJSONRPC::NotifyAll(const CVariant& parameterObject, CVariant &result)
+JSONRPC_STATUS CJSONRPC::NotifyAll(const CVariant& parameterObject, CVariant& result)
 {
   CServiceBroker::GetAnnouncementManager()->Announce(
       ANNOUNCEMENT::OtherEvent{parameterObject["sender"].asString(),

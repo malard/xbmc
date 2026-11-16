@@ -109,7 +109,7 @@ JSONRPC_STATUS CFileOperations::GetSources(const CVariant &parameterObject, CVar
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -207,7 +207,7 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant &parameterObject, CV
               Target("directory", parameterObject["directory"]));
 }
 
-JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   const std::string file = parameterObject["file"].asString();
   if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
@@ -255,7 +255,7 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant &parameterObject, 
   return OK;
 }
 
-JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -303,7 +303,10 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant &parameterObject, 
   return ACK;
 }
 
-JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
+                                                IClient* client,
+                                                const CVariant& parameterObject,
+                                                CVariant& result)
 {
   std::string protocol;
   if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))

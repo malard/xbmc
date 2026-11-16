@@ -472,6 +472,12 @@ TEST_F(TestJSONServiceDescription, SchemaWithAMalformedTypeStillFailsParse)
   EXPECT_FALSE(AddTestMethod("Test.BadType", R"([ { "name": "data", "schema": { "type": 5 } } ])"));
 }
 
+TEST_F(TestJSONServiceDescription, AnAllOfMemberThatIsNotAReferenceFailsParse)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddType(
+      R"({"Bad.Compose": { "allOf": [ { "type": "object" } ] }})"));
+}
+
 TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
 {
   ASSERT_TRUE(CJSONServiceDescription::AddType(
@@ -566,12 +572,14 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
   for (const bool descriptions : {true, false})
   {
     SCOPED_TRACE(descriptions ? "with descriptions" : "without descriptions");
-    const CVariant properties{Introspect("", descriptions)["types"]["Dep.Thing"]["properties"]};
+    const CVariant types{Introspect("", descriptions)["types"]};
+    const CVariant& properties{types["Dep.Thing"]["properties"]};
 
     ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
     EXPECT_EQ(descriptions, properties["old"].isMember("description"));
     EXPECT_FALSE(properties["new"].isMember("deprecated"));
     ExpectVariantEq(CVariant(true), properties["oldReference"]["deprecated"]);
     EXPECT_FALSE(properties["newReference"].isMember("deprecated"));
+    EXPECT_FALSE(types["Dep.Target"].isMember("deprecated"));
   }
 }

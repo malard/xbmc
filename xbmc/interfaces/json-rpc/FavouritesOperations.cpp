@@ -22,7 +22,8 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObject,
+                                                    CVariant& result)
 {
   CFileItemList favourites;
   CServiceBroker::GetFavouritesService().GetAll(favourites);
@@ -88,7 +89,8 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant &parameterObj
   return OK;
 }
 
-JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObject,
+                                                   CVariant& result)
 {
   std::string type = parameterObject["type"].asString();
 

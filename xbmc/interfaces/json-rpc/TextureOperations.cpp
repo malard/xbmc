@@ -20,7 +20,7 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, CVariant& result)
 {
   CFileItemList listItems;
 
@@ -88,7 +88,7 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant &parameterObject, 
   return OK;
 }
 
-JSONRPC_STATUS CTextureOperations::RemoveTexture(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CTextureOperations::RemoveTexture(const CVariant& parameterObject, CVariant& result)
 {
   int id = static_cast<int>(parameterObject["textureId"].asInteger());
 

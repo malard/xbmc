@@ -1187,8 +1187,7 @@ NPT_Result CUPnPServer::OnSearchContainer(PLT_ActionReference& action,
   {
     return OnBrowseDirectChildren(action,
                                   CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC).c_str(),
-                                  filter, starting_index,
-                                  requested_count, sort_criteria, context);
+                                  filter, starting_index, requested_count, sort_criteria, context);
   }
   else if (searchClass.Find("object.container.album.videoAlbum.videoBroadcastShow") >= 0)
   {

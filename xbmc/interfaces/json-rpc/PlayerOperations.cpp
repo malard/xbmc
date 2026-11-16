@@ -198,7 +198,7 @@ void OverlayCurrentSongTag(CFileItem& item)
 
 } // namespace
 
-JSONRPC_STATUS CPlayerOperations::GetPlayers(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::GetPlayers(const CVariant& parameterObject, CVariant& result)
 {
   const CPlayerCoreFactory &playerCoreFactory = CServiceBroker::GetPlayerCoreFactory();
 
@@ -253,7 +253,7 @@ JSONRPC_STATUS CPlayerOperations::GetProperties(const CVariant& parameterObject,
   return GetNamedProperties(parameterObject, result, getValue);
 }
 
-JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVariant& result)
 {
   PlayerType player = GetTarget(parameterObject["playlist"]);
   CFileItemPtr fileItem;
@@ -463,7 +463,7 @@ JSONRPC_STATUS CPlayerOperations::PlayPause(const CVariant& parameterObject, CVa
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::Stop(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::Stop(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
       parameterObject, result,
@@ -567,7 +567,7 @@ JSONRPC_STATUS CPlayerOperations::SetAudioDelay(const CVariant& parameterObject,
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetSpeed(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
@@ -696,7 +696,7 @@ JSONRPC_STATUS PlayRecording(const std::shared_ptr<CPVRRecording>& recording,
 }
 } // unnamed namespace
 
-JSONRPC_STATUS CPlayerOperations::Seek(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::Seek(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
       parameterObject, result,
@@ -751,7 +751,7 @@ JSONRPC_STATUS CPlayerOperations::Seek(const CVariant &parameterObject, CVariant
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::Move(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::Move(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(
       parameterObject, result,
@@ -796,7 +796,7 @@ JSONRPC_STATUS CPlayerOperations::Move(const CVariant &parameterObject, CVariant
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
@@ -885,7 +885,7 @@ void GetNewValueForViewModeParameter(const CVariant &parameter, float stepSize, 
   result = std::max(minValue, std::min(result, maxValue));
 }
 
-JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant& parameterObject, CVariant& result)
 {
   JSONRPC_STATUS jsonStatus = InvalidParams;
   // init with current values from settings
@@ -1045,7 +1045,7 @@ JSONRPC_STATUS CPlayerOperations::Rotate(const CVariant& parameterObject, CVaria
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::Open(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant& result)
 {
   auto& pvrManager{CServiceBroker::GetPVRManager()};
   CVariant options = parameterObject["options"];
@@ -1341,7 +1341,7 @@ bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,
   return true;
 }
 
-JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant& result)
 {
   const auto appMessenger{CServiceBroker::GetAppMessenger()};
   return ForEachOnList(
@@ -1418,7 +1418,7 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant &parameterObject, CVariant
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachOnList(parameterObject, result,
       [&](PlayerType player)-> JSONRPC_STATUS
@@ -1454,7 +1454,7 @@ JSONRPC_STATUS CPlayerOperations::SetPartymode(const CVariant &parameterObject, 
       });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
@@ -1491,7 +1491,7 @@ JSONRPC_STATUS CPlayerOperations::SetAudioStream(const CVariant &parameterObject
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
@@ -1510,7 +1510,7 @@ JSONRPC_STATUS CPlayerOperations::AddSubtitle(const CVariant &parameterObject, C
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS
@@ -1560,7 +1560,7 @@ JSONRPC_STATUS CPlayerOperations::SetSubtitle(const CVariant &parameterObject, C
                        });
 }
 
-JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlayerOperations::SetVideoStream(const CVariant& parameterObject, CVariant& result)
 {
   return ForEachTarget(parameterObject, result,
                        [&](PlayerType player) -> JSONRPC_STATUS

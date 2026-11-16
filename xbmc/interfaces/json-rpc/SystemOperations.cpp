@@ -17,7 +17,10 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CSystemOperations::GetProperties(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSystemOperations::GetProperties(ITransportLayer* transport,
+                                                IClient* client,
+                                                const CVariant& parameterObject,
+                                                CVariant& result)
 {
   return GetNamedProperties(
       parameterObject, result, [client](const std::string& property, CVariant& value)
@@ -30,7 +33,7 @@ JSONRPC_STATUS CSystemOperations::EjectOpticalDrive(const CVariant &parameterObj
   return CBuiltins::GetInstance().Execute("EjectTray") == 0 ? ACK : FailedToExecute;
 }
 
-JSONRPC_STATUS CSystemOperations::Shutdown(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSystemOperations::Shutdown(const CVariant& parameterObject, CVariant& result)
 {
   if (CServiceBroker::GetPowerManager().CanPowerdown())
   {
@@ -41,7 +44,7 @@ JSONRPC_STATUS CSystemOperations::Shutdown(const CVariant &parameterObject, CVar
     return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
-JSONRPC_STATUS CSystemOperations::Suspend(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSystemOperations::Suspend(const CVariant& parameterObject, CVariant& result)
 {
   if (CServiceBroker::GetPowerManager().CanSuspend())
   {
@@ -52,7 +55,7 @@ JSONRPC_STATUS CSystemOperations::Suspend(const CVariant &parameterObject, CVari
     return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
-JSONRPC_STATUS CSystemOperations::Hibernate(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSystemOperations::Hibernate(const CVariant& parameterObject, CVariant& result)
 {
   if (CServiceBroker::GetPowerManager().CanHibernate())
   {
@@ -63,7 +66,7 @@ JSONRPC_STATUS CSystemOperations::Hibernate(const CVariant &parameterObject, CVa
     return Fail(result, FailedToExecute, Reason::NotSupported);
 }
 
-JSONRPC_STATUS CSystemOperations::Reboot(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CSystemOperations::Reboot(const CVariant& parameterObject, CVariant& result)
 {
   if (CServiceBroker::GetPowerManager().CanReboot())
   {

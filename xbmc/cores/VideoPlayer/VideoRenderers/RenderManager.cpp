@@ -190,6 +190,7 @@ bool CRenderManager::Configure()
     CLog::Log(LOGDEBUG, "CRenderManager::Configure - renderer kept for the new picture size");
   else if (m_pRenderer)
   {
+    m_pRenderer->PrepareForReconfigure();
     DeleteRenderer();
   }
 

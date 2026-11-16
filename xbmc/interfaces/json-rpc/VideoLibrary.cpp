@@ -576,7 +576,7 @@ std::optional<std::pair<VideoDbContentType, std::string>> FacetListing(KODI::MED
 }
 } // unnamed namespace
 
-JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)
 {
   const auto listing{
       FacetListing(MediaTypeFromName(parameterObject["type"].asString()), Facet::GENRES)};
@@ -600,7 +600,7 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant &parameterObject, CVarian
   return OK;
 }
 
-JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant& result)
 {
   const auto listing{
       FacetListing(MediaTypeFromName(parameterObject["type"].asString()), Facet::TAGS)};
@@ -850,27 +850,27 @@ JSONRPC_STATUS CVideoLibrary::RefreshContentGeometry(const CVariant& parameterOb
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::RemoveMovie(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RemoveMovie(const CVariant& parameterObject, CVariant& result)
 {
   return RemoveVideo(parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RemoveTVShow(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RemoveTVShow(const CVariant& parameterObject, CVariant& result)
 {
   return RemoveVideo(parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RemoveEpisode(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RemoveEpisode(const CVariant& parameterObject, CVariant& result)
 {
   return RemoveVideo(parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::RemoveMusicVideo(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::RemoveMusicVideo(const CVariant& parameterObject, CVariant& result)
 {
   return RemoveVideo(parameterObject);
 }
 
-JSONRPC_STATUS CVideoLibrary::Scan(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::Scan(const CVariant& parameterObject, CVariant& result)
 {
   std::string directory = parameterObject["directory"].asString();
   if (!directory.empty())
@@ -950,7 +950,7 @@ JSONRPC_STATUS CVideoLibrary::SetSourceContent(const CVariant& parameterObject, 
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::Export(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::Export(const CVariant& parameterObject, CVariant& result)
 {
   std::string cmd;
   if (parameterObject["options"].isMember("path"))
@@ -975,7 +975,7 @@ JSONRPC_STATUS CVideoLibrary::Export(const CVariant &parameterObject, CVariant &
   return ACK;
 }
 
-JSONRPC_STATUS CVideoLibrary::Clean(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CVideoLibrary::Clean(const CVariant& parameterObject, CVariant& result)
 {
   std::string directory = parameterObject["directory"].asString();
   if (!directory.empty())

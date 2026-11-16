@@ -60,12 +60,12 @@ CGUIWindowScreenAlignment* GetScreenAlignmentWindow()
 }
 } // namespace
 
-JSONRPC_STATUS CGUIOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
 
-JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant& parameterObject, CVariant& result)
 {
   int iWindow = CWindowTranslator::TranslateWindow(parameterObject["window"].asString());
   if (iWindow != WINDOW_INVALID)
@@ -85,7 +85,7 @@ JSONRPC_STATUS CGUIOperations::ActivateWindow(const CVariant &parameterObject, C
   return InvalidParams;
 }
 
-JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant& parameterObject, CVariant& result)
 {
   std::string image = parameterObject["image"].asString();
   std::string title = parameterObject["title"].asString();
@@ -105,7 +105,7 @@ JSONRPC_STATUS CGUIOperations::ShowNotification(const CVariant &parameterObject,
   return ACK;
 }
 
-JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant& parameterObject, CVariant& result)
 {
   if ((parameterObject["fullscreen"].isString() &&
        parameterObject["fullscreen"].asString().compare("toggle") == 0) ||
@@ -122,7 +122,8 @@ JSONRPC_STATUS CGUIOperations::SetFullscreen(const CVariant &parameterObject, CV
   return GetPropertyValue("fullscreen", result);
 }
 
-JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant& parameterObject,
+                                                   CVariant& result)
 {
   CAction action = CStereoscopicsManager::ConvertActionCommandToAction("SetStereoMode", parameterObject["mode"].asString());
   if (action.GetID() != ACTION_NONE)
@@ -136,7 +137,8 @@ JSONRPC_STATUS CGUIOperations::SetStereoscopicMode(const CVariant &parameterObje
   return InvalidParams;
 }
 
-JSONRPC_STATUS CGUIOperations::GetStereoscopicModes(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CGUIOperations::GetStereoscopicModes(const CVariant& parameterObject,
+                                                    CVariant& result)
 {
   for (int i = static_cast<int>(RenderStereoMode::OFF);
        i < static_cast<int>(RenderStereoMode::COUNT); i++)

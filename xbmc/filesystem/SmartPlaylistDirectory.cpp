@@ -332,13 +332,13 @@ namespace XFILE
     CFileItemList list;
     bool filesExist = false;
     if (PLAYLIST::CSmartPlaylist::IsMusicType(playlistType))
-      filesExist = CDirectory::GetDirectory(
-          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), list, ".xsp",
-          DIR_FLAG_DEFAULTS);
+      filesExist =
+          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), list,
+                                   ".xsp", DIR_FLAG_DEFAULTS);
     else // all others are video
-      filesExist = CDirectory::GetDirectory(
-          CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), list, ".xsp",
-          DIR_FLAG_DEFAULTS);
+      filesExist =
+          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), list,
+                                   ".xsp", DIR_FLAG_DEFAULTS);
     if (filesExist)
     {
       for (int i = 0; i < list.Size(); i++)

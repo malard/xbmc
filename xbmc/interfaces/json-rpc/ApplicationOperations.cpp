@@ -26,7 +26,8 @@
 
 using namespace JSONRPC;
 
-JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CApplicationOperations::GetProperties(const CVariant& parameterObject,
+                                                     CVariant& result)
 {
   return GetNamedProperties(parameterObject, result, GetPropertyValue);
 }
@@ -123,7 +124,7 @@ CVariant CApplicationOperations::LogLevelValue()
   return value;
 }
 
-JSONRPC_STATUS CApplicationOperations::Quit(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CApplicationOperations::Quit(const CVariant& parameterObject, CVariant& result)
 {
   CServiceBroker::GetAppMessenger()->PostMsg(TMSG_QUIT);
   return ACK;

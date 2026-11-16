@@ -127,7 +127,7 @@ JSONRPC_STATUS CPlaylistOperations::ReadItems(KODI::MEDIA::MediaSection media,
   return nothingAdded;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant& parameterObject, CVariant& result)
 {
   result = CVariant(CVariant::VariantTypeArray);
   for (const PublishedPlayList& playList : PUBLISHED_PLAYLISTS)
@@ -140,7 +140,7 @@ JSONRPC_STATUS CPlaylistOperations::GetPlaylists(const CVariant &parameterObject
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
   const auto playLists{CServiceBroker::GetPlayLists()};
   const PublishedPlayList* playList = FindPublished(parameterObject);
@@ -183,7 +183,7 @@ JSONRPC_STATUS CPlaylistOperations::GetProperties(const CVariant &parameterObjec
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlaylistOperations::GetItems(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
 
@@ -277,7 +277,7 @@ JSONRPC_STATUS CPlaylistOperations::Add(const CVariant &parameterObject, CVarian
   return OK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlaylistOperations::Insert(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)
@@ -359,7 +359,7 @@ JSONRPC_STATUS CPlaylistOperations::Clear(const CVariant& parameterObject, CVari
   return ACK;
 }
 
-JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CPlaylistOperations::Swap(const CVariant& parameterObject, CVariant& result)
 {
   const PublishedPlayList* playList = FindPublished(parameterObject);
   if (!playList)

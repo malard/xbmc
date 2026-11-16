@@ -24,9 +24,9 @@ namespace JSONRPC
   {
   public:
     static JSONRPC_STATUS GetSources(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetDirectory(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetFileDetails(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS SetFileDetails(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetDirectory(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetFileDetails(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS SetFileDetails(const CVariant& parameterObject, CVariant& result);
 
     static JSONRPC_STATUS PrepareDownload(ITransportLayer *transport, IClient *client, const CVariant &parameterObject, CVariant &result);
 

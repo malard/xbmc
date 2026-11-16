@@ -51,15 +51,15 @@ class CAudioLibrary : public CFileItemHandler
   static JSONRPC_STATUS List(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetItemProperties(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS SetItemProperties(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetGenres(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetRoles(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS GetSources(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetGenres(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetRoles(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS GetSources(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetAvailableArtTypes(const CVariant& parameterObject, CVariant& result);
-    static JSONRPC_STATUS GetAvailableArt(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetAvailableArt(const CVariant& parameterObject, CVariant& result);
 
-    static JSONRPC_STATUS Scan(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Export(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS Clean(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Scan(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Export(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS Clean(const CVariant& parameterObject, CVariant& result);
 
     static bool FillFileItem(
         const std::string& strFilename,

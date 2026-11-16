@@ -17,7 +17,7 @@ namespace JSONRPC
   class CTextureOperations
   {
   public:
-    static JSONRPC_STATUS GetTextures(const CVariant &parameterObject, CVariant &result);
-    static JSONRPC_STATUS RemoveTexture(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetTextures(const CVariant& parameterObject, CVariant& result);
+    static JSONRPC_STATUS RemoveTexture(const CVariant& parameterObject, CVariant& result);
   };
 } // namespace JSONRPC

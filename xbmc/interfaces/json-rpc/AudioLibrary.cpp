@@ -77,7 +77,7 @@ const LibraryProperty* LibraryPropertyNamed(std::string_view name)
 }
 } // unnamed namespace
 
-JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::GetProperties(const CVariant& parameterObject, CVariant& result)
 {
   const CVariant& names{parameterObject["properties"]};
 
@@ -494,7 +494,7 @@ JSONRPC_STATUS CAudioLibrary::ReadItem(
   return OK;
 }
 
-JSONRPC_STATUS CAudioLibrary::GetGenres(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::GetGenres(const CVariant& parameterObject, CVariant& result)
 {
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -516,7 +516,7 @@ JSONRPC_STATUS CAudioLibrary::GetGenres(const CVariant &parameterObject, CVarian
   return OK;
 }
 
-JSONRPC_STATUS CAudioLibrary::GetRoles(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::GetRoles(const CVariant& parameterObject, CVariant& result)
 {
   CMusicDatabase musicdatabase;
   if (!musicdatabase.Open())
@@ -779,7 +779,7 @@ JSONRPC_STATUS CAudioLibrary::SetSongDetails(int id, const CVariant & properties
   return OK;
 }
 
-JSONRPC_STATUS CAudioLibrary::Scan(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::Scan(const CVariant& parameterObject, CVariant& result)
 {
   std::string directory = parameterObject["directory"].asString();
   std::string cmd =
@@ -790,7 +790,7 @@ JSONRPC_STATUS CAudioLibrary::Scan(const CVariant &parameterObject, CVariant &re
   return ACK;
 }
 
-JSONRPC_STATUS CAudioLibrary::Export(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::Export(const CVariant& parameterObject, CVariant& result)
 {
   std::string cmd;
   if (parameterObject["options"].isMember("path"))
@@ -811,7 +811,7 @@ JSONRPC_STATUS CAudioLibrary::Export(const CVariant &parameterObject, CVariant &
   return ACK;
 }
 
-JSONRPC_STATUS CAudioLibrary::Clean(const CVariant &parameterObject, CVariant &result)
+JSONRPC_STATUS CAudioLibrary::Clean(const CVariant& parameterObject, CVariant& result)
 {
   std::string cmd = StringUtils::Format(
       "cleanlibrary(music, {})", parameterObject["showDialogs"].asBoolean() ? "true" : "false");

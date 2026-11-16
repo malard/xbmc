@@ -21,11 +21,11 @@ namespace JSONRPC
   class CApplicationOperations : CFileItemHandler
   {
   public:
-    static JSONRPC_STATUS GetProperties(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS GetProperties(const CVariant& parameterObject, CVariant& result);
 
     static JSONRPC_STATUS SetLogLevel(const CVariant &parameterObject, CVariant &result);
 
-    static JSONRPC_STATUS Quit(const CVariant &parameterObject, CVariant &result);
+    static JSONRPC_STATUS Quit(const CVariant& parameterObject, CVariant& result);
 
 protected:
   /*!

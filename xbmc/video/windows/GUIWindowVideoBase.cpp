@@ -1320,7 +1320,8 @@ void CGUIWindowVideoBase::OnDeleteItem(const CFileItemPtr& item)
       return;
   }
 
-  if ((CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_ALLOWFILEDELETION) ||
+  if ((CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+           CSettings::SETTING_FILELISTS_ALLOWFILEDELETION) ||
        m_vecItems->IsPath(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO))) &&
       CUtil::SupportsWriteFileOperations(item->GetPath()))
   {
