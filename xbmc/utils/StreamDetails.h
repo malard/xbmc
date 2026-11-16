@@ -72,10 +72,10 @@ protected:
   friend class CVideoDatabase;
 };
 
-// A stream detail holds the language as its source declared it, subtags and all. Archive and the
-// streamdetails table take ISO 639-2/B, which is as much of it as they can hold, and Serialize
-// takes BCP 47. So an item answers with a fuller tag while it is playing than after it has been
-// read back from the library.
+// A stream detail holds the language as its source declared it, subtags and all. The
+// streamdetails table takes ISO 639-2/B, which is as much of it as it can hold, while Archive and
+// Serialize take BCP 47. So an item answers with a fuller tag while it is playing than after it
+// has been read back from the library.
 //
 // The classes are the shape of the streamdetails table, which smart playlists filter with SQL
 // built from user-authored rules (see CSmartPlaylistRule::GetWhereClause). Those rules live in

@@ -613,13 +613,16 @@ TEST_F(AudioSortKeyTester, DescribedStreamFollowsTheLanguageDetailsSetting)
   PreferLanguage("eng");
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_PLAYER);
-  EXPECT_EQ("eng", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("eng",
+            tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_DEFAULT);
-  EXPECT_EQ("fre", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("fre",
+            tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_BEST);
-  EXPECT_EQ("ger", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("ger",
+            tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 }
 
 TEST_F(AudioSortKeyTester, DefaultFallsBackToTheBestStreamWhenNothingIsNominated)
@@ -630,7 +633,8 @@ TEST_F(AudioSortKeyTester, DefaultFallsBackToTheBestStreamWhenNothingIsNominated
   PreferLanguage("eng");
 
   DescribeStream(CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_DEFAULT);
-  EXPECT_EQ("ger", tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
+  EXPECT_EQ("ger",
+            tag.m_streamDetails.GetAudioLanguage(tag.GetDescribedAudioStreamIndex()).AsIso6392B());
 }
 
 TEST_F(AudioSortKeyTester, SortKeyFollowsTheLanguageDetailsSetting)
