@@ -1567,9 +1567,34 @@ void CVideoDatabase::UpdateTables(int iVersion)
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DeclaredOn text");
     m_pDS->exec("ALTER TABLE settings ADD COLUMN DetectedWhenDeclared float");
   }
+
+  if (iVersion < 157)
+  {
+    m_pDS->exec("ALTER TABLE settings RENAME TO settingsold");
+    m_pDS->exec(
+        "CREATE TABLE settings ( idFile integer, Deinterlace bool,"
+        "ViewMode integer, PixelRatio float, VerticalShift float, AudioStream "
+        "integer, SubtitleStream integer,"
+        "SubtitleDelay float, SubtitlesOn bool, Brightness float, Contrast float, Gamma float,"
+        "VolumeAmplification float, AudioDelay float, ResumeTime integer,"
+        "Sharpness float, NoiseReduction float, NonLinStretch bool, PostProcess bool,"
+        "ScalingMethod integer, DeinterlaceMode integer, StereoMode integer, StereoInvert bool, "
+        "VideoStream integer,"
+        "TonemapMethod integer, TonemapParam float, Orientation integer, CenterMixLevel integer, "
+        "Hue float, Saturation float,"
+        "DeclaredAspect float, DeclaredOn text, DetectedWhenDeclared float)");
+    m_pDS->exec("INSERT INTO settings SELECT idFile, Deinterlace, ViewMode, PixelRatio, "
+                "VerticalShift, AudioStream, SubtitleStream, SubtitleDelay, SubtitlesOn, "
+                "Brightness, Contrast, Gamma, VolumeAmplification, AudioDelay, ResumeTime, "
+                "Sharpness, NoiseReduction, NonLinStretch, PostProcess, ScalingMethod, "
+                "DeinterlaceMode, StereoMode, StereoInvert, VideoStream, TonemapMethod, "
+                "TonemapParam, Orientation, CenterMixLevel, Hue, Saturation, DeclaredAspect, "
+                "DeclaredOn, DetectedWhenDeclared FROM settingsold");
+    m_pDS->exec("DROP TABLE settingsold");
+  }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 155;
+  return 157;
 }

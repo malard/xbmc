@@ -367,7 +367,7 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
                                        "contentgeometry";
 }
 
-//! The real 154 to 155 upgrade, driven through CDatabaseManager.
+//! The real upgrade from 154, driven through CDatabaseManager.
 TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndItsCascade)
 {
   const DatabaseSettings settings{TestDatabaseSettings()};
@@ -380,6 +380,8 @@ TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndI
     ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
               old.Connect("MyVideosMigration154", settings, true));
     RestateVideo154(old);
+    ASSERT_TRUE(
+        old.ExecuteQuery("INSERT INTO settings (idFile, ViewMode, ZoomAmount) VALUES (1, 6, 1.2)"));
     ASSERT_TRUE(old.ExecuteQuery("UPDATE version SET idVersion=154"));
     old.Close();
   }
@@ -389,9 +391,14 @@ TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndI
 
   CVideoDatabase migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-            migrated.Connect("MyVideosMigration155", settings, false));
+            migrated.Connect("MyVideosMigration157", settings, false));
 
-  EXPECT_EQ(155, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
+  EXPECT_EQ(157, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
+
+  // 157 drops the zoom the custom view mode no longer has, and keeps the rest of the row.
+  EXPECT_EQ(0, migrated.GetSingleValueInt(
+                   "SELECT count(*) FROM pragma_table_info('settings') WHERE name = 'ZoomAmount'"));
+  EXPECT_EQ(6, migrated.GetSingleValueInt("SELECT ViewMode FROM settings WHERE idFile = 1"));
 
   // The same upgrade carries the declaration columns, which live with the other per-file
   // overrides rather than in the cache.
