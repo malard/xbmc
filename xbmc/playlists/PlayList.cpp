@@ -14,7 +14,6 @@
 #include "PlayListFile.h"
 #include "PlayListFileItemClassify.h"
 #include "PlayListShuffle.h"
-#include "music/MusicFileItemClassify.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
@@ -781,13 +780,12 @@ void CPlayList::Remove(int position)
   Notify(changes);
 }
 
-void CPlayList::RemoveDVDItems()
+void CPlayList::RemoveIf(const std::function<bool(const CFileItem&)>& remove)
 {
   Changes changes;
   {
     std::unique_lock lock(m_critSection);
-    RemoveIfLocked([](const PlayListEntry& entry)
-                   { return MUSIC::IsCDDA(*entry.item) || entry.item->IsOnDVD(); }, changes);
+    RemoveIfLocked([&remove](const PlayListEntry& entry) { return remove(*entry.item); }, changes);
   }
   Notify(changes);
 }

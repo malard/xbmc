@@ -548,6 +548,17 @@ TEST_F(TestPlayList, AnEntryToKeepIsNotRemoved)
   EXPECT_EQ(4, m_playList.Size());
 }
 
+TEST_F(TestPlayList, RemovingIfTakesEveryEntryItSaysTo)
+{
+  m_playList.RemoveIf(
+      [](const CFileItem& item)
+      { return item.GetPath() == "/media/b.mkv" || item.GetPath() == "/media/d.mkv"; });
+
+  EXPECT_EQ(2, m_playList.Size());
+  EXPECT_EQ(0, m_playList.GetPosition(m_ids[0]));
+  EXPECT_EQ(1, m_playList.GetPosition(m_ids[2]));
+}
+
 TEST_F(TestPlayList, ReplacingAnItemTouchesOnlyItsEntry)
 {
   // two tracks of one cue sheet: the same file at different offsets

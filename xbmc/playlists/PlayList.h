@@ -117,6 +117,8 @@ public:
   void Remove(int position);
   //! Remove this entry unless it is one to keep. \return Whether it was removed.
   bool RemoveEntry(EntryId entry, const std::vector<EntryId>& keep = {});
+  //! Remove every entry whose item this says to.
+  void RemoveIf(const std::function<bool(const CFileItem&)>& remove);
   //! Give this entry a copy of the item in place of the one it holds.
   void ReplaceItem(EntryId entry, const CFileItem& item);
   bool Swap(int position1, int position2);
@@ -141,7 +143,6 @@ public:
   void Assign(const CFileItemList& items, const std::string& sourcePath = "");
   int Size() const;
   bool IsEmpty() const { return Size() == 0; }
-  void RemoveDVDItems();
 
   std::shared_ptr<CFileItem> operator[](int iItem) const;
 

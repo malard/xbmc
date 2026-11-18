@@ -690,7 +690,7 @@ void CApplicationPlayLists::UpdateItem(Type type, const CFileItem& item)
 void CApplicationPlayLists::RemoveDiscItems()
 {
   for (const auto& playList : m_playLists)
-    playList->RemoveDVDItems();
+    playList->RemoveIf([](const CFileItem& item) { return MUSIC::IsCDDA(item) || item.IsOnDVD(); });
 }
 
 bool CApplicationPlayLists::Swap(Type type, int position1, int position2)
