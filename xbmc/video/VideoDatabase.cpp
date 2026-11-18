@@ -6058,7 +6058,6 @@ bool CVideoDatabase::GetVideoSettings(int idFile, CVideoSettings &settings)
       settings.m_NoiseReduction = m_pDS->fv("NoiseReduction").get_asFloat();
       settings.m_PostProcess = m_pDS->fv("PostProcess").get_asBool();
       settings.m_Sharpness = m_pDS->fv("Sharpness").get_asFloat();
-      settings.m_CustomZoomAmount = m_pDS->fv("ZoomAmount").get_asFloat();
       settings.m_CustomVerticalShift = m_pDS->fv("VerticalShift").get_asFloat();
       settings.m_Gamma = m_pDS->fv("Gamma").get_asFloat();
       settings.m_SubtitleDelay = m_pDS->fv("SubtitleDelay").get_asFloat();
@@ -6117,13 +6116,12 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
       // update the item
       strSQL = PrepareSQL(
           "update settings set "
-          "Deinterlace=%i,ViewMode=%i,ZoomAmount=%f,PixelRatio=%f,VerticalShift=%f,"
+          "Deinterlace=%i,ViewMode=%i,PixelRatio=%f,VerticalShift=%f,"
           "AudioStream=%i,SubtitleStream=%i,SubtitleDelay=%f,SubtitlesOn=%i,Brightness=%f,Contrast="
           "%f,Gamma=%f,"
           "VolumeAmplification=%f,AudioDelay=%f,Sharpness=%f,NoiseReduction=%f,NonLinStretch=%i,"
           "PostProcess=%i,ScalingMethod=%i,",
           setting.m_InterlaceMethod, setting.m_ViewMode,
-          static_cast<double>(setting.m_CustomZoomAmount),
           static_cast<double>(setting.m_CustomPixelRatio),
           static_cast<double>(setting.m_CustomVerticalShift), setting.m_AudioStream,
           setting.m_SubtitleStream, static_cast<double>(setting.m_SubtitleDelay),
@@ -6155,7 +6153,7 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
     { // add the items
       m_pDS->close();
       strSQL =
-          "INSERT INTO settings (idFile,Deinterlace,ViewMode,ZoomAmount,PixelRatio, VerticalShift, "
+          "INSERT INTO settings (idFile,Deinterlace,ViewMode,PixelRatio, VerticalShift, "
           "AudioStream,SubtitleStream,SubtitleDelay,SubtitlesOn,Brightness,"
           "Contrast,Gamma,VolumeAmplification,AudioDelay,"
           "ResumeTime,"
@@ -6164,10 +6162,9 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
           "Hue,Saturation,DeclaredAspect,DeclaredOn,DetectedWhenDeclared) "
           "VALUES ";
       strSQL += PrepareSQL(
-          "(%i,%i,%i,%f,%f,%f,%i,%i,%f,%i,%f,%f,%f,%f,%f,%i,%f,%f,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%f,"
+          "(%i,%i,%i,%f,%f,%i,%i,%f,%i,%f,%f,%f,%f,%f,%i,%f,%f,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%f,"
           "%f,%f,'%s',%f)",
           idFile, setting.m_InterlaceMethod, setting.m_ViewMode,
-          static_cast<double>(setting.m_CustomZoomAmount),
           static_cast<double>(setting.m_CustomPixelRatio),
           static_cast<double>(setting.m_CustomVerticalShift), setting.m_AudioStream,
           setting.m_SubtitleStream, static_cast<double>(setting.m_SubtitleDelay),

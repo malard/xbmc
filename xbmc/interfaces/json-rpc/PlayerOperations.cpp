@@ -904,16 +904,9 @@ JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant& parameterObject, C
   else if (viewMode.isObject())
   {
     mode = ViewModeCustom;
-    CVariant zoom = viewMode["zoom"];
     CVariant pixelRatio = viewMode["pixelRatio"];
     CVariant verticalShift = viewMode["verticalShift"];
     CVariant stretch = viewMode["nonlinearStretch"];
-
-    if (!zoom.isNull())
-    {
-      GetNewValueForViewModeParameter(zoom, 0.01f, 0.5f, 2.f, vs.m_CustomZoomAmount);
-      jsonStatus = ACK;
-    }
 
     if (!pixelRatio.isNull())
     {
@@ -936,9 +929,8 @@ JSONRPC_STATUS CPlayerOperations::SetViewMode(const CVariant& parameterObject, C
 
   if (jsonStatus == ACK)
   {
-    appPlayer->SetRenderViewMode(static_cast<int>(mode), vs.m_CustomZoomAmount,
-                                 vs.m_CustomPixelRatio, vs.m_CustomVerticalShift,
-                                 vs.m_CustomNonLinStretch);
+    appPlayer->SetRenderViewMode(static_cast<int>(mode), vs.m_CustomPixelRatio,
+                                 vs.m_CustomVerticalShift, vs.m_CustomNonLinStretch);
   }
 
   return jsonStatus;

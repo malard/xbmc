@@ -1003,10 +1003,7 @@ msgctxt "#215"
 msgid "Soften"
 msgstr ""
 
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#216"
-msgid "Zoom amount"
-msgstr ""
+#empty string with id 216
 
 #: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
 msgctxt "#217"

@@ -110,6 +110,8 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
 - `Player.ViewMode` no longer has `zoom`, `widezoom`, `stretch16x9nonlin`, `zoom120width` or
   `zoom110width`, so `Player.SetViewMode` refuses them as `InvalidParams`. Content geometry fits
   the picture to the screen in their place.
+- `Player.CustomViewMode` no longer has `zoom`: content geometry finds and cuts the black bars a
+  hand zoom cropped. `Player.GetViewMode` still reports the `zoom` in force.
 
 ### Deprecated
 

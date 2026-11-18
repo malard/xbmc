@@ -13600,23 +13600,6 @@
       "Player.CustomViewMode": {
         "type": "object",
         "properties": {
-          "zoom": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "increase",
-                  "decrease"
-                ]
-              },
-              {
-                "$ref": "#/components/schemas/Optional.Number",
-                "minimum": 0.5,
-                "maximum": 2.0,
-                "description": "Zoom where 1.0 means 100%"
-              }
-            ]
-          },
           "pixelRatio": {
             "anyOf": [
               {

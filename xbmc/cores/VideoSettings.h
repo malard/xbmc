@@ -233,7 +233,6 @@ public:
   EINTERLACEMETHOD m_InterlaceMethod;
   ESCALINGMETHOD m_ScalingMethod;
   int m_ViewMode; // current view mode
-  float m_CustomZoomAmount; // custom setting zoom amount
   float m_CustomPixelRatio; // custom setting pixel ratio
   float m_CustomVerticalShift; // custom setting vertical shift
   bool  m_CustomNonLinStretch;
@@ -307,7 +306,7 @@ public:
    */
   void SetSubtitleVerticalPosition(int value, bool save);
 
-  void SetViewMode(int mode, float zoom, float par, float shift, bool stretch);
+  void SetViewMode(int mode, float par, float shift, bool stretch);
   void SetVolumeAmplification(float amp);
 
 protected:

@@ -507,7 +507,7 @@ void CBaseRenderer::SetViewMode(int viewMode)
   }
   else if (mode == ViewModeCustom)
   {
-    CDisplaySettings::GetInstance().SetZoomAmount(m_videoSettings.m_CustomZoomAmount);
+    CDisplaySettings::GetInstance().SetZoomAmount(1.0f);
     CDisplaySettings::GetInstance().SetPixelRatio(m_videoSettings.m_CustomPixelRatio);
     CDisplaySettings::GetInstance().SetNonLinearStretched(m_videoSettings.m_CustomNonLinStretch);
     CDisplaySettings::GetInstance().SetVerticalShift(m_videoSettings.m_CustomVerticalShift);
@@ -519,7 +519,6 @@ void CBaseRenderer::SetViewMode(int viewMode)
   }
 
   //@TODO
-  m_videoSettings.m_CustomZoomAmount = CDisplaySettings::GetInstance().GetZoomAmount();
   m_videoSettings.m_CustomPixelRatio = CDisplaySettings::GetInstance().GetPixelRatio();
   m_videoSettings.m_CustomNonLinStretch = CDisplaySettings::GetInstance().IsNonLinearStretched();
   m_videoSettings.m_CustomVerticalShift = CDisplaySettings::GetInstance().GetVerticalShift();

@@ -77,8 +77,6 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
     XMLUtils::GetInt(pElement, "viewmode", m_defaultVideoSettings.m_ViewMode, ViewModeNormal,
                      ViewModeCustom);
     m_defaultVideoSettings.m_ViewMode = ViewModeFromStored(m_defaultVideoSettings.m_ViewMode);
-    if (!XMLUtils::GetFloat(pElement, "zoomamount", m_defaultVideoSettings.m_CustomZoomAmount, 0.5f, 2.0f))
-      m_defaultVideoSettings.m_CustomZoomAmount = 1.0f;
     if (!XMLUtils::GetFloat(pElement, "pixelratio", m_defaultVideoSettings.m_CustomPixelRatio, 0.5f, 2.0f))
       m_defaultVideoSettings.m_CustomPixelRatio = 1.0f;
     if (!XMLUtils::GetFloat(pElement, "verticalshift", m_defaultVideoSettings.m_CustomVerticalShift, -2.0f, 2.0f))
@@ -224,7 +222,6 @@ bool CMediaSettings::Save(TiXmlNode *settings) const
   XMLUtils::SetBoolean(pNode, "postprocess", m_defaultVideoSettings.m_PostProcess);
   XMLUtils::SetFloat(pNode, "sharpness", m_defaultVideoSettings.m_Sharpness);
   XMLUtils::SetInt(pNode, "viewmode", m_defaultVideoSettings.m_ViewMode);
-  XMLUtils::SetFloat(pNode, "zoomamount", m_defaultVideoSettings.m_CustomZoomAmount);
   XMLUtils::SetFloat(pNode, "pixelratio", m_defaultVideoSettings.m_CustomPixelRatio);
   XMLUtils::SetFloat(pNode, "verticalshift", m_defaultVideoSettings.m_CustomVerticalShift);
   XMLUtils::SetFloat(pNode, "volumeamplification", m_defaultVideoSettings.m_VolumeAmplification);

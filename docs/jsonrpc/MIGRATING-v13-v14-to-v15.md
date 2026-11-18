@@ -910,16 +910,18 @@ and `Files.PrepareDownload` no longer answers `mode`, which was always
 
 Drop any use of `result.mode`.
 
-## 25. Five view modes are removed
+## 25. Five view modes and the custom zoom are removed
 
 `Player.ViewMode` no longer has `zoom`, `widezoom`, `stretch16x9nonlin`,
-`zoom120width` or `zoom110width`. Each filled the screen by cropping or
-distorting the picture, which content geometry now does by measuring it.
-`Player.SetViewMode` refuses them as `InvalidParams`, and a file stored with
-one of them plays as `normal`.
+`zoom120width` or `zoom110width`, and `Player.CustomViewMode` no longer has
+`zoom`. Each filled the screen by cropping or distorting the picture, which
+content geometry now does by measuring it. `Player.SetViewMode` refuses them
+as `InvalidParams`, and a file stored with one of the five modes plays as
+`normal`.
 
-**What to do.** Stop offering the five. `normal`, `stretch4x3`,
-`stretch16x9`, `original` and a custom view mode remain.
+**What to do.** Stop offering the five modes and the zoom. `normal`,
+`stretch4x3`, `stretch16x9`, `original` and a custom view mode of
+`pixelRatio`, `verticalShift` and `nonlinearStretch` remain.
 
 ## Finding the rest
 
