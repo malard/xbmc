@@ -924,6 +924,22 @@ as `InvalidParams`, and a file stored with one of the five modes plays as
 `pixelRatio`, `verticalShift` and `nonlinearStretch` remain, and
 `stretchtofill` is new.
 
+## 26. Only the declared notifications are sent
+
+Kodi sent every announcement it made, including some no schema described:
+`Player.OnMenu`, `Player.OnCommercial`, `Player.OnToggleSkipCommercials`,
+`Player.OnProcessInfo`, `Player.SourceSlow`, `GUI.WindowFocused`,
+`GUI.WindowUnfocused`, `Info.OnChanged`, `PVR.RDSRadioRTC`, `PVR.RDSRadioTA`
+and `PVR.RDSRadioTMC`. Those are no longer sent. `Sources.OnAdded`,
+`Sources.OnRemoved`, `Sources.OnUpdated`, `Player.OnBlurayMenuError` and
+`Player.OnBlurayEncryptedError` are now declared, and still sent. `Other`
+notifications, which add-ons and clients send each other, are sent under any
+name.
+
+**What to do.** A client that listened for one of the removed notifications
+asks for that state when it needs it, such as the focused window from
+`GUI.GetProperties`.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its

@@ -243,6 +243,48 @@
     ],
     "returns": null
   },
+  "Player.OnBlurayMenuError": {
+    "type": "notification",
+    "description": "A Blu-ray disc's menu could not be shown, so it plays without it.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "null"
+        }
+      }
+    ],
+    "returns": null
+  },
+  "Player.OnBlurayEncryptedError": {
+    "type": "notification",
+    "description": "A Blu-ray disc is encrypted and cannot be played.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "null"
+        }
+      }
+    ],
+    "returns": null
+  },
   "Playlist.OnAdd": {
     "type": "notification",
     "description": "A playlist item has been added.",
@@ -1258,6 +1300,69 @@
           "required": [
             "level"
           ]
+        }
+      }
+    ],
+    "returns": null
+  },
+  "Sources.OnAdded": {
+    "type": "notification",
+    "description": "A media source has been added. The data is its path.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "returns": null
+  },
+  "Sources.OnRemoved": {
+    "type": "notification",
+    "description": "A media source has been removed. The data is its path.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "returns": null
+  },
+  "Sources.OnUpdated": {
+    "type": "notification",
+    "description": "A media source has been changed. The data is its path.",
+    "params": [
+      {
+        "name": "sender",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "data",
+        "required": true,
+        "schema": {
+          "type": "string"
         }
       }
     ],

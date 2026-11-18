@@ -26,7 +26,8 @@ namespace JSONRPC
   static std::string AnnouncementToJSONRPC(const ANNOUNCEMENT::Announcement& announcement,
                                            bool compactOutput);
 
-  //! \return the notification, or nothing when the announcement is not one clients receive
+  //! \return the notification, or nothing when the announcement is not one clients receive: one
+  //! the service description does not declare, other than an Other announcement
   static std::string AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementFlag flag,
                                              const std::string& sender,
                                              const std::string& method,

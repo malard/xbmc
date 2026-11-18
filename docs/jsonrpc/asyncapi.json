@@ -58,6 +58,12 @@
         "Player.OnPropertiesChanged": {
           "$ref": "#/components/messages/Player.OnPropertiesChanged"
         },
+        "Player.OnBlurayMenuError": {
+          "$ref": "#/components/messages/Player.OnBlurayMenuError"
+        },
+        "Player.OnBlurayEncryptedError": {
+          "$ref": "#/components/messages/Player.OnBlurayEncryptedError"
+        },
         "Playlist.OnAdd": {
           "$ref": "#/components/messages/Playlist.OnAdd"
         },
@@ -171,6 +177,15 @@
         },
         "Settings.OnLevelChanged": {
           "$ref": "#/components/messages/Settings.OnLevelChanged"
+        },
+        "Sources.OnAdded": {
+          "$ref": "#/components/messages/Sources.OnAdded"
+        },
+        "Sources.OnRemoved": {
+          "$ref": "#/components/messages/Sources.OnRemoved"
+        },
+        "Sources.OnUpdated": {
+          "$ref": "#/components/messages/Sources.OnUpdated"
         }
       }
     }
@@ -261,6 +276,28 @@
       "messages": [
         {
           "$ref": "#/channels/jsonrpc/messages/Player.OnPropertiesChanged"
+        }
+      ]
+    },
+    "Player.OnBlurayMenuError": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Player.OnBlurayMenuError"
+        }
+      ]
+    },
+    "Player.OnBlurayEncryptedError": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Player.OnBlurayEncryptedError"
         }
       ]
     },
@@ -681,6 +718,39 @@
           "$ref": "#/channels/jsonrpc/messages/Settings.OnLevelChanged"
         }
       ]
+    },
+    "Sources.OnAdded": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Sources.OnAdded"
+        }
+      ]
+    },
+    "Sources.OnRemoved": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Sources.OnRemoved"
+        }
+      ]
+    },
+    "Sources.OnUpdated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/jsonrpc"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/jsonrpc/messages/Sources.OnUpdated"
+        }
+      ]
     }
   },
   "components": {
@@ -1033,6 +1103,78 @@
                   "required": [
                     "properties"
                   ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Player.OnBlurayMenuError": {
+        "name": "Player.OnBlurayMenuError",
+        "summary": "A Blu-ray disc's menu could not be shown, so it plays without it.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Player.OnBlurayMenuError"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "null"
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Player.OnBlurayEncryptedError": {
+        "name": "Player.OnBlurayEncryptedError",
+        "summary": "A Blu-ray disc is encrypted and cannot be played.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Player.OnBlurayEncryptedError"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "null"
                 }
               },
               "required": [
@@ -2623,6 +2765,114 @@
                   "required": [
                     "level"
                   ]
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Sources.OnAdded": {
+        "name": "Sources.OnAdded",
+        "summary": "A media source has been added. The data is its path.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Sources.OnAdded"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Sources.OnRemoved": {
+        "name": "Sources.OnRemoved",
+        "summary": "A media source has been removed. The data is its path.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Sources.OnRemoved"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sender",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "method",
+            "params"
+          ]
+        }
+      },
+      "Sources.OnUpdated": {
+        "name": "Sources.OnUpdated",
+        "summary": "A media source has been changed. The data is its path.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "method": {
+              "const": "Sources.OnUpdated"
+            },
+            "params": {
+              "type": "object",
+              "properties": {
+                "sender": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
                 }
               },
               "required": [

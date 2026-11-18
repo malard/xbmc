@@ -6,11 +6,17 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "interfaces/AnnouncementEvents.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "interfaces/json-rpc/IJSONRPCAnnouncer.h"
+#include "interfaces/json-rpc/test/JSONRPCTestUtils.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
+#include <set>
 #include <string>
+#include <utility>
+#include <variant>
 
 #include <gtest/gtest.h>
 
@@ -38,6 +44,18 @@ public:
     return AnnouncementToJSONRPC(flag, "xbmc", message, data, true);
   }
 };
+
+//! Every notification an event of \p Event is announced as, before JSON-RPC renames any.
+template<typename Event>
+void AddAnnounced(std::set<std::string>& announced)
+{
+  using Variant = typename Event::variant;
+  const std::string flag{ANNOUNCEMENT::AnnouncementFlagToString(Event::FLAG)};
+  [&]<size_t... Index>(std::index_sequence<Index...>)
+  {
+    (announced.insert(flag + "." + std::variant_alternative_t<Index, Variant>::MESSAGE), ...);
+  }(std::make_index_sequence<std::variant_size_v<Variant>>{});
+}
 
 CVariant PlaybackData(int speed)
 {
@@ -288,4 +306,49 @@ TEST(TestAnnouncementToJSONRPC, APlaylistRemovalKeepsItsEvent)
 
   EXPECT_EQ("Playlist.OnRemove", notification["method"].asString());
   EXPECT_EQ(2, notification["params"]["data"]["position"].asInteger());
+}
+
+TEST(TestAnnouncementToJSONRPC, AnAnnouncementTheSchemaDoesNotDeclareIsNotSent)
+{
+  EXPECT_EQ("", CTestAnnouncer::Text(ANNOUNCEMENT::GUI, ANNOUNCEMENT::MESSAGE::WINDOW_FOCUSED,
+                                     CVariant{}));
+}
+
+TEST(TestAnnouncementToJSONRPC, AnOtherAnnouncementIsSentUnderItsOwnName)
+{
+  const CVariant notification =
+      CTestAnnouncer::Notification(ANNOUNCEMENT::Other, "MyAddonEvent", CVariant{"hello"});
+
+  EXPECT_EQ("Other.MyAddonEvent", notification["method"].asString());
+}
+
+TEST(TestAnnouncementToJSONRPC, EveryDeclaredNotificationIsOneKodiSends)
+{
+  std::set<std::string> announced;
+  AddAnnounced<ANNOUNCEMENT::PlayerEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::PlaylistEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::GUIEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::SystemEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::VideoLibraryEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::AudioLibraryEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::InputEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::PVREvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::InfoEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::SourcesEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::FilesEvent>(announced);
+  AddAnnounced<ANNOUNCEMENT::SettingsEvent>(announced);
+  // what a library item's update and removal are sent as
+  for (const char* library : {"VideoLibrary.", "AudioLibrary."})
+  {
+    for (const char* message :
+         {ANNOUNCEMENT::MESSAGE::ON_ITEM_ADDED, ANNOUNCEMENT::MESSAGE::ON_ITEM_PROPERTIES_CHANGED,
+          ANNOUNCEMENT::MESSAGE::ON_ITEM_REMOVED})
+      announced.insert(std::string(library) + message);
+  }
+
+  const auto declared{
+      ShippedDefinitions(JSONRPC_SERVICE_NOTIFICATIONS, std::size(JSONRPC_SERVICE_NOTIFICATIONS))};
+  ASSERT_EQ(std::size(JSONRPC_SERVICE_NOTIFICATIONS), declared.size());
+  for (const auto& [name, definition] : declared)
+    EXPECT_TRUE(announced.contains(name)) << name << " is declared but no event is announced as it";
 }

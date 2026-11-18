@@ -9,6 +9,7 @@
 #include "IJSONRPCAnnouncer.h"
 
 #include "AudioLibrary.h"
+#include "ServiceDescription.h"
 #include "VideoLibrary.h"
 #include "interfaces/AnnouncementEvents.h"
 #include "interfaces/AnnouncementMessages.h"
@@ -17,10 +18,32 @@
 #include "utils/Variant.h"
 
 #include <cstdint>
+#include <set>
+#include <string_view>
 #include <utility>
 
 namespace JSONRPC
 {
+namespace
+{
+bool IsDeclared(std::string_view notification)
+{
+  static const std::set<std::string, std::less<>> declared = []
+  {
+    std::set<std::string, std::less<>> names;
+    // each entry is the notification as a member, "Player.OnPlay": {...}
+    for (const std::string_view entry : JSONRPC_SERVICE_NOTIFICATIONS)
+    {
+      const size_t open = entry.find('"');
+      const size_t close = entry.find('"', open + 1);
+      if (close != std::string_view::npos)
+        names.emplace(entry.substr(open + 1, close - open - 1));
+    }
+    return names;
+  }();
+  return declared.contains(notification);
+}
+} // unnamed namespace
 
 std::string IJSONRPCAnnouncer::AnnouncementToJSONRPC(const ANNOUNCEMENT::Announcement& announcement,
                                                      bool compactOutput)
@@ -49,6 +72,9 @@ std::string IJSONRPCAnnouncer::AnnouncementToJSONRPC(ANNOUNCEMENT::AnnouncementF
   std::string namespaceMethod = ANNOUNCEMENT::AnnouncementFlagToString(flag);
   namespaceMethod += ".";
   namespaceMethod += name;
+  // Other carries what add-ons and clients send each other, under names of their own
+  if (flag != ANNOUNCEMENT::Other && !IsDeclared(namespaceMethod))
+    return {};
   root["method"] = namespaceMethod;
 
   root["params"]["data"] = payload;

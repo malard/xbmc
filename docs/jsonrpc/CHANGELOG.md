@@ -112,6 +112,10 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   the picture to the screen in their place.
 - `Player.CustomViewMode` no longer has `zoom`: content geometry finds and cuts the black bars a
   hand zoom cropped. `Player.GetViewMode` still reports the `zoom` in force.
+- Only the notifications the schema declares are sent, and `Other` ones. `Player.OnMenu`,
+  `Player.OnCommercial`, `Player.OnToggleSkipCommercials`, `Player.OnProcessInfo`,
+  `Player.SourceSlow`, `GUI.WindowFocused`, `GUI.WindowUnfocused`, `Info.OnChanged`,
+  `PVR.RDSRadioRTC`, `PVR.RDSRadioTA` and `PVR.RDSRadioTMC` are no longer sent.
 
 ### Deprecated
 
@@ -164,6 +168,8 @@ Notifications:
 - `Playlist.OnPropertiesChanged`
 - `Files.OnPlayCountChanged`, `Files.OnResumePointChanged`
 - `Settings.OnLevelChanged`
+- `Sources.OnAdded`, `Sources.OnRemoved`, `Sources.OnUpdated`
+- `Player.OnBlurayMenuError`, `Player.OnBlurayEncryptedError`
 
 Failure reasons:
 

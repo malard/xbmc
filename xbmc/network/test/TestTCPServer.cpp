@@ -408,9 +408,9 @@ TEST_F(TestTCPServer, APeerThatStopsReadingHoldsUpNoAnnouncement)
   // A later queue entry proves all callbacks for the flood have finished.
   manager->Announce(ANNOUNCEMENT::OtherEvent{"test", "barrier", CVariant{}});
   const bool barrierDispatched = m_progress.m_barrierDispatched.Wait(5s);
-  manager->Announce(ANNOUNCEMENT::InfoEvent{ANNOUNCEMENT::EVENT::INFO::Changed{}});
+  manager->Announce(ANNOUNCEMENT::GUIEvent{ANNOUNCEMENT::EVENT::GUI::ScreensaverActivated{}});
 
-  const bool delivered = ReadUntil(listener, "Info.OnChanged", 5s);
+  const bool delivered = ReadUntil(listener, "GUI.OnScreensaverActivated", 5s);
 
   std::promise<void> stopped;
   auto done = stopped.get_future();
