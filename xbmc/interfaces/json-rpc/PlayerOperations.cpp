@@ -840,14 +840,9 @@ JSONRPC_STATUS CPlayerOperations::Zoom(const CVariant& parameterObject, CVariant
 std::map<std::string, ViewMode> viewModes =
 {
   {"normal", ViewModeNormal},
-  {"zoom", ViewModeZoom},
   {"stretch4x3", ViewModeStretch4x3},
-  {"widezoom", ViewModeWideZoom, },
   {"stretch16x9", ViewModeStretch16x9},
   {"original", ViewModeOriginal},
-  {"stretch16x9nonlin", ViewModeStretch16x9Nonlin},
-  {"zoom120width", ViewModeZoom120Width},
-  {"zoom110width", ViewModeZoom110Width}
 };
 
 std::string GetStringFromViewMode(ViewMode viewMode)

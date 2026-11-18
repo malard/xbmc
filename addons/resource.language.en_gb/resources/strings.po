@@ -3014,11 +3014,7 @@ msgctxt "#632"
 msgid "Stretch 4:3"
 msgstr ""
 
-#: system/settings/settings.xml
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#633"
-msgid "Wide zoom"
-msgstr ""
+#empty string with id 633
 
 #. Label for stretching the displayed video to a 16:9 aspect ratio
 #: system/settings/settings.xml
@@ -3073,10 +3069,7 @@ msgctxt "#643"
 msgid "Avoid clipping protection on ReplayGained files"
 msgstr ""
 
-#: system/settings/settings.xml
-msgctxt "#644"
-msgid "Stretch 16:9 - Nonlinear"
-msgstr ""
+#empty string with id 644
 
 msgctxt "#645"
 msgid "Need to unpack a big file. Continue?"
@@ -24571,15 +24564,7 @@ msgctxt "#39007"
 msgid "This provides access to where picture sources can be added and otherwise managed."
 msgstr ""
 
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#39008"
-msgid "Zoom - 120% width"
-msgstr ""
-
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#39009"
-msgid "Zoom - 110% width"
-msgstr ""
+#empty strings from id 39008 to 39009
 
 #: view/GUIViewState.cpp
 msgctxt "#39010"

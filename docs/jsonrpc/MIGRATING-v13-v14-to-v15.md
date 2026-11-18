@@ -910,6 +910,17 @@ and `Files.PrepareDownload` no longer answers `mode`, which was always
 
 Drop any use of `result.mode`.
 
+## 25. Five view modes are removed
+
+`Player.ViewMode` no longer has `zoom`, `widezoom`, `stretch16x9nonlin`,
+`zoom120width` or `zoom110width`. Each filled the screen by cropping or
+distorting the picture, which content geometry now does by measuring it.
+`Player.SetViewMode` refuses them as `InvalidParams`, and a file stored with
+one of them plays as `normal`.
+
+**What to do.** Stop offering the five. `normal`, `stretch4x3`,
+`stretch16x9`, `original` and a custom view mode remain.
+
 ## Finding the rest
 
 Anything deprecated is marked `"deprecated": true` on its method or its

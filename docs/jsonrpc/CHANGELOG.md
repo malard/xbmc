@@ -107,6 +107,9 @@ covers every break. 13.200.0 (22.0b2) already has the library-id `NotFound`, `Pl
   broadcast that already has a timer is `FailedToExecute` (`timer-exists`), none of them
   `InvalidParams` any more.
 - The type `PVR.Fields.Client` is removed; nothing referenced it.
+- `Player.ViewMode` no longer has `zoom`, `widezoom`, `stretch16x9nonlin`, `zoom120width` or
+  `zoom110width`, so `Player.SetViewMode` refuses them as `InvalidParams`. Content geometry fits
+  the picture to the screen in their place.
 
 ### Deprecated
 
