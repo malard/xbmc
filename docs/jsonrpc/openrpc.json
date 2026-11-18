@@ -13594,6 +13594,7 @@
           "normal",
           "stretch4x3",
           "stretch16x9",
+          "stretchtofill",
           "original"
         ]
       },

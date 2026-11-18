@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cstdlib> // std::abs(int) prototype
+#include <optional>
 
 
 CBaseRenderer::CBaseRenderer()
@@ -129,19 +130,6 @@ void CBaseRenderer::CalcDestRect(float offsetX,
   // and the output pixel ratio setting)
 
   float outputFrameRatio = inputFrameRatio / CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo().fPixelRatio;
-
-  // allow a certain error to maximize size of render area
-  float fCorrection = width / height / outputFrameRatio - 1.0f;
-  float fAllowed = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ERRORINASPECT) * 0.01f;
-
-  if (CServiceBroker::GetWinSystem()->GetGfxContext().IsRasterShapeStated())
-    fAllowed = 0.0f;
-  if (fCorrection > fAllowed)
-    fCorrection = fAllowed;
-  if (fCorrection < -fAllowed)
-    fCorrection = - fAllowed;
-
-  outputFrameRatio *= 1.0f + fCorrection;
 
   bool isRotated = false;
   if (m_renderOrientation == 90 ||
@@ -389,6 +377,29 @@ CRect CBaseRenderer::ApplyContentGeometry(float& contentRatio)
       if (!m_frameContentRect.IsEmpty() && inputs.maskAspect > 0.0f)
         renderWindow =
             KODI::VIDEO::GEOMETRY::FitAspect(inputs.maskAspect, renderWindow, pixelRatio);
+    }
+  }
+  else if (m_videoSettings.m_ViewMode == ViewModeStretchToFill && renderWindow.Height() > 0.0f)
+  {
+    // Judged on the measured picture when there is one, so a letterboxed frame fills too.
+    CRect source = m_sourceRect;
+    float pictureAspect = contentRatio;
+    if (KODI::VIDEO::GEOMETRY::DescribesFrame(inputs.geometry, m_sourceRect))
+    {
+      const KODI::VIDEO::GEOMETRY::ContentCut cut{
+          KODI::VIDEO::GEOMETRY::CutToContent(inputs.geometry, m_frameContentRect, m_sourceRect)};
+      source = cut.source;
+      pictureAspect = cut.aspect;
+    }
+
+    const float limit = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+                            CSettings::SETTING_VIDEOPLAYER_STRETCHTOFILL) *
+                        0.01f;
+    if (const std::optional<float> filled = KODI::VIDEO::GEOMETRY::StretchToFill(
+            pictureAspect, renderWindow.Width() / renderWindow.Height() * pixelRatio, limit))
+    {
+      m_sourceRect = source;
+      contentRatio = *filled;
     }
   }
 

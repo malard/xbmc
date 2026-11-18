@@ -439,6 +439,11 @@ TEST_F(TestVideoDatabase, AStoredViewModeSinceRemovedReadsAsNormal)
   m_db.SetVideoSettings(idFile, zoomed);
   ASSERT_TRUE(m_db.GetVideoSettings(idFile, stored));
   EXPECT_EQ(ViewModeStretch16x9, stored.m_ViewMode);
+
+  zoomed.m_ViewMode = ViewModeStretchToFill;
+  m_db.SetVideoSettings(idFile, zoomed);
+  ASSERT_TRUE(m_db.GetVideoSettings(idFile, stored));
+  EXPECT_EQ(ViewModeStretchToFill, stored.m_ViewMode);
 }
 
 // zip:// (native) and archive:// (vfs addon) special case

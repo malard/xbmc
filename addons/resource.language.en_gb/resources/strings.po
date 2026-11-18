@@ -2984,7 +2984,13 @@ msgctxt "#626"
 msgid "In progress TV shows"
 msgstr ""
 
-#empty strings from id 627 to 628
+#. Label for stretching the displayed video to fill the screen when only a small stretch is needed
+#: xbmc/video/ViewModeSettings.cpp
+msgctxt "#627"
+msgid "Stretch to fill"
+msgstr ""
+
+#empty string with id 628
 
 msgctxt "#629"
 msgid "View mode"
@@ -15873,7 +15879,7 @@ msgstr ""
 
 #: system/settings/settings.xml
 msgctxt "#22021"
-msgid "Minimise black bars"
+msgid "Stretch to fill limit"
 msgstr ""
 
 #: system/settings/settings.xml
@@ -20943,7 +20949,7 @@ msgstr ""
 #. Description of setting with label #22021 "Minimise black bars"
 #: system/settings/settings.xml
 msgctxt "#36170"
-msgid "Stretch the video up to the set percentage in order to minimise black bars."
+msgid "The most the Stretch to fill view mode stretches a video to fill the screen. A video that needs more is left as it is."
 msgstr ""
 
 #. Description of setting with label #173 "Display 4:3 videos as"

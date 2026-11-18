@@ -921,7 +921,8 @@ as `InvalidParams`, and a file stored with one of the five modes plays as
 
 **What to do.** Stop offering the five modes and the zoom. `normal`,
 `stretch4x3`, `stretch16x9`, `original` and a custom view mode of
-`pixelRatio`, `verticalShift` and `nonlinearStretch` remain.
+`pixelRatio`, `verticalShift` and `nonlinearStretch` remain, and
+`stretchtofill` is new.
 
 ## Finding the rest
 

@@ -33,6 +33,7 @@ static const ViewModeProperties viewModes[] =
   { 630,   ViewModeNormal },
   { 632,   ViewModeStretch4x3 },
   { 634,   ViewModeStretch16x9 },
+  { 627,   ViewModeStretchToFill },
   { 635,   ViewModeOriginal },
   { 636,   ViewModeCustom, HIDE_ITEM }
 };

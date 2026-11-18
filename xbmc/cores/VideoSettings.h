@@ -204,7 +204,8 @@ enum ViewMode
   ViewModeStretch4x3 = 2,
   ViewModeStretch16x9 = 4,
   ViewModeOriginal = 5,
-  ViewModeCustom = 6
+  ViewModeCustom = 6,
+  ViewModeStretchToFill = 10
 };
 
 //! The view mode a stored value names, or Normal for one no mode has.
@@ -216,6 +217,7 @@ constexpr int ViewModeFromStored(int value)
     case ViewModeStretch16x9:
     case ViewModeOriginal:
     case ViewModeCustom:
+    case ViewModeStretchToFill:
       return value;
     default:
       return ViewModeNormal;

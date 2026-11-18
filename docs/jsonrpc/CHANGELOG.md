@@ -207,6 +207,8 @@ Properties and types:
 - `GUI.GetProperties`: `ready`
 - `Player.GetProperties`: `contentrect`, `hasMedia`; video streams: `contentrect`
 - `Player.Audio.Stream`: `bitspersample`; `Player.Subtitle`: `codec`
+- `Player.ViewMode`: `stretchtofill`, which stretches the picture to fill the screen when that
+  takes no more than the `videoplayer.stretchtofill` setting, and otherwise leaves it as it is
 - `Playlist.GetProperties`: `shuffled`, `repeat`
 - `List.Item.Base`: `stationname`; `List.Fields.All`: `episodename`, `episodepart`
 - `PVR.Details.Broadcast`: `season`, `episode`, `parentalratingcode`, `parentalratingicon`,

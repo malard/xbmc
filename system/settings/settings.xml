@@ -75,9 +75,9 @@
           <default>false</default>
           <control type="toggle" />
         </setting>
-        <setting id="videoplayer.errorinaspect" type="integer" label="22021" help="36170">
+        <setting id="videoplayer.stretchtofill" type="integer" label="22021" help="36170">
           <level>2</level>
-          <default>0</default>
+          <default>10</default>
           <dependencies>
             <!-- Disabled while a screen shape is stated; the runtime ignores the stored value
                  then too. -->

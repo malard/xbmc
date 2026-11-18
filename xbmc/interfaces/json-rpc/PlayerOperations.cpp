@@ -842,6 +842,7 @@ std::map<std::string, ViewMode> viewModes =
   {"normal", ViewModeNormal},
   {"stretch4x3", ViewModeStretch4x3},
   {"stretch16x9", ViewModeStretch16x9},
+  {"stretchtofill", ViewModeStretchToFill},
   {"original", ViewModeOriginal},
 };
 
