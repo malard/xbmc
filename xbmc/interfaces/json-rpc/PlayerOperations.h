@@ -17,7 +17,9 @@
 #include <string>
 #include <vector>
 
+class CFileItem;
 class CFileItemList;
+class CPlayerCoreFactory;
 class CVariant;
 
 namespace PVR
@@ -99,6 +101,18 @@ protected:
     static JSONRPC_STATUS PlayFileItemList(CFileItemList& list,
                                          const CVariant& options,
                                          CVariant& result);
+  /*!
+   \brief The player a request names in its playerName option
+   \param option The playerName option
+   \param first The item playback starts with, or nullptr to check only that the player exists
+   \param playerCoreFactory The players to look the name up in
+   \param name Receives the player's name, or empty for the default player
+   \return InvalidParams if no such player exists, or it cannot play first
+   */
+  static JSONRPC_STATUS PlayerNameFor(const CVariant& option,
+                                      const CFileItem* first,
+                                      const CPlayerCoreFactory& playerCoreFactory,
+                                      std::string& name);
 
 private:
   //! Sends a volume step action and answers with the volume now in force.

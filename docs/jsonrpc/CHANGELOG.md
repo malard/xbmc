@@ -238,6 +238,10 @@ Properties and types:
 
 - `Player.Open` with a `channelId` while PVR is off no longer crashes Kodi. Every PVR item it
   opens answers `FailedToExecute` (`pvr-not-started`) until PVR has started.
+- `Player.Open` with `playerName` `default` plays in the player Kodi would choose, where it asked
+  for a player named `default` and nothing played.
+- `Player.Open` with a `playlist` plays in the `playerName` asked for, which it ignored, and
+  answers `InvalidParams` when no such player exists or it cannot play the starting entry.
 - `PVR.GetProperties` answers while PVR is off, with `available`, `recording` and `scanning`
   false, where it failed with `FailedToExecute`.
 - A `Player` method called without `playlist` acts on everything playing. The validator had filled

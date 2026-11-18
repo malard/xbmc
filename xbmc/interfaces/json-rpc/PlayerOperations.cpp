@@ -46,6 +46,7 @@
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/SlideShowDelegator.h"
 #include "playlists/PlayList.h"
+#include "playlists/PlayListFileItemClassify.h"
 #include "pvr/PVRManager.h"
 #include "pvr/PVRPlaybackState.h"
 #include "pvr/channels/PVRChannel.h"
@@ -73,6 +74,7 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/geometry/GeometryPublication.h"
 
+#include <algorithm>
 #include <cmath>
 #include <map>
 #include <memory>
@@ -1070,13 +1072,31 @@ JSONRPC_STATUS CPlayerOperations::Open(const CVariant& parameterObject, CVariant
 
     if (type)
     {
+      // A starting entry that is itself a playlist is only read when it plays, so the player is
+      // checked against what it holds then.
+      const std::vector<PLAYLIST::PlayListEntry> entries =
+          CServiceBroker::GetPlayLists()->GetPlayList(*type).GetEntries();
+      const int last = static_cast<int>(entries.size()) - 1;
+      std::shared_ptr<const CFileItem> first =
+          last < 0 ? nullptr : entries[std::clamp(playlistStartPosition, 0, last)].item;
+      if (first && PLAYLIST::IsPlayList(*first))
+        first.reset();
+
+      auto playOptions = std::make_unique<APPLICATION::PlayOptions>();
+      if (const JSONRPC_STATUS status =
+              PlayerNameFor(options["playerName"], first.get(),
+                            CServiceBroker::GetPlayerCoreFactory(), playOptions->player);
+          status != OK)
+        return status;
+
       if (optionShuffled.isBoolean())
         CServiceBroker::GetPlayLists()->SetShuffle(*type, optionShuffled.asBoolean(),
                                                    CApplicationPlayLists::Persist::No);
       const std::string repeat =
           optionRepeat.isNull() ? "" : std::string(PLAYLIST::NameOf(ParseRepeat(optionRepeat)));
-      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(*type),
-                                                   playlistStartPosition, nullptr, repeat);
+      CServiceBroker::GetAppMessenger()->PostMsg(
+          TMSG_MEDIA_PLAY_PLAYLIST, static_cast<int>(*type), playlistStartPosition,
+          TransferToMessenger(std::move(playOptions)), repeat);
       return ACK;
     }
 
@@ -1232,43 +1252,13 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
   const CVariant& optionShuffled = options["shuffled"];
   const CVariant& optionRepeat = options["repeat"];
   const CVariant& optionResume = options["resume"];
-  const CVariant& optionPlayer = options["playerName"];
 
   std::string playername;
-  if (!optionPlayer.isNull())
-  {
-    if (optionPlayer.isString())
-    {
-      playername = optionPlayer.asString();
-
-      if (playername != "default")
-      {
-        const CPlayerCoreFactory& playerCoreFactory = CServiceBroker::GetPlayerCoreFactory();
-
-        // check if the there's actually a player with the given name
-        if (playerCoreFactory.GetPlayerType(playername).empty())
-          return InvalidParams;
-
-        // check if the player can handle at least the first item in the list
-        std::vector<std::string> possiblePlayers;
-        playerCoreFactory.GetPlayers(*list.Get(0).get(), possiblePlayers);
-
-        bool match = false;
-        for (const auto& entry : possiblePlayers)
-        {
-          if (StringUtils::EqualsNoCase(entry, playername))
-          {
-            match = true;
-            break;
-          }
-        }
-        if (!match)
-          return InvalidParams;
-      }
-    }
-    else
-      return InvalidParams;
-  }
+  if (const JSONRPC_STATUS status =
+          PlayerNameFor(options["playerName"], list.Get(0).get(),
+                        CServiceBroker::GetPlayerCoreFactory(), playername);
+      status != OK)
+    return status;
 
   // Handle "shuffled" option
   if (optionShuffled.isBoolean())
@@ -1290,6 +1280,37 @@ JSONRPC_STATUS CPlayerOperations::PlayFileItemList(CFileItemList& list,
   APPLICATION::PostPlayItems(std::move(items), {}, playername);
 
   return ACK;
+}
+
+JSONRPC_STATUS CPlayerOperations::PlayerNameFor(const CVariant& option,
+                                                const CFileItem* first,
+                                                const CPlayerCoreFactory& playerCoreFactory,
+                                                std::string& name)
+{
+  name.clear();
+  if (option.isNull())
+    return OK;
+  if (!option.isString())
+    return InvalidParams;
+
+  if (option.asString() == "default")
+    return OK;
+
+  name = option.asString();
+  if (playerCoreFactory.GetPlayerType(name).empty())
+    return InvalidParams;
+
+  if (!first)
+    return OK;
+
+  std::vector<std::string> possiblePlayers;
+  playerCoreFactory.GetPlayers(*first, possiblePlayers);
+  for (const auto& entry : possiblePlayers)
+  {
+    if (StringUtils::EqualsNoCase(entry, name))
+      return OK;
+  }
+  return InvalidParams;
 }
 
 bool CPlayerOperations::ListSlideshowDirectory(const std::string& path,

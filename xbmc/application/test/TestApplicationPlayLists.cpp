@@ -329,6 +329,21 @@ TEST(TestApplicationPlayLists, RepeatOneAskedForWithAPlayIsOnForTheRun)
   EXPECT_EQ(1, playLists.GetPlayList(PLAYLIST::Audio).GetCurrentPosition());
 }
 
+TEST(TestApplicationPlayLists, APlayListPlaysInThePlayerAskedForWithThePlay)
+{
+  CTestPlayLists playLists;
+  playLists.Queue(PLAYLIST::Video, *Items({"/video/a.mkv", "/video/b.mkv"}),
+                  CApplicationPlayLists::Placement::End);
+
+  KODI::MESSAGING::ThreadMessage message{TMSG_MEDIA_PLAY_PLAYLIST,
+                                         static_cast<int>(PLAYLIST::Video), 1,
+                                         new APPLICATION::PlayOptions{.player = "VideoPlayer"}};
+  CPlayListsMessageHandler(playLists).OnApplicationMessage(&message);
+
+  EXPECT_EQ((std::vector<std::string>{"/video/b.mkv"}), playLists.m_opened);
+  EXPECT_EQ((std::vector<std::string>{"VideoPlayer"}), playLists.m_players);
+}
+
 TEST(TestApplicationPlayLists, AnEndedTrackLeavesItsPlayListPlayingUntilNothingFollows)
 {
   CTestPlayLists playLists;

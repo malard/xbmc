@@ -45,7 +45,8 @@
 // or -1. strParam: the player.
 #define TMSG_MEDIA_PLAY_ITEMS             TMSG_MASK_PLAYLISTPLAYER + 6
 // param1: a PLAYLIST::Type. param2: the position to start at, or -1. strParam: a repeat to set
-// once it plays, or empty.
+// once it plays, or empty. payload: the APPLICATION::PlayOptions to play with, owned by the
+// handler, or nullptr.
 #define TMSG_MEDIA_PLAY_PLAYLIST          TMSG_MASK_PLAYLISTPLAYER + 7
 // param1: 1 starts party mode afresh, 0 ends it. param2: the PLAYLIST::Type to fill, or -1 for
 // the one strParam's smart playlist names, or with no strParam the Audio playlist.

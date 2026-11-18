@@ -128,15 +128,20 @@ void CPlayListsMessageHandler::OnApplicationMessage(ThreadMessage* pMsg)
       break;
 
     case TMSG_MEDIA_PLAY_PLAYLIST:
+    {
+      const std::unique_ptr<const APPLICATION::PlayOptions> options{
+          static_cast<const APPLICATION::PlayOptions*>(pMsg->lpVoid)};
       if (const std::optional<Type> type = TypeFromInt(pMsg->param1); type)
       {
         WakeScreen();
-        m_playLists.PlayFrom(*type, PositionFromInt(pMsg->param2));
+        m_playLists.PlayFrom(*type, PositionFromInt(pMsg->param2),
+                             options ? *options : APPLICATION::PlayOptions{});
         if (const std::optional<PLAYLIST::Repeat> repeat = PLAYLIST::RepeatFromName(pMsg->strParam);
             repeat)
           m_playLists.SetRepeat(*type, *repeat, Persist::No);
       }
       break;
+    }
 
     case TMSG_PLAYLISTPLAYER_PARTYMODE:
       PARTYMODE::Stop();
