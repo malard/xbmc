@@ -27,6 +27,16 @@ using namespace XFILE;
 
 namespace KODI::PLAYLIST
 {
+namespace
+{
+//! The path to write for an item: a library song's file rather than its musicdb:// path.
+std::string ResolveURL(const std::shared_ptr<CFileItem>& item)
+{
+  if (MUSIC::IsMusicDb(*item) && item->HasMusicInfoTag())
+    return item->GetMusicInfoTag()->GetURL();
+  return item->GetDynPath();
+}
+} // namespace
 
 const char* CPlayListM3U::StartMarker = "#EXTCPlayListM3U::M3U";
 const char* CPlayListM3U::InfoMarker = "#EXTINF";

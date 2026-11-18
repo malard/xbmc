@@ -58,9 +58,6 @@ public:
   void GetItems(CFileItemList& items) const;
 
 protected:
-  //! The path to write for an item: a library song's file rather than its musicdb:// path.
-  static std::string ResolveURL(const std::shared_ptr<CFileItem>& item);
-
   std::string m_strPlayListName;
   std::string m_strBasePath;
   std::vector<std::shared_ptr<CFileItem>> m_items;

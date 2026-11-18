@@ -11,8 +11,6 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "filesystem/File.h"
-#include "music/MusicFileItemClassify.h"
-#include "music/tags/MusicInfoTag.h"
 #include "utils/ItemProperties.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -103,13 +101,6 @@ void CPlayListFile::GetItems(CFileItemList& items) const
   items.Reserve(items.Size() + Size());
   for (const auto& item : m_items)
     items.Add(item);
-}
-
-std::string CPlayListFile::ResolveURL(const std::shared_ptr<CFileItem>& item)
-{
-  if (MUSIC::IsMusicDb(*item) && item->HasMusicInfoTag())
-    return item->GetMusicInfoTag()->GetURL();
-  return item->GetDynPath();
 }
 
 } // namespace KODI::PLAYLIST
