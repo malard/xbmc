@@ -19,6 +19,8 @@
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayList.h"
 #include "playlists/PlayListEntryRules.h"
+#include "playlists/PlayListFactory.h"
+#include "playlists/PlayListFile.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "playlists/PlayListShuffle.h"
 #include "pvr/channels/PVRChannel.h"
@@ -27,6 +29,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ItemProperties.h"
+#include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 
@@ -47,6 +50,53 @@ constexpr int FEED_DEPTH = 10;
 //! How deep playlist files inside playlist files are opened; the limit stops two that hold each
 //! other.
 constexpr int EXPANSION_DEPTH = 5;
+
+/*!
+ * \brief Replace a playlist file's entry with the file's entries; a game's list of discs stays
+ * whole.
+ * \return The first of the new entries, or NO_ENTRY if nothing was expanded.
+ */
+EntryId ExpandEntry(CPlayList& playList, EntryId entry)
+{
+  const std::shared_ptr<CFileItem> item = playList.GetItem(entry);
+  // a game's list of discs goes to the player whole
+  if (!item || item->HasGameInfoTag())
+    return NO_ENTRY;
+
+  // the factory fills in a stream's mime type, so it is given a copy
+  const CFileItem probe(*item);
+  std::unique_ptr<CPlayListFile> playlist(CPlayListFactory::Create(probe));
+  if (playlist == nullptr)
+    return NO_ENTRY;
+
+  std::string path = item->GetDynPath();
+
+  if (!playlist->Load(path))
+    return NO_ENTRY;
+
+  std::vector<std::shared_ptr<CFileItem>> expansion;
+  for (const std::shared_ptr<CFileItem>& loaded : playlist->GetItems())
+  {
+    // an entry pointing back at the playlist would expand for ever
+    if (StringUtils::EqualsNoCase(loaded->GetPath(), path))
+      continue;
+
+    // What plays is still the entry that was expanded, such as a radio station's .pls, so each
+    // stream keeps that entry's path as its identity and plays from its own.
+    loaded->SetDynPath(loaded->GetPath());
+    loaded->SetPath(item->GetDynPath());
+    // Only propagate parent's start offset if the loaded item doesn't already
+    // have its own (e.g. a CUE sheet offset loaded from the playlist file).
+    if (!loaded->HasProperty(ITEM::PROPERTY::ITEM_START))
+      loaded->SetStartOffset(item->GetStartOffset());
+    if (!loaded->HasProperty("BasePath"))
+      loaded->SetProperty("BasePath", playlist->GetBasePath());
+    expansion.push_back(loaded);
+  }
+
+  // the entry is found again, since other edits may have moved it while the file was read
+  return playList.ReplaceEntry(entry, item, expansion);
+}
 
 size_t Index(Type type)
 {
@@ -746,7 +796,7 @@ bool CApplicationPlayLists::PlayEntry(Type type,
 
   for (int i = 0; i < EXPANSION_DEPTH; i++)
   {
-    const EntryId expanded = playList.Expand(entry);
+    const EntryId expanded = ExpandEntry(playList, entry);
     if (expanded == NO_ENTRY)
       break;
     entry = expanded;

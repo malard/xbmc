@@ -125,11 +125,13 @@ public:
   //! Move the entry at one position in list order to another, shifting those between.
   bool Move(int from, int to);
   /*!
-   * \brief Replace a playlist file's entry with the file's entries; a game's list of discs stays
-   * whole.
-   * \return The first of the new entries, or NO_ENTRY if nothing was expanded.
+   * \brief Put these items in place of an entry, wherever it now is, if it still holds \p held.
+   * The first of them is current if the entry was.
+   * \return The first of the new entries, or NO_ENTRY if nothing was replaced.
    */
-  EntryId Expand(EntryId entry);
+  EntryId ReplaceEntry(EntryId entry,
+                       const std::shared_ptr<CFileItem>& held,
+                       const std::vector<std::shared_ptr<CFileItem>>& items);
   void Clear();
   /*!
    * \brief Hold these items, in this order, in one step. When they are the entries already held,

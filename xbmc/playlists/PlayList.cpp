@@ -10,12 +10,9 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "PlayListFactory.h"
-#include "PlayListFile.h"
 #include "PlayListFileItemClassify.h"
 #include "PlayListShuffle.h"
 #include "utils/ItemProperties.h"
-#include "utils/StringUtils.h"
 #include "utils/log.h"
 
 #include <algorithm>
@@ -857,61 +854,26 @@ int CPlayList::GetPlayable() const
   return static_cast<int>(std::ranges::count(m_entries, true, &PlayListEntry::playable));
 }
 
-EntryId CPlayList::Expand(EntryId expanded)
+EntryId CPlayList::ReplaceEntry(EntryId entry,
+                                const std::shared_ptr<CFileItem>& held,
+                                const std::vector<std::shared_ptr<CFileItem>>& items)
 {
-  const std::shared_ptr<CFileItem> item = GetItem(expanded);
-  // a game's list of discs goes to the player whole
-  if (!item || item->HasGameInfoTag())
-    return NO_ENTRY;
-
-  // the factory fills in a stream's mime type, so it is given a copy
-  const CFileItem probe(*item);
-  std::unique_ptr<CPlayListFile> playlist (CPlayListFactory::Create(probe));
-  if (playlist == nullptr)
-    return NO_ENTRY;
-
-  std::string path = item->GetDynPath();
-
-  if (!playlist->Load(path))
-    return NO_ENTRY;
-
-  std::vector<std::shared_ptr<CFileItem>> expansion;
-  for (const std::shared_ptr<CFileItem>& loaded : playlist->GetItems())
-  {
-    // an entry pointing back at the playlist would expand for ever
-    if (StringUtils::EqualsNoCase(loaded->GetPath(), path))
-      continue;
-
-    // What plays is still the entry that was expanded, such as a radio station's .pls, so each
-    // stream keeps that entry's path as its identity and plays from its own.
-    loaded->SetDynPath(loaded->GetPath());
-    loaded->SetPath(item->GetDynPath());
-    // Only propagate parent's start offset if the loaded item doesn't already
-    // have its own (e.g. a CUE sheet offset loaded from the playlist file).
-    if (!loaded->HasProperty(ITEM::PROPERTY::ITEM_START))
-      loaded->SetStartOffset(item->GetStartOffset());
-    if (!loaded->HasProperty("BasePath"))
-      loaded->SetProperty("BasePath", playlist->GetBasePath());
-    expansion.push_back(loaded);
-  }
-
-  if (expansion.empty())
+  if (items.empty())
     return NO_ENTRY;
 
   Changes changes;
   EntryId first = NO_ENTRY;
   {
     std::unique_lock lock(m_critSection);
-    // the entry is found again, since other edits may have moved it while the file was read
-    const int position = FindLocked(expanded);
-    if (position < 0 || m_entries[position].item != item)
+    const int position = FindLocked(entry);
+    if (position < 0 || m_entries[position].item != held)
       return NO_ENTRY;
 
-    const bool wasCurrent = expanded == m_current;
+    const bool wasCurrent = entry == m_current;
     RemoveLocked(position, changes);
 
     int insertAt = position;
-    for (const auto& loaded : expansion)
+    for (const auto& loaded : items)
     {
       const EntryId added = InsertLocked(loaded, insertAt++, changes);
       if (first == NO_ENTRY)

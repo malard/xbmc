@@ -559,6 +559,28 @@ TEST_F(TestPlayList, RemovingIfTakesEveryEntryItSaysTo)
   EXPECT_EQ(1, m_playList.GetPosition(m_ids[2]));
 }
 
+TEST_F(TestPlayList, AReplacedEntryHandsItsPlaceAndTheCursorToTheFirstItem)
+{
+  m_playList.SetCurrent(m_ids[1]);
+  const auto held = m_playList.GetItem(m_ids[1]);
+
+  const EntryId first = m_playList.ReplaceEntry(m_ids[1], held, {Item("x"), Item("y")});
+
+  EXPECT_EQ("axycd", NameOf(m_playList.GetEntryId(0)) + NameOf(m_playList.GetEntryId(1)) +
+                         NameOf(m_playList.GetEntryId(2)) + NameOf(m_playList.GetEntryId(3)) +
+                         NameOf(m_playList.GetEntryId(4)));
+  EXPECT_EQ(first, m_playList.GetCurrent());
+  EXPECT_EQ(1, m_playList.GetPosition(first));
+}
+
+TEST_F(TestPlayList, AnEntryHoldingAnotherItemIsNotReplaced)
+{
+  m_playList.ReplaceItem(m_ids[1], *Item("z"));
+
+  EXPECT_EQ(NO_ENTRY, m_playList.ReplaceEntry(m_ids[1], Item("b"), {Item("x")}));
+  EXPECT_EQ(4, m_playList.Size());
+}
+
 TEST_F(TestPlayList, ReplacingAnItemTouchesOnlyItsEntry)
 {
   // two tracks of one cue sheet: the same file at different offsets
