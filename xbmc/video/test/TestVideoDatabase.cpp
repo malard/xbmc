@@ -422,6 +422,31 @@ TEST_F(TestVideoDatabase, UpdateStoresOrientationAndCenterMixLevel)
   EXPECT_EQ(3, stored.m_CenterMixLevel);
 }
 
+TEST_F(TestVideoDatabase, AStreamLanguageIsStoredAsItsWholeTag)
+{
+  const int idFile = m_db.AddFile("/videos/languages.mkv");
+  ASSERT_GT(idFile, 0);
+
+  auto* video = new CStreamDetailVideo();
+  video->m_language = KODI::LANGUAGE::CLanguageTag::Parse("en-AU");
+  auto* audio = new CStreamDetailAudio();
+  audio->m_language = KODI::LANGUAGE::CLanguageTag::Parse("pt-BR");
+  auto* subtitle = new CStreamDetailSubtitle();
+  subtitle->m_language = KODI::LANGUAGE::CLanguageTag::Parse("zh-Hant");
+  CStreamDetails details;
+  details.AddStream(video);
+  details.AddStream(audio);
+  details.AddStream(subtitle);
+  ASSERT_TRUE(m_db.SetStreamDetailsForFileId(details, idFile));
+
+  CVideoInfoTag stored;
+  stored.m_iFileId = idFile;
+  ASSERT_TRUE(m_db.GetStreamDetails(stored));
+  EXPECT_EQ("en-AU", stored.m_streamDetails.GetVideoLanguage(1).ToString());
+  EXPECT_EQ("pt-BR", stored.m_streamDetails.GetAudioLanguage(1).ToString());
+  EXPECT_EQ("zh-Hant", stored.m_streamDetails.GetSubtitleLanguage(1).ToString());
+}
+
 TEST_F(TestVideoDatabase, AStoredViewModeSinceRemovedReadsAsNormal)
 {
   const int idFile = m_db.AddFile("/videos/zoomed.mkv");

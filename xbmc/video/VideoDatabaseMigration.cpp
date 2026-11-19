@@ -239,6 +239,27 @@ void RepairVideoAssetTypesV154(CDatabase& db, Dataset& ds, Dataset& ds2, int iVe
                           VideoAssetType_VERSION, VideoAssetType_EXTRA));
   }
 }
+
+// A code with an ISO 639-1 equivalent becomes it, as BCP 47 prefers it. Any other is already the
+// tag, or came from <languagecodes> or a language add-on and stays as it is, as in step 141.
+void StoreStreamLanguagesAsTagsV158(CDatabase& db, Dataset& ds, Dataset& ds2)
+{
+  for (const char* column : {"strVideoLanguage", "strAudioLanguage", "strSubtitleLanguage"})
+  {
+    ds.query(db.PrepareSQL("SELECT DISTINCT %s FROM streamdetails WHERE %s <> ''", column, column));
+    while (!ds.eof())
+    {
+      const std::string code{ds.fv(0).get_asString()};
+      if (const auto alpha2 = KODI::LANGUAGE::I18N::Alpha2OfAlpha3B(code))
+      {
+        ds2.exec(db.PrepareSQL("UPDATE streamdetails SET %s = '%s' WHERE %s = '%s'", column,
+                               std::string{*alpha2}.c_str(), column, code.c_str()));
+      }
+      ds.next();
+    }
+    ds.close();
+  }
+}
 } // namespace KODI::DATABASE::MIGRATION
 
 void CVideoDatabase::UpdateTables(int iVersion)
@@ -1592,9 +1613,14 @@ void CVideoDatabase::UpdateTables(int iVersion)
                 "DeclaredOn, DetectedWhenDeclared FROM settingsold");
     m_pDS->exec("DROP TABLE settingsold");
   }
+
+  if (iVersion < 158)
+  {
+    KODI::DATABASE::MIGRATION::StoreStreamLanguagesAsTagsV158(*this, *m_pDS, *m_pDS2);
+  }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 157;
+  return 158;
 }

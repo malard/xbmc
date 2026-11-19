@@ -3660,7 +3660,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
           idFile, static_cast<int>(CStreamDetail::VIDEO), details.GetVideoCodec(i).c_str(),
           static_cast<double>(details.GetVideoAspect(i)), details.GetVideoWidth(i),
           details.GetVideoHeight(i), details.GetVideoDuration(i), details.GetStereoMode(i).c_str(),
-          details.GetVideoLanguage(i).AsIso6392B().c_str(), details.GetVideoHdrType(i).c_str(),
+          details.GetVideoLanguage(i).ToString().c_str(), details.GetVideoHdrType(i).c_str(),
           details.GetVideoHdrDetail(i).c_str(),
           static_cast<int>(details.GetSource(CStreamDetail::VIDEO, i)),
           details.GetVersion(CStreamDetail::VIDEO, i)));
@@ -3673,7 +3673,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
           "strAudioLanguage, iSource, iVersion, iFlags) "
           "VALUES (%i,%i,'%s',%i,'%s',%i, %i, %i)",
           idFile, static_cast<int>(CStreamDetail::AUDIO), details.GetAudioCodec(i).c_str(),
-          details.GetAudioChannels(i), details.GetAudioLanguage(i).AsIso6392B().c_str(),
+          details.GetAudioChannels(i), details.GetAudioLanguage(i).ToString().c_str(),
           static_cast<int>(details.GetSource(CStreamDetail::AUDIO, i)),
           details.GetVersion(CStreamDetail::AUDIO, i), static_cast<int>(details.GetAudioFlags(i))));
     }
@@ -3684,7 +3684,7 @@ bool CVideoDatabase::SetStreamDetailsForFileId(const CStreamDetails& details, in
                              "iFlags) "
                              "VALUES (%i,%i,'%s',%i, %i, %i)",
                              idFile, static_cast<int>(CStreamDetail::SUBTITLE),
-                             details.GetSubtitleLanguage(i).AsIso6392B().c_str(),
+                             details.GetSubtitleLanguage(i).ToString().c_str(),
                              static_cast<int>(details.GetSource(CStreamDetail::SUBTITLE, i)),
                              details.GetVersion(CStreamDetail::SUBTITLE, i),
                              static_cast<int>(details.GetSubtitleFlags(i))));
