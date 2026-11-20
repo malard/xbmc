@@ -15,7 +15,6 @@
 #include "GUIInfoManager.h"
 #include "ServiceBroker.h"
 #include "URL.h"
-#include "application/Application.h"
 #include "application/ApplicationActionListeners.h"
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
@@ -158,16 +157,17 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
   CGUIMessage msg(GUI_MSG_NOTIFY_ALL,0,0,GUI_MSG_REFRESH_THUMBS);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
 
-  // The info manager and the application hold separate items; both need the art, while the
-  // application item is the AirTunes pipe.
-  const auto playing = g_application.CurrentFileItemPtr();
-  if (ServerInstance != NULL && ServerInstance->m_pPipe != NULL &&
-      playing->GetPath() == ServerInstance->m_pPipe->GetName())
+  // The info manager and the application hold separate items; only the latter is serialised.
+  const std::string pipeName =
+      ServerInstance != nullptr && ServerInstance->m_pPipe != nullptr
+          ? ServerInstance->m_pPipe->GetName()
+          : std::string{};
+  if (!pipeName.empty())
   {
     // UpdateInfo copies the mime type and replaces the whole art map, so an empty url clears the
     // previous thumbnail and the default icon has to travel with it.
     auto item = std::make_unique<CFileItem>();
-    item->SetPath(ServerInstance->m_pPipe->GetName());
+    item->SetPath(pipeName);
     item->SetMimeType("audio/x-xbmc-pcm");
     item->SetArt(KODI::ART::TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
     KODI::ART::FillInDefaultIcon(*item);
