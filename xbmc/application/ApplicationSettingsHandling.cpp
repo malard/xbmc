@@ -146,7 +146,8 @@ void CApplicationSettingsHandling::OnSettingChanged(const std::shared_ptr<const 
   {
     CWinSystemBase* const winSystem{CServiceBroker::GetWinSystem()};
     if (winSystem->GetGfxContext().IsFullScreenRoot())
-      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(), true);
+      winSystem->GetGfxContext().SetVideoResolution(winSystem->GetGfxContext().GetVideoResolution(),
+                                                    true);
   }
   else if (settingId == CSettings::SETTING_AUDIOOUTPUT_PASSTHROUGH)
   {

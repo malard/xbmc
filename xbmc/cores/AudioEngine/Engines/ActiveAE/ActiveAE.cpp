@@ -1068,6 +1068,17 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
         case CActiveAEControlProtocol::TIMEOUT:
           ResampleSounds();
           ClearDiscardedBuffers();
+          if (m_sinkFallback && m_fallbackRetry.IsTimePast())
+          {
+            UnconfigureSink();
+            Configure();
+            if (m_extError)
+            {
+              m_state = AE_TOP_ERROR;
+              m_extTimeout = 500ms;
+              return;
+            }
+          }
           if (m_extDrain)
           {
             if (m_extDrainTimer.IsTimePast())
@@ -1088,7 +1099,8 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
               m_extTimeout = m_extDrainTimer.GetTimeLeft();
           }
           else
-            m_extTimeout = 5000ms;
+            m_extTimeout =
+                m_sinkFallback ? std::min(5000ms, m_fallbackRetry.GetTimeLeft()) : 5000ms;
           return;
         default:
           break;
@@ -1102,6 +1114,11 @@ void CActiveAE::StateMachine(int signal, Protocol *port, Message *msg)
         switch (signal)
         {
         case CActiveAEControlProtocol::TIMEOUT:
+          if (m_sinkFallback && m_fallbackRetry.IsTimePast())
+          {
+            UnconfigureSink();
+            Configure();
+          }
           if (m_extError)
           {
             m_state = AE_TOP_ERROR;
@@ -2011,6 +2028,15 @@ bool CActiveAE::InitSink()
         m_openedDevice = openedDevice.name;
       }
       m_sinkHasVolume = data->hasVolume;
+      m_sinkFallback = data->fallback;
+      if (m_sinkFallback)
+      {
+        m_fallbackRetry.Set(ErrorRetryDelay(++m_extErrorRetries));
+      }
+      else
+      {
+        m_extErrorRetries = 0;
+      }
       m_stats.SetSinkCacheTotal(data->cacheTotal);
       m_stats.SetSinkLatency(data->latency);
       m_stats.SetCurrentSinkFormat(m_sinkFormat);
@@ -2623,9 +2649,12 @@ CSampleBuffer* CActiveAE::SyncStream(CActiveAEStream *stream)
 
   double error;
   double threshold = 100;
+  // The error measured at the start of a stream is adjusted whatever the clock speed is.
+  double startThreshold = threshold;
   if (stream->m_resampleMode)
   {
     threshold *= 2;
+    startThreshold = threshold;
     if (stream->m_pClock)
     {
       double clockspeed = stream->m_pClock->GetClockSpeed();
@@ -2656,7 +2685,7 @@ CSampleBuffer* CActiveAE::SyncStream(CActiveAEStream *stream)
   const bool clockFollowsAudio{!stream->m_resampleMode && !IsTrueHDPassthrough()};
   const auto keepAudible = [&](double syncError)
   {
-    return fabs(syncError) <= threshold ||
+    return fabs(syncError) <= startThreshold ||
            (clockFollowsAudio && syncError < 0 && -syncError <= MAX_LATE_START_MS);
   };
 

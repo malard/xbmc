@@ -4641,6 +4641,16 @@ constexpr std::array<InfoMap, 96> videoplayer = {{
 ///     @skinning_v22 **[New Boolean Condition]** \link RetroPlayer_SupportsCheats `RetroPlayer.SupportsCheats`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`RetroPlayer.SupportsSavestates`</b>,
+///                  \anchor RetroPlayer_SupportsSavestates
+///                  _boolean_,
+///     @return **True** if the currently-playing game client can save the game's
+///     state\, **False** otherwise. This controls the Save / Load OSD item's
+///     visibility.
+///     <p><hr>
+///     @skinning_v23 **[New Boolean Condition]** \link RetroPlayer_SupportsSavestates `RetroPlayer.SupportsSavestates`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`RetroPlayer.AchievementsHardcore`</b>,
 ///                  \anchor RetroPlayer_AchievementsHardcore
 ///                  _boolean_,
@@ -4779,7 +4789,7 @@ constexpr std::array<InfoMap, 96> videoplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 30> retroplayer = {{
+constexpr std::array<InfoMap, 31> retroplayer = {{
     {"title", RETROPLAYER_TITLE},
     {"platform", RETROPLAYER_PLATFORM},
     {"genres", RETROPLAYER_GENRES},
@@ -4793,6 +4803,7 @@ constexpr std::array<InfoMap, 30> retroplayer = {{
     {"achievementsloggedin", RETROPLAYER_ACHIEVEMENTS_LOGGED_IN},
     {"hascheats", RETROPLAYER_HAS_CHEATS},
     {"supportscheats", RETROPLAYER_SUPPORTS_CHEATS},
+    {"supportssavestates", RETROPLAYER_SUPPORTS_SAVESTATES},
     {"achievementsprogress", RETROPLAYER_ACHIEVEMENTS_PROGRESS},
     {"achievementschallengetitle", RETROPLAYER_ACHIEVEMENTS_CHALLENGE_TITLE},
     {"achievementschallengebadge", RETROPLAYER_ACHIEVEMENTS_CHALLENGE_BADGE},
@@ -9860,7 +9871,7 @@ constexpr std::array<InfoMap, 12> pvr_times = {{
 ///     @return The RDS reported audio language of the channel\, as a BCP 47 language tag:
 ///     e.g. en\, de\, pt-BR
 ///     @note A broadcaster sends an index into the language table EBU Tech 3244 Annex J
-///     defines\, never text\, so an index the standard reserves is reported as und.
+///     defines\, never text. An index the standard reserves leaves the label as it was.
 ///     <p><hr>
 ///     @skinning_v23 **[Infolabel Updated]** \link RDS_AudioLanguage `RDS.AudioLanguage`\endlink
 ///     now the language tag itself\, where it was whatever the RDS table held

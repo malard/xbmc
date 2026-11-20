@@ -908,6 +908,20 @@ CVideoInfoScanner::~CVideoInfoScanner()
 
     bool setUpdated{false};
     ART::Artwork movieSetArt;
+    ART::Artwork setNfoArt;
+
+    // Wherever the set's art comes from, it follows the artwork level, as a movie's does
+    const int artLevel{CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+        CSettings::SETTING_VIDEOLIBRARY_ARTWORK_LEVEL)};
+    const bool addAll{artLevel == CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_ALL};
+    const bool exactName{artLevel == CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_BASIC};
+    const std::vector<std::string> movieSetArtTypes{
+        CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION)};
+    const auto isWanted = [addAll, exactName, &movieSetArtTypes](const std::string& artType) {
+      return addAll ||
+             CVideoThumbLoader::IsArtTypeInWhitelist(artType, movieSetArtTypes, exactName);
+    };
+
     const std::string movieSetInfoPath{GetMovieSetInfoFolder(tag.m_set.GetTitle())};
     if (!movieSetInfoPath.empty())
     {
@@ -927,22 +941,21 @@ CVideoInfoScanner::~CVideoInfoScanner()
             tag.m_set.SetSortTitle(setTag.GetSortTitle());
           if (!setTag.GetOverview().empty())
             tag.m_set.SetOverview(setTag.GetOverview());
-          if (setTag.HasArt())
-            tag.m_set.SetArt(setTag.GetArt());
+          setNfoArt = setTag.GetArt();
           setUpdated = true;
         }
       }
 
       // Now look for art
       // Look for local art files first
-      const std::vector<std::string> movieSetArtTypes =
-          CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::VIDEO_COLLECTION);
-      ART::AddLocalItemArtwork(movieSetArt, movieSetArtTypes, movieSetInfoPath, true, false, true);
+      if (artLevel != CSettings::VIDEOLIBRARY_ARTWORK_LEVEL_NONE)
+        ART::AddLocalItemArtwork(movieSetArt, movieSetArtTypes, movieSetInfoPath, addAll, exactName,
+                                 true);
 
       // If art specified in set.nfo use that next
-      if (movieSetArt.empty() && tag.m_set.HasArt())
-        for (auto& art : tag.m_set.GetArt())
-          if (CVideoThumbLoader::IsArtTypeInWhitelist(art.first, movieSetArtTypes, false))
+      if (movieSetArt.empty())
+        for (const auto& art : setNfoArt)
+          if (isWanted(art.first))
             movieSetArt.insert(art);
     }
     else
@@ -950,7 +963,7 @@ CVideoInfoScanner::~CVideoInfoScanner()
       // No MSIF, so use the set art from the scraper (already in tag)
       tag.m_strPictureURL.Parse();
       for (const auto& url : tag.m_strPictureURL.GetUrls())
-        if (StringUtils::StartsWith(url.m_aspect, "set."))
+        if (StringUtils::StartsWith(url.m_aspect, "set.") && isWanted(url.m_aspect.substr(4)))
           movieSetArt.try_emplace(url.m_aspect.substr(4), url.m_url);
     }
     if (!movieSetArt.empty())
@@ -2434,8 +2447,6 @@ CVideoInfoScanner::~CVideoInfoScanner()
     CVideoInfoTag &movieDetails = *pItem->GetVideoInfoTag();
     if (movieDetails.m_basePath.empty())
       movieDetails.m_basePath = pItem->GetBaseMoviePath(videoFolder);
-    movieDetails.m_parentPathID =
-        m_database.AddPath(URIUtils::GetParentPath(movieDetails.m_basePath));
 
     movieDetails.m_strFileNameAndPath = path;
 
@@ -2540,17 +2551,54 @@ CVideoInfoScanner::~CVideoInfoScanner()
       }
     }
 
-    CLog::Log(LOGDEBUG, "VideoInfoScanner: Adding new item to {}:{}", content,
-              CURL::GetRedacted(path));
-    long lResult = -1;
-
     if (content == ContentType::MOVIES)
     {
       // find local trailer first
       std::string strTrailer = UTILS::FindTrailer(*pItem, videoFolder, &m_regexpCache);
       if (!strTrailer.empty())
         movieDetails.m_strTrailer = strTrailer;
+    }
 
+    KODI::ART::SeasonsArtwork seasonArt;
+    if (content == ContentType::TVSHOWS && pItem->IsFolder() && !libraryImport)
+    {
+      CVideoInfoScannerArt::GetSeasonThumbs(
+          movieDetails, seasonArt, CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::SEASON),
+          useLocal && !pItem->IsPlugin(), useRemoteArt, &m_regexpCache);
+      for (const auto& seasonArtwork : seasonArt | std::views::values)
+        m_art.Cache(seasonArtwork);
+    }
+
+    // A file's date added may be read from the file itself, and a show's from its folders
+    if (!movieDetails.m_dateAdded.IsValid())
+    {
+      if (!pItem->IsFolder())
+        m_database.PrepareDateAdded(path);
+      else if (content == ContentType::TVSHOWS)
+      {
+        std::vector<std::string> showPaths;
+        if (!URIUtils::IsMultiPath(path) || !CMultiPathDirectory::GetPaths(path, showPaths))
+          showPaths.push_back(path);
+        for (const std::string& showPath : showPaths)
+          m_database.PrepareDateAdded(showPath);
+      }
+    }
+
+    CLog::Log(LOGDEBUG, "VideoInfoScanner: Adding new item to {}:{}", content,
+              CURL::GetRedacted(path));
+    long lResult = -1;
+
+    // Written in one transaction, with nothing left to wait on but the database. A caller writing
+    // more with it has its own open.
+    const bool ownTransaction{!m_database.InTransaction()};
+    if (ownTransaction)
+      m_database.BeginTransaction();
+
+    movieDetails.m_parentPathID =
+        m_database.AddPath(URIUtils::GetParentPath(movieDetails.m_basePath));
+
+    if (content == ContentType::MOVIES)
+    {
       // Remove remote set art (if need)
       if (useRemoteArt == CVideoInfoScannerArt::UseRemoteArtWithLocalScraper::NO)
         std::erase_if(art,
@@ -2660,17 +2708,6 @@ CVideoInfoScanner::~CVideoInfoScanner()
         if (!URIUtils::IsMultiPath(path) || !CMultiPathDirectory::GetPaths(path, multipath))
           multipath.push_back(path);
 
-        KODI::ART::SeasonsArtwork seasonArt;
-
-        if (!libraryImport)
-        {
-          CVideoInfoScannerArt::GetSeasonThumbs(
-              movieDetails, seasonArt, CVideoThumbLoader::GetArtTypes(MEDIA::TYPE::SEASON),
-              useLocal && !pItem->IsPlugin(), useRemoteArt, &m_regexpCache);
-          for (const auto& seasonArtwork : seasonArt | std::views::values)
-            m_art.Cache(seasonArtwork);
-        }
-
         lResult = m_database.SetDetailsForTvShow(multipath, movieDetails, art, seasonArt);
         movieDetails.m_iDbId = lResult;
         movieDetails.SetMediaType(MEDIA::TYPE::TV_SHOW);
@@ -2715,6 +2752,22 @@ CVideoInfoScanner::~CVideoInfoScanner()
     if (unread && lResult > -1)
       m_database.SetContentGeometry(m_database.GetFileId(*pItem), *unread);
 
+    // An episode added without its details leaves no episode behind, and a video whose transaction
+    // couldn't be committed isn't added
+    if (ownTransaction)
+    {
+      if (lResult < 0)
+        m_database.RollbackTransaction();
+      else if (!m_database.CommitTransaction())
+      {
+        if (m_database.InTransaction())
+          m_database.RollbackTransaction();
+        lResult = -1;
+        movieDetails.m_iDbId = -1;
+      }
+    }
+    m_database.ForgetPreparedDatesAdded();
+
     m_database.Close();
 
     if (lResult > -1)
@@ -2727,16 +2780,16 @@ CVideoInfoScanner::~CVideoInfoScanner()
       else if (content == ContentType::MUSICVIDEOS)
         type = ScanSummary::Type::MUSIC_VIDEO;
       m_summary.added.push_back({type, path, strTitle});
-    }
 
-    // Announce() copies the item before it returns, so it is lent here rather than copied twice
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
-        ANNOUNCEMENT::EVENT::LIBRARY::Update{
-            .type = movieDetails.GetMediaType(),
-            .id = movieDetails.m_iDbId,
-            .item = std::shared_ptr<const CFileItem>(pItem, [](const CFileItem*) {}),
-            .transaction = m_bRunning,
-            .added = true}});
+      // Announce() copies the item before it returns, so it is lent here rather than copied twice
+      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
+          ANNOUNCEMENT::EVENT::LIBRARY::Update{
+              .type = movieDetails.GetMediaType(),
+              .id = movieDetails.m_iDbId,
+              .item = std::shared_ptr<const CFileItem>(pItem, [](const CFileItem*) {}),
+              .transaction = m_bRunning,
+              .added = true}});
+    }
     return lResult;
   }
 

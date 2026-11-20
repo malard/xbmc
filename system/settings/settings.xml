@@ -616,6 +616,11 @@
           <default>false</default>
           <control type="toggle" />
         </setting>
+        <setting id="slideshow.hdrpictures" type="boolean" label="36643" help="36644">
+          <level>1</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
         <setting id="slideshow.showdate" type="boolean" label="36645" help="36646">
           <level>0</level>
           <default>false</default>
@@ -2935,6 +2940,12 @@
             <popup>true</popup>
             <formatlabel>35382</formatlabel>
           </control>
+        </setting>
+        <setting id="gamesgeneral.hdrvideofilters" type="boolean" label="35311" help="35312">
+          <requirement>HAVE_GBM</requirement>
+          <level>2</level>
+          <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="2" label="35320">

@@ -210,7 +210,8 @@ int CUPnPPlayer::PlayFile(const CFileItem& file,
   }
 
   timeout.Set(timeout.GetInitialTimeoutValue());
-  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->SetAVTransportURI(uri, metadata), timeout), failed_setavtransporturi);
+  NPT_CHECK_LABEL_SEVERE(m_delegate->Call(m_delegate->SetAVTransportURI(uri, metadata), timeout),
+                         failed_setavtransporturi);
 
   {
     std::unique_lock lock(m_queueSection);
