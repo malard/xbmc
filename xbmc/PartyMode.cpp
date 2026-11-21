@@ -157,7 +157,7 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
 
   const bool rulesLoaded = rules.Load(rulesPath);
   const PLAYLIST::Type playList =
-      named.value_or(rulesLoaded ? rules.GetPlayListType() : PLAYLIST::Audio);
+      named.value_or(rulesLoaded ? PARTYMODE::PlayListOf(rules.GetType()) : PLAYLIST::Audio);
   const bool isVideo = playList == PLAYLIST::Video;
   const std::string content =
       rulesLoaded ? rules.GetType() : (isVideo ? CONTENT::MUSICVIDEOS : CONTENT::SONGS);
@@ -222,6 +222,14 @@ bool Start(PLAYLIST::Type playList)
 bool Start(const std::string& rulesPath)
 {
   return StartFeed(std::nullopt, rulesPath);
+}
+
+PLAYLIST::Type PlayListOf(const std::string& rulesType)
+{
+  return PLAYLIST::CSmartPlaylist::IsMusicType(rulesType) &&
+                 !PLAYLIST::CSmartPlaylist::IsVideoType(rulesType)
+             ? PLAYLIST::Audio
+             : PLAYLIST::Video;
 }
 
 bool CanStart(const std::string& rulesPath)

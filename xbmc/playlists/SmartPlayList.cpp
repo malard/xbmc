@@ -1659,11 +1659,6 @@ bool CSmartPlaylist::IsMusicType() const
   return IsMusicType(m_playlistType);
 }
 
-Type CSmartPlaylist::GetPlayListType() const
-{
-  return IsMusicType() && !IsVideoType() ? Audio : Video;
-}
-
 bool CSmartPlaylist::IsVideoType(const std::string &type)
 {
   return type == MEDIA::CONTENT::MOVIES || type == MEDIA::CONTENT::TVSHOWS ||

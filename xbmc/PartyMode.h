@@ -42,6 +42,12 @@ bool Start(const std::string& rulesPath);
 //! Whether Start() can play the rules in this smart playlist file: songs, music videos or mixed.
 bool CanStart(const std::string& rulesPath);
 
+/*!
+ * \brief The playlist Start() plays rules of this smart playlist type on: Audio for songs, albums
+ * and artists, Video for everything else, mixed included.
+ */
+PLAYLIST::Type PlayListOf(const std::string& rulesType);
+
 //! Stop party mode; see CApplicationPlayLists::DropFeed().
 void Stop();
 

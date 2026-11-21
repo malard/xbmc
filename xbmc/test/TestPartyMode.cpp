@@ -12,6 +12,7 @@
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "music/tags/MusicInfoTag.h"
+#include "playlists/PlayListTypes.h"
 #include "utils/URIUtils.h"
 #include "video/VideoInfoTag.h"
 
@@ -120,3 +121,26 @@ TEST(TestPartyMode, AMissingRulesFileCannotStart)
 {
   EXPECT_FALSE(PARTYMODE::CanStart("special://temp/test-partymode-missing.xsp"));
 }
+
+using TypePlayList = std::pair<std::string, PLAYLIST::Type>;
+
+class TestPartyModePlayList : public ::testing::TestWithParam<TypePlayList>
+{
+};
+
+TEST_P(TestPartyModePlayList, RulesPlayOnThePlayListOfTheirType)
+{
+  EXPECT_EQ(GetParam().second, PARTYMODE::PlayListOf(GetParam().first));
+}
+
+INSTANTIATE_TEST_SUITE_P(Types,
+                         TestPartyModePlayList,
+                         ::testing::Values(TypePlayList{"songs", PLAYLIST::Audio},
+                                           TypePlayList{"albums", PLAYLIST::Audio},
+                                           TypePlayList{"artists", PLAYLIST::Audio},
+                                           TypePlayList{"movies", PLAYLIST::Video},
+                                           TypePlayList{"tvshows", PLAYLIST::Video},
+                                           TypePlayList{"episodes", PLAYLIST::Video},
+                                           TypePlayList{"musicvideos", PLAYLIST::Video},
+                                           TypePlayList{"mixed", PLAYLIST::Video},
+                                           TypePlayList{"", PLAYLIST::Video}));

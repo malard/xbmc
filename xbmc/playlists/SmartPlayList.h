@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "PlayListTypes.h"
 #include "dbwrappers/DatabaseQuery.h"
 #include "utils/SortUtils.h"
 #include "utils/XBMCTinyXML.h"
@@ -121,12 +120,6 @@ public:
   const std::string& GetType() const { return m_playlistType; }
   bool IsVideoType() const;
   bool IsMusicType() const;
-
-  /*!
-   * \return The playlist this smart playlist's items play on: Audio for songs, albums and artists,
-   * Video for everything else, mixed included.
-   */
-  Type GetPlayListType() const;
 
   void SetMatchAllRules(bool matchAll)
   {
