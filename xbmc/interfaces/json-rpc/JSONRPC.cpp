@@ -27,6 +27,7 @@
 #include "playlists/SmartPlayList.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
@@ -35,6 +36,8 @@
 
 using namespace KODI;
 using namespace JSONRPC;
+
+namespace CONTENT = KODI::MEDIA::CONTENT;
 
 bool CJSONRPC::m_initialized = false;
 
@@ -65,31 +68,31 @@ void CJSONRPC::Initialize()
   CJSONServiceDescription::AddEnum("List.Filter.Operators", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("movies", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::MOVIES, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Movies", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("tvshows", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::TVSHOWS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.TVShows", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("episodes", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::EPISODES, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Episodes", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("musicvideos", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::MUSICVIDEOS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.MusicVideos", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("artists", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::ARTISTS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Artists", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("albums", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::ALBUMS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Albums", smartplaylistList);
 
   smartplaylistList.clear();
-  PLAYLIST::CSmartPlaylist::GetAvailableFields("songs", smartplaylistList);
+  PLAYLIST::CSmartPlaylist::GetAvailableFields(CONTENT::SONGS, smartplaylistList);
   CJSONServiceDescription::AddEnum("List.Filter.Fields.Songs", smartplaylistList);
 
   smartplaylistList.clear();
@@ -130,8 +133,8 @@ JSONRPC_STATUS CJSONRPC::Introspect(ITransportLayer* transport,
                                     CVariant& result)
 {
   return CJSONServiceDescription::Print(result, transport, client,
-    parameterObject["getdescriptions"].asBoolean(), parameterObject["getmetadata"].asBoolean(), parameterObject["filterbytransport"].asBoolean(),
-    parameterObject["filter"]["id"].asString(), parameterObject["filter"]["type"].asString(), parameterObject["filter"]["getreferences"].asBoolean());
+    parameterObject["getDescriptions"].asBoolean(), parameterObject["getMetadata"].asBoolean(), parameterObject["filterByTransport"].asBoolean(),
+    parameterObject["filter"]["id"].asString(), parameterObject["filter"]["type"].asString(), parameterObject["filter"]["getReferences"].asBoolean());
 }
 
 JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant& result)
@@ -141,15 +144,15 @@ JSONRPC_STATUS CJSONRPC::Version(const CVariant& parameterObject, CVariant& resu
   result["version"]["patch"] = 0;
 
   const char* version = CJSONServiceDescription::GetVersion();
-  if (version != NULL)
+  if (version != nullptr)
   {
     std::vector<std::string> parts = StringUtils::Split(version, ".");
     if (!parts.empty())
-      result["version"]["major"] = (int)strtol(parts[0].c_str(), NULL, 10);
+      result["version"]["major"] = static_cast<int>(strtol(parts[0].c_str(), nullptr, 10));
     if (parts.size() > 1)
-      result["version"]["minor"] = (int)strtol(parts[1].c_str(), NULL, 10);
+      result["version"]["minor"] = static_cast<int>(strtol(parts[1].c_str(), nullptr, 10));
     if (parts.size() > 2)
-      result["version"]["patch"] = (int)strtol(parts[2].c_str(), NULL, 10);
+      result["version"]["patch"] = static_cast<int>(strtol(parts[2].c_str(), nullptr, 10));
   }
 
   return OK;
@@ -219,17 +222,9 @@ JSONRPC_STATUS CJSONRPC::SetConfiguration(ITransportLayer* transport,
 
 JSONRPC_STATUS CJSONRPC::NotifyAll(const CVariant& parameterObject, CVariant& result)
 {
-  if (parameterObject["data"].isNull())
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Other,
-                                                       parameterObject["sender"].asString(),
-                                                       parameterObject["message"].asString());
-  else
-  {
-    CVariant data = parameterObject["data"];
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Other,
-                                                       parameterObject["sender"].asString(),
-                                                       parameterObject["message"].asString(), data);
-  }
+  CServiceBroker::GetAnnouncementManager()->Announce(
+      ANNOUNCEMENT::OtherEvent{parameterObject["sender"].asString(),
+                               parameterObject["message"].asString(), parameterObject["data"]});
 
   return ACK;
 }
@@ -343,11 +338,36 @@ inline void CJSONRPC::BuildResponse(const CVariant& request, JSONRPC_STATUS code
 
       response["error"]["code"] = status->status;
       response["error"]["message"] = status->message;
-      if (status->hasData && !result.isNull())
+      if (result["reason"].isString() || (status->hasData && !result.isNull()))
         response["error"]["data"] = result;
       break;
     }
   }
+}
+
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result, JSONRPC_STATUS status, Reason reason)
+{
+  result = CVariant(CVariant::VariantTypeObject);
+  result["reason"] = ReasonToDescription(reason).name;
+  return status;
+}
+
+JSONRPC_STATUS JSONRPC::Fail(CVariant& result,
+                             JSONRPC_STATUS status,
+                             Reason reason,
+                             const CVariant& target)
+{
+  Fail(result, status, reason);
+  if (!target.isNull())
+    result["target"] = target;
+  return status;
+}
+
+CVariant JSONRPC::Target(const std::string& key, const CVariant& value)
+{
+  CVariant target(CVariant::VariantTypeObject);
+  target[key] = value;
+  return target;
 }
 
 void CJSONRPCUtils::NotifyItemUpdated()

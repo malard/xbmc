@@ -15,6 +15,7 @@
 #include "utils/Geometry.h" // for CRect/CPoint
 #include "utils/TransformMatrix.h" // for the members m_guiTransform etc.
 
+#include <cstdint>
 #include <stack>
 #include <string>
 #include <vector>

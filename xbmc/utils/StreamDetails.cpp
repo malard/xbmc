@@ -9,7 +9,7 @@
 #include "StreamDetails.h"
 
 #include "StreamUtils.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "language/LanguageTag.h"
 #include "utils/Archive.h"
 #include "utils/AspectRatioVocabulary.h"
@@ -95,10 +95,10 @@ void CStreamDetailVideo::Serialize(CVariant& value) const
   value["height"] = m_iHeight;
   value["width"] = m_iWidth;
   value["duration"] = m_iDuration;
-  value["stereomode"] = m_strStereoMode;
+  value["stereoMode"] = m_strStereoMode;
   value["language"] = m_language.ToString();
-  value["hdrtype"] = m_strHdrType;
-  value["hdrdetail"] = m_strHdrDetail;
+  value["hdrType"] = m_strHdrType;
+  value["hdrDetail"] = m_strHdrDetail;
   value["source"] = static_cast<int>(m_source);
   value["version"] = m_version;
 }
@@ -231,8 +231,10 @@ bool CStreamDetailSubtitle::IsWorseThan(const CStreamDetail& that) const
     return false;
 
   // the best subtitle should be the one in the user's preferred language
-  // If preferred language is set to "original" this is "eng"
-  return m_language.IsUndetermined() || g_langInfo.GetSubtitleLanguage(true).Matches(other);
+  // A preference naming no language falls back to the audio preference, then the interface
+  // language.
+  return m_language.IsUndetermined() ||
+         KODI::LANGUAGE::CLanguage::GetInstance().Subtitle().Matches(other);
 }
 
 CStreamDetailVideo& CStreamDetailVideo::operator=(const CStreamDetailVideo& that)

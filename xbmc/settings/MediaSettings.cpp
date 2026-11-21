@@ -8,9 +8,9 @@
 
 #include "MediaSettings.h"
 
-#include "PlayListPlayer.h"
 #include "ServiceBroker.h"
 #include "TextureCache.h"
+#include "application/ApplicationPlayLists.h"
 #include "cores/RetroPlayer/RetroPlayerUtils.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "interfaces/AnnouncementManager.h"
@@ -74,9 +74,8 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       scalingMethod = (int)VS_SCALINGMETHOD_LINEAR;
     m_defaultVideoSettings.m_ScalingMethod = (ESCALINGMETHOD)scalingMethod;
 
-    XMLUtils::GetInt(pElement, "viewmode", m_defaultVideoSettings.m_ViewMode, ViewModeNormal, ViewModeZoom110Width);
-    if (!XMLUtils::GetFloat(pElement, "zoomamount", m_defaultVideoSettings.m_CustomZoomAmount, 0.5f, 2.0f))
-      m_defaultVideoSettings.m_CustomZoomAmount = 1.0f;
+    XMLUtils::GetInt(pElement, "viewmode", m_defaultVideoSettings.m_ViewMode);
+    m_defaultVideoSettings.m_ViewMode = ViewModeFromStored(m_defaultVideoSettings.m_ViewMode);
     if (!XMLUtils::GetFloat(pElement, "pixelratio", m_defaultVideoSettings.m_CustomPixelRatio, 0.5f, 2.0f))
       m_defaultVideoSettings.m_CustomPixelRatio = 1.0f;
     if (!XMLUtils::GetFloat(pElement, "verticalshift", m_defaultVideoSettings.m_CustomVerticalShift, -2.0f, 2.0f))
@@ -155,15 +154,6 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_musicNeedsUpdate = 0;
   }
 
-  // Set music playlist player repeat and shuffle from loaded settings
-  if (m_musicPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_MUSIC,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_MUSIC, m_musicPlaylistShuffle);
-
   // Read the watchmode settings for the various media views
   pElement = settings->FirstChildElement("myvideos");
   if (pElement)
@@ -188,16 +178,29 @@ bool CMediaSettings::Load(const TiXmlNode *settings)
       m_videoNeedsUpdate = 0;
   }
 
-  // Set video playlist player repeat and shuffle from loaded settings
-  if (m_videoPlaylistRepeat)
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::ALL);
-  else
-    CServiceBroker::GetPlaylistPlayer().SetRepeat(PLAYLIST::Id::TYPE_VIDEO,
-                                                  PLAYLIST::RepeatState::NONE);
-  CServiceBroker::GetPlaylistPlayer().SetShuffle(PLAYLIST::Id::TYPE_VIDEO, m_videoPlaylistShuffle);
+  CServiceBroker::GetPlayLists()->RestoreSavedPlayOrder();
 
   return true;
+}
+
+bool CMediaSettings::GetPlayListRepeat(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat;
+}
+
+void CMediaSettings::SetPlayListRepeat(PLAYLIST::Type type, bool repeats)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistRepeat : m_videoPlaylistRepeat) = repeats;
+}
+
+bool CMediaSettings::GetPlayListShuffled(PLAYLIST::Type type) const
+{
+  return type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle;
+}
+
+void CMediaSettings::SetPlayListShuffled(PLAYLIST::Type type, bool shuffled)
+{
+  (type == PLAYLIST::Audio ? m_musicPlaylistShuffle : m_videoPlaylistShuffle) = shuffled;
 }
 
 bool CMediaSettings::Save(TiXmlNode *settings) const
@@ -218,7 +221,6 @@ bool CMediaSettings::Save(TiXmlNode *settings) const
   XMLUtils::SetBoolean(pNode, "postprocess", m_defaultVideoSettings.m_PostProcess);
   XMLUtils::SetFloat(pNode, "sharpness", m_defaultVideoSettings.m_Sharpness);
   XMLUtils::SetInt(pNode, "viewmode", m_defaultVideoSettings.m_ViewMode);
-  XMLUtils::SetFloat(pNode, "zoomamount", m_defaultVideoSettings.m_CustomZoomAmount);
   XMLUtils::SetFloat(pNode, "pixelratio", m_defaultVideoSettings.m_CustomPixelRatio);
   XMLUtils::SetFloat(pNode, "verticalshift", m_defaultVideoSettings.m_CustomVerticalShift);
   XMLUtils::SetFloat(pNode, "volumeamplification", m_defaultVideoSettings.m_VolumeAmplification);
@@ -401,7 +403,8 @@ void CMediaSettings::OnSettingChanged(const std::shared_ptr<const CSetting>& set
 
   const std::string& settingId{setting->GetId()};
   if (settingId == CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)
-    CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibrary, "OnRefresh");
+    CServiceBroker::GetAnnouncementManager()->Announce(
+        ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Refresh{}});
   else if (settingId == CSettings::SETTING_VIDEOSCREEN_EXTRACTCONTENTGEOMETRY ||
            settingId == CSettings::SETTING_VIDEOSCREEN_CONTENTGEOMETRYONSCAN)
   {

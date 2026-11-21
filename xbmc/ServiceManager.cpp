@@ -10,7 +10,6 @@
 
 #include "ContextMenuManager.h"
 #include "DatabaseManager.h"
-#include "PlayListPlayer.h"
 #include "addons/AddonManager.h"
 #include "addons/BinaryAddonCache.h"
 #include "addons/ExtsMimeSupportList.h"
@@ -27,7 +26,7 @@
 #include "input/InputManager.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "interfaces/python/XBPython.h"
-#include "language/LangInfo.h"
+#include "language/LanguageLoader.h"
 #include "network/Network.h"
 #include "peripherals/Peripherals.h"
 #if defined(HAS_FILESYSTEM_SMB)
@@ -118,7 +117,6 @@ bool CServiceManager::InitStageOne()
                                                                             ".py");
 #endif
 
-  m_playlistPlayer = std::make_unique<PLAYLIST::CPlayListPlayer>();
   m_slideShowDelegator = std::make_unique<CSlideShowDelegator>();
 
   m_network = CNetworkBase::GetNetwork();
@@ -160,8 +158,9 @@ bool CServiceManager::InitStageTwo(const std::string& profilesUserDataFolder)
     return false;
   }
 
-  m_addonMgr->Events().Subscribe(&g_langInfo, [](const ADDON::AddonEvent& event)
-                                 { g_langInfo.OnAddonEvent(event); });
+  auto& languageLoader{KODI::LANGUAGE::CLanguageLoader::GetInstance()};
+  m_addonMgr->Events().Subscribe(&languageLoader, [&languageLoader](const ADDON::AddonEvent& event)
+                                 { languageLoader.OnAddonEvent(event); });
 
   m_repositoryUpdater = std::make_unique<ADDON::CRepositoryUpdater>(*m_addonMgr);
 
@@ -300,7 +299,7 @@ void CServiceManager::DeinitStageTwo()
   m_vfsAddonCache.reset();
   m_repositoryUpdater.reset();
   m_binaryAddonManager.reset();
-  m_addonMgr->Events().Unsubscribe(&g_langInfo);
+  m_addonMgr->Events().Unsubscribe(&KODI::LANGUAGE::CLanguageLoader::GetInstance());
   m_addonMgr.reset();
   m_databaseManager.reset();
 
@@ -318,7 +317,6 @@ void CServiceManager::DeinitStageOne()
   init_level = 0;
 
   m_network.reset();
-  m_playlistPlayer.reset();
   m_slideShowDelegator.reset();
 #ifdef HAS_PYTHON
   CScriptInvocationManager::GetInstance().UnregisterLanguageInvocationHandler(m_XBPython.get());
@@ -407,11 +405,6 @@ CDataCacheCore& CServiceManager::GetDataCacheCore()
 CPlatform& CServiceManager::GetPlatform()
 {
   return *m_Platform;
-}
-
-PLAYLIST::CPlayListPlayer& CServiceManager::GetPlaylistPlayer()
-{
-  return *m_playlistPlayer;
 }
 
 GAME::CControllerManager& CServiceManager::GetGameControllerManager()

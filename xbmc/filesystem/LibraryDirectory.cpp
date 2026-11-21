@@ -129,7 +129,7 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
       item->SetLabel(label);
       if (!icon.empty() && CServiceBroker::GetGUI()->GetTextureManager().HasTexture(icon))
         item->SetArt(ART::TYPE::ICON, icon);
-      item->SetProgramCount(order);
+      item->SetPlayListOrder(order);
       items.Add(item);
     }
   }

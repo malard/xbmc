@@ -53,11 +53,6 @@ bool CJNIXBMCJsonHandler::CJNITransportLayer::PrepareDownload(const char *path, 
   return false;
 }
 
-bool CJNIXBMCJsonHandler::CJNITransportLayer::Download(const char *path, CVariant &result)
-{
-  return false;
-}
-
 int CJNIXBMCJsonHandler::CJNITransportLayer::GetCapabilities()
 {
   return JSONRPC::Response;

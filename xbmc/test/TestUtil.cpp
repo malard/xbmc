@@ -64,9 +64,7 @@ TEST(TestUtil, GetQualifiedFilename)
 TEST(TestUtil, IsInPlaylistsFolderFollowsThePlaylistsSetting)
 {
   using KODI::MEDIA::MediaSection;
-  const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
-  const std::string original{settings->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH)};
-  settings->SetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH, "special://temp/lists/");
+  const CScopedSetting playlists{CSettings::SETTING_SYSTEM_PLAYLISTSPATH, "special://temp/lists/"};
 
   EXPECT_TRUE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::VIDEO));
   EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::MUSIC));
@@ -75,8 +73,6 @@ TEST(TestUtil, IsInPlaylistsFolderFollowsThePlaylistsSetting)
   EXPECT_FALSE(
       CUtil::IsInPlaylistsFolder("special://profile/playlists/video/a.m3u", MediaSection::VIDEO));
   EXPECT_FALSE(CUtil::IsInPlaylistsFolder("special://temp/lists/video/a.m3u", MediaSection::FILES));
-
-  settings->SetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH, original);
 }
 
 TEST(TestUtil, MakeLegalPath)
@@ -1495,10 +1491,6 @@ TEST(TestUtil, ExternalStreamDetailsOfABlurayVersionsSubtitle)
   }
 }
 
-/*!
- * A percent-encoded path reaches here from any VFS that escapes its names - WebDAV among them.
- * Hiding the extension must not hand back the escaped form.
- */
 class TestTitleFromPath : public Test
 {
 protected:
@@ -1522,7 +1514,6 @@ private:
 TEST_F(TestTitleFromPath, DecodesAnEscapedNameWhileHidingTheExtension)
 {
   EXPECT_EQ("file name", CUtil::GetTitleFromPath("davs://server/files/file%20name.mkv"));
-  EXPECT_EQ("file_name", CUtil::GetTitleFromPath("davs://server/files/file_name.mkv"));
 }
 
 TEST_F(TestTitleFromPath, DecodesLosslessURIPathNames)
@@ -1533,9 +1524,9 @@ TEST_F(TestTitleFromPath, DecodesLosslessURIPathNames)
             CUtil::GetTitleFromPath("http:/Video%20clips/?title=ignored#part", true));
 }
 
-/*! A local path is not escaped, so decoding one would corrupt every name holding a plus. */
-TEST_F(TestTitleFromPath, LeavesALocalNameAlone)
+TEST_F(TestTitleFromPath, LeavesAnUnescapedNameAlone)
 {
+  EXPECT_EQ("file_name", CUtil::GetTitleFromPath("davs://server/files/file_name.mkv"));
   EXPECT_EQ("C++ Media", CUtil::GetTitleFromPath("/path/to/C++ Media.mkv"));
   EXPECT_EQ("100% proof", CUtil::GetTitleFromPath("/path/to/100% proof.mkv"));
 }
@@ -1580,6 +1571,14 @@ TEST_F(TestTitleFromPath, DecodesAnArchiveNameOnlyWhenItsParentIsAUrl)
       CUtil::GetTitleFromPath("zip://davs%3a%2f%2fserver%2ffiles%2f100%2525%2520proof.zip/", true));
   EXPECT_EQ("100%20proof.zip",
             CUtil::GetTitleFromPath("zip://%2fmedia%2f100%2520proof.zip/", true));
+}
+
+TEST_F(TestTitleFromPath, NamesThePlaylistsFolders)
+{
+  const std::string playlists{
+      CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(136)};
+  EXPECT_EQ(playlists, CUtil::GetTitleFromPath("special://musicplaylists/"));
+  EXPECT_EQ(playlists, CUtil::GetTitleFromPath("special://videoplaylists/"));
 }
 
 TEST(TestUtil, FoundationNativeAndNestedNormalization)

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "PlayListTypes.h"
 #include "dbwrappers/DatabaseQuery.h"
 #include "utils/SortUtils.h"
 #include "utils/XBMCTinyXML.h"
@@ -123,6 +124,12 @@ public:
   bool IsVideoType() const;
   bool IsMusicType() const;
 
+  /*!
+   * \return The playlist this smart playlist's items play on: Audio for songs, albums and artists,
+   * Video for everything else, mixed included.
+   */
+  Type GetPlayListType() const;
+
   void SetMatchAllRules(bool matchAll)
   {
     m_ruleCombination.SetType(matchAll ? CDatabaseQueryRuleCombination::Type::COMBINATION_AND
@@ -162,7 +169,6 @@ public:
 
    \param db the database to use to format up results
    \param referencedPlaylists a set of playlists to know when we reach a cycle
-   \param needWhere whether we need to prepend the where clause with "WHERE "
    */
   std::string GetWhereClause(const CDatabase& db,
                              std::set<std::string, std::less<>>& referencedPlaylists) const;

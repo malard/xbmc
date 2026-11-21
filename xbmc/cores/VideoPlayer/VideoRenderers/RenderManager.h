@@ -45,6 +45,7 @@ class CLinuxRenderer;
 class CLinuxRendererGL;
 class CLinuxRendererGLES;
 class CRenderManager;
+
 struct DEBUG_INFO_PLAYER;
 
 class IRenderMsg

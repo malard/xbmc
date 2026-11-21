@@ -17,6 +17,7 @@
 #include "application/ApplicationContentGeometry.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationStackHelper.h"
+#include "application/PlaybackAnnouncer.h"
 #include "cores/VideoPlayer/LiveGeometryMonitor.h"
 #ifdef HAVE_LIBBLURAY
 #include "filesystem/BlurayDirectory.h"
@@ -25,6 +26,7 @@
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIWindowManager.h"
 #include "guilib/StereoscopicsManager.h"
+#include "interfaces/PlaybackValues.h"
 #include "interfaces/python/XBPython.h"
 #include "jobs/JobManager.h"
 #include "music/MusicFileItemClassify.h"
@@ -53,8 +55,6 @@ using namespace std::chrono_literals;
 
 void CApplicationPlayerCallback::OnPlayBackEnded()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_ENDED, 0, 0);
@@ -80,7 +80,6 @@ bool ShouldUpdateStreamDetails(const CFileItem& file)
 
 void CApplicationPlayerCallback::OnPlayBackStarted(const CFileItem& file)
 {
-  CLog::LogF(LOGDEBUG, "call");
   std::shared_ptr<CFileItem> itemCurrentFile;
 
   // check if VideoPlayer should set file item stream details from its current streams
@@ -466,8 +465,6 @@ void CApplicationPlayerCallback::OnPlayBackResumed()
 
 void CApplicationPlayerCallback::OnPlayBackStopped()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Clear();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_STOPPED, 0, 0);
@@ -476,7 +473,7 @@ void CApplicationPlayerCallback::OnPlayBackStopped()
 
 void CApplicationPlayerCallback::OnPlayBackError()
 {
-  //@todo Playlists can be continued by calling OnPlaybackEnded instead
+  //! @todo Playlists could continue by calling OnPlayBackEnded() instead
   // open error dialog
   CGUIMessage msg(GUI_MSG_PLAYBACK_ERROR, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
@@ -485,8 +482,6 @@ void CApplicationPlayerCallback::OnPlayBackError()
 
 void CApplicationPlayerCallback::OnQueueNextItem()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   // informs python script currently running that we are requesting the next track
   // (does nothing if python is not loaded)
 #ifdef HAS_PYTHON
@@ -527,8 +522,6 @@ void CApplicationPlayerCallback::OnPlayBackSpeedChanged(int iSpeed)
 
 void CApplicationPlayerCallback::OnAVChange()
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetGUI()->GetStereoscopicsManager().OnStreamChange();
 
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
@@ -539,12 +532,37 @@ void CApplicationPlayerCallback::OnAVChange()
 
 void CApplicationPlayerCallback::OnAVStarted(const CFileItem& file)
 {
-  CLog::LogF(LOGDEBUG, "call");
-
   CServiceBroker::GetAppComponents().GetComponent<CApplicationContentGeometry>()->Refresh();
 
   CGUIMessage msg(GUI_MSG_PLAYBACK_AVSTARTED, 0, 0);
   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
+}
+
+void CApplicationPlayerCallback::OnSubtitleVisibilityChanged(bool visible)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.subtitleEnabled = visible});
+}
+
+void CApplicationPlayerCallback::OnSubtitleStreamChanged(int index, const SubtitleStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentSubtitle =
+                                                         INTERFACES::StreamToObject(index, info)});
+}
+
+void CApplicationPlayerCallback::OnAudioStreamChanged(int index, const AudioStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentAudioStream =
+                                                         INTERFACES::StreamToObject(index, info)});
+}
+
+void CApplicationPlayerCallback::OnVideoStreamChanged(int index, const VideoStreamInfo& info)
+{
+  CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>()->Announce(
+      ANNOUNCEMENT::EVENT::PLAYER::PropertiesChanged{.currentVideoStream =
+                                                         INTERFACES::StreamToObject(index, info)});
 }
 
 void CApplicationPlayerCallback::OnContentGeometryChanged(const LiveGeometryUpdate& update)

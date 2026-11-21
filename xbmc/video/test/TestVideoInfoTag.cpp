@@ -8,7 +8,7 @@
 
 #include "ServiceBroker.h"
 #include "filesystem/File.h"
-#include "language/LangInfo.h"
+#include "language/Language.h"
 #include "language/LanguageTag.h"
 #include "language/i18n/LanguageTable.h"
 #include "settings/Settings.h"
@@ -208,8 +208,8 @@ TEST(TestVideoInfoTag, ReadStreamDetailLanguageThatNamesNone)
   KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Declare({{"hva", "High Valyrian"}});
   CVideoInfoTag declared;
   EXPECT_TRUE(declared.Load(doc.RootElement(), true, false));
-  EXPECT_EQ(declared.m_streamDetails.GetAudioLanguage(1).AsIso6392B(), "hva");
-  EXPECT_EQ(declared.m_streamDetails.GetSubtitleLanguage(1).AsIso6392B(), "hva");
+  EXPECT_EQ(declared.m_streamDetails.GetAudioLanguage(1).ToString(), "hva");
+  EXPECT_EQ(declared.m_streamDetails.GetSubtitleLanguage(1).ToString(), "hva");
   KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Reset();
 }
 
@@ -290,6 +290,37 @@ TEST(TestVideoInfoTag, WriteVideoStreamDetails)
 
   EXPECT_EQ("eng", reloaded.m_streamDetails.GetVideoLanguage(1).AsIso6392B());
   EXPECT_EQ("7MEL", reloaded.m_streamDetails.GetVideoHdrDetail(1));
+}
+
+TEST(TestVideoInfoTag, WriteStreamLanguagesAsTheirWholeTag)
+{
+  auto* video = new CStreamDetailVideo();
+  video->m_language = CLanguageTag::Parse("en-AU");
+  video->SetSource(CStreamDetail::MEDIA);
+  auto* audio = new CStreamDetailAudio();
+  audio->m_language = CLanguageTag::Parse("pob");
+  audio->SetSource(CStreamDetail::MEDIA);
+  auto* subtitle = new CStreamDetailSubtitle();
+  subtitle->m_language = CLanguageTag::Parse("zh-Hant");
+  subtitle->SetSource(CStreamDetail::MEDIA);
+
+  CVideoInfoTag details;
+  details.m_streamDetails.AddStream(video);
+  details.m_streamDetails.AddStream(audio);
+  details.m_streamDetails.AddStream(subtitle);
+  details.m_streamDetails.DetermineBestStreams();
+
+  CXBMCTinyXML xmlDoc;
+  ASSERT_TRUE(details.Save(&xmlDoc, "movie"));
+
+  const TiXmlElement* streams{
+      xmlDoc.RootElement()->FirstChildElement("fileinfo")->FirstChildElement("streamdetails")};
+  EXPECT_STREQ("en-AU",
+               streams->FirstChildElement("video")->FirstChildElement("language")->GetText());
+  EXPECT_STREQ("pt-BR",
+               streams->FirstChildElement("audio")->FirstChildElement("language")->GetText());
+  EXPECT_STREQ("zh-Hant",
+               streams->FirstChildElement("subtitle")->FirstChildElement("language")->GetText());
 }
 
 TEST(TestVideoInfoTag, EpisodeBookmarkRoundTrip)
@@ -502,7 +533,7 @@ protected:
   {
     m_settingOriginal = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
         CSettings::SETTING_LOCALE_AUDIOLANGUAGE);
-    m_audioLanguageOriginal = g_langInfo.GetAudioLanguage(false).ToString();
+    m_languageOriginal = KODI::LANGUAGE::CLanguage::GetInstance();
     m_languageDetailsOriginal = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
         CSettings::SETTING_VIDEOLIBRARY_LANGUAGEDETAILS);
   }
@@ -511,7 +542,7 @@ protected:
   {
     CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
         CSettings::SETTING_LOCALE_AUDIOLANGUAGE, m_settingOriginal);
-    g_langInfo.SetAudioLanguage(m_audioLanguageOriginal);
+    KODI::LANGUAGE::CLanguage::GetInstance() = m_languageOriginal;
     DescribeStream(m_languageDetailsOriginal);
   }
 
@@ -525,7 +556,7 @@ protected:
   {
     CServiceBroker::GetSettingsComponent()->GetSettings()->SetString(
         CSettings::SETTING_LOCALE_AUDIOLANGUAGE, language);
-    g_langInfo.SetAudioLanguage(language);
+    KODI::LANGUAGE::CLanguage::GetInstance().SetAudio(language);
   }
 
   // A German TrueHD 7.1 track that outranks an English AC3 5.1 one on quality alone
@@ -569,7 +600,7 @@ protected:
   }
 
   std::string m_settingOriginal;
-  std::string m_audioLanguageOriginal;
+  KODI::LANGUAGE::CLanguage m_languageOriginal;
   int m_languageDetailsOriginal{CSettings::VIDEOLIBRARY_LANGUAGE_DETAILS_PLAYER};
 };
 
@@ -577,7 +608,7 @@ TEST_F(AudioSortKeyTester, OrdersByThePreferredLanguageStream)
 {
   const CVideoInfoTag tag{MakeTagWithTwoAudioStreams()};
 
-  // The technically best stream is the German one, so that is what the sort key used to be
+  // The technically best stream is the German one, which the sort key must not follow
   ASSERT_EQ("truehd", tag.m_streamDetails.GetAudioCodec());
 
   PreferLanguage("eng");

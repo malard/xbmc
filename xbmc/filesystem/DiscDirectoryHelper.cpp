@@ -2861,14 +2861,17 @@ std::string GetDefaultStreamLanguages(const PlaylistInformation& information)
   const auto isDefault{[](const auto& stream)
                        { return (stream.flags & StreamFlags::FLAG_DEFAULT) != 0; }};
 
+  // A person reads this to tell one playlist from another, so the languages are named rather than
+  // coded. The language alone, without whatever a subtag qualifies it with, keeps the list narrow
+  // enough to read.
   std::vector<std::string> languages;
   if (const auto audio{std::ranges::find_if(information.audioStreams, isDefault)};
       audio != information.audioStreams.cend() && !audio->language.IsUndetermined())
-    languages.emplace_back(audio->language.AsIso6392B());
+    languages.emplace_back(audio->language.ToEnglishLanguageName());
 
   if (const auto pg{std::ranges::find_if(information.pgStreams, isDefault)};
       pg != information.pgStreams.cend() && !pg->language.IsUndetermined())
-    languages.emplace_back(pg->language.AsIso6392B());
+    languages.emplace_back(pg->language.ToEnglishLanguageName());
 
   return StringUtils::Join(languages, " | ");
 }

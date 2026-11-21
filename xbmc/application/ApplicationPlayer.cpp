@@ -259,17 +259,6 @@ bool CApplicationPlayer::HasGame() const
   return (player && player->HasGame());
 }
 
-PLAYLIST::Id CApplicationPlayer::GetPreferredPlaylist() const
-{
-  if (IsPlayingVideo())
-    return PLAYLIST::Id::TYPE_VIDEO;
-
-  if (IsPlayingAudio())
-    return PLAYLIST::Id::TYPE_MUSIC;
-
-  return PLAYLIST::Id::TYPE_NONE;
-}
-
 bool CApplicationPlayer::HasRDS() const
 {
   std::shared_ptr<const IPlayer> player = GetInternal();
@@ -1117,11 +1106,11 @@ void CApplicationPlayer::FlushRenderer()
     player->FlushRenderer();
 }
 
-void CApplicationPlayer::SetRenderViewMode(int mode, float zoom, float par, float shift, bool stretch)
+void CApplicationPlayer::SetRenderViewMode(int mode, float par, float shift, bool stretch)
 {
   std::shared_ptr<IPlayer> player = GetInternal();
   if (player)
-    player->SetRenderViewMode(mode, zoom, par, shift, stretch);
+    player->SetRenderViewMode(mode, par, shift, stretch);
 }
 
 float CApplicationPlayer::GetRenderAspectRatio() const

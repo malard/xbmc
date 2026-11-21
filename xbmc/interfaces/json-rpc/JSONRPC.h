@@ -81,4 +81,4 @@ namespace JSONRPC
 
     static bool m_initialized;
   };
-}
+} // namespace JSONRPC

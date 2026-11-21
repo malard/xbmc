@@ -144,24 +144,12 @@ bool CGUIWindowFullScreen::OnAction(const CAction &action)
       {
         CVideoSettings vs = appPlayer->GetVideoSettings();
         vs.m_ViewMode = CViewModeSettings::GetNextQuickCycleViewMode(vs.m_ViewMode);
-        appPlayer->SetRenderViewMode(vs.m_ViewMode, vs.m_CustomZoomAmount, vs.m_CustomPixelRatio,
-                                     vs.m_CustomVerticalShift, vs.m_CustomNonLinStretch);
+        appPlayer->SetRenderViewMode(vs.m_ViewMode, vs.m_CustomPixelRatio, vs.m_CustomVerticalShift,
+                                     vs.m_CustomNonLinStretch);
       }
       else
         m_viewModeChanged = true;
       m_dwShowViewModeTimeout = std::chrono::steady_clock::now();
-    }
-    return true;
-    break;
-  case ACTION_SHOW_PLAYLIST:
-    {
-      CFileItem item(g_application.CurrentFileItem());
-      if (item.HasPVRChannelInfoTag())
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_DIALOG_PVR_OSD_CHANNELS);
-      else if (item.HasVideoInfoTag())
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_VIDEO_PLAYLIST);
-      else if (item.HasMusicInfoTag())
-        CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_MUSIC_PLAYLIST);
     }
     return true;
     break;

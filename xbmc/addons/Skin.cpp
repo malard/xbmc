@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <charconv>
 #include <chrono>
+#include <cmath>
 #include <map>
 #include <memory>
 #include <set>

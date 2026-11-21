@@ -156,31 +156,6 @@ enum class Wrap
   ToStart
 };
 
-enum class Id : int
-{
-  TYPE_NONE = -1,
-  TYPE_MUSIC = 0,
-  TYPE_VIDEO = 1,
-  TYPE_PICTURE = 2,
-  TYPE_GAME = 3
-};
-
-/*!
- * \brief Manages playlist playing.
- */
-enum class RepeatState
-{
-  NONE,
-  ONE,
-  ALL
-};
-
-enum class ExcludeUsedPlaylists : bool
-{
-  DONT_EXCLUDE_USED_PLAYLISTS,
-  EXCLUDE_USED_PLAYLISTS
-};
-
 } // namespace KODI::PLAYLIST
 
 template<>

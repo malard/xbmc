@@ -661,10 +661,10 @@ public:
   /////////////////////////////////////////////////
   /*! \brief Gets song IDs in random order that match the filter criteria
   \param filter the criteria to apply in the query
-  \param songIDs a vector of <1, id> pairs suited to party mode use
+  \param songIDs [out] the matching song ids
   \return count of song ids found.
   */
-  unsigned int GetRandomSongIDs(const Filter& filter, std::vector<std::pair<int, int>>& songIDs);
+  unsigned int GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs);
 
   /////////////////////////////////////////////////
   // JSON-RPC
@@ -689,6 +689,10 @@ public:
   /////////////////////////////////////////////////
   // Scraper
   /////////////////////////////////////////////////
+  /*! \brief Set the information provider for a single artist or album.
+   \param content ARTISTS or ALBUMS.
+   \param scraper nullptr clears the item's own, leaving the default to apply.
+   */
   bool SetScraper(int id, ADDON::ContentType content, const ADDON::ScraperPtr& scraper);
   bool SetScraperAll(const std::string& strBaseDir, const ADDON::ScraperPtr& scraper);
   bool GetScraper(int id, ADDON::ContentType content, ADDON::ScraperPtr& scraper);

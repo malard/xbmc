@@ -111,6 +111,7 @@ void CGUIDialogVideoManagerExtras::SetVideoAsset(const std::shared_ptr<CFileItem
 
 bool CGUIDialogVideoManagerExtras::AddVideoExtra()
 {
+  auto& localizeStrings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()};
   // @todo: combine with versions add file logic, structured similarly and sharing most logic.
 
   const KODI::MEDIA::TYPE mediaType{m_videoAsset->GetVideoInfoTag()->GetMediaType()};
@@ -159,7 +160,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
   std::string path;
   if (CGUIDialogFileBrowser::ShowAndGetFile(
           sources, CServiceBroker::GetFileExtensionProvider().GetVideoExtensions(),
-          CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40015), path))
+          localizeStrings.Get(40015), path))
   {
     if ((URIUtils::IsBDFile(path) || ::UTILS::DISCS::IsBlurayDiscImage(path)) &&
         CGUIDialogYesNo::ShowAndGetInput(CVariant{40015}, CVariant{40054}))
@@ -195,7 +196,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
         CGUIDialogOK::ShowAndGetInput(
             CVariant{40015},
             StringUtils::Format(
-                CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(msgid),
+                localizeStrings.Get(msgid),
                 newAsset.m_assetTypeName));
         return false;
       }
@@ -206,8 +207,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
       if (newAsset.m_assetType == VideoAssetType::VERSION &&
           !CGUIDialogYesNo::ShowAndGetInput(
               CVariant{40015},
-              StringUtils::Format(
-                  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(40036))))
+              StringUtils::Format(localizeStrings.Get(40036))))
       {
         return false;
       }
@@ -237,7 +237,7 @@ bool CGUIDialogVideoManagerExtras::AddVideoExtra()
         if (!CGUIDialogYesNo::ShowAndGetInput(
                 CVariant{40015},
                 StringUtils::Format(
-                    CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(msgid),
+                    localizeStrings.Get(msgid),
                     newAsset.m_assetTypeName, videoTitle)))
         {
           return false;

@@ -13,6 +13,7 @@
 #include "GUIDialogContextMenu.h"
 #include "GUIDialogSelect.h"
 #include "GUIDialogSmartPlaylistRule.h"
+#include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "filesystem/File.h"
@@ -20,7 +21,7 @@
 #include "guilib/GUIKeyboardFactory.h"
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/ActionIDs.h"
-#include "profiles/ProfileManager.h"
+#include "playlists/PlayListTypes.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
@@ -73,17 +74,14 @@ static const translateType types[] = {
     {CGUIDialogSmartPlaylistEditor::TYPE_EPISODES, MEDIA::CONTENT::EPISODES, 20360}};
 
 CGUIDialogSmartPlaylistEditor::CGUIDialogSmartPlaylistEditor(void)
-    : CGUIDialog(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR, "SmartPlaylistEditor.xml")
+    : CGUIDialog(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR, "SmartPlaylistEditor.xml"),
+      m_ruleLabels(std::make_unique<CFileItemList>())
 {
   m_cancelled = false;
-  m_ruleLabels = new CFileItemList;
   m_loadType = KEEP_IN_MEMORY;
 }
 
-CGUIDialogSmartPlaylistEditor::~CGUIDialogSmartPlaylistEditor()
-{
-  delete m_ruleLabels;
-}
+CGUIDialogSmartPlaylistEditor::~CGUIDialogSmartPlaylistEditor() = default;
 
 bool CGUIDialogSmartPlaylistEditor::OnBack(int actionID)
 {
@@ -154,9 +152,9 @@ bool CGUIDialogSmartPlaylistEditor::OnMessage(CGUIMessage& message)
       if (!startupList.empty())
       {
         int party = 0;
-        if (URIUtils::PathEquals(startupList, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode.xsp")))
+        if (URIUtils::PathEquals(startupList, PARTYMODE::RulesPath(PLAYLIST::Audio)))
           party = 1;
-        else if (URIUtils::PathEquals(startupList, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode-Video.xsp")))
+        else if (URIUtils::PathEquals(startupList, PARTYMODE::RulesPath(PLAYLIST::Video)))
           party = 2;
 
         if ((party && !XFILE::CFile::Exists(startupList)) ||
@@ -165,16 +163,16 @@ bool CGUIDialogSmartPlaylistEditor::OnMessage(CGUIMessage& message)
           m_path = startupList;
 
           if (party == 1)
-            m_mode = "partymusic";
+            m_mode = Mode::PARTY_MUSIC;
           else if (party == 2)
-            m_mode = "partyvideo";
+            m_mode = Mode::PARTY_VIDEO;
           else
           {
             PLAYLIST_TYPE type = ConvertType(m_playlist.GetType());
             if (type == TYPE_SONGS || type == TYPE_ALBUMS || type == TYPE_ARTISTS)
-              m_mode = "music";
+              m_mode = Mode::MUSIC;
             else
-              m_mode = "video";
+              m_mode = Mode::VIDEO;
           }
         }
         else
@@ -452,7 +450,7 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
 {
   CONTROL_ENABLE(CONTROL_OK); // always enabled since we can have no rules -> match everything (as we do with default partymode playlists)
 
-  if (m_mode == "partyvideo" || m_mode == "partymusic")
+  if (m_mode == Mode::PARTY_VIDEO || m_mode == Mode::PARTY_MUSIC)
   {
     SET_CONTROL_LABEL2(CONTROL_NAME,
                        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(16035));
@@ -487,15 +485,15 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
   m_ruleLabels->Clear();
   for (const auto& rule : m_playlist.m_ruleCombination.GetRules())
   {
-    CFileItemPtr item(new CFileItem("", false));
+    auto item = std::make_shared<CFileItem>("", false);
     item->SetLabel(
         std::static_pointer_cast<PLAYLIST::CSmartPlaylistRule>(rule)->GetLocalizedRule());
     m_ruleLabels->Add(item);
   }
-  CFileItemPtr item(new CFileItem("", false));
+  auto item = std::make_shared<CFileItem>("", false);
   item->SetLabel(CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(21423));
   m_ruleLabels->Add(item);
-  CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_RULE_LIST, 0, 0, m_ruleLabels);
+  CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_RULE_LIST, 0, 0, m_ruleLabels.get());
   OnMessage(msg);
   SendMessage(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_RULE_LIST, currentItem);
 
@@ -644,27 +642,27 @@ void CGUIDialogSmartPlaylistEditor::HighlightItem(int item)
   OnMessage(msg);
 }
 
-std::vector<CGUIDialogSmartPlaylistEditor::PLAYLIST_TYPE> CGUIDialogSmartPlaylistEditor::GetAllowedTypes(const std::string& mode)
+std::vector<CGUIDialogSmartPlaylistEditor::PLAYLIST_TYPE> CGUIDialogSmartPlaylistEditor::GetAllowedTypes(Mode mode)
 {
   std::vector<PLAYLIST_TYPE> allowedTypes;
-  if (mode == "partymusic")
+  if (mode == Mode::PARTY_MUSIC)
   {
     allowedTypes.push_back(TYPE_SONGS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "partyvideo")
+  else if (mode == Mode::PARTY_VIDEO)
   {
     allowedTypes.push_back(TYPE_MUSICVIDEOS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "music")
+  else if (mode == Mode::MUSIC)
   { // music types + mixed
     allowedTypes.push_back(TYPE_SONGS);
     allowedTypes.push_back(TYPE_ALBUMS);
     allowedTypes.push_back(TYPE_ARTISTS);
     allowedTypes.push_back(TYPE_MIXED);
   }
-  else if (mode == "video")
+  else if (mode == Mode::VIDEO)
   { // general category for videos
     allowedTypes.push_back(TYPE_MOVIES);
     allowedTypes.push_back(TYPE_TVSHOWS);
@@ -704,32 +702,32 @@ bool CGUIDialogSmartPlaylistEditor::NewPlaylist(const std::string &type)
 
   editor->m_path = "";
   editor->m_playlist = PLAYLIST::CSmartPlaylist();
-  editor->m_mode = type;
+  editor->m_mode = type == "music" ? Mode::MUSIC : type == "video" ? Mode::VIDEO : Mode::NONE;
   editor->Initialize();
   editor->Open();
   return !editor->m_cancelled;
 }
 
-bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string &path, const std::string &type)
+bool CGUIDialogSmartPlaylistEditor::EditPlaylist(const std::string& path, Mode mode)
 {
   CGUIDialogSmartPlaylistEditor *editor = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSmartPlaylistEditor>(WINDOW_DIALOG_SMART_PLAYLIST_EDITOR);
   if (!editor) return false;
 
-  editor->m_mode = type;
-  if (URIUtils::PathEquals(path, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode.xsp")))
-    editor->m_mode = "partymusic";
-  if (URIUtils::PathEquals(path, CServiceBroker::GetSettingsComponent()->GetProfileManager()->GetUserDataItem("PartyMode-Video.xsp")))
-    editor->m_mode = "partyvideo";
+  editor->m_mode = mode;
+  if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Audio)))
+    editor->m_mode = Mode::PARTY_MUSIC;
+  if (URIUtils::PathEquals(path, PARTYMODE::RulesPath(PLAYLIST::Video)))
+    editor->m_mode = Mode::PARTY_VIDEO;
 
   PLAYLIST::CSmartPlaylist playlist;
   bool loaded(playlist.Load(path));
   if (!loaded)
   { // failed to load
-    if (!StringUtils::StartsWithNoCase(editor->m_mode, "party"))
+    if (editor->m_mode != Mode::PARTY_MUSIC && editor->m_mode != Mode::PARTY_VIDEO)
       return false; // only edit normal playlists that exist
     // party mode playlists can be edited even if they don't exist
-    playlist.SetType(editor->m_mode == "partymusic" ? MEDIA::CONTENT::SONGS
-                                                    : MEDIA::CONTENT::MUSICVIDEOS);
+    playlist.SetType(editor->m_mode == Mode::PARTY_MUSIC ? MEDIA::CONTENT::SONGS
+                                                         : MEDIA::CONTENT::MUSICVIDEOS);
   }
 
   editor->m_playlist = playlist;
