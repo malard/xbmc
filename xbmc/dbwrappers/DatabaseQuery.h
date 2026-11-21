@@ -126,7 +126,6 @@ public:
   };
 
   void clear();
-  virtual bool Load(const TiXmlNode* node, const std::string& encoding = "UTF-8") { return false; }
   virtual bool Load(const CVariant& obj, const IDatabaseQueryRuleFactory* factory);
   virtual bool Save(TiXmlNode* parent) const;
   virtual bool Save(CVariant& obj) const;
