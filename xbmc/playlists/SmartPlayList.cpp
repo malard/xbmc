@@ -177,7 +177,28 @@ static const auto groups = std::array{
 };
 // clang-format on
 
-constexpr std::string_view RULE_VALUE_SEPARATOR = " / ";
+namespace
+{
+bool UseOriginalDate()
+{
+  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE);
+}
+
+//! The music field a year rule queries, which the original date setting can redirect
+int MusicYearField(int field)
+{
+  return UseOriginalDate() ? static_cast<int>(Field::ORIG_YEAR) : field;
+}
+
+std::string StreamDetailsExists(const std::string& negate,
+                                const std::string& table,
+                                const std::string& condition)
+{
+  return negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table +
+         ".idFile AND " + condition + ")";
+}
+} // namespace
 
 constexpr char TAG_WATCHEDMODE[] = "watchedmode";
 
@@ -266,7 +287,8 @@ bool CSmartPlaylistRule::Validate(const std::string& input, void* data)
     return it->validator("", data);
 
   // Split the input into multiple values and validate every value separately
-  const std::vector<std::string> values{StringUtils::Split(input, RULE_VALUE_SEPARATOR)};
+  const std::vector<std::string> values{
+      StringUtils::Split(input, DATABASEQUERY_RULE_VALUE_SEPARATOR)};
 
   return std::ranges::all_of(values, [data, validator = it->validator](const auto& s)
                              { return validator(s, data); });
@@ -326,9 +348,10 @@ std::vector<Field> CSmartPlaylistRule::GetFields(const std::string &type)
         Field::GENRE,  Field::SOURCE,       Field::ALBUM, Field::DISC_TITLE,
         Field::ARTIST, Field::ALBUM_ARTIST, Field::TITLE, Field::YEAR,
     };
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-      CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!UseOriginalDate())
+    {
       fields.push_back(Field::ORIG_YEAR);
+    }
     fields.insert(fields.end(), {
                                     Field::TIME,
                                     Field::TRACK_NUMBER,
@@ -358,9 +381,10 @@ std::vector<Field> CSmartPlaylistRule::GetFields(const std::string &type)
         Field::ALBUM_ARTIST, // album artist
         Field::YEAR,
     };
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!UseOriginalDate())
+    {
       fields.push_back(Field::ORIG_YEAR);
+    }
     fields.insert(fields.end(), {
                                     Field::ALBUM_DURATION,
                                     Field::REVIEW,
@@ -518,9 +542,10 @@ std::vector<SortBy> CSmartPlaylistRule::GetOrders(const std::string& type)
     orders = {
         SortBy::NONE, SortBy::GENRE, SortBy::ALBUM, SortBy::ARTIST, SortBy::TITLE, SortBy::YEAR,
     };
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-      CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!UseOriginalDate())
+    {
       orders.push_back(SortBy::ORIG_DATE);
+    }
     orders.insert(orders.end(), {
                                     SortBy::TIME,
                                     SortBy::TRACK_NUMBER,
@@ -541,9 +566,10 @@ std::vector<SortBy> CSmartPlaylistRule::GetOrders(const std::string& type)
         SortBy::ARTIST, // any artist
         SortBy::YEAR,
     };
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!UseOriginalDate())
+    {
       orders.push_back(SortBy::ORIG_DATE);
+    }
     orders.insert(orders.end(), {
                                     SortBy::ALBUM_TYPE,
                                     SortBy::RATING,
@@ -629,9 +655,10 @@ std::vector<Field> CSmartPlaylistRule::GetGroups(const std::string &type)
         Field::UNKNOWN,
         Field::YEAR,
     };
-    if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
+    if (!UseOriginalDate())
+    {
       groups.push_back(Field::ORIG_YEAR);
+    }
   }
   if (type == MEDIA::CONTENT::MOVIES)
   {
@@ -868,13 +895,7 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     else if (m_field == static_cast<int>(Field::YEAR) ||
              m_field == static_cast<int>(Field::ORIG_YEAR))
     {
-      std::string field;
-      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-        CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
-        field = GetField(static_cast<int>(Field::ORIG_YEAR), strType);
-      else
-        field = GetField(m_field, strType);
-      query = FormatYearQuery(field, param, parameter);
+      query = FormatYearQuery(GetField(MusicYearField(m_field), strType), param, parameter);
     }
   }
   else if (strType == MEDIA::CONTENT::ALBUMS)
@@ -916,13 +937,7 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     else if (m_field == static_cast<int>(Field::YEAR) ||
              m_field == static_cast<int>(Field::ORIG_YEAR))
     {
-      std::string field;
-      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-              CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE))
-        field = GetField(static_cast<int>(Field::ORIG_YEAR), strType);
-      else
-        field = GetField(m_field, strType);
-      query = FormatYearQuery(field, param, parameter);
+      query = FormatYearQuery(GetField(MusicYearField(m_field), strType), param, parameter);
     }
   }
   else if (strType == MEDIA::CONTENT::ARTISTS)
@@ -1088,28 +1103,59 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
       query = negate + " (" + GetField(m_field, strType) +  parameter + ")";
   }
   if (m_field == static_cast<int>(Field::VIDEO_RESOLUTION))
+  {
     query = table + ".idFile" + negate + GetVideoResolutionQuery(param);
+  }
   else if (m_field == static_cast<int>(Field::AUDIO_CHANNELS))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND iAudioChannels " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "iAudioChannels " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::VIDEO_CODEC))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND strVideoCodec " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strVideoCodec " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::AUDIO_CODEC))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND strAudioCodec " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strAudioCodec " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::AUDIO_LANGUAGE))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND strAudioLanguage " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strAudioLanguage " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::SUBTITLE_LANGUAGE))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND strSubtitleLanguage " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strSubtitleLanguage " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::VIDEO_ASPECT_RATIO))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND fVideoAspect " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "fVideoAspect " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::AUDIO_COUNT))
-    query = db.PrepareSQL(negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND streamdetails.iStreamtype = %i GROUP BY streamdetails.idFile HAVING COUNT(streamdetails.iStreamType) " + parameter + ")",CStreamDetail::AUDIO);
+  {
+    query = db.PrepareSQL(
+        StreamDetailsExists(negate, table,
+                            "streamdetails.iStreamtype = %i GROUP BY streamdetails.idFile HAVING "
+                            "COUNT(streamdetails.iStreamType) " +
+                                parameter),
+        CStreamDetail::AUDIO);
+  }
   else if (m_field == static_cast<int>(Field::SUBTITLE_COUNT))
-    query = db.PrepareSQL(negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND streamdetails.iStreamType = %i GROUP BY streamdetails.idFile HAVING COUNT(streamdetails.iStreamType) " + parameter + ")",CStreamDetail::SUBTITLE);
+  {
+    query = db.PrepareSQL(
+        StreamDetailsExists(negate, table,
+                            "streamdetails.iStreamType = %i GROUP BY streamdetails.idFile HAVING "
+                            "COUNT(streamdetails.iStreamType) " +
+                                parameter),
+        CStreamDetail::SUBTITLE);
+  }
   else if (m_field == static_cast<int>(Field::HDR_TYPE))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table + ".idFile AND strHdrType " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strHdrType " + parameter);
+  }
   else if (m_field == static_cast<int>(Field::HDR_DETAIL))
-    query = negate + " EXISTS (SELECT 1 FROM streamdetails WHERE streamdetails.idFile = " + table +
-            ".idFile AND strHdrDetail " + parameter + ")";
+  {
+    query = StreamDetailsExists(negate, table, "strHdrDetail " + parameter);
+  }
 
   if ((m_field == static_cast<int>(Field::PLAYCOUNT) && strType != MEDIA::CONTENT::SONGS &&
        strType != MEDIA::CONTENT::ALBUMS && strType != MEDIA::CONTENT::TVSHOWS) ||
