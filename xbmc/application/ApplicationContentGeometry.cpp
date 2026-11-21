@@ -54,11 +54,11 @@ float GuiShapeAspect()
 }
 
 //! \brief What is on the screen when nothing is playing: a ratio, no rectangle.
-EffectiveGeometry AtRestGeometry()
+EffectiveGeometry AtRestGeometry(float atRestAspect)
 {
   EffectiveGeometry gui;
   const float guiShape{GuiShapeAspect()};
-  gui.aspect = guiShape > 0.0f ? guiShape : ContentGeometryAtRestFromSettings();
+  gui.aspect = guiShape > 0.0f ? guiShape : atRestAspect;
   gui.label = CAspectRatioVocabulary::Label(gui.aspect);
   gui.name = CAspectRatioVocabulary::Name(gui.aspect);
   gui.source = GeometrySource::Container;
@@ -191,7 +191,7 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
     m_pending = {};
 
     m_haveStream = false;
-    m_current = AtRestGeometry();
+    m_current = AtRestGeometry(AtRestAspect());
 
     m_carryRaster = true;
   }
@@ -236,6 +236,11 @@ float CApplicationContentGeometry::RasterAspect() const
   }
 
   return RasterAspectFromSettings();
+}
+
+float CApplicationContentGeometry::AtRestAspect() const
+{
+  return ContentGeometryAtRest(RasterAspect());
 }
 
 OsdPlacement CApplicationContentGeometry::OsdPlacementInForce() const
@@ -294,7 +299,7 @@ void CApplicationContentGeometry::RefreshAtRest()
       return;
   }
 
-  Set(AtRestGeometry());
+  Set(AtRestGeometry(AtRestAspect()));
 }
 
 void CApplicationContentGeometry::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
@@ -337,16 +342,16 @@ void CApplicationContentGeometry::Refresh()
       std::unique_lock lock(m_section);
       m_haveStream = false;
     }
-    Set(AtRestGeometry());
+    Set(AtRestGeometry(AtRestAspect()));
     return;
   }
 
   const CVideoSettings videoSettings = appPlayer->GetVideoSettings();
 
-  // Gathered before the section is taken: none of it depends on what the section guards, and
-  // the settings store has a lock of its own.
+  // Gathered before the section is taken: the settings store has a lock of its own, and the
+  // shape at rest takes the section for itself.
   const VariableGeometryPolicy policy = ContentGeometryPolicyFromSettings();
-  const float atRestAspect = ContentGeometryAtRestFromSettings();
+  const float atRestAspect = AtRestAspect();
   const int videoStream = appPlayer->GetVideoStream();
 
   EffectiveGeometry resolved;
@@ -401,7 +406,7 @@ void CApplicationContentGeometry::Clear()
 
   ApplyRaster();
 
-  Set(AtRestGeometry());
+  Set(AtRestGeometry(AtRestAspect()));
 }
 
 void CApplicationContentGeometry::ApplyRaster()
