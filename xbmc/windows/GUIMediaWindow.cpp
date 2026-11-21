@@ -26,6 +26,7 @@
 #include "media/MediaSection.h"
 #include "messaging/ApplicationMessenger.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "playlists/SmartPlayList.h"
 #if defined(TARGET_ANDROID)
 #include "platform/android/activity/XBMCApp.h"
 #endif
@@ -90,8 +91,9 @@ using namespace KODI::MESSAGING;
 using KODI::MEDIA::MediaSection;
 using namespace std::chrono_literals;
 
-CGUIMediaWindow::CGUIMediaWindow(int id, const char *xmlFile)
-    : CGUIWindow(id, xmlFile)
+CGUIMediaWindow::CGUIMediaWindow(int id, const char* xmlFile)
+  : CGUIWindow(id, xmlFile),
+    m_filter(std::make_unique<PLAYLIST::CSmartPlaylist>())
 {
   m_loadType = KEEP_IN_MEMORY;
   m_vecItems = new CFileItemList;
@@ -229,7 +231,7 @@ bool CGUIMediaWindow::OnMessage(CGUIMessage& message)
     if (m_canFilterAdvanced)
     {
       m_canFilterAdvanced = false;
-      m_filter.Reset();
+      m_filter->Reset();
     }
     m_strFilterPath.clear();
 
@@ -850,7 +852,7 @@ bool CGUIMediaWindow::GetDirectory(const std::string &strDirectory, CFileItemLis
   // clear the filter
   SetProperty("filter", "");
   m_canFilterAdvanced = false;
-  m_filter.Reset();
+  m_filter->Reset();
   return true;
 }
 
@@ -1000,7 +1002,9 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
   // Check whether to enabled advanced filtering based on the content type
   m_canFilterAdvanced = CheckFilterAdvanced(*m_vecItems);
   if (m_canFilterAdvanced)
-    m_filter.SetType(m_vecItems->GetContent());
+  {
+    m_filter->SetType(m_vecItems->GetContent());
+  }
 
   //  Ask the derived class if it wants to load additional info
   //  for the fileitems like media info or additional
@@ -1179,7 +1183,7 @@ bool CGUIMediaWindow::OnClick(int iItem, const std::string &player)
     // if we have a filtered list, we need to add the filtered
     // path to be able to come back to the filtered view
     std::string strCurrentDirectory = m_vecItems->GetPath();
-    if (m_canFilterAdvanced && !m_filter.IsEmpty() &&
+    if (m_canFilterAdvanced && !m_filter->IsEmpty() &&
         !URIUtils::PathEquals(m_strFilterPath, strCurrentDirectory))
     {
       m_history.RemoveParentPath();
@@ -1372,7 +1376,8 @@ bool CGUIMediaWindow::GoParentFolder()
     return false;
 
   // No items to show so go another level up
-  if (!m_vecItems->GetPath().empty() && (m_filter.IsEmpty() ? m_vecItems->Size() : m_unfilteredItems->Size()) <= 0)
+  if (!m_vecItems->GetPath().empty() &&
+      (m_filter->IsEmpty() ? m_vecItems->Size() : m_unfilteredItems->Size()) <= 0)
   {
     CGUIDialogKaiToast::QueueNotification(
         CGUIDialogKaiToast::Info,
@@ -1895,11 +1900,11 @@ void CGUIMediaWindow::UpdateFilterPath(const std::string &strDirectory, const CF
   // check if there is a filter and re-apply it
   if (canfilter && !filter.empty())
   {
-    if (!m_filter.LoadFromJson(filter))
+    if (!m_filter->LoadFromJson(filter))
     {
       CLog::Log(LOGWARNING,
                 "CGUIMediaWindow::UpdateFilterPath(): unable to load existing filter ({})", filter);
-      m_filter.Reset();
+      m_filter->Reset();
       m_strFilterPath = m_vecItems->GetPath();
     }
     else
@@ -2069,11 +2074,13 @@ bool CGUIMediaWindow::GetAdvanceFilteredItems(CFileItemList &items)
   // and there hasn't been a filter applied before which
   // would have to be removed
   CURL url(m_strFilterPath);
-  if (m_filter.IsEmpty() && !url.HasOption("filter"))
+  if (m_filter->IsEmpty() && !url.HasOption("filter"))
+  {
     return false;
+  }
 
   CFileItemList resultItems;
-  XFILE::CSmartPlaylistDirectory::GetDirectory(m_filter, resultItems, m_strFilterPath, true);
+  XFILE::CSmartPlaylistDirectory::GetDirectory(*m_filter, resultItems, m_strFilterPath, true);
 
   // put together a lookup map for faster path comparison
   std::map<std::string, CFileItemPtr> lookup;
@@ -2132,7 +2139,7 @@ bool CGUIMediaWindow::GetAdvanceFilteredItems(CFileItemList &items)
 bool CGUIMediaWindow::IsFiltered()
 {
   return (!m_canFilterAdvanced && !GetProperty("filter").empty()) ||
-         (m_canFilterAdvanced && !m_filter.IsEmpty());
+         (m_canFilterAdvanced && !m_filter->IsEmpty());
 }
 
 bool CGUIMediaWindow::IsSameStartFolder(const std::string &dir)
@@ -2169,7 +2176,9 @@ bool CGUIMediaWindow::Filter(bool advanced /* = true */)
   }
   // advanced filtering
   else
-    CGUIDialogMediaFilter::ShowAndEditMediaFilter(m_strFilterPath, m_filter);
+  {
+    CGUIDialogMediaFilter::ShowAndEditMediaFilter(m_strFilterPath, *m_filter);
+  }
 
   return true;
 }

@@ -10,7 +10,6 @@
 
 #include "JSONRPCUtils.h"
 #include "dbwrappers/Database.h"
-#include "playlists/SmartPlayList.h"
 #include "utils/Artwork.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
@@ -517,26 +516,6 @@ protected:
                                        const std::string& settings,
                                        std::shared_ptr<ADDON::CScraper>& scraper,
                                        CVariant& result);
-
-    static bool GetXspFiltering(const std::string &type, const CVariant &filter, std::string &xsp)
-    {
-      if (type.empty() || !filter.isObject())
-        return false;
-
-      CVariant xspObj(CVariant::VariantTypeObject);
-      xspObj["type"] = type;
-
-      if (filter.isMember("field"))
-      {
-        xspObj["rules"]["and"] = CVariant(CVariant::VariantTypeArray);
-        xspObj["rules"]["and"].push_back(filter);
-      }
-      else
-        xspObj["rules"] = filter;
-
-      KODI::PLAYLIST::CSmartPlaylist playlist;
-      return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
-    }
   };
 
 /*!

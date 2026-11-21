@@ -12,16 +12,22 @@
 #include "filesystem/DirectoryHistory.h"
 #include "filesystem/VirtualDirectory.h"
 #include "guilib/GUIWindow.h"
-#include "playlists/SmartPlayList.h"
 #include "view/GUIViewControl.h"
 
 #include <atomic>
+#include <memory>
 
 class CFileItemList;
 class CGUIViewState;
 enum class SourceType;
+struct LABEL_MASKS;
 
 class TiXmlElement;
+
+namespace KODI::PLAYLIST
+{
+class CSmartPlaylist;
+}
 
 // base class for all media windows
 class CGUIMediaWindow : public CGUIWindow
@@ -210,7 +216,7 @@ protected:
   int m_iLastControl;
   std::string m_startDirectory;
 
-  KODI::PLAYLIST::CSmartPlaylist m_filter;
+  const std::unique_ptr<KODI::PLAYLIST::CSmartPlaylist> m_filter;
   bool m_canFilterAdvanced;
   /*! \brief Contains the path used for filtering (including any active filter)
 
