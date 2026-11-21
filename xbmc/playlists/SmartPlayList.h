@@ -106,7 +106,6 @@ public:
   bool Load(const CURL& url);
   bool Load(const std::string &path);
   bool Load(const CVariant &obj);
-  bool LoadFromXml(const std::string &xml);
   bool LoadFromJson(const std::string &json);
   bool Save(const std::string &path) const;
   bool Save(CVariant &obj, bool full = true) const;
@@ -194,7 +193,6 @@ private:
 
   const TiXmlNode* readName(const TiXmlNode *root);
   const TiXmlNode* readNameFromPath(const CURL &url);
-  const TiXmlNode* readNameFromXml(const std::string &xml);
   bool load(const TiXmlNode *root);
 
   CSmartPlaylistRuleCombination m_ruleCombination;

@@ -1352,27 +1352,6 @@ const TiXmlNode* CSmartPlaylist::readNameFromPath(const CURL &url)
   return root;
 }
 
-const TiXmlNode* CSmartPlaylist::readNameFromXml(const std::string &xml)
-{
-  if (xml.empty())
-  {
-    CLog::Log(LOGERROR, "Error loading empty Smart playlist");
-    return nullptr;
-  }
-
-  m_xmlDoc.Clear();
-  if (!m_xmlDoc.Parse(xml))
-  {
-    CLog::Log(LOGERROR, "Error loading Smart playlist (failed to parse xml: {})",
-              m_xmlDoc.ErrorDesc());
-    return nullptr;
-  }
-
-  const TiXmlNode *root = readName(m_xmlDoc.RootElement());
-
-  return root;
-}
-
 bool CSmartPlaylist::load(const TiXmlNode *root)
 {
   if (root == nullptr)
@@ -1451,11 +1430,6 @@ bool CSmartPlaylist::Load(const CVariant &obj)
   }
 
   return true;
-}
-
-bool CSmartPlaylist::LoadFromXml(const std::string &xml)
-{
-  return load(readNameFromXml(xml));
 }
 
 bool CSmartPlaylist::LoadFromXML(const TiXmlNode *root, const std::string &encoding)
