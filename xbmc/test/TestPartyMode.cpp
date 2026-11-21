@@ -9,11 +9,15 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "PartyMode.h"
+#include "filesystem/Directory.h"
+#include "filesystem/File.h"
 #include "music/tags/MusicInfoTag.h"
+#include "utils/URIUtils.h"
 #include "video/VideoInfoTag.h"
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -68,4 +72,51 @@ TEST(TestPartyMode, AMatchTheDatabaseNoLongerHoldsIsSkipped)
 
   EXPECT_EQ((std::vector<std::string>{"/music/1.flac", "/music/3.flac"}),
             Paths(PARTYMODE::InMatchOrder({{SONG, 1}, {SONG, 2}, {SONG, 3}}, fetched)));
+}
+
+namespace
+{
+constexpr auto RULES_FOLDER = "special://temp/test-partymode-rules/";
+
+using TypeCanStart = std::pair<std::string, bool>;
+
+class TestPartyModeCanStart : public ::testing::TestWithParam<TypeCanStart>
+{
+protected:
+  void SetUp() override { ASSERT_TRUE(XFILE::CDirectory::Create(RULES_FOLDER)); }
+  void TearDown() override { XFILE::CDirectory::RemoveRecursive(RULES_FOLDER); }
+};
+} // namespace
+
+TEST_P(TestPartyModeCanStart, OnlyTypesItCanFeedFromAreOffered)
+{
+  const auto& [type, canStart] = GetParam();
+  const std::string path{URIUtils::AddFileToFolder(RULES_FOLDER, "rules.xsp")};
+  const std::string xml{"<smartplaylist type=\"" + type +
+                        "\"><name>Rules</name><match>all</match></smartplaylist>"};
+  XFILE::CFile file;
+  ASSERT_TRUE(file.OpenForWrite(path, true));
+  ASSERT_EQ(static_cast<ssize_t>(xml.size()), file.Write(xml.data(), xml.size()));
+  file.Close();
+
+  EXPECT_EQ(canStart, PARTYMODE::CanStart(path));
+}
+
+INSTANTIATE_TEST_SUITE_P(Types,
+                         TestPartyModeCanStart,
+                         ::testing::Values(TypeCanStart{"songs", true},
+                                           TypeCanStart{"musicvideos", true},
+                                           TypeCanStart{"mixed", true},
+                                           TypeCanStart{"music", true},
+                                           TypeCanStart{"video", true},
+                                           TypeCanStart{"albums", false},
+                                           TypeCanStart{"artists", false},
+                                           TypeCanStart{"movies", false},
+                                           TypeCanStart{"tvshows", false},
+                                           TypeCanStart{"episodes", false},
+                                           TypeCanStart{"", false}));
+
+TEST(TestPartyMode, AMissingRulesFileCannotStart)
+{
+  EXPECT_FALSE(PARTYMODE::CanStart("special://temp/test-partymode-missing.xsp"));
 }

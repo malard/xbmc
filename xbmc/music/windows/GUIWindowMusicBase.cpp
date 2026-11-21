@@ -450,8 +450,10 @@ void CGUIWindowMusicBase::GetContextButtons(int itemNumber, CContextButtons &but
       //! @todo get rid of IsAddonsPath and IsScript check. CanQueue should be enough!
       if (item->CanQueue() && !item->IsAddonsPath() && !item->IsScript())
       {
-        if (PLAYLIST::IsSmartPlayList(*item))
+        if (PLAYLIST::IsSmartPlayList(*item) && PARTYMODE::CanStart(item->GetPath()))
+        {
           buttons.Add(CONTEXT_BUTTON_PLAY_PARTYMODE, 15216); // Play in Partymode
+        }
 
         if (PLAYLIST::IsSmartPlayList(*item) || PLAYLIST::IsSmartPlayList(*m_vecItems))
           buttons.Add(CONTEXT_BUTTON_EDIT_SMART_PLAYLIST, 586);

@@ -39,6 +39,9 @@ bool Start(PLAYLIST::Type playList);
  */
 bool Start(const std::string& rulesPath);
 
+//! Whether Start() can play the rules in this smart playlist file: songs, music videos or mixed.
+bool CanStart(const std::string& rulesPath);
+
 //! Stop party mode; see CApplicationPlayLists::DropFeed().
 void Stop();
 

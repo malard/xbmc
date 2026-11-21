@@ -1110,7 +1110,7 @@ void CGUIWindowVideoBase::GetContextButtons(int itemNumber, CContextButtons &but
   {
     if (!item->IsParentFolder())
     {
-      if (PLAYLIST::IsSmartPlayList(*item))
+      if (PLAYLIST::IsSmartPlayList(*item) && PARTYMODE::CanStart(item->GetPath()))
       {
         buttons.Add(CONTEXT_BUTTON_PLAY_PARTYMODE, 15216); // Play in Partymode
       }

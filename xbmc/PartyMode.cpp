@@ -11,6 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
+#include "URL.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "guilib/GUIComponent.h"
@@ -221,6 +222,19 @@ bool Start(PLAYLIST::Type playList)
 bool Start(const std::string& rulesPath)
 {
   return StartFeed(std::nullopt, rulesPath);
+}
+
+bool CanStart(const std::string& rulesPath)
+{
+  PLAYLIST::CSmartPlaylist rules;
+  if (!rules.OpenAndReadName(CURL{rulesPath}))
+  {
+    return false;
+  }
+  const std::string& type = rules.GetType();
+  return StringUtils::EqualsNoCase(type, CONTENT::SONGS) ||
+         StringUtils::EqualsNoCase(type, CONTENT::MUSICVIDEOS) ||
+         StringUtils::EqualsNoCase(type, CONTENT::MIXED);
 }
 
 void Stop()
