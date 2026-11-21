@@ -31,6 +31,7 @@
 #include "video/VideoDbUrl.h"
 
 #include <memory>
+#include <vector>
 
 using namespace KODI;
 using KODI::MEDIA::MediaTypeFromName;
@@ -317,16 +318,33 @@ namespace XFILE
 
   std::string CSmartPlaylistDirectory::GetPlaylistByName(const std::string& name, const std::string& playlistType)
   {
+    using enum KODI::MEDIA::MediaSection;
+    std::vector<KODI::MEDIA::MediaSection> sections;
+    if (playlistType == MEDIA::CONTENT::MIXED)
+    {
+      sections = {MUSIC, VIDEO};
+    }
+    else if (PLAYLIST::CSmartPlaylist::IsMusicType(playlistType))
+    {
+      sections = {MUSIC};
+    }
+    else // all others are video
+    {
+      sections = {VIDEO};
+    }
+
     CFileItemList list;
     bool filesExist = false;
-    if (PLAYLIST::CSmartPlaylist::IsMusicType(playlistType))
-      filesExist =
-          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::MUSIC), list,
-                                   ".xsp", DIR_FLAG_DEFAULTS);
-    else // all others are video
-      filesExist =
-          CDirectory::GetDirectory(CUtil::PlaylistsPathOf(KODI::MEDIA::MediaSection::VIDEO), list,
-                                   ".xsp", DIR_FLAG_DEFAULTS);
+    for (const auto section : sections)
+    {
+      CFileItemList sectionList;
+      if (CDirectory::GetDirectory(CUtil::PlaylistsPathOf(section), sectionList, ".xsp",
+                                   DIR_FLAG_DEFAULTS))
+      {
+        filesExist = true;
+        list.Append(sectionList);
+      }
+    }
     if (filesExist)
     {
       for (int i = 0; i < list.Size(); i++)

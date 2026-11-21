@@ -70,24 +70,36 @@ class TestSmartPlayListReferences : public ::testing::Test
 protected:
   void SetUp() override
   {
-    ASSERT_TRUE(XFILE::CDirectory::Create(m_musicFolder));
-    ASSERT_TRUE(XFILE::CDirectory::Create(URIUtils::AddFileToFolder(PLAYLISTS_FOLDER, "mixed")));
+    for (const char* folder : {"music", "video", "mixed"})
+    {
+      ASSERT_TRUE(XFILE::CDirectory::Create(URIUtils::AddFileToFolder(PLAYLISTS_FOLDER, folder)));
+    }
   }
   void TearDown() override { XFILE::CDirectory::RemoveRecursive(PLAYLISTS_FOLDER); }
 
-  void WritePlaylist(const std::string& name, const std::string& rules) const
+  static std::string PathOf(const std::string& folder, const std::string& name)
   {
-    const std::string xml{"<smartplaylist type=\"songs\"><name>" + name +
+    return URIUtils::AddFileToFolder(PLAYLISTS_FOLDER, folder, name + ".xsp");
+  }
+
+  //! Writes a playlist of this type into this folder of the playlists path
+  static void WritePlaylist(const std::string& name,
+                            const std::string& rules,
+                            const std::string& type = "songs",
+                            const std::string& folder = "music")
+  {
+    const std::string xml{"<smartplaylist type=\"" + type + "\"><name>" + name +
                           "</name><match>all</match>" + rules + "</smartplaylist>"};
     XFILE::CFile file;
-    ASSERT_TRUE(file.OpenForWrite(URIUtils::AddFileToFolder(m_musicFolder, name + ".xsp"), true));
+    ASSERT_TRUE(file.OpenForWrite(PathOf(folder, name), true));
     ASSERT_EQ(static_cast<ssize_t>(xml.size()), file.Write(xml.data(), xml.size()));
   }
 
-  std::vector<std::string> VirtualFolderNamesOf(const std::string& name) const
+  static std::vector<std::string> VirtualFolderNamesOf(const std::string& name,
+                                                       const std::string& folder = "music")
   {
     PLAYLIST::CSmartPlaylist playlist;
-    EXPECT_TRUE(playlist.Load(URIUtils::AddFileToFolder(m_musicFolder, name + ".xsp")));
+    EXPECT_TRUE(playlist.Load(PathOf(folder, name)));
     std::vector<std::string> folders;
     playlist.GetVirtualFolders(folders);
     for (auto& folder : folders)
@@ -99,7 +111,7 @@ protected:
 
   //! A cycle that is not stopped recurses until the stack overflows, which ends the whole test
   //! run, so the walk is first tried in a process of its own.
-  void ExpectWalkEnds(const std::string& name) const
+  static void ExpectWalkEnds(const std::string& name)
   {
     GTEST_FLAG_SET(death_test_style, "threadsafe");
     EXPECT_EXIT(
@@ -115,7 +127,6 @@ protected:
     return "<rule field=\"" + field + "\" operator=\"is\"><value>" + value + "</value></rule>";
   }
 
-  const std::string m_musicFolder{URIUtils::AddFileToFolder(PLAYLISTS_FOLDER, "music")};
   const CScopedSetting m_playlistsPath{CSettings::SETTING_SYSTEM_PLAYLISTSPATH, PLAYLISTS_FOLDER};
 };
 } // namespace
@@ -144,4 +155,12 @@ TEST_F(TestSmartPlayListReferences, PlaylistsReferencingEachOtherGiveTheirVirtua
     return;
   }
   EXPECT_EQ(std::vector<std::string>{"C.xsp"}, VirtualFolderNamesOf("A"));
+}
+
+TEST_F(TestSmartPlayListReferences, AMixedPlaylistFindsAMusicVideoPlaylistAsAVirtualFolder)
+{
+  WritePlaylist("V", Rule("genre", "Rock"), "musicvideos", "video");
+  WritePlaylist("M", Rule("virtualfolder", "V"), "mixed", "mixed");
+
+  EXPECT_EQ(std::vector<std::string>{"V.xsp"}, VirtualFolderNamesOf("M", "mixed"));
 }
