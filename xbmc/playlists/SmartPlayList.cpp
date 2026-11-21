@@ -48,6 +48,28 @@ using KODI::MEDIA::MediaTypeFromName;
 namespace KODI::PLAYLIST
 {
 
+namespace
+{
+bool ValidateRating(const std::string& input, void* data)
+{
+  char* end = nullptr;
+  std::string strRating = input;
+  StringUtils::Trim(strRating);
+
+  const double rating = std::strtod(strRating.c_str(), &end);
+  return (end == nullptr || *end == '\0') && rating >= 0.0 && rating <= 10.0;
+}
+
+bool ValidateMyRating(const std::string& input, void* data)
+{
+  std::string strRating = input;
+  StringUtils::Trim(strRating);
+
+  const int rating = atoi(strRating.c_str());
+  return StringValidation::IsPositiveInteger(input, data) && rating <= 10;
+}
+} // namespace
+
 struct TranslateField
 {
   std::string_view string;
@@ -84,8 +106,8 @@ static const auto fields = std::array{
   TranslateField{ "playcount",         Field::PLAYCOUNT,                  NUMERIC_FIELD,  StringValidation::IsPositiveInteger,  false, 567 },
   TranslateField{ "lastplayed",        Field::LAST_PLAYED,                DATE_FIELD,     CSmartPlaylistRule::ValidateDate,     false, 568 },
   TranslateField{ "inprogress",        Field::IN_PROGRESS,                BOOLEAN_FIELD,  nullptr,                              false, 575 },
-  TranslateField{ "rating",            Field::RATING,                     REAL_FIELD,     CSmartPlaylistRule::ValidateRating,   false, 563 },
-  TranslateField{ "userrating",        Field::USER_RATING,                REAL_FIELD,     CSmartPlaylistRule::ValidateMyRating, false, 38018 },
+  TranslateField{ "rating",            Field::RATING,                     REAL_FIELD,     ValidateRating,                       false, 563 },
+  TranslateField{ "userrating",        Field::USER_RATING,                REAL_FIELD,     ValidateMyRating,                     false, 38018 },
   TranslateField{ "votes",             Field::VOTES,                      REAL_FIELD,     StringValidation::IsPositiveInteger,  false, 205 },
   TranslateField{ "top250",            Field::TOP250,                     NUMERIC_FIELD,  nullptr,                              false, 13409 },
   TranslateField{ "mpaarating",        Field::MPAA,                       TEXT_FIELD,     nullptr,                              false, 20074 },
@@ -292,25 +314,6 @@ bool CSmartPlaylistRule::Validate(const std::string& input, void* data)
 
   return std::ranges::all_of(values, [data, validator = it->validator](const auto& s)
                              { return validator(s, data); });
-}
-
-bool CSmartPlaylistRule::ValidateRating(const std::string &input, void *data)
-{
-  char* end = nullptr;
-  std::string strRating = input;
-  StringUtils::Trim(strRating);
-
-  const double rating = std::strtod(strRating.c_str(), &end);
-  return (end == nullptr || *end == '\0') && rating >= 0.0 && rating <= 10.0;
-}
-
-bool CSmartPlaylistRule::ValidateMyRating(const std::string &input, void *data)
-{
-  std::string strRating = input;
-  StringUtils::Trim(strRating);
-
-  const int rating = atoi(strRating.c_str());
-  return StringValidation::IsPositiveInteger(input, data) && rating <= 10;
 }
 
 bool CSmartPlaylistRule::ValidateDate(const std::string& input, void* data)
