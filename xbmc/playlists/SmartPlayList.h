@@ -115,7 +115,7 @@ public:
   void Reset();
 
   void SetName(const std::string &name);
-  void SetType(const std::string &type); // music, video, mixed
+  void SetType(const std::string& type);
   const std::string& GetName() const { return m_playlistName; }
   const std::string& GetType() const { return m_playlistType; }
   bool IsVideoType() const;

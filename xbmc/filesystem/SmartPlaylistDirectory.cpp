@@ -317,7 +317,6 @@ namespace XFILE
 
   bool CSmartPlaylistDirectory::ContainsFiles(const CURL& url)
   {
-    // smart playlists always have files??
     return true;
   }
 
