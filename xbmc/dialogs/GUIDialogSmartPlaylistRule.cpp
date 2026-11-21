@@ -226,11 +226,20 @@ void CGUIDialogSmartPlaylistRule::OnBrowse()
     case Field::YEAR:
     {
       if (music)
+      {
         database.GetYearsNav(MUSIC::DB_PATH::YEARS, items);
-      if (video)
+      }
+      if (video && !musicVideos)
       {
         CFileItemList items2;
         videodatabase.GetYearsNav(basePath + "years/", items2, type);
+        items.Append(items2);
+      }
+      if (musicVideos)
+      {
+        CFileItemList items2;
+        videodatabase.GetYearsNav(VIDEO::DB_PATH::MUSICVIDEO_YEARS, items2,
+                                  VideoDbContentType::MUSICVIDEOS);
         items.Append(items2);
       }
       iLabel = 562;
