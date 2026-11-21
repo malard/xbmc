@@ -718,8 +718,7 @@ bool CGUIWindowVideoBase::UpdateMovieListItem(const std::string& listItemPath,
         newItem = items.Get(0);
         newItem->SetProperty(ITEM::PROPERTY::PARENT_PATH,
                              listItem->GetProperty(ITEM::PROPERTY::PARENT_PATH));
-        // the program count holds the order of a smart playlist
-        newItem->SetProgramCount(listItem->GetProgramCount());
+        newItem->SetPlayListOrder(listItem->GetPlayListOrder());
       }
     }
     else

@@ -239,6 +239,7 @@ public:
    * restores. Set by CDirectory::GetDirectory().
    */
   void SetPlayListOrder(int order) { m_playListOrder = order; }
+  int GetPlayListOrder() const { return m_playListOrder; }
   int GetDepth() const { return m_depth; }
   void SetDepth(int depth) { m_depth = depth; }
   int GetStartPartNumber() const { return m_lStartPartNumber; }
