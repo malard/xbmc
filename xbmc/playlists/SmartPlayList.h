@@ -110,7 +110,7 @@ public:
   bool SaveAsJson(std::string &json, bool full = true) const;
 
   bool OpenAndReadName(const CURL &url);
-  bool LoadFromXML(const TiXmlNode *root, const std::string &encoding = "UTF-8");
+  bool LoadFromXML(const TiXmlNode* root);
 
   void Reset();
 

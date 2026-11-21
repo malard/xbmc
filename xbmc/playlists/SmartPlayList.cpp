@@ -1435,7 +1435,7 @@ bool CSmartPlaylist::Load(const CVariant &obj)
   return true;
 }
 
-bool CSmartPlaylist::LoadFromXML(const TiXmlNode *root, const std::string &encoding)
+bool CSmartPlaylist::LoadFromXML(const TiXmlNode* root)
 {
   if (!root)
     return false;
@@ -1451,7 +1451,7 @@ bool CSmartPlaylist::LoadFromXML(const TiXmlNode *root, const std::string &encod
   while (ruleNode)
   {
     const auto rule{std::make_shared<CSmartPlaylistRule>()};
-    if (rule->Load(ruleNode, encoding))
+    if (rule->Load(ruleNode))
       m_ruleCombination.AddRule(rule);
 
     ruleNode = ruleNode->NextSibling("rule");

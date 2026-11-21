@@ -57,7 +57,7 @@ public:
     TEXTIN_FIELD
   };
 
-  virtual bool Load(const TiXmlNode* node, const std::string& encoding = "UTF-8");
+  virtual bool Load(const TiXmlNode* node);
   virtual bool Load(const CVariant& obj);
   virtual bool Save(TiXmlNode* parent) const;
   virtual bool Save(CVariant& obj) const;

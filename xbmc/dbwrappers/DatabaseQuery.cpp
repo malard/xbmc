@@ -13,7 +13,6 @@
 #include "XBDateTime.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/CharsetConverter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
@@ -58,7 +57,7 @@ const std::array<OperatorField, 15> operators = {{
 
 } // unnamed namespace
 
-bool CDatabaseQueryRule::Load(const TiXmlNode* node, const std::string& encoding /* = "UTF-8" */)
+bool CDatabaseQueryRule::Load(const TiXmlNode* node)
 {
   if (!node)
     return false;
@@ -88,14 +87,10 @@ bool CDatabaseQueryRule::Load(const TiXmlNode* node, const std::string& encoding
 
   if (parameter->Type() == TiXmlNode::TINYXML_TEXT)
   {
-    std::string utf8Parameter;
-    if (encoding.empty()) // utf8
-      utf8Parameter = parameter->ValueStr();
-    else
-      CCharsetConverter::ToUtf8(encoding, parameter->ValueStr(), utf8Parameter);
-
-    if (!utf8Parameter.empty())
-      m_parameter.push_back(utf8Parameter);
+    if (!parameter->ValueStr().empty())
+    {
+      m_parameter.push_back(parameter->ValueStr());
+    }
   }
   else if (parameter->Type() == TiXmlNode::TINYXML_ELEMENT)
   {
@@ -105,14 +100,10 @@ bool CDatabaseQueryRule::Load(const TiXmlNode* node, const std::string& encoding
       const TiXmlNode* value = valueNode->FirstChild();
       if (value && value->Type() == TiXmlNode::TINYXML_TEXT)
       {
-        std::string utf8Parameter;
-        if (encoding.empty()) // utf8
-          utf8Parameter = value->ValueStr();
-        else
-          CCharsetConverter::ToUtf8(encoding, value->ValueStr(), utf8Parameter);
-
-        if (!utf8Parameter.empty())
-          m_parameter.push_back(utf8Parameter);
+        if (!value->ValueStr().empty())
+        {
+          m_parameter.push_back(value->ValueStr());
+        }
       }
 
       valueNode = valueNode->NextSibling("value");
