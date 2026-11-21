@@ -56,15 +56,15 @@ protected:
   std::string GetField(int field, const std::string& type) const override;
   int TranslateField(const char *field) const override;
   std::string TranslateField(int field) const override;
-  std::string FormatParameter(const std::string &negate,
-                              const std::string &oper,
-                              const CDatabase &db,
-                              const std::string &type) const override;
-  std::string FormatWhereClause(const std::string &negate,
-                                const std::string& oper,
-                                const std::string &param,
-                                const CDatabase &db,
-                                const std::string &type) const override;
+  std::optional<std::string> FormatParameter(const std::string& negate,
+                                             const std::string& oper,
+                                             const CDatabase& db,
+                                             const std::string& type) const override;
+  std::optional<std::string> FormatWhereClause(const std::string& negate,
+                                               const std::string& oper,
+                                               const std::string& param,
+                                               const CDatabase& db,
+                                               const std::string& type) const override;
   SearchOperator GetOperator(const std::string& type) const override;
   std::string GetBooleanQuery(const std::string &negate,
                               const std::string &strType) const override;
@@ -87,9 +87,10 @@ public:
   CSmartPlaylistRuleCombination() = default;
   ~CSmartPlaylistRuleCombination() override = default;
 
-  std::string GetWhereClause(const CDatabase& db,
-                             const std::string& strType,
-                             std::set<std::string, std::less<>>& referencedPlaylists) const;
+  std::optional<std::string> GetWhereClause(
+      const CDatabase& db,
+      const std::string& strType,
+      std::set<std::string, std::less<>>& referencedPlaylists) const;
   void GetVirtualFolders(const std::string& strType,
                          std::vector<std::string>& virtualFolders,
                          std::set<std::string, std::less<>>& referencedPlaylists) const;
@@ -160,9 +161,10 @@ public:
 
    \param db the database to use to format up results
    \param referencedPlaylists a set of playlists to know when we reach a cycle
+   \return the clause, or nullopt if a rule's value cannot go into it
    */
-  std::string GetWhereClause(const CDatabase& db,
-                             std::set<std::string, std::less<>>& referencedPlaylists) const;
+  std::optional<std::string> GetWhereClause(
+      const CDatabase& db, std::set<std::string, std::less<>>& referencedPlaylists) const;
   void GetVirtualFolders(std::vector<std::string> &virtualFolders) const;
   //! \param referencedPlaylists the playlists already followed, to stop at a cycle
   void GetVirtualFolders(std::vector<std::string>& virtualFolders,

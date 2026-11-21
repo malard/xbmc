@@ -47,7 +47,12 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, 
     if (!rule.Load(xspObj, &db))
       return InvalidParams;
 
-    dbFilter.AppendWhere(rule.GetWhereClause(db, ""));
+    const std::optional<std::string> where = rule.GetWhereClause(db, "");
+    if (!where)
+    {
+      return InvalidParams;
+    }
+    dbFilter.AppendWhere(*where);
   }
 
   // fetch textures from the database

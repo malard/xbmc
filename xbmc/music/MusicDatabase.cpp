@@ -13217,8 +13217,12 @@ bool CMusicDatabase::GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription
       return false;
 
     std::set<std::string, std::less<>> playlists;
-    std::string xspWhere;
-    xspWhere = xsp.GetWhereClause(*this, playlists);
+    const std::optional<std::string> where = xsp.GetWhereClause(*this, playlists);
+    if (!where)
+    {
+      return false;
+    }
+    const std::string& xspWhere = *where;
     hasRoleRules = xsp.GetType() == MEDIA::CONTENT::ARTISTS &&
                    xspWhere.find("song_artist.idRole = role.idRole") != std::string::npos;
 
@@ -13808,7 +13812,12 @@ bool CMusicDatabase::GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription
     if (xspFilter.GetType() == type)
     {
       std::set<std::string, std::less<>> playlists;
-      filter.AppendWhere(xspFilter.GetWhereClause(*this, playlists));
+      const std::optional<std::string> where = xspFilter.GetWhereClause(*this, playlists);
+      if (!where)
+      {
+        return false;
+      }
+      filter.AppendWhere(*where);
     }
     // remove the filter if it doesn't match the item type
     else

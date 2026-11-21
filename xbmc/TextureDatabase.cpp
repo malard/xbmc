@@ -75,10 +75,10 @@ CDatabaseQueryRule::FieldType CTextureRule::GetFieldType(int field) const
   return f == fields.end() ? TEXT_FIELD : f->type;
 }
 
-std::string CTextureRule::FormatParameter(const std::string &operatorString,
-                                          const std::string &param,
-                                          const CDatabase &db,
-                                          const std::string &strType) const
+std::optional<std::string> CTextureRule::FormatParameter(const std::string& operatorString,
+                                                         const std::string& param,
+                                                         const CDatabase& db,
+                                                         const std::string& strType) const
 {
   std::string parameter(param);
   if (m_field == static_cast<int>(TextureField::URL))

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -69,7 +70,9 @@ public:
   void SetParameter(const std::string& value);
   void SetParameter(const std::vector<std::string>& values);
 
-  virtual std::string GetWhereClause(const CDatabase& db, const std::string& strType) const;
+  //! \return the SQL for the rule, or nullopt if one of its values cannot go into it
+  virtual std::optional<std::string> GetWhereClause(const CDatabase& db,
+                                                    const std::string& strType) const;
 
   int m_field{0};
   SearchOperator m_operator{SearchOperator::OPERATOR_CONTAINS};
@@ -81,15 +84,15 @@ protected:
   virtual int TranslateField(const char* field) const = 0;
   virtual std::string TranslateField(int field) const = 0;
   std::string ValidateParameter(const std::string& parameter) const;
-  virtual std::string FormatParameter(const std::string& negate,
-                                      const std::string& oper,
-                                      const CDatabase& db,
-                                      const std::string& type) const;
-  virtual std::string FormatWhereClause(const std::string& negate,
-                                        const std::string& oper,
-                                        const std::string& param,
-                                        const CDatabase& db,
-                                        const std::string& type) const;
+  virtual std::optional<std::string> FormatParameter(const std::string& negate,
+                                                     const std::string& oper,
+                                                     const CDatabase& db,
+                                                     const std::string& type) const;
+  virtual std::optional<std::string> FormatWhereClause(const std::string& negate,
+                                                       const std::string& oper,
+                                                       const std::string& param,
+                                                       const CDatabase& db,
+                                                       const std::string& type) const;
   virtual SearchOperator GetOperator(const std::string& type) const { return m_operator; }
   virtual std::string GetOperatorString(SearchOperator op) const;
   virtual std::string GetBooleanQuery(const std::string& negate, const std::string& strType) const
@@ -130,7 +133,7 @@ public:
   virtual bool Save(TiXmlNode* parent) const;
   virtual bool Save(CVariant& obj) const;
 
-  std::string GetWhereClause(const CDatabase& db, const std::string& strType) const;
+  std::optional<std::string> GetWhereClause(const CDatabase& db, const std::string& strType) const;
   std::string TranslateCombinationType() const;
 
   Type GetType() const { return m_type; }

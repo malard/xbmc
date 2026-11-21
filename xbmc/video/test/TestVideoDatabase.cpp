@@ -538,13 +538,62 @@ TEST_F(TestVideoDatabase, ASmartPlaylistGenreRuleFindsAMovieOfThatGenre)
   rule.m_field = static_cast<int>(Field::GENRE);
   rule.m_operator = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
   rule.m_parameter = {"Drama"};
-  const std::string where{rule.GetWhereClause(m_db, "movies")};
-  EXPECT_NE(std::string::npos, where.find("genre_link.media_type = 'movie'")) << where;
+  const std::optional<std::string> where{rule.GetWhereClause(m_db, "movies")};
+  ASSERT_TRUE(where);
+  EXPECT_NE(std::string::npos, where->find("genre_link.media_type = 'movie'")) << *where;
 
   CFileItemList items;
-  ASSERT_TRUE(m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter{where}, items));
+  ASSERT_TRUE(m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter{*where}, items));
   ASSERT_EQ(1, items.Size());
   EXPECT_EQ(idMovie, items[0]->GetVideoInfoTag()->m_iDbId);
+}
+
+TEST_F(TestVideoDatabase, ANumberRuleWhoseValueIsNotANumberFailsTheListing)
+{
+  ASSERT_GT(AddMovie("/videos/movie.mkv"), 0);
+
+  for (const std::string rule : {
+           R"({"field":"rating","operator":"greaterthan","value":"0 OR 1=1"})",
+           R"({"field":"year","operator":"is","value":"2000 OR 1=1"})",
+           R"({"field":"playcount","operator":"lessthan","value":"1 OR 1=1"})",
+           R"({"field":"rating","operator":"between","value":["0","10 OR 1=1"]})",
+           R"({"field":"time","operator":"between","value":["0 OR 1=1","60"]})",
+       })
+  {
+    CVideoDbUrl url;
+    ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+    url.AddOption("xsp", R"({"type":"movies","rules":{"and":[)" + rule + "]}}");
+
+    CFileItemList items;
+    EXPECT_FALSE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items)) << rule;
+    EXPECT_TRUE(items.IsEmpty()) << rule;
+  }
+}
+
+TEST_F(TestVideoDatabase, ANumberRuleFindsTheItemsItsValueMatches)
+{
+  CVideoInfoTag good{Tag("/videos/good.mkv")};
+  good.SetRating(8.0f, 100, "imdb", true);
+  const int idGood{m_db.SetDetailsForMovie(good, KODI::ART::Artwork{})};
+  ASSERT_GT(idGood, 0);
+  CVideoInfoTag poor{Tag("/videos/poor.mkv")};
+  poor.SetRating(3.0f, 100, "imdb", true);
+  ASSERT_GT(m_db.SetDetailsForMovie(poor, KODI::ART::Artwork{}), 0);
+
+  for (const std::string rule : {
+           R"({"field":"rating","operator":"greaterthan","value":"5.5"})",
+           R"({"field":"rating","operator":"between","value":["5","9"]})",
+       })
+  {
+    CVideoDbUrl url;
+    ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+    url.AddOption("xsp", R"({"type":"movies","rules":{"and":[)" + rule + "]}}");
+
+    CFileItemList items;
+    ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items)) << rule;
+    ASSERT_EQ(1, items.Size()) << rule;
+    EXPECT_EQ(idGood, items[0]->GetVideoInfoTag()->m_iDbId) << rule;
+  }
 }
 
 TEST_F(TestVideoDatabase, AListItemHasTheDetailsOfTheItemLoadedAlone)

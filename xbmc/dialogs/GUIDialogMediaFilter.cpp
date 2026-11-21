@@ -725,7 +725,12 @@ int CGUIDialogMediaFilter::GetItems(const Filter &filter, std::vector<std::strin
     if (!videodb.Open())
       return -1;
 
-    dbfilter.where = tmpFilter.GetWhereClause(videodb, playlists);
+    const std::optional<std::string> where = tmpFilter.GetWhereClause(videodb, playlists);
+    if (!where)
+    {
+      return -1;
+    }
+    dbfilter.where = *where;
     const VideoDbContentType type{VideoContentOf(m_type)};
 
     switch (filter.field)
@@ -759,7 +764,12 @@ int CGUIDialogMediaFilter::GetItems(const Filter &filter, std::vector<std::strin
     if (!musicdb.Open())
       return -1;
 
-    dbfilter.where = tmpFilter.GetWhereClause(musicdb, playlists);
+    const std::optional<std::string> where = tmpFilter.GetWhereClause(musicdb, playlists);
+    if (!where)
+    {
+      return -1;
+    }
+    dbfilter.where = *where;
 
     switch (filter.field)
     {

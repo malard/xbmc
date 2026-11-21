@@ -16,11 +16,14 @@
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
+#include "utils/log.h"
 
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using enum CDatabaseQueryRule::SearchOperator;
@@ -54,6 +57,45 @@ const std::array<OperatorField, 15> operators = {{
   {"between",         OPERATOR_BETWEEN,           21398},
 }};
 // clang-format on
+
+bool HoldsNumbers(CDatabaseQueryRule::FieldType type)
+{
+  return type == REAL_FIELD || type == NUMERIC_FIELD || type == SECONDS_FIELD;
+}
+
+//! Whether \p value is a decimal number, as it goes into the SQL unquoted. Logs a refusal.
+bool AcceptNumber(std::string_view field, std::string_view value)
+{
+  std::string_view digits{value};
+  if (digits.starts_with('-'))
+  {
+    digits.remove_prefix(1);
+  }
+  bool point{false};
+  bool digit{false};
+  for (const char c : digits)
+  {
+    if (c >= '0' && c <= '9')
+    {
+      digit = true;
+    }
+    else if (c == '.' && !point)
+    {
+      point = true;
+    }
+    else
+    {
+      digit = false;
+      break;
+    }
+  }
+
+  if (!digit)
+  {
+    CLog::LogF(LOGERROR, "Refusing the rule on field \"{}\": \"{}\" is not a number", field, value);
+  }
+  return digit;
+}
 
 } // unnamed namespace
 
@@ -239,10 +281,10 @@ std::string CDatabaseQueryRule::ValidateParameter(const std::string& parameter) 
   return parameter;
 }
 
-std::string CDatabaseQueryRule::FormatParameter(const std::string& operatorString,
-                                                const std::string& param,
-                                                const CDatabase& db,
-                                                const std::string& strType) const
+std::optional<std::string> CDatabaseQueryRule::FormatParameter(const std::string& operatorString,
+                                                               const std::string& param,
+                                                               const CDatabase& db,
+                                                               const std::string& strType) const
 {
   std::string parameter;
   if (GetFieldType(m_field) == TEXTIN_FIELD)
@@ -257,7 +299,14 @@ std::string CDatabaseQueryRule::FormatParameter(const std::string& operatorStrin
     parameter = " IN (" + parameter + ")";
   }
   else
-    parameter = db.PrepareSQL(operatorString, ValidateParameter(param).c_str());
+  {
+    const std::string value{ValidateParameter(param)};
+    if (HoldsNumbers(GetFieldType(m_field)) && !AcceptNumber(TranslateField(m_field), value))
+    {
+      return std::nullopt;
+    }
+    parameter = db.PrepareSQL(operatorString, value.c_str());
+  }
 
   if (GetFieldType(m_field) == DATE_FIELD)
   {
@@ -340,8 +389,8 @@ std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
   return operatorString;
 }
 
-std::string CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
-                                               const std::string& strType) const
+std::optional<std::string> CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
+                                                              const std::string& strType) const
 {
   const SearchOperator op = GetOperator(strType);
 
@@ -379,6 +428,12 @@ std::string CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
       return "";
 
     const CDatabaseQueryRule::FieldType fieldType = GetFieldType(m_field);
+    if (HoldsNumbers(fieldType) && (!AcceptNumber(TranslateField(m_field), m_parameter[0]) ||
+                                    !AcceptNumber(TranslateField(m_field), m_parameter[1])))
+    {
+      return std::nullopt;
+    }
+
     if (fieldType == REAL_FIELD)
       return db.PrepareSQL("%s BETWEEN %s AND %s", GetField(m_field, strType).c_str(),
                            m_parameter[0].c_str(), m_parameter[1].c_str());
@@ -399,7 +454,13 @@ std::string CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
   std::string wholeQuery;
   for (auto it = m_parameter.begin(); it != m_parameter.end(); ++it)
   {
-    std::string query = '(' + FormatWhereClause(negate, operatorString, *it, db, strType) + ')';
+    const std::optional<std::string> clause =
+        FormatWhereClause(negate, operatorString, *it, db, strType);
+    if (!clause)
+    {
+      return std::nullopt;
+    }
+    std::string query = '(' + *clause + ')';
 
     if (it + 1 != m_parameter.end())
     {
@@ -415,13 +476,18 @@ std::string CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
   return wholeQuery;
 }
 
-std::string CDatabaseQueryRule::FormatWhereClause(const std::string& negate,
-                                                  const std::string& oper,
-                                                  const std::string& param,
-                                                  const CDatabase& db,
-                                                  const std::string& strType) const
+std::optional<std::string> CDatabaseQueryRule::FormatWhereClause(const std::string& negate,
+                                                                 const std::string& oper,
+                                                                 const std::string& param,
+                                                                 const CDatabase& db,
+                                                                 const std::string& strType) const
 {
-  std::string parameter = FormatParameter(oper, param, db, strType);
+  const std::optional<std::string> formatted = FormatParameter(oper, param, db, strType);
+  if (!formatted)
+  {
+    return std::nullopt;
+  }
+  const std::string& parameter = *formatted;
 
   std::string query;
   if (m_field != 0)
@@ -452,8 +518,8 @@ void CDatabaseQueryRuleCombination::clear()
   m_type = CDatabaseQueryRuleCombination::Type::COMBINATION_AND;
 }
 
-std::string CDatabaseQueryRuleCombination::GetWhereClause(const CDatabase& db,
-                                                          const std::string& strType) const
+std::optional<std::string> CDatabaseQueryRuleCombination::GetWhereClause(
+    const CDatabase& db, const std::string& strType) const
 {
   std::string rule;
 
@@ -462,7 +528,12 @@ std::string CDatabaseQueryRuleCombination::GetWhereClause(const CDatabase& db,
   {
     if (it != m_combinations.begin())
       rule += m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? " AND " : " OR ";
-    rule += "(" + (*it)->GetWhereClause(db, strType) + ")";
+    const std::optional<std::string> clause = (*it)->GetWhereClause(db, strType);
+    if (!clause)
+    {
+      return std::nullopt;
+    }
+    rule += "(" + *clause + ")";
   }
 
   // translate the rules into SQL
@@ -471,7 +542,12 @@ std::string CDatabaseQueryRuleCombination::GetWhereClause(const CDatabase& db,
     if (!rule.empty())
       rule += m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? " AND " : " OR ";
     rule += "(";
-    std::string currentRule = it->GetWhereClause(db, strType);
+    const std::optional<std::string> clause = it->GetWhereClause(db, strType);
+    if (!clause)
+    {
+      return std::nullopt;
+    }
+    std::string currentRule = *clause;
     // if we don't get a rule, we add '1' or '0' so the query is still valid and doesn't fail
     if (currentRule.empty())
       currentRule = m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? "'1'" : "'0'";

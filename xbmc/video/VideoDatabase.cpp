@@ -13591,7 +13591,12 @@ bool CVideoDatabase::GetFilter(CDbUrl &videoUrl, Filter &filter, SortDescription
        (xsp.GetType() == MEDIA::CONTENT::EPISODES && itemType == MEDIA::CONTENT::TVSHOWS))
     {
       std::set<std::string, std::less<>> playlists;
-      filter.AppendWhere(xsp.GetWhereClause(*this, playlists));
+      const std::optional<std::string> where = xsp.GetWhereClause(*this, playlists);
+      if (!where)
+      {
+        return false;
+      }
+      filter.AppendWhere(*where);
 
       if (xsp.GetLimit() > 0)
         sorting.limitEnd = xsp.GetLimit();
@@ -13615,7 +13620,12 @@ bool CVideoDatabase::GetFilter(CDbUrl &videoUrl, Filter &filter, SortDescription
     if (xspFilter.GetType() == itemType)
     {
       std::set<std::string, std::less<>> playlists;
-      filter.AppendWhere(xspFilter.GetWhereClause(*this, playlists));
+      const std::optional<std::string> where = xspFilter.GetWhereClause(*this, playlists);
+      if (!where)
+      {
+        return false;
+      }
+      filter.AppendWhere(*where);
     }
     // remove the filter if it doesn't match the item type
     else

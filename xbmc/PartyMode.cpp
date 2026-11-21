@@ -51,7 +51,7 @@ using PARTYMODE::Match;
 /*!
  * \brief What the rules match of this content: "songs", "musicvideos" or "mixed". With no rules,
  * everything of the content matches.
- * \return nullopt if a database could not be opened.
+ * \return nullopt if a database could not be opened or the rules could not be put into SQL.
  */
 std::optional<std::vector<Match>> FindMatches(const PLAYLIST::CSmartPlaylist* rules,
                                               const std::string& content)
@@ -74,7 +74,12 @@ std::optional<std::vector<Match>> FindMatches(const PLAYLIST::CSmartPlaylist* ru
       PLAYLIST::CSmartPlaylist songRules{*rules};
       songRules.SetType(CONTENT::SONGS);
       std::set<std::string, std::less<>> playlists;
-      filter = songRules.GetWhereClause(db, playlists);
+      const std::optional<std::string> where = songRules.GetWhereClause(db, playlists);
+      if (!where)
+      {
+        return std::nullopt;
+      }
+      filter = *where;
     }
     CLog::LogF(LOGINFO, "song filter [{}]", filter);
     std::vector<int> ids;
@@ -94,7 +99,12 @@ std::optional<std::vector<Match>> FindMatches(const PLAYLIST::CSmartPlaylist* ru
       PLAYLIST::CSmartPlaylist musicVideoRules{*rules};
       musicVideoRules.SetType(CONTENT::MUSICVIDEOS);
       std::set<std::string, std::less<>> playlists;
-      filter = musicVideoRules.GetWhereClause(db, playlists);
+      const std::optional<std::string> where = musicVideoRules.GetWhereClause(db, playlists);
+      if (!where)
+      {
+        return std::nullopt;
+      }
+      filter = *where;
     }
     CLog::LogF(LOGINFO, "music video filter [{}]", filter);
     std::vector<int> ids;

@@ -803,7 +803,10 @@ CDatabaseQueryRule::SearchOperator CSmartPlaylistRule::GetOperator(const std::st
   return op;
 }
 
-std::string CSmartPlaylistRule::FormatParameter(const std::string &operatorString, const std::string &param, const CDatabase &db, const std::string &strType) const
+std::optional<std::string> CSmartPlaylistRule::FormatParameter(const std::string& operatorString,
+                                                               const std::string& param,
+                                                               const CDatabase& db,
+                                                               const std::string& strType) const
 {
   // special-casing
   if (m_field == static_cast<int>(Field::TIME) ||
@@ -870,10 +873,18 @@ std::string FormatNullableNumber(const std::string& field,
 }
 } // namespace
 
-std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, const std::string &oper, const std::string &param,
-                                                 const CDatabase &db, const std::string &strType) const
+std::optional<std::string> CSmartPlaylistRule::FormatWhereClause(const std::string& negate,
+                                                                 const std::string& oper,
+                                                                 const std::string& param,
+                                                                 const CDatabase& db,
+                                                                 const std::string& strType) const
 {
-  std::string parameter = FormatParameter(oper, param, db, strType);
+  const std::optional<std::string> formatted = FormatParameter(oper, param, db, strType);
+  if (!formatted)
+  {
+    return std::nullopt;
+  }
+  const std::string& parameter = *formatted;
 
   std::string query;
   std::string table;
@@ -1166,7 +1177,9 @@ std::string CSmartPlaylistRule::FormatWhereClause(const std::string &negate, con
     query = FormatNullableNumber(GetField(m_field, strType), m_operator, param, parameter);
 
   if (query.empty())
-    query = CDatabaseQueryRule::FormatWhereClause(negate, oper, param, db, strType);
+  {
+    return CDatabaseQueryRule::FormatWhereClause(negate, oper, param, db, strType);
+  }
 
   return query;
 }
@@ -1179,7 +1192,7 @@ std::string CSmartPlaylistRule::GetField(int field, const std::string &type) con
   return "";
 }
 
-std::string CSmartPlaylistRuleCombination::GetWhereClause(
+std::optional<std::string> CSmartPlaylistRuleCombination::GetWhereClause(
     const CDatabase& db,
     const std::string& strType,
     std::set<std::string, std::less<>>& referencedPlaylists) const
@@ -1194,7 +1207,15 @@ std::string CSmartPlaylistRuleCombination::GetWhereClause(
       rule += GetType() == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? " AND " : " OR ";
     std::shared_ptr<CSmartPlaylistRuleCombination> combo = std::static_pointer_cast<CSmartPlaylistRuleCombination>(*it);
     if (combo)
-      rule += "(" + combo->GetWhereClause(db, strType, referencedPlaylists) + ")";
+    {
+      const std::optional<std::string> clause =
+          combo->GetWhereClause(db, strType, referencedPlaylists);
+      if (!clause)
+      {
+        return std::nullopt;
+      }
+      rule += "(" + *clause + ")";
+    }
   }
 
   // translate the rules into SQL
@@ -1227,7 +1248,13 @@ std::string CSmartPlaylistRuleCombination::GetWhereClause(
               playlist.GetType().empty())
           {
             playlist.SetType(strType);
-            playlistQuery = playlist.GetWhereClause(db, referencedPlaylists);
+            const std::optional<std::string> clause =
+                playlist.GetWhereClause(db, referencedPlaylists);
+            if (!clause)
+            {
+              return std::nullopt;
+            }
+            playlistQuery = *clause;
           }
           if (playlist.GetType() == strType)
           {
@@ -1240,7 +1267,14 @@ std::string CSmartPlaylistRuleCombination::GetWhereClause(
       }
     }
     else
-      currentRule = r->GetWhereClause(db, strType);
+    {
+      const std::optional<std::string> clause = r->GetWhereClause(db, strType);
+      if (!clause)
+      {
+        return std::nullopt;
+      }
+      currentRule = *clause;
+    }
     // if we don't get a rule, we add '1' or '0' so the query is still valid and doesn't fail
     if (currentRule.empty())
       currentRule =
@@ -1672,7 +1706,7 @@ bool CSmartPlaylist::IsMusicType(const std::string &type)
          type == MEDIA::CONTENT::SONGS || type == MEDIA::CONTENT::MIXED;
 }
 
-std::string CSmartPlaylist::GetWhereClause(
+std::optional<std::string> CSmartPlaylist::GetWhereClause(
     const CDatabase& db, std::set<std::string, std::less<>>& referencedPlaylists) const
 {
   return m_ruleCombination.GetWhereClause(db, GetType(), referencedPlaylists);
