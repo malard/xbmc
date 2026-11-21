@@ -32,12 +32,6 @@
 
 #include <memory>
 
-#define PROPERTY_PATH_DB            "path.db"
-#define PROPERTY_SORT_ORDER         "sort.order"
-#define PROPERTY_SORT_ASCENDING     "sort.ascending"
-#define PROPERTY_GROUP_BY           "group.by"
-#define PROPERTY_GROUP_MIXED        "group.mixed"
-
 using namespace KODI;
 using KODI::MEDIA::MediaTypeFromName;
 using KODI::MEDIA::PluralNameOf;
@@ -160,7 +154,7 @@ namespace XFILE
         // a pre-defined base path, we need to fix it
         if (strBaseDir.empty() && mediaType == MEDIA::TYPE::EPISODE && !isGrouped)
           videoUrl.AppendPath("-1/-1/");
-        items.SetProperty(PROPERTY_PATH_DB, videoUrl.ToString());
+        items.SetProperty(ITEM::PROPERTY::PATH_DB, videoUrl.ToString());
       }
     }
     else if (playlist.IsMusicType() || playlist.GetType().empty())
@@ -212,7 +206,7 @@ namespace XFILE
         success = db.GetItems(musicUrl.ToString(), items, sorting, dbfilter);
         db.Close();
 
-        items.SetProperty(PROPERTY_PATH_DB, musicUrl.ToString());
+        items.SetProperty(ITEM::PROPERTY::PATH_DB, musicUrl.ToString());
       }
     }
 
@@ -274,7 +268,7 @@ namespace XFILE
           items.SetPath(videoUrl.ToString());
 
         items.Append(items2);
-        items.SetProperty(PROPERTY_PATH_DB, videoUrl.ToString());
+        items.SetProperty(ITEM::PROPERTY::PATH_DB, videoUrl.ToString());
       }
     }
 
@@ -284,13 +278,13 @@ namespace XFILE
     else
       items.SetContent(playlist.GetType());
 
-    items.SetProperty(PROPERTY_SORT_ORDER, (int)playlist.GetOrder());
-    items.SetProperty(PROPERTY_SORT_ASCENDING,
+    items.SetProperty(ITEM::PROPERTY::SORT_ORDER, (int)playlist.GetOrder());
+    items.SetProperty(ITEM::PROPERTY::SORT_ASCENDING,
                       playlist.GetOrderDirection() == SortOrder::ASCENDING);
     if (!group.empty())
     {
-      items.SetProperty(PROPERTY_GROUP_BY, group);
-      items.SetProperty(PROPERTY_GROUP_MIXED, playlist.IsGroupMixed());
+      items.SetProperty(ITEM::PROPERTY::GROUP_BY, group);
+      items.SetProperty(ITEM::PROPERTY::GROUP_MIXED, playlist.IsGroupMixed());
     }
 
     // sort grouped list by label unless random was specified for musicvideo artists

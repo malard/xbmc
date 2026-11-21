@@ -12,13 +12,12 @@
 #include "FileItemList.h"
 #include "URL.h"
 #include "playlists/SmartPlayList.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 
 #include <string>
 
 #define URL_OPTION_XSP              "xsp"
-#define PROPERTY_SORT_ORDER         "sort.order"
-#define PROPERTY_SORT_ASCENDING     "sort.ascending"
 
 namespace KODI::PLAYLIST
 {
@@ -30,8 +29,10 @@ bool CSmartPlaylistFileItemListModifier::CanModify(const CFileItemList &items) c
 
 bool CSmartPlaylistFileItemListModifier::Modify(CFileItemList &items) const
 {
-  if (items.HasProperty(PROPERTY_SORT_ORDER))
+  if (items.HasProperty(ITEM::PROPERTY::SORT_ORDER))
+  {
     return false;
+  }
 
   std::string xspOption = GetUrlOption(items.GetPath(), URL_OPTION_XSP);
   if (xspOption.empty())
@@ -42,8 +43,9 @@ bool CSmartPlaylistFileItemListModifier::Modify(CFileItemList &items) const
   if (!xsp.LoadFromJson(xspOption))
     return false;
 
-  items.SetProperty(PROPERTY_SORT_ORDER, (int)xsp.GetOrder());
-  items.SetProperty(PROPERTY_SORT_ASCENDING, xsp.GetOrderDirection() == SortOrder::ASCENDING);
+  items.SetProperty(ITEM::PROPERTY::SORT_ORDER, (int)xsp.GetOrder());
+  items.SetProperty(ITEM::PROPERTY::SORT_ASCENDING,
+                    xsp.GetOrderDirection() == SortOrder::ASCENDING);
 
   return true;
 }

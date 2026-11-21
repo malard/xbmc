@@ -102,9 +102,6 @@ using namespace KODI::MESSAGING;
 
 #define CONTROL_PLAY_DVD           6
 
-#define PROPERTY_GROUP_BY           "group.by"
-#define PROPERTY_GROUP_MIXED        "group.mixed"
-
 CGUIWindowVideoBase::CGUIWindowVideoBase(int id, const std::string &xmlFile)
     : CGUIMediaWindow(id, xmlFile.c_str())
 {
@@ -701,7 +698,7 @@ bool CGUIWindowVideoBase::UpdateMovieListItem(const std::string& listItemPath,
     // path.db holds the library path of a smart playlist listing
     const std::string dbPath{VIDEO::IsVideoDb(*m_vecItems)
                                  ? m_vecItems->GetPath()
-                                 : m_vecItems->GetProperty("path.db").asString()};
+                                 : m_vecItems->GetProperty(ITEM::PROPERTY::PATH_DB).asString()};
     if (URIUtils::IsVideoDb(dbPath))
     {
       // a query by id finds the movie even when a limit leaves it out of the listing
@@ -1480,10 +1477,14 @@ void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)
 
   std::string group;
   bool mixed = false;
-  if (items.HasProperty(PROPERTY_GROUP_BY))
-    group = items.GetProperty(PROPERTY_GROUP_BY).asString();
-  if (items.HasProperty(PROPERTY_GROUP_MIXED))
-    mixed = items.GetProperty(PROPERTY_GROUP_MIXED).asBoolean();
+  if (items.HasProperty(ITEM::PROPERTY::GROUP_BY))
+  {
+    group = items.GetProperty(ITEM::PROPERTY::GROUP_BY).asString();
+  }
+  if (items.HasProperty(ITEM::PROPERTY::GROUP_MIXED))
+  {
+    mixed = items.GetProperty(ITEM::PROPERTY::GROUP_MIXED).asBoolean();
+  }
 
   // group == "none" completely suppresses any grouping
   if (PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE)

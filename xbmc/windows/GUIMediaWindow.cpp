@@ -82,10 +82,6 @@
 
 #define CONTROL_LABELFILES          12
 
-#define PROPERTY_PATH_DB            "path.db"
-#define PROPERTY_SORT_ORDER         "sort.order"
-#define PROPERTY_SORT_ASCENDING     "sort.ascending"
-
 #define PLUGIN_REFRESH_DELAY 200
 
 using namespace ADDON;
@@ -658,14 +654,14 @@ void CGUIMediaWindow::SortItems(CFileItemList &items)
     // We do this as the new SortBy methods are a superset of the SORT_METHOD methods, thus
     // not all are available. This may be removed once SORT_METHOD_* have been replaced by
     // SortBy.
-    if ((sorting.sortBy == SortBy::PLAYLIST_ORDER) && items.HasProperty(PROPERTY_SORT_ORDER))
+    if ((sorting.sortBy == SortBy::PLAYLIST_ORDER) && items.HasProperty(ITEM::PROPERTY::SORT_ORDER))
     {
-      SortBy sortBy = (SortBy)items.GetProperty(PROPERTY_SORT_ORDER).asInteger();
+      SortBy sortBy = (SortBy)items.GetProperty(ITEM::PROPERTY::SORT_ORDER).asInteger();
       if (sortBy != SortBy::NONE && sortBy != SortBy::PLAYLIST_ORDER &&
           sortBy != SortBy::PROGRAM_COUNT)
       {
         sorting.sortBy = sortBy;
-        sorting.sortOrder = items.GetProperty(PROPERTY_SORT_ASCENDING).asBoolean()
+        sorting.sortOrder = items.GetProperty(ITEM::PROPERTY::SORT_ASCENDING).asBoolean()
                                 ? SortOrder::ASCENDING
                                 : SortOrder::DESCENDING;
         const auto settings = CServiceBroker::GetSettingsComponent()->GetSettings();
@@ -1874,10 +1870,14 @@ void CGUIMediaWindow::UpdateFilterPath(const std::string &strDirectory, const CF
   // as preset or if it's empty
   if (updateFilterPath || m_strFilterPath.empty())
   {
-    if (items.HasProperty(PROPERTY_PATH_DB))
-      m_strFilterPath = items.GetProperty(PROPERTY_PATH_DB).asString();
+    if (items.HasProperty(ITEM::PROPERTY::PATH_DB))
+    {
+      m_strFilterPath = items.GetProperty(ITEM::PROPERTY::PATH_DB).asString();
+    }
     else
+    {
       m_strFilterPath = items.GetPath();
+    }
   }
 
   // maybe the filter path can contain a filter
@@ -1928,14 +1928,18 @@ void CGUIMediaWindow::OnFilterItems(const std::string &filter)
   // if the filter has changed, get the new filter path
   if (filtered && m_canFilterAdvanced)
   {
-    if (items.HasProperty(PROPERTY_PATH_DB))
-      m_strFilterPath = items.GetProperty(PROPERTY_PATH_DB).asString();
+    if (items.HasProperty(ITEM::PROPERTY::PATH_DB))
+    {
+      m_strFilterPath = items.GetProperty(ITEM::PROPERTY::PATH_DB).asString();
+    }
     // only set m_strFilterPath if it hasn't been set before
     // otherwise we might overwrite it with a non-filter path
     // in case GetFilteredItems() returns true even though no
     // db-based filter (e.g. watched filter) has been applied
     else if (m_strFilterPath.empty())
+    {
       m_strFilterPath = items.GetPath();
+    }
   }
 
   GetGroupedItems(*m_vecItems);
@@ -2118,8 +2122,10 @@ bool CGUIMediaWindow::GetAdvanceFilteredItems(CFileItemList &items)
   items.ClearItems();
   items.Append(filteredItems);
   items.SetPath(resultItems.GetPath());
-  if (resultItems.HasProperty(PROPERTY_PATH_DB))
-    items.SetProperty(PROPERTY_PATH_DB, resultItems.GetProperty(PROPERTY_PATH_DB));
+  if (resultItems.HasProperty(ITEM::PROPERTY::PATH_DB))
+  {
+    items.SetProperty(ITEM::PROPERTY::PATH_DB, resultItems.GetProperty(ITEM::PROPERTY::PATH_DB));
+  }
   return true;
 }
 
