@@ -10,6 +10,7 @@ set(SOURCES TestAddonsPaths.cpp
             TestFileFactory.cpp
             TestLibraryPaths.cpp
             TestPlaylistDirectory.cpp
+            TestSmartPlaylistDirectory.cpp
             TestSourcesDirectory.cpp
             TestCurlHttpClient.cpp
             TestZipFile.cpp

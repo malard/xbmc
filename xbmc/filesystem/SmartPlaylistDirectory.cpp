@@ -149,10 +149,6 @@ namespace XFILE
         success = db.GetItems(videoUrl.ToString(), items, dbfilter, sorting);
         db.Close();
 
-        // if we retrieve a list of episodes and we didn't receive
-        // a pre-defined base path, we need to fix it
-        if (strBaseDir.empty() && mediaType == MEDIA::TYPE::EPISODE && !isGrouped)
-          videoUrl.AppendPath("-1/-1/");
         items.SetProperty(ITEM::PROPERTY::PATH_DB, videoUrl.ToString());
       }
     }
