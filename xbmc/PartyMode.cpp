@@ -53,7 +53,7 @@ using PARTYMODE::Match;
  * everything of the content matches.
  * \return nullopt if a database could not be opened.
  */
-std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
+std::optional<std::vector<Match>> FindMatches(const PLAYLIST::CSmartPlaylist* rules,
                                               const std::string& content)
 {
   const bool songs =
@@ -71,9 +71,10 @@ std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
     std::string filter;
     if (rules)
     {
+      PLAYLIST::CSmartPlaylist songRules{*rules};
+      songRules.SetType(CONTENT::SONGS);
       std::set<std::string, std::less<>> playlists;
-      rules->SetType(CONTENT::SONGS);
-      filter = rules->GetWhereClause(db, playlists);
+      filter = songRules.GetWhereClause(db, playlists);
     }
     CLog::LogF(LOGINFO, "song filter [{}]", filter);
     std::vector<int> ids;
@@ -90,9 +91,10 @@ std::optional<std::vector<Match>> FindMatches(PLAYLIST::CSmartPlaylist* rules,
     std::string filter;
     if (rules)
     {
+      PLAYLIST::CSmartPlaylist musicVideoRules{*rules};
+      musicVideoRules.SetType(CONTENT::MUSICVIDEOS);
       std::set<std::string, std::less<>> playlists;
-      rules->SetType(CONTENT::MUSICVIDEOS);
-      filter = rules->GetWhereClause(db, playlists);
+      filter = musicVideoRules.GetWhereClause(db, playlists);
     }
     CLog::LogF(LOGINFO, "music video filter [{}]", filter);
     std::vector<int> ids;
