@@ -1388,9 +1388,10 @@ namespace
 std::vector<std::string> PlaylistsFoldersOf(KODI::MEDIA::MediaSection section)
 {
   const std::string path = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_SYSTEM_PLAYLISTSPATH);
-  return {URIUtils::AddFileToFolder(path, section == KODI::MEDIA::MediaSection::MUSIC ? "music"
-                                                                                      : "video"),
-          URIUtils::AddFileToFolder(path, "mixed")};
+  return {URIUtils::AddFileToFolder(path, section == KODI::MEDIA::MediaSection::MUSIC
+                                              ? CUtil::MUSIC_PLAYLISTS_FOLDER
+                                              : CUtil::VIDEO_PLAYLISTS_FOLDER),
+          URIUtils::AddFileToFolder(path, CUtil::MIXED_PLAYLISTS_FOLDER)};
 }
 } // namespace
 

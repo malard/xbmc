@@ -1702,11 +1702,15 @@ void CSmartPlaylist::GetVirtualFolders(std::vector<std::string> &virtualFolders)
 std::string CSmartPlaylist::GetSaveLocation() const
 {
   if (m_playlistType == MEDIA::CONTENT::MIXED)
-    return MEDIA::CONTENT::MIXED;
+  {
+    return CUtil::MIXED_PLAYLISTS_FOLDER;
+  }
   if (IsMusicType())
-    return "music";
+  {
+    return CUtil::MUSIC_PLAYLISTS_FOLDER;
+  }
   // all others are video
-  return "video";
+  return CUtil::VIDEO_PLAYLISTS_FOLDER;
 }
 
 void CSmartPlaylist::GetAvailableFields(const std::string &type, std::vector<std::string> &fieldList)
