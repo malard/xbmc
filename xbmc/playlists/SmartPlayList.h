@@ -92,7 +92,8 @@ public:
                              const std::string& strType,
                              std::set<std::string, std::less<>>& referencedPlaylists) const;
   void GetVirtualFolders(const std::string& strType,
-                         std::vector<std::string>& virtualFolders) const;
+                         std::vector<std::string>& virtualFolders,
+                         std::set<std::string, std::less<>>& referencedPlaylists) const;
 };
 
 class CSmartPlaylist : public IDatabaseQueryRuleFactory
@@ -170,6 +171,9 @@ public:
   std::string GetWhereClause(const CDatabase& db,
                              std::set<std::string, std::less<>>& referencedPlaylists) const;
   void GetVirtualFolders(std::vector<std::string> &virtualFolders) const;
+  //! \param referencedPlaylists the playlists already followed, to stop at a cycle
+  void GetVirtualFolders(std::vector<std::string>& virtualFolders,
+                         std::set<std::string, std::less<>>& referencedPlaylists) const;
 
   std::string GetSaveLocation() const;
 

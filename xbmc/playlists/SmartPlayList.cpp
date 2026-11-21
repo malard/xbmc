@@ -1252,13 +1252,18 @@ std::string CSmartPlaylistRuleCombination::GetWhereClause(
   return rule;
 }
 
-void CSmartPlaylistRuleCombination::GetVirtualFolders(const std::string& strType, std::vector<std::string> &virtualFolders) const
+void CSmartPlaylistRuleCombination::GetVirtualFolders(
+    const std::string& strType,
+    std::vector<std::string>& virtualFolders,
+    std::set<std::string, std::less<>>& referencedPlaylists) const
 {
   for (const auto& combination : GetCombinations())
   {
     const auto combo = std::static_pointer_cast<CSmartPlaylistRuleCombination>(combination);
     if (combo)
-      combo->GetVirtualFolders(strType, virtualFolders);
+    {
+      combo->GetVirtualFolders(strType, virtualFolders, referencedPlaylists);
+    }
   }
 
   for (const auto& r : GetRules())
@@ -1274,8 +1279,10 @@ void CSmartPlaylistRuleCombination::GetVirtualFolders(const std::string& strType
       continue;
 
     if (r->m_field == static_cast<int>(Field::VIRTUAL_FOLDER))
+    {
       virtualFolders.push_back(playlistFile);
-    else
+    }
+    else if (referencedPlaylists.insert(playlistFile).second)
     {
       // look for any virtual folders in the expanded playlists
       CSmartPlaylist playlist;
@@ -1283,7 +1290,9 @@ void CSmartPlaylistRuleCombination::GetVirtualFolders(const std::string& strType
         continue;
 
       if (CSmartPlaylist::CheckTypeCompatibility(playlist.GetType(), strType))
-        playlist.GetVirtualFolders(virtualFolders);
+      {
+        playlist.GetVirtualFolders(virtualFolders, referencedPlaylists);
+      }
     }
   }
 }
@@ -1673,7 +1682,15 @@ std::string CSmartPlaylist::GetWhereClause(
 
 void CSmartPlaylist::GetVirtualFolders(std::vector<std::string> &virtualFolders) const
 {
-  m_ruleCombination.GetVirtualFolders(GetType(), virtualFolders);
+  std::set<std::string, std::less<>> referencedPlaylists;
+  GetVirtualFolders(virtualFolders, referencedPlaylists);
+}
+
+void CSmartPlaylist::GetVirtualFolders(
+    std::vector<std::string>& virtualFolders,
+    std::set<std::string, std::less<>>& referencedPlaylists) const
+{
+  m_ruleCombination.GetVirtualFolders(GetType(), virtualFolders, referencedPlaylists);
 }
 
 std::string CSmartPlaylist::GetSaveLocation() const
