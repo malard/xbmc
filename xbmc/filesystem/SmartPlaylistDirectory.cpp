@@ -116,8 +116,6 @@ namespace XFILE
             baseDir = VIDEO::DB_PATH::TVSHOWS;
           else if (mediaType == MEDIA::TYPE::MOVIE)
             baseDir = VIDEO::DB_PATH::MOVIES;
-          else
-            return false;
 
           if (!isGrouped)
             baseDir += "titles";
@@ -174,9 +172,6 @@ namespace XFILE
           baseDir = MUSIC::DB_PATH::ROOT;
           if (!isGrouped)
           {
-            if (mediaType != MEDIA::TYPE::ARTIST && mediaType != MEDIA::TYPE::ALBUM &&
-                mediaType != MEDIA::TYPE::SONG)
-              return false;
             baseDir += PluralNameOf(mediaType);
           }
           else
