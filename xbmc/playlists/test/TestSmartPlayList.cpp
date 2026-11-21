@@ -47,6 +47,20 @@ INSTANTIATE_TEST_SUITE_P(Types,
                                            Param{"mixed", PLAYLIST::Video},
                                            Param{"", PLAYLIST::Video}));
 
+TEST(TestSmartPlayList, IgnoreFoldersSurvivesAJsonRoundTrip)
+{
+  PLAYLIST::CSmartPlaylist playlist;
+  playlist.SetType("songs");
+  playlist.SetOrder(SortBy::TITLE);
+  playlist.SetOrderAttributes(SortAttributeIgnoreFolders);
+  std::string json;
+  ASSERT_TRUE(playlist.SaveAsJson(json));
+
+  PLAYLIST::CSmartPlaylist loaded;
+  ASSERT_TRUE(loaded.LoadFromJson(json));
+  EXPECT_EQ(SortAttributeIgnoreFolders, loaded.GetOrderAttributes()) << json;
+}
+
 namespace
 {
 constexpr auto PLAYLISTS_FOLDER = "special://temp/test-smartplaylist-references/";

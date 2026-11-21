@@ -1425,8 +1425,11 @@ bool CSmartPlaylist::Load(const CVariant &obj)
                              ? SortOrder::ASCENDING
                              : SortOrder::DESCENDING;
 
-    if (order.isMember("ignorefolders") && obj["ignorefolders"].isBoolean())
-      m_orderAttributes = obj["ignorefolders"].asBoolean() ? SortAttributeIgnoreFolders : SortAttributeNone;
+    if (order.isMember("ignorefolders") && order["ignorefolders"].isBoolean())
+    {
+      m_orderAttributes =
+          order["ignorefolders"].asBoolean() ? SortAttributeIgnoreFolders : SortAttributeNone;
+    }
 
     m_orderField = CSmartPlaylistRule::TranslateOrder(obj["order"]["method"].asString().c_str());
   }
@@ -1604,7 +1607,7 @@ bool CSmartPlaylist::Save(CVariant &obj, bool full /* = true */) const
     obj["order"]["method"] = CSmartPlaylistRule::TranslateOrder(m_orderField);
     obj["order"]["direction"] =
         m_orderDirection == SortOrder::DESCENDING ? "descending" : "ascending";
-    obj["order"]["ignorefolders"] = (m_orderAttributes & SortAttributeIgnoreFolders);
+    obj["order"]["ignorefolders"] = (m_orderAttributes & SortAttributeIgnoreFolders) != 0;
   }
 
   // add "watchedmode"
