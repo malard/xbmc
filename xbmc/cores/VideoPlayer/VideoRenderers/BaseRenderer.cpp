@@ -362,7 +362,10 @@ CRect CBaseRenderer::ApplyContentGeometry(float& contentRatio)
           .GetComponent<CApplicationContentGeometry>()
           ->GetRenderInputs()};
 
-  if (CServiceBroker::GetWinSystem()->GetGfxContext().IsRasterShapeStated())
+  // Normal and Custom fit the measured picture to the stated screen shape, or to the display
+  // when none is stated. A stated shape collapses every other view mode to Normal.
+  const bool shapeStated = CServiceBroker::GetWinSystem()->GetGfxContext().IsRasterShapeStated();
+  if (shapeStated || CViewModeSettings::SurvivesStatedShape(m_videoSettings.m_ViewMode))
   {
     const KODI::VIDEO::GEOMETRY::RenderGeometry& effective = inputs.geometry;
 
@@ -374,7 +377,8 @@ CRect CBaseRenderer::ApplyContentGeometry(float& contentRatio)
       m_sourceRect = cut.source;
       contentRatio = cut.aspect;
 
-      if (!m_frameContentRect.IsEmpty() && inputs.maskAspect > 0.0f)
+      // Masks belong to a stated screen. Without one, a mixed-ratio title fills the display.
+      if (shapeStated && !m_frameContentRect.IsEmpty() && inputs.maskAspect > 0.0f)
         renderWindow =
             KODI::VIDEO::GEOMETRY::FitAspect(inputs.maskAspect, renderWindow, pixelRatio);
     }
