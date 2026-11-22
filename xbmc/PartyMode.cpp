@@ -14,142 +14,75 @@
 #include "URL.h"
 #include "application/ApplicationPlayLists.h"
 #include "dialogs/GUIDialogProgress.h"
+#include "filesystem/File.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/GUIWindowManager.h"
+#include "media/LibraryQuery.h"
+#include "media/LibraryQueryDatabase.h"
+#include "media/LibraryQueryReferences.h"
+#include "media/LibraryQueryType.h"
 #include "messaging/helpers/DialogOKHelper.h"
-#include "music/MusicDatabase.h"
-#include "music/MusicDbPaths.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListTypes.h"
 #include "playlists/SmartFeed.h"
-#include "playlists/SmartPlayList.h"
 #include "profiles/ProfileManager.h"
 #include "settings/SettingsComponent.h"
-#include "utils/ContentNames.h"
-#include "utils/StringUtils.h"
+#include "utils/SortUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
-#include "video/VideoDbPaths.h"
 #include "video/VideoInfoTag.h"
 #include "windows/GUIWindowPlayList.h"
 
 #include <map>
 #include <optional>
-#include <set>
 
 using namespace KODI;
 using namespace KODI::MESSAGING;
 
-namespace CONTENT = KODI::MEDIA::CONTENT;
+namespace LIBRARY_QUERY = KODI::MEDIA::LIBRARY_QUERY;
 
 namespace
 {
 using PARTYMODE::Library;
 using PARTYMODE::Match;
 
-/*!
- * \brief What the rules match of this content: "songs", "musicvideos" or "mixed". With no rules,
- * everything of the content matches.
- * \return nullopt if a database could not be opened or the rules could not be put into SQL.
- */
-std::optional<std::vector<Match>> FindMatches(const PLAYLIST::CSmartPlaylist* rules,
-                                              const std::string& content)
+//! The library party mode plays a source of a smart playlist type from, if it plays it
+std::optional<Library> LibraryOf(const LIBRARY_QUERY::Source& source)
 {
-  const bool songs =
-      StringUtils::EqualsNoCase(content, CONTENT::SONGS) ||
-      StringUtils::EqualsNoCase(content, CONTENT::MIXED);
-  const bool musicVideos = StringUtils::EqualsNoCase(content, CONTENT::MUSICVIDEOS) ||
-                           StringUtils::EqualsNoCase(content, CONTENT::MIXED);
-
-  std::vector<Match> matches;
-  if (songs)
+  if (source.itemType == MEDIA::TYPE::SONG)
   {
-    CMusicDatabase db;
-    if (!db.Open())
-      return std::nullopt;
-    std::string filter;
-    if (rules)
-    {
-      PLAYLIST::CSmartPlaylist songRules{*rules};
-      songRules.SetType(CONTENT::SONGS);
-      std::set<std::string, std::less<>> playlists;
-      const std::optional<std::string> where = songRules.GetWhereClause(db, playlists);
-      if (!where)
-      {
-        return std::nullopt;
-      }
-      filter = *where;
-    }
-    CLog::LogF(LOGINFO, "song filter [{}]", filter);
-    std::vector<int> ids;
-    db.GetRandomSongIDs(CDatabase::Filter(filter), ids);
-    for (const int id : ids)
-      matches.emplace_back(Library::Song, id);
+    return Library::Song;
   }
-
-  if (musicVideos)
+  if (source.itemType == MEDIA::TYPE::MUSIC_VIDEO)
   {
-    CVideoDatabase db;
-    if (!db.Open())
-      return std::nullopt;
-    std::string filter;
-    if (rules)
-    {
-      PLAYLIST::CSmartPlaylist musicVideoRules{*rules};
-      musicVideoRules.SetType(CONTENT::MUSICVIDEOS);
-      std::set<std::string, std::less<>> playlists;
-      const std::optional<std::string> where = musicVideoRules.GetWhereClause(db, playlists);
-      if (!where)
-      {
-        return std::nullopt;
-      }
-      filter = *where;
-    }
-    CLog::LogF(LOGINFO, "music video filter [{}]", filter);
-    std::vector<int> ids;
-    db.GetRandomMusicVideoIDs(filter, ids);
-    for (const int id : ids)
-      matches.emplace_back(Library::MusicVideo, id);
+    return Library::MusicVideo;
   }
-  return matches;
+  return std::nullopt;
 }
 
-std::string IdList(const std::vector<Match>& matches, Library library)
+LIBRARY_QUERY::Source SourceOf(Library library)
 {
-  std::string ids;
+  return library == Library::Song
+             ? LIBRARY_QUERY::Source{MEDIA::MediaSection::MUSIC, MEDIA::TYPE::SONG}
+             : LIBRARY_QUERY::Source{MEDIA::MediaSection::VIDEO, MEDIA::TYPE::MUSIC_VIDEO};
+}
+
+std::vector<int> IdsIn(const std::vector<Match>& matches, Library library)
+{
+  std::vector<int> ids;
   for (const auto& [matchLibrary, id] : matches)
     if (matchLibrary == library)
-      ids += StringUtils::Format("{},", id);
-  if (!ids.empty())
-    ids.pop_back();
+      ids.push_back(id);
   return ids;
 }
 
 std::vector<std::shared_ptr<CFileItem>> Fetch(const std::vector<Match>& matches)
 {
   CFileItemList fetched;
-  if (const std::string songIds = IdList(matches, Library::Song); !songIds.empty())
+  for (const Library library : {Library::Song, Library::MusicVideo})
   {
-    CMusicDatabase database;
-    if (database.Open())
-    {
-      database.GetSongsFullByWhere(MUSIC::DB_PATH::SONGS, fetched, SortDescription{},
-                                   CDatabase::Filter("songview.idSong IN (" + songIds + ")"), true);
-      for (const auto& item : fetched)
-        database.SetPropertiesForFileItem(*item);
-    }
-    else
-      CLog::LogF(LOGERROR, "could not open the music database");
-  }
-  if (const std::string videoIds = IdList(matches, Library::MusicVideo); !videoIds.empty())
-  {
-    CVideoDatabase database;
-    if (database.Open())
-      database.GetMusicVideosByWhere(VIDEO::DB_PATH::MUSICVIDEO_TITLES,
-                                     CDatabase::Filter("idMVideo IN (" + videoIds + ")"), fetched);
-    else
-      CLog::LogF(LOGERROR, "could not open the video database");
+    if (const std::vector<int> ids{IdsIn(matches, library)}; !ids.empty())
+      LIBRARY_QUERY::ItemsById(SourceOf(library), ids, fetched);
   }
   return PARTYMODE::InMatchOrder(matches, fetched);
 }
@@ -163,16 +96,21 @@ bool Fail(int error, const std::string& message)
 
 bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
 {
-  PLAYLIST::CSmartPlaylist rules;
+  MEDIA::CLibraryQuery rules;
   const std::string rulesPath =
       xspPath.empty() ? PARTYMODE::RulesPath(named.value_or(PLAYLIST::Audio)) : xspPath;
 
   const bool rulesLoaded = rules.Load(rulesPath);
+  if (!rulesLoaded && XFILE::CFile::Exists(rulesPath))
+  {
+    return Fail(0, "the rules in " + CURL::GetRedacted(rulesPath) + " could not be loaded");
+  }
   const PLAYLIST::Type playList =
-      named.value_or(rulesLoaded ? PARTYMODE::PlayListOf(rules.GetType()) : PLAYLIST::Audio);
+      named.value_or(rulesLoaded ? LIBRARY_QUERY::PlayListOf(rules.GetType()) : PLAYLIST::Audio);
   const bool isVideo = playList == PLAYLIST::Video;
-  const std::string content =
-      rulesLoaded ? rules.GetType() : (isVideo ? CONTENT::MUSICVIDEOS : CONTENT::SONGS);
+  const LIBRARY_QUERY::TYPE content{
+      rulesLoaded ? rules.GetType()
+                  : (isVideo ? LIBRARY_QUERY::TYPE::MUSIC_VIDEOS : LIBRARY_QUERY::TYPE::SONGS)};
 
   CGUIDialogProgress* dialog =
       CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogProgress>(
@@ -183,7 +121,8 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
   dialog->SetLine(2, CVariant{""});
   dialog->Open();
 
-  std::optional<std::vector<Match>> found = FindMatches(rulesLoaded ? &rules : nullptr, content);
+  std::optional<std::vector<Match>> found =
+      PARTYMODE::FindMatches(rulesLoaded ? &rules : nullptr, content);
   if (!found)
   {
     dialog->Close();
@@ -236,25 +175,47 @@ bool Start(const std::string& rulesPath)
   return StartFeed(std::nullopt, rulesPath);
 }
 
-PLAYLIST::Type PlayListOf(const std::string& rulesType)
+std::optional<std::vector<Match>> FindMatches(const MEDIA::CLibraryQuery* rules,
+                                              LIBRARY_QUERY::TYPE content)
 {
-  return PLAYLIST::CSmartPlaylist::IsMusicType(rulesType) &&
-                 !PLAYLIST::CSmartPlaylist::IsVideoType(rulesType)
-             ? PLAYLIST::Audio
-             : PLAYLIST::Video;
+  std::optional<MEDIA::CLibraryQueryReferences> references;
+  if (rules)
+  {
+    references = MEDIA::CLibraryQueryReferences::Resolve(*rules);
+    if (!references)
+    {
+      return std::nullopt;
+    }
+  }
+
+  SortDescription shuffled;
+  shuffled.sortBy = SortBy::RANDOM;
+  std::vector<Match> matches;
+  for (const LIBRARY_QUERY::Source& source : LIBRARY_QUERY::SourcesOf(content))
+  {
+    const std::optional<Library> library{LibraryOf(source)};
+    if (!library)
+    {
+      continue;
+    }
+    const std::optional<std::vector<int>> ids{
+        LIBRARY_QUERY::IdsOf(source, rules, references ? &*references : nullptr, shuffled)};
+    if (!ids)
+    {
+      return std::nullopt;
+    }
+    for (const int id : *ids)
+    {
+      matches.emplace_back(*library, id);
+    }
+  }
+  return matches;
 }
 
 bool CanStart(const std::string& rulesPath)
 {
-  PLAYLIST::CSmartPlaylist rules;
-  if (!rules.OpenAndReadName(CURL{rulesPath}))
-  {
-    return false;
-  }
-  const std::string& type = rules.GetType();
-  return StringUtils::EqualsNoCase(type, CONTENT::SONGS) ||
-         StringUtils::EqualsNoCase(type, CONTENT::MUSICVIDEOS) ||
-         StringUtils::EqualsNoCase(type, CONTENT::MIXED);
+  MEDIA::CLibraryQuery rules;
+  return rules.OpenAndReadName(CURL{rulesPath}) && LIBRARY_QUERY::CanFeedPartyMode(rules.GetType());
 }
 
 void Stop()

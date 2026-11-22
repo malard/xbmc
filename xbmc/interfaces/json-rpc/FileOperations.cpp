@@ -31,9 +31,9 @@
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
-#include "video/VideoUtils.h"
 
 #include <memory>
+#include <optional>
 #include <set>
 
 using namespace KODI;
@@ -282,21 +282,24 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
     return status;
 
   CDateTime lastPlayed = infos.m_lastPlayed;
-  int playcount = infos.GetPlayCount();
   if (!parameterObject["lastPlayed"].isNull())
   {
     lastPlayed.Reset();
     SetFromDBDateTime(parameterObject["lastPlayed"], lastPlayed);
-    playcount = lastPlayed.IsValid() ? std::max(1, playcount) : 0;
   }
+  std::optional<int> playCount;
   if (!parameterObject["playCount"].isNull())
-    playcount = parameterObject["playCount"].asInteger();
+    playCount = static_cast<int>(parameterObject["playCount"].asInteger());
+  if (parameterObject["lastPlayed"].isString() && parameterObject["lastPlayed"].empty() &&
+      !videodatabase.CanClearLastPlayed(file, playCount))
+    return InvalidParams;
+
+  const int playcount{playCount.value_or(infos.GetPlayCount())};
   if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
     videodatabase.SetPlayCount(CFileItem(infos), playcount, lastPlayed);
-  if (playcount != infos.GetPlayCount())
-    VIDEO::UTILS::AnnouncePlayCountChanged(file, playcount);
 
-  CVideoLibrary::UpdateResumePoint(parameterObject, infos, videodatabase);
+  if (const CVariant& resume{parameterObject["resume"]}; !resume.isNull())
+    videodatabase.SetResumePoint(file, resume["position"].asDouble(), resume["total"].asDouble());
 
   videodatabase.GetFileInfo("", infos, fileId);
   CJSONRPCUtils::NotifyItemUpdated(infos, KODI::ART::Artwork{});
@@ -335,7 +338,7 @@ bool CFileOperations::FillFileItem(
   if (!strFilename.empty() && (CDirectory::Exists(strFilename) || CFileUtils::Exists(strFilename)))
   {
     if (section == MediaSection::VIDEO)
-      status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
+      status = CVideoLibrary::FillFileItem(strFilename, item);
     else if (section == MediaSection::MUSIC)
       status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
     else if (section == MediaSection::FILES)
@@ -343,7 +346,7 @@ bool CFileOperations::FillFileItem(
       // A "files" entry is untyped, so ask whichever library it could belong to; a folder could
       // be a movie, a show or an album, so it is asked about in both.
       if (!MUSIC::IsAudio(*originalItem))
-        status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
+        status = CVideoLibrary::FillFileItem(strFilename, item);
       if (!status && !VIDEO::IsVideo(*originalItem))
         status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
     }

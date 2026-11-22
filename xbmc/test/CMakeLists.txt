@@ -12,11 +12,13 @@ set(SOURCES TestAutoSwitch.cpp
             TestPasswordManager.cpp
             TestTextureCache.cpp
             TestTextureCacheJob.cpp
+            TestTextureRule.cpp
             TestURL.cpp
             TestUtil.cpp
             TestUtils.cpp)
 
 set(HEADERS TestBasicEnvironment.h
+            TestLibrary.h
             TestUtils.h)
 
 core_add_test_library(xbmc_test)

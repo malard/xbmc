@@ -15,8 +15,11 @@
 #include "PartyMode.h"
 #include "ServiceBroker.h"
 #include "Util.h"
+#include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayLists.h"
+#include "application/ApplicationPlayer.h"
 #include "dialogs/GUIDialogBusy.h"
+#include "dialogs/GUIDialogYesNo.h"
 #include "filesystem/Directory.h"
 #include "filesystem/DiscDirectoryHelper.h"
 #include "filesystem/LibraryPaths.h"
@@ -28,19 +31,24 @@
 #include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListEntryRules.h"
 #include "playlists/PlayListFileItemClassify.h"
+#include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/MediaSettings.h"
+#include "settings/Settings.h"
+#include "settings/SettingsComponent.h"
 #include "threads/IRunnable.h"
 #include "utils/FileUtils.h"
 #include "utils/ItemProperties.h"
 #include "utils/PlaceholderPaths.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
+#include "utils/Variant.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoLibrary.h"
 #include "video/VideoUtils.h"
 #include "view/GUIViewState.h"
 
@@ -207,6 +215,7 @@ void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,
     items.Sort(sortDesc);
   }
 
+  bool fetchedPlayCounts = false;
   if (items.GetContent().empty() && !VIDEO::IsVideoDb(items) && !items.IsVirtualDirectoryRoot() &&
       !items.IsSourcesPath() && !items.IsLibraryFolder())
   {
@@ -221,6 +230,7 @@ void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,
 
       // Get play counts and resume bookmarks for the items.
       db.GetPlayCounts(items.GetPath(), items);
+      fetchedPlayCounts = true;
     }
   }
 
@@ -262,7 +272,6 @@ void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,
 
   const bool unwatchedOnly = watchedMode == WatchedMode::UNWATCHED;
   const bool watchedOnly = watchedMode == WatchedMode::WATCHED;
-  bool fetchedPlayCounts = false;
   for (int n = 0; n < items.Size();)
   {
     const auto& i = items[n];
@@ -277,12 +286,12 @@ void CAsyncGetItemsForPlaylist::Arrange(const CFileItem& folder,
     {
       if (!fetchedPlayCounts && (!i->HasVideoInfoTag() || !i->GetVideoInfoTag()->IsPlayCountSet()))
       {
-        CVideoDatabase db;
-        if (db.Open())
-        {
-          fetchedPlayCounts = true;
-          db.GetPlayCounts(items.GetPath(), items);
-        }
+        fetchedPlayCounts = VIDEO::LIBRARY::WithDatabase(
+            [&items](CVideoDatabase& db)
+            {
+              db.GetPlayCounts(items.GetPath(), items);
+              return true;
+            });
       }
       if (i->HasVideoInfoTag() && i->GetVideoInfoTag()->IsPlayCountSet())
       {
@@ -530,20 +539,6 @@ bool IsItemPlayable(const CFileItem& item)
   return false;
 }
 
-bool HasItemVideoDbInformation(const CFileItem& item)
-{
-  CVideoDatabase db;
-  if (!db.Open())
-  {
-    CLog::LogF(LOGERROR, "Cannot open VideoDatabase");
-    return false;
-  }
-
-  return db.HasMovieInfo(item.GetDynPath()) ||
-         db.HasTvShowInfo(URIUtils::GetDirectory(item.GetPath())) ||
-         db.HasEpisodeInfo(item.GetDynPath()) || db.HasMusicVideoInfo(item.GetDynPath());
-}
-
 std::string GetResumeString(const CFileItem& item)
 {
   const ResumeInformation resumeInfo = GetItemResumeInformation(item);
@@ -618,6 +613,32 @@ void NotifyItemPathChanged(const CFileItem& item, const std::string& oldPath, in
                   GUI_MSG_FLAG_FORCE_UPDATE,
                   std::make_shared<CFileItem>(oldItem)};
   CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+}
+
+void MakeVideoSettingsDefault(const std::function<void(CVideoSettings&)>& forget)
+{
+  const std::shared_ptr<CProfileManager> profileManager{
+      CServiceBroker::GetSettingsComponent()->GetProfileManager()};
+  if (profileManager->GetMasterProfile().getLockMode() != LockMode::EVERYONE &&
+      !g_passwordManager.CheckSettingLevelLock(::SettingLevel::Expert))
+    return;
+
+  if (!CGUIDialogYesNo::ShowAndGetInput(CVariant{12376}, CVariant{12377}))
+    return;
+
+  if (!LIBRARY::WithDatabase(
+          [](CVideoDatabase& db)
+          {
+            db.EraseAllVideoSettings();
+            return true;
+          }))
+    return;
+
+  const auto appPlayer{CServiceBroker::GetAppComponents().GetComponent<CApplicationPlayer>()};
+  CVideoSettings& defaults{CMediaSettings::GetInstance().GetDefaultVideoSettings()};
+  defaults = appPlayer->GetVideoSettings();
+  forget(defaults);
+  CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
 }
 
 } // namespace KODI::VIDEO::UTILS

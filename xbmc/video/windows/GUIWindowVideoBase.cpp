@@ -38,11 +38,11 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
+#include "media/LibraryQuery.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "music/dialogs/GUIDialogMusicInfo.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
-#include "playlists/SmartPlayList.h"
 #include "profiles/ProfileManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
@@ -305,7 +305,7 @@ bool CGUIWindowVideoBase::OnItemInfo(const CFileItem& fileItem)
   const ADDON::ScraperPtr scraper = m_database.GetScraperForPath(strDir, settings, foundDirectly);
 
   if (!fileItem.HasVideoInfoTag() && !scraper && !(fileItem.IsPlugin() || fileItem.IsScript()) &&
-      !KODI::VIDEO::UTILS::HasItemVideoDbInformation(fileItem))
+      !m_database.HasVideoInfo(fileItem))
   {
     // We have no chance to fill a video info tag, neither scraper nor db data available.
     HELPERS::ShowOKDialogText(CVariant{20176}, // Show video information
@@ -465,6 +465,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
           {
             CLog::Log(LOGERROR, "{}: could not add episode [{}]. tvshow does not exist yet..",
                       __FUNCTION__, item->GetPath());
+            m_database.Close();
             return RESULT_ERROR;
           }
         }
@@ -549,6 +550,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
 
   bool listNeedsUpdating = false;
   bool refreshFailed = false;
+  bool removed = false;
   // 3. Run a loop so that if we Refresh we re-run this block
   do
   {
@@ -558,7 +560,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
     OnMessage(reload);
 
     if (!CVideoLibraryQueue::GetInstance().RefreshItemModal(item, needsRefresh,
-                                                            pDlgInfo->RefreshAll()))
+                                                            pDlgInfo->RefreshAll(), removed))
     {
       refreshFailed = true;
       break;
@@ -584,17 +586,7 @@ CGUIWindowVideoBase::ShowInfoResult CGUIWindowVideoBase::ShowInfo(
   } while (needsRefresh);
 
   if (refreshFailed)
-  {
-    // the movie may have been removed from the library before the refresh failed
-    bool removed{false};
-    if (item->HasVideoInfoTag() && item->GetVideoInfoTag()->GetMediaType() == MEDIA::TYPE::MOVIE &&
-        item->GetVideoInfoTag()->m_iDbId > 0 && m_database.Open())
-    {
-      removed = m_database.GetMovieId(item->GetVideoInfoTag()->m_strFileNameAndPath) < 0;
-      m_database.Close();
-    }
     return (listNeedsUpdating || removed || hasChanges) ? RESULT_OK_UPDATED : RESULT_OK_NOT_UPDATED;
-  }
 
   // changes the dialog made to other items are only picked up by refreshing the list
   const std::shared_ptr<CFileItem> dialogItem{pDlgInfo->GetCurrentListItem()};
@@ -703,7 +695,7 @@ bool CGUIWindowVideoBase::UpdateMovieListItem(const std::string& listItemPath,
     {
       // a query by id finds the movie even when a limit leaves it out of the listing
       const CURL dbUrl{dbPath};
-      PLAYLIST::CSmartPlaylist xsp;
+      MEDIA::CLibraryQuery xsp;
       const bool hasLimit{dbUrl.HasOption("xsp") && xsp.LoadFromJson(dbUrl.GetOption("xsp")) &&
                           xsp.GetLimit() > 0};
 
@@ -1486,7 +1478,9 @@ void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)
   }
 
   // group == "none" completely suppresses any grouping
-  if (PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) != Field::NONE)
+  const std::optional<MEDIA::LIBRARY_QUERY::GROUP> groupBy{
+      MEDIA::LIBRARY_QUERY::GroupFromName(group)};
+  if (groupBy != MEDIA::LIBRARY_QUERY::GROUP::NONE)
   {
     CQueryParams params;
     CVideoDatabaseDirectory dir;
@@ -1496,7 +1490,7 @@ void CGUIWindowVideoBase::GetGroupedItems(CFileItemList &items)
     if (items.GetContent() == MEDIA::CONTENT::MOVIES && params.GetSetId() <= 0 &&
         params.GetVideoVersionId() < 0 && nodeType == NodeType::TITLE_MOVIES &&
         (settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_GROUPMOVIESETS) ||
-         (PLAYLIST::CSmartPlaylistRule::TranslateGroup(group.c_str()) == Field::SET && mixed)))
+         (groupBy == MEDIA::LIBRARY_QUERY::GROUP::SET && mixed)))
     {
       CFileItemList groupedItems;
       GroupAttribute groupAttributes = settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_GROUPSINGLEITEMSETS) ? GroupAttributeNone : GroupAttributeIgnoreSingleItems;

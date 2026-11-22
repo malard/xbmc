@@ -12,9 +12,7 @@ set(SOURCES PlayList.cpp
             PlayListWPL.cpp
             PlayListXML.cpp
             PlayListXSPF.cpp
-            SmartFeed.cpp
-            SmartPlayList.cpp
-            SmartPlaylistFileItemListModifier.cpp)
+            SmartFeed.cpp)
 
 set(HEADERS PlayList.h
             PlayListASX.h
@@ -33,8 +31,6 @@ set(HEADERS PlayList.h
             PlayListWPL.h
             PlayListXML.h
             PlayListXSPF.h
-            SmartFeed.h
-            SmartPlayList.h
-            SmartPlaylistFileItemListModifier.h)
+            SmartFeed.h)
 
 core_add_library(playlists)

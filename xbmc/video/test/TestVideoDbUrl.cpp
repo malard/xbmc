@@ -7,7 +7,6 @@
  */
 
 #include "test/TestUtils.h"
-#include "video/VideoDatabase.h"
 #include "video/VideoDbUrl.h"
 
 #include <gtest/gtest.h>

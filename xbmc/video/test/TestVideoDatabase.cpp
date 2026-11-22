@@ -24,7 +24,7 @@
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
 #include "language/LanguageLoader.h"
-#include "playlists/SmartPlayList.h"
+#include "media/LibraryQuery.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
@@ -33,6 +33,7 @@
 #include "utils/Artwork.h"
 #include "utils/DatabaseUtils.h"
 #include "utils/FileUtils.h"
+#include "utils/ItemProperties.h"
 #include "utils/StreamDetails.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -534,11 +535,13 @@ TEST_F(TestVideoDatabase, ASmartPlaylistGenreRuleFindsAMovieOfThatGenre)
   ASSERT_GT(idMovie, 0);
   ASSERT_GT(AddMovie("/videos/other.mkv"), 0);
 
-  KODI::PLAYLIST::CSmartPlaylistRule rule;
-  rule.m_field = static_cast<int>(Field::GENRE);
+  KODI::MEDIA::CLibraryQueryRule rule;
+  rule.m_field = Field::GENRE;
   rule.m_operator = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
   rule.m_parameter = {"Drama"};
-  const std::optional<std::string> where{rule.GetWhereClause(m_db, "movies")};
+  const std::optional<std::string> where{rule.GetWhereClause(
+      m_db, KODI::MEDIA::CLibraryQueryContext{KODI::MEDIA::LIBRARY_QUERY::TYPE::MOVIES,
+                                              KODI::MEDIA::TYPE::MOVIE})};
   ASSERT_TRUE(where);
   EXPECT_NE(std::string::npos, where->find("genre_link.media_type = 'movie'")) << *where;
 
@@ -2261,7 +2264,9 @@ TEST_F(TestPlayStateAnnouncements, MarkingWatchedResetsAResumePointOnlyTheDataba
   CBookmark resumePoint;
   resumePoint.timeInSeconds = 600.0;
   resumePoint.totalTimeInSeconds = 3600.0;
+  m_db.SetAnnounceFileChanges(false);
   ASSERT_TRUE(m_db.AddBookMarkToFile("/videos/film.mkv", resumePoint, CBookmark::RESUME));
+  m_db.SetAnnounceFileChanges(true);
 
   // As the items of a folder come, without a video info tag
   ASSERT_TRUE(
@@ -2289,6 +2294,7 @@ TEST_F(TestPlayStateAnnouncements, ResettingALibraryItemAnnouncesItsFile)
 {
   auto item{std::make_shared<CFileItem>("videodb://movies/titles/1", false)};
   item->GetVideoInfoTag()->m_strFileNameAndPath = "/movies/film.mkv";
+  item->GetVideoInfoTag()->SetResumePoint(600.0, 3600.0, "");
 
   ASSERT_TRUE(ResetResumePointJob(item).Work(m_db));
 
@@ -2299,11 +2305,42 @@ TEST_F(TestPlayStateAnnouncements, ResettingALibraryItemAnnouncesItsFile)
 
 TEST_F(TestPlayStateAnnouncements, AnnouncesAFileWithoutCredentials)
 {
-  KODI::VIDEO::UTILS::AnnouncePlayCountChanged("smb://user:secret@server/videos/film.mkv", 1);
+  ASSERT_TRUE(
+      m_db.SetPlayCount(CFileItem("smb://user:secret@server/videos/film.mkv", false), 1).IsValid());
 
   const auto files{m_announcements->Files()};
   ASSERT_EQ(1u, files.size());
   EXPECT_EQ("smb://server/videos/film.mkv", files[0].data["file"].asString());
+}
+
+TEST_F(TestPlayStateAnnouncements, ClearingAResumePointAnnouncesItOnlyWhenOneWasHeld)
+{
+  CBookmark resumePoint;
+  resumePoint.timeInSeconds = 600.0;
+  resumePoint.totalTimeInSeconds = 3600.0;
+  m_db.SetAnnounceFileChanges(false);
+  ASSERT_TRUE(m_db.AddBookMarkToFile("/videos/film.mkv", resumePoint, CBookmark::RESUME));
+  m_db.SetAnnounceFileChanges(true);
+
+  ASSERT_TRUE(m_db.ClearBookMarksOfFile("/videos/film.mkv", CBookmark::RESUME));
+  ASSERT_TRUE(m_db.ClearBookMarksOfFile("/videos/film.mkv", CBookmark::RESUME));
+
+  const auto files{m_announcements->Files()};
+  ASSERT_EQ(1u, files.size());
+  EXPECT_EQ("OnResumePointChanged", files[0].message);
+  EXPECT_EQ(0.0, files[0].data["resume"]["position"].asDouble());
+}
+
+TEST_F(TestPlayStateAnnouncements, UpdatingTheLastPlayedDateAnnouncesNoPlayCount)
+{
+  const CFileItem film{"/videos/film.mkv", false};
+  m_db.SetAnnounceFileChanges(false);
+  ASSERT_TRUE(m_db.SetPlayCount(film, 2).IsValid());
+  m_db.SetAnnounceFileChanges(true);
+
+  ASSERT_TRUE(m_db.UpdateLastPlayed(film).IsValid());
+
+  EXPECT_TRUE(m_announcements->Files().empty());
 }
 
 // Writes made later on the connection would otherwise never be committed
@@ -2315,6 +2352,260 @@ TEST_F(TestVideoDatabaseClean, EndsItsTransactionWhenThePathsHoldNoMedia)
   m_db.CleanDatabase(nullptr, {m_db.GetPathId(movies)}, false);
 
   EXPECT_FALSE(m_db.InTransaction());
+}
+
+TEST_F(TestVideoDatabase, DeleteItemRemovesTheKindItIsGiven)
+{
+  const int idMovie{AddMovie("/movies/film.mkv")};
+  const int idSet{m_db.AddSet("Saga")};
+  ASSERT_GT(idMovie, 0);
+  ASSERT_GT(idSet, 0);
+  m_db.SetMovieSet(idMovie, idSet);
+
+  EXPECT_TRUE(m_db.DeleteItem(VideoDbContentType::MOVIE_SETS, idSet));
+  CVideoInfoTag details;
+  EXPECT_FALSE(m_db.GetSetInfo(idSet, details));
+  EXPECT_TRUE(m_db.GetMovieInfo("", details, idMovie));
+
+  EXPECT_TRUE(m_db.DeleteItem(VideoDbContentType::MOVIES, idMovie));
+  EXPECT_FALSE(m_db.GetMovieInfo("", details, idMovie));
+  EXPECT_FALSE(m_db.DeleteItem(VideoDbContentType::MUSICALBUMS, 1));
+}
+
+TEST_F(TestVideoDatabase, AShowIsWatchedWhileAnyOfItsEpisodesIs)
+{
+  const int idShow{AddTvShow("/tv/Show/")};
+  const int idEpisode{AddEpisode(idShow, "/tv/Show/Show S01E01.mkv", 1)};
+  ASSERT_GT(AddEpisode(idShow, "/tv/Show/Show S01E02.mkv", 2), 0);
+  EXPECT_FALSE(m_db.IsWatched(KODI::MEDIA::TYPE::TV_SHOW, idShow));
+
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/tv/Show/Show S01E01.mkv", false), 1).IsValid());
+
+  EXPECT_TRUE(m_db.IsWatched(KODI::MEDIA::TYPE::TV_SHOW, idShow));
+  EXPECT_TRUE(m_db.IsWatched(KODI::MEDIA::TYPE::EPISODE, idEpisode));
+}
+
+TEST_F(TestVideoDatabase, OnlyAnEditLeavingAFileUnwatchedMayClearItsLastPlayedDate)
+{
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/videos/film.mkv", false), 2).IsValid());
+
+  EXPECT_FALSE(m_db.CanClearLastPlayed("/videos/film.mkv", std::nullopt));
+  EXPECT_FALSE(m_db.CanClearLastPlayed("/videos/film.mkv", 1));
+  EXPECT_TRUE(m_db.CanClearLastPlayed("/videos/film.mkv", 0));
+  EXPECT_TRUE(m_db.CanClearLastPlayed("/videos/unplayed.mkv", std::nullopt));
+}
+
+TEST_F(TestVideoDatabase, AResumePointWithoutALengthTakesTheOneStoredOrTheVideos)
+{
+  const std::string film{"/videos/film.mkv"};
+  const int idFile{m_db.AddFile(film)};
+  ASSERT_GT(idFile, 0);
+  CStreamDetails details;
+  auto* video = new CStreamDetailVideo();
+  video->m_iDuration = 5400;
+  video->SetSource(CStreamDetail::MEDIA);
+  details.AddStream(video);
+  ASSERT_TRUE(m_db.SetStreamDetailsForFileId(details, idFile));
+
+  CBookmark resumePoint;
+  ASSERT_TRUE(m_db.SetResumePoint(film, 600.0, 0.0));
+  ASSERT_TRUE(m_db.GetResumeBookMark(film, resumePoint));
+  EXPECT_EQ(5400.0, resumePoint.totalTimeInSeconds);
+
+  ASSERT_TRUE(m_db.SetResumePoint(film, 900.0, 3600.0));
+  ASSERT_TRUE(m_db.SetResumePoint(film, 1200.0, 0.0));
+  ASSERT_TRUE(m_db.GetResumeBookMark(film, resumePoint));
+  EXPECT_EQ(1200.0, resumePoint.timeInSeconds);
+  EXPECT_EQ(3600.0, resumePoint.totalTimeInSeconds);
+
+  ASSERT_TRUE(m_db.SetResumePoint(film, 0.0, 0.0));
+  EXPECT_FALSE(m_db.GetResumeBookMark(film, resumePoint));
+}
+
+TEST_F(TestVideoDatabase, ABlurayInADriveResumesFromThePlaylistLastPlayed)
+{
+  CURL disc{"bluray://"};
+  disc.SetHostName("removable://FILM_1234");
+  disc.SetFileName("BDMV/index.bdmv");
+  CURL playlist{disc};
+  playlist.SetFileName("BDMV/PLAYLIST/00800.mpls");
+  CBookmark resumePoint;
+  resumePoint.timeInSeconds = 600.0;
+  resumePoint.totalTimeInSeconds = 3600.0;
+  ASSERT_TRUE(m_db.AddBookMarkToFile(playlist.Get(), resumePoint, CBookmark::RESUME));
+
+  CBookmark found;
+  ASSERT_TRUE(m_db.GetDiscResumeBookMark(disc.Get(), found));
+  EXPECT_EQ(600.0, found.timeInSeconds);
+  EXPECT_FALSE(m_db.GetDiscResumeBookMark("removable://OTHER_5678", found));
+}
+
+TEST_F(TestVideoDatabase, RemovingAVersionOnADiscPlaylistRemovesItsFileToo)
+{
+  const MovieWithVersion movie{AddMovieWithVersion(KODI::ART::Artwork{}, KODI::ART::Artwork{})};
+  ASSERT_GT(movie.versionFileId, 0);
+  EXPECT_FALSE(m_db.RemoveVideoAsset(movie.movieFileId));
+  EXPECT_TRUE(m_db.RemoveVideoAsset(movie.versionFileId));
+  CVideoInfoTag file;
+  EXPECT_TRUE(m_db.GetFileInfo("", file, movie.versionFileId));
+
+  const int idSource{
+      AddMovie(URIUtils::GetBlurayPlaylistPath("/movies/Movie (2010)/BDMV/index.bdmv", 801))};
+  ASSERT_GT(idSource, 0);
+  const int idFile{m_db.GetFileIdByMovie(idSource)};
+  ASSERT_TRUE(m_db.ConvertVideoToVersion(VideoDbContentType::MOVIES, idSource, movie.movieId, -1,
+                                         VideoAssetType::VERSION));
+  EXPECT_TRUE(m_db.RemoveVideoAsset(idFile));
+  EXPECT_FALSE(m_db.GetFileInfo("", file, idFile));
+}
+
+TEST_F(TestVideoDatabase, AVersionConvertedToAVideoIsAMovieOfItsOwn)
+{
+  const MovieWithVersion movie{
+      AddMovieWithVersion({{"poster", "/art/movie.jpg"}}, {{"poster", "/art/version.jpg"}})};
+  ASSERT_GT(movie.versionFileId, 0);
+  CVideoInfoTag details;
+  ASSERT_TRUE(m_db.GetMovieInfo("", details, movie.movieId));
+  // As Manage versions lists it
+  CVideoInfoTag version{Tag("/movies/Movie (2010)/Movie (2010) Standard Edition.mkv")};
+  version.m_iDbId = movie.versionFileId;
+  version.m_iFileId = movie.versionFileId;
+
+  const int idMovie{m_db.ConvertVersionToVideo(details, version)};
+  ASSERT_GT(idMovie, 0);
+  EXPECT_NE(movie.movieId, idMovie);
+  CVideoInfoTag converted;
+  ASSERT_TRUE(m_db.GetMovieInfo("", converted, idMovie));
+  EXPECT_EQ(movie.versionFileId, converted.m_iFileId);
+  CFileItemList versions;
+  m_db.GetVideoVersions(VideoDbContentType::MOVIES, movie.movieId, versions,
+                        VideoAssetType::VERSION);
+  EXPECT_EQ(1, versions.Size());
+}
+
+TEST_F(TestVideoDatabase, AnExtrasFileLoadsAsTheExtrasListShowsIt)
+{
+  CVideoInfoTag movie{Tag("/movies/Film (2010)/Film (2010).mkv")};
+  movie.m_strPictureURL.ParseFromData("<thumb>/art/poster.jpg</thumb>");
+  const int idMovie{m_db.SetDetailsForMovie(movie, KODI::ART::Artwork{})};
+  ASSERT_GT(idMovie, 0);
+  const std::string trailer{"/movies/Film (2010)/Trailer.mkv"};
+  CFileItem extra{trailer, false};
+  ASSERT_TRUE(m_db.AddVideoAsset(
+      VideoDbContentType::MOVIES, idMovie,
+      m_db.AddVideoVersionType("Trailer", VideoAssetTypeOwner::USER, VideoAssetType::EXTRA),
+      VideoAssetType::EXTRA, extra));
+  CFileItemList extras;
+  m_db.GetVideoVersions(VideoDbContentType::MOVIES, idMovie, extras, VideoAssetType::EXTRA);
+  ASSERT_EQ(1, extras.Size());
+  const CVideoInfoTag& listed{*extras[0]->GetVideoInfoTag()};
+
+  CVideoInfoTag loaded;
+  ASSERT_TRUE(m_db.LoadVideoInfo(trailer, loaded));
+
+  EXPECT_EQ(KODI::MEDIA::TYPE::VIDEO_VERSION, loaded.GetMediaType());
+  EXPECT_EQ(listed.m_iDbId, loaded.m_iDbId);
+  EXPECT_EQ(listed.m_iFileId, loaded.m_iFileId);
+  EXPECT_EQ(VideoAssetType::EXTRA, loaded.GetAssetInfo().GetType());
+  EXPECT_EQ(listed.GetAssetInfo().GetId(), loaded.GetAssetInfo().GetId());
+  EXPECT_EQ("Trailer", loaded.m_strTitle);
+  EXPECT_EQ(listed.m_strPictureURL.GetData(), loaded.m_strPictureURL.GetData());
+  EXPECT_NE("", loaded.m_strPictureURL.GetData());
+}
+
+TEST_F(TestVideoDatabase, AddingAnotherMoviesFileAsAVersionBringsThatMovie)
+{
+  const int idTarget{AddMovie("/movies/Target.mkv")};
+  const int idOther{AddMovie("/movies/Other.mkv")};
+  ASSERT_GT(idTarget, 0);
+  ASSERT_GT(idOther, 0);
+  ASSERT_TRUE(m_db.CanAddVideoAsset(m_db.GetFileIdByMovie(idOther)));
+  const int idType{
+      m_db.AddVideoVersionType("Other cut", VideoAssetTypeOwner::USER, VideoAssetType::VERSION)};
+
+  CFileItem item{"/movies/Other.mkv", false};
+  ASSERT_TRUE(m_db.AddVideoAsset(VideoDbContentType::MOVIES, idTarget, idType,
+                                 VideoAssetType::VERSION, item));
+  CVideoInfoTag gone;
+  EXPECT_FALSE(m_db.GetMovieInfo("", gone, idOther));
+  EXPECT_EQ(idTarget, m_db.GetVideoVersionInfo("/movies/Other.mkv").m_idMedia);
+
+  // A movie with versions would be left without a file of its own
+  const MovieWithVersion withVersions{
+      AddMovieWithVersion(KODI::ART::Artwork{}, KODI::ART::Artwork{})};
+  EXPECT_FALSE(m_db.CanAddVideoAsset(withVersions.movieFileId));
+}
+
+TEST_F(TestVideoDatabase, RevertingAPlaylistMovesItsMovieToTheDisc)
+{
+  const std::string disc{"/movies/Film/BDMV/index.bdmv"};
+  const int idMovie{AddMovie(URIUtils::GetBlurayPlaylistPath(disc, 800))};
+  ASSERT_GT(idMovie, 0);
+  const int idPlaylistFile{m_db.GetFileIdByMovie(idMovie)};
+  const std::vector<KODI::VIDEO::DiscPlaylist> playlists{{.playlist = 800,
+                                                          .idFile = idPlaylistFile,
+                                                          .mediaType = VideoDbContentType::MOVIES,
+                                                          .idMedia = idMovie,
+                                                          .itemType = VideoAssetType::VERSION}};
+
+  std::vector<CVideoDatabase::PlaylistRevert> reverted;
+  ASSERT_EQ(CVideoDatabase::PlaylistRevertResult::DONE,
+            m_db.RevertPlaylistsToDisc(disc, playlists, reverted));
+  ASSERT_EQ(1u, reverted.size());
+  EXPECT_EQ(idMovie, reverted[0].details.m_iDbId);
+  EXPECT_EQ(idPlaylistFile, reverted[0].oldIdFile);
+  EXPECT_EQ(disc, reverted[0].details.m_strFileNameAndPath);
+}
+
+TEST_F(TestVideoDatabase, APlayedItemMovesToTheFileItWasPlayedFromOnlyWhenThatChanged)
+{
+  const int idMovie{AddMovie("/movies/Film.mkv")};
+  ASSERT_GT(idMovie, 0);
+  CVideoInfoTag tag;
+  ASSERT_TRUE(m_db.GetMovieInfo("", tag, idMovie));
+  CFileItem item{tag};
+  EXPECT_FALSE(m_db.MoveFileOfPlayedItem(item, "/movies/Film.mkv"));
+
+  item.SetProperty(KODI::ITEM::PROPERTY::NEW_STACK_PATH, true);
+  const auto move{
+      m_db.MoveFileOfPlayedItem(item, "stack:///movies/Film-cd1.mkv , /movies/Film-cd2.mkv")};
+  ASSERT_TRUE(move);
+  EXPECT_EQ(tag.m_iFileId, move->replacedIdFile);
+  EXPECT_EQ(idMovie, move->idMedia);
+  CVideoInfoTag moved;
+  ASSERT_TRUE(m_db.GetMovieInfo("", moved, idMovie));
+  EXPECT_EQ(move->idFile, moved.m_iFileId);
+}
+
+TEST_F(TestVideoDatabase, TotalsCountWhatHasBeenWatched)
+{
+  ASSERT_GT(AddMovie("/movies/one.mkv"), 0);
+  ASSERT_GT(AddMovie("/movies/two.mkv"), 0);
+  const int idShow{AddTvShow("/tv/Show/")};
+  ASSERT_GT(AddEpisode(idShow, "/tv/Show/Show S01E01.mkv", 1), 0);
+  ASSERT_GT(AddEpisode(idShow, "/tv/Show/Show S01E02.mkv", 2), 0);
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/movies/one.mkv", false), 1).IsValid());
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/tv/Show/Show S01E01.mkv", false), 1).IsValid());
+
+  const CVideoDatabase::Totals totals{m_db.GetTotals()};
+  EXPECT_EQ(2, totals.movies);
+  EXPECT_EQ(1, totals.moviesWatched);
+  EXPECT_EQ(1, totals.tvShows);
+  EXPECT_EQ(0, totals.tvShowsWatched);
+  EXPECT_EQ(2, totals.episodes);
+  EXPECT_EQ(1, totals.episodesWatched);
+  EXPECT_EQ(0, totals.musicVideos);
+}
+
+TEST_F(TestVideoDatabase, ATagIsFoundOnlyForTheTypeItIsGivenTo)
+{
+  const int idMovie{AddMovie("/movies/film.mkv")};
+  ASSERT_GT(idMovie, 0);
+  m_db.AddTagToItem(idMovie, m_db.AddTag("Favourites"), KODI::MEDIA::TYPE::MOVIE);
+
+  EXPECT_TRUE(m_db.HasTag("Favourites", KODI::MEDIA::TYPE::MOVIE));
+  EXPECT_FALSE(m_db.HasTag("Favourites", KODI::MEDIA::TYPE::TV_SHOW));
+  EXPECT_FALSE(m_db.HasTag("Classics", KODI::MEDIA::TYPE::MOVIE));
 }
 
 // A bonus disc's folder sits beside the folders holding the movie's own discs
@@ -2353,7 +2644,7 @@ TEST_F(TestVideoDatabase, DeleteVideoAssetCanKeepTheHashOfItsFolder)
   ASSERT_GT(idFile, 0);
   ASSERT_TRUE(m_db.SetPathHash(folder, "hash"));
 
-  ASSERT_TRUE(m_db.DeleteVideoAsset(idFile, DeleteMovieHashAction::HASH_PRESERVE));
+  ASSERT_TRUE(m_db.UnlinkVideoAsset(idFile, DeleteMovieHashAction::HASH_PRESERVE));
 
   std::string hash;
   ASSERT_TRUE(m_db.GetPathHash(folder, hash));
@@ -2651,14 +2942,14 @@ TEST_F(TestVideoDatabase, AnExtrasTypeGoesWithItsLastExtra)
   const int second{addExtra("/movies/Movie (2020)/Extras/gag reel 2.mkv", made)};
   const int third{addExtra("/movies/Movie (2020)/Extras/my scene.mkv", typed)};
 
-  ASSERT_TRUE(m_db.DeleteVideoAsset(first));
+  ASSERT_TRUE(m_db.UnlinkVideoAsset(first));
   EXPECT_EQ("Gag Reel", m_db.GetVideoVersionById(made));
-  ASSERT_TRUE(m_db.DeleteVideoAsset(second));
+  ASSERT_TRUE(m_db.UnlinkVideoAsset(second));
   EXPECT_EQ("", m_db.GetVideoVersionById(made));
 
   m_db.SetVideoVersion(third, VIDEO_EXTRA_ID_BEGIN + 1);
   EXPECT_EQ("", m_db.GetVideoVersionById(typed));
-  ASSERT_TRUE(m_db.DeleteVideoAsset(third));
+  ASSERT_TRUE(m_db.UnlinkVideoAsset(third));
   EXPECT_EQ(kind, m_db.GetVideoVersionById(VIDEO_EXTRA_ID_BEGIN + 1));
   EXPECT_EQ("My Cut", m_db.GetVideoVersionById(version));
 
@@ -2971,4 +3262,237 @@ TEST_F(TestVideoDatabase, AnExtraFoundBySearchPlaysItsFile)
   m_db.GetMovieExtrasByName("Gag", items);
   ASSERT_EQ(items.Size(), 1);
   EXPECT_EQ(items[0]->GetDynPath(), playlist);
+}
+
+namespace
+{
+//! A movie source, /movies/, scanned recursively, in a database of the test's own
+class TestLookupByFolders : public testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    m_settings.type = "sqlite3";
+    m_settings.name = "TestLookupByFolders";
+    m_settings.host = CSpecialProtocol::TranslatePath("special://temp/");
+    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
+              m_db.Connect(m_settings.name, m_settings, true));
+    UseFolderNames(true);
+  }
+
+  void TearDown() override
+  {
+    m_db.Close();
+    XFILE::CFile::Delete(m_settings.host + m_settings.name + ".db");
+  }
+
+  void UseFolderNames(bool useFolderNames)
+  {
+    ASSERT_TRUE(m_db.ExecuteQuery(m_db.PrepareSQL(
+        "UPDATE path SET strContent='movies', strScraper='metadata.local', useFolderNames=%i, "
+        "scanRecursive=2147483647 WHERE idPath=%i",
+        useFolderNames ? 1 : 0, m_db.AddPath("/movies/"))));
+  }
+
+  DatabaseSettings m_settings;
+  CVideoDatabase m_db;
+};
+} // namespace
+
+// A movie in the source's root shares it, whether a file, an ISO, or a playlist of an ISO
+TEST_F(TestLookupByFolders, AMovieInTheSourcesRootHasNoFolderOfItsOwn)
+{
+  for (const std::string& video :
+       {std::string{"/movies/Film.mkv"}, std::string{"/movies/M3GAN.iso"},
+        URIUtils::GetBlurayPlaylistPath("/movies/M3GAN.iso", 800)})
+    EXPECT_FALSE(m_db.LookupByFolders(video)) << video;
+}
+
+TEST_F(TestLookupByFolders, AMovieInAFolderBelowTheSourcesRootHasOne)
+{
+  for (const std::string& video :
+       {std::string{"/movies/Film/Film.mkv"}, std::string{"/movies/M3GAN/M3GAN.iso"},
+        URIUtils::GetBlurayPlaylistPath("/movies/M3GAN/M3GAN.iso", 800),
+        URIUtils::GetBlurayPlaylistPath("/movies/M3GAN/BDMV/index.bdmv", 800),
+        URIUtils::GetBlurayPlaylistPath("/movies/M3GAN/disc 1/BDMV/index.bdmv", 800),
+        URIUtils::GetBlurayPlaylistPath("/movies/M3GAN/disc 1/M3GAN.iso", 800),
+        std::string{"/movies/M3GAN/VIDEO_TS/VIDEO_TS.IFO"}})
+    EXPECT_TRUE(m_db.LookupByFolders(video)) << video;
+}
+
+TEST_F(TestLookupByFolders, AMovieOfASourceWithoutFolderNamesHasNoFolderOfItsOwn)
+{
+  UseFolderNames(false);
+  for (const std::string& video : {std::string{"/movies/Film/Film.mkv"},
+                                   URIUtils::GetBlurayPlaylistPath("/movies/M3GAN/M3GAN.iso", 800)})
+    EXPECT_FALSE(m_db.LookupByFolders(video)) << video;
+}
+
+TEST_F(TestVideoDatabase, ClearingAllBookmarksOfAFileClearsEachType)
+{
+  const std::string film{"/videos/film.mkv"};
+  CBookmark bookmark;
+  bookmark.timeInSeconds = 60.0;
+  bookmark.totalTimeInSeconds = 3600.0;
+  ASSERT_TRUE(m_db.AddBookMarkToFile(film, bookmark, CBookmark::STANDARD));
+  ASSERT_TRUE(m_db.AddBookMarkToFile(film, bookmark, CBookmark::RESUME));
+
+  EXPECT_TRUE(m_db.ClearAllBookMarksOfFile(film));
+
+  VECBOOKMARKS bookmarks;
+  m_db.GetBookMarksForFile(film, bookmarks, CBookmark::STANDARD);
+  EXPECT_TRUE(bookmarks.empty());
+  CBookmark resumePoint;
+  EXPECT_FALSE(m_db.GetResumeBookMark(film, resumePoint));
+}
+
+TEST_F(TestVideoDatabase, AnItemIsInTheLibraryByItsFileOrItsShowsFolder)
+{
+  ASSERT_GT(AddMovie("/movies/Film.mkv"), 0);
+  const int idShow{AddTvShow("/shows/Show/")};
+  ASSERT_GT(idShow, 0);
+  ASSERT_GT(AddEpisode(idShow, "/shows/Show/Show S01E01.mkv", 1), 0);
+
+  EXPECT_TRUE(m_db.HasVideoInfo(CFileItem{"/movies/Film.mkv", false}));
+  EXPECT_TRUE(m_db.HasVideoInfo(CFileItem{"/shows/Show/Show S01E01.mkv", false}));
+  EXPECT_TRUE(m_db.HasVideoInfo(CFileItem{"/shows/Show/", true}));
+  EXPECT_FALSE(m_db.HasVideoInfo(CFileItem{"/movies/Other.mkv", false}));
+}
+
+TEST_F(TestVideoDatabase, SettingAMoviesTrailerSetsThatMoviesTrailer)
+{
+  const int idMovie{AddMovie("/movies/Film.mkv")};
+  ASSERT_GT(idMovie, 0);
+
+  m_db.SetTrailerForMovie(idMovie, "/movies/Film-trailer.mkv");
+
+  CVideoInfoTag tag;
+  ASSERT_TRUE(m_db.GetMovieInfo("", tag, idMovie));
+  EXPECT_EQ("/movies/Film-trailer.mkv", tag.m_strTrailer);
+}
+
+TEST_F(TestVideoDatabase, TaggedItemsAreListedByWhetherTheyHaveTheTag)
+{
+  const int idTagged{AddMovie("/movies/Tagged.mkv")};
+  const int idOther{AddMovie("/movies/Other.mkv")};
+  ASSERT_GT(idTagged, 0);
+  ASSERT_GT(idOther, 0);
+  const int idTag{m_db.AddTag("Favourites")};
+  ASSERT_GT(idTag, 0);
+  const auto listed{[this, idTag](bool tagged)
+                    {
+                      CFileItemList items;
+                      m_db.GetVideosForTag(KODI::MEDIA::TYPE::MOVIE, idTag, tagged, items);
+                      std::set<int> ids;
+                      for (const auto& item : items)
+                        ids.insert(item->GetVideoInfoTag()->m_iDbId);
+                      return ids;
+                    }};
+
+  ASSERT_TRUE(m_db.AddTagToItems(idTag, {idTagged}, KODI::MEDIA::TYPE::MOVIE));
+  EXPECT_EQ(std::set<int>{idTagged}, listed(true));
+  EXPECT_EQ(std::set<int>{idOther}, listed(false));
+
+  ASSERT_TRUE(m_db.RemoveTagFromItems(idTag, {idTagged}, KODI::MEDIA::TYPE::MOVIE));
+  EXPECT_TRUE(listed(true).empty());
+}
+
+TEST_F(TestVideoDatabase, ASetMadeForAMovieStartsWithItsArtOnly)
+{
+  CVideoInfoTag film{Tag("/movies/Film.mkv")};
+  CVideoInfoTag other{Tag("/movies/Other.mkv")};
+  const int idMovie{m_db.SetDetailsForMovie(film, {{"poster", "/art/film.jpg"}})};
+  const int idOther{m_db.SetDetailsForMovie(other, {{"poster", "/art/other.jpg"}})};
+  ASSERT_GT(idMovie, 0);
+  ASSERT_GT(idOther, 0);
+
+  const int idSet{m_db.AddSetForMovie("Saga", idMovie)};
+  ASSERT_GT(idSet, 0);
+  EXPECT_EQ(idSet, m_db.AddSetForMovie("Saga", idOther));
+
+  KODI::ART::Artwork art;
+  ASSERT_TRUE(m_db.GetArtForItem(idSet, KODI::MEDIA::TYPE::VIDEO_COLLECTION, art));
+  EXPECT_EQ("/art/film.jpg", art["poster"]);
+}
+
+TEST_F(TestVideoDatabase, RenamingASeasonNamesItAndKeepsItsOtherDetails)
+{
+  const int idShow{AddTvShow("/shows/Show/")};
+  ASSERT_GT(idShow, 0);
+  ASSERT_GT(AddEpisode(idShow, "/shows/Show/Show S01E01.mkv", 1), 0);
+  CVideoInfoTag season;
+  season.m_iSeason = 1;
+  season.m_strPlot = "Plot";
+  const int idSeason{m_db.SetDetailsForSeason(season, {{"poster", "/art/season.jpg"}}, idShow,
+                                              m_db.GetSeasonId(idShow, 1))};
+  ASSERT_GT(idSeason, 0);
+  CVideoInfoTag item;
+  item.SetMediaType(KODI::MEDIA::TYPE::SEASON);
+  item.m_iDbId = idSeason;
+
+  ASSERT_TRUE(m_db.SetItemTitle(item, "The Beginning"));
+
+  CVideoInfoTag details;
+  ASSERT_TRUE(m_db.GetDetailsOfItem(item, details));
+  EXPECT_EQ("The Beginning", details.m_strTitle);
+  EXPECT_EQ("Plot", details.m_strPlot);
+  KODI::ART::Artwork art;
+  ASSERT_TRUE(m_db.GetArtForItem(idSeason, KODI::MEDIA::TYPE::SEASON, art));
+  EXPECT_EQ("/art/season.jpg", art["poster"]);
+}
+
+TEST_F(TestVideoDatabase, AnItemsDetailsAreOfTheVersionItNames)
+{
+  const MovieWithVersion movie{AddMovieWithVersion(KODI::ART::Artwork{}, KODI::ART::Artwork{})};
+  ASSERT_GT(movie.versionFileId, 0);
+  CVideoInfoTag item;
+  item.SetMediaType(KODI::MEDIA::TYPE::MOVIE);
+  item.m_iDbId = movie.movieId;
+  item.m_iFileId = movie.versionFileId;
+
+  CVideoInfoTag details;
+  ASSERT_TRUE(m_db.GetDetailsOfItem(item, details));
+  EXPECT_EQ(movie.versionFileId, details.m_iFileId);
+}
+
+namespace
+{
+class TestLibraryAnnouncements : public TestPlayStateAnnouncements
+{
+protected:
+  long Updated(int idMovie) const
+  {
+    return m_announcements->CountUpdated(KODI::MEDIA::TYPE::MOVIE, idMovie);
+  }
+};
+} // namespace
+
+TEST_F(TestLibraryAnnouncements, RemovingAnExtraAnnouncesItsMovie)
+{
+  const int idMovie{AddMovie("/movies/Film.mkv")};
+  ASSERT_GT(idMovie, 0);
+  CFileItem extra{"/movies/Trailer.mkv", false};
+  ASSERT_TRUE(m_db.AddVideoAsset(
+      VideoDbContentType::MOVIES, idMovie,
+      m_db.AddVideoVersionType("Trailer", VideoAssetTypeOwner::USER, VideoAssetType::EXTRA),
+      VideoAssetType::EXTRA, extra));
+  const long before{Updated(idMovie)};
+
+  ASSERT_TRUE(m_db.RemoveVideoAsset(m_db.AddFile("/movies/Trailer.mkv")));
+
+  EXPECT_EQ(before + 1, Updated(idMovie));
+}
+
+TEST_F(TestLibraryAnnouncements, ChangingTheDefaultVersionAnnouncesTheMovieOnce)
+{
+  const MovieWithVersion movie{AddMovieWithVersion(KODI::ART::Artwork{}, KODI::ART::Artwork{})};
+  ASSERT_GT(movie.versionFileId, 0);
+  const long before{Updated(movie.movieId)};
+
+  ASSERT_TRUE(
+      m_db.SetDefaultVideoVersion(VideoDbContentType::MOVIES, movie.movieId, movie.versionFileId));
+  ASSERT_TRUE(
+      m_db.SetDefaultVideoVersion(VideoDbContentType::MOVIES, movie.movieId, movie.versionFileId));
+
+  EXPECT_EQ(before + 1, Updated(movie.movieId));
 }

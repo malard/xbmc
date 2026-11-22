@@ -23,10 +23,10 @@
 #include "addons/addoninfo/AddonType.h"
 #include "application/Application.h"
 #include "filesystem/SourcesDirectory.h"
+#include "media/LibraryQuery.h"
 #include "media/MediaSection.h"
 #include "messaging/ApplicationMessenger.h"
 #include "playlists/PlayListFileItemClassify.h"
-#include "playlists/SmartPlayList.h"
 #if defined(TARGET_ANDROID)
 #include "platform/android/activity/XBMCApp.h"
 #endif
@@ -93,7 +93,7 @@ using namespace std::chrono_literals;
 
 CGUIMediaWindow::CGUIMediaWindow(int id, const char* xmlFile)
   : CGUIWindow(id, xmlFile),
-    m_filter(std::make_unique<PLAYLIST::CSmartPlaylist>())
+    m_filter(std::make_unique<MEDIA::CLibraryQuery>())
 {
   m_loadType = KEEP_IN_MEMORY;
   m_vecItems = new CFileItemList;
@@ -1003,7 +1003,13 @@ bool CGUIMediaWindow::Update(const std::string &strDirectory, bool updateFilterP
   m_canFilterAdvanced = CheckFilterAdvanced(*m_vecItems);
   if (m_canFilterAdvanced)
   {
-    m_filter->SetType(m_vecItems->GetContent());
+    const std::optional<MEDIA::LIBRARY_QUERY::TYPE> type{
+        MEDIA::LIBRARY_QUERY::TypeFromName(m_vecItems->GetContent())};
+    if (type)
+    {
+      m_filter->SetType(*type);
+    }
+    m_canFilterAdvanced = type.has_value();
   }
 
   //  Ask the derived class if it wants to load additional info

@@ -72,6 +72,7 @@
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
+#include "video/VideoLibrary.h"
 #include "video/geometry/GeometryPublication.h"
 
 #include <algorithm>
@@ -276,7 +277,7 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
 
       if (player == Video)
       {
-        if (!CVideoLibrary::FillFileItem(fileItem->GetPath(), fileItem, parameterObject))
+        if (!CVideoLibrary::FillFileItem(fileItem->GetPath(), fileItem))
         {
           // Fallback to item details held by GUI but ensure path unchanged
           //! @todo  remove this once there is no route to playback that updates
@@ -291,30 +292,15 @@ JSONRPC_STATUS CPlayerOperations::GetItem(const CVariant& parameterObject, CVari
             if (fileItem->GetLabel().empty())
               fileItem->SetLabel(originalLabel);
             fileItem->SetPath(originalPath);   // Ensure path unchanged
+
+            // The GUI's tag of a library item can lack what only the library holds
+            CVideoInfoTag& tag = *fileItem->GetVideoInfoTag();
+            if (tag.m_iDbId > 0)
+              VIDEO::LIBRARY::TryGetDetailsByTypeAndId(
+                  DatabaseUtils::MediaTypeFromVideoContentType(fileItem->GetVideoContentType()),
+                  tag.m_iDbId, tag, nullptr, VideoDbDetailsAll, tag.GetAssetInfo().GetId(),
+                  tag.m_iFileId);
           }
-        }
-
-        bool additionalInfo = false;
-        for (CVariant::const_iterator_array itr = parameterObject["properties"].begin_array();
-             itr != parameterObject["properties"].end_array(); ++itr)
-        {
-          std::string fieldValue = itr->asString();
-          if (fieldValue == "cast" || fieldValue == "set" || fieldValue == "setId" ||
-              fieldValue == "showLink" || fieldValue == "resume" ||
-              (fieldValue == "streamDetails" &&
-               !fileItem->GetVideoInfoTag()->m_streamDetails.HasItems()))
-            additionalInfo = true;
-        }
-
-        CVideoDatabase videodatabase;
-        if ((additionalInfo) &&
-            videodatabase.Open())
-        {
-          CVideoInfoTag& tag = *fileItem->GetVideoInfoTag();
-          videodatabase.TryGetDetailsByTypeAndId(
-              DatabaseUtils::MediaTypeFromVideoContentType(fileItem->GetVideoContentType()),
-              tag.m_iDbId, tag, nullptr, VideoDbDetailsAll, tag.GetAssetInfo().GetId(),
-              tag.m_iFileId);
         }
       }
       else // Audio

@@ -52,7 +52,7 @@
 #include "network/cddb.h"
 #endif // HAS_OPTICAL_DRIVE
 #include "language/Language.h"
-#include "playlists/SmartPlayList.h"
+#include "media/LibraryQuery.h"
 #include "profiles/ProfileManager.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSourceSettings.h"
@@ -9577,42 +9577,9 @@ std::string CMusicDatabase::GetArtistsLastModified() const
   return GetSingleValue("SELECT MAX(dateModified) FROM artist");
 }
 
-unsigned int CMusicDatabase::GetRandomSongIDs(const Filter& filter, std::vector<int>& songIDs)
+int CMusicDatabase::GetAlbumNamesCount() const
 {
-  try
-  {
-    if (nullptr == m_pDB)
-      return 0;
-    if (nullptr == m_pDS)
-      return 0;
-
-    std::string strSQL = "SELECT idSong FROM songview ";
-    if (!CDatabase::BuildSQL(strSQL, filter, strSQL))
-      return false;
-    strSQL += PrepareSQL(" ORDER BY RANDOM()");
-
-    if (!m_pDS->query(strSQL))
-      return 0;
-    songIDs.clear();
-    if (m_pDS->num_rows() == 0)
-    {
-      m_pDS->close();
-      return 0;
-    }
-    songIDs.reserve(m_pDS->num_rows());
-    while (!m_pDS->eof())
-    {
-      songIDs.push_back(m_pDS->fv(song_idSong).get_asInt());
-      m_pDS->next();
-    }
-    m_pDS->close();
-    return static_cast<unsigned int>(songIDs.size());
-  }
-  catch (...)
-  {
-    CLog::LogF(LOGERROR, "({}) failed", filter.where);
-  }
-  return 0;
+  return std::atoi(GetSingleValue("songview", "count(distinct strAlbum)").c_str());
 }
 
 int CMusicDatabase::GetSongsCount(const Filter& filter)
@@ -10676,6 +10643,18 @@ int CMusicDatabase::GetArtistByName(const std::string& strArtist)
     CLog::LogF(LOGERROR, "failed");
   }
   return -1;
+}
+
+bool CMusicDatabase::GetArtistArtByName(const std::string& name, KODI::ART::Artwork& art)
+{
+  const int idArtist{GetArtistByName(name)};
+  return idArtist >= 0 && GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, art);
+}
+
+std::string CMusicDatabase::GetArtistArtByName(const std::string& name, const std::string& artType)
+{
+  const int idArtist{GetArtistByName(name)};
+  return idArtist >= 0 ? GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artType) : std::string{};
 }
 
 int CMusicDatabase::GetArtistByMatch(const CArtist& artist)
@@ -13206,41 +13185,40 @@ bool CMusicDatabase::GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription
   std::string type = musicUrl.GetType();
   const CUrlOptions::UrlOptions& options = musicUrl.GetOptions();
 
+  const bool useOriginalDate{CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_MUSICLIBRARY_USEORIGINALDATE)};
+
   // Check for playlist rules first, they may contain role criteria
   bool hasRoleRules = false;
 
   auto option = options.find("xsp");
   if (option != options.end())
   {
-    PLAYLIST::CSmartPlaylist xsp;
+    MEDIA::CLibraryQuery xsp;
     if (!xsp.LoadFromJson(option->second.asString()))
       return false;
 
-    std::set<std::string, std::less<>> playlists;
-    const std::optional<std::string> where = xsp.GetWhereClause(*this, playlists);
-    if (!where)
+    // A playlist of video items has no rules for this database
+    const std::optional<MEDIA::TYPE> xspItemType{
+        MEDIA::LIBRARY_QUERY::ItemTypeIn(xsp.GetType(), MEDIA::MediaSection::MUSIC)};
+    if (xspItemType)
     {
-      return false;
-    }
-    const std::string& xspWhere = *where;
-    hasRoleRules = xsp.GetType() == MEDIA::CONTENT::ARTISTS &&
-                   xspWhere.find("song_artist.idRole = role.idRole") != std::string::npos;
+      const std::optional<std::string> where =
+          xsp.GetWhereClause(*this, *xspItemType, useOriginalDate);
+      if (!where)
+      {
+        return false;
+      }
+      const std::string& xspWhere = *where;
+      hasRoleRules = xsp.GetType() == MEDIA::LIBRARY_QUERY::TYPE::ARTISTS &&
+                     xspWhere.find("song_artist.idRole = role.idRole") != std::string::npos;
 
-    // Check if the filter playlist matches the item type
-    // Allow for grouping name like "originalyears" and type "years"
-    if (xsp.GetType() == type ||
-        (xsp.GetGroup().find(type) != std::string::npos && !xsp.IsGroupMixed()))
-    {
-      filter.AppendWhere(xspWhere);
-
-      if (xsp.GetLimit() > 0)
-        sorting.limitEnd = xsp.GetLimit();
-      if (xsp.GetOrder() != SortBy::NONE)
-        sorting.sortBy = xsp.GetOrder();
-      sorting.sortOrder = xsp.GetOrderAscending() ? SortOrder::ASCENDING : SortOrder::DESCENDING;
-      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
-              CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING))
-        sorting.sortAttributes = SortAttributeIgnoreArticle;
+      if (xsp.AppliesTo(MEDIA::MediaSection::MUSIC, type, false))
+      {
+        filter.AppendWhere(xspWhere);
+        xsp.ApplyOrder(sorting, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+                                    CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING));
+      }
     }
   }
 
@@ -13804,15 +13782,17 @@ bool CMusicDatabase::GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription
   option = options.find("filter");
   if (option != options.end())
   {
-    PLAYLIST::CSmartPlaylist xspFilter;
+    MEDIA::CLibraryQuery xspFilter;
     if (!xspFilter.LoadFromJson(option->second.asString()))
       return false;
 
     // check if the filter playlist matches the item type
-    if (xspFilter.GetType() == type)
+    const std::optional<MEDIA::TYPE> filterItemType{
+        MEDIA::LIBRARY_QUERY::ItemTypeIn(xspFilter.GetType(), MEDIA::MediaSection::MUSIC)};
+    if (filterItemType && xspFilter.AppliesTo(MEDIA::MediaSection::MUSIC, type, true))
     {
-      std::set<std::string, std::less<>> playlists;
-      const std::optional<std::string> where = xspFilter.GetWhereClause(*this, playlists);
+      const std::optional<std::string> where =
+          xspFilter.GetWhereClause(*this, *filterItemType, useOriginalDate);
       if (!where)
       {
         return false;

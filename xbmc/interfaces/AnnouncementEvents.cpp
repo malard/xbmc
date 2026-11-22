@@ -18,8 +18,8 @@
 #include "utils/DatabaseUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
+#include "video/VideoLibrary.h"
 
 #include <type_traits>
 
@@ -560,18 +560,11 @@ Announcement WithLibraryDetails(Announcement announcement)
     if (item->GetVideoInfoTag()->GetDatabaseId() > 0)
       return announcement;
 
-    CVideoDatabase videodatabase;
-    if (!videodatabase.Open())
-    {
-      CLog::LogFC(LOGWARNING, LOGANNOUNCE,
-                  "Unable to open video database. Can not load video tag for announcement!");
-      return announcement;
-    }
     CVideoInfoTag tag = *item->GetVideoInfoTag();
     const std::string path = StringUtils::StartsWith(tag.m_strFileNameAndPath, "removable://")
                                  ? tag.m_strFileNameAndPath
                                  : item->GetPath();
-    if (!videodatabase.LoadVideoInfo(path, tag))
+    if (!KODI::VIDEO::LIBRARY::LoadVideoInfo(path, tag))
       return announcement;
 
     auto loaded = std::make_shared<CFileItem>(*item);

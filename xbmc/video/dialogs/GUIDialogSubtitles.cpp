@@ -45,7 +45,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
+#include "video/VideoDbContentType.h"
 
 #include <mutex>
 

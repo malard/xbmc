@@ -9,10 +9,13 @@
 #pragma once
 
 #include "guilib/GUIDialog.h"
-#include "video/VideoDatabase.h"
+#include "video/Bookmark.h"
 #include "view/GUIViewControl.h"
 
+#include <vector>
+
 class CFileItemList;
+class CVideoInfoTag;
 
 class CGUIDialogVideoBookmarks : public CGUIDialog
 {
@@ -49,7 +52,7 @@ public:
 protected:
   void GotoBookmark(int iItem);
   void ClearBookmarks();
-  static bool AddEpisodeBookmark();
+  static bool AddEpisodeBookmark(std::vector<CVideoInfoTag> episodes);
   static bool AddBookmark(CVideoInfoTag *tag=NULL);
   void Delete(int item);
   void Clear();

@@ -11,7 +11,7 @@
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "ServiceBroker.h"
-#include "VideoDatabase.h"
+#include "VideoDbContentType.h"
 #include "filesystem/Directory.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/PlaylistDirectory.h"

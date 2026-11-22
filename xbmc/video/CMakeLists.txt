@@ -32,6 +32,8 @@ set(SOURCES Bookmark.cpp
             VideoInfoScannerExtras.cpp
             VideoInfoTag.cpp
             VideoItemArtworkHandler.cpp
+            VideoLibrary.cpp
+            VideoLibraryQuery.cpp
             VideoLibraryQueue.cpp
             VideoStreamSelect.cpp
             VideoThumbLoader.cpp
@@ -40,6 +42,8 @@ set(SOURCES Bookmark.cpp
 
 set(HEADERS Bookmark.h
             ContextMenus.h
+            DiscPlaylist.h
+            EpisodeFileMap.h
             Episode.h
             FilenameAttributes.h
             geometry/ContentBarDetector.h
@@ -65,6 +69,7 @@ set(HEADERS Bookmark.h
             VideoDatabaseColumns.h
             VideoDatabaseDDL.h
             VideoDatabaseMigration.h
+            VideoDbContentType.h
             VideoDbPaths.h
             VideoDbUrl.h
             VideoEmbeddedImageFileLoader.h
@@ -76,6 +81,8 @@ set(HEADERS Bookmark.h
             VideoInfoScannerExtras.h
             VideoInfoTag.h
             VideoItemArtworkHandler.h
+            VideoLibrary.h
+            VideoLibraryQuery.h
             VideoLibraryQueue.h
             VideoStreamSelect.h
             VideoThumbLoader.h

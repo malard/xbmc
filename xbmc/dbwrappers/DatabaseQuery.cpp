@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013-2018 Team Kodi
+ *  Copyright (C) 2013-2026 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
@@ -18,9 +18,7 @@
 #include "utils/XBMCTinyXML.h"
 #include "utils/log.h"
 
-#include <algorithm>
 #include <array>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -117,7 +115,7 @@ bool CDatabaseQueryRule::Load(const TiXmlNode* node)
   if (!field || !oper)
     return false;
 
-  m_field = TranslateField(field);
+  SetFieldName(field);
   m_operator = TranslateOperator(oper);
 
   if (m_operator == OPERATOR_TRUE || m_operator == OPERATOR_FALSE)
@@ -163,7 +161,7 @@ bool CDatabaseQueryRule::Load(const CVariant& obj)
       !obj["operator"].isString())
     return false;
 
-  m_field = TranslateField(obj["field"].asString().c_str());
+  SetFieldName(obj["field"].asString().c_str());
   m_operator = TranslateOperator(obj["operator"].asString().c_str());
 
   if (m_operator == OPERATOR_TRUE || m_operator == OPERATOR_FALSE)
@@ -198,7 +196,7 @@ bool CDatabaseQueryRule::Save(TiXmlNode* parent) const
     return false;
 
   TiXmlElement rule("rule");
-  rule.SetAttribute("field", TranslateField(m_field).c_str());
+  rule.SetAttribute("field", GetFieldName().c_str());
   rule.SetAttribute("operator", TranslateOperator(m_operator).c_str());
 
   for (const auto& it : m_parameter)
@@ -220,7 +218,7 @@ bool CDatabaseQueryRule::Save(CVariant& obj) const
       (m_parameter.empty() && m_operator != OPERATOR_TRUE && m_operator != OPERATOR_FALSE))
     return false;
 
-  obj["field"] = TranslateField(m_field);
+  obj["field"] = GetFieldName();
   obj["operator"] = TranslateOperator(m_operator);
   obj["value"] = m_parameter;
 
@@ -257,37 +255,20 @@ void CDatabaseQueryRule::GetAvailableOperators(std::vector<std::string>& operato
     operatorList.emplace_back(o.name);
 }
 
-std::string CDatabaseQueryRule::GetParameter() const
-{
-  return StringUtils::Join(m_parameter, DATABASEQUERY_RULE_VALUE_SEPARATOR);
-}
-
-void CDatabaseQueryRule::SetParameter(const std::string& value)
-{
-  m_parameter = StringUtils::Split(value, DATABASEQUERY_RULE_VALUE_SEPARATOR);
-}
-
-void CDatabaseQueryRule::SetParameter(const std::vector<std::string>& values)
-{
-  m_parameter.assign(values.begin(), values.end());
-}
-
 std::string CDatabaseQueryRule::ValidateParameter(const std::string& parameter) const
 {
-  if ((GetFieldType(m_field) == REAL_FIELD || GetFieldType(m_field) == NUMERIC_FIELD ||
-       GetFieldType(m_field) == SECONDS_FIELD) &&
-      parameter.empty())
+  if (HoldsNumbers(GetFieldType()) && parameter.empty())
     return "0"; // interpret empty fields as 0
   return parameter;
 }
 
 std::optional<std::string> CDatabaseQueryRule::FormatParameter(const std::string& operatorString,
                                                                const std::string& param,
-                                                               const CDatabase& db,
-                                                               const std::string& strType) const
+                                                               const CDatabase& db) const
 {
+  const FieldType fieldType{GetFieldType()};
   std::string parameter;
-  if (GetFieldType(m_field) == TEXTIN_FIELD)
+  if (fieldType == TEXTIN_FIELD)
   {
     std::vector<std::string> split = StringUtils::Split(param, ',');
     for (std::string& itIn : split)
@@ -301,14 +282,14 @@ std::optional<std::string> CDatabaseQueryRule::FormatParameter(const std::string
   else
   {
     const std::string value{ValidateParameter(param)};
-    if (HoldsNumbers(GetFieldType(m_field)) && !AcceptNumber(TranslateField(m_field), value))
+    if (HoldsNumbers(fieldType) && !AcceptNumber(GetFieldName(), value))
     {
       return std::nullopt;
     }
     parameter = db.PrepareSQL(operatorString, value.c_str());
   }
 
-  if (GetFieldType(m_field) == DATE_FIELD)
+  if (fieldType == DATE_FIELD)
   {
     if (m_operator == OPERATOR_IN_THE_LAST || m_operator == OPERATOR_NOT_IN_THE_LAST)
     { // translate time period
@@ -324,8 +305,10 @@ std::optional<std::string> CDatabaseQueryRule::FormatParameter(const std::string
 
 std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
 {
+  const FieldType fieldType{GetFieldType()};
+  const bool numbers{HoldsNumbers(fieldType)};
   std::string operatorString;
-  if (GetFieldType(m_field) != TEXTIN_FIELD)
+  if (fieldType != TEXTIN_FIELD)
   {
     // the comparison piece
     switch (op)
@@ -337,15 +320,13 @@ std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
         operatorString = " LIKE '%%%s%%'";
         break;
       case OPERATOR_EQUALS:
-        if (GetFieldType(m_field) == REAL_FIELD || GetFieldType(m_field) == NUMERIC_FIELD ||
-            GetFieldType(m_field) == SECONDS_FIELD)
+        if (numbers)
           operatorString = " = %s";
         else
           operatorString = " LIKE '%s'";
         break;
       case OPERATOR_DOES_NOT_EQUAL:
-        if (GetFieldType(m_field) == REAL_FIELD || GetFieldType(m_field) == NUMERIC_FIELD ||
-            GetFieldType(m_field) == SECONDS_FIELD)
+        if (numbers)
           operatorString = " != %s";
         else
           operatorString = " LIKE '%s'";
@@ -360,8 +341,7 @@ std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
       case OPERATOR_GREATER_THAN:
       case OPERATOR_IN_THE_LAST:
         operatorString = " > ";
-        if (GetFieldType(m_field) == REAL_FIELD || GetFieldType(m_field) == NUMERIC_FIELD ||
-            GetFieldType(m_field) == SECONDS_FIELD)
+        if (numbers)
           operatorString += "%s";
         else
           operatorString += "'%s'";
@@ -370,8 +350,7 @@ std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
       case OPERATOR_LESS_THAN:
       case OPERATOR_NOT_IN_THE_LAST:
         operatorString = " < ";
-        if (GetFieldType(m_field) == REAL_FIELD || GetFieldType(m_field) == NUMERIC_FIELD ||
-            GetFieldType(m_field) == SECONDS_FIELD)
+        if (numbers)
           operatorString += "%s";
         else
           operatorString += "'%s'";
@@ -389,285 +368,90 @@ std::string CDatabaseQueryRule::GetOperatorString(SearchOperator op) const
   return operatorString;
 }
 
-std::optional<std::string> CDatabaseQueryRule::GetWhereClause(const CDatabase& db,
-                                                              const std::string& strType) const
+bool CDatabaseQueryRule::IsNegated(SearchOperator op) const
 {
-  const SearchOperator op = GetOperator(strType);
+  return op == OPERATOR_DOES_NOT_CONTAIN || op == OPERATOR_FALSE ||
+         (op == OPERATOR_DOES_NOT_EQUAL && !HoldsNumbers(GetFieldType()));
+}
 
-  std::string operatorString = GetOperatorString(op);
-  std::string negate;
-  if (op == OPERATOR_DOES_NOT_CONTAIN || op == OPERATOR_FALSE ||
-      (op == OPERATOR_DOES_NOT_EQUAL && GetFieldType(m_field) != REAL_FIELD &&
-       GetFieldType(m_field) != NUMERIC_FIELD && GetFieldType(m_field) != SECONDS_FIELD))
-    negate = " NOT ";
-
+bool CDatabaseQueryRule::AsksTruth(SearchOperator op, std::string& negate) const
+{
   // boolean operators don't have any values in m_parameter, they work on the operator
   if (m_operator == OPERATOR_FALSE || m_operator == OPERATOR_TRUE)
-    return GetBooleanQuery(negate, strType);
+  {
+    return true;
+  }
 
   // Process boolean field with (not) EQUAL/CONTAINS "true"/"false" parameter too
-  if (GetFieldType(m_field) == BOOLEAN_FIELD &&
+  if (GetFieldType() == BOOLEAN_FIELD && !m_parameter.empty() &&
       (m_parameter[0] == "true" || m_parameter[0] == "false") &&
       (op == OPERATOR_CONTAINS || op == OPERATOR_EQUALS || op == OPERATOR_DOES_NOT_CONTAIN ||
        op == OPERATOR_DOES_NOT_EQUAL))
   {
     if (m_parameter[0] == "false")
     {
-      if (!negate.empty())
-        negate.clear();
-      else
-        negate = " NOT ";
+      negate = negate.empty() ? " NOT " : "";
     }
-    return GetBooleanQuery(negate, strType);
+    return true;
   }
-
-  // The BETWEEN operator is handled special
-  if (op == OPERATOR_BETWEEN)
-  {
-    if (m_parameter.size() != 2)
-      return "";
-
-    const CDatabaseQueryRule::FieldType fieldType = GetFieldType(m_field);
-    if (HoldsNumbers(fieldType) && (!AcceptNumber(TranslateField(m_field), m_parameter[0]) ||
-                                    !AcceptNumber(TranslateField(m_field), m_parameter[1])))
-    {
-      return std::nullopt;
-    }
-
-    if (fieldType == REAL_FIELD)
-      return db.PrepareSQL("%s BETWEEN %s AND %s", GetField(m_field, strType).c_str(),
-                           m_parameter[0].c_str(), m_parameter[1].c_str());
-    else if (fieldType == NUMERIC_FIELD)
-      return db.PrepareSQL("CAST(%s as DECIMAL(5,1)) BETWEEN %s AND %s",
-                           GetField(m_field, strType).c_str(), m_parameter[0].c_str(),
-                           m_parameter[1].c_str());
-    else if (fieldType == SECONDS_FIELD)
-      return db.PrepareSQL("CAST(%s as INTEGER) BETWEEN %s AND %s",
-                           GetField(m_field, strType).c_str(), m_parameter[0].c_str(),
-                           m_parameter[1].c_str());
-    else
-      return db.PrepareSQL("%s BETWEEN '%s' AND '%s'", GetField(m_field, strType).c_str(),
-                           m_parameter[0].c_str(), m_parameter[1].c_str());
-  }
-
-  // now the query parameter
-  std::string wholeQuery;
-  for (auto it = m_parameter.begin(); it != m_parameter.end(); ++it)
-  {
-    const std::optional<std::string> clause =
-        FormatWhereClause(negate, operatorString, *it, db, strType);
-    if (!clause)
-    {
-      return std::nullopt;
-    }
-    std::string query = '(' + *clause + ')';
-
-    if (it + 1 != m_parameter.end())
-    {
-      if (negate.empty())
-        query += " OR ";
-      else
-        query += " AND ";
-    }
-
-    wholeQuery += query;
-  }
-
-  return wholeQuery;
+  return false;
 }
 
-std::optional<std::string> CDatabaseQueryRule::FormatWhereClause(const std::string& negate,
-                                                                 const std::string& oper,
-                                                                 const std::string& param,
-                                                                 const CDatabase& db,
-                                                                 const std::string& strType) const
+std::optional<std::string> CDatabaseQueryRule::FormatBetween(const std::string& column,
+                                                             const CDatabase& db) const
 {
-  const std::optional<std::string> formatted = FormatParameter(oper, param, db, strType);
-  if (!formatted)
+  if (m_parameter.size() != 2)
+  {
+    return "";
+  }
+
+  const FieldType fieldType{GetFieldType()};
+  if (HoldsNumbers(fieldType) && (!AcceptNumber(GetFieldName(), m_parameter[0]) ||
+                                  !AcceptNumber(GetFieldName(), m_parameter[1])))
   {
     return std::nullopt;
   }
-  const std::string& parameter = *formatted;
 
+  const char* format{"%s BETWEEN '%s' AND '%s'"};
+  if (fieldType == REAL_FIELD)
+  {
+    format = "%s BETWEEN %s AND %s";
+  }
+  else if (fieldType == NUMERIC_FIELD)
+  {
+    format = "CAST(%s as DECIMAL(5,1)) BETWEEN %s AND %s";
+  }
+  else if (fieldType == SECONDS_FIELD)
+  {
+    format = "CAST(%s as INTEGER) BETWEEN %s AND %s";
+  }
+  return db.PrepareSQL(format, column.c_str(), m_parameter[0].c_str(), m_parameter[1].c_str());
+}
+
+std::string CDatabaseQueryRule::FormatComparison(bool hasField,
+                                                 const std::string& column,
+                                                 const std::string& negate,
+                                                 const std::string& param,
+                                                 const std::string& parameter) const
+{
   std::string query;
-  if (m_field != 0)
+  if (hasField)
   {
     std::string fmt = "{}";
-    if (GetFieldType(m_field) == NUMERIC_FIELD)
+    if (GetFieldType() == NUMERIC_FIELD)
       fmt = "CAST({} as DECIMAL(6,1))";
-    else if (GetFieldType(m_field) == SECONDS_FIELD)
+    else if (GetFieldType() == SECONDS_FIELD)
       fmt = "CAST({} as INTEGER)";
 
-    query = StringUtils::Format(fmt, GetField(m_field, strType));
+    query = StringUtils::Format(fmt, column);
     query += negate + parameter;
 
     // special case for matching parameters in fields that might be either empty or NULL.
     if ((param.empty() && negate.empty()) || (!param.empty() && !negate.empty()))
-      query += " OR " + GetField(m_field, strType) + " IS NULL";
+      query += " OR " + column + " IS NULL";
   }
 
   if (query == negate + parameter)
     query = "1";
   return query;
-}
-
-void CDatabaseQueryRuleCombination::clear()
-{
-  m_combinations.clear();
-  m_rules.clear();
-  m_type = CDatabaseQueryRuleCombination::Type::COMBINATION_AND;
-}
-
-std::optional<std::string> CDatabaseQueryRuleCombination::GetWhereClause(
-    const CDatabase& db, const std::string& strType) const
-{
-  std::string rule;
-
-  // translate the combinations into SQL
-  for (auto it = m_combinations.begin(); it != m_combinations.end(); ++it)
-  {
-    if (it != m_combinations.begin())
-      rule += m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? " AND " : " OR ";
-    const std::optional<std::string> clause = (*it)->GetWhereClause(db, strType);
-    if (!clause)
-    {
-      return std::nullopt;
-    }
-    rule += "(" + *clause + ")";
-  }
-
-  // translate the rules into SQL
-  for (const auto& it : m_rules)
-  {
-    if (!rule.empty())
-      rule += m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? " AND " : " OR ";
-    rule += "(";
-    const std::optional<std::string> clause = it->GetWhereClause(db, strType);
-    if (!clause)
-    {
-      return std::nullopt;
-    }
-    std::string currentRule = *clause;
-    // if we don't get a rule, we add '1' or '0' so the query is still valid and doesn't fail
-    if (currentRule.empty())
-      currentRule = m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? "'1'" : "'0'";
-    rule += currentRule;
-    rule += ")";
-  }
-
-  return rule;
-}
-
-bool CDatabaseQueryRuleCombination::Load(const CVariant& obj,
-                                         const IDatabaseQueryRuleFactory* factory)
-{
-  if (!obj.isObject() && !obj.isArray())
-    return false;
-
-  CVariant child;
-  if (obj.isObject())
-  {
-    if (obj.isMember("and") && obj["and"].isArray())
-    {
-      m_type = CDatabaseQueryRuleCombination::Type::COMBINATION_AND;
-      child = obj["and"];
-    }
-    else if (obj.isMember("or") && obj["or"].isArray())
-    {
-      m_type = CDatabaseQueryRuleCombination::Type::COMBINATION_OR;
-      child = obj["or"];
-    }
-    else
-      return false;
-  }
-  else
-    child = obj;
-
-  for (CVariant::const_iterator_array it = child.begin_array(); it != child.end_array(); ++it)
-  {
-    if (!it->isObject())
-      continue;
-
-    if (it->isMember("and") || it->isMember("or"))
-    {
-      std::shared_ptr<CDatabaseQueryRuleCombination> combo(factory->CreateCombination());
-      if (combo && combo->Load(*it, factory))
-        m_combinations.push_back(combo);
-    }
-    else
-    {
-      std::shared_ptr<CDatabaseQueryRule> rule(factory->CreateRule());
-      if (rule && rule->Load(*it))
-        m_rules.push_back(rule);
-    }
-  }
-
-  return true;
-}
-
-bool CDatabaseQueryRuleCombination::Save(TiXmlNode* parent) const
-{
-  for (const auto& it : m_rules)
-    it->Save(parent);
-  return true;
-}
-
-bool CDatabaseQueryRuleCombination::Save(CVariant& obj) const
-{
-  if (!obj.isObject() || (m_combinations.empty() && m_rules.empty()))
-    return false;
-
-  CVariant comboArray(CVariant::VariantTypeArray);
-  if (!m_combinations.empty())
-  {
-    for (const auto& combo : m_combinations)
-    {
-      CVariant comboObj(CVariant::VariantTypeObject);
-      if (combo->Save(comboObj))
-        comboArray.push_back(comboObj);
-    }
-  }
-  if (!m_rules.empty())
-  {
-    for (const auto& rule : m_rules)
-    {
-      CVariant ruleObj(CVariant::VariantTypeObject);
-      if (rule->Save(ruleObj))
-        comboArray.push_back(ruleObj);
-    }
-  }
-
-  obj[TranslateCombinationType()] = comboArray;
-
-  return true;
-}
-
-std::string CDatabaseQueryRuleCombination::TranslateCombinationType() const
-{
-  return m_type == CDatabaseQueryRuleCombination::Type::COMBINATION_AND ? "and" : "or";
-}
-
-void CDatabaseQueryRuleCombination::AddRule(const std::shared_ptr<CDatabaseQueryRule>& rule)
-{
-  m_rules.emplace_back(rule);
-}
-
-void CDatabaseQueryRuleCombination::RemoveRule(const std::shared_ptr<CDatabaseQueryRule>& rule)
-{
-  const auto it = std::ranges::find(m_rules, rule);
-  if (it != m_rules.cend())
-    m_rules.erase(it);
-}
-
-void CDatabaseQueryRuleCombination::RemoveRule(int index)
-{
-  if (index < 0 || index >= static_cast<int>(m_rules.size()))
-    return;
-
-  m_rules.erase(m_rules.begin() + index);
-}
-
-void CDatabaseQueryRuleCombination::Reserve(size_t amount)
-{
-  m_rules.reserve(amount);
 }

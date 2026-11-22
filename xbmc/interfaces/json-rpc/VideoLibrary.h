@@ -78,9 +78,7 @@ class CVideoLibrary : public CFileItemHandler
   static JSONRPC_STATUS Export(const CVariant& parameterObject, CVariant& result);
   static JSONRPC_STATUS Clean(const CVariant& parameterObject, CVariant& result);
 
-  static bool FillFileItem(const std::string& strFilename,
-                           std::shared_ptr<CFileItem>& item,
-                           const CVariant& parameterObject = CVariant(CVariant::VariantTypeArray));
+  static bool FillFileItem(const std::string& strFilename, std::shared_ptr<CFileItem>& item);
   static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
 
 protected:
@@ -132,16 +130,7 @@ protected:
                                 CVideoInfoTag& details,
                                 CVideoDatabase& videodatabase);
 
-  //! Whether the item is watched once \p properties are stored: for a show, any of its episodes
-  static bool EndsUpWatched(VideoKind kind,
-                            int id,
-                            const CVariant& properties,
-                            const CVideoInfoTag& details,
-                            CVideoDatabase& videodatabase);
-
 public:
-    static void UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase);
-
     /*! \brief Provided the JSON-RPC parameter object compute the VideoDbDetails mask
     * \param parameterObject the JSON parameter mask
     * \return the mask value for the requested properties

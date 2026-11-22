@@ -9,12 +9,22 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 class CFileItem;
 class CFileItemList;
+
+namespace KODI::MEDIA
+{
+class CLibraryQuery;
+namespace LIBRARY_QUERY
+{
+enum class TYPE;
+}
+} // namespace KODI::MEDIA
 
 namespace KODI::PLAYLIST
 {
@@ -42,12 +52,6 @@ bool Start(const std::string& rulesPath);
 //! Whether Start() can play the rules in this smart playlist file: songs, music videos or mixed.
 bool CanStart(const std::string& rulesPath);
 
-/*!
- * \brief The playlist Start() plays rules of this smart playlist type on: Audio for songs, albums
- * and artists, Video for everything else, mixed included.
- */
-PLAYLIST::Type PlayListOf(const std::string& rulesType);
-
 //! Stop party mode; see CApplicationPlayLists::DropFeed().
 void Stop();
 
@@ -73,6 +77,14 @@ enum class Library
   MusicVideo
 };
 using Match = std::pair<Library, int>;
+
+/*!
+ * \brief What the rules match of the songs and music videos this type lists. With no rules, all
+ * of them match.
+ * \return nullopt if a database could not be opened or the rules could not be put into SQL.
+ */
+std::optional<std::vector<Match>> FindMatches(const MEDIA::CLibraryQuery* rules,
+                                              MEDIA::LIBRARY_QUERY::TYPE content);
 
 /*!
  * \brief The fetched items the matches name, in the matches' order. Matches that were not fetched

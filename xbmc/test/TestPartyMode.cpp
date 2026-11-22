@@ -11,12 +11,17 @@
 #include "PartyMode.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
+#include "media/LibraryQuery.h"
+#include "media/LibraryQueryType.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListTypes.h"
+#include "test/TestLibrary.h"
 #include "utils/URIUtils.h"
 #include "video/VideoInfoTag.h"
 
+#include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -108,8 +113,8 @@ INSTANTIATE_TEST_SUITE_P(Types,
                          ::testing::Values(TypeCanStart{"songs", true},
                                            TypeCanStart{"musicvideos", true},
                                            TypeCanStart{"mixed", true},
-                                           TypeCanStart{"music", true},
-                                           TypeCanStart{"video", true},
+                                           TypeCanStart{"music", false},
+                                           TypeCanStart{"video", false},
                                            TypeCanStart{"albums", false},
                                            TypeCanStart{"artists", false},
                                            TypeCanStart{"movies", false},
@@ -122,25 +127,83 @@ TEST(TestPartyMode, AMissingRulesFileCannotStart)
   EXPECT_FALSE(PARTYMODE::CanStart("special://temp/test-partymode-missing.xsp"));
 }
 
-using TypePlayList = std::pair<std::string, PLAYLIST::Type>;
-
-class TestPartyModePlayList : public ::testing::TestWithParam<TypePlayList>
+namespace
 {
+using PARTYMODE::Library;
+using PARTYMODE::Match;
+
+class TestPartyModeMatches : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    m_rockSong = m_library.AddSong("Rock song", "Album", "Artist");
+    m_popSong = m_library.AddSong("Pop song", "Album", "Artist");
+    m_rockClip = m_library.AddMusicVideo("Rock clip", "Band");
+    m_popClip = m_library.AddMusicVideo("Pop clip", "Band");
+    ASSERT_GT(m_rockSong, 0);
+    ASSERT_GT(m_popSong, 0);
+    ASSERT_GT(m_rockClip, 0);
+    ASSERT_GT(m_popClip, 0);
+  }
+
+  //! What rules of this type for titles starting with "Rock" match, in id order
+  static std::vector<Match> RockMatches(const std::string& type)
+  {
+    MEDIA::CLibraryQuery rules;
+    EXPECT_TRUE(rules.LoadFromJson(
+        R"({"type":")" + type +
+        R"(","rules":{"and":[{"field":"title","operator":"startswith","value":"Rock"}]}})"));
+    return Sorted(PARTYMODE::FindMatches(&rules, rules.GetType()));
+  }
+
+  static std::vector<Match> Sorted(std::optional<std::vector<Match>> matches)
+  {
+    EXPECT_TRUE(matches);
+    std::vector<Match> sorted{matches.value_or(std::vector<Match>{})};
+    std::ranges::sort(sorted);
+    return sorted;
+  }
+
+  CTestLibrary m_library{"TestPartyMode"};
+  int m_rockSong{-1};
+  int m_popSong{-1};
+  int m_rockClip{-1};
+  int m_popClip{-1};
 };
+} // namespace
 
-TEST_P(TestPartyModePlayList, RulesPlayOnThePlayListOfTheirType)
+TEST_F(TestPartyModeMatches, SongRulesMatchSongs)
 {
-  EXPECT_EQ(GetParam().second, PARTYMODE::PlayListOf(GetParam().first));
+  EXPECT_EQ((std::vector<Match>{{Library::Song, m_rockSong}}), RockMatches("songs"));
 }
 
-INSTANTIATE_TEST_SUITE_P(Types,
-                         TestPartyModePlayList,
-                         ::testing::Values(TypePlayList{"songs", PLAYLIST::Audio},
-                                           TypePlayList{"albums", PLAYLIST::Audio},
-                                           TypePlayList{"artists", PLAYLIST::Audio},
-                                           TypePlayList{"movies", PLAYLIST::Video},
-                                           TypePlayList{"tvshows", PLAYLIST::Video},
-                                           TypePlayList{"episodes", PLAYLIST::Video},
-                                           TypePlayList{"musicvideos", PLAYLIST::Video},
-                                           TypePlayList{"mixed", PLAYLIST::Video},
-                                           TypePlayList{"", PLAYLIST::Video}));
+TEST_F(TestPartyModeMatches, MusicVideoRulesMatchMusicVideos)
+{
+  EXPECT_EQ((std::vector<Match>{{Library::MusicVideo, m_rockClip}}), RockMatches("musicvideos"));
+}
+
+TEST_F(TestPartyModeMatches, MixedRulesMatchSongsAndMusicVideos)
+{
+  EXPECT_EQ((std::vector<Match>{{Library::Song, m_rockSong}, {Library::MusicVideo, m_rockClip}}),
+            RockMatches("mixed"));
+}
+
+TEST_F(TestPartyModeMatches, RulesThatCannotBeListedFindNoMatches)
+{
+  MEDIA::CLibraryQuery rules;
+  ASSERT_TRUE(rules.LoadFromJson(
+      R"({"type":"mixed","rules":{"and":[{"field":"albumartist","operator":"is","value":"Artist"}]}})"));
+  EXPECT_FALSE(PARTYMODE::FindMatches(&rules, rules.GetType()));
+}
+
+TEST_F(TestPartyModeMatches, WithoutRulesEverythingOfTheContentMatches)
+{
+  EXPECT_EQ((std::vector<Match>{{Library::Song, m_rockSong}, {Library::Song, m_popSong}}),
+            Sorted(PARTYMODE::FindMatches(nullptr, MEDIA::LIBRARY_QUERY::TYPE::SONGS)));
+  EXPECT_EQ((std::vector<Match>{{Library::Song, m_rockSong},
+                                {Library::Song, m_popSong},
+                                {Library::MusicVideo, m_rockClip},
+                                {Library::MusicVideo, m_popClip}}),
+            Sorted(PARTYMODE::FindMatches(nullptr, MEDIA::LIBRARY_QUERY::TYPE::MIXED)));
+}

@@ -11,8 +11,8 @@
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
+#include "media/LibraryQuery.h"
 #include "music/MusicDbPaths.h"
-#include "playlists/SmartPlayList.h"
 #include "utils/ContentNames.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -168,10 +168,9 @@ bool CMusicDbUrl::validateOption(const std::string &key, const CVariant &value)
   if (!value.isString())
     return false;
 
-  PLAYLIST::CSmartPlaylist xspFilter;
+  MEDIA::CLibraryQuery xspFilter;
   if (!xspFilter.LoadFromJson(value.asString()))
     return false;
 
-  // check if the filter playlist matches the item type
-  return xspFilter.GetType() == m_type;
+  return xspFilter.AppliesTo(MEDIA::MediaSection::MUSIC, m_type, true);
 }

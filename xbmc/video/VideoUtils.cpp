@@ -18,7 +18,6 @@
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "filesystem/StackDirectory.h"
-#include "interfaces/AnnouncementManager.h"
 #include "media/MediaType.h"
 #include "network/NetworkFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
@@ -42,6 +41,7 @@
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoScanner.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoLibrary.h"
 
 #include <algorithm>
 #include <array>
@@ -167,17 +167,6 @@ std::string FindTrailer(const CFileItem& item,
     strTrailer = findTrailerFor(discFile);
 
   return strTrailer;
-}
-
-bool HasMovieFolder(CVideoDatabase& database, const std::string& videoPath)
-{
-  // A playlist's path (bluray://.../BDMV/PLAYLIST/) is deeper than its disc's, so would be taken
-  // for a folder below the source's root
-  const std::string path{URIUtils::IsBlurayPath(videoPath) ? URIUtils::GetDiscFile(videoPath)
-                                                           : videoPath};
-  SScanSettings settings;
-  bool foundDirectly{false};
-  return database.GetScraperForPath(path, settings, foundDirectly) && settings.parent_name_root;
 }
 
 std::string GetOpticalMediaPath(const CFileItem& item)
@@ -441,20 +430,6 @@ std::optional<std::string> GetNextPartPlayerStateFromBookmark(const CBookmark& b
   return std::string{state};
 }
 
-namespace
-{
-bool GetStackTimes(const std::string& path, std::vector<std::chrono::milliseconds>& times)
-{
-  CVideoDatabase db;
-  if (!db.Open())
-  {
-    CLog::LogF(LOGERROR, "Cannot open VideoDatabase");
-    return false;
-  }
-  return db.GetStackTimes(path, times);
-}
-} // namespace
-
 std::optional<std::tuple<int64_t, unsigned int>> GetStackResumeOffsetAndPartNumber(
     const CFileItem& item)
 {
@@ -477,7 +452,7 @@ std::optional<std::tuple<int64_t, unsigned int>> GetStackResumeOffsetAndPartNumb
       int64_t offset{CUtil::ConvertSecsToMilliSecs(bookmark.timeInSeconds)};
       unsigned int partNumber{1};
       std::vector<std::chrono::milliseconds> times;
-      if (GetStackTimes(path, times))
+      if (LIBRARY::GetStackTimes(path, times))
       {
         // Look backwards through the parts to find the part we are in
         const auto index{std::ranges::distance(
@@ -514,7 +489,7 @@ int64_t GetStackPartResumeOffset(const CFileItem& item, unsigned int partNumber)
       }
 
       std::vector<std::chrono::milliseconds> times;
-      if (GetStackTimes(path, times) && partNumber <= times.size())
+      if (LIBRARY::GetStackTimes(path, times) && partNumber <= times.size())
       {
         offset = 0;
         const int64_t offsetToCheck{CUtil::ConvertSecsToMilliSecs(bookmark.timeInSeconds)};
@@ -543,7 +518,7 @@ int64_t GetStackPartStartOffset(const CFileItem& item, unsigned int partNumber)
     else
     {
       std::vector<std::chrono::milliseconds> times;
-      if (GetStackTimes(path, times) && partNumber <= times.size())
+      if (LIBRARY::GetStackTimes(path, times) && partNumber <= times.size())
         offset = times[partNumber - 2].count();
     }
   }
@@ -599,17 +574,16 @@ ResumeInformation GetItemResumeInformation(const CFileItem& item)
 
 std::shared_ptr<CFileItem> LoadVideoFilesFolderInfo(const CFileItem& folder)
 {
-  CVideoDatabase db;
-  if (!db.Open())
-  {
-    CLog::LogF(LOGERROR, "Cannot open VideoDatabase");
-    return {};
-  }
-
   CFileItemList items;
   XFILE::CDirectory::GetDirectory(folder.GetDynPath(), items, "", XFILE::DIR_FLAG_DEFAULTS);
 
-  db.GetPlayCounts(items.GetPath(), items);
+  if (!LIBRARY::WithDatabase(
+          [&items](CVideoDatabase& db)
+          {
+            db.GetPlayCounts(items.GetPath(), items);
+            return true;
+          }))
+    return {};
 
   std::shared_ptr<CFileItem> loadedItem{std::make_shared<CFileItem>(folder)};
   loadedItem->SetProperty("total", 0);
@@ -758,22 +732,5 @@ bool SaveDiscPlaylist(CFileItem& item)
 
   item.GetVideoInfoTag()->m_iFileId = idFile;
   return true;
-}
-
-// As JSON-RPC hands out paths elsewhere, files are announced without credentials
-void AnnouncePlayCountChanged(const std::string& file, int playCount)
-{
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::FilesEvent{ANNOUNCEMENT::EVENT::FILES::PlayCountChanged{
-          .file = CURL(file).GetWithoutUserDetails(), .playCount = playCount}});
-}
-
-void AnnounceResumePointChanged(const std::string& file, const CBookmark& resumePoint)
-{
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::FilesEvent{ANNOUNCEMENT::EVENT::FILES::ResumePointChanged{
-          .file = CURL(file).GetWithoutUserDetails(),
-          .position = resumePoint.timeInSeconds,
-          .total = resumePoint.totalTimeInSeconds}});
 }
 } // namespace KODI::VIDEO::UTILS

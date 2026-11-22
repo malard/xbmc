@@ -9,7 +9,7 @@
 #pragma once
 
 #include "guilib/GUIDialog.h"
-#include "playlists/SmartPlayList.h"
+#include "media/LibraryQuery.h"
 
 #include <memory>
 
@@ -19,8 +19,6 @@ class CGUIDialogSmartPlaylistEditor :
       public CGUIDialog
 {
 public:
-  enum PLAYLIST_TYPE { TYPE_SONGS = 1, TYPE_ALBUMS, TYPE_ARTISTS, TYPE_MIXED, TYPE_MUSICVIDEOS, TYPE_MOVIES, TYPE_TVSHOWS, TYPE_EPISODES };
-
   //! \brief Which playlist types the editor offers.
   enum class Mode
   {
@@ -62,12 +60,10 @@ protected:
   void UpdateRuleControlButtons();
   int GetSelectedItem();
   void HighlightItem(int item);
-  std::vector<PLAYLIST_TYPE> GetAllowedTypes(Mode mode);
-  PLAYLIST_TYPE ConvertType(const std::string &type);
-  std::string ConvertType(PLAYLIST_TYPE type);
-  std::string GetLocalizedType(PLAYLIST_TYPE type);
+  std::vector<KODI::MEDIA::LIBRARY_QUERY::TYPE> GetAllowedTypes(Mode mode);
+  std::string GetLocalizedType(KODI::MEDIA::LIBRARY_QUERY::TYPE type);
 
-  KODI::PLAYLIST::CSmartPlaylist m_playlist;
+  KODI::MEDIA::CLibraryQuery m_playlist;
 
   // our list of rules for display purposes
   std::unique_ptr<CFileItemList> m_ruleLabels;
