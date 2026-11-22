@@ -10,7 +10,6 @@
 #include "FileItemList.h"
 #include "URL.h"
 #include "filesystem/Directory.h"
-#include "filesystem/File.h"
 #include "filesystem/SmartPlaylistDirectory.h"
 #include "media/LibraryQuery.h"
 #include "settings/Settings.h"
@@ -283,13 +282,9 @@ TEST_F(TestSmartPlaylistDirectory, AVirtualFolderRuleListsThatPlaylistAsAFolderF
   ASSERT_TRUE(XFILE::CDirectory::Create(PLAYLISTS_FOLDER));
   ASSERT_TRUE(XFILE::CDirectory::Create(folder));
   const std::string other{URIUtils::AddFileToFolder(folder, "Other.xsp")};
-  const std::string xml{
-      "<smartplaylist type=\"movies\"><name>Other</name><match>all</match></smartplaylist>"};
-  {
-    XFILE::CFile file;
-    ASSERT_TRUE(file.OpenForWrite(other, true));
-    ASSERT_EQ(static_cast<ssize_t>(xml.size()), file.Write(xml.data(), xml.size()));
-  }
+  ASSERT_TRUE(WriteTextFile(
+      other,
+      "<smartplaylist type=\"movies\"><name>Other</name><match>all</match></smartplaylist>"));
 
   CFileItemList items;
   const bool listed{XFILE::CSmartPlaylistDirectory::GetDirectory(

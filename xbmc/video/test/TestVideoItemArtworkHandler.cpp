@@ -10,11 +10,12 @@
 #include "FileItem.h"
 #include "ServiceBroker.h"
 #include "filesystem/Directory.h"
-#include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
 #include "media/MediaType.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestLibrary.h"
+#include "test/TestUtils.h"
 #include "utils/ArtTypes.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -24,7 +25,6 @@
 #include "video/VideoManagerTypes.h"
 
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,11 +49,6 @@ protected:
   {
     if (m_library)
     {
-      for (const int idShow : m_shows)
-        m_library->DeleteTvShow(idShow);
-      for (const int idFile : m_files)
-        m_library->DeleteFile(idFile);
-      m_library->Close();
       m_library.reset();
       // Left as found: the scanner's tests rely on the library being unavailable to the code they
       // reach, which otherwise goes on to read their discs
@@ -69,14 +64,9 @@ protected:
     if (!m_library)
     {
       m_initialisedDatabases = !CServiceBroker::GetDatabaseManager().CanOpen("MyVideos");
-      if (m_initialisedDatabases)
-      {
-        EXPECT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
-      }
-      m_library = std::make_unique<CVideoDatabase>();
-      EXPECT_TRUE(m_library->Open());
+      m_library = std::make_unique<CTestLibrary>("TestVideoItemArtworkHandler");
     }
-    return *m_library;
+    return m_library->Video();
   }
 
   //! The info of an extra of a movie, such as a featurette, the library stores as the given file:
@@ -89,7 +79,6 @@ protected:
     tag.GetAssetInfo().SetType(VideoAssetType::EXTRA);
     tag.m_iFileId = Library().AddFile(stored);
     EXPECT_GT(tag.m_iFileId, 0);
-    m_files.insert(tag.m_iFileId);
     return tag;
   }
 
@@ -103,7 +92,6 @@ protected:
     const int idShow{
         Library().SetDetailsForTvShow({m_root}, show, ART::Artwork{}, ART::SeasonsArtwork{})};
     EXPECT_GT(idShow, 0);
-    m_shows.insert(idShow);
 
     std::vector<CVideoInfoTag> tags;
     for (const auto& [episode, file] : episodes)
@@ -136,9 +124,7 @@ protected:
   static std::string File(const std::string& folder, const std::string& name)
   {
     const std::string path{URIUtils::AddFileToFolder(folder, name)};
-    XFILE::CFile output;
-    EXPECT_TRUE(output.OpenForWrite(path, true));
-    output.Close();
+    EXPECT_TRUE(WriteTextFile(path, ""));
     return path;
   }
 
@@ -183,11 +169,8 @@ protected:
 
   const std::string m_root{URIUtils::AddFileToFolder(
       CSpecialProtocol::TranslatePath("special://temp/"), "TestVideoItemArtworkHandler")};
-  std::unique_ptr<CVideoDatabase> m_library;
+  std::unique_ptr<CTestLibrary> m_library;
   bool m_initialisedDatabases{false};
-  //! What was added to the library, removed again afterwards
-  std::set<int> m_shows;
-  std::set<int> m_files;
 };
 } // namespace
 
@@ -462,9 +445,7 @@ TEST_F(TestVideoItemArtworkHandler, ChoosingTheEmbeddedFanartMakesItTheFanart)
       ->UpdateEmbeddedArt(embedded);
 
   CVideoInfoTag stored;
-  const bool found{Library().GetMovieInfo("", stored, idMovie)};
-  Library().DeleteMovie(idMovie);
-  ASSERT_TRUE(found);
+  ASSERT_TRUE(Library().GetMovieInfo("", stored, idMovie));
   stored.m_fanart.Unpack();
   EXPECT_EQ(embedded, stored.m_fanart.GetImageURL());
 }

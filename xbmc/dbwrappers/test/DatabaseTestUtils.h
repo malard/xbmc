@@ -30,6 +30,37 @@ inline DatabaseSettings TestDatabaseSettings()
 }
 
 /*!
+ * \brief An empty database named \p name of a test's own, connected for the life of the guard and
+ * deleted after it. Connect() rather than Open(), so CDatabaseManager plays no part.
+ */
+template<typename DATABASE>
+class CConnectedTestDatabase
+{
+public:
+  explicit CConnectedTestDatabase(const std::string& name) : m_name(name)
+  {
+    EXPECT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
+              m_db.Connect(m_name, TestDatabaseSettings(), true))
+        << "could not create the test database " << m_name;
+  }
+
+  ~CConnectedTestDatabase()
+  {
+    m_db.Close();
+    XFILE::CFile::Delete(TestDatabaseSettings().host + m_name + ".db");
+  }
+
+  CConnectedTestDatabase(const CConnectedTestDatabase&) = delete;
+  CConnectedTestDatabase& operator=(const CConnectedTestDatabase&) = delete;
+
+  DATABASE& Get() { return m_db; }
+
+private:
+  const std::string m_name;
+  DATABASE m_db;
+};
+
+/*!
  * \brief Points a database slot of the advanced settings, which Open() connects to, at an empty
  * test database for the life of the guard, so code that opens the library itself can be tested.
  */

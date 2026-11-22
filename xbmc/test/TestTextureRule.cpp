@@ -8,7 +8,6 @@
 
 #include "TextureDatabase.h"
 #include "dbwrappers/test/DatabaseTestUtils.h"
-#include "filesystem/File.h"
 #include "utils/JSONVariantParser.h"
 #include "utils/Variant.h"
 
@@ -43,17 +42,10 @@ class TestTextureRule : public ::testing::TestWithParam<FilterCase>
 protected:
   static void SetUpTestSuite()
   {
-    s_db = std::make_unique<CTextureDatabase>();
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-              s_db->Connect(DB_NAME, TestDatabaseSettings(), true));
+    s_db = std::make_unique<CConnectedTestDatabase<CTextureDatabase>>(DB_NAME);
   }
 
-  static void TearDownTestSuite()
-  {
-    s_db->Close();
-    s_db.reset();
-    XFILE::CFile::Delete(TestDatabaseSettings().host + DB_NAME + ".db");
-  }
+  static void TearDownTestSuite() { s_db.reset(); }
 
   //! The clause as JSONRPC::CTextureOperations::GetTextures builds it
   static std::optional<std::string> WhereOf(std::string_view json)
@@ -81,13 +73,13 @@ protected:
     {
       return std::nullopt;
     }
-    return group.GetWhereClause(*s_db, {});
+    return group.GetWhereClause(s_db->Get(), {});
   }
 
-  static std::unique_ptr<CTextureDatabase> s_db;
+  static std::unique_ptr<CConnectedTestDatabase<CTextureDatabase>> s_db;
 };
 
-std::unique_ptr<CTextureDatabase> TestTextureRule::s_db;
+std::unique_ptr<CConnectedTestDatabase<CTextureDatabase>> TestTextureRule::s_db;
 
 // clang-format off
 const FilterCase FILTERS[] = {

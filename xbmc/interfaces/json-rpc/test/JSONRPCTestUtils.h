@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "ServiceBroker.h"
 #include "ServiceDescription.h"
-#include "interfaces/AnnouncementManager.h"
 #include "interfaces/json-rpc/IClient.h"
 #include "interfaces/json-rpc/ITransportLayer.h"
 #include "interfaces/json-rpc/JSONRPC.h"
@@ -305,24 +303,6 @@ public:
     JSONServiceDescriptionTestBase::SetUp();
     AddShippedServiceDescription();
   }
-};
-
-//! \brief Registers a fresh announcement manager for its lifetime, and the previous one after it
-class CScopedAnnouncementManager
-{
-public:
-  CScopedAnnouncementManager() : m_previous(CServiceBroker::GetAnnouncementManager())
-  {
-    CServiceBroker::RegisterAnnouncementManager(
-        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
-  }
-  ~CScopedAnnouncementManager() { CServiceBroker::RegisterAnnouncementManager(m_previous); }
-
-  CScopedAnnouncementManager(const CScopedAnnouncementManager&) = delete;
-  CScopedAnnouncementManager& operator=(const CScopedAnnouncementManager&) = delete;
-
-private:
-  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previous;
 };
 
 } // namespace JSONRPC

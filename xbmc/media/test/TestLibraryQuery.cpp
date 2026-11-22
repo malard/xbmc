@@ -75,9 +75,7 @@ protected:
 
   static void Write(const std::string& name, const std::string& text)
   {
-    XFILE::CFile file;
-    ASSERT_TRUE(file.OpenForWrite(PathOf(name), true));
-    ASSERT_EQ(static_cast<ssize_t>(text.size()), file.Write(text.data(), text.size()));
+    ASSERT_TRUE(WriteTextFile(PathOf(name), text));
   }
 
   static std::string Read(const std::string& name)
@@ -280,15 +278,8 @@ protected:
     {
       ASSERT_TRUE(XFILE::CDirectory::Create(URIUtils::AddFileToFolder(PLAYLISTS_FOLDER, folder)));
     }
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-              m_db.Connect(DB_NAME, TestDatabaseSettings(), true));
   }
-  void TearDown() override
-  {
-    m_db.Close();
-    XFILE::CFile::Delete(TestDatabaseSettings().host + DB_NAME + ".db");
-    XFILE::CDirectory::RemoveRecursive(PLAYLISTS_FOLDER);
-  }
+  void TearDown() override { XFILE::CDirectory::RemoveRecursive(PLAYLISTS_FOLDER); }
 
   static std::string PathOf(const std::string& folder, const std::string& name)
   {
@@ -303,9 +294,7 @@ protected:
   {
     const std::string xml{"<smartplaylist type=\"" + type + "\"><name>" + name +
                           "</name><match>all</match>" + rules + "</smartplaylist>"};
-    XFILE::CFile file;
-    ASSERT_TRUE(file.OpenForWrite(PathOf(folder, name), true));
-    ASSERT_EQ(static_cast<ssize_t>(xml.size()), file.Write(xml.data(), xml.size()));
+    ASSERT_TRUE(WriteTextFile(PathOf(folder, name), xml));
   }
 
   //! The file names of a playlist's virtual folders; nullopt if a playlist it names is refused
@@ -359,8 +348,8 @@ protected:
            "</value></rule>";
   }
 
-  static constexpr const char* DB_NAME = "TestLibraryQueryReferences";
-  CMusicDatabase m_db;
+  CConnectedTestDatabase<CMusicDatabase> m_connection{"TestLibraryQueryReferences"};
+  CMusicDatabase& m_db{m_connection.Get()};
 
   const CScopedSetting m_playlistsPath{CSettings::SETTING_SYSTEM_PLAYLISTSPATH, PLAYLISTS_FOLDER};
 };

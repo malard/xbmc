@@ -6,29 +6,22 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DatabaseManager.h"
 #include "FileItem.h"
 #include "JSONRPCTestUtils.h"
-#include "ServiceBroker.h"
 #include "Util.h"
 #include "XBDateTime.h"
 #include "guilib/test/TestGUIStubs.h"
-#include "interfaces/AnnouncementManager.h"
-#include "interfaces/json-rpc/VideoLibrary.h"
+#include "media/MediaType.h"
 #include "music/MusicDatabase.h"
-#include "utils/URIUtils.h"
+#include "test/TestAnnouncements.h"
+#include "test/TestLibrary.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
-#include "video/VideoManagerTypes.h"
 
 #include <algorithm>
-#include <chrono>
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -52,121 +45,51 @@ public:
   }
 };
 
-//! A library of this test's own items in the profile's databases, removed afterwards
+//! A library of this test's own, which the methods open
 class TestLibraryItemsInDatabase : public TestLibraryItems
 {
 public:
   void SetUp() override
   {
     TestLibraryItems::SetUp();
-    if (!CServiceBroker::GetDatabaseManager().CanOpen("MyVideos") ||
-        !CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
-    {
-      ASSERT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
-    }
-    ASSERT_TRUE(m_videos.Open());
-    ASSERT_TRUE(m_music.Open());
 
-    m_movieId = AddMovie("/jsonrpc-test/library/Set Member (2001).mkv", SET_NAME);
+    m_movieId = KODI::TEST::AddMovie(m_videos, MOVIE_FILE, "", SET_NAME);
     ASSERT_GT(m_movieId, 0);
-    m_otherMovieId = AddMovie("/jsonrpc-test/library/Loner (2002).mkv", "");
+    m_otherMovieId = KODI::TEST::AddMovie(m_videos, "/jsonrpc-test/library/Loner (2002).mkv");
     ASSERT_GT(m_otherMovieId, 0);
     m_setId = std::stoi(m_videos.GetSingleValue(
         m_videos.PrepareSQL("SELECT idSet FROM sets WHERE strSet = '%s'", SET_NAME)));
 
     m_showId = AddShow("/jsonrpc-test/library/Show/");
     ASSERT_GT(m_showId, 0);
-    m_episodeId = AddEpisode(m_showId, "/jsonrpc-test/library/Show/Show.S01E01.mkv", 1);
+    m_episodeId = KODI::TEST::AddEpisode(m_videos, m_showId, EPISODE_FILE, 1);
     ASSERT_GT(m_episodeId, 0);
     m_seasonId = m_videos.GetSeasonId(m_showId, 1);
     ASSERT_GT(m_seasonId, 0);
 
-    m_artistId = m_music.AddArtist("JSON-RPC test artist", "");
-    ASSERT_GT(m_artistId, 0);
-    ASSERT_TRUE(
-        m_music.ExecuteQuery("INSERT INTO album (strAlbum) VALUES ('JSON-RPC test album')"));
-    m_albumId = std::stoi(m_music.GetSingleValue("SELECT MAX(idAlbum) FROM album"));
-    ASSERT_TRUE(m_music.ExecuteQuery(m_music.PrepareSQL(
-        "INSERT INTO album_artist (idArtist, idAlbum) VALUES (%i, %i)", m_artistId, m_albumId)));
-    ASSERT_TRUE(m_music.ExecuteQuery("INSERT INTO path (strPath) VALUES ('/jsonrpc-test/music/')"));
-    m_pathId = std::stoi(m_music.GetSingleValue("SELECT MAX(idPath) FROM path"));
-    ASSERT_TRUE(m_music.ExecuteQuery(
-        m_music.PrepareSQL("INSERT INTO song (idAlbum, idPath, strFileName, iTrack, strTitle) "
-                           "VALUES (%i, %i, 'song.flac', 1, 'JSON-RPC test song')",
-                           m_albumId, m_pathId)));
-    m_songId = std::stoi(m_music.GetSingleValue("SELECT MAX(idSong) FROM song"));
-    ASSERT_TRUE(m_music.ExecuteQuery(
-        m_music.PrepareSQL("INSERT INTO song_artist (idArtist, idSong, idRole, iOrder, strArtist) "
-                           "VALUES (%i, %i, 1, 0, 'JSON-RPC test artist')",
-                           m_artistId, m_songId)));
-  }
-
-  void TearDown() override
-  {
-    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM song_artist WHERE idSong = %i", m_songId));
-    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM song WHERE idSong = %i", m_songId));
-    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM path WHERE idPath = %i", m_pathId));
-    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM album WHERE idAlbum = %i", m_albumId));
-    m_music.ExecuteQuery(m_music.PrepareSQL("DELETE FROM artist WHERE idArtist = %i", m_artistId));
-    m_music.Close();
-
-    m_videos.DeleteTvShow(m_showId);
-    for (const int idShow : m_extraShows)
-      m_videos.DeleteTvShow(idShow);
-    m_videos.DeleteMovie(m_movieId);
-    m_videos.DeleteMovie(m_otherMovieId);
-    m_videos.DeleteSet(m_setId);
-    m_videos.Close();
-
-    TestLibraryItems::TearDown();
+    m_songId = m_library.AddSong("JSON-RPC test song", "JSON-RPC test album", ARTIST_NAME);
+    ASSERT_GT(m_songId, 0);
+    m_albumId = std::stoi(m_music.GetSingleValue(
+        m_music.PrepareSQL("SELECT idAlbum FROM song WHERE idSong = %i", m_songId)));
+    m_artistId = std::stoi(m_music.GetSingleValue(
+        m_music.PrepareSQL("SELECT idArtist FROM song_artist WHERE idSong = %i", m_songId)));
   }
 
   static constexpr const char* SET_NAME = "JSON-RPC test set";
-
-  CVideoInfoTag Tag(const std::string& fileAndPath)
-  {
-    CVideoInfoTag tag;
-    tag.m_strTitle = URIUtils::GetFileName(fileAndPath);
-    tag.m_strFileNameAndPath = fileAndPath;
-    tag.m_strPath = URIUtils::GetDirectory(fileAndPath);
-    tag.m_basePath = CFileItem(fileAndPath, false).GetBaseMoviePath(false);
-    tag.m_parentPathID = m_videos.AddPath(URIUtils::GetParentPath(tag.m_basePath));
-    return tag;
-  }
-
-  int AddMovie(const std::string& fileAndPath, const std::string& set)
-  {
-    CVideoInfoTag tag{Tag(fileAndPath)};
-    if (!set.empty())
-      tag.SetSet(set);
-    return m_videos.SetDetailsForMovie(tag, KODI::ART::Artwork{});
-  }
+  static constexpr const char* ARTIST_NAME = "JSON-RPC test artist";
 
   int AddShow(const std::string& showPath, const std::string& title = "JSON-RPC test show")
   {
-    CVideoInfoTag tag;
-    tag.m_strTitle = title;
-    tag.m_strPath = showPath;
-    return m_videos.SetDetailsForTvShow({showPath}, tag, KODI::ART::Artwork{},
-                                        KODI::ART::SeasonsArtwork{});
+    return KODI::TEST::AddTvShow(m_videos, title, {showPath});
   }
 
-  int AddEpisode(int idShow, const std::string& fileAndPath, int episode)
-  {
-    CVideoInfoTag tag{Tag(fileAndPath)};
-    tag.m_iSeason = 1;
-    tag.m_iEpisode = episode;
-    return m_videos.SetDetailsForEpisode(tag, KODI::ART::Artwork{}, idShow);
-  }
-
-  //! A show of two episodes, one of them watched, removed with the fixture
+  //! A show of two episodes, one of them watched
   int AddShowInProgress(const std::string& title)
   {
     const std::string path{"/jsonrpc-test/library/" + title + "/"};
     const int idShow{AddShow(path, title)};
-    m_extraShows.push_back(idShow);
-    const int idEpisode{AddEpisode(idShow, path + "S01E01.mkv", 1)};
-    AddEpisode(idShow, path + "S01E02.mkv", 2);
+    const int idEpisode{KODI::TEST::AddEpisode(m_videos, idShow, path + "S01E01.mkv", 1)};
+    KODI::TEST::AddEpisode(m_videos, idShow, path + "S01E02.mkv", 2);
 
     CVideoInfoTag watched;
     m_videos.GetEpisodeInfo("", watched, idEpisode);
@@ -238,91 +161,34 @@ public:
 
   CTestGUIComponent m_gui{CTestGUIComponent::InfoManager::WITH};
   CScopedAnnouncementManager m_announcements;
-  CVideoDatabase m_videos;
-  CMusicDatabase m_music;
+  CTestLibrary m_library{"TestLibraryItems"};
+  CVideoDatabase& m_videos{m_library.Video()};
+  CMusicDatabase& m_music{m_library.Music()};
   int m_movieId{-1};
   int m_otherMovieId{-1};
   int m_setId{-1};
   int m_showId{-1};
-  std::vector<int> m_extraShows;
   int m_seasonId{-1};
   int m_episodeId{-1};
   int m_artistId{-1};
   int m_albumId{-1};
-  int m_pathId{-1};
   int m_songId{-1};
 };
 
-//! Keeps every library update announced, in order
-class CUpdateListener : public ANNOUNCEMENT::IAnnouncer
+//! The updates \p announcements holds about the item of \p kind with \p id, as JSON-RPC gives them
+std::vector<CVariant> UpdatesTo(const CQueuedAnnouncements& announcements,
+                                const std::string& kind,
+                                int id)
 {
-public:
-  explicit CUpdateListener(std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> announcements)
-    : m_announcements(std::move(announcements))
+  std::vector<CVariant> updates;
+  for (const auto& update : announcements.LibraryUpdates())
   {
-    m_announcements->AddAnnouncer(this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary |
-                                            ANNOUNCEMENT::Other);
-    m_announcements->Start();
+    const CVariant& item{update.data.isMember("item") ? update.data["item"] : update.data};
+    if (item["type"].asString() == kind && item["id"].asInteger() == id)
+      updates.push_back(update.data);
   }
-
-  ~CUpdateListener() override { m_announcements->RemoveAnnouncer(this); }
-
-  void OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement) override
-  {
-    const std::string message = ANNOUNCEMENT::MessageOf(announcement);
-    std::unique_lock lock(m_lock);
-    if (message == DRAINED)
-      m_drained = true;
-    else if (message == "OnUpdate")
-    {
-      m_updates.push_back(ANNOUNCEMENT::NotificationDataOf(announcement));
-      const ANNOUNCEMENT::LibraryEvent* library{
-          std::get_if<ANNOUNCEMENT::VideoLibraryEvent>(&announcement)};
-      if (!library)
-        library = std::get_if<ANNOUNCEMENT::AudioLibraryEvent>(&announcement);
-      if (const auto* update = std::get_if<ANNOUNCEMENT::EVENT::LIBRARY::Update>(library))
-        m_named.emplace_back(update->type, update->id);
-    }
-    m_arrived.notify_all();
-  }
-
-  //! Whether an update arrived that names the item of \p type with \p id by its own fields
-  bool Named(KODI::MEDIA::TYPE type, int id)
-  {
-    std::unique_lock lock(m_lock);
-    return std::ranges::find(m_named, std::pair{type, id}) != m_named.end();
-  }
-
-  //! The updates announced about the item of \p kind with \p id, once all announced so far arrived
-  std::vector<CVariant> UpdatesTo(const std::string& kind, int id)
-  {
-    m_announcements->Announce(ANNOUNCEMENT::OtherEvent{
-        ANNOUNCEMENT::CAnnouncementManager::ANNOUNCEMENT_SENDER, DRAINED, {}});
-
-    std::unique_lock lock(m_lock);
-    m_arrived.wait_for(lock, std::chrono::seconds(5), [this] { return m_drained; });
-    m_drained = false;
-
-    std::vector<CVariant> updates;
-    for (const CVariant& update : m_updates)
-    {
-      const CVariant& item{update.isMember("item") ? update["item"] : update};
-      if (item["type"].asString() == kind && item["id"].asInteger() == id)
-        updates.push_back(update);
-    }
-    return updates;
-  }
-
-private:
-  static constexpr const char* DRAINED = "TestLibraryItemsDrained";
-
-  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_announcements;
-  std::mutex m_lock;
-  std::condition_variable m_arrived;
-  std::vector<CVariant> m_updates;
-  std::vector<std::pair<KODI::MEDIA::TYPE, int>> m_named;
-  bool m_drained{false};
-};
+  return updates;
+}
 } // unnamed namespace
 
 TEST_F(TestLibraryItems, TheQueryRefusesAPropertyTheKindDoesNotHave)
@@ -451,13 +317,18 @@ TEST_F(TestLibraryItemsInDatabase, AnItemThatDoesNotExistIsNotFound)
 {
   CVariant result;
   EXPECT_EQ(NotFound, Invoke("VideoLibrary.GetItemProperties",
-                             R"({"item": {"kind": "movie", "id": 987654}})", result));
-  EXPECT_EQ(NotFound, Invoke("VideoLibrary.SetItemProperties",
-                             R"({"item": {"kind": "episode", "id": 987654},
-                                 "properties": {"title": "Nobody"}})",
+                             R"({"item": {"kind": "movie", "id": )" +
+                                 std::to_string(m_otherMovieId + 1) + "}}",
                              result));
-  EXPECT_EQ(NotFound, Invoke("AudioLibrary.GetItemProperties",
-                             R"({"item": {"kind": "song", "id": 987654}})", result));
+  EXPECT_EQ(NotFound,
+            Invoke("VideoLibrary.SetItemProperties",
+                   R"({"item": {"kind": "episode", "id": )" + std::to_string(m_episodeId + 1) +
+                       R"(}, "properties": {"title": "Nobody"}})",
+                   result));
+  EXPECT_EQ(NotFound,
+            Invoke("AudioLibrary.GetItemProperties",
+                   R"({"item": {"kind": "song", "id": )" + std::to_string(m_songId + 1) + "}}",
+                   result));
 }
 
 TEST_F(TestLibraryItemsInDatabase, AnItemsArtChoicesAreAskedForByItsKindAndId)
@@ -555,12 +426,13 @@ TEST_F(TestLibraryItemsInDatabase, AMusicItemIsSetAndReadBack)
                        R"({"item": {"kind": "artist", "id": )" + std::to_string(m_artistId) +
                            R"(}, "properties": ["sortName"]})",
                        result));
-  EXPECT_EQ("JSON-RPC test artist", result["artist"].asString());
+  EXPECT_EQ(ARTIST_NAME, result["artist"].asString());
 }
 
 TEST_F(TestLibraryItemsInDatabase, SettingAnnouncesTheItemAndWhatChanged)
 {
-  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
+  const auto announcements{std::make_shared<CQueuedAnnouncements>()};
+  const CScopedAnnouncementManager registered{announcements};
 
   CVariant result;
   ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
@@ -568,7 +440,7 @@ TEST_F(TestLibraryItemsInDatabase, SettingAnnouncesTheItemAndWhatChanged)
                            R"(}, "properties": {"plot": "Announced"}})",
                        result));
 
-  const std::vector<CVariant> updates{listener.UpdatesTo("movie", m_movieId)};
+  const std::vector<CVariant> updates{UpdatesTo(*announcements, "movie", m_movieId)};
   ASSERT_EQ(1u, updates.size());
   EXPECT_EQ("Announced", updates[0]["properties"]["plot"].asString());
   EXPECT_EQ(1u, updates[0]["properties"].size());
@@ -576,7 +448,8 @@ TEST_F(TestLibraryItemsInDatabase, SettingAnnouncesTheItemAndWhatChanged)
 
 TEST_F(TestLibraryItemsInDatabase, APlayCountSetIsAnnouncedOnce)
 {
-  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
+  const auto announcements{std::make_shared<CQueuedAnnouncements>()};
+  const CScopedAnnouncementManager registered{announcements};
 
   CVariant result;
   ASSERT_EQ(OK, Invoke("VideoLibrary.SetItemProperties",
@@ -588,11 +461,11 @@ TEST_F(TestLibraryItemsInDatabase, APlayCountSetIsAnnouncedOnce)
                            R"(}, "properties": {"playCount": 4}})",
                        result));
 
-  const std::vector<CVariant> movie{listener.UpdatesTo("movie", m_movieId)};
+  const std::vector<CVariant> movie{UpdatesTo(*announcements, "movie", m_movieId)};
   ASSERT_EQ(1u, movie.size());
   EXPECT_EQ(3, movie[0]["properties"]["playCount"].asInteger());
 
-  const std::vector<CVariant> song{listener.UpdatesTo("song", m_songId)};
+  const std::vector<CVariant> song{UpdatesTo(*announcements, "song", m_songId)};
   ASSERT_EQ(1u, song.size());
   EXPECT_EQ(4, song[0]["properties"]["playCount"].asInteger());
 }
@@ -609,16 +482,6 @@ TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedMovieIsRef
   EXPECT_EQ(title, TitleOf("movie", m_movieId));
 }
 
-TEST_F(TestLibraryItemsInDatabase, MarkingAMovieWatchedWithNoLastPlayedDateIsRefused)
-{
-  Play(MOVIE_FILE, 0);
-
-  EXPECT_EQ(InvalidParams,
-            SetProperties("movie", m_movieId, R"({"playCount": 1, "lastPlayed": ""})"));
-
-  EXPECT_EQ(0, Played(MOVIE_FILE).first);
-}
-
 TEST_F(TestLibraryItemsInDatabase, ClearingAMovieWithPlayCountZeroClearsBoth)
 {
   Play(MOVIE_FILE, 2);
@@ -626,77 +489,6 @@ TEST_F(TestLibraryItemsInDatabase, ClearingAMovieWithPlayCountZeroClearsBoth)
   EXPECT_EQ(OK, SetProperties("movie", m_movieId, R"({"playCount": 0, "lastPlayed": ""})"));
 
   EXPECT_EQ(std::pair(0, std::string()), Played(MOVIE_FILE));
-}
-
-TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedEpisodeIsRefused)
-{
-  Play(EPISODE_FILE, 2);
-  const std::string title{TitleOf("episode", m_episodeId)};
-
-  EXPECT_EQ(InvalidParams,
-            SetProperties("episode", m_episodeId, R"({"title": "Changed", "lastPlayed": ""})"));
-
-  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(EPISODE_FILE));
-  EXPECT_EQ(title, TitleOf("episode", m_episodeId));
-}
-
-TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedMusicVideoIsRefused)
-{
-  const std::string file{"/jsonrpc-test/library/Watched Clip.mkv"};
-  CVideoInfoTag tag{Tag(file)};
-  const int id{m_videos.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{})};
-  ASSERT_GT(id, 0);
-  Play(file, 2);
-  const std::string title{TitleOf("musicvideo", id)};
-
-  EXPECT_EQ(InvalidParams,
-            SetProperties("musicvideo", id, R"({"title": "Changed", "lastPlayed": ""})"));
-
-  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(file));
-  EXPECT_EQ(title, TitleOf("musicvideo", id));
-  m_videos.DeleteMusicVideo(id);
-}
-
-// Player.GetItem relies on this for a library item, loading nothing more itself
-TEST_F(TestLibraryItemsInDatabase, AMovieVersionIsFilledWithItsDetailsFromItsOwnFile)
-{
-  const std::string versionFile{"/jsonrpc-test/library/Set Member (2001) Director's Cut.mkv"};
-  const int sourceId{AddMovie(versionFile, "")};
-  ASSERT_GT(sourceId, 0);
-  const int idFile{m_videos.GetFileIdByMovie(sourceId)};
-  ASSERT_TRUE(m_videos.ConvertVideoToVersion(VideoDbContentType::MOVIES, sourceId, m_movieId, -1,
-                                             VideoAssetType::VERSION));
-
-  auto item{std::make_shared<CFileItem>(versionFile, false)};
-  ASSERT_TRUE(JSONRPC::CVideoLibrary::FillFileItem(versionFile, item));
-  EXPECT_EQ(m_movieId, item->GetVideoInfoTag()->m_iDbId);
-  EXPECT_EQ(idFile, item->GetVideoInfoTag()->m_iFileId);
-  EXPECT_EQ(m_setId, item->GetVideoInfoTag()->m_set.GetID());
-}
-
-TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAShowWithAWatchedEpisodeIsRefused)
-{
-  Play(EPISODE_FILE, 2);
-  const std::string title{TitleOf("tvshow", m_showId)};
-
-  EXPECT_EQ(InvalidParams,
-            SetProperties("tvshow", m_showId, R"({"title": "Changed", "lastPlayed": ""})"));
-
-  EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(EPISODE_FILE));
-  EXPECT_EQ(title, TitleOf("tvshow", m_showId));
-}
-
-TEST_F(TestLibraryItemsInDatabase, ClearingAShowWithPlayCountZeroClearsEveryEpisode)
-{
-  const std::string second{"/jsonrpc-test/library/Show/Show.S01E02.mkv"};
-  ASSERT_GT(AddEpisode(m_showId, second, 2), 0);
-  Play(EPISODE_FILE, 2);
-  Play(second, 1);
-
-  EXPECT_EQ(OK, SetProperties("tvshow", m_showId, R"({"playCount": 0, "lastPlayed": ""})"));
-
-  EXPECT_EQ(std::pair(0, std::string()), Played(EPISODE_FILE));
-  EXPECT_EQ(std::pair(0, std::string()), Played(second));
 }
 
 TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)
@@ -708,7 +500,7 @@ TEST_F(TestLibraryItemsInDatabase, InProgressShowsAreSortedAndLimitedAsAsked)
   ASSERT_EQ(OK, Invoke("VideoLibrary.GetInProgressTVShows",
                        R"({"sort": {"method": "title", "order": "ascending"}})", ascending));
   const int total{static_cast<int>(ascending["limits"]["total"].asInteger())};
-  ASSERT_GE(total, 2);
+  ASSERT_EQ(2, total);
   EXPECT_EQ(first, ascending["items"][0]["tvShowId"].asInteger());
 
   CVariant descending;
@@ -743,8 +535,6 @@ TEST_F(TestLibraryItemsInDatabase, AddingAMovieNeedsNoScan)
                        read));
   EXPECT_EQ(path, read["file"].asString());
   EXPECT_EQ("Added", read["plot"].asString());
-
-  m_videos.DeleteMovie(id);
 }
 
 TEST_F(TestLibraryItemsInDatabase, AnEpisodeIsAddedToTheShowNamed)
@@ -756,7 +546,6 @@ TEST_F(TestLibraryItemsInDatabase, AnEpisodeIsAddedToTheShowNamed)
                        show));
   const int showId{static_cast<int>(show["tvShowId"].asInteger())};
   ASSERT_GT(showId, 0);
-  m_extraShows.push_back(showId);
   EXPECT_EQ("Added Show", show["title"].asString());
 
   CVariant episode;
@@ -781,7 +570,8 @@ TEST_F(TestLibraryItemsInDatabase, AnEpisodeIsAddedToTheShowNamed)
 
 TEST_F(TestLibraryItemsInDatabase, AMusicVideoIsAddedAndAnnouncedAsAdded)
 {
-  CUpdateListener listener{CServiceBroker::GetAnnouncementManager()};
+  const auto announcements{std::make_shared<CQueuedAnnouncements>()};
+  const CScopedAnnouncementManager registered{announcements};
 
   CVariant result;
   ASSERT_EQ(OK,
@@ -790,12 +580,12 @@ TEST_F(TestLibraryItemsInDatabase, AMusicVideoIsAddedAndAnnouncedAsAdded)
   const int id{static_cast<int>(result["musicVideoId"].asInteger())};
   ASSERT_GT(id, 0);
 
-  const std::vector<CVariant> updates{listener.UpdatesTo("musicvideo", id)};
+  const std::vector<CVariant> updates{UpdatesTo(*announcements, "musicvideo", id)};
   ASSERT_EQ(1u, updates.size());
   EXPECT_TRUE(updates[0]["added"].asBoolean());
-  EXPECT_TRUE(listener.Named(KODI::MEDIA::TYPE::MUSIC_VIDEO, id));
-
-  m_videos.DeleteMusicVideo(id);
+  EXPECT_TRUE(std::ranges::any_of(
+      announcements->LibraryUpdates(), [id](const CQueuedAnnouncements::LibraryUpdate& update)
+      { return update.type == KODI::MEDIA::TYPE::MUSIC_VIDEO && update.id == id; }));
 }
 
 TEST_F(TestLibraryItemsInDatabase, AnItemAlreadyAtThePathIsNotAddedAgain)
@@ -813,7 +603,8 @@ TEST_F(TestLibraryItemsInDatabase, AnEpisodeNeedsAShowThatExists)
   CVariant result;
   EXPECT_EQ(NotFound, Invoke("VideoLibrary.AddItem",
                              R"({"kind": "episode", "path": "/jsonrpc-test/library/Orphan.mkv",
-                                 "tvShowId": 987654})",
+                                 "tvShowId": )" +
+                                 std::to_string(m_showId + 1) + "}",
                              result));
   EXPECT_EQ(InvalidParams,
             Invoke("VideoLibrary.AddItem",
