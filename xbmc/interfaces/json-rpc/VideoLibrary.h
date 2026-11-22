@@ -10,12 +10,10 @@
 
 #include "FileItemHandler.h"
 #include "JSONRPC.h"
-#include "XBDateTime.h"
 #include "utils/Artwork.h"
 #include "utils/DatabaseUtils.h"
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -82,30 +80,6 @@ class CVideoLibrary : public CFileItemHandler
   static bool FillFileItemList(const CVariant& parameterObject, CFileItemList& list);
 
 protected:
-  //! Adds the files table's playback state to an item that already says what it is.
-  static void ApplyPlaybackState(const CVideoInfoTag& fileDetails, CVideoInfoTag& details);
-
-  //! Describes a folder as the TV show it is one of the folders of. A folder beneath a
-  //! show's own resolves to the show as well, and is left as it is.
-  static bool GetTvShowOfFolder(CVideoDatabase& videodatabase,
-                                const std::string& path,
-                                CVideoInfoTag& details,
-                                CFileItem* item);
-
-  struct PlaybackUpdate
-  {
-    int playCount;
-    CDateTime lastPlayed;
-  };
-
-  /*! \brief The playback state a show-level update leaves one of its episodes with.
-     \return what to store, or nothing when the episode is left as it is
-    */
-  static std::optional<PlaybackUpdate> EpisodePlaybackUpdate(const CVideoInfoTag& show,
-                                                             bool updatePlaycount,
-                                                             bool updateLastplayed,
-                                                             const CVideoInfoTag& episode);
-
   //! What a Set*Details call changes about an item's artwork, and which details it names
   struct DetailsEdit
   {
@@ -115,20 +89,12 @@ protected:
   };
 
   //! Applies the caller's edit to \p details and to the item's stored artwork.
-  static DetailsEdit EditDetails(const CVariant& parameterObject,
-                                 CVideoInfoTag& details,
-                                 CVideoDatabase& videodatabase);
+  static DetailsEdit EditDetails(const CVariant& parameterObject, CVideoInfoTag& details);
   static void UpdateVideoTag(const CVariant& parameterObject,
                              CVideoInfoTag& details,
                              KODI::ART::Artwork& artwork,
                              std::set<std::string, std::less<>>& removedArtwork,
                              std::set<std::string, std::less<>>& updatedDetails);
-
-  //! Stores the playcount, last played date and resume point an edit changed from \p before.
-  static void StorePlaybackEdit(const CVariant& parameterObject,
-                                const PlaybackUpdate& before,
-                                CVideoInfoTag& details,
-                                CVideoDatabase& videodatabase);
 
 public:
     /*! \brief Provided the JSON-RPC parameter object compute the VideoDbDetails mask
@@ -155,51 +121,11 @@ public:
                                  CVideoDatabase& videodatabase,
                                  CVariant& result);
 
-  /*! \brief Stores \p infos, the item of their kind with \p id after \p edit
-     \param before the item's playback state before the edit
-     */
-  static JSONRPC_STATUS SetMovieDetails(int id,
-                                        const CVariant& properties,
-                                        const PlaybackUpdate& before,
-                                        const DetailsEdit& edit,
-                                        CVideoInfoTag& infos,
-                                        CVideoDatabase& videodatabase,
-                                        CVariant& result);
-  static JSONRPC_STATUS SetMovieSetDetails(int id,
-                                           const CVariant& properties,
-                                           const PlaybackUpdate& before,
-                                           const DetailsEdit& edit,
-                                           CVideoInfoTag& infos,
-                                           CVideoDatabase& videodatabase,
-                                           CVariant& result);
-  static JSONRPC_STATUS SetTVShowDetails(int id,
-                                         const CVariant& properties,
-                                         const PlaybackUpdate& before,
-                                         const DetailsEdit& edit,
-                                         CVideoInfoTag& infos,
-                                         CVideoDatabase& videodatabase,
-                                         CVariant& result);
-  static JSONRPC_STATUS SetSeasonDetails(int id,
-                                         const CVariant& properties,
-                                         const PlaybackUpdate& before,
-                                         const DetailsEdit& edit,
-                                         CVideoInfoTag& infos,
-                                         CVideoDatabase& videodatabase,
-                                         CVariant& result);
-  static JSONRPC_STATUS SetEpisodeDetails(int id,
-                                          const CVariant& properties,
-                                          const PlaybackUpdate& before,
-                                          const DetailsEdit& edit,
-                                          CVideoInfoTag& infos,
-                                          CVideoDatabase& videodatabase,
-                                          CVariant& result);
-  static JSONRPC_STATUS SetMusicVideoDetails(int id,
-                                             const CVariant& properties,
-                                             const PlaybackUpdate& before,
-                                             const DetailsEdit& edit,
-                                             CVideoInfoTag& infos,
-                                             CVideoDatabase& videodatabase,
-                                             CVariant& result);
+  //! ReadItem, on a connection of its own
+  static JSONRPC_STATUS ReadItemOwnConnection(VideoKind kind,
+                                              int id,
+                                              const CVariant& fields,
+                                              CVariant& result);
 
   static int RequiresAdditionalDetails(KODI::MEDIA::TYPE mediaType,
                                        const CVariant &parameterObject);
@@ -225,7 +151,6 @@ public:
   static JSONRPC_STATUS ResolveRefreshItem(VideoKind kind,
                                            int id,
                                            const CVariant& target,
-                                           CVideoDatabase& videodatabase,
                                            CFileItem& item,
                                            CVariant& result);
     static void UpdateVideoTagField(const CVariant& parameterObject,

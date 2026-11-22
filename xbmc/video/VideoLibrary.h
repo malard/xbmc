@@ -48,6 +48,15 @@ bool AddBookMarkToFile(const std::string& strFilenameAndPath,
                        const CBookmark& bookmark,
                        CBookmark::EType type);
 
+//! CVideoDatabase::AddItem on a connection of its own; FAILED if it cannot be had
+CVideoDatabase::AddResult AddItem(KODI::MEDIA::TYPE type,
+                                  const std::string& path,
+                                  CVideoInfoTag& details,
+                                  const KODI::ART::Artwork& artwork,
+                                  int idShow,
+                                  const CVideoDatabase::PlayStateEdit& playState,
+                                  int& id);
+
 //! CVideoDatabase::AddSetForMovie on a connection of its own
 int AddSetForMovie(const std::string& name, int idMovie);
 
@@ -65,6 +74,23 @@ bool DeleteItem(VideoDbContentType type, int id);
 
 //! CVideoDatabase::DeleteTag on a connection of its own
 void DeleteTag(int idTag, VideoDbContentType mediaType);
+
+//! CVideoDatabase::DescribePath on a connection of its own
+bool DescribePath(const std::string& path, CFileItem& item);
+
+//! CVideoDatabase::EditFilePlayState on a connection of its own; FAILED if it cannot be had
+CVideoDatabase::EditResult EditFilePlayState(const std::string& file,
+                                             const CVideoDatabase::PlayStateEdit& playState,
+                                             CVideoInfoTag& details);
+
+//! CVideoDatabase::EditItem on a connection of its own; FAILED if it cannot be had
+CVideoDatabase::EditResult EditItem(KODI::MEDIA::TYPE type,
+                                    int id,
+                                    CVideoInfoTag& details,
+                                    const KODI::ART::Artwork& artwork,
+                                    const std::set<std::string, std::less<>>& removedArtwork,
+                                    const std::set<std::string, std::less<>>& updatedDetails,
+                                    const CVideoDatabase::PlayStateEdit& playState);
 
 //! CVideoDatabase::EraseVideoSettings on a connection of its own
 void EraseVideoSettings(const CFileItem& item);
@@ -220,6 +246,12 @@ bool SetItemTitle(const CVideoInfoTag& item, const std::string& title);
 
 //! CVideoDatabase::SetPathHash on a connection of its own
 bool SetPathHash(const std::string& path, const std::string& hash);
+
+//! CVideoDatabase::SetSourceContent on a connection of its own
+void SetSourceContent(const std::string& path,
+                      const ADDON::ScraperPtr& scraper,
+                      const KODI::VIDEO::SScanSettings& settings,
+                      bool removeContent);
 
 //! CVideoDatabase::SetStackTimes on a connection of its own
 void SetStackTimes(const std::string& filePath,

@@ -3003,9 +3003,11 @@ int CVideoDatabase::UpdateDetailsForMovie(int idMovie,
   if (idMovie < 0)
     return idMovie;
 
+  const bool inTransaction{m_pDB->in_transaction()};
   try
   {
-    BeginTransaction();
+    if (!inTransaction)
+      BeginTransaction();
 
     // process the link table updates
     if (updatedDetails.contains(UPDATED_DETAIL::GENRE))
@@ -3079,15 +3081,361 @@ int CVideoDatabase::UpdateDetailsForMovie(int idMovie,
     sql += PrepareSQL(" where idMovie=%i", idMovie);
     m_pDS->exec(sql);
 
-    CommitTransaction();
+    if (!inTransaction)
+      CommitTransaction();
     return idMovie;
   }
   catch (...)
   {
     CLog::LogF(LOGERROR, "({}) failed", idMovie);
   }
-  RollbackTransaction();
+  if (!inTransaction)
+    RollbackTransaction();
   return -1;
+}
+
+CVideoDatabase::EditResult CVideoDatabase::EditItem(
+    MEDIA::TYPE type,
+    int id,
+    CVideoInfoTag& details,
+    const KODI::ART::Artwork& artwork,
+    const std::set<std::string, std::less<>>& removedArtwork,
+    const std::set<std::string, std::less<>>& updatedDetails,
+    const PlayStateEdit& playState)
+{
+  if (!m_pDB || !m_pDS)
+    return EditResult::FAILED;
+
+  if (playState.lastPlayed && !playState.lastPlayed->IsValid() &&
+      !CanClearLastPlayed(type, id, playState.playCount))
+    return EditResult::REFUSED;
+
+  const int idShow{type == MEDIA::TYPE::EPISODE ? GetTvShowForEpisode(id) : details.m_iIdShow};
+  if ((type == MEDIA::TYPE::EPISODE || type == MEDIA::TYPE::SEASON) && idShow <= 0)
+    return EditResult::NOT_FOUND;
+
+  const bool announceUpdates{m_announceUpdates};
+  m_announceUpdates = false;
+  const bool inTransaction{m_pDB->in_transaction()};
+  if (!inTransaction)
+    BeginTransaction();
+
+  bool stored{false};
+  switch (type)
+  {
+    case MEDIA::TYPE::MOVIE:
+      stored = UpdateDetailsForMovie(id, details, artwork, updatedDetails) > 0 &&
+               StorePlayStateEdit(details.m_strFileNameAndPath, playState);
+      break;
+    case MEDIA::TYPE::VIDEO_COLLECTION:
+      stored = SetDetailsForMovieSet(details, artwork, id) > 0;
+      break;
+    case MEDIA::TYPE::TV_SHOW:
+    {
+      KODI::ART::SeasonsArtwork seasonArt;
+      GetTvShowSeasonArt(id, seasonArt);
+      // Tags are removed by hand, as the update does not replace them
+      RemoveTagsFromItem(id, MEDIA::TYPE::TV_SHOW);
+      if (!UpdateDetailsForTvShow(id, details, artwork, seasonArt))
+        break;
+      // Each episode is an item of its own, which the show's announcement does not cover
+      m_announceUpdates = announceUpdates;
+      stored = StoreEpisodesPlayState(id, playState);
+      m_announceUpdates = false;
+      break;
+    }
+    case MEDIA::TYPE::SEASON:
+      stored = SetDetailsForSeason(details, artwork, idShow, id) > 0;
+      break;
+    case MEDIA::TYPE::EPISODE:
+      stored = SetDetailsForEpisode(details, artwork, idShow, id) > 0 &&
+               StorePlayStateEdit(details.m_strFileNameAndPath, playState);
+      break;
+    case MEDIA::TYPE::MUSIC_VIDEO:
+      RemoveTagsFromItem(id, MEDIA::TYPE::MUSIC_VIDEO);
+      stored = SetDetailsForMusicVideo(details, artwork, id) > 0 &&
+               StorePlayStateEdit(details.m_strFileNameAndPath, playState);
+      break;
+    default:
+      break;
+  }
+  stored = stored && RemoveArtForItem(id, type, removedArtwork);
+  m_announceUpdates = announceUpdates;
+
+  if (!stored)
+  {
+    if (!inTransaction)
+      RollbackTransaction();
+    return EditResult::FAILED;
+  }
+  return inTransaction || CommitTransaction() ? EditResult::DONE : EditResult::FAILED;
+}
+
+CVideoDatabase::AddResult CVideoDatabase::AddItem(MEDIA::TYPE type,
+                                                  const std::string& path,
+                                                  CVideoInfoTag& details,
+                                                  const KODI::ART::Artwork& artwork,
+                                                  int idShow,
+                                                  const PlayStateEdit& playState,
+                                                  int& id)
+{
+  id = -1;
+  if (!m_pDB || !m_pDS)
+    return AddResult::FAILED;
+
+  const bool isShow{type == MEDIA::TYPE::TV_SHOW};
+  std::string itemPath{path};
+  if (isShow)
+    URIUtils::AddSlashAtEnd(itemPath);
+
+  int existing{-1};
+  switch (type)
+  {
+    case MEDIA::TYPE::MOVIE:
+      existing = GetMovieId(itemPath);
+      break;
+    case MEDIA::TYPE::TV_SHOW:
+      existing = GetTvShowId(itemPath);
+      break;
+    case MEDIA::TYPE::EPISODE:
+      existing = GetEpisodeId(itemPath);
+      break;
+    case MEDIA::TYPE::MUSIC_VIDEO:
+      existing = GetMusicVideoId(itemPath);
+      break;
+    default:
+      return AddResult::FAILED;
+  }
+  if (existing >= 0)
+    return AddResult::IN_LIBRARY;
+
+  if (type == MEDIA::TYPE::EPISODE)
+  {
+    CVideoInfoTag show;
+    switch (TryGetTvShowInfo("", show, idShow))
+    {
+      case GetResult::Ok:
+        break;
+      case GetResult::NotFound:
+        return AddResult::NO_SUCH_SHOW;
+      case GetResult::Error:
+        return AddResult::FAILED;
+    }
+  }
+
+  if (details.m_strTitle.empty())
+    details.m_strTitle = CUtil::GetTitleFromPath(itemPath, isShow);
+
+  const bool inTransaction{m_pDB->in_transaction()};
+  if (!inTransaction)
+    BeginTransaction();
+
+  if (isShow)
+    details.m_strPath = itemPath;
+  else
+  {
+    details.m_strFileNameAndPath = itemPath;
+    details.m_strPath = URIUtils::GetDirectory(itemPath);
+    details.m_basePath = CFileItem(itemPath, false).GetBaseMoviePath(false);
+    details.m_parentPathID = AddPath(URIUtils::GetParentPath(details.m_basePath));
+  }
+
+  const bool announceUpdates{m_announceUpdates};
+  m_announceUpdates = false;
+  switch (type)
+  {
+    case MEDIA::TYPE::MOVIE:
+      id = SetDetailsForMovie(details, artwork);
+      break;
+    case MEDIA::TYPE::TV_SHOW:
+      id = SetDetailsForTvShow({itemPath}, details, artwork, {});
+      break;
+    case MEDIA::TYPE::EPISODE:
+      id = SetDetailsForEpisode(details, artwork, idShow);
+      break;
+    default:
+      id = SetDetailsForMusicVideo(details, artwork);
+      break;
+  }
+  const bool added{id > 0 && (isShow || StorePlayStateEdit(itemPath, playState))};
+  m_announceUpdates = announceUpdates;
+
+  if (!added || (!inTransaction && !CommitTransaction()))
+  {
+    if (!inTransaction)
+      RollbackTransaction();
+    id = -1;
+    return AddResult::FAILED;
+  }
+  return AddResult::ADDED;
+}
+
+CVideoDatabase::EditResult CVideoDatabase::EditFilePlayState(const std::string& file,
+                                                             const PlayStateEdit& playState,
+                                                             CVideoInfoTag& details)
+{
+  if (!m_pDB || !m_pDS)
+    return EditResult::FAILED;
+
+  if (playState.lastPlayed && !playState.lastPlayed->IsValid() &&
+      !CanClearLastPlayed(file, playState.playCount))
+    return EditResult::REFUSED;
+
+  // Added before the transaction, as adding a file can ask the file system its date
+  const int idFile{AddFile(file)};
+  if (idFile < 0)
+    return EditResult::FAILED;
+
+  const bool inTransaction{m_pDB->in_transaction()};
+  if (!inTransaction)
+    BeginTransaction();
+  if (!StorePlayStateEdit(file, playState) || (!inTransaction && !CommitTransaction()))
+  {
+    if (!inTransaction)
+      RollbackTransaction();
+    return EditResult::FAILED;
+  }
+
+  switch (TryGetFileInfo("", details, idFile))
+  {
+    case GetResult::Ok:
+      return EditResult::DONE;
+    case GetResult::NotFound:
+      return EditResult::NOT_FOUND;
+    case GetResult::Error:
+      break;
+  }
+  return EditResult::FAILED;
+}
+
+void CVideoDatabase::SetSourceContent(const std::string& path,
+                                      const ADDON::ScraperPtr& scraper,
+                                      const KODI::VIDEO::SScanSettings& settings,
+                                      bool removeContent)
+{
+  KODI::VIDEO::SScanSettings stored;
+  GetScraperForPath(path, stored);
+  KODI::VIDEO::SScanSettings given{settings};
+  given.m_allExtAudio = stored.m_allExtAudio;
+
+  if (removeContent)
+    RemoveContentForPath(path);
+  SetScraperForPath(path, scraper, given);
+  CUtil::DeleteVideoDatabaseDirectoryCache();
+}
+
+bool CVideoDatabase::DescribePath(const std::string& path, CFileItem& item)
+{
+  if (path.empty())
+    return false;
+
+  // Only a library row describes the item; the files table knows anything ever played. A TV show
+  // is keyed on its folder, so it is only asked about for a folder.
+  CVideoInfoTag details;
+  if (GetMovieInfo(path, details) || GetEpisodeInfo(path, details) ||
+      GetMusicVideoInfo(path, details) ||
+      (item.IsFolder() && GetTvShowOfFolder(path, details, &item)))
+  {
+    item.SetFromVideoInfoTag(details);
+    item.SetDynPath(path);
+    return true;
+  }
+
+  CVideoInfoTag file;
+  if (!GetFileInfo(path, file))
+    return false;
+  AddFilePlayState(file, *item.GetVideoInfoTag());
+  if (item.GetPath().empty())
+    item.SetPath(path);
+  return true;
+}
+
+std::optional<CVideoDatabase::PlayState> CVideoDatabase::EpisodePlayState(
+    const PlayStateEdit& showEdit, const CVideoInfoTag& episode)
+{
+  const int count{showEdit.playCount.value_or(episode.GetPlayCount())};
+  if (!showEdit.lastPlayed && count == episode.GetPlayCount())
+    return std::nullopt;
+
+  return PlayState{count, showEdit.lastPlayed.value_or(episode.m_lastPlayed)};
+}
+
+void CVideoDatabase::AddFilePlayState(const CVideoInfoTag& file, CVideoInfoTag& details)
+{
+  details.m_iFileId = file.m_iFileId;
+  details.SetPlayCount(std::max(details.GetPlayCount(), file.GetPlayCount()));
+  if (file.m_lastPlayed.IsValid() &&
+      (!details.m_lastPlayed.IsValid() || details.m_lastPlayed < file.m_lastPlayed))
+    details.m_lastPlayed = file.m_lastPlayed;
+  if (!details.m_dateAdded.IsValid())
+    details.m_dateAdded = file.m_dateAdded;
+  if (!details.GetResumePoint().IsSet())
+    details.SetResumePoint(file.GetResumePoint());
+  if (!details.m_streamDetails.HasItems())
+    details.m_streamDetails = file.m_streamDetails;
+}
+
+bool CVideoDatabase::StorePlayStateEdit(const std::string& file, const PlayStateEdit& edit)
+{
+  CVideoInfoTag stored;
+  GetFileInfo(file, stored);
+  stored.m_strFileNameAndPath = file;
+
+  const int playCount{edit.playCount.value_or(stored.GetPlayCount())};
+  const CDateTime lastPlayed{edit.lastPlayed.value_or(stored.m_lastPlayed)};
+  if (playCount != stored.GetPlayCount() || lastPlayed != stored.m_lastPlayed)
+    SetPlayCount(CFileItem(stored), playCount, lastPlayed);
+
+  return !edit.resume || SetResumePoint(file, edit.resume->position, edit.resume->total);
+}
+
+bool CVideoDatabase::StoreEpisodesPlayState(int idShow, const PlayStateEdit& showEdit)
+{
+  if (!showEdit.playCount && !showEdit.lastPlayed)
+    return true;
+
+  // A show has no file of its own; its play count is its episodes'
+  CVideoDbUrl videoUrl;
+  if (!videoUrl.FromString(StringUtils::Format("{}{}/-1/", VIDEO::DB_PATH::TVSHOW_TITLES, idShow)))
+    return false;
+  videoUrl.AddOption("tvshowid", idShow);
+
+  CFileItemList episodes;
+  if (!GetEpisodesByWhere(videoUrl.ToString(), Filter(), episodes, false))
+    return false;
+
+  for (const auto& episode : episodes)
+  {
+    if (!episode->HasVideoInfoTag())
+      continue;
+
+    if (const std::optional<PlayState> state{
+            EpisodePlayState(showEdit, *episode->GetVideoInfoTag())})
+      SetPlayCount(*episode, state->playCount, state->lastPlayed);
+  }
+  return true;
+}
+
+bool CVideoDatabase::GetTvShowOfFolder(const std::string& path,
+                                       CVideoInfoTag& details,
+                                       CFileItem* item)
+{
+  const int idShow{GetTvShowId(path)};
+  if (idShow < 0)
+    return false;
+
+  std::vector<std::string> folders;
+  if (!GetPathsLinkedToTvShow(idShow, folders) ||
+      std::ranges::none_of(folders, [&path](const std::string& folder)
+                           { return URIUtils::PathEquals(folder, path, true); }))
+    return false;
+
+  if (!GetTvShowInfo(path, details, idShow, item))
+    return false;
+
+  // A show's details carry only the first of its folders
+  details.m_strPath = path;
+  return true;
 }
 
 int CVideoDatabase::SetDetailsForMovieSet(const CVideoInfoTag& details,
