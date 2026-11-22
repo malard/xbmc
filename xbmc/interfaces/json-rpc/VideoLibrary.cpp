@@ -21,7 +21,7 @@
 #include "messaging/ApplicationMessenger.h"
 #include "utils/ArtTypes.h"
 #include "utils/ContentNames.h"
-#include "utils/ItemProperties.h"
+#include "utils/DatabaseUtils.h"
 #include "utils/SortUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
@@ -29,8 +29,8 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoDbPaths.h"
 #include "video/VideoDbUrl.h"
+#include "video/VideoLibrary.h"
 #include "video/VideoLibraryQueue.h"
-#include "video/VideoUtils.h"
 #include "video/geometry/ContentGeometryScanner.h"
 #include "video/geometry/GeometrySettings.h"
 
@@ -334,7 +334,10 @@ JSONRPC_STATUS CVideoLibrary::SetItemProperties(const CVariant& parameterObject,
   const PlaybackUpdate before{infos.GetPlayCount(), infos.m_lastPlayed};
   const DetailsEdit edit = EditDetails(properties, infos, videodatabase);
   if (ClearsLastPlayed(properties) &&
-      EndsUpWatched(traits->kind, id, properties, infos, videodatabase))
+      !videodatabase.CanClearLastPlayed(traits->type, id,
+                                        ParameterNotNull(properties, "playCount")
+                                            ? std::optional{infos.GetPlayCount()}
+                                            : std::nullopt))
     return InvalidParams;
 
   JSONRPC_STATUS status{InternalError};
@@ -584,12 +587,8 @@ JSONRPC_STATUS CVideoLibrary::GetGenres(const CVariant& parameterObject, CVarian
     return InvalidParams;
   const auto& [idContent, strPath] = *listing;
 
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CFileItemList items;
-  if (!videodatabase.GetGenresNav(strPath, items, idContent))
+  if (!KODI::VIDEO::LIBRARY::GetGenresNav(strPath, items, idContent))
     return InternalError;
 
   /* need to set strTitle in each item*/
@@ -608,12 +607,8 @@ JSONRPC_STATUS CVideoLibrary::GetTags(const CVariant& parameterObject, CVariant&
     return InvalidParams;
   const auto& [idContent, strPath] = *listing;
 
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   CFileItemList items;
-  if (!videodatabase.GetTagsNav(strPath, items, idContent))
+  if (!KODI::VIDEO::LIBRARY::GetTagsNav(strPath, items, idContent))
     return InternalError;
 
   /* need to set strTitle in each item*/
@@ -703,12 +698,7 @@ JSONRPC_STATUS CVideoLibrary::SetTVShowDetails(int id, const CVariant & properti
       const auto update = EpisodePlaybackUpdate(infos, updatePlaycount, updateLastplayed,
                                                 *episode->GetVideoInfoTag());
       if (update)
-      {
         videodatabase.SetPlayCount(*episode, update->playCount, update->lastPlayed);
-        if (update->playCount != episode->GetVideoInfoTag()->GetPlayCount())
-          KODI::VIDEO::UTILS::AnnouncePlayCountChanged(
-              episode->GetVideoInfoTag()->m_strFileNameAndPath, update->playCount);
-      }
     }
     videodatabase.CommitTransaction();
   }
@@ -878,12 +868,15 @@ JSONRPC_STATUS CVideoLibrary::Scan(const CVariant& parameterObject, CVariant& re
     // a directory outside every video source could never be found by the scan
     directory = CVideoDatabase::ToStoredPath(directory);
 
-    CVideoDatabase videodatabase;
-    if (!videodatabase.Open())
+    const std::optional<bool> isSource{KODI::VIDEO::LIBRARY::WithDatabase(
+        [&directory](CVideoDatabase& db) -> std::optional<bool>
+        {
+          std::string sourcePath;
+          return db.GetSourcePath(directory, sourcePath);
+        })};
+    if (!isSource)
       return InternalError;
-
-    std::string sourcePath;
-    if (!videodatabase.GetSourcePath(directory, sourcePath))
+    if (!*isSource)
       return Fail(result, NotFound, Reason::NoSuchSource,
                   Target("directory", parameterObject["directory"]));
   }
@@ -983,13 +976,9 @@ JSONRPC_STATUS CVideoLibrary::Clean(const CVariant& parameterObject, CVariant& r
     // a directory that resolves to no library path leaves the clean nothing to touch
     const std::string contentParam = parameterObject["content"].asString();
 
-    CVideoDatabase videodatabase;
-    if (!videodatabase.Open())
-      return InternalError;
-
     std::set<int> paths;
-    if (!videodatabase.GetPathsForCleaning(directory, contentParam == "video" ? "" : contentParam,
-                                           paths))
+    if (!KODI::VIDEO::LIBRARY::GetPathsForCleaning(
+            directory, contentParam == "video" ? "" : contentParam, paths))
       return InternalError;
     if (paths.empty())
       return Fail(result, NotFound, Reason::NotInLibrary,
@@ -1061,10 +1050,7 @@ bool CVideoLibrary::GetTvShowOfFolder(CVideoDatabase& videodatabase,
   return true;
 }
 
-bool CVideoLibrary::FillFileItem(
-    const std::string& strFilename,
-    std::shared_ptr<CFileItem>& item,
-    const CVariant& parameterObject /* = CVariant(CVariant::VariantTypeArray) */)
+bool CVideoLibrary::FillFileItem(const std::string& strFilename, std::shared_ptr<CFileItem>& item)
 {
   CVideoDatabase videodatabase;
   if (strFilename.empty())
@@ -1197,31 +1183,12 @@ JSONRPC_STATUS CVideoLibrary::HandleItems(const char *idProperty, CFileItemList 
 
 JSONRPC_STATUS CVideoLibrary::RemoveVideo(const CVariant &parameterObject)
 {
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
   // each Remove method's schema requires its kind's id
   const KindTraits& traits = *TraitsOfIdIn(parameterObject);
   const int id = static_cast<int>(parameterObject[traits.id].asInteger());
-  switch (traits.kind)
-  {
-    case VideoKind::Movie:
-      if (!videodatabase.DeleteMovie(id))
-      return InternalError;
-      break;
-    case VideoKind::TVShow:
-      videodatabase.DeleteTvShow(id);
-      break;
-    case VideoKind::Episode:
-      videodatabase.DeleteEpisode(id);
-      break;
-    case VideoKind::MusicVideo:
-      videodatabase.DeleteMusicVideo(id);
-      break;
-    default:
-      break;
-  }
+  if (!KODI::VIDEO::LIBRARY::DeleteItem(DatabaseUtils::VideoContentTypeFromMediaType(traits.type),
+                                        id))
+    return InternalError;
 
   CJSONRPCUtils::NotifyItemUpdated();
   return ACK;
@@ -1304,55 +1271,11 @@ void CVideoLibrary::StorePlaybackEdit(const CVariant& parameterObject,
                                       CVideoDatabase& videodatabase)
 {
   if (before.playCount != details.GetPlayCount() || before.lastPlayed != details.m_lastPlayed)
-  {
     videodatabase.SetPlayCount(CFileItem(details), details.GetPlayCount(), details.m_lastPlayed);
-    if (before.playCount != details.GetPlayCount())
-      KODI::VIDEO::UTILS::AnnouncePlayCountChanged(details.m_strFileNameAndPath,
-                                                   details.GetPlayCount());
-  }
 
-  UpdateResumePoint(parameterObject, details, videodatabase);
-}
-
-bool CVideoLibrary::EndsUpWatched(VideoKind kind,
-                                  int id,
-                                  const CVariant& properties,
-                                  const CVideoInfoTag& details,
-                                  CVideoDatabase& videodatabase)
-{
-  if (kind != VideoKind::TVShow || ParameterNotNull(properties, "playCount"))
-    return details.GetPlayCount() > 0;
-
-  CVideoInfoTag show;
-  CFileItem showItem;
-  return videodatabase.GetTvShowInfo("", show, id, &showItem) &&
-         showItem.GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger() > 0;
-}
-
-void CVideoLibrary::UpdateResumePoint(const CVariant &parameterObject, CVideoInfoTag &details, CVideoDatabase &videodatabase)
-{
-  if (!parameterObject["resume"].isNull())
-  {
-    double position = parameterObject["resume"]["position"].asDouble();
-    if (position == 0.0)
-    {
-      videodatabase.ClearBookMarksOfFile(details.m_strFileNameAndPath, CBookmark::RESUME);
-      KODI::VIDEO::UTILS::AnnounceResumePointChanged(details.m_strFileNameAndPath, {});
-    }
-    else
-    {
-      CBookmark bookmark;
-      double total = parameterObject["resume"]["total"].asDouble();
-      if (total <= 0.0 && !videodatabase.GetResumeBookMark(details.m_strFileNameAndPath, bookmark))
-        bookmark.totalTimeInSeconds = details.m_streamDetails.GetVideoDuration();
-      else
-        bookmark.totalTimeInSeconds = total;
-
-      bookmark.timeInSeconds = position;
-      videodatabase.AddBookMarkToFile(details.m_strFileNameAndPath, bookmark, CBookmark::RESUME);
-      KODI::VIDEO::UTILS::AnnounceResumePointChanged(details.m_strFileNameAndPath, bookmark);
-    }
-  }
+  if (const CVariant& resume{parameterObject["resume"]}; !resume.isNull())
+    videodatabase.SetResumePoint(details.m_strFileNameAndPath, resume["position"].asDouble(),
+                                 resume["total"].asDouble());
 }
 
 void CVideoLibrary::UpdateVideoTagField(const CVariant& parameterObject,

@@ -43,11 +43,11 @@ JSONRPC_STATUS CTextureOperations::GetTextures(const CVariant& parameterObject, 
       xspObj = filter;
 
     // decipher the rules
-    CDatabaseQueryRuleCombination rule;
-    if (!rule.Load(xspObj, &db))
+    CTextureRuleGroup rule;
+    if (!rule.Load(xspObj))
       return InvalidParams;
 
-    const std::optional<std::string> where = rule.GetWhereClause(db, "");
+    const std::optional<std::string> where = rule.GetWhereClause(db, {});
     if (!where)
     {
       return InvalidParams;

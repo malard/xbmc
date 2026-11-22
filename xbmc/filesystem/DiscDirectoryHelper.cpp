@@ -31,6 +31,7 @@
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
+#include "video/VideoLibrary.h"
 #include "video/VideoManagerTypes.h"
 #include "video/VideoUtils.h"
 
@@ -4032,14 +4033,8 @@ void CDiscDirectoryHelper::AddRootOptions(const CURL& url,
 
 std::vector<CVideoInfoTag> CDiscDirectoryHelper::GetEpisodesOnDisc(const CURL& url)
 {
-  CVideoDatabase database;
-  if (!database.Open())
-  {
-    CLog::LogF(LOGERROR, "Failed to open video database");
-    return {};
-  }
   std::vector<CVideoInfoTag> episodesOnDisc;
-  database.GetEpisodesByBlurayPath(url.Get(), episodesOnDisc);
+  KODI::VIDEO::LIBRARY::GetEpisodesByBlurayPath(url.Get(), episodesOnDisc);
   std::ranges::sort(episodesOnDisc,
                     [](const CVideoInfoTag& i, const CVideoInfoTag& j)
                     {
@@ -4054,7 +4049,7 @@ namespace
 {
 //! \brief Show which playlists are already allocated (and to what)
 void LabelUsedPlaylists(CFileItemList& items,
-                        const std::vector<CVideoDatabase::PlaylistInfo>& usedPlaylists)
+                        const std::vector<KODI::VIDEO::DiscPlaylist>& usedPlaylists)
 {
   for (const auto& item : items)
   {
@@ -4065,7 +4060,7 @@ void LabelUsedPlaylists(CFileItemList& items,
     // Several episodes can share one playlist, and choosing it detaches all of them, so all of
     // them are named
     auto owners{usedPlaylists |
-                std::views::filter([playlist](const CVideoDatabase::PlaylistInfo& used)
+                std::views::filter([playlist](const KODI::VIDEO::DiscPlaylist& used)
                                    { return used.playlist == playlist; })};
     if (std::ranges::distance(owners) == 0)
       continue;
@@ -4075,7 +4070,7 @@ void LabelUsedPlaylists(CFileItemList& items,
     // An episode names itself, where a movie's asset is one of a known few and is named here so
     // that it can be translated as a whole phrase
     std::string label;
-    if (const CVideoDatabase::PlaylistInfo & first{*owners.begin()};
+    if (const KODI::VIDEO::DiscPlaylist& first{*owners.begin()};
         first.mediaType == VideoDbContentType::MOVIES)
     {
       if (first.itemType == VideoAssetType::EXTRA)
@@ -4086,7 +4081,7 @@ void LabelUsedPlaylists(CFileItemList& items,
     else
     {
       std::vector<std::string> titles;
-      for (const CVideoDatabase::PlaylistInfo& owner : owners)
+      for (const KODI::VIDEO::DiscPlaylist& owner : owners)
         titles.emplace_back(owner.title);
       std::ranges::sort(titles);
       label = StringUtils::Format(strings.Get(25021), StringUtils::Join(titles, ", "));
@@ -4249,13 +4244,7 @@ bool CDiscDirectoryHelper::GetOrShowPlaylistSelection(const CFileItem& item,
   }
 
   // Get playlists that are already used (to avoid duplicates in file table)
-  std::vector<CVideoDatabase::PlaylistInfo> usedPlaylists{};
-  CVideoDatabase database;
-  if (!database.Open())
-  {
-    CLog::LogF(LOGERROR, "Failed to open video database");
-    return false;
-  }
+  std::vector<KODI::VIDEO::DiscPlaylist> usedPlaylists{};
 
   // Add what the scraper knows to the bluray:// url, as CBlurayDirectory needs it to work out
   // which playlist an episode is. The duration narrows the candidates; the title is the only
@@ -4324,14 +4313,14 @@ bool CDiscDirectoryHelper::GetOrShowPlaylistSelection(const CFileItem& item,
       // Playlists used by other items are only of interest if this choice will be saved, as
       // choosing one of them reassigns the item it belongs to. The version manager saves its
       // (version typed) items itself, but only when it asked for the selection.
-      std::vector<CVideoDatabase::PlaylistInfo> reusablePlaylists;
+      std::vector<KODI::VIDEO::DiscPlaylist> reusablePlaylists;
       if (KODI::VIDEO::UTILS::CanSaveDiscPlaylist(item) ||
           (item.HasVideoInfoTag() &&
            item.GetVideoInfoTag()->GetMediaType() == KODI::MEDIA::TYPE::VIDEO_VERSION &&
            item.GetProperty(KODI::ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION).asBoolean(false)))
       {
-        usedPlaylists =
-            database.GetPlaylistsByPath(URIUtils::GetBlurayPlaylistPath(item.GetDynPath()));
+        usedPlaylists = KODI::VIDEO::LIBRARY::GetPlaylistsByPath(
+            URIUtils::GetBlurayPlaylistPath(item.GetDynPath()));
 
         // The playlist this item already uses is labelled like any other, but choosing it again
         // is no change and must not go through the reassignment
@@ -4340,7 +4329,7 @@ bool CDiscDirectoryHelper::GetOrShowPlaylistSelection(const CFileItem& item,
             regex.RegFind(item.GetDynPath()) != -1)
         {
           const int playlist{std::stoi(regex.GetMatch(1))};
-          std::erase_if(reusablePlaylists, [&playlist](const CVideoDatabase::PlaylistInfo& p)
+          std::erase_if(reusablePlaylists, [&playlist](const KODI::VIDEO::DiscPlaylist& p)
                         { return p.playlist == playlist; });
         }
       }

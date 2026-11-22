@@ -24,9 +24,9 @@ struct LABEL_MASKS;
 
 class TiXmlElement;
 
-namespace KODI::PLAYLIST
+namespace KODI::MEDIA
 {
-class CSmartPlaylist;
+class CLibraryQuery;
 }
 
 // base class for all media windows
@@ -216,7 +216,7 @@ protected:
   int m_iLastControl;
   std::string m_startDirectory;
 
-  const std::unique_ptr<KODI::PLAYLIST::CSmartPlaylist> m_filter;
+  const std::unique_ptr<KODI::MEDIA::CLibraryQuery> m_filter;
   bool m_canFilterAdvanced;
   /*! \brief Contains the path used for filtering (including any active filter)
 

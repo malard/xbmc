@@ -11,8 +11,8 @@
 #include "URL.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
-#include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoLibrary.h"
 
 using namespace XFILE;
 
@@ -39,11 +39,7 @@ CVideoInfoTag CVideoDatabaseFile::GetVideoTag(const CURL& url)
   if (type == VideoDbContentType::UNKNOWN)
     return tag;
 
-  CVideoDatabase videoDatabase;
-  if (!videoDatabase.Open())
-    return tag;
-
-  tag = videoDatabase.GetDetailsByTypeAndId(type, idDb);
+  tag = KODI::VIDEO::LIBRARY::GetDetailsByTypeAndId(type, idDb);
 
   return tag;
 }
@@ -88,12 +84,8 @@ std::string CVideoDatabaseFile::TranslatePath(const CURL& url)
   if (type == VideoDbContentType::UNKNOWN)
     return "";
 
-  CVideoDatabase videoDatabase;
-  if (!videoDatabase.Open())
-    return "";
-
   std::string realFilename;
-  videoDatabase.GetFilePathById(idDb, realFilename, type);
+  KODI::VIDEO::LIBRARY::GetFilePathById(idDb, realFilename, type);
 
   return realFilename;
 }

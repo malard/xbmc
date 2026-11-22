@@ -46,7 +46,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
+#include "video/VideoLibrary.h"
 
 #ifdef HAS_CDDA_RIPPER
 #include "cdrip/CDDARipper.h"
@@ -252,15 +252,10 @@ bool CAutorun::RunDisc(IDirectory* pDir,
           // See if this disc has been played before and playlist is available
           if (!item->GetVideoInfoTag()->m_strFileNameAndPath.empty())
           {
-            CVideoDatabase db;
-            if (db.Open())
-            {
-              const std::string path{
-                  db.GetRemovableBlurayPath(item->GetVideoInfoTag()->m_strFileNameAndPath)};
-              if (!path.empty())
-                item->GetVideoInfoTag()->SetFileNameAndPath(path);
-              db.Close();
-            }
+            const std::string path{CServiceBroker::GetMediaManager().GetRemovableBlurayPlaylist(
+                item->GetVideoInfoTag()->m_strFileNameAndPath)};
+            if (!path.empty())
+              item->GetVideoInfoTag()->SetFileNameAndPath(path);
           }
           if (options.forceSelection)
             item->SetProperty(ITEM::PROPERTY::FORCE_PLAYLIST_SELECTION, true);
@@ -538,10 +533,8 @@ bool CAutorun::CanResumePlayDVD(const std::string& path)
   std::string strUniqueId = CServiceBroker::GetMediaManager().GetDiskUniqueId(path);
   if (!strUniqueId.empty())
   {
-    CVideoDatabase dbs;
-    dbs.Open();
     CBookmark bookmark;
-    if (dbs.GetResumeBookMark(strUniqueId, bookmark))
+    if (LIBRARY::GetDiscResumeBookMark(strUniqueId, bookmark))
       return true;
   }
   return false;

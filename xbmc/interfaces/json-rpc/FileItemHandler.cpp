@@ -21,10 +21,10 @@
 #include "filesystem/Directory.h"
 #include "imagefiles/ImageFileURL.h"
 #include "interfaces/AnnouncementManager.h"
+#include "media/LibraryQuery.h"
 #include "music/MusicThumbLoader.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
-#include "playlists/SmartPlayList.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroupMember.h"
@@ -42,7 +42,7 @@
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
-#include "video/VideoDatabase.h"
+#include "video/VideoDbContentType.h"
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
@@ -128,7 +128,7 @@ bool GetXspFiltering(const std::string& type, const CVariant& filter, std::strin
     xspObj["rules"] = filter;
   }
 
-  KODI::PLAYLIST::CSmartPlaylist playlist;
+  KODI::MEDIA::CLibraryQuery playlist;
   return playlist.Load(xspObj) && playlist.SaveAsJson(xsp, false);
 }
 } // unnamed namespace

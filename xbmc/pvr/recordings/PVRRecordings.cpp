@@ -314,7 +314,8 @@ bool CPVRRecordings::ChangeRecordingsPlayCount(const std::shared_ptr<CPVRRecordi
       // Clear resume bookmark
       if (recording->GetPlayCount() > 0)
       {
-        db.ClearBookMarksOfFile(recording->m_strFileNameAndPath, CBookmark::RESUME);
+        db.ClearBookMarksOfFile(recording->m_strFileNameAndPath, CBookmark::RESUME,
+                                recording->GetResumePoint().IsPartWay());
         recording->SetResumePoint(CBookmark());
       }
 
@@ -347,7 +348,8 @@ bool CPVRRecordings::ResetResumePoint(const std::shared_ptr<CPVRRecording>& reco
     {
       bResult = true;
 
-      db.ClearBookMarksOfFile(recording->m_strFileNameAndPath, CBookmark::RESUME);
+      db.ClearBookMarksOfFile(recording->m_strFileNameAndPath, CBookmark::RESUME,
+                              recording->GetResumePoint().IsPartWay());
       recording->SetResumePoint(CBookmark());
 
       CServiceBroker::GetPVRManager().PublishEvent(PVREvent::RecordingsInvalidated);
@@ -358,25 +360,29 @@ bool CPVRRecordings::ResetResumePoint(const std::shared_ptr<CPVRRecording>& reco
 
 bool CPVRRecordings::DeleteRecording(const std::shared_ptr<CPVRRecording>& recording)
 {
-  CVideoDatabase& db = GetVideoDatabase();
-  if (db.IsOpen() && recording->Delete())
   {
-    recording->DeleteMetadata(db);
-    return true;
+    std::unique_lock lock(m_critSection);
+    if (!GetVideoDatabase().IsOpen())
+      return false;
   }
-  return false;
+
+  if (!recording->Delete())
+    return false;
+
+  // The connection is shared with the updates from the backend
+  std::unique_lock lock(m_critSection);
+  recording->DeleteMetadata(GetVideoDatabase());
+  return true;
 }
 
 CVideoDatabase& CPVRRecordings::GetVideoDatabase()
 {
   if (!m_database)
-  {
     m_database = std::make_unique<CVideoDatabase>();
-    m_database->Open();
 
-    if (!m_database->IsOpen())
-      CLog::LogF(LOGERROR, "Failed to open the video database");
-  }
+  // The database may not be reachable yet when PVR starts
+  if (!m_database->IsOpen() && !m_database->Open())
+    CLog::LogF(LOGERROR, "Failed to open the video database");
 
   return *m_database;
 }

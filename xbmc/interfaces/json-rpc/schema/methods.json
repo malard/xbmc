@@ -2249,7 +2249,7 @@
       },
       {
         "name": "lastPlayed",
-        "description": "Setting a valid lastPlayed without a playCount will force playCount to 1.",
+        "description": "An empty string clears it, which a file left watched refuses with InvalidParams. It never changes the play count.",
         "schema": {
           "$ref": "#/$defs/Optional.String"
         }

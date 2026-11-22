@@ -14,10 +14,12 @@
 #include "XBDateTime.h"
 #include "guilib/test/TestGUIStubs.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/json-rpc/VideoLibrary.h"
 #include "music/MusicDatabase.h"
 #include "utils/URIUtils.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoManagerTypes.h"
 
 #include <algorithm>
 #include <chrono>
@@ -653,6 +655,23 @@ TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAWatchedMusicVideo
   EXPECT_EQ(std::pair(2, std::string(LAST_PLAYED)), Played(file));
   EXPECT_EQ(title, TitleOf("musicvideo", id));
   m_videos.DeleteMusicVideo(id);
+}
+
+// Player.GetItem relies on this for a library item, loading nothing more itself
+TEST_F(TestLibraryItemsInDatabase, AMovieVersionIsFilledWithItsDetailsFromItsOwnFile)
+{
+  const std::string versionFile{"/jsonrpc-test/library/Set Member (2001) Director's Cut.mkv"};
+  const int sourceId{AddMovie(versionFile, "")};
+  ASSERT_GT(sourceId, 0);
+  const int idFile{m_videos.GetFileIdByMovie(sourceId)};
+  ASSERT_TRUE(m_videos.ConvertVideoToVersion(VideoDbContentType::MOVIES, sourceId, m_movieId, -1,
+                                             VideoAssetType::VERSION));
+
+  auto item{std::make_shared<CFileItem>(versionFile, false)};
+  ASSERT_TRUE(JSONRPC::CVideoLibrary::FillFileItem(versionFile, item));
+  EXPECT_EQ(m_movieId, item->GetVideoInfoTag()->m_iDbId);
+  EXPECT_EQ(idFile, item->GetVideoInfoTag()->m_iFileId);
+  EXPECT_EQ(m_setId, item->GetVideoInfoTag()->m_set.GetID());
 }
 
 TEST_F(TestLibraryItemsInDatabase, ClearingTheLastPlayedDateOfAShowWithAWatchedEpisodeIsRefused)

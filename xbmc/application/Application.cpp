@@ -153,6 +153,7 @@
 #include "utils/Variant.h"
 #include "utils/log.h"
 #include "video/PlayerController.h"
+#include "video/VideoLibrary.h"
 #include "video/VideoLibraryQueue.h"
 #include "video/dialogs/GUIDialogVideoBookmarks.h"
 #include "video/geometry/ContentGeometryScanner.h"
@@ -1211,9 +1212,7 @@ bool CApplication::OnAction(const CAction &action)
     {
       tag.m_iUserRating = *rating;
 
-      CVideoDatabase db;
-      if (db.Open())
-        db.SetVideoUserRating(tag.m_iDbId, tag.m_iUserRating, tag.GetMediaType());
+      VIDEO::LIBRARY::SetVideoUserRating(tag.m_iDbId, tag.m_iUserRating, tag.GetMediaType());
       ShowRatingChanged(playing);
     }
     return true;

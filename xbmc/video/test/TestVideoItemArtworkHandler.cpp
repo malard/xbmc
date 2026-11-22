@@ -440,3 +440,31 @@ TEST_F(TestVideoItemArtworkHandler, AnEpisodeOfSeveralHasNoneOfThePlainArt)
   EXPECT_EQ("", LocalArt(episodes[2], ART::TYPE::THUMB));
   EXPECT_EQ(thumb9, LocalArt(episodes[4], ART::TYPE::THUMB));
 }
+
+TEST_F(TestVideoItemArtworkHandler, ChoosingTheEmbeddedFanartMakesItTheFanart)
+{
+  CVideoInfoTag tag;
+  tag.m_strTitle = "Film";
+  tag.m_strFileNameAndPath = File(m_root, "film.mkv");
+  tag.m_strPath = m_root;
+  tag.m_fanart.AddFanart("http://example.com/fanart.jpg", "", "");
+  tag.m_fanart.Pack();
+  const int idMovie{Library().SetDetailsForMovie(tag, ART::Artwork{})};
+  ASSERT_GT(idMovie, 0);
+  tag.m_iDbId = idMovie;
+  tag.SetMediaType(MEDIA::TYPE::MOVIE);
+  const auto item{std::make_shared<CFileItem>(tag)};
+  item->SetPath(StringUtils::Format("videodb://movies/titles/{}", idMovie));
+
+  const std::string embedded{"image://video@film.mkv/"};
+  VIDEO::IVideoItemArtworkHandlerFactory::Create(item, MEDIA::NameOf(MEDIA::TYPE::MOVIE),
+                                                 ART::TYPE::FANART)
+      ->UpdateEmbeddedArt(embedded);
+
+  CVideoInfoTag stored;
+  const bool found{Library().GetMovieInfo("", stored, idMovie)};
+  Library().DeleteMovie(idMovie);
+  ASSERT_TRUE(found);
+  stored.m_fanart.Unpack();
+  EXPECT_EQ(embedded, stored.m_fanart.GetImageURL());
+}

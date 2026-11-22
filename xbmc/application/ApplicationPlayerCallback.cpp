@@ -38,12 +38,12 @@
 #include "storage/MediaManager.h"
 #include "utils/ItemProperties.h"
 #include "utils/SaveFileStateJob.h"
-#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
 #include "video/VideoInfoTag.h"
+#include "video/VideoLibrary.h"
 #include "video/VideoUtils.h"
 #include "video/geometry/ContentGeometryRecord.h"
 
@@ -234,7 +234,7 @@ bool UpdateDiscStackBookmark(CBookmark& bookmark,
         // Not played main title of this part yet
         bookmark.timeInSeconds = bookmark.partNumber;
         bookmark.totalTimeInSeconds = stackHelper->GetTotalPartNumbers();
-        bookmark.playerState = StringUtils::Format("<nextpart>{}</nextpart>", bookmark.partNumber);
+        bookmark.playerState = VIDEO::UTILS::MakeNextPartPlayerState(bookmark.partNumber, "");
       }
       else
       {
@@ -258,7 +258,7 @@ bool UpdateDiscStackBookmark(CBookmark& bookmark,
         bookmark.partNumber += 1;
         bookmark.timeInSeconds = bookmark.partNumber;
         bookmark.totalTimeInSeconds = stackHelper->GetTotalPartNumbers();
-        bookmark.playerState = StringUtils::Format("<nextpart>{}</nextpart>", bookmark.partNumber);
+        bookmark.playerState = VIDEO::UTILS::MakeNextPartPlayerState(bookmark.partNumber, "");
       }
     }
   }
@@ -329,7 +329,6 @@ void UpdateStackAndItem(const CFileItem& file,
     if (!oldStackPath.empty())
     {
       fileItem.SetProperty(ITEM::PROPERTY::NEW_STACK_PATH, true);
-      fileItem.SetProperty("old_stack_path", oldStackPath);
     }
 
     // Also update video info tag with total time of the stack (as this is read for the library display)
@@ -583,8 +582,9 @@ void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
     CLog::Log(LOGDEBUG, "Loading settings for {}", CURL::GetRedacted(fileItem.GetPath()));
 
     // Load stored settings if they exist, otherwise use default
+    const int idFile{dbs.GetFileId(fileItem)};
     CVideoSettings vs;
-    if (!dbs.GetVideoSettings(fileItem, vs))
+    if (!dbs.GetVideoSettings(idFile, vs))
       vs = CMediaSettings::GetInstance().GetDefaultVideoSettings();
 
     auto& components = CServiceBroker::GetAppComponents();
@@ -592,7 +592,7 @@ void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
     appPlayer->SetVideoSettings(vs);
 
     const VIDEO::GEOMETRY::ContentGeometryLookup cached{
-        dbs.GetContentGeometryOfFile(dbs.GetFileId(fileItem), fileItem.GetDynPath())};
+        dbs.GetContentGeometryOfFile(idFile, fileItem.GetDynPath())};
 
     components.GetComponent<CApplicationContentGeometry>()->SetFileInputs(cached);
 
@@ -603,17 +603,12 @@ void CApplicationPlayerCallback::RequestVideoSettings(const CFileItem& fileItem)
 void CApplicationPlayerCallback::StoreVideoSettings(const CFileItem& fileItem,
                                                     const CVideoSettings& vs)
 {
-  CVideoDatabase dbs;
-  if (dbs.Open())
+  if (vs != CMediaSettings::GetInstance().GetDefaultVideoSettings())
   {
-    if (vs != CMediaSettings::GetInstance().GetDefaultVideoSettings())
-    {
-      dbs.SetVideoSettings(fileItem, vs);
-    }
-    else
-    {
-      dbs.EraseVideoSettings(fileItem);
-    }
-    dbs.Close();
+    VIDEO::LIBRARY::SetVideoSettings(fileItem, vs);
+  }
+  else
+  {
+    VIDEO::LIBRARY::EraseVideoSettings(fileItem);
   }
 }

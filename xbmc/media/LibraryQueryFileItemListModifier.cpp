@@ -6,12 +6,12 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "SmartPlaylistFileItemListModifier.h"
+#include "LibraryQueryFileItemListModifier.h"
 
 #include "FileItem.h"
 #include "FileItemList.h"
 #include "URL.h"
-#include "playlists/SmartPlayList.h"
+#include "media/LibraryQuery.h"
 #include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 
@@ -19,15 +19,15 @@
 
 #define URL_OPTION_XSP              "xsp"
 
-namespace KODI::PLAYLIST
+namespace KODI::MEDIA
 {
 
-bool CSmartPlaylistFileItemListModifier::CanModify(const CFileItemList &items) const
+bool CLibraryQueryFileItemListModifier::CanModify(const CFileItemList& items) const
 {
   return !GetUrlOption(items.GetPath(), URL_OPTION_XSP).empty();
 }
 
-bool CSmartPlaylistFileItemListModifier::Modify(CFileItemList &items) const
+bool CLibraryQueryFileItemListModifier::Modify(CFileItemList& items) const
 {
   if (items.HasProperty(ITEM::PROPERTY::SORT_ORDER))
   {
@@ -39,7 +39,7 @@ bool CSmartPlaylistFileItemListModifier::Modify(CFileItemList &items) const
     return false;
 
   // check for smartplaylist-specific sorting information
-  CSmartPlaylist xsp;
+  CLibraryQuery xsp;
   if (!xsp.LoadFromJson(xspOption))
     return false;
 
@@ -50,7 +50,8 @@ bool CSmartPlaylistFileItemListModifier::Modify(CFileItemList &items) const
   return true;
 }
 
-std::string CSmartPlaylistFileItemListModifier::GetUrlOption(const std::string &path, const std::string &option)
+std::string CLibraryQueryFileItemListModifier::GetUrlOption(const std::string& path,
+                                                            const std::string& option)
 {
   if (path.empty() || option.empty())
     return StringUtils::Empty;
@@ -59,4 +60,4 @@ std::string CSmartPlaylistFileItemListModifier::GetUrlOption(const std::string &
   return url.GetOption(option);
 }
 
-} // namespace KODI::PLAYLIST
+} // namespace KODI::MEDIA

@@ -670,9 +670,9 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       database.GetArtist(idArtist, artist);
       tag.m_strPlot = artist.strBiography;
       item.SetProperty(ITEM::PROPERTY::ARTIST_MUSICID, idArtist);
+      if (database.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artwork))
+        item.SetArt(artwork);
     }
-    if (database.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artwork))
-      item.SetArt(artwork);
     database.Close();
   }
 
@@ -704,8 +704,7 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
       //! @todo Is m_artist set other than musicvideo? Remove this fallback if not.
       CMusicDatabase database;
       database.Open();
-      int idArtist = database.GetArtistByName(item.GetLabel());
-      if (database.GetArtForItem(idArtist, MEDIA::TYPE::ARTIST, artwork))
+      if (database.GetArtistArtByName(item.GetLabel(), artwork))
         item.SetArt(artwork);
       database.Close();
     }
