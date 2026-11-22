@@ -207,20 +207,9 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
 
   if (listing == Listing::RecentlyAdded)
   {
-    const std::optional<bool> listed{Ask(
-        [kind, details, &items](CVideoDatabase& db)
-        {
-          if (kind == VideoKind::Movie)
-            return db.GetRecentlyAddedMoviesNav(KODI::VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES, items,
-                                                0, details);
-          if (kind == VideoKind::Episode)
-            return db.GetRecentlyAddedEpisodesNav(KODI::VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES,
-                                                  items, 0, details);
-          if (kind == VideoKind::MusicVideo)
-            return db.GetRecentlyAddedMusicVideosNav(
-                KODI::VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS, items, 0, details);
-          return false;
-        })};
+    const std::optional<bool> listed{
+        Ask([&traits, details, &items](CVideoDatabase& db)
+            { return db.GetRecentlyAdded(traits.type, items, 0, details); })};
     if (!listed.value_or(false))
       return InternalError;
 
@@ -301,17 +290,9 @@ JSONRPC_STATUS CVideoLibrary::Query(VideoKind kind,
   }
 
   const std::string url = videoUrl.ToString();
-  const std::optional<bool> listed{Ask(
-      [kind, &url, &items, &sorting, details](CVideoDatabase& db)
-      {
-        if (kind == VideoKind::Movie)
-          return db.GetMoviesByWhere(url, CDatabase::Filter(), items, sorting, details);
-        if (kind == VideoKind::TVShow)
-          return db.GetTvShowsByWhere(url, CDatabase::Filter(), items, sorting, details);
-        if (kind == VideoKind::Episode)
-          return db.GetEpisodesByWhere(url, CDatabase::Filter(), items, false, sorting, details);
-        return db.GetMusicVideosByWhere(url, CDatabase::Filter(), items, true, sorting, details);
-      })};
+  const std::optional<bool> listed{
+      Ask([&traits, &url, &items, &sorting, details](CVideoDatabase& db)
+          { return db.GetSortedVideos(traits.type, url, sorting, items, {}, details); })};
   if (!listed)
     return InternalError;
   if (!*listed)
