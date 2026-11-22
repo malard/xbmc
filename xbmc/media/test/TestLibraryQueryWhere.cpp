@@ -7,7 +7,6 @@
  */
 
 #include "dbwrappers/test/DatabaseTestUtils.h"
-#include "filesystem/File.h"
 #include "media/LibraryQuery.h"
 #include "music/MusicDatabase.h"
 #include "video/VideoDatabase.h"
@@ -47,23 +46,14 @@ class TestLibraryQueryWhere : public ::testing::TestWithParam<WhereCase>
 protected:
   static void SetUpTestSuite()
   {
-    s_music = std::make_unique<CMusicDatabase>();
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-              s_music->Connect(MUSIC_DB_NAME, TestDatabaseSettings(), true));
-    s_video = std::make_unique<CVideoDatabase>();
-    ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-              s_video->Connect(VIDEO_DB_NAME, TestDatabaseSettings(), true));
+    s_music = std::make_unique<CConnectedTestDatabase<CMusicDatabase>>(MUSIC_DB_NAME);
+    s_video = std::make_unique<CConnectedTestDatabase<CVideoDatabase>>(VIDEO_DB_NAME);
   }
 
   static void TearDownTestSuite()
   {
-    const std::string folder{TestDatabaseSettings().host};
-    s_music->Close();
     s_music.reset();
-    XFILE::CFile::Delete(folder + MUSIC_DB_NAME + ".db");
-    s_video->Close();
     s_video.reset();
-    XFILE::CFile::Delete(folder + VIDEO_DB_NAME + ".db");
   }
 
   static std::optional<std::string> WhereOf(const WhereCase& c)
@@ -84,17 +74,17 @@ protected:
     const MEDIA::LIBRARY_QUERY::Source source{
         MEDIA::LIBRARY_QUERY::SourcesOf(playlist.GetType()).front()};
     const bool music{source.section == MEDIA::MediaSection::MUSIC};
-    return playlist.GetWhereClause(music ? static_cast<const CDatabase&>(*s_music)
-                                         : static_cast<const CDatabase&>(*s_video),
+    return playlist.GetWhereClause(music ? static_cast<const CDatabase&>(s_music->Get())
+                                         : static_cast<const CDatabase&>(s_video->Get()),
                                    source.itemType, c.useOriginalDate);
   }
 
-  static std::unique_ptr<CMusicDatabase> s_music;
-  static std::unique_ptr<CVideoDatabase> s_video;
+  static std::unique_ptr<CConnectedTestDatabase<CMusicDatabase>> s_music;
+  static std::unique_ptr<CConnectedTestDatabase<CVideoDatabase>> s_video;
 };
 
-std::unique_ptr<CMusicDatabase> TestLibraryQueryWhere::s_music;
-std::unique_ptr<CVideoDatabase> TestLibraryQueryWhere::s_video;
+std::unique_ptr<CConnectedTestDatabase<CMusicDatabase>> TestLibraryQueryWhere::s_music;
+std::unique_ptr<CConnectedTestDatabase<CVideoDatabase>> TestLibraryQueryWhere::s_video;
 
 // clang-format off
 const WhereCase SONGS_RULES[] = {
@@ -458,7 +448,7 @@ const WhereCase MUSICVIDEOS_RULES[] = {
      R"sql(((musicvideo_view.c08 LIKE '%x%')))sql"},
 };
 
-//! Rules on a field the type has none of
+//! Rules on a field the type has none of, and number rules whose value is not a number
 const WhereCase REFUSED_RULES[] = {
     {"musicvideos", R"({"field":"albumartist","operator":"is","value":"Queen"})", ""},
     {"musicvideos", R"({"field":"tracknumber","operator":"is","value":"1"})", ""},
@@ -468,6 +458,11 @@ const WhereCase REFUSED_RULES[] = {
     {"mixed", R"({"field":"originaltitle","operator":"is","value":"x"})", ""},
     {"mixed", R"({"field":"albumartist","operator":"isnot","value":"Queen"})", ""},
     {"movies", R"({"field":"nosuchfield","operator":"is","value":"x"})", ""},
+    {"movies", R"({"field":"rating","operator":"greaterthan","value":"0 OR 1=1"})", ""},
+    {"movies", R"({"field":"year","operator":"is","value":"2000 OR 1=1"})", ""},
+    {"movies", R"({"field":"playcount","operator":"lessthan","value":"1 OR 1=1"})", ""},
+    {"movies", R"({"field":"rating","operator":"between","value":["0","10 OR 1=1"]})", ""},
+    {"movies", R"({"field":"time","operator":"between","value":["0 OR 1=1","60"]})", ""},
 };
 // clang-format on
 } // namespace

@@ -10,12 +10,12 @@
 #include "FileItemList.h"
 #include "PartyMode.h"
 #include "filesystem/Directory.h"
-#include "filesystem/File.h"
 #include "media/LibraryQuery.h"
 #include "media/LibraryQueryType.h"
 #include "music/tags/MusicInfoTag.h"
 #include "playlists/PlayListTypes.h"
 #include "test/TestLibrary.h"
+#include "test/TestUtils.h"
 #include "utils/URIUtils.h"
 #include "video/VideoInfoTag.h"
 
@@ -98,12 +98,8 @@ TEST_P(TestPartyModeCanStart, OnlyTypesItCanFeedFromAreOffered)
 {
   const auto& [type, canStart] = GetParam();
   const std::string path{URIUtils::AddFileToFolder(RULES_FOLDER, "rules.xsp")};
-  const std::string xml{"<smartplaylist type=\"" + type +
-                        "\"><name>Rules</name><match>all</match></smartplaylist>"};
-  XFILE::CFile file;
-  ASSERT_TRUE(file.OpenForWrite(path, true));
-  ASSERT_EQ(static_cast<ssize_t>(xml.size()), file.Write(xml.data(), xml.size()));
-  file.Close();
+  ASSERT_TRUE(WriteTextFile(path, "<smartplaylist type=\"" + type +
+                                      "\"><name>Rules</name><match>all</match></smartplaylist>"));
 
   EXPECT_EQ(canStart, PARTYMODE::CanStart(path));
 }

@@ -6,6 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "JSONRPCTestUtils.h"
 #include "interfaces/json-rpc/VideoLibrary.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
@@ -39,47 +40,19 @@ std::set<std::string, std::less<>> UpdatedDetails(const CVariant& parameterObjec
 }
 } // unnamed namespace
 
-TEST(TestVideoLibraryUpdatedDetails, UniqueIdIsNamedAsTheDatabaseReadsIt)
+TEST(TestVideoLibraryUpdatedDetails, EachFieldIsNamedAsTheDatabaseReadsIt)
 {
-  CVariant parameterObject;
-  parameterObject["uniqueId"]["imdb"] = "tt0000001";
-
-  EXPECT_TRUE(UpdatedDetails(parameterObject).contains(UPDATED_DETAIL::UNIQUE_ID));
-}
-
-TEST(TestVideoLibraryUpdatedDetails, ImdbNumberIsNamedAsTheDatabaseReadsIt)
-{
-  CVariant parameterObject;
-  parameterObject["imdbNumber"] = "tt0000001";
-
-  EXPECT_TRUE(UpdatedDetails(parameterObject).contains(UPDATED_DETAIL::UNIQUE_ID));
-}
-
-TEST(TestVideoLibraryUpdatedDetails, ShowLinkIsNamedAsTheDatabaseReadsIt)
-{
-  CVariant parameterObject;
-  parameterObject["showLink"].push_back("Planetes");
-
-  EXPECT_TRUE(UpdatedDetails(parameterObject).contains(UPDATED_DETAIL::SHOW_LINK));
-}
-
-TEST(TestVideoLibraryUpdatedDetails, DateAddedIsNamedAsTheDatabaseReadsIt)
-{
-  CVariant parameterObject;
-  parameterObject["dateAdded"] = "2026-10-08 12:00:00";
-
-  EXPECT_TRUE(UpdatedDetails(parameterObject).contains(UPDATED_DETAIL::DATE_ADDED));
-}
-
-TEST(TestVideoLibraryUpdatedDetails, LinkTablesAreNamedAsTheDatabaseReadsThem)
-{
-  CVariant parameterObject;
-  for (const char* field : {"genre", "studio", "country", "tag", "director", "writer"})
-    parameterObject[field].push_back("value");
-
-  const auto updated = UpdatedDetails(parameterObject);
-  for (const char* detail : {UPDATED_DETAIL::GENRE, UPDATED_DETAIL::STUDIO,
-                             UPDATED_DETAIL::COUNTRY, UPDATED_DETAIL::TAG,
-                             UPDATED_DETAIL::DIRECTOR, UPDATED_DETAIL::WRITER})
-    EXPECT_TRUE(updated.contains(detail)) << detail;
+  for (const auto& [json, detail] : {
+           std::pair{R"({"uniqueId": {"imdb": "tt0000001"}})", UPDATED_DETAIL::UNIQUE_ID},
+           std::pair{R"({"imdbNumber": "tt0000001"})", UPDATED_DETAIL::UNIQUE_ID},
+           std::pair{R"({"showLink": ["Planetes"]})", UPDATED_DETAIL::SHOW_LINK},
+           std::pair{R"({"dateAdded": "2026-10-08 12:00:00"})", UPDATED_DETAIL::DATE_ADDED},
+           std::pair{R"({"genre": ["value"]})", UPDATED_DETAIL::GENRE},
+           std::pair{R"({"studio": ["value"]})", UPDATED_DETAIL::STUDIO},
+           std::pair{R"({"country": ["value"]})", UPDATED_DETAIL::COUNTRY},
+           std::pair{R"({"tag": ["value"]})", UPDATED_DETAIL::TAG},
+           std::pair{R"({"director": ["value"]})", UPDATED_DETAIL::DIRECTOR},
+           std::pair{R"({"writer": ["value"]})", UPDATED_DETAIL::WRITER},
+       })
+    EXPECT_TRUE(UpdatedDetails(ParseJson(json)).contains(detail)) << json;
 }

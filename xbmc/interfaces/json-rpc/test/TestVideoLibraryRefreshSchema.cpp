@@ -27,15 +27,8 @@ constexpr std::array<const char*, 6> KINDS{
 } // unnamed namespace
 
 //! \brief Drives the shipped schema, so what is validated is what a client reaches
-class TestVideoLibraryRefreshSchema : public JSONServiceDescriptionTestBase
+class TestVideoLibraryRefreshSchema : public ShippedServiceDescriptionTestBase
 {
-public:
-  void SetUp() override
-  {
-    JSONServiceDescriptionTestBase::SetUp();
-
-    AddShippedServiceDescription();
-  }
 };
 
 TEST_F(TestVideoLibraryRefreshSchema, EveryKindOfLibraryItemCanBeNamed)

@@ -16,6 +16,7 @@
 #include "platform/Filesystem.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
+#include "test/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/VideoDatabase.h"
@@ -455,7 +456,7 @@ void CreateFiles(const std::string& root, const std::vector<std::string>& files)
   {
     const std::string path{URIUtils::AddFileToFolder(root, file)};
     ASSERT_TRUE(CUtil::CreateDirectoryEx(URIUtils::GetDirectory(path)));
-    std::ofstream of(path);
+    ASSERT_TRUE(WriteTextFile(path, ""));
   }
 }
 } // namespace
