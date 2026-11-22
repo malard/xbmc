@@ -592,6 +592,27 @@ TEST_F(TestVideoDatabase, ASmartPlaylistsOrderAndLimitApplyToAMovieListing)
   EXPECT_EQ("B.mkv", items[1]->GetVideoInfoTag()->m_strTitle);
 }
 
+TEST_F(TestVideoDatabase, RecentlyAddedListsTheNewestFirstUpToTheLimit)
+{
+  for (const auto& [name, added] :
+       {std::pair{"Old.mkv", "2026-01-01 10:00:00"}, std::pair{"Newest.mkv", "2026-03-01 10:00:00"},
+        std::pair{"Newer.mkv", "2026-02-01 10:00:00"}})
+  {
+    CVideoInfoTag movie{Tag(std::string{"/movies/"} + name)};
+    movie.m_dateAdded.SetFromDBDateTime(added);
+    ASSERT_GT(m_db.SetDetailsForMovie(movie, KODI::ART::Artwork{}), 0);
+  }
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetRecentlyAdded(KODI::MEDIA::TYPE::MOVIE, items, 2));
+  ASSERT_EQ(2, items.Size());
+  EXPECT_EQ("Newest.mkv", items[0]->GetVideoInfoTag()->m_strTitle);
+  EXPECT_EQ("Newer.mkv", items[1]->GetVideoInfoTag()->m_strTitle);
+
+  CFileItemList shows;
+  EXPECT_FALSE(m_db.GetRecentlyAdded(KODI::MEDIA::TYPE::TV_SHOW, shows));
+}
+
 TEST_F(TestVideoDatabase, ANumberRuleFindsTheItemsItsValueMatches)
 {
   CVideoInfoTag good{Tag("/videos/good.mkv")};

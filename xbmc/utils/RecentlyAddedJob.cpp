@@ -27,7 +27,6 @@
 #include "utils/StringUtils.h"
 #include "utils/log.h"
 #include "video/VideoDatabase.h"
-#include "video/VideoDbPaths.h"
 #include "video/VideoInfoTag.h"
 #include "video/VideoThumbLoader.h"
 
@@ -61,7 +60,7 @@ bool CRecentlyAddedJob::UpdateVideo()
 
   videodatabase.Open();
 
-  if (videodatabase.GetRecentlyAddedMoviesNav(KODI::VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES, items, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAdded(KODI::MEDIA::TYPE::MOVIE, items, NUM_ITEMS))
   {
     for (; i < items.Size(); ++i)
     {
@@ -104,7 +103,7 @@ bool CRecentlyAddedJob::UpdateVideo()
   i = 0;
   CFileItemList  TVShowItems;
 
-  if (videodatabase.GetRecentlyAddedEpisodesNav(KODI::VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES, TVShowItems, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAdded(KODI::MEDIA::TYPE::EPISODE, TVShowItems, NUM_ITEMS))
   {
     for (; i < TVShowItems.Size(); ++i)
     {
@@ -161,7 +160,7 @@ bool CRecentlyAddedJob::UpdateVideo()
   i = 0;
   CFileItemList MusicVideoItems;
 
-  if (videodatabase.GetRecentlyAddedMusicVideosNav(KODI::VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS, MusicVideoItems, NUM_ITEMS))
+  if (videodatabase.GetRecentlyAdded(KODI::MEDIA::TYPE::MUSIC_VIDEO, MusicVideoItems, NUM_ITEMS))
   {
     for (; i < MusicVideoItems.Size(); ++i)
     {
