@@ -923,6 +923,27 @@ TEST_F(TestVideoDatabase, ATvShowListedIsAFolderWithItsEpisodeCounts)
   EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_UNWATCHED), listed(idEmpty)->GetOverlayImage());
 }
 
+TEST_F(TestVideoDatabase, AMusicVideosCastIsLoadedOnlyWhenAskedFor)
+{
+  CVideoInfoTag tag{Tag("/musicvideos/Song.mkv")};
+  SActorInfo actor;
+  actor.strName = "Singer";
+  tag.m_cast.push_back(actor);
+  tag.SetTags({"Live"});
+  const int idVideo{m_db.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{})};
+  ASSERT_GT(idVideo, 0);
+
+  CVideoInfoTag tags;
+  ASSERT_TRUE(m_db.GetMusicVideoInfo("", tags, idVideo, VideoDbDetailsTag));
+  EXPECT_EQ(std::vector<std::string>{"Live"}, tags.m_tags);
+  EXPECT_TRUE(tags.m_cast.empty());
+
+  CVideoInfoTag cast;
+  ASSERT_TRUE(m_db.GetMusicVideoInfo("", cast, idVideo, VideoDbDetailsCast));
+  ASSERT_EQ(1u, cast.m_cast.size());
+  EXPECT_EQ("Singer", cast.m_cast[0].strName);
+}
+
 TEST_F(TestVideoDatabase, AMusicVideoListedIsItsIdAndAnArtistsListIsTitledWithTheirName)
 {
   CVideoInfoTag tag{Tag("/musicvideos/Song.mkv")};
