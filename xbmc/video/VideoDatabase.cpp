@@ -9380,7 +9380,7 @@ bool CVideoDatabase::GetMoviesByWhere(const std::string& strBaseDir, const Filte
     DatabaseResults results;
     results.reserve(iRowsFound);
 
-    if (!SortUtils::SortFromDataset(sortDescription, MEDIA::TYPE::MOVIE, *m_pDS, results))
+    if (!SortUtils::SortFromDataset(sorting, MEDIA::TYPE::MOVIE, *m_pDS, results))
       return false;
 
     // get data from returned rows
