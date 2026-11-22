@@ -1146,8 +1146,16 @@ public:
   bool GetSetsByWhere(const std::string& strBaseDir, const Filter &filter, CFileItemList& items, bool ignoreSingleMovieSets = false);
   bool GetTvShowsByWhere(const std::string& strBaseDir, const Filter &filter, CFileItemList& items, const SortDescription &sortDescription = SortDescription(), int getDetails = VideoDbDetailsNone);
   bool GetSeasonsByWhere(const std::string& strBaseDir, const Filter &filter, CFileItemList& items, bool appendFullShowPath = true, const SortDescription &sortDescription = SortDescription());
-  bool GetEpisodesByWhere(const std::string& strBaseDir, const Filter &filter, CFileItemList& items, bool appendFullShowPath = true, const SortDescription &sortDescription = SortDescription(), int getDetails = VideoDbDetailsNone);
-  bool GetMusicVideosByWhere(const std::string &baseDir, const Filter &filter, CFileItemList& items, bool checkLocks = true, const SortDescription &sortDescription = SortDescription(), int getDetails = VideoDbDetailsNone);
+  bool GetEpisodesByWhere(const std::string& strBaseDir,
+                          const Filter& filter,
+                          CFileItemList& items,
+                          const SortDescription& sortDescription = SortDescription(),
+                          int getDetails = VideoDbDetailsNone);
+  bool GetMusicVideosByWhere(const std::string& baseDir,
+                             const Filter& filter,
+                             CFileItemList& items,
+                             const SortDescription& sortDescription = SortDescription(),
+                             int getDetails = VideoDbDetailsNone);
 
   // retrieve sorted and limited items
   bool GetSortedVideos(KODI::MEDIA::TYPE mediaType,

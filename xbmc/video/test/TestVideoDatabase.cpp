@@ -714,7 +714,7 @@ TEST_F(TestVideoDatabase, AListItemHasTheDetailsOfTheItemLoadedAlone)
 
   CFileItemList episodes;
   ASSERT_TRUE(m_db.GetEpisodesByWhere("videodb://tvshows/titles/" + std::to_string(idShow) + "/1/",
-                                      CDatabase::Filter(), episodes, true, {}, VideoDbDetailsAll));
+                                      CDatabase::Filter(), episodes, {}, VideoDbDetailsAll));
   ASSERT_EQ(2, episodes.Size());
   for (const auto& item : episodes)
   {
@@ -732,7 +732,7 @@ TEST_F(TestVideoDatabase, AListItemHasTheDetailsOfTheItemLoadedAlone)
   }
   CFileItemList musicVideos;
   ASSERT_TRUE(m_db.GetMusicVideosByWhere("videodb://musicvideos/titles/", CDatabase::Filter(),
-                                         musicVideos, true, {}, VideoDbDetailsAll));
+                                         musicVideos, {}, VideoDbDetailsAll));
   ASSERT_EQ(2, musicVideos.Size());
   for (const auto& item : musicVideos)
   {
@@ -870,12 +870,6 @@ TEST_F(TestVideoDatabase, AnEpisodeListedIsItsIdUnderItsSeasonAndItsShowSeasonAn
       m_db.GetEpisodesByWhere("videodb://tvshows/titles/", CDatabase::Filter(), everywhere));
   ASSERT_EQ(1, everywhere.Size());
   EXPECT_EQ(show + "1/" + episode, everywhere[0]->GetPath());
-
-  CFileItemList idOnly;
-  ASSERT_TRUE(
-      m_db.GetEpisodesByWhere("videodb://tvshows/titles/", CDatabase::Filter(), idOnly, false));
-  ASSERT_EQ(1, idOnly.Size());
-  EXPECT_EQ("videodb://tvshows/titles/" + episode, idOnly[0]->GetPath());
 }
 
 TEST_F(TestVideoDatabase, ATvShowListedIsAFolderWithItsEpisodeCounts)
