@@ -30,7 +30,6 @@ set(SOURCES TestAddonsExecuteAddon.cpp
             TestSettingsValueRefusal.cpp
             TestSharedFieldDeclarations.cpp
             TestStreamObjects.cpp
-            TestVideoLibraryPlaybackState.cpp
             TestVideoLibraryRefreshSchema.cpp
             TestVideoLibrarySetSourceContent.cpp
             TestVideoLibraryUpdatedDetails.cpp

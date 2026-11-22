@@ -31,6 +31,7 @@
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
 #include "video/VideoFileItemClassify.h"
+#include "video/VideoLibrary.h"
 
 #include <memory>
 #include <optional>
@@ -267,41 +268,31 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
   if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
     return status;
 
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  const int fileId = videodatabase.AddFile(file);
-  if (fileId < 0)
-    return InternalError;
-
-  CVideoInfoTag infos;
-  if (const JSONRPC_STATUS status = StatusFor(videodatabase.TryGetFileInfo("", infos, fileId),
-                                              result, Target("file", parameterObject["file"]));
-      status != OK)
-    return status;
-
-  CDateTime lastPlayed = infos.m_lastPlayed;
+  CVideoDatabase::PlayStateEdit playState;
+  if (!parameterObject["playCount"].isNull())
+    playState.playCount = static_cast<int>(parameterObject["playCount"].asInteger());
   if (!parameterObject["lastPlayed"].isNull())
   {
-    lastPlayed.Reset();
+    CDateTime lastPlayed;
     SetFromDBDateTime(parameterObject["lastPlayed"], lastPlayed);
+    playState.lastPlayed = lastPlayed;
   }
-  std::optional<int> playCount;
-  if (!parameterObject["playCount"].isNull())
-    playCount = static_cast<int>(parameterObject["playCount"].asInteger());
-  if (parameterObject["lastPlayed"].isString() && parameterObject["lastPlayed"].empty() &&
-      !videodatabase.CanClearLastPlayed(file, playCount))
-    return InvalidParams;
-
-  const int playcount{playCount.value_or(infos.GetPlayCount())};
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-    videodatabase.SetPlayCount(CFileItem(infos), playcount, lastPlayed);
-
   if (const CVariant& resume{parameterObject["resume"]}; !resume.isNull())
-    videodatabase.SetResumePoint(file, resume["position"].asDouble(), resume["total"].asDouble());
+    playState.resume = CVideoDatabase::PlayStateEdit::Resume{resume["position"].asDouble(),
+                                                             resume["total"].asDouble()};
 
-  videodatabase.GetFileInfo("", infos, fileId);
+  CVideoInfoTag infos;
+  switch (KODI::VIDEO::LIBRARY::EditFilePlayState(file, playState, infos))
+  {
+    case CVideoDatabase::EditResult::DONE:
+      break;
+    case CVideoDatabase::EditResult::REFUSED:
+      return InvalidParams;
+    case CVideoDatabase::EditResult::NOT_FOUND:
+      return Fail(result, NotFound, Reason::NoSuchItem, Target("file", parameterObject["file"]));
+    case CVideoDatabase::EditResult::FAILED:
+      return InternalError;
+  }
   CJSONRPCUtils::NotifyItemUpdated(infos, KODI::ART::Artwork{});
   return ACK;
 }

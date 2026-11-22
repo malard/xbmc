@@ -483,6 +483,91 @@ public:
                             const KODI::ART::Artwork& artwork,
                             const std::set<std::string, std::less<>>& updatedDetails);
 
+  //! \brief A change a caller makes to how far something has been watched; what is empty is kept
+  struct PlayStateEdit
+  {
+    std::optional<int> playCount;
+    std::optional<CDateTime> lastPlayed; //!< an invalid date clears it
+    struct Resume
+    {
+      double position{0.0}; //!< 0 or less clears it
+      double total{0.0}; //!< as SetResumePoint takes it
+    };
+    std::optional<Resume> resume;
+  };
+
+  enum class EditResult
+  {
+    DONE,
+    REFUSED, //!< it would clear the last played date of what is left watched
+    NOT_FOUND, //!< an episode or season without its show, or a file that cannot be read back
+    FAILED,
+  };
+
+  /*!
+   * \brief Store a caller's edit of a library item in one transaction: \p details as the edit
+   * leaves them, with \p artwork and without \p removedArtwork, and \p playState on its file. A TV
+   * show's play state is given to each of its episodes, which are announced; the item itself is
+   * left for the caller to announce with what it changed.
+   * \param updatedDetails the details whose links are rewritten, as UpdateDetailsForMovie takes them
+   */
+  EditResult EditItem(KODI::MEDIA::TYPE type,
+                      int id,
+                      CVideoInfoTag& details,
+                      const KODI::ART::Artwork& artwork,
+                      const std::set<std::string, std::less<>>& removedArtwork,
+                      const std::set<std::string, std::less<>>& updatedDetails,
+                      const PlayStateEdit& playState);
+
+  enum class AddResult
+  {
+    ADDED,
+    IN_LIBRARY, //!< the library already holds an item of the type at the path
+    NO_SUCH_SHOW,
+    FAILED,
+  };
+
+  /*!
+   * \brief Add a movie, TV show, episode or music video at a path in one transaction, with
+   * \p details, \p artwork and \p playState. One without a title is named after its path. The item
+   * is left for the caller to announce.
+   * \param idShow the show an episode is added to
+   * \param id [out] the new item's id
+   */
+  AddResult AddItem(KODI::MEDIA::TYPE type,
+                    const std::string& path,
+                    CVideoInfoTag& details,
+                    const KODI::ART::Artwork& artwork,
+                    int idShow,
+                    const PlayStateEdit& playState,
+                    int& id);
+
+  /*!
+   * \brief Store a caller's change to a file's play state in one transaction, adding the file if
+   * the library has never seen it.
+   * \param details [out] the file's state afterwards
+   */
+  EditResult EditFilePlayState(const std::string& file,
+                               const PlayStateEdit& playState,
+                               CVideoInfoTag& details);
+
+  /*!
+   * \brief Set what a source holds and how it is scanned, keeping whether it uses all external
+   * audio, which no caller sets. What the library holds below it goes first when \p removeContent.
+   */
+  void SetSourceContent(const std::string& path,
+                        const ADDON::ScraperPtr& scraper,
+                        const KODI::VIDEO::SScanSettings& settings,
+                        bool removeContent);
+
+  /*!
+   * \brief Describe a path as the library holds it: the movie, episode or music video it is the
+   * file of, or for a folder the TV show it is one of the folders of. Otherwise the play state the
+   * files table holds for it is added to what \p item already says.
+   * \return whether the library holds anything for the path
+   */
+  bool DescribePath(const std::string& path, CFileItem& item);
+
   /*!
    * \brief Remove a movie from the library.
    * \param[in] idMovie The id of the movie
@@ -1387,6 +1472,20 @@ public:
   bool GetDiscResumeBookMark(const std::string& discId, CBookmark& bookmark);
 
 protected:
+  //! \brief The play state a TV show's edit leaves one of its episodes with
+  struct PlayState
+  {
+    int playCount;
+    CDateTime lastPlayed;
+  };
+
+  //! \brief The play state \p showEdit leaves \p episode with, nullopt for it to be left as it is
+  static std::optional<PlayState> EpisodePlayState(const PlayStateEdit& showEdit,
+                                                   const CVideoInfoTag& episode);
+
+  //! \brief Adds the play state a file's row holds to \p details, which say what the file is
+  static void AddFilePlayState(const CVideoInfoTag& file, CVideoInfoTag& details);
+
   int AddNewMovie(CVideoInfoTag& details);
   int AddNewMusicVideo(CVideoInfoTag& details);
   int GetFileId(const CVideoInfoTag& details);
@@ -1558,6 +1657,15 @@ private:
   //! \brief Announce a library item's change, clearing the cached listings first, unless updates
   //! are not announced
   void AnnounceItemChanged(KODI::MEDIA::TYPE type, int id);
+
+  //! \brief Store \p edit on a file, against the play state it holds
+  bool StorePlayStateEdit(const std::string& file, const PlayStateEdit& edit);
+
+  //! \brief Give each episode of a show the play state its edit sets
+  bool StoreEpisodesPlayState(int idShow, const PlayStateEdit& showEdit);
+
+  //! \brief A TV show that \p path is one of the folders of; a folder beneath one is not
+  bool GetTvShowOfFolder(const std::string& path, CVideoInfoTag& details, CFileItem* item);
 
   //! \brief SetPlayCount, without announcing the count
   CDateTime WritePlayCount(const CFileItem& item, int count, const CDateTime& date);
