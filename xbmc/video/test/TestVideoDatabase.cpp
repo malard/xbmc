@@ -29,6 +29,7 @@
 #include "resources/ResourcesComponent.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSourceSettings.h"
+#include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/Artwork.h"
 #include "utils/DatabaseUtils.h"
@@ -721,6 +722,252 @@ TEST_F(TestVideoDatabase, AListItemHasTheDetailsOfTheItemLoadedAlone)
     ASSERT_TRUE(m_db.GetEpisodeInfo("", alone, item->GetVideoInfoTag()->m_iDbId));
     EXPECT_TRUE(serialized(alone) == serialized(*item->GetVideoInfoTag())) << item->GetLabel();
   }
+
+  // Their ids are the movies', which a list must not take for movies linked to the show
+  for (const std::string name : {"one", "two"})
+  {
+    CVideoInfoTag tag{Tag("/musicvideos/" + name + ".mkv")};
+    addDetails(tag, "music video " + name);
+    ASSERT_GT(m_db.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{}), 0);
+  }
+  CFileItemList musicVideos;
+  ASSERT_TRUE(m_db.GetMusicVideosByWhere("videodb://musicvideos/titles/", CDatabase::Filter(),
+                                         musicVideos, true, {}, VideoDbDetailsAll));
+  ASSERT_EQ(2, musicVideos.Size());
+  for (const auto& item : musicVideos)
+  {
+    CVideoInfoTag alone;
+    ASSERT_TRUE(m_db.GetMusicVideoInfo("", alone, item->GetVideoInfoTag()->m_iDbId));
+    EXPECT_TRUE(serialized(alone) == serialized(*item->GetVideoInfoTag())) << item->GetLabel();
+    EXPECT_TRUE(item->GetVideoInfoTag()->m_showLink.empty()) << item->GetLabel();
+  }
+}
+
+namespace
+{
+std::string Overlay(CGUIListItem::GUIIconOverlay overlay)
+{
+  CFileItem item;
+  item.SetOverlayImage(overlay);
+  return item.GetOverlayImage();
+}
+} // namespace
+
+// What each type's listing gives a skin or a client for an item
+
+TEST_F(TestVideoDatabase, AMovieListedIsItsFileAtItsId)
+{
+  const int idMovie{AddMovie("/movies/Film.mkv")};
+  ASSERT_GT(idMovie, 0);
+  MarkPlayed("/movies/Film.mkv", 1);
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter(), items));
+  ASSERT_EQ(1, items.Size());
+  const CFileItem& movie{*items[0]};
+  EXPECT_EQ("videodb://movies/titles/" + std::to_string(idMovie), movie.GetPath());
+  EXPECT_EQ("/movies/Film.mkv", movie.GetDynPath());
+  EXPECT_FALSE(movie.IsFolder());
+  EXPECT_EQ("Film.mkv", movie.GetLabel());
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_WATCHED), movie.GetOverlayImage());
+}
+
+TEST_F(TestVideoDatabase, AMovieWithVersionsListsAsAFolderOfThemOrAsEachVersion)
+{
+  const MovieWithVersion movie{AddMovieWithVersion(KODI::ART::Artwork{}, KODI::ART::Artwork{})};
+  ASSERT_GT(movie.versionFileId, 0);
+  const std::string moviePath{"videodb://movies/titles/" + std::to_string(movie.movieId)};
+
+  const auto settings{CServiceBroker::GetSettingsComponent()->GetSettings()};
+  const bool flatten{settings->GetBool(CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS)};
+  CFileItemList folder;
+  settings->SetBool(CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS, false);
+  const bool listedFolder{
+      m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter(), folder)};
+  CFileItemList versions;
+  settings->SetBool(CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS, true);
+  const bool listedVersions{
+      m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter(), versions)};
+  settings->SetBool(CSettings::SETTING_VIDEOLIBRARY_FLATTENVERSIONS, flatten);
+
+  ASSERT_TRUE(listedFolder);
+  ASSERT_EQ(1, folder.Size());
+  EXPECT_EQ(moviePath + "/-2/", folder[0]->GetPath());
+  EXPECT_TRUE(folder[0]->IsFolder());
+  EXPECT_TRUE(folder[0]->GetProperty(KODI::ITEM::PROPERTY::IS_HYBRID_FOLDER).asBoolean());
+
+  ASSERT_TRUE(listedVersions);
+  ASSERT_EQ(2, versions.Size());
+  for (const auto& item : versions)
+  {
+    EXPECT_EQ(moviePath + "/1/" + std::to_string(item->GetVideoInfoTag()->m_iFileId) +
+                  "?assetType=1",
+              item->GetPath());
+    EXPECT_FALSE(item->IsFolder());
+  }
+}
+
+TEST_F(TestVideoDatabase, AMoviesAssetsListAsTheAssetsUnderTheMoviesTitle)
+{
+  CVideoInfoTag film{Tag("/movies/Film/Film.mkv")};
+  film.m_strTitle = "Film";
+  const int idMovie{m_db.SetDetailsForMovie(film, KODI::ART::Artwork{})};
+  ASSERT_GT(idMovie, 0);
+  CFileItem extended{"/movies/Film/Film Extended.mkv", false};
+  ASSERT_TRUE(m_db.AddVideoAsset(
+      VideoDbContentType::MOVIES, idMovie,
+      m_db.AddVideoVersionType("Extended", VideoAssetTypeOwner::USER, VideoAssetType::VERSION),
+      VideoAssetType::VERSION, extended));
+  const int idExtended{m_db.AddFile("/movies/Film/Film Extended.mkv")};
+
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  url.AddOption("movieid", idMovie);
+  url.AddOption("assetType", static_cast<int>(VideoAssetType::VERSION));
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items));
+
+  ASSERT_EQ(2, items.Size());
+  EXPECT_EQ("Film", items.GetProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE).asString());
+  for (const auto& item : items)
+  {
+    const CVideoInfoTag& asset{*item->GetVideoInfoTag()};
+    EXPECT_EQ(asset.GetAssetInfo().GetTitle(), item->GetLabel());
+    EXPECT_EQ(asset.m_iFileId != idExtended, item->IsSelected());
+    EXPECT_NE(std::string::npos,
+              item->GetPath().find("videodb://movies/titles/" + std::to_string(asset.m_iFileId)))
+        << item->GetPath();
+    if (asset.m_iFileId == idExtended)
+      EXPECT_EQ("Extended", item->GetLabel());
+  }
+}
+
+TEST_F(TestVideoDatabase, AnEpisodeListedIsItsIdUnderItsSeasonAndItsShowSeasonAndIdElsewhere)
+{
+  const int idShow{AddTvShow("/shows/Show/")};
+  ASSERT_GT(idShow, 0);
+  CVideoInfoTag tag{Tag("/shows/Show/Show S01E02.mkv")};
+  tag.m_strTitle = "Pilot";
+  tag.m_iSeason = 1;
+  tag.m_iEpisode = 2;
+  tag.m_firstAired.SetFromDBDate("2026-01-05");
+  const int idEpisode{m_db.SetDetailsForEpisode(tag, KODI::ART::Artwork{}, idShow)};
+  ASSERT_GT(idEpisode, 0);
+  const std::string show{"videodb://tvshows/titles/" + std::to_string(idShow) + "/"};
+  const std::string episode{std::to_string(idEpisode)};
+
+  CFileItemList inSeason;
+  ASSERT_TRUE(m_db.GetEpisodesByWhere(show + "1/", CDatabase::Filter(), inSeason));
+  ASSERT_EQ(1, inSeason.Size());
+  EXPECT_EQ(show + "1/" + episode + "?season=1&tvshowid=" + std::to_string(idShow),
+            inSeason[0]->GetPath());
+  EXPECT_EQ("/shows/Show/Show S01E02.mkv", inSeason[0]->GetDynPath());
+  EXPECT_EQ("1x02. Pilot", inSeason[0]->GetLabel());
+  EXPECT_EQ("2026-01-05", inSeason[0]->GetDateTime().GetAsDBDate());
+
+  CFileItemList everywhere;
+  ASSERT_TRUE(
+      m_db.GetEpisodesByWhere("videodb://tvshows/titles/", CDatabase::Filter(), everywhere));
+  ASSERT_EQ(1, everywhere.Size());
+  EXPECT_EQ(show + "1/" + episode, everywhere[0]->GetPath());
+
+  CFileItemList idOnly;
+  ASSERT_TRUE(
+      m_db.GetEpisodesByWhere("videodb://tvshows/titles/", CDatabase::Filter(), idOnly, false));
+  ASSERT_EQ(1, idOnly.Size());
+  EXPECT_EQ("videodb://tvshows/titles/" + episode, idOnly[0]->GetPath());
+}
+
+TEST_F(TestVideoDatabase, ATvShowListedIsAFolderWithItsEpisodeCounts)
+{
+  const int idShow{AddTvShow("/shows/Show/")};
+  ASSERT_GT(idShow, 0);
+  ASSERT_GT(AddEpisode(idShow, "/shows/Show/Show S01E01.mkv", 1), 0);
+  ASSERT_GT(AddEpisode(idShow, "/shows/Show/Show S01E02.mkv", 2), 0);
+  CVideoInfoTag empty;
+  empty.m_strTitle = "Empty";
+  empty.m_strPath = "/shows/Empty/";
+  const int idEmpty{m_db.SetDetailsForTvShow({empty.m_strPath}, empty, KODI::ART::Artwork{},
+                                             KODI::ART::SeasonsArtwork{})};
+  ASSERT_GT(idEmpty, 0);
+  MarkPlayed("/shows/Show/Show S01E01.mkv", 1);
+  MarkPlayed("/shows/Show/Show S01E02.mkv", 0, 300.0);
+
+  const auto listed{[this](int id)
+                    {
+                      CFileItemList items;
+                      EXPECT_TRUE(m_db.GetTvShowsByWhere("videodb://tvshows/titles/",
+                                                         CDatabase::Filter(), items));
+                      for (const auto& item : items)
+                      {
+                        if (item->GetVideoInfoTag()->m_iDbId == id)
+                          return item;
+                      }
+                      return std::shared_ptr<CFileItem>{};
+                    }};
+
+  const auto show{listed(idShow)};
+  ASSERT_TRUE(show);
+  EXPECT_EQ("videodb://tvshows/titles/" + std::to_string(idShow) + "/", show->GetPath());
+  EXPECT_TRUE(show->IsFolder());
+  EXPECT_EQ(1, show->GetProperty(KODI::ITEM::PROPERTY::TOTAL_SEASONS).asInteger());
+  EXPECT_EQ(2, show->GetProperty(KODI::ITEM::PROPERTY::NUM_EPISODES).asInteger());
+  EXPECT_EQ(1, show->GetProperty(KODI::ITEM::PROPERTY::WATCHED_EPISODES).asInteger());
+  EXPECT_EQ(1, show->GetProperty(KODI::ITEM::PROPERTY::IN_PROGRESS_EPISODES).asInteger());
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_UNWATCHED), show->GetOverlayImage());
+
+  // A show is watched once all of its episodes are, which a show without any never is
+  MarkPlayed("/shows/Show/Show S01E02.mkv", 1);
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_WATCHED), listed(idShow)->GetOverlayImage());
+  ASSERT_TRUE(listed(idEmpty));
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_UNWATCHED), listed(idEmpty)->GetOverlayImage());
+}
+
+TEST_F(TestVideoDatabase, AMusicVideoListedIsItsIdAndAnArtistsListIsTitledWithTheirName)
+{
+  CVideoInfoTag tag{Tag("/musicvideos/Song.mkv")};
+  tag.m_artist = {"Singer"};
+  const int idVideo{m_db.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{})};
+  ASSERT_GT(idVideo, 0);
+
+  CFileItemList items;
+  ASSERT_TRUE(
+      m_db.GetMusicVideosByWhere("videodb://musicvideos/titles/", CDatabase::Filter(), items));
+  ASSERT_EQ(1, items.Size());
+  EXPECT_EQ("videodb://musicvideos/titles/" + std::to_string(idVideo), items[0]->GetPath());
+  EXPECT_EQ("/musicvideos/Song.mkv", items[0]->GetDynPath());
+  EXPECT_FALSE(items.HasProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE));
+
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://musicvideos/titles/"));
+  url.AddOption("artistid",
+                m_db.GetSingleValueInt("SELECT actor_id FROM actor WHERE name = 'Singer'"));
+  CFileItemList byArtist;
+  ASSERT_TRUE(m_db.GetMusicVideosByWhere(url.ToString(), CDatabase::Filter(), byArtist));
+  ASSERT_EQ(1, byArtist.Size());
+  EXPECT_EQ("Singer", byArtist.GetProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE).asString());
+}
+
+TEST_F(TestVideoDatabase, AListingsTotalCountsEveryMatchNotOnlyThoseItsLimitReturns)
+{
+  for (const char* name : {"C.mkv", "A.mkv", "B.mkv"})
+    ASSERT_GT(AddMovie(std::string{"/movies/"} + name), 0);
+
+  SortDescription limited;
+  limited.limitEnd = 2;
+  CFileItemList unsorted;
+  ASSERT_TRUE(
+      m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter(), unsorted, limited));
+  EXPECT_EQ(2, unsorted.Size());
+  EXPECT_EQ(3, unsorted.GetProperty("total").asInteger());
+
+  limited.sortBy = SortBy::TITLE;
+  CFileItemList sorted;
+  ASSERT_TRUE(
+      m_db.GetMoviesByWhere("videodb://movies/titles/", CDatabase::Filter(), sorted, limited));
+  ASSERT_EQ(2, sorted.Size());
+  EXPECT_EQ(3, sorted.GetProperty("total").asInteger());
+  EXPECT_EQ("A.mkv", sorted[0]->GetLabel());
 }
 
 TEST_F(TestVideoDatabase, ListArtIsTheArtOfEachItemLoadedAlone)
