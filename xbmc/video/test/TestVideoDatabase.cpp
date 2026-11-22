@@ -574,6 +574,24 @@ TEST_F(TestVideoDatabase, ANumberRuleWhoseValueIsNotANumberFailsTheListing)
   }
 }
 
+// A movie listing takes a smart playlist's order and limit, as the other types' listings do
+TEST_F(TestVideoDatabase, ASmartPlaylistsOrderAndLimitApplyToAMovieListing)
+{
+  for (const char* name : {"C.mkv", "A.mkv", "B.mkv"})
+    ASSERT_GT(AddMovie(std::string{"/movies/"} + name), 0);
+
+  CVideoDbUrl url;
+  ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
+  url.AddOption("xsp",
+                R"({"type":"movies","order":{"method":"title","direction":"ascending"},"limit":2})");
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items));
+  ASSERT_EQ(2, items.Size());
+  EXPECT_EQ("A.mkv", items[0]->GetVideoInfoTag()->m_strTitle);
+  EXPECT_EQ("B.mkv", items[1]->GetVideoInfoTag()->m_strTitle);
+}
+
 TEST_F(TestVideoDatabase, ANumberRuleFindsTheItemsItsValueMatches)
 {
   CVideoInfoTag good{Tag("/videos/good.mkv")};
