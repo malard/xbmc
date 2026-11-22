@@ -6211,7 +6211,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForMusicVideo(const dbiplus::sql_record*
     if (getDetails & VideoDbDetailsStream)
       GetStreamDetails(details);
 
-    if (getDetails & VideoDbDetailsAll)
+    if (getDetails & VideoDbDetailsCast)
     {
       GetCast(details.m_iDbId, MEDIA::TYPE::MUSIC_VIDEO, details.m_cast);
     }
@@ -6361,6 +6361,8 @@ void CVideoDatabase::GetDetailsForList(const std::vector<CVideoInfoTag*>& tags,
     available &= ~(VideoDbDetailsTag | VideoDbDetailsShowLink);
   else if (media_type == MEDIA::TYPE::TV_SHOW)
     available &= ~(VideoDbDetailsShowLink | VideoDbDetailsStream);
+  else if (media_type == MEDIA::TYPE::MUSIC_VIDEO)
+    available &= ~(VideoDbDetailsRating | VideoDbDetailsShowLink);
   const int wanted{getDetails & available};
 
   if (!(getDetails & LIST_DETAILS) || tags.empty() || !m_pDB || !m_pDS2)
@@ -10730,14 +10732,15 @@ bool CVideoDatabase::GetMusicVideosByWhere(const std::string &baseDir, const Fil
 
     // get data from returned rows
     items.Reserve(results.size());
-    // get songs from returned subtable
+    std::vector<CVideoInfoTag*> listTags;
+    listTags.reserve(results.size());
     const query_data &data = m_pDS->get_result_set().records;
     for (const auto &i : results)
     {
       const auto targetRow = static_cast<unsigned int>(i.at(Field::ROW).asInteger());
       const dbiplus::sql_record* const record = data.at(targetRow);
 
-      CVideoInfoTag musicvideo = GetDetailsForMusicVideo(record, getDetails);
+      CVideoInfoTag musicvideo = GetDetailsForMusicVideo(record, getDetails & ~LIST_DETAILS);
       if (!checkLocks || m_profileManager.GetMasterProfile().getLockMode() == LockMode::EVERYONE ||
           g_passwordManager.bMasterUser ||
           g_passwordManager.IsDatabasePathUnlocked(
@@ -10754,9 +10757,11 @@ bool CVideoDatabase::GetMusicVideosByWhere(const std::string &baseDir, const Fil
 
         item->SetOverlayImage(musicvideo.GetPlayCount() > 0 ? CGUIListItem::ICON_OVERLAY_WATCHED
                                                             : CGUIListItem::ICON_OVERLAY_UNWATCHED);
+        listTags.push_back(item->GetVideoInfoTag());
         items.Add(std::move(item));
       }
     }
+    GetDetailsForList(listTags, MEDIA::TYPE::MUSIC_VIDEO, getDetails);
 
     // cleanup
     m_pDS->close();
