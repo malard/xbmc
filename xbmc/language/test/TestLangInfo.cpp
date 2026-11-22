@@ -164,6 +164,20 @@ TEST(TestLangInfo, PlatformLocaleNamePairsLanguageAndPlace)
   EXPECT_TRUE(CLangInfoTest::PlatformLocaleName(CLanguageTag::Parse("de"), CTerritory{}).empty());
 }
 
+TEST(TestLangInfo, LoadingALanguageNamesTheLanguagesOfTheInstalledAddons)
+{
+  ASSERT_TRUE(
+      KODI::LANGUAGE::CLanguageLoader::GetInstance().Load("resource.language.en_gb", false));
+
+  // The name the installed addon gives, rather than one composed from the subtags
+  EXPECT_EQ(CLanguageTag::Parse("en-GB").ToEnglishName(), "English");
+
+  // All three are process-wide
+  CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Clear();
+  KODI::LANGUAGE::I18N::CLanguageTable::GetInstance().Reset();
+  KODI::LANGUAGE::CLanguage::GetInstance().SetPack(nullptr);
+}
+
 TEST(TestLangInfo, ALanguageAddonInstalledOrEnabledLaterNamesItsLanguage)
 {
   // The language settings offer every installed language addon by name, so one installed,

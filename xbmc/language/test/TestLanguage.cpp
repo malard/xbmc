@@ -7,6 +7,7 @@
  */
 
 #include "language/Language.h"
+#include "language/i18n/LanguageTable.h"
 
 #include <gtest/gtest.h>
 
@@ -53,6 +54,19 @@ TEST(TestLanguagePreference, ReadsTheChoicesThatNameNoLanguage)
   EXPECT_NE(*CLanguagePreference::ForAudio("mediadefault"),
             *CLanguagePreference::ForAudio("original"));
   EXPECT_NE(*CLanguagePreference::ForSubtitles("none"), *CLanguagePreference::ForSubtitles("fr"));
+}
+
+TEST(TestLanguagePreference, AStoredAddonLanguageNameIsALanguage)
+{
+  // The audio and subtitle language settings offer the names language addons give, which are
+  // declared under the codes GetAddonsLanguageCodes gives them
+  I18N::CLanguageTable::GetInstance().DeclareNames({{"en-au", "English (Australia)"}});
+
+  const auto preference = CLanguagePreference::ForAudio("English (Australia)");
+  ASSERT_TRUE(preference.has_value());
+  EXPECT_EQ(preference->GetLanguage().ToString(), "en-AU");
+
+  I18N::CLanguageTable::GetInstance().Reset();
 }
 
 TEST(TestLanguagePreference, TextNamingNothingIsNoPreference)

@@ -498,8 +498,8 @@ namespace XBMCAddon
         case KODI::LANGUAGE::CLanguageTag::ISO_639_1:
         case KODI::LANGUAGE::CLanguageTag::ISO_639_2:
           return tag->In(static_cast<KODI::LANGUAGE::CLanguageTag::Notation>(format));
-      default:
-        return "";
+        default:
+          return "";
       }
     }
 
@@ -569,9 +569,18 @@ namespace XBMCAddon
     int getLOGNONE() { return LOGNONE; }
 
     // language string formats
-    int getISO_639_1() { return KODI::LANGUAGE::CLanguageTag::ISO_639_1; }
-    int getISO_639_2(){ return KODI::LANGUAGE::CLanguageTag::ISO_639_2; }
-    int getENGLISH_NAME() { return KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME; }
+    int getISO_639_1()
+    {
+      return KODI::LANGUAGE::CLanguageTag::ISO_639_1;
+    }
+    int getISO_639_2()
+    {
+      return KODI::LANGUAGE::CLanguageTag::ISO_639_2;
+    }
+    int getENGLISH_NAME()
+    {
+      return KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME;
+    }
     int getISO_NAME()
     {
       return KODI::LANGUAGE::CLanguageTag::ISO_NAME;

@@ -643,17 +643,17 @@ void CSettings::InitializeISettingCallbacks()
   GetSettingsManager()->RegisterCallback(&g_charsetConverter, {CSettings::SETTING_SUBTITLES_CHARSET,
                                                                CSettings::SETTING_LOCALE_CHARSET});
 
-  GetSettingsManager()->RegisterCallback(
-      &KODI::LANGUAGE::CLanguageLoader::GetInstance(),
-      {CSettings::SETTING_LOCALE_LANGUAGE,
-                                          CSettings::SETTING_LOCALE_AUDIOLANGUAGE, CSettings::SETTING_LOCALE_SUBTITLELANGUAGE});
+  GetSettingsManager()->RegisterCallback(&KODI::LANGUAGE::CLanguageLoader::GetInstance(),
+                                         {CSettings::SETTING_LOCALE_LANGUAGE,
+                                          CSettings::SETTING_LOCALE_AUDIOLANGUAGE,
+                                          CSettings::SETTING_LOCALE_SUBTITLELANGUAGE});
 
   GetSettingsManager()->RegisterCallback(
       &CServiceBroker::GetResourcesComponent().GetLangInfo(),
-      {CSettings::SETTING_LOCALE_COUNTRY,
-       CSettings::SETTING_LOCALE_SHORTDATEFORMAT, CSettings::SETTING_LOCALE_LONGDATEFORMAT,
-       CSettings::SETTING_LOCALE_TIMEFORMAT, CSettings::SETTING_LOCALE_USE24HOURCLOCK,
-       CSettings::SETTING_LOCALE_TEMPERATUREUNIT, CSettings::SETTING_LOCALE_SPEEDUNIT});
+      {CSettings::SETTING_LOCALE_COUNTRY, CSettings::SETTING_LOCALE_SHORTDATEFORMAT,
+       CSettings::SETTING_LOCALE_LONGDATEFORMAT, CSettings::SETTING_LOCALE_TIMEFORMAT,
+       CSettings::SETTING_LOCALE_USE24HOURCLOCK, CSettings::SETTING_LOCALE_TEMPERATUREUNIT,
+       CSettings::SETTING_LOCALE_SPEEDUNIT});
 
   GetSettingsManager()->RegisterCallback(&g_passwordManager,
                                          {CSettings::SETTING_MASTERLOCK_LOCKCODE});
