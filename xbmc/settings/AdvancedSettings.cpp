@@ -26,7 +26,6 @@
 #include "utils/Set.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
-#include "utils/URIUtils.h"
 #include "utils/XMLUtils.h"
 #include "utils/log.h"
 
@@ -330,7 +329,6 @@ void CAdvancedSettings::Initialize()
   m_handleMounting = CServiceBroker::GetAppParams()->IsStandAlone();
 
   m_fullScreenOnMovieStart = true;
-  m_cachePath = "special://temp/";
 
   m_videoFilenameAttributePairsRegExp = R"([\[{]\s*(?<key>\w+)\s*[=\-](?<value>[^\]}]+)[\]}])";
   m_videoCleanDateTimeRegExp = "(.*[^ _\\,\\.\\(\\)\\[\\]\\-])[ _\\.\\(\\)\\[\\]\\-]+(19[0-9][0-9]|20[0-9][0-9])([ _\\,\\.\\(\\)\\[\\]\\-]|[^0-9]$)?";
@@ -1195,12 +1193,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
   LoadSortTokens(pRootElement->FirstChild("sorttokens"), sortTokens);
   KODI::LANGUAGE::CLanguage::GetInstance().DeclareSortTokens(std::move(sortTokens));
 
-  //! @todo Should cache path be given in terms of our predefined paths??
-  //! Are we even going to have predefined paths??
   std::string tmp;
-  if (XMLUtils::GetPath(pRootElement, "cachepath", tmp))
-    m_cachePath = tmp;
-  URIUtils::AddSlashAtEnd(m_cachePath);
 
   LoadLanguageCodes(pRootElement->FirstChildElement("languagecodes"));
 
