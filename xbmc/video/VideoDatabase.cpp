@@ -15049,23 +15049,31 @@ CVideoDatabase::PlaylistRevertResult CVideoDatabase::RevertPlaylistsToDisc(
   return PlaylistRevertResult::DONE;
 }
 
+bool CVideoDatabase::PlayedItemMovesFile(const CFileItem& item)
+{
+  const CVideoInfoTag* tag{item.HasVideoInfoTag() ? item.GetVideoInfoTag() : nullptr};
+  if (!tag || tag->m_iFileId < 0)
+    return false; // No tag or file to update
+  if (tag->m_iDbId < 0 && item.GetVideoContentType() != VideoDbContentType::UNKNOWN)
+    return false; // No video db item to update
+  return (URIUtils::IsBlurayPath(item.GetDynPath()) &&
+          !URIUtils::IsStack(tag->m_strFileNameAndPath) &&
+          tag->m_strFileNameAndPath != item.GetDynPath()) || // Bluray path to update
+         // Playlist chosen by the user, or main title of a disc
+         item.GetProperty(ITEM::PROPERTY::NEW_PLAYLIST_PATH).asBoolean(false) ||
+         item.GetProperty(ITEM::PROPERTY::NEW_STACK_PATH).asBoolean(false); // Stack path to update
+}
+
 std::optional<CVideoDatabase::PlayedFileMove> CVideoDatabase::MoveFileOfPlayedItem(
     const CFileItem& item, const std::string& file)
 {
   if (!m_pDB || !m_pDS)
     return {};
 
-  const CVideoInfoTag* tag{item.HasVideoInfoTag() ? item.GetVideoInfoTag() : nullptr};
-  if (!tag || tag->m_iFileId < 0)
-    return {}; // No tag or file to update
-  if (tag->m_iDbId < 0 && item.GetVideoContentType() != VideoDbContentType::UNKNOWN)
-    return {}; // No video db item to update
-  if (!(URIUtils::IsBlurayPath(item.GetDynPath()) &&
-        !URIUtils::IsStack(tag->m_strFileNameAndPath) &&
-        tag->m_strFileNameAndPath != item.GetDynPath()) && // Bluray path to update
-      !item.GetProperty(ITEM::PROPERTY::NEW_PLAYLIST_PATH).asBoolean(false) && // Playlist chosen
-      !item.GetProperty(ITEM::PROPERTY::NEW_STACK_PATH).asBoolean(false)) // Stack path to update
+  if (!PlayedItemMovesFile(item))
     return {};
+
+  const CVideoInfoTag* tag{item.GetVideoInfoTag()};
 
   // An asset played from its own row (eg. an extra) is identified by its file
   PlayedFileMove move{.mediaType = tag->GetMediaType(), .idMedia = tag->m_iDbId};

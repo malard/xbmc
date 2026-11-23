@@ -1406,6 +1406,9 @@ public:
     int idMedia{-1};
   };
 
+  //! Whether MoveFileOfPlayedItem moves the played library item
+  static bool PlayedItemMovesFile(const CFileItem& item);
+
   /*!
    * \brief Point a played library item at the file it was played from, where that changed: a disc
    * played by another playlist, or a stack played under a new stack path. A version or an extra

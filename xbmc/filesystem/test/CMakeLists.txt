@@ -12,6 +12,7 @@ set(SOURCES TestAddonsPaths.cpp
             TestPlaylistDirectory.cpp
             TestSmartPlaylistDirectory.cpp
             TestSourcesDirectory.cpp
+            TestVideoDatabaseFile.cpp
             TestCurlHttpClient.cpp
             TestZipFile.cpp
             TestZipManager.cpp)

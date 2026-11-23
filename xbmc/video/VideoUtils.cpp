@@ -733,4 +733,15 @@ bool SaveDiscPlaylist(CFileItem& item)
   item.GetVideoInfoTag()->m_iFileId = idFile;
   return true;
 }
+
+bool FlagMainTitleToSave(CFileItem& item, const std::string& pathBeforePick)
+{
+  // An item already stored as a playlist keeps it, as the user may have chosen it
+  if (URIUtils::IsBlurayPath(pathBeforePick) || !URIUtils::IsBlurayPath(item.GetDynPath()) ||
+      !CanSaveDiscPlaylist(item))
+    return false;
+
+  item.SetProperty(ITEM::PROPERTY::NEW_PLAYLIST_PATH, true);
+  return true;
+}
 } // namespace KODI::VIDEO::UTILS
