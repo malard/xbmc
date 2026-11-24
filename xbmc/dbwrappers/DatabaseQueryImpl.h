@@ -10,7 +10,6 @@
 
 #include "DatabaseQuery.h"
 #include "utils/Variant.h"
-#include "utils/XBMCTinyXML.h"
 
 #include <algorithm>
 #include <memory>
@@ -185,7 +184,7 @@ bool CDatabaseQueryRuleCombination<RULE>::Load(const CVariant& obj)
 }
 
 template<typename RULE>
-bool CDatabaseQueryRuleCombination<RULE>::Save(TiXmlNode* parent) const
+bool CDatabaseQueryRuleCombination<RULE>::Save(tinyxml2::XMLNode* parent) const
 {
   for (const auto& rule : m_rules)
   {

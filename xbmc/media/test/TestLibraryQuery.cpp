@@ -17,6 +17,7 @@
 #include "settings/Settings.h"
 #include "test/TestUtils.h"
 #include "utils/URIUtils.h"
+#include "utils/XBMCTinyXML2.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -35,7 +36,7 @@ namespace
 {
 constexpr auto FILES_FOLDER = "special://temp/test-smartplaylist-files/";
 
-constexpr auto FULL_XSP = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+constexpr auto FULL_XSP = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <smartplaylist type="movies">
     <name>Everything</name>
     <match>one</match>
@@ -43,7 +44,7 @@ constexpr auto FULL_XSP = R"(<?xml version="1.0" encoding="UTF-8" standalone="ye
         <value>Drama</value>
         <value>Comedy</value>
     </rule>
-    <rule field="inprogress" operator="true" />
+    <rule field="inprogress" operator="true"/>
     <rule field="year" operator="greaterthan">
         <value>1999</value>
     </rule>
@@ -122,7 +123,7 @@ TEST_F(TestLibraryQueryFile, AnXspFileWithOnlyATypeSavesItsDefaults)
   EXPECT_EQ("in", playlist.GetName()) << "a playlist without a name is named after its file";
 
   ASSERT_TRUE(playlist.Save(PathOf("out.xsp")));
-  EXPECT_EQ(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+  EXPECT_EQ(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <smartplaylist type="songs">
     <name>in</name>
     <match>all</match>
@@ -139,7 +140,7 @@ TEST_F(TestLibraryQueryFile, ARuleValueWrittenAsTextIsSavedAsAValue)
   MEDIA::CLibraryQuery playlist;
   ASSERT_TRUE(playlist.Load(PathOf("in.xsp")));
   ASSERT_TRUE(playlist.Save(PathOf("out.xsp")));
-  EXPECT_EQ(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+  EXPECT_EQ(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <smartplaylist type="songs">
     <name>Text</name>
     <match>all</match>
@@ -712,4 +713,106 @@ TEST(TestLibraryQuery, AMixedPlaylistOffersTheFieldsSongsAndMusicVideosBothHave)
     EXPECT_TRUE(
         MEDIA::CLibraryQueryRule::HasField(MEDIA::LIBRARY_QUERY::TYPE::MUSIC_VIDEOS, field));
   }
+}
+
+TEST_F(TestLibraryQueryFile, AnXspFileSkipsCommentsAndRulesWithoutAField)
+{
+  Write("in.xsp", R"(<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<smartplaylist type="movies">
+  <name>Test &amp; Playlist</name>
+  <match>all</match>
+  <rule field="genre" operator="is">
+    <value>Action</value>
+    <!-- comment -->
+    <value>Comedy</value>
+  </rule>
+  <rule field="title" operator="contains">Star</rule>
+  <rule field="rating" operator="greaterthan"><!-- comment --><value>5</value></rule>
+  <rule operator="is">no field</rule>
+</smartplaylist>)");
+
+  MEDIA::CLibraryQuery playlist;
+  ASSERT_TRUE(playlist.Load(PathOf("in.xsp")));
+  EXPECT_EQ("Test & Playlist", playlist.GetName());
+  std::string json;
+  ASSERT_TRUE(playlist.SaveAsJson(json));
+  EXPECT_EQ(R"({"rules":{"and":[{"field":"genre","operator":"is","value":["Action","Comedy"]},)"
+            R"({"field":"title","operator":"contains","value":["Star"]}]},"type":"movies"})",
+            json);
+}
+
+TEST_F(TestLibraryQueryFile, AFileThatIsNotAnXspDoesNotLoad)
+{
+  Write("empty.xsp", "");
+  Write("other.xsp", R"(<playlist type="movies"/>)");
+  Write("broken.xsp", "<smartplaylist");
+
+  for (const char* name : {"empty.xsp", "other.xsp", "broken.xsp"})
+  {
+    MEDIA::CLibraryQuery playlist;
+    EXPECT_FALSE(playlist.Load(PathOf(name))) << name;
+  }
+}
+
+TEST_F(TestLibraryQueryFile, AnUnescapedAmpersandIsKept)
+{
+  Write("in.xsp", R"(<smartplaylist type="songs"><name>Rock & Roll</name>)"
+                  R"(<rule field="genre" operator="is">R&B</rule></smartplaylist>)");
+
+  MEDIA::CLibraryQuery playlist;
+  ASSERT_TRUE(playlist.Load(PathOf("in.xsp")));
+  EXPECT_EQ("Rock & Roll", playlist.GetName());
+  std::string json;
+  ASSERT_TRUE(playlist.SaveAsJson(json));
+  EXPECT_EQ(
+      R"({"rules":{"and":[{"field":"genre","operator":"is","value":["R&B"]}]},"type":"songs"})",
+      json);
+}
+
+TEST_F(TestLibraryQueryFile, ALatin1FileIsReadAsUtf8)
+{
+  Write("in.xsp", "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+                  "<smartplaylist type=\"songs\"><name>Caf\xE9</name>"
+                  "<rule field=\"genre\" operator=\"is\">Caf\xE9</rule></smartplaylist>");
+
+  MEDIA::CLibraryQuery playlist;
+  ASSERT_TRUE(playlist.Load(PathOf("in.xsp")));
+  EXPECT_EQ("Caf\xC3\xA9", playlist.GetName());
+  std::string json;
+  ASSERT_TRUE(playlist.SaveAsJson(json));
+  EXPECT_EQ("{\"rules\":{\"and\":[{\"field\":\"genre\",\"operator\":\"is\","
+            "\"value\":[\"Caf\xC3\xA9\"]}]},\"type\":\"songs\"}",
+            json);
+}
+
+TEST_F(TestLibraryQueryFile, OpeningAnXspReadsItsNameAndType)
+{
+  Write("in.xsp", FULL_XSP);
+
+  MEDIA::CLibraryQuery playlist;
+  ASSERT_TRUE(playlist.OpenAndReadName(CURL(PathOf("in.xsp"))));
+  EXPECT_EQ("Everything", playlist.GetName());
+  EXPECT_EQ(MEDIA::LIBRARY_QUERY::TYPE::MOVIES, playlist.GetType());
+}
+
+TEST(TestLibraryQuery, ALibraryNodeLoadsAsAQueryOfItsType)
+{
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(std::string{R"(<node order="1" type="filter">
+    <label>Drama</label>
+    <content>movies</content>
+    <match>one</match>
+    <rule field="genre" operator="is"><value>Drama</value></rule>
+    <rule field="playcount" operator="is">0</rule>
+    <limit>10</limit>
+  </node>)"}));
+
+  MEDIA::CLibraryQuery playlist;
+  playlist.SetType(MEDIA::LIBRARY_QUERY::TYPE::MOVIES);
+  ASSERT_TRUE(playlist.LoadFromXML(doc.RootElement()));
+  std::string json;
+  ASSERT_TRUE(playlist.SaveAsJson(json));
+  EXPECT_EQ(R"({"limit":10,"rules":{"or":[{"field":"genre","operator":"is","value":["Drama"]},)"
+            R"({"field":"playcount","operator":"is","value":["0"]}]},"type":"movies"})",
+            json);
 }

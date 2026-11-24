@@ -10,8 +10,6 @@
 
 #include "interfaces/AnnouncementManager.h"
 
-class CVariant;
-
 class CAnnounceReceiver : public ANNOUNCEMENT::IAnnouncer
 {
 public:

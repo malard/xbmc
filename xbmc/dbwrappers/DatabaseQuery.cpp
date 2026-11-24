@@ -15,7 +15,7 @@
 #include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
-#include "utils/XBMCTinyXML.h"
+#include "utils/XBMCTinyXML2.h"
 #include "utils/log.h"
 
 #include <array>
@@ -97,12 +97,12 @@ bool AcceptNumber(std::string_view field, std::string_view value)
 
 } // unnamed namespace
 
-bool CDatabaseQueryRule::Load(const TiXmlNode* node)
+bool CDatabaseQueryRule::Load(const tinyxml2::XMLNode* node)
 {
   if (!node)
     return false;
 
-  const TiXmlElement* element = node->ToElement();
+  const tinyxml2::XMLElement* element = node->ToElement();
   if (!element)
     return false;
 
@@ -121,32 +121,32 @@ bool CDatabaseQueryRule::Load(const TiXmlNode* node)
   if (m_operator == OPERATOR_TRUE || m_operator == OPERATOR_FALSE)
     return true;
 
-  const TiXmlNode* parameter = element->FirstChild();
+  const tinyxml2::XMLNode* parameter = element->FirstChild();
   if (!parameter)
     return false;
 
-  if (parameter->Type() == TiXmlNode::TINYXML_TEXT)
+  if (parameter->ToText())
   {
-    if (!parameter->ValueStr().empty())
+    if (*parameter->Value() != '\0')
     {
-      m_parameter.push_back(parameter->ValueStr());
+      m_parameter.emplace_back(parameter->Value());
     }
   }
-  else if (parameter->Type() == TiXmlNode::TINYXML_ELEMENT)
+  else if (parameter->ToElement())
   {
-    const TiXmlNode* valueNode = element->FirstChild("value");
+    const tinyxml2::XMLElement* valueNode = element->FirstChildElement("value");
     while (valueNode)
     {
-      const TiXmlNode* value = valueNode->FirstChild();
-      if (value && value->Type() == TiXmlNode::TINYXML_TEXT)
+      const tinyxml2::XMLNode* value = valueNode->FirstChild();
+      if (value && value->ToText())
       {
-        if (!value->ValueStr().empty())
+        if (*value->Value() != '\0')
         {
-          m_parameter.push_back(value->ValueStr());
+          m_parameter.emplace_back(value->Value());
         }
       }
 
-      valueNode = valueNode->NextSibling("value");
+      valueNode = valueNode->NextSiblingElement("value");
     }
   }
   else
@@ -189,22 +189,22 @@ bool CDatabaseQueryRule::Load(const CVariant& obj)
   return true;
 }
 
-bool CDatabaseQueryRule::Save(TiXmlNode* parent) const
+bool CDatabaseQueryRule::Save(tinyxml2::XMLNode* parent) const
 {
   if (!parent ||
       (m_parameter.empty() && m_operator != OPERATOR_TRUE && m_operator != OPERATOR_FALSE))
     return false;
 
-  TiXmlElement rule("rule");
-  rule.SetAttribute("field", GetFieldName().c_str());
-  rule.SetAttribute("operator", TranslateOperator(m_operator).c_str());
+  tinyxml2::XMLDocument* doc = parent->GetDocument();
+  tinyxml2::XMLElement* rule = doc->NewElement("rule");
+  rule->SetAttribute("field", GetFieldName().c_str());
+  rule->SetAttribute("operator", TranslateOperator(m_operator).c_str());
 
   for (const auto& it : m_parameter)
   {
-    TiXmlElement value("value");
-    TiXmlText text(it);
-    value.InsertEndChild(text);
-    rule.InsertEndChild(value);
+    tinyxml2::XMLElement* value = doc->NewElement("value");
+    value->InsertEndChild(doc->NewText(it.c_str()));
+    rule->InsertEndChild(value);
   }
 
   parent->InsertEndChild(rule);

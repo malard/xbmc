@@ -11,7 +11,6 @@
 #include "media/LibraryQueryRule.h"
 #include "media/LibraryQueryType.h"
 #include "utils/SortUtils.h"
-#include "utils/XBMCTinyXML.h"
 
 #include <memory>
 #include <optional>
@@ -21,7 +20,13 @@
 
 class CURL;
 class CVariant;
+class CXBMCTinyXML2;
 enum class WatchedMode;
+
+namespace tinyxml2
+{
+class XMLNode;
+} // namespace tinyxml2
 
 namespace KODI::MEDIA
 {
@@ -34,19 +39,19 @@ public:
   CLibraryQuery();
 
   bool Load(const CURL& url);
-  bool Load(const std::string &path);
-  bool Load(const CVariant &obj);
-  bool LoadFromJson(const std::string &json);
-  bool Save(const std::string &path) const;
-  bool Save(CVariant &obj, bool full = true) const;
-  bool SaveAsJson(std::string &json, bool full = true) const;
+  bool Load(const std::string& path);
+  bool Load(const CVariant& obj);
+  bool LoadFromJson(const std::string& json);
+  bool Save(const std::string& path) const;
+  bool Save(CVariant& obj, bool full = true) const;
+  bool SaveAsJson(std::string& json, bool full = true) const;
 
-  bool OpenAndReadName(const CURL &url);
-  bool LoadFromXML(const TiXmlNode* root);
+  bool OpenAndReadName(const CURL& url);
+  bool LoadFromXML(const tinyxml2::XMLNode* root);
 
   void Reset();
 
-  void SetName(const std::string &name);
+  void SetName(const std::string& name);
   void SetType(LIBRARY_QUERY::TYPE type) { m_playlistType = type; }
   const std::string& GetName() const { return m_playlistName; }
   LIBRARY_QUERY::TYPE GetType() const { return m_playlistType; }
@@ -142,9 +147,9 @@ private:
   bool SetTypeByName(const char* name, const std::string& source);
   //! \brief Takes the group a name names. Logs and fails if it names none.
   bool SetGroupByName(const std::string& name);
-  const TiXmlNode* readName(const TiXmlNode* root, const std::string& file);
-  const TiXmlNode* readNameFromPath(const CURL &url);
-  bool load(const TiXmlNode *root);
+  const tinyxml2::XMLNode* readName(const tinyxml2::XMLNode* root, const std::string& file);
+  const tinyxml2::XMLNode* readNameFromPath(const CURL& url, CXBMCTinyXML2& xmlDoc);
+  bool load(const tinyxml2::XMLNode* root);
 
   CLibraryQueryRuleGroup m_ruleCombination;
   std::string m_playlistName;
@@ -158,8 +163,6 @@ private:
   LIBRARY_QUERY::GROUP m_group;
   bool m_groupMixed;
   std::optional<WatchedMode> m_watchedMode;
-
-  CXBMCTinyXML m_xmlDoc;
 };
 
 } // namespace KODI::MEDIA

@@ -23,7 +23,6 @@
 #include <string>
 
 class CFileItemList;
-class CVariant;
 
 class CGUIWindowSlideShow;
 

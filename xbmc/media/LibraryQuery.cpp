@@ -8,8 +8,8 @@
 
 #include "LibraryQuery.h"
 
+#include "URL.h"
 #include "Util.h"
-#include "filesystem/File.h"
 #include "media/LibraryQueryReferences.h"
 #include "music/MusicLibraryQuery.h"
 #include "settings/MediaSettings.h"
@@ -18,6 +18,7 @@
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
+#include "utils/XBMCTinyXML2.h"
 #include "utils/XMLUtils.h"
 #include "utils/log.h"
 #include "video/VideoLibraryQuery.h"
@@ -27,8 +28,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-using namespace XFILE;
 
 namespace KODI::MEDIA
 {
@@ -42,7 +41,8 @@ CLibraryQuery::CLibraryQuery()
 
 bool CLibraryQuery::OpenAndReadName(const CURL& url)
 {
-  if (readNameFromPath(url) == nullptr)
+  CXBMCTinyXML2 xmlDoc;
+  if (readNameFromPath(url, xmlDoc) == nullptr)
     return false;
 
   return !m_playlistName.empty();
@@ -83,12 +83,13 @@ bool CLibraryQuery::SetGroupByName(const std::string& name)
   return true;
 }
 
-const TiXmlNode* CLibraryQuery::readName(const TiXmlNode* root, const std::string& file)
+const tinyxml2::XMLNode* CLibraryQuery::readName(const tinyxml2::XMLNode* root,
+                                                 const std::string& file)
 {
   if (root == nullptr)
     return nullptr;
 
-  const TiXmlElement *rootElem = root->ToElement();
+  const tinyxml2::XMLElement* rootElem = root->ToElement();
   if (rootElem == nullptr)
     return nullptr;
 
@@ -110,19 +111,15 @@ const TiXmlNode* CLibraryQuery::readName(const TiXmlNode* root, const std::strin
   return root;
 }
 
-const TiXmlNode* CLibraryQuery::readNameFromPath(const CURL& url)
+const tinyxml2::XMLNode* CLibraryQuery::readNameFromPath(const CURL& url, CXBMCTinyXML2& xmlDoc)
 {
-  CFileStream file;
-  if (!file.Open(url))
+  if (!xmlDoc.LoadFile(url.Get()) && !xmlDoc.Error())
   {
     CLog::Log(LOGERROR, "Error loading Smart playlist {} (failed to read file)", url.GetRedacted());
     return nullptr;
   }
 
-  m_xmlDoc.Clear();
-  file >> m_xmlDoc;
-
-  const TiXmlNode* root = readName(m_xmlDoc.RootElement(), url.GetRedacted());
+  const tinyxml2::XMLNode* root = readName(xmlDoc.RootElement(), url.GetRedacted());
   if (m_playlistName.empty())
   {
     m_playlistName = CUtil::GetTitleFromPath(url.Get());
@@ -133,7 +130,7 @@ const TiXmlNode* CLibraryQuery::readNameFromPath(const CURL& url)
   return root;
 }
 
-bool CLibraryQuery::load(const TiXmlNode* root)
+bool CLibraryQuery::load(const tinyxml2::XMLNode* root)
 {
   if (root == nullptr)
     return false;
@@ -143,13 +140,15 @@ bool CLibraryQuery::load(const TiXmlNode* root)
 
 bool CLibraryQuery::Load(const CURL& url)
 {
-  return load(readNameFromPath(url));
+  CXBMCTinyXML2 xmlDoc;
+  return load(readNameFromPath(url, xmlDoc));
 }
 
 bool CLibraryQuery::Load(const std::string& path)
 {
   const CURL pathToUrl(path);
-  return load(readNameFromPath(pathToUrl));
+  CXBMCTinyXML2 xmlDoc;
+  return load(readNameFromPath(pathToUrl, xmlDoc));
 }
 
 bool CLibraryQuery::Load(const CVariant& obj)
@@ -181,13 +180,14 @@ bool CLibraryQuery::Load(const CVariant& obj)
   }
 
   // now any limits
-  if (obj.isMember("limit") && (obj["limit"].isInteger() || obj["limit"].isUnsignedInteger()) && obj["limit"].asUnsignedInteger() > 0)
+  if (obj.isMember("limit") && (obj["limit"].isInteger() || obj["limit"].isUnsignedInteger()) &&
+      obj["limit"].asUnsignedInteger() > 0)
     m_limit = (unsigned int)obj["limit"].asUnsignedInteger();
 
   // and order
   if (obj.isMember("order") && obj["order"].isMember("method") && obj["order"]["method"].isString())
   {
-    const CVariant &order = obj["order"];
+    const CVariant& order = obj["order"];
     if (order.isMember("direction") && order["direction"].isString())
       m_orderDirection = StringUtils::EqualsNoCase(order["direction"].asString(), "ascending")
                              ? SortOrder::ASCENDING
@@ -215,7 +215,7 @@ bool CLibraryQuery::Load(const CVariant& obj)
   return true;
 }
 
-bool CLibraryQuery::LoadFromXML(const TiXmlNode* root)
+bool CLibraryQuery::LoadFromXML(const tinyxml2::XMLNode* root)
 {
   if (!root)
     return false;
@@ -227,20 +227,20 @@ bool CLibraryQuery::LoadFromXML(const TiXmlNode* root)
                                   : CLibraryQueryRuleGroup::Type::COMBINATION_OR);
 
   // now the rules
-  const TiXmlNode *ruleNode = root->FirstChild("rule");
+  const tinyxml2::XMLElement* ruleNode = root->FirstChildElement("rule");
   while (ruleNode)
   {
     const auto rule{std::make_shared<CLibraryQueryRule>()};
     if (rule->Load(ruleNode))
       m_ruleCombination.AddRule(rule);
 
-    ruleNode = ruleNode->NextSibling("rule");
+    ruleNode = ruleNode->NextSiblingElement("rule");
   }
 
-  const TiXmlElement *groupElement = root->FirstChildElement("group");
+  const tinyxml2::XMLElement* groupElement = root->FirstChildElement("group");
   if (groupElement != nullptr && groupElement->FirstChild() != nullptr)
   {
-    if (!SetGroupByName(groupElement->FirstChild()->ValueStr()))
+    if (!SetGroupByName(groupElement->FirstChild()->Value()))
     {
       return false;
     }
@@ -254,17 +254,19 @@ bool CLibraryQuery::LoadFromXML(const TiXmlNode* root)
 
   // and order
   // format is <order direction="ascending">field</order>
-  const TiXmlElement *order = root->FirstChildElement("order");
+  const tinyxml2::XMLElement* order = root->FirstChildElement("order");
   if (order && order->FirstChild())
   {
-    const char *direction = order->Attribute("direction");
+    const char* direction = order->Attribute("direction");
     if (direction)
       m_orderDirection = StringUtils::EqualsNoCase(direction, "ascending") ? SortOrder::ASCENDING
                                                                            : SortOrder::DESCENDING;
 
-    const char *ignorefolders = order->Attribute("ignorefolders");
+    const char* ignorefolders = order->Attribute("ignorefolders");
     if (ignorefolders != nullptr)
-      m_orderAttributes = StringUtils::EqualsNoCase(ignorefolders, "true") ? SortAttributeIgnoreFolders : SortAttributeNone;
+      m_orderAttributes = StringUtils::EqualsNoCase(ignorefolders, "true")
+                              ? SortAttributeIgnoreFolders
+                              : SortAttributeNone;
 
     m_orderField = CLibraryQueryRule::TranslateOrder(order->FirstChild()->Value());
   }
@@ -289,13 +291,12 @@ bool CLibraryQuery::LoadFromJson(const std::string& json)
 
 bool CLibraryQuery::Save(const std::string& path) const
 {
-  CXBMCTinyXML doc;
-  TiXmlDeclaration decl("1.0", "UTF-8", "yes");
-  doc.InsertEndChild(decl);
+  CXBMCTinyXML2 doc;
+  doc.InsertEndChild(doc.NewDeclaration(R"(xml version="1.0" encoding="UTF-8" standalone="yes")"));
 
-  TiXmlElement xmlRootElement("smartplaylist");
-  xmlRootElement.SetAttribute("type", std::string{LIBRARY_QUERY::NameOf(m_playlistType)}.c_str());
-  TiXmlNode *pRoot = doc.InsertEndChild(xmlRootElement);
+  tinyxml2::XMLElement* xmlRootElement = doc.NewElement("smartplaylist");
+  xmlRootElement->SetAttribute("type", std::string{LIBRARY_QUERY::NameOf(m_playlistType)}.c_str());
+  tinyxml2::XMLNode* pRoot = doc.InsertEndChild(xmlRootElement);
   if (!pRoot)
     return false;
 
@@ -313,11 +314,11 @@ bool CLibraryQuery::Save(const std::string& path) const
   // add <group> tag if necessary
   if (m_group != LIBRARY_QUERY::GROUP::DEFAULT)
   {
-    TiXmlElement nodeGroup("group");
+    tinyxml2::XMLElement* nodeGroup = doc.NewElement("group");
     if (m_groupMixed)
-      nodeGroup.SetAttribute("mixed", "true");
-    TiXmlText group(std::string{LIBRARY_QUERY::NameOf(m_group, m_playlistType)});
-    nodeGroup.InsertEndChild(group);
+      nodeGroup->SetAttribute("mixed", "true");
+    nodeGroup->InsertEndChild(
+        doc.NewText(std::string{LIBRARY_QUERY::NameOf(m_group, m_playlistType)}.c_str()));
     pRoot->InsertEndChild(nodeGroup);
   }
 
@@ -328,13 +329,12 @@ bool CLibraryQuery::Save(const std::string& path) const
   // add <order> tag
   if (m_orderField != SortBy::NONE)
   {
-    TiXmlText order(CLibraryQueryRule::TranslateOrder(m_orderField).c_str());
-    TiXmlElement nodeOrder("order");
-    nodeOrder.SetAttribute("direction",
-                           m_orderDirection == SortOrder::DESCENDING ? "descending" : "ascending");
+    tinyxml2::XMLElement* nodeOrder = doc.NewElement("order");
+    nodeOrder->SetAttribute("direction",
+                            m_orderDirection == SortOrder::DESCENDING ? "descending" : "ascending");
     if (m_orderAttributes & SortAttributeIgnoreFolders)
-      nodeOrder.SetAttribute("ignorefolders", "true");
-    nodeOrder.InsertEndChild(order);
+      nodeOrder->SetAttribute("ignorefolders", "true");
+    nodeOrder->InsertEndChild(doc.NewText(CLibraryQueryRule::TranslateOrder(m_orderField).c_str()));
     pRoot->InsertEndChild(nodeOrder);
   }
 

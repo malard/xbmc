@@ -41,7 +41,6 @@
 #include "utils/EndianSwap.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
 
 #include <cstring>

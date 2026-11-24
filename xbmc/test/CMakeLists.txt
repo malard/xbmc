@@ -13,7 +13,7 @@ set(SOURCES TestAutoSwitch.cpp
             TestTextureCache.cpp
             TestTextureCacheJob.cpp
             TestTextureRule.cpp
-            TestURL.cpp
+            TestURLParsing.cpp
             TestUtil.cpp
             TestUtils.cpp)
 

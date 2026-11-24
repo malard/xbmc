@@ -375,6 +375,8 @@ void CSettings::InitializeDefaults()
 
 void CSettings::InitializeOptionFillers()
 {
+  using KODI::LANGUAGE::CLangInfo;
+
   // register setting option fillers
 #ifdef HAS_OPTICAL_DRIVE
   GetSettingsManager()->RegisterSettingOptionsFiller(
@@ -390,52 +392,59 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller("refreshrates", CDisplaySettings::SettingOptionsRefreshRatesFiller);
 
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "regions", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-                    std::string& current)
+      "regions",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsRegionsFiller(
+        CLangInfo::SettingOptionsRegionsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "shortdateformats", [](const std::shared_ptr<const CSetting>& setting,
-                             StringSettingOptions& list, std::string& current)
+      "shortdateformats",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsShortDateFormatsFiller(
+        CLangInfo::SettingOptionsShortDateFormatsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "longdateformats", [](const std::shared_ptr<const CSetting>& setting,
-                            StringSettingOptions& list, std::string& current)
+      "longdateformats",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsLongDateFormatsFiller(
+        CLangInfo::SettingOptionsLongDateFormatsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "timeformats", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-                        std::string& current)
+      "timeformats",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsTimeFormatsFiller(
+        CLangInfo::SettingOptionsTimeFormatsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "24hourclockformats", [](const std::shared_ptr<const CSetting>& setting,
-                               StringSettingOptions& list, std::string& current)
+      "24hourclockformats",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptions24HourClockFormatsFiller(
+        CLangInfo::SettingOptions24HourClockFormatsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "speedunits", [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
-                       std::string& current)
+      "speedunits",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsSpeedUnitsFiller(
+        CLangInfo::SettingOptionsSpeedUnitsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller(
-      "temperatureunits", [](const std::shared_ptr<const CSetting>& setting,
-                             StringSettingOptions& list, std::string& current)
+      "temperatureunits",
+      [](const std::shared_ptr<const CSetting>& setting, StringSettingOptions& list,
+         std::string& current)
       {
-        KODI::LANGUAGE::CLangInfo::SettingOptionsTemperatureUnitsFiller(
+        CLangInfo::SettingOptionsTemperatureUnitsFiller(
             setting, list, current, CServiceBroker::GetResourcesComponent().GetLangInfo());
       });
   GetSettingsManager()->RegisterSettingOptionsFiller("rendermethods", CBaseRenderer::SettingOptionsRenderMethodsFiller);
@@ -454,11 +463,14 @@ void CSettings::InitializeOptionFillers()
   GetSettingsManager()->RegisterSettingOptionsFiller("cmsgammamodes", CDisplaySettings::SettingOptionsCmsGammaModesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("videoseeksteps", CSeekHandler::SettingOptionsSeekStepsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("startupwindows", ADDON::CSkinInfo::SettingOptionsStartupWindowsFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller("audiostreamlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller(
+      "audiostreamlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsAudioStreamLanguagesFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller("subtitlestreamlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller(
+      "subtitlestreamlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsSubtitleStreamLanguagesFiller);
-  GetSettingsManager()->RegisterSettingOptionsFiller("subtitledownloadlanguages",
+  GetSettingsManager()->RegisterSettingOptionsFiller(
+      "subtitledownloadlanguages",
       KODI::LANGUAGE::CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skincolors", ADDON::CSkinInfo::SettingOptionsSkinColorsFiller);
   GetSettingsManager()->RegisterSettingOptionsFiller("skinfonts", ADDON::CSkinInfo::SettingOptionsSkinFontsFiller);

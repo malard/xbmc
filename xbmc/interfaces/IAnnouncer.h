@@ -93,30 +93,30 @@ struct SettingsEvent;
 struct OtherEvent;
 struct Announcement;
 
-  class IAnnouncer
-  {
-  public:
-    IAnnouncer() = default;
-    virtual ~IAnnouncer() = default;
+class IAnnouncer
+{
+public:
+  IAnnouncer() = default;
+  virtual ~IAnnouncer() = default;
 
-    /*!
+  /*!
      * \brief Every announcement of the flags the announcer was added for. Each goes to the
-     * handler for its flag unless this is overridden.
-     */
-    virtual void OnAnnouncement(const Announcement& announcement);
+   * handler for its flag unless this is overridden.
+   */
+  virtual void OnAnnouncement(const Announcement& announcement);
 
-    virtual void OnPlayerEvent(const PlayerEvent& event) {}
-    virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
-    virtual void OnGUIEvent(const GUIEvent& event) {}
-    virtual void OnSystemEvent(const SystemEvent& event) {}
-    virtual void OnVideoLibraryEvent(const VideoLibraryEvent& event) {}
-    virtual void OnAudioLibraryEvent(const AudioLibraryEvent& event) {}
-    virtual void OnInputEvent(const InputEvent& event) {}
-    virtual void OnPVREvent(const PVREvent& event) {}
-    virtual void OnInfoEvent(const InfoEvent& event) {}
-    virtual void OnSourcesEvent(const SourcesEvent& event) {}
-    virtual void OnFilesEvent(const FilesEvent& event) {}
-    virtual void OnSettingsEvent(const SettingsEvent& event) {}
-    virtual void OnOtherEvent(const OtherEvent& event) {}
-  };
+  virtual void OnPlayerEvent(const PlayerEvent& event) {}
+  virtual void OnPlaylistEvent(const PlaylistEvent& event) {}
+  virtual void OnGUIEvent(const GUIEvent& event) {}
+  virtual void OnSystemEvent(const SystemEvent& event) {}
+  virtual void OnVideoLibraryEvent(const VideoLibraryEvent& event) {}
+  virtual void OnAudioLibraryEvent(const AudioLibraryEvent& event) {}
+  virtual void OnInputEvent(const InputEvent& event) {}
+  virtual void OnPVREvent(const PVREvent& event) {}
+  virtual void OnInfoEvent(const InfoEvent& event) {}
+  virtual void OnSourcesEvent(const SourcesEvent& event) {}
+  virtual void OnFilesEvent(const FilesEvent& event) {}
+  virtual void OnSettingsEvent(const SettingsEvent& event) {}
+  virtual void OnOtherEvent(const OtherEvent& event) {}
+};
 }

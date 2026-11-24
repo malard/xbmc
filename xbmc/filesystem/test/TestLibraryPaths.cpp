@@ -18,7 +18,7 @@
 #include "music/MusicLibraryQuery.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
-#include "utils/XBMCTinyXML.h"
+#include "utils/XBMCTinyXML2.h"
 #include "utils/XMLUtils.h"
 #include "video/VideoLibraryQuery.h"
 
@@ -65,9 +65,9 @@ TEST(TestLibraryPaths, EveryShippedFilterNodeIsAQueryItsLibraryCanList)
   for (const auto& file : files)
   {
     const std::string& path{file->GetPath()};
-    CXBMCTinyXML doc;
+    CXBMCTinyXML2 doc;
     ASSERT_TRUE(doc.LoadFile(path)) << path;
-    const TiXmlElement* node{doc.RootElement()};
+    const tinyxml2::XMLElement* node{doc.RootElement()};
     ASSERT_NE(nullptr, node) << path;
     if (XMLUtils::GetAttribute(node, "type") != "filter")
     {

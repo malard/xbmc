@@ -119,6 +119,7 @@ public:
   std::string GetStreamCodecName(int iStreamId) override;
 
   bool IsStreaming() const override;
+  bool ReportsKeyFrames() const override { return true; }
 
   bool Aborted();
 

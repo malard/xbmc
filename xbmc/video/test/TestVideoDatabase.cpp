@@ -518,8 +518,8 @@ TEST_F(TestVideoDatabase, ASmartPlaylistsOrderAndLimitApplyToAMovieListing)
 
   CVideoDbUrl url;
   ASSERT_TRUE(url.FromString("videodb://movies/titles/"));
-  url.AddOption("xsp",
-                R"({"type":"movies","order":{"method":"title","direction":"ascending"},"limit":2})");
+  url.AddOption(
+      "xsp", R"({"type":"movies","order":{"method":"title","direction":"ascending"},"limit":2})");
 
   CFileItemList items;
   ASSERT_TRUE(m_db.GetMoviesByWhere(url.ToString(), CDatabase::Filter(), items));
@@ -809,9 +809,12 @@ TEST_F(TestVideoDatabase, ATvShowListedIsAFolderWithItsEpisodeCounts)
 
   // A show is watched once all of its episodes are, which a show without any never is
   MarkPlayed("/shows/Show/Show S01E02.mkv", 1);
-  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_WATCHED), listed(idShow)->GetOverlayImage());
-  ASSERT_TRUE(listed(idEmpty));
-  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_UNWATCHED), listed(idEmpty)->GetOverlayImage());
+  const auto watchedShow{listed(idShow)};
+  ASSERT_TRUE(watchedShow);
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_WATCHED), watchedShow->GetOverlayImage());
+  const auto emptyShow{listed(idEmpty)};
+  ASSERT_TRUE(emptyShow);
+  EXPECT_EQ(Overlay(CGUIListItem::ICON_OVERLAY_UNWATCHED), emptyShow->GetOverlayImage());
 }
 
 TEST_F(TestVideoDatabase, AMusicVideosCastIsLoadedOnlyWhenAskedFor)
@@ -3507,6 +3510,42 @@ TEST_F(TestVideoDatabase, AnEditMayNotClearTheLastPlayedDateOfAWatchedItem)
                           PlayStateEdit(0, CDateTime{})));
   EXPECT_GE(0, m_db.GetPlayCount(film));
   EXPECT_FALSE(m_db.GetLastPlayed(film).IsValid());
+}
+
+TEST_F(TestVideoDatabase, AMusicVideoEditStaysInTheCallersTransaction)
+{
+  CVideoInfoTag tag{Tag("/musicvideos/Artist - Song.mkv")};
+  const int idMVideo{m_db.SetDetailsForMusicVideo(tag, KODI::ART::Artwork{})};
+  ASSERT_GT(idMVideo, 0);
+  CVideoInfoTag details;
+  ASSERT_TRUE(m_db.GetMusicVideoInfo("", details, idMVideo));
+
+  details.m_strTitle = "Renamed";
+  m_db.BeginTransaction();
+  EXPECT_EQ(CVideoDatabase::EditResult::DONE,
+            m_db.EditItem(KODI::MEDIA::TYPE::MUSIC_VIDEO, idMVideo, details, {}, {}, {}, {}));
+  m_db.RollbackTransaction();
+
+  ASSERT_TRUE(m_db.GetMusicVideoInfo("", details, idMVideo));
+  EXPECT_EQ("Artist - Song.mkv", details.m_strTitle);
+}
+
+TEST_F(TestVideoDatabase, AnEditWhosePlayCountIsNotStoredIsUndone)
+{
+  const int idMovie{AddMovie("/movies/Film.mkv")};
+  ASSERT_GT(idMovie, 0);
+  CVideoInfoTag details;
+  ASSERT_TRUE(m_db.GetMovieInfo("", details, idMovie));
+  ASSERT_TRUE(m_db.ExecuteQuery("CREATE TRIGGER refusePlayCount BEFORE UPDATE OF playCount ON "
+                                "files BEGIN SELECT RAISE(ABORT, 'refused'); END"));
+
+  details.m_strTitle = "Renamed";
+  EXPECT_EQ(
+      CVideoDatabase::EditResult::FAILED,
+      m_db.EditItem(KODI::MEDIA::TYPE::MOVIE, idMovie, details, {}, {}, {}, PlayStateEdit(2)));
+
+  ASSERT_TRUE(m_db.GetMovieInfo("", details, idMovie));
+  EXPECT_EQ("Film.mkv", details.m_strTitle);
 }
 
 TEST_F(TestVideoDatabase, EditingAShowsPlayCountGivesItToEachEpisode)

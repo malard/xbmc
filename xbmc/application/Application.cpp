@@ -1716,6 +1716,18 @@ bool CApplication::Stop(int exitCode)
   const auto appPlayer = GetComponent<CApplicationPlayer>();
   appPlayer->ClosePlayer();
 
+  // the stop message is no longer processed, so notify its listeners here
+  static constexpr std::array playbackStopped{GUI_MSG_PLAYBACK_STOPPED, 0};
+  if (CGUIComponent* gui = CServiceBroker::GetGUI();
+      gui && gui->GetWindowManager().RemoveThreadMessageByMessageIds(playbackStopped.data()) > 0)
+  {
+    CGUIMessage stopped{GUI_MSG_PLAYBACK_STOPPED, 0, 0};
+    GetComponent<CPlaybackAnnouncer>()->OnMessage(stopped);
+#ifdef HAS_PYTHON
+    CServiceBroker::GetXBPython().OnPlayBackStopped();
+#endif
+  }
+
   {
     // close inbound port
     CServiceBroker::UnregisterAppPort();
@@ -1775,8 +1787,6 @@ bool CApplication::Stop(int exitCode)
     m_ExitCode = exitCode;
     CLog::Log(LOGINFO, "Stopping all");
 
-    CScriptInvocationManager::GetInstance().NotifyAllScriptsAborting();
-
     // Stop scanning before the job manager is cancelled below
     // otherwise scans underway are not stopped
     CMusicLibraryQueue::GetInstance().CancelAllJobs();
@@ -1806,6 +1816,8 @@ bool CApplication::Stop(int exitCode)
 #if defined(TARGET_POSIX) && defined(HAS_FILESYSTEM_SMB)
     smb.Deinit();
 #endif
+
+    CScriptInvocationManager::GetInstance().NotifyAllScriptsAborting();
 
     // Stop services before unloading Python
     CServiceBroker::GetServiceAddons().Stop();

@@ -28,7 +28,6 @@
 #include <sys/types.h>
 
 class CDACP;
-class CVariant;
 
 class CAirTunesServer : public ANNOUNCEMENT::IAnnouncer,
                         public KODI::ACTION::IActionListener,

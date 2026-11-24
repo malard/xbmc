@@ -29,7 +29,6 @@
 #include "pictures/GUIWindowSlideShow.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
 
 #include <mutex>
@@ -39,7 +38,6 @@
 
 using namespace PERIPHERALS;
 using namespace CEC;
-using namespace ANNOUNCEMENT;
 using namespace std::chrono_literals;
 
 #define CEC_LIB_SUPPORTED_VERSION LIBCEC_VERSION_TO_UINT(4, 0, 0)

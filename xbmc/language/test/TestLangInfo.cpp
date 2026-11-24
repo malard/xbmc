@@ -32,7 +32,10 @@ class CLangInfoTest : public KODI::LANGUAGE::CLangInfo
 {
 public:
   //! Read the region profiles a pack ships, as the loader does
-  bool LoadLang(const std::string& language) { return Load(KODI::LANGUAGE::CLanguageLoader::GetLanguageInfoPath(language)); }
+  bool LoadLang(const std::string& language)
+  {
+    return Load(KODI::LANGUAGE::CLanguageLoader::GetLanguageInfoPath(language));
+  }
 
   //! Read region profiles from this text
   bool LoadText(const std::string& text)

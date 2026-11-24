@@ -27,7 +27,6 @@
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/SystemInfo.h"
-#include "utils/Variant.h"
 #include "utils/log.h"
 #include "windowing/windows/WinKeyMap.h"
 

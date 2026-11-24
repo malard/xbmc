@@ -15,7 +15,11 @@
 
 class CDatabase;
 class CVariant;
-class TiXmlNode;
+
+namespace tinyxml2
+{
+class XMLNode;
+} // namespace tinyxml2
 
 /*!
  * \brief A filter rule: a field, an operator and the values to compare with. This is what every
@@ -59,9 +63,9 @@ public:
     TEXTIN_FIELD
   };
 
-  bool Load(const TiXmlNode* node);
+  bool Load(const tinyxml2::XMLNode* node);
   bool Load(const CVariant& obj);
-  bool Save(TiXmlNode* parent) const;
+  bool Save(tinyxml2::XMLNode* parent) const;
   bool Save(CVariant& obj) const;
 
   static std::string GetLocalizedOperator(SearchOperator oper);
@@ -180,7 +184,7 @@ public:
 
   void clear();
   bool Load(const CVariant& obj);
-  bool Save(TiXmlNode* parent) const;
+  bool Save(tinyxml2::XMLNode* parent) const;
   bool Save(CVariant& obj) const;
 
   //! \return the SQL for the group, or nullopt if a value of one of its rules cannot go into it

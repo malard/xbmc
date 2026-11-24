@@ -22,8 +22,6 @@
 
 #include <sys/socket.h>
 
-class CVariant;
-
 #define AIRPLAY_SERVER_VERSION_STR "101.28"
 
 class CAirPlayServer : public CThread, public ANNOUNCEMENT::IAnnouncer

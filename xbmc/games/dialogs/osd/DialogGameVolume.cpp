@@ -21,7 +21,6 @@
 #include "interfaces/AnnouncementManager.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/Variant.h"
 
 #include <cmath>
 #include <variant>
