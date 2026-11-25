@@ -35,9 +35,8 @@
 #include "utils/log.h"
 
 #if defined(TARGET_WINDOWS)
-#include "utils/CharsetConverter.h"
-
 #include "platform/win32/WIN32Util.h"
+#include "utils/CharsetConverter.h"
 #endif
 
 #include <algorithm>

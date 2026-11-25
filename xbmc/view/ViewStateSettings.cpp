@@ -12,7 +12,6 @@
 #include "SortFileItem.h"
 #include "interfaces/AnnouncementManager.h"
 #include "utils/SortUtils.h"
-#include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
 #include "utils/XMLUtils.h"
 #include "utils/log.h"

@@ -154,7 +154,7 @@ bool CGUIWindowSettingsCategory::OnAction(const CAction &action)
       if (!g_passwordManager.CheckSettingLevelLock(CViewStateSettings::GetInstance().GetNextSettingLevel(), true))
         return false;
 
-      // the window rebuilds on the Settings.OnLevelChanged announcement this raises
+      // The window rebuilds on the Settings.OnLevelChanged announcement this raises
       CViewStateSettings::GetInstance().CycleSettingLevel();
       CServiceBroker::GetSettingsComponent()->GetSettings()->Save();
       return true;

@@ -145,7 +145,8 @@ struct StringHash
 };
 
 //! \brief Text an add-on states in several languages, keyed by the locale it named each in.
-using LocalizedStringsMap = std::unordered_map<std::string, std::string, StringHash, std::equal_to<>>;
+using LocalizedStringsMap =
+    std::unordered_map<std::string, std::string, StringHash, std::equal_to<>>;
 
 class CAddonInfoBuilder;
 

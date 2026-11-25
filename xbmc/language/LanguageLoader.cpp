@@ -332,4 +332,3 @@ void CLanguageLoader::SettingOptionsSubtitleDownloadlanguagesFiller(
 {
   FillLanguageOptions(specialSubtitlesDownloadLangSettings, list);
 }
-

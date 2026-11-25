@@ -65,12 +65,12 @@ TEST(TestFileUtils, AnEmptyPlaylistsPathSharesNothing)
 //! \brief An always-allowed root is allowed with or without its trailing slash
 TEST(TestFileUtils, RemoteAccessAllowsARootWithOrWithoutItsSlash)
 {
-  for (const char* path : {"library://video", "library://video/", "library://video/movies/titles/",
-                           "library://video_flat", "library://music", "library://music/",
-                           "addons://sources", "addons://sources/video/", "sources://video",
-                           "sources://video/", "sources://video/movies", "special://skin", "upnp://",
-                           "plugin://plugin.video.x", "virtualpath://upnproot",
-                           "virtualpath://upnproot/"})
+  for (const char* path :
+       {"library://video", "library://video/", "library://video/movies/titles/",
+        "library://video_flat", "library://music", "library://music/", "addons://sources",
+        "addons://sources/video/", "sources://video", "sources://video/", "sources://video/movies",
+        "special://skin", "upnp://", "plugin://plugin.video.x", "virtualpath://upnproot",
+        "virtualpath://upnproot/"})
   {
     EXPECT_TRUE(CFileUtils::RemoteAccessAllowed(path)) << path;
   }
