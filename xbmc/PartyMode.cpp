@@ -103,7 +103,7 @@ bool StartFeed(std::optional<PLAYLIST::Type> named, const std::string& xspPath)
   const bool rulesLoaded = rules.Load(rulesPath);
   if (!rulesLoaded && XFILE::CFile::Exists(rulesPath))
   {
-    return Fail(0, "the rules in " + CURL::GetRedacted(rulesPath) + " could not be loaded");
+    return Fail(477, "the rules in " + CURL::GetRedacted(rulesPath) + " could not be loaded");
   }
   const PLAYLIST::Type playList =
       named.value_or(rulesLoaded ? LIBRARY_QUERY::PlayListOf(rules.GetType()) : PLAYLIST::Audio);
