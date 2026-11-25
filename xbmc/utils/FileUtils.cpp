@@ -19,7 +19,6 @@
 #include "filesystem/File.h"
 #include "filesystem/LibraryPaths.h"
 #include "filesystem/MultiPathDirectory.h"
-#include "filesystem/SourcesDirectory.h"
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/StackDirectory.h"
 #include "guilib/GUIComponent.h"
@@ -112,8 +111,9 @@ bool CFileUtils::RenameFile(const std::string &strFile)
 namespace
 {
 //! The paths remote clients may always access, by prefix
-constexpr std::array<std::string_view, 9> ALWAYS_ALLOWED_PREFIXES{
+constexpr std::array<std::string_view, 10> ALWAYS_ALLOWED_PREFIXES{
     "virtualpath://upnproot/",
+    "sources://video/",
     KODI::MEDIA::LIBRARY_PATH::VIDEO,
     KODI::MEDIA::LIBRARY_PATH::VIDEO_FLAT,
     KODI::MEDIA::LIBRARY_PATH::MUSIC,
@@ -136,12 +136,14 @@ bool CFileUtils::RemoteAccessAllowed(const std::string &strPath)
   while (URIUtils::IsInArchive(realPath))
     realPath = CURL(realPath).GetHostName();
 
-  if (std::ranges::any_of(ALWAYS_ALLOWED_PREFIXES, [&realPath](std::string_view prefix)
-                          { return StringUtils::StartsWithNoCase(realPath, prefix); }))
+  // A root is allowed with or without its trailing slash
+  std::string folderPath{realPath};
+  URIUtils::AddSlashAtEnd(folderPath);
+  if (std::ranges::any_of(ALWAYS_ALLOWED_PREFIXES, [&folderPath](std::string_view prefix)
+                          { return StringUtils::StartsWithNoCase(folderPath, prefix); }))
     return true;
 
   if (URIUtils::IsMusicDb(realPath) || URIUtils::IsVideoDb(realPath) ||
-      CSourcesDirectory::SectionOf(realPath) == MediaSection::VIDEO ||
       CUtil::IsInPlaylistsFolder(realPath, MediaSection::MUSIC) ||
       CUtil::IsInPlaylistsFolder(realPath, MediaSection::VIDEO) ||
       CScreenShot::IsScreenshotPath(realPath))
