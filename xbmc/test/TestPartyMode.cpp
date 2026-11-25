@@ -189,7 +189,7 @@ TEST_F(TestPartyModeMatches, RulesThatCannotBeListedFindNoMatches)
 {
   MEDIA::CLibraryQuery rules;
   ASSERT_TRUE(rules.LoadFromJson(
-      R"({"type":"mixed","rules":{"and":[{"field":"albumartist","operator":"is","value":"Artist"}]}})"));
+      R"({"type":"mixed","rules":{"and":[{"field":"originaltitle","operator":"is","value":"Title"}]}})"));
   EXPECT_FALSE(PARTYMODE::FindMatches(&rules, rules.GetType()));
 }
 

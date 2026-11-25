@@ -701,7 +701,8 @@ protected:
   {
     Strings() : strings{CServiceBroker::GetResourcesComponent().GetLocalizeStrings()}
     {
-      loaded = strings.Load(KODI::LANGUAGE::CLanguageLoader::GetLanguagePath(), "resource.language.en_gb");
+      loaded = strings.Load(KODI::LANGUAGE::CLanguageLoader::GetLanguagePath(),
+                            "resource.language.en_gb");
     }
     ~Strings() { strings.Clear(); }
 

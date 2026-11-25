@@ -47,7 +47,8 @@ int AddSetForMovie(const std::string& name, int idMovie)
 
 int AddTag(const std::string& tag)
 {
-  return WithDatabase([&](CVideoDatabase& db) { return db.AddTag(tag); });
+  return WithDatabase([&](CVideoDatabase& db) -> std::optional<int> { return db.AddTag(tag); })
+      .value_or(-1);
 }
 
 bool AddTagToItems(int idTag, const std::vector<int>& idItems, KODI::MEDIA::TYPE type)

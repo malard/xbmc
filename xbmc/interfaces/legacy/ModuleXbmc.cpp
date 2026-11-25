@@ -187,7 +187,8 @@ namespace XBMCAddon
       return CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_LOOKANDFEEL_SKIN);
     }
 
-    String getLanguage(int format /* = KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME */, bool region /*= false*/)
+    String getLanguage(int format /* = KODI::LANGUAGE::CLanguageTag::ENGLISH_NAME */,
+                       bool region /*= false*/)
     {
       XBMC_TRACE;
       switch (format)
