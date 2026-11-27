@@ -11,13 +11,21 @@
 #include "FileItemHandler.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
+class CDateTime;
 class CVariant;
 
 namespace PVR
 {
+class CPVRChannel;
 class CPVRChannelGroup;
-}
+class CPVREpg;
+class CPVREpgInfoTag;
+class CPVRRecording;
+class CPVRTimerInfoTag;
+} // namespace PVR
 
 namespace JSONRPC
 {
@@ -31,6 +39,7 @@ namespace JSONRPC
     static JSONRPC_STATUS GetChannelDetails(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetClients(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetBroadcasts(const CVariant& parameterObject, CVariant& result);
+  static JSONRPC_STATUS GetBroadcastsByChannelGroup(const CVariant &parameterObject, CVariant &result);
     static JSONRPC_STATUS GetBroadcastDetails(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetBroadcastIsPlayable(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS GetPlayableBroadcasts(const CVariant& parameterObject, CVariant& result);
@@ -48,6 +57,47 @@ namespace JSONRPC
 
     static std::shared_ptr<CFileItem> GetRecordingFileItem(int recordingId);
 
+  /*! \name Lookups by id
+     Each answers FailedToExecute before PVR has started, and NotFound for an id it does not
+     know, naming the parameter \p key the caller gave \p id in.
+     */
+  ///@{
+  static JSONRPC_STATUS FindChannel(const std::string& key,
+                                    const CVariant& id,
+                                    std::shared_ptr<PVR::CPVRChannel>& channel,
+                                    CVariant& result);
+  static JSONRPC_STATUS FindBroadcast(const std::string& key,
+                                      const CVariant& id,
+                                      std::shared_ptr<PVR::CPVREpgInfoTag>& broadcast,
+                                      CVariant& result);
+  static JSONRPC_STATUS FindRecording(const std::string& key,
+                                      const CVariant& id,
+                                      std::shared_ptr<PVR::CPVRRecording>& recording,
+                                      CVariant& result);
+  static JSONRPC_STATUS FindTimer(const std::string& key,
+                                  const CVariant& id,
+                                  std::shared_ptr<PVR::CPVRTimerInfoTag>& timer,
+                                  CVariant& result);
+  ///@}
+
+protected:
+  /*!
+     \brief Read the starttime/endtime pair of a request
+
+     Both absent leaves start and end invalid (no range) when not required; otherwise both
+     must parse and end must not precede start.
+     */
+  static JSONRPC_STATUS ParseTimeRange(const CVariant& parameterObject,
+                                       bool required,
+                                       CDateTime& start,
+                                       CDateTime& end);
+
+  /*!
+     \brief The broadcasts of an EPG overlapping [start, end), or all of them for an invalid range
+     */
+  static std::vector<std::shared_ptr<PVR::CPVREpgInfoTag>> GetBroadcastsInRange(
+      const PVR::CPVREpg& epg, const CDateTime& start, const CDateTime& end);
+
   private:
     static JSONRPC_STATUS GetPropertyValue(const std::string &property, CVariant &result);
     static void FillChannelGroupDetails(
@@ -56,4 +106,4 @@ namespace JSONRPC
         CVariant& result,
         bool append = false);
   };
-}
+} // namespace JSONRPC

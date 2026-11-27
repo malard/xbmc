@@ -18,6 +18,7 @@
 #include "VideoLibrary.h"
 #include "filesystem/Directory.h"
 #include "media/MediaLockState.h"
+#include "music/MusicFileItemClassify.h"
 #include "playlists/PlayListFileItemClassify.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSourceSettings.h"
@@ -29,9 +30,11 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "video/VideoDatabase.h"
-#include "video/windows/GUIWindowVideoBase.h"
+#include "video/VideoFileItemClassify.h"
+#include "video/VideoLibrary.h"
 
 #include <memory>
+#include <optional>
 #include <set>
 
 using namespace KODI;
@@ -41,7 +44,36 @@ using namespace XFILE;
 using KODI::MEDIA::MediaSection;
 using KODI::MEDIA::MediaSectionFromName;
 
-JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject, CVariant& result)
+namespace
+{
+//! A directory that cannot be listed is missing when one above it can be; otherwise its source
+//! is out of reach.
+bool IsMissing(const std::string & directory)
+{
+  std::string parent;
+  for (std::string current = directory;
+       URIUtils::GetParentPath(current, parent) && parent != current; current = parent)
+  {
+    if (CDirectory::Exists(parent, false))
+      return true;
+  }
+  return false;
+}
+
+//! Check the file the "file" parameter names is within a source and exists, failing
+//! \p result as the call should when not.
+JSONRPC_STATUS CheckFile(const CVariant& parameterObject, CVariant& result)
+{
+  const CVariant& file = parameterObject["file"];
+  if (!CFileUtils::RemoteAccessAllowed(file.asString()))
+    return Fail(result, AccessDenied, Reason::OutsideSources, Target("file", file));
+  if (!CFileUtils::Exists(file.asString()))
+    return Fail(result, NotFound, Reason::NoSuchPath, Target("file", file));
+  return OK;
+}
+} // namespace
+
+JSONRPC_STATUS CFileOperations::GetSources(const CVariant &parameterObject, CVariant &result)
 {
   std::string media = parameterObject["media"].asString();
   StringUtils::ToLower(media);
@@ -59,12 +91,12 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
       items.Add(std::make_shared<CFileItem>(source));
     }
 
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (const auto& item : items)
     {
-      if (items[i]->IsSmb())
+      if (item->IsSmb())
       {
-        CURL url(items[i]->GetPath());
-        items[i]->SetPath(url.GetWithoutUserDetails());
+        CURL url(item->GetPath());
+        item->SetPath(url.GetWithoutUserDetails());
       }
     }
 
@@ -72,7 +104,7 @@ JSONRPC_STATUS CFileOperations::GetRootDirectory(const CVariant& parameterObject
     param["properties"] = CVariant(CVariant::VariantTypeArray);
     param["properties"].append("file");
 
-    HandleFileItemList(NULL, true, "sources", items, param, result);
+    HandleFileItemList(nullptr, true, "sources", items, param, result);
   }
 
   return OK;
@@ -87,7 +119,8 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
   std::string strPath = parameterObject["directory"].asString();
 
   if (!CFileUtils::RemoteAccessAllowed(strPath))
-    return InvalidParams;
+    return Fail(result, AccessDenied, Reason::OutsideSources,
+                Target("directory", parameterObject["directory"]));
 
   const MediaSection section{MediaSectionFromName(media).value_or(MediaSection::FILES)};
   const std::vector<std::string> regexps{
@@ -108,49 +141,41 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
       if (status != OK)
         return status;
     }
-    else if (media == "files" && NeedsLibraryLookup(parameterObject))
-    {
-      CVideoDatabase videoDatabase;
-      if (videoDatabase.Open())
-      {
-        // Matched folder paths may be rewritten according to the GUI stacking setting.
-        CGUIWindowVideoBase::LoadVideoInfo(
-            items, videoDatabase, false,
-            CVideoLibrary::GetDetailsFromJsonParameters(parameterObject));
-      }
-    }
+
+    // A plain "files" browse consults the library only for a property a file cannot answer.
+    const bool enrichFromLibrary{NeedsLibraryLookup(parameterObject)};
 
     CFileItemList filteredFiles;
     RegExpCache cache;
-    for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+    for (const auto& item : items)
     {
-      if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
+      if (CUtil::ExcludeFileOrFolder(item->GetPath(), regexps, &cache))
         continue;
 
-      if (items[i]->IsSmb())
+      if (item->IsSmb())
       {
-        CURL url(items[i]->GetPath());
-        items[i]->SetPath(url.GetWithoutUserDetails());
+        CURL url(item->GetPath());
+        item->SetPath(url.GetWithoutUserDetails());
       }
 
-      if ((media == "video" && items[i]->HasVideoInfoTag()) ||
-          (media == "music" && items[i]->HasMusicInfoTag()) ||
-          (media == "pictures" && items[i]->HasPictureInfoTag()) ||
-           media == "files" ||
+      if ((section == MediaSection::VIDEO && item->HasVideoInfoTag()) ||
+          (section == MediaSection::MUSIC && item->HasMusicInfoTag()) ||
+          (section == MediaSection::PICTURES && item->HasPictureInfoTag()) ||
+          (section == MediaSection::FILES && !enrichFromLibrary) ||
            URIUtils::IsUPnP(items.GetPath()))
-          filteredFiles.Add(items[i]);
+          filteredFiles.Add(item);
       else
       {
         CFileItemPtr fileItem(new CFileItem());
-        if (FillFileItem(items[i], fileItem, section, parameterObject))
+        if (FillFileItem(item, fileItem, section, parameterObject))
             filteredFiles.Add(fileItem);
         else
-            filteredFiles.Add(items[i]);
+            filteredFiles.Add(item);
       }
     }
 
     // Check if the "properties" list exists
-    // and make sure it contains the "file" and "filetype"
+    // and make sure it contains the "file" and "fileType"
     // fields
     CVariant param = parameterObject;
     if (!param.isMember("properties"))
@@ -169,24 +194,25 @@ JSONRPC_STATUS CFileOperations::GetDirectory(const CVariant& parameterObject, CV
 
     if (!hasFileField)
       param["properties"].append("file");
-    param["properties"].append("filetype");
+    param["properties"].append("fileType");
 
     HandleFileItemList("id", true, "files", filteredFiles, param, result);
 
     return OK;
   }
 
-  return InvalidParams;
+  if (IsMissing(strPath))
+    return Fail(result, NotFound, Reason::NoSuchPath,
+                Target("directory", parameterObject["directory"]));
+  return Fail(result, Unavailable, Reason::Unreachable,
+              Target("directory", parameterObject["directory"]));
 }
 
 JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, CVariant& result)
 {
-  std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::Exists(file))
-    return InvalidParams;
-
-  if (!CFileUtils::RemoteAccessAllowed(file))
-    return InvalidParams;
+  const std::string file = parameterObject["file"].asString();
+  if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
+    return status;
 
   std::string path = URIUtils::GetDirectory(file);
 
@@ -224,9 +250,9 @@ JSONRPC_STATUS CFileOperations::GetFileDetails(const CVariant& parameterObject, 
 
   if (!hasFileField)
     param["properties"].append("file");
-  param["properties"].append("filetype");
+  param["properties"].append("fileType");
 
-  HandleFileItem("id", true, "filedetails", item, parameterObject, param["properties"], result, false);
+  HandleFileItem("id", true, "fileDetails", item, parameterObject, param["properties"], result, false);
   return OK;
 }
 
@@ -238,39 +264,35 @@ JSONRPC_STATUS CFileOperations::SetFileDetails(const CVariant& parameterObject, 
   if (MediaSectionFromName(media) != MediaSection::VIDEO)
     return InvalidParams;
 
-  std::string file = parameterObject["file"].asString();
-  if (!CFileUtils::Exists(file))
-    return InvalidParams;
+  const std::string file = parameterObject["file"].asString();
+  if (const JSONRPC_STATUS status = CheckFile(parameterObject, result); status != OK)
+    return status;
 
-  if (!CFileUtils::RemoteAccessAllowed(file))
-    return InvalidParams;
-
-  CVideoDatabase videodatabase;
-  if (!videodatabase.Open())
-    return InternalError;
-
-  int fileId = videodatabase.AddFile(file);
+  CVideoDatabase::PlayStateEdit playState;
+  if (!parameterObject["playCount"].isNull())
+    playState.playCount = static_cast<int>(parameterObject["playCount"].asInteger());
+  if (!parameterObject["lastPlayed"].isNull())
+  {
+    CDateTime lastPlayed;
+    SetFromDBDateTime(parameterObject["lastPlayed"], lastPlayed);
+    playState.lastPlayed = lastPlayed;
+  }
+  if (const CVariant& resume{parameterObject["resume"]}; !resume.isNull())
+    playState.resume = CVideoDatabase::PlayStateEdit::Resume{resume["position"].asDouble(),
+                                                             resume["total"].asDouble()};
 
   CVideoInfoTag infos;
-  if (!videodatabase.GetFileInfo("", infos, fileId))
-    return InvalidParams;
-
-  CDateTime lastPlayed = infos.m_lastPlayed;
-  int playcount = infos.GetPlayCount();
-  if (!parameterObject["lastplayed"].isNull())
+  switch (KODI::VIDEO::LIBRARY::EditFilePlayState(file, playState, infos))
   {
-    lastPlayed.Reset();
-    SetFromDBDateTime(parameterObject["lastplayed"], lastPlayed);
-    playcount = lastPlayed.IsValid() ? std::max(1, playcount) : 0;
+    case CVideoDatabase::EditResult::DONE:
+      break;
+    case CVideoDatabase::EditResult::REFUSED:
+      return InvalidParams;
+    case CVideoDatabase::EditResult::NOT_FOUND:
+      return Fail(result, NotFound, Reason::NoSuchItem, Target("file", parameterObject["file"]));
+    case CVideoDatabase::EditResult::FAILED:
+      return InternalError;
   }
-  if (!parameterObject["playcount"].isNull())
-    playcount = parameterObject["playcount"].asInteger();
-  if (playcount != infos.GetPlayCount() || lastPlayed != infos.m_lastPlayed)
-    videodatabase.SetPlayCount(CFileItem(infos), playcount, lastPlayed);
-
-  CVideoLibrary::UpdateResumePoint(parameterObject, infos, videodatabase);
-
-  videodatabase.GetFileInfo("", infos, fileId);
   CJSONRPCUtils::NotifyItemUpdated(infos, KODI::ART::Artwork{});
   return ACK;
 }
@@ -284,24 +306,10 @@ JSONRPC_STATUS CFileOperations::PrepareDownload(ITransportLayer* transport,
   if (transport->PrepareDownload(parameterObject["path"].asString().c_str(), result["details"], protocol))
   {
     result["protocol"] = protocol;
-
-    if ((transport->GetCapabilities() & FileDownloadDirect) == FileDownloadDirect)
-      result["mode"] = "direct";
-    else
-      result["mode"] = "redirect";
-
     return OK;
   }
 
-  return InvalidParams;
-}
-
-JSONRPC_STATUS CFileOperations::Download(ITransportLayer* transport,
-                                         IClient* client,
-                                         const CVariant& parameterObject,
-                                         CVariant& result)
-{
-  return transport->Download(parameterObject["path"].asString().c_str(), result) ? OK : InvalidParams;
+  return Fail(result, NotFound, Reason::NoSuchPath, Target("path", parameterObject["path"]));
 }
 
 bool CFileOperations::FillFileItem(
@@ -310,7 +318,7 @@ bool CFileOperations::FillFileItem(
     std::optional<MediaSection> section /* = {} */,
     const CVariant& parameterObject /* = CVariant(CVariant::VariantTypeArray) */)
 {
-  if (originalItem.get() == NULL)
+  if (originalItem.get() == nullptr)
     return false;
 
   // copy all the available details
@@ -321,9 +329,27 @@ bool CFileOperations::FillFileItem(
   if (!strFilename.empty() && (CDirectory::Exists(strFilename) || CFileUtils::Exists(strFilename)))
   {
     if (section == MediaSection::VIDEO)
-      status = CVideoLibrary::FillFileItem(strFilename, item, parameterObject);
+      status = CVideoLibrary::FillFileItem(strFilename, item);
     else if (section == MediaSection::MUSIC)
       status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
+    else if (section == MediaSection::FILES)
+    {
+      // A "files" entry is untyped, so ask whichever library it could belong to; a folder could
+      // be a movie, a show or an album, so it is asked about in both.
+      if (!MUSIC::IsAudio(*originalItem))
+        status = CVideoLibrary::FillFileItem(strFilename, item);
+      if (!status && !VIDEO::IsVideo(*originalItem))
+        status = CAudioLibrary::FillFileItem(strFilename, item, parameterObject);
+    }
+
+    if (status)
+    {
+      // The library match annotates the browsed entry; keep the entry's own path, folder flag
+      // and mime type.
+      item->SetPath(strFilename);
+      item->SetFolder(originalItem->IsFolder());
+      item->SetMimeType(originalItem->GetMimeType());
+    }
 
     if (status && item->GetLabel().empty())
     {
@@ -390,7 +416,7 @@ bool CFileOperations::FillFileItemList(const CVariant &parameterObject, CFileIte
 
         CFileItemList filteredDirectories;
         RegExpCache cache;
-        for (unsigned int i = 0; i < (unsigned int)items.Size(); i++)
+        for (unsigned int i = 0; i < static_cast<unsigned int>(items.Size()); i++)
         {
           if (CUtil::ExcludeFileOrFolder(items[i]->GetPath(), regexps, &cache))
             continue;
@@ -433,8 +459,8 @@ bool CFileOperations::NeedsLibraryLookup(const CVariant& parameterObject)
   if (!parameterObject.isMember("properties") || !parameterObject["properties"].isArray())
     return false;
 
-  static const std::set<std::string> fileProperties = {"file",     "filetype", "label",
-                                                       "mimetype", "size",     "lastmodified"};
+  static const std::set<std::string> fileProperties = {"file",     "fileType", "label",
+                                                       "mimeType", "size",     "lastModified"};
 
   for (CVariant::const_iterator_array property = parameterObject["properties"].begin_array();
        property != parameterObject["properties"].end_array(); ++property)

@@ -65,8 +65,7 @@ public:
   explicit CSubscriber(ISubscriberCallback& invalidate) : m_callback(invalidate)
   {
     CServiceBroker::GetAnnouncementManager()->AddAnnouncer(
-        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player |
-                  ANNOUNCEMENT::GUI);
+        this, ANNOUNCEMENT::VideoLibrary | ANNOUNCEMENT::AudioLibrary | ANNOUNCEMENT::Player);
   }
   ~CSubscriber() override { CServiceBroker::GetAnnouncementManager()->RemoveAnnouncer(this); }
 

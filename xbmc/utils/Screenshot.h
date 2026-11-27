@@ -31,11 +31,6 @@ public:
                              KODI::RENDERING::CAPTURE::CaptureContent content =
                                  KODI::RENDERING::CAPTURE::CaptureContent::COMPOSITE);
 
-  //! \brief Capture the video-only image and the full composite from the same
-  //! rendered frame into two files in the configured folder
-  //! (screenshotNNNNN.png and screenshotNNNNN-video.png).
-  static void TakeScreenshotBoth();
-
   //! \brief Why a screenshot did not happen, so a caller can say which.
   enum class ScreenshotError
   {

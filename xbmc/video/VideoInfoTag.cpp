@@ -33,6 +33,8 @@
 #include <string_view>
 #include <vector>
 
+namespace NFO_ROOT = KODI::VIDEO::NFO_ROOT;
+
 namespace
 {
 /*!
@@ -122,7 +124,7 @@ void CVideoInfoTag::Reset()
   m_iEpisode = -1;
   m_iIdUniqueID = -1;
   m_uniqueIDs.clear();
-  m_strDefaultUniqueID = "unknown";
+  m_strDefaultUniqueID = KODI::VIDEO::UNIQUE_ID::UNKNOWN;
   m_iSpecialSortSeason = -1;
   m_iSpecialSortEpisode = -1;
   m_strDefaultRating = "default";
@@ -162,7 +164,8 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
 
   // we start with a <tag> tag
   TiXmlElement movieElement(tag.c_str());
-  if (tag == "movie" || tag == "tvshow" || tag == "episodedetails" || tag == "musicvideo")
+  if (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW || tag == NFO_ROOT::EPISODE ||
+      tag == NFO_ROOT::MUSIC_VIDEO)
     movieElement.SetAttribute("version", 0);
   TiXmlNode *movie = node->InsertEndChild(movieElement);
 
@@ -211,14 +214,14 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   }
 
   XMLUtils::SetInt(movie, "top250", m_iTop250);
-  if (tag == "episodedetails" || tag == "tvshow")
+  if (tag == NFO_ROOT::EPISODE || tag == NFO_ROOT::TV_SHOW)
   {
     XMLUtils::SetInt(movie, "season", m_iSeason);
     XMLUtils::SetInt(movie, "episode", m_iEpisode);
     XMLUtils::SetInt(movie, "displayseason",m_iSpecialSortSeason);
     XMLUtils::SetInt(movie, "displayepisode",m_iSpecialSortEpisode);
   }
-  if (tag == "musicvideo")
+  if (tag == NFO_ROOT::MUSIC_VIDEO)
   {
     XMLUtils::SetInt(movie, "track", m_iTrack);
     XMLUtils::SetString(movie, "album", m_strAlbum);
@@ -408,7 +411,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const std::string &tag, bool savePathI
   {
     const std::string& lang{GetOriginalLanguage().ToString()};
 
-    if (!lang.empty() && (tag == "movie" || tag == "tvshow"))
+    if (!lang.empty() && (tag == NFO_ROOT::MOVIE || tag == NFO_ROOT::TV_SHOW))
       XMLUtils::SetString(movie, "originallanguage", lang);
   }
 
@@ -852,7 +855,7 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["genre"] = m_genre;
   value["country"] = m_country;
   value["tagline"] = m_strTagLine;
-  value["plotoutline"] = m_strPlotOutline;
+  value["plotOutline"] = m_strPlotOutline;
   value["plot"] = m_strPlot;
   value["title"] = m_strTitle;
   value["votes"] = std::to_string(GetRating().votes);
@@ -878,28 +881,29 @@ void CVideoInfoTag::Serialize(CVariant& value) const
   value["runtime"] = GetDuration();
   value["file"] = m_strFile;
   value["path"] = m_strPath;
-  value["imdbnumber"] = GetUniqueID();
+  value["imdbNumber"] = GetUniqueID();
   value["mpaa"] = m_strMPAARating;
   value["filenameandpath"] = m_strFileNameAndPath;
-  value["originaltitle"] = m_strOriginalTitle;
+  value["originalTitle"] = m_strOriginalTitle;
   value["originallanguage"] = m_originalLanguage.ToString();
-  value["sorttitle"] = m_strSortTitle;
-  value["episodeguide"] = m_strEpisodeGuide;
+  value["sortTitle"] = m_strSortTitle;
+  value["episodeGuide"] = m_strEpisodeGuide;
   value["premiered"] = m_premiered.IsValid() ? m_premiered.GetAsDBDate() : StringUtils::Empty;
   value["status"] = m_strStatus;
-  value["productioncode"] = m_strProductionCode;
-  value["firstaired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
-  value["showtitle"] = m_strShowTitle;
+  value["productionCode"] = m_strProductionCode;
+  value["firstAired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
+  value["showTitle"] = m_strShowTitle;
   value["album"] = m_strAlbum;
   value["artist"] = m_artist;
-  value["playcount"] = GetPlayCount();
-  value["lastplayed"] = m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
+  value["playCount"] = GetPlayCount();
+  value["lastPlayed"] =
+      m_lastPlayed.IsValid() ? m_lastPlayed.GetAsDBDateTime() : StringUtils::Empty;
   value["top250"] = m_iTop250;
   value["year"] = GetYear();
   value["season"] = m_iSeason;
   value["episode"] = m_iEpisode;
   for (const auto& i : m_uniqueIDs)
-    value["uniqueid"][i.first] = i.second;
+    value["uniqueId"][i.first] = i.second;
 
   value["rating"] = GetRating().rating;
   CVariant ratings{CVariant::VariantTypeObject};
@@ -913,22 +917,23 @@ void CVideoInfoTag::Serialize(CVariant& value) const
     ratings[ratingname] = rating;
   }
   value["ratings"] = ratings;
-  value["userrating"] = m_iUserRating;
+  value["userRating"] = m_iUserRating;
   value["dbid"] = m_iDbId;
   value["fileid"] = m_iFileId;
   value["track"] = m_iTrack;
-  value["showlink"] = m_showLink;
-  m_streamDetails.Serialize(value["streamdetails"]);
+  value["showLink"] = m_showLink;
+  m_streamDetails.Serialize(value["streamDetails"]);
+  SerializeContentGeometry(value["streamDetails"]);
   CVariant resume{CVariant::VariantTypeObject};
   resume["position"] = m_resumePoint.timeInSeconds;
   resume["total"] = m_resumePoint.totalTimeInSeconds;
   value["resume"] = resume;
-  value["tvshowid"] = m_iIdShow;
-  value["dateadded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
+  value["tvShowId"] = m_iIdShow;
+  value["dateAdded"] = m_dateAdded.IsValid() ? m_dateAdded.GetAsDBDateTime() : StringUtils::Empty;
   value["type"] = m_type;
-  value["seasonid"] = m_iIdSeason;
-  value["specialsortseason"] = m_iSpecialSortSeason;
-  value["specialsortepisode"] = m_iSpecialSortEpisode;
+  value["seasonId"] = m_iIdSeason;
+  value["specialSortSeason"] = m_iSpecialSortSeason;
+  value["specialSortEpisode"] = m_iSpecialSortEpisode;
 }
 
 int CVideoInfoTag::GetDescribedAudioStreamIndex() const
@@ -1232,9 +1237,9 @@ bool CVideoInfoTag::HasConflictingUniqueID(const CVideoInfoTag& other) const
                              [&other](const auto& id)
                              {
                                const auto it{other.m_uniqueIDs.find(id.first)};
-                               return id.first != "unknown" && !id.second.empty() &&
-                                      it != other.m_uniqueIDs.end() && !it->second.empty() &&
-                                      it->second != id.second;
+                               return id.first != KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
+                                      !id.second.empty() && it != other.m_uniqueIDs.end() &&
+                                      !it->second.empty() && it->second != id.second;
                              });
 }
 
@@ -1395,7 +1400,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prioritise)
         else
           SetUniqueID(uniqueid->FirstChild()->ValueStr());
         bool isDefault;
-        if (m_strDefaultUniqueID == "unknown" &&
+        if (m_strDefaultUniqueID == KODI::VIDEO::UNIQUE_ID::UNKNOWN &&
             (uniqueid->QueryBoolAttribute("default", &isDefault) == TIXML_SUCCESS) && isDefault)
         {
           m_strDefaultUniqueID = value;
@@ -1793,6 +1798,15 @@ KODI::VIDEO::GEOMETRY::EffectiveGeometry CVideoInfoTag::ResolveContentGeometry()
   inputs.atRestAspect = KODI::VIDEO::GEOMETRY::ContentGeometryAtRestFromSettings();
 
   return KODI::VIDEO::GEOMETRY::ResolveEffectiveGeometry(inputs);
+}
+
+void CVideoInfoTag::SerializeContentGeometry(CVariant& streamdetails) const
+{
+  if (!HasContentGeometry() || !streamdetails["video"].isArray() || streamdetails["video"].empty())
+    return;
+
+  KODI::VIDEO::GEOMETRY::SerializeEffectiveGeometry(ResolveContentGeometry(),
+                                                    streamdetails["video"][0]["contentRect"]);
 }
 
 bool CVideoInfoTag::IsEmpty() const

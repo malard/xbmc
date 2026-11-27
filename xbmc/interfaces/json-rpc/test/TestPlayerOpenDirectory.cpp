@@ -8,14 +8,18 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "PlayListPlayer.h"
+#include "ServiceBroker.h"
 #include "URL.h"
+#include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "filesystem/Directory.h"
 #include "filesystem/DirectoryCache.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/json-rpc/PlayerOperations.h"
+#include "playlists/PlayListFileItemClassify.h"
+#include "settings/SettingsComponent.h"
 #include "utils/URIUtils.h"
+#include "utils/Variant.h"
 
 #include <memory>
 #include <string>
@@ -38,6 +42,7 @@ public:
   {
     return ListSlideshowDirectory(path, recursive, pictures, media);
   }
+  using CPlayerOperations::PlayerNameFor;
 };
 
 class TestPlayerOpenDirectory : public ::testing::Test
@@ -75,6 +80,30 @@ protected:
   }
 
   std::string m_root;
+};
+
+class TestPlayerOpenPlayerName : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    m_factory = std::make_unique<CPlayerCoreFactory>(
+        *CServiceBroker::GetSettingsComponent()->GetProfileManager());
+    m_factory->OnSettingsLoaded();
+    // The unit environment has no game service, so the media tags say what each file is.
+    m_audio.GetMusicInfoTag();
+    m_video.GetVideoInfoTag();
+  }
+
+  JSONRPC_STATUS NameFor(const CVariant& option, const CFileItem* first)
+  {
+    return CTestPlayerOperations::PlayerNameFor(option, first, *m_factory, m_name);
+  }
+
+  std::unique_ptr<CPlayerCoreFactory> m_factory;
+  CFileItem m_audio{"/music/track.wav", false};
+  CFileItem m_video{"/video/film.mp4", false};
+  std::string m_name{"previous"};
 };
 
 } // unnamed namespace
@@ -131,9 +160,7 @@ TEST_F(TestPlayerOpenDirectory, AFileThatCouldBeAudioOrVideoAsksForTheVideoPlaye
   ASSERT_TRUE(CTestPlayerOperations::List(m_root, true, pictures, media));
 
   ASSERT_EQ((std::vector<std::string>{"film.mkv", "recording.wtv"}), Names(media));
-  EXPECT_FALSE(media[0]->HasProperty("playlist_type_hint"));
-  EXPECT_EQ(static_cast<int>(KODI::PLAYLIST::Id::TYPE_VIDEO),
-            media[1]->GetProperty("playlist_type_hint").asInteger32(-1));
+  EXPECT_EQ(KODI::PLAYLIST::Video, KODI::PLAYLIST::TypeFor(*media[1]));
 }
 
 TEST_F(TestPlayerOpenDirectory, SubdirectoriesAreOnlyFollowedWhenAsked)
@@ -187,4 +214,32 @@ TEST_F(TestPlayerOpenDirectory, ADirectoryThatCannotBeListedIsReported)
   CFileItemList media;
   EXPECT_FALSE(CTestPlayerOperations::List(URIUtils::AddFileToFolder(m_root, "missing/"), true,
                                            pictures, media));
+}
+
+TEST_F(TestPlayerOpenPlayerName, NoNameOrTheNameDefaultIsTheDefaultPlayer)
+{
+  EXPECT_EQ(OK, NameFor(CVariant(), &m_audio));
+  EXPECT_EQ("", m_name);
+  EXPECT_EQ(OK, NameFor(CVariant("default"), &m_audio));
+  EXPECT_EQ("", m_name);
+}
+
+TEST_F(TestPlayerOpenPlayerName, AnUnknownPlayerIsRefused)
+{
+  EXPECT_EQ(InvalidParams, NameFor(CVariant("NoSuchPlayer"), &m_audio));
+  EXPECT_EQ(InvalidParams, NameFor(CVariant(42), &m_audio));
+  EXPECT_EQ(InvalidParams, NameFor(CVariant("NoSuchPlayer"), nullptr));
+}
+
+TEST_F(TestPlayerOpenPlayerName, APlayerMustPlayTheFirstItem)
+{
+  EXPECT_EQ(InvalidParams, NameFor(CVariant("PAPlayer"), &m_video));
+  EXPECT_EQ(OK, NameFor(CVariant("VideoPlayer"), &m_video));
+  EXPECT_EQ("VideoPlayer", m_name);
+}
+
+TEST_F(TestPlayerOpenPlayerName, WithNoFirstItemOnlyThePlayerIsChecked)
+{
+  EXPECT_EQ(OK, NameFor(CVariant("PAPlayer"), nullptr));
+  EXPECT_EQ("PAPlayer", m_name);
 }

@@ -45,7 +45,7 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
-#include "video/VideoDatabase.h"
+#include "video/VideoDbContentType.h"
 
 #include <mutex>
 
@@ -481,8 +481,8 @@ void CGUIDialogSubtitles::OnSubtitleServiceContextMenu(int itemIdx)
       }
       else
       {
-        CLog::Log(LOGERROR, "{} - Could not open settings for addon: {}", __FUNCTION__,
-                  service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
+        CLog::LogF(LOGERROR, "Could not open settings for addon: {}",
+                   service->GetProperty(KODI::ITEM::PROPERTY::ADDON_ID).asString());
       }
       break;
     }

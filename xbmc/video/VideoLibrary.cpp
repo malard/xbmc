@@ -26,6 +26,20 @@ bool AddBookMarkToFile(const std::string& strFilenameAndPath,
                       { return db.AddBookMarkToFile(strFilenameAndPath, bookmark, type); });
 }
 
+CVideoDatabase::AddResult AddItem(KODI::MEDIA::TYPE type,
+                                  const std::string& path,
+                                  CVideoInfoTag& details,
+                                  const KODI::ART::Artwork& artwork,
+                                  int idShow,
+                                  const CVideoDatabase::PlayStateEdit& playState,
+                                  int& id)
+{
+  id = -1;
+  return WithDatabase([&](CVideoDatabase& db) -> std::optional<CVideoDatabase::AddResult>
+                      { return db.AddItem(type, path, details, artwork, idShow, playState, id); })
+      .value_or(CVideoDatabase::AddResult::FAILED);
+}
+
 int AddSetForMovie(const std::string& name, int idMovie)
 {
   return WithDatabase([&](CVideoDatabase& db) { return db.AddSetForMovie(name, idMovie); });
@@ -56,6 +70,37 @@ bool DeleteItem(VideoDbContentType type, int id)
 void DeleteTag(int idTag, VideoDbContentType mediaType)
 {
   WithDatabase([&](CVideoDatabase& db) { db.DeleteTag(idTag, mediaType); });
+}
+
+bool DescribePath(const std::string& path, CFileItem& item)
+{
+  return WithDatabase([&](CVideoDatabase& db) { return db.DescribePath(path, item); });
+}
+
+CVideoDatabase::EditResult EditFilePlayState(const std::string& file,
+                                             const CVideoDatabase::PlayStateEdit& playState,
+                                             CVideoInfoTag& details)
+{
+  return WithDatabase([&](CVideoDatabase& db) -> std::optional<CVideoDatabase::EditResult>
+                      { return db.EditFilePlayState(file, playState, details); })
+      .value_or(CVideoDatabase::EditResult::FAILED);
+}
+
+CVideoDatabase::EditResult EditItem(KODI::MEDIA::TYPE type,
+                                    int id,
+                                    CVideoInfoTag& details,
+                                    const KODI::ART::Artwork& artwork,
+                                    const std::set<std::string, std::less<>>& removedArtwork,
+                                    const std::set<std::string, std::less<>>& updatedDetails,
+                                    const CVideoDatabase::PlayStateEdit& playState)
+{
+  return WithDatabase(
+             [&](CVideoDatabase& db) -> std::optional<CVideoDatabase::EditResult>
+             {
+               return db.EditItem(type, id, details, artwork, removedArtwork, updatedDetails,
+                                  playState);
+             })
+      .value_or(CVideoDatabase::EditResult::FAILED);
 }
 
 void EraseVideoSettings(const CFileItem& item)
@@ -318,6 +363,15 @@ bool SetItemTitle(const CVideoInfoTag& item, const std::string& title)
 bool SetPathHash(const std::string& path, const std::string& hash)
 {
   return WithDatabase([&](CVideoDatabase& db) { return db.SetPathHash(path, hash); });
+}
+
+void SetSourceContent(const std::string& path,
+                      const ADDON::ScraperPtr& scraper,
+                      const KODI::VIDEO::SScanSettings& settings,
+                      bool removeContent)
+{
+  WithDatabase([&](CVideoDatabase& db)
+               { db.SetSourceContent(path, scraper, settings, removeContent); });
 }
 
 void SetStackTimes(const std::string& filePath, const std::vector<std::chrono::milliseconds>& times)

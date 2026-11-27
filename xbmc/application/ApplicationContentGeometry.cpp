@@ -12,6 +12,7 @@
 #include "application/ApplicationComponents.h"
 #include "application/ApplicationPlayer.h"
 #include "application/ApplicationSettingsHandling.h"
+#include "application/PlaybackAnnouncer.h"
 #include "cores/VideoPlayer/Interface/StreamInfo.h"
 #include "cores/VideoSettings.h"
 #include "settings/Settings.h"
@@ -19,10 +20,14 @@
 #include "settings/lib/Setting.h"
 #include "utils/AspectRatioVocabulary.h"
 #include "utils/MathUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/log.h"
+#include "video/geometry/GeometryPublication.h"
 #include "video/geometry/GeometrySettings.h"
 #include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
+
+#include <chrono>
 
 using namespace KODI::UTILS;
 using namespace KODI::VIDEO::GEOMETRY;
@@ -49,11 +54,11 @@ float GuiShapeAspect()
 }
 
 //! \brief What is on the screen when nothing is playing: a ratio, no rectangle.
-EffectiveGeometry AtRestGeometry()
+EffectiveGeometry AtRestGeometry(float atRestAspect)
 {
   EffectiveGeometry gui;
   const float guiShape{GuiShapeAspect()};
-  gui.aspect = guiShape > 0.0f ? guiShape : ContentGeometryAtRestFromSettings();
+  gui.aspect = guiShape > 0.0f ? guiShape : atRestAspect;
   gui.label = CAspectRatioVocabulary::Label(gui.aspect);
   gui.name = CAspectRatioVocabulary::Name(gui.aspect);
   gui.source = GeometrySource::Container;
@@ -72,24 +77,106 @@ CRect WholePixels(const CRect& rect)
 
 CApplicationContentGeometry::CApplicationContentGeometry() = default;
 
+void CApplicationContentGeometry::Announce(const EffectiveGeometry& geometry,
+                                           const DrawnGeometry& drawn)
+{
+  const auto announcer = CServiceBroker::GetAppComponents().GetComponent<CPlaybackAnnouncer>();
+  if (!announcer)
+    return;
+
+  CVariant data{CVariant::VariantTypeObject};
+  SerializeEffectiveGeometry(geometry, data["contentRect"]);
+
+  if (drawn.Drawn())
+    SerializeDrawnGeometry(drawn, data["screen"]);
+
+  announcer->OnContentGeometryChanged(std::move(data));
+}
+
 void CApplicationContentGeometry::Set(const EffectiveGeometry& geometry)
 {
-  std::unique_lock lock(m_section);
-  m_current = geometry;
+  bool differs = false;
+  {
+    std::unique_lock lock(m_section);
+    differs = PublishedGeometryDiffers(m_current, geometry);
+    m_current = geometry;
+  }
+
+  if (differs)
+    AnnounceThrottled();
+}
+
+void CApplicationContentGeometry::AnnounceThrottled()
+{
+  bool now = false;
+  {
+    std::unique_lock lock(m_announceSection);
+
+    const int64_t elapsed = CTimeUtils::MonotonicMs() - m_lastAnnounceMs;
+    if (elapsed >= ANNOUNCE_INTERVAL_MS)
+    {
+      m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+      now = true;
+    }
+    else if (!m_announcePending)
+    {
+      m_announcePending = true;
+
+      if (!m_announceTimer.Start(std::chrono::milliseconds(ANNOUNCE_INTERVAL_MS - elapsed)))
+      {
+        m_announcePending = false;
+        m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+        now = true;
+      }
+    }
+  }
+
+  if (now)
+    AnnounceNow();
+}
+
+void CApplicationContentGeometry::OnAnnounceTimer()
+{
+  {
+    std::unique_lock lock(m_announceSection);
+    m_announcePending = false;
+    m_lastAnnounceMs = CTimeUtils::MonotonicMs();
+  }
+
+  AnnounceNow();
+}
+
+void CApplicationContentGeometry::AnnounceNow()
+{
+  const auto [geometry, drawn] = Snapshot();
+  Announce(geometry, drawn);
 }
 
 void CApplicationContentGeometry::SetDrawn(const DrawnGeometry& drawn)
 {
   const DrawnGeometry rounded{WholePixels(drawn.picture), WholePixels(drawn.raster)};
 
-  std::unique_lock lock(m_section);
-  m_drawn = rounded;
+  {
+    std::unique_lock lock(m_section);
+    if (rounded.picture == m_drawn.picture && rounded.raster == m_drawn.raster)
+      return;
+
+    m_drawn = rounded;
+  }
+
+  AnnounceThrottled();
 }
 
 DrawnGeometry CApplicationContentGeometry::Drawn() const
 {
   std::unique_lock lock(m_section);
   return m_drawn;
+}
+
+std::pair<EffectiveGeometry, DrawnGeometry> CApplicationContentGeometry::Snapshot() const
+{
+  std::unique_lock lock(m_section);
+  return {m_current, m_drawn};
 }
 
 void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cached)
@@ -104,7 +191,7 @@ void CApplicationContentGeometry::SetFileInputs(const ContentGeometryLookup& cac
     m_pending = {};
 
     m_haveStream = false;
-    m_current = AtRestGeometry();
+    m_current = AtRestGeometry(AtRestAspect());
 
     m_carryRaster = true;
   }
@@ -149,6 +236,11 @@ float CApplicationContentGeometry::RasterAspect() const
   }
 
   return RasterAspectFromSettings();
+}
+
+float CApplicationContentGeometry::AtRestAspect() const
+{
+  return ContentGeometryAtRest(RasterAspect());
 }
 
 OsdPlacement CApplicationContentGeometry::OsdPlacementInForce() const
@@ -214,7 +306,7 @@ void CApplicationContentGeometry::RefreshAtRest()
       return;
   }
 
-  Set(AtRestGeometry());
+  Set(AtRestGeometry(AtRestAspect()));
 }
 
 void CApplicationContentGeometry::OnSettingChanged(const std::shared_ptr<const CSetting>& setting)
@@ -257,16 +349,16 @@ void CApplicationContentGeometry::Refresh()
       std::unique_lock lock(m_section);
       m_haveStream = false;
     }
-    Set(AtRestGeometry());
+    Set(AtRestGeometry(AtRestAspect()));
     return;
   }
 
   const CVideoSettings videoSettings = appPlayer->GetVideoSettings();
 
-  // Gathered before the section is taken: none of it depends on what the section guards, and
-  // the settings store has a lock of its own.
+  // Gathered before the section is taken: the settings store has a lock of its own, and the
+  // shape at rest takes the section for itself.
   const VariableGeometryPolicy policy = ContentGeometryPolicyFromSettings();
-  const float atRestAspect = ContentGeometryAtRestFromSettings();
+  const float atRestAspect = AtRestAspect();
   const int videoStream = appPlayer->GetVideoStream();
 
   EffectiveGeometry resolved;
@@ -321,7 +413,7 @@ void CApplicationContentGeometry::Clear()
 
   ApplyRaster();
 
-  Set(AtRestGeometry());
+  Set(AtRestGeometry(AtRestAspect()));
 }
 
 void CApplicationContentGeometry::ApplyRaster()

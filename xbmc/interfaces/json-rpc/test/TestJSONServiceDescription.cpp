@@ -6,17 +6,9 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "interfaces/json-rpc/IClient.h"
-#include "interfaces/json-rpc/ITransportLayer.h"
-#include "interfaces/json-rpc/JSONRPC.h"
-#include "interfaces/json-rpc/JSONServiceDescription.h"
-#include "utils/JSONVariantParser.h"
-#include "utils/JSONVariantWriter.h"
-#include "utils/StringUtils.h"
-#include "utils/Variant.h"
+#include "JSONRPCTestUtils.h"
 
 #include <string>
-#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -25,280 +17,259 @@ using namespace JSONRPC;
 namespace
 {
 
-class CAllCapabilityTransport : public ITransportLayer
-{
-public:
-  bool PrepareDownload(const char* path, CVariant& details, std::string& protocol) override
-  {
-    return false;
-  }
-  bool Download(const char* path, CVariant& result) override { return false; }
-  int GetCapabilities() override { return TRANSPORT_LAYER_CAPABILITY_ALL; }
-};
-
-class CAllPermissionClient : public IClient
-{
-public:
-  int GetPermissionFlags() override { return OPERATION_PERMISSION_ALL; }
-  int GetAnnouncementFlags() override { return 0; }
-  bool SetAnnouncementFlags(int flags) override { return true; }
-};
-
-JSONRPC_STATUS StubMethod(const CVariant& parameterObject, CVariant& result)
-{
-  return OK;
-}
-
-CVariant ParseJson(const std::string& json)
-{
-  CVariant parsed;
-  EXPECT_TRUE(CJSONVariantParser::Parse(json, parsed)) << "invalid test JSON: " << json;
-  return parsed;
-}
-
-std::string ToJson(const CVariant& variant)
-{
-  std::string json;
-  CJSONVariantWriter::Write(variant, json, true);
-  return json;
-}
-
 void ExpectVariantEq(const CVariant& expected, const CVariant& actual)
 {
   EXPECT_TRUE(expected == actual) << "expected: " << ToJson(expected)
                                   << "\n  actual: " << ToJson(actual);
 }
 
-//! \brief One definition written both ways: the draft-03 form and its JSON Schema 2020-12 twin
-struct Twin
-{
-  std::string draft03;
-  std::string draft2020;
-};
-
-// clang-format off
-const std::vector<Twin> TWIN_TYPES = {
-  { R"({"Twin.Id": { "type": "integer", "default": -1, "minimum": 1 }})",
-    R"({"Twin.Id": { "type": "integer", "default": -1, "minimum": 1 }})" },
-  { R"({"Twin.Base": { "type": "object", "description": "a base", "properties": {
-        "a": { "type": "string", "required": true },
-        "shared": { "type": "integer", "default": 1 } } }})",
-    R"({"Twin.Base": { "type": "object", "description": "a base", "properties": {
-        "a": { "type": "string" },
-        "shared": { "type": "integer", "default": 1 } },
-        "required": ["a"] }})" },
-  { R"({"Twin.Other": { "type": "object", "properties": { "c": { "type": "number" } } }})",
-    R"({"Twin.Other": { "type": "object", "properties": { "c": { "type": "number" } } }})" },
-  { R"({"Twin.Derived": { "extends": "Twin.Base", "properties": {
-        "b": { "type": "boolean", "required": true },
-        "ref": { "$ref": "Twin.Id", "required": true },
-        "shared": { "type": "integer", "default": 2 } } }})",
-    R"({"Twin.Derived": { "allOf": [ { "$ref": "#/$defs/Twin.Base" } ], "properties": {
-        "b": { "type": "boolean" },
-        "ref": { "$ref": "#/$defs/Twin.Id" },
-        "shared": { "type": "integer", "default": 2 } },
-        "required": ["b", "ref"] }})" },
-  { R"({"Twin.Both": { "extends": [ "Twin.Base", "Twin.Other" ] }})",
-    R"({"Twin.Both": { "allOf": [ { "$ref": "#/$defs/Twin.Base" }, { "$ref": "#/$defs/Twin.Other" } ] }})" },
-  { R"({"Twin.Union": { "type": [
-        { "type": "object", "properties": { "movieid": { "$ref": "Twin.Id", "required": true } },
-          "additionalProperties": false },
-        { "type": "object", "properties": { "songid": { "$ref": "Twin.Id", "required": true } },
-          "additionalProperties": false } ] }})",
-    R"({"Twin.Union": { "anyOf": [
-        { "type": "object", "properties": { "movieid": { "$ref": "#/$defs/Twin.Id" } },
-          "required": ["movieid"], "additionalProperties": false },
-        { "type": "object", "properties": { "songid": { "$ref": "#/$defs/Twin.Id" } },
-          "required": ["songid"], "additionalProperties": false } ] }})" },
-  { R"({"Twin.Optional": { "type": [ "null", { "$ref": "Twin.Base" } ], "default": null }})",
-    R"({"Twin.Optional": { "anyOf": [ { "type": "null" }, { "$ref": "#/$defs/Twin.Base" } ], "default": null }})" },
-  { R"({"Twin.Any": { "type": "object", "properties": { "data": { "type": "any", "default": null } } }})",
-    R"({"Twin.Any": { "type": "object", "properties": { "data": { "default": null } } }})" },
-  { R"({"Twin.List": { "type": "array", "items": { "$ref": "Twin.Id" }, "uniqueItems": true, "minItems": 1 }})",
-    R"({"Twin.List": { "type": "array", "items": { "$ref": "#/$defs/Twin.Id" }, "uniqueItems": true, "minItems": 1 }})" },
-  { R"({"Twin.Map": { "type": "object", "additionalProperties": { "$ref": "Twin.Id" } }})",
-    R"({"Twin.Map": { "type": "object", "additionalProperties": { "$ref": "#/$defs/Twin.Id" } }})" },
-};
-
-const Twin TWIN_METHOD = {
-  R"({"Twin.Method": { "type": "method", "description": "test", "transport": "Response",
-      "permission": "ReadData", "returns": { "$ref": "Twin.List" }, "params": [
-      { "name": "target", "$ref": "Twin.Union", "required": true },
-      { "name": "item", "$ref": "Twin.Derived" },
-      { "name": "both", "$ref": "Twin.Both" },
-      { "name": "opt", "$ref": "Twin.Optional" },
-      { "name": "level", "$ref": "Twin.Id", "default": 7 },
-      { "name": "filter", "type": "object", "description": "a filter", "properties": {
-          "path": { "type": "string", "required": true },
-          "mode": { "type": "string", "enum": ["fast", "slow"], "default": "fast" } },
-        "additionalProperties": false },
-      { "name": "flag", "type": [ "null", "boolean" ], "default": null },
-      { "name": "data", "type": "any", "default": null },
-      { "name": "map", "$ref": "Twin.Map" } ] }})",
-  R"({"Twin.Method": { "type": "method", "description": "test", "transport": "Response",
-      "permission": "ReadData", "returns": { "$ref": "#/$defs/Twin.List" }, "params": [
-      { "name": "target", "required": true, "schema": { "$ref": "#/$defs/Twin.Union" } },
-      { "name": "item", "schema": { "$ref": "#/$defs/Twin.Derived" } },
-      { "name": "both", "schema": { "$ref": "#/$defs/Twin.Both" } },
-      { "name": "opt", "schema": { "$ref": "#/$defs/Twin.Optional" } },
-      { "name": "level", "schema": { "$ref": "#/$defs/Twin.Id", "default": 7 } },
-      { "name": "filter", "description": "a filter", "schema": { "type": "object", "properties": {
-          "path": { "type": "string" },
-          "mode": { "type": "string", "enum": ["fast", "slow"], "default": "fast" } },
-        "required": ["path"], "additionalProperties": false } },
-      { "name": "flag", "schema": { "type": [ "null", "boolean" ], "default": null } },
-      { "name": "data", "schema": { "default": null } },
-      { "name": "map", "schema": { "$ref": "#/$defs/Twin.Map" } } ] }})"
-};
-
-const std::vector<std::string> TWIN_CALLS = {
-  R"({})",
-  R"({"target": {"movieid": 3}})",
-  R"({"target": {"songid": 7}, "level": 2, "flag": true, "data": [1, "x"]})",
-  R"({"target": {"movieid": 0}})",
-  R"({"target": {"foo": 1}})",
-  R"({"target": {"movieid": 3}, "item": {"a": "x", "b": true, "ref": 4}})",
-  R"({"target": {"movieid": 3}, "item": {"b": true, "ref": 4}})",
-  R"({"target": {"movieid": 3}, "item": {"a": "x", "ref": 4}})",
-  R"({"target": {"movieid": 3}, "both": {"a": "x", "c": 1.5}})",
-  R"({"target": {"movieid": 3}, "both": {"c": 1.5}})",
-  R"({"target": {"movieid": 3}, "opt": {"a": "x"}})",
-  R"({"target": {"movieid": 3}, "opt": {"shared": 2}})",
-  R"({"target": {"movieid": 3}, "level": 0})",
-  R"({"target": {"movieid": 3}, "filter": {}})",
-  R"({"target": {"movieid": 3}, "filter": {"path": 7}})",
-  R"({"target": {"movieid": 3}, "filter": {"path": "/x", "mode": "slow"}})",
-  R"({"target": {"movieid": 3}, "filter": {"path": "/x", "mode": "other"}})",
-  R"({"target": {"movieid": 3}, "filter": {"path": "/x", "extra": 1}})",
-  R"({"target": {"movieid": 3}, "flag": 1})",
-  R"({"target": {"movieid": 3}, "map": {"x": 1, "y": 2}})",
-  R"({"target": {"movieid": 3}, "map": {"x": "one"}})",
-  R"([{"movieid": 3}, null, null, null, 5])",
-};
-// clang-format on
-
 } // unnamed namespace
 
-class TestJSONServiceDescription : public ::testing::Test
+class TestJSONServiceDescription : public JSONServiceDescriptionTestBase
 {
-protected:
-  void SetUp() override { CJSONRPC::Cleanup(); }
-  void TearDown() override { CJSONRPC::Cleanup(); }
-
-  static bool AddTestMethod(const std::string& name, const std::string& params)
-  {
-    return CJSONServiceDescription::AddMethod(
-        R"({")" + name +
-            R"(": {"type": "method", "description": "test", "transport": "Response",
-                   "permission": "ReadData", "returns": "string", "params": )" +
-            params + "}}",
-        StubMethod);
-  }
-
-  CVariant Introspect(bool descriptions = true)
-  {
-    CVariant result;
-    EXPECT_EQ(OK, CJSONServiceDescription::Print(result, &m_transport, &m_client, descriptions,
-                                                 true, false));
-    return result;
-  }
-
-  JSONRPC_STATUS Call(const char* method, const std::string& paramsJson, CVariant& output)
-  {
-    std::string key = method;
-    StringUtils::ToLower(key);
-    MethodCall call;
-    output = CVariant();
-    return CJSONServiceDescription::CheckCall(key.c_str(), ParseJson(paramsJson), &m_transport,
-                                              &m_client, false, call, output);
-  }
-
-  //! \brief Registers one form of the twins and records what Introspect and each call answer
-  CVariant Record(bool draft2020)
-  {
-    CJSONRPC::Cleanup();
-    for (const auto& twin : TWIN_TYPES)
-      EXPECT_TRUE(CJSONServiceDescription::AddType(draft2020 ? twin.draft2020 : twin.draft03));
-    EXPECT_TRUE(CJSONServiceDescription::AddMethod(
-        draft2020 ? TWIN_METHOD.draft2020 : TWIN_METHOD.draft03, StubMethod));
-    CJSONServiceDescription::ResolveReferences();
-
-    CVariant record;
-    record["introspect"] = Introspect();
-    for (const auto& params : TWIN_CALLS)
-    {
-      CVariant output;
-      CVariant answer;
-      answer["status"] = static_cast<int>(Call("Twin.Method", params, output));
-      answer["output"] = output;
-      record["calls"][params] = answer;
-    }
-    return record;
-  }
-
-  CAllCapabilityTransport m_transport;
-  CAllPermissionClient m_client;
 };
 
-TEST_F(TestJSONServiceDescription, A2020DefinitionReadsAsItsDraft03Twin)
+TEST_F(TestJSONServiceDescription, EveryShippedMethodHasAHandler)
 {
-  const CVariant draft03 = Record(false);
-  const CVariant draft2020 = Record(true);
+  AddShippedServiceDescription();
 
-  ASSERT_EQ(TWIN_TYPES.size(), draft03["introspect"]["types"].size());
-  ASSERT_TRUE(draft03["introspect"]["methods"].isMember("Twin.Method"));
-  ExpectVariantEq(draft03["introspect"], draft2020["introspect"]);
-  for (const auto& params : TWIN_CALLS)
+  for (const auto& [name, definition] : ShippedMethods())
   {
-    SCOPED_TRACE(params);
-    ExpectVariantEq(draft03["calls"][params], draft2020["calls"][params]);
-  }
-
-  // The calls reach both outcomes, so the comparison is not of two refusals
-  EXPECT_EQ(OK, draft2020["calls"][R"({"target": {"movieid": 3}})"]["status"].asInteger());
-  EXPECT_EQ(InvalidParams, draft2020["calls"][R"({"target": {"foo": 1}})"]["status"].asInteger());
-}
-
-TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)
-{
-  ASSERT_TRUE(AddTestMethod("Test.Case", R"([ { "name": "o", "required": true, "schema": {
-      "type": "object",
-      "properties": { "MixedCase": { "type": "string" } },
-      "required": ["MixedCase"] } } ])"));
-  ASSERT_TRUE(AddTestMethod("Test.CaseDraft03", R"([ { "name": "o", "required": true,
-      "type": "object",
-      "properties": { "MixedCase": { "type": "string", "required": true } } } ])"));
-
-  for (const char* method : {"Test.Case", "Test.CaseDraft03"})
-  {
-    SCOPED_TRACE(method);
+    std::string key = name;
+    StringUtils::ToLower(key);
+    MethodCall call;
     CVariant output;
-    EXPECT_EQ(OK, Call(method, R"({"o": {"MixedCase": "v"}})", output));
-    EXPECT_EQ(InvalidParams, Call(method, R"({"o": {}})", output));
-    EXPECT_EQ("MixedCase", output["stack"]["property"]["name"].asString());
-    EXPECT_EQ("Missing property", output["stack"]["message"].asString());
+    EXPECT_NE(MethodNotFound,
+              CJSONServiceDescription::CheckCall(key.c_str(), CVariant{}, &m_transport, &m_client,
+                                                 false, call, output))
+        << name << " is declared but not registered";
+    EXPECT_TRUE(call) << name << " has no handler";
   }
 }
 
-TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
+TEST_F(TestJSONServiceDescription, APropertyLeftOutOfSetPropertiesStaysUnset)
 {
-  EXPECT_FALSE(AddTestMethod("Test.Bad", R"([ { "name": "o", "schema": {
+  AddShippedServiceDescription();
+
+  CVariant output;
+  ASSERT_EQ(OK, Call("Player.SetProperties", R"({"properties": {"muted": true}})", output));
+
+  EXPECT_TRUE(output["properties"]["volume"].isNull())
+      << "an omitted volume must not reach the handler as 0";
+  EXPECT_TRUE(output["properties"]["muted"].asBoolean());
+}
+
+TEST_F(TestJSONServiceDescription, MissingRequiredParameter)
+{
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Required",
+      R"([ { "name": "value", "required": true, "schema": { "type": "string" } } ])"));
+
+  CVariant output;
+  EXPECT_EQ(InvalidParams, Call("Test.Required", "{}", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Required",
+    "stack": { "name": "value", "type": "string", "message": "Missing parameter" }
+  })"),
+                  output);
+}
+
+TEST_F(TestJSONServiceDescription, ObjectParameter)
+{
+  ASSERT_TRUE(AddTestMethod("Test.Object", R"([
+      { "name": "opts", "required": true, "schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "mode": { "type": "string", "default": "fast" }
+          },
+          "required": ["path"],
+          "additionalProperties": false } },
+      { "name": "speed", "schema": { "type": "integer", "default": 5 } }
+    ])"));
+
+  // A missing required property names the property and its type in the error data
+  CVariant output;
+  EXPECT_EQ(InvalidParams, Call("Test.Object", R"({"opts": {}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Object",
+    "stack": {
+      "name": "opts",
       "type": "object",
-      "properties": { "real": { "type": "string" } },
-      "required": ["nonexistent"] } } ])"));
+      "property": { "name": "path", "type": "string" },
+      "message": "Missing property"
+    }
+  })"),
+                  output);
+
+  // A property of the wrong type carries the message on the property frame
+  EXPECT_EQ(InvalidParams, Call("Test.Object", R"({"opts": {"path": 7}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Object",
+    "stack": {
+      "name": "opts",
+      "type": "object",
+      "property": { "name": "path", "type": "string", "message": "Invalid type integer received" }
+    }
+  })"),
+                  output);
+
+  // Optional properties and parameters are filled from their defaults
+  EXPECT_EQ(OK, Call("Test.Object", R"({"opts": {"path": "/x"}})", output));
+  ExpectVariantEq(ParseJson(R"({ "opts": { "mode": "fast", "path": "/x" }, "speed": 5 })"), output);
 }
 
-TEST_F(TestJSONServiceDescription, SchemaWithAMalformedTypeStillFailsParse)
+TEST_F(TestJSONServiceDescription, UnionParameter)
 {
-  // Absent is not the same as nonsense: a "type" that is neither a name nor a list of names
-  // is a broken schema and must not be read as "any".
-  EXPECT_FALSE(AddTestMethod("Test.BadType", R"([ { "name": "data", "schema": { "type": 5 } } ])"));
+  ASSERT_TRUE(AddTestMethod("Test.Union", R"([
+      { "name": "target", "required": true, "schema": { "anyOf": [
+          { "type": "object",
+            "properties": { "movieId": { "type": "integer" } },
+            "required": ["movieId"],
+            "additionalProperties": false },
+          { "type": "object",
+            "properties": { "songId": { "type": "integer" } },
+            "required": ["songId"],
+            "additionalProperties": false }
+        ] } },
+      { "name": "when", "schema": { "anyOf": [
+          { "type": "null" },
+          { "type": "string", "enum": ["now", "later"] }
+        ], "default": null } },
+      { "name": "flag", "schema": { "type": ["null", "boolean"], "default": null } }
+    ])"));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"movieId": 3}})", output));
+  ExpectVariantEq(ParseJson(R"({ "target": { "movieId": 3 }, "when": null, "flag": null })"),
+                  output);
+
+  EXPECT_EQ(OK, Call("Test.Union", R"({"target": {"songId": 7}, "when": "later", "flag": true})",
+                     output));
+  ExpectVariantEq(ParseJson(R"({ "target": { "songId": 7 }, "when": "later", "flag": true })"),
+                  output);
+
+  // No union branch accepts the value: the error carries the OR'd type list
+  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"foo": 1}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Union",
+    "stack": {
+      "name": "target",
+      "type": "object",
+      "message": "Received value does not match any of the union type definitions"
+    }
+  })"),
+                  output);
+
+  // A value matching the type mask but no branch constraint fails the union check
+  EXPECT_EQ(InvalidParams,
+            Call("Test.Union", R"({"target": {"movieId": 3}, "when": "never"})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Union",
+    "stack": {
+      "name": "when",
+      "type": ["null", "string"],
+      "message": "Received value does not match any of the union type definitions"
+    }
+  })"),
+                  output);
+
+  // A value outside the OR'd type mask fails before any branch is tried
+  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieId": 3}, "when": 5})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Union",
+    "stack": {
+      "name": "when",
+      "type": ["null", "string"],
+      "message": "Invalid type integer received"
+    }
+  })"),
+                  output);
+
+  // Pure string unions behave identically
+  EXPECT_EQ(InvalidParams, Call("Test.Union", R"({"target": {"movieId": 3}, "flag": 1})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Union",
+    "stack": {
+      "name": "flag",
+      "type": ["null", "boolean"],
+      "message": "Invalid type integer received"
+    }
+  })"),
+                  output);
 }
 
-TEST_F(TestJSONServiceDescription, AnAllOfMemberThatIsNotAReferenceFailsParse)
+TEST_F(TestJSONServiceDescription, ExtendedType)
 {
-  EXPECT_FALSE(CJSONServiceDescription::AddType(
-      R"({"Bad.Compose": { "allOf": [ { "type": "object" } ] }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Base.A": {
+    "type": "object",
+    "properties": {
+      "a": { "type": "string" },
+      "shared": { "type": "integer", "default": 1 }
+    },
+    "required": ["a"]
+  }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Derived.B": {
+    "allOf": [ { "$ref": "#/$defs/Base.A" } ],
+    "properties": {
+      "b": { "type": "boolean" },
+      "shared": { "type": "integer", "default": 2 }
+    },
+    "required": ["b"]
+  }})"));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Extends",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/Derived.B" } } ])"));
+  CJSONServiceDescription::ResolveReferences();
+
+  // The base type is validated first and fills the output first; the derived
+  // type's defaults overwrite the base's for same-named optional properties
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Extends", R"({"data": {"a": "x", "b": true}})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": { "a": "x", "b": true, "shared": 2 } })"), output);
+
+  // A value failing the base type reports the extended type by name
+  EXPECT_EQ(InvalidParams, Call("Test.Extends", R"({"data": {"b": true}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Extends",
+    "stack": {
+      "name": "Base.A",
+      "type": "object",
+      "property": { "name": "a", "type": "string" },
+      "message": "value does not match extended type Base.A"
+    }
+  })"),
+                  output);
+}
+
+TEST_F(TestJSONServiceDescription, ForwardReferences)
+{
+  // A reference to a type that arrives later parks until the base has parsed; methods are
+  // registered only after all types, as at startup.
+  EXPECT_FALSE(CJSONServiceDescription::AddType(R"({"C.Container": {
+    "type": "object",
+    "properties": { "inner": { "$ref": "#/$defs/C.Base" } },
+    "required": ["inner"]
+  }})"));
+  EXPECT_TRUE(CJSONServiceDescription::AddType(R"({"C.Base": {
+    "type": "object",
+    "properties": {
+      "x": { "type": "integer" },
+      "y": { "type": "integer", "default": 9 }
+    },
+    "required": ["x"]
+  }})"));
+  CJSONServiceDescription::ResolveReferences();
+
+  EXPECT_NE(nullptr, CJSONServiceDescription::GetType("C.Container"));
+  EXPECT_NE(nullptr, CJSONServiceDescription::GetType("C.Base"));
+  EXPECT_TRUE(AddTestMethod(
+      "Test.Forward",
+      R"([ { "name": "data", "required": true, "schema": { "$ref": "#/$defs/C.Container" } } ])"));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Forward", R"({"data": {"inner": {"x": 1}}})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": { "inner": { "x": 1, "y": 9 } } })"), output);
 }
 
 //! \brief Two types referencing each other resolve, whichever arrives first
@@ -363,6 +334,223 @@ TEST_F(TestJSONServiceDescription, ForwardCompositionReference)
   EXPECT_EQ(InvalidParams, Call("Test.LateExtends", R"({"data": {"a": "x"}})", output));
 }
 
+TEST_F(TestJSONServiceDescription, ReferenceWithLocalDefault)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddType(R"({"Level.T": {
+    "type": "integer", "minimum": 0, "maximum": 10, "default": 5
+  }})"));
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Ref",
+      R"([ { "name": "level", "schema": { "$ref": "#/$defs/Level.T", "default": 7 } } ])"));
+  CJSONServiceDescription::ResolveReferences();
+
+  // The parameter's own default overrides the referenced type's default
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Ref", "{}", output));
+  ExpectVariantEq(ParseJson(R"({ "level": 7 })"), output);
+
+  // Constraints of the referenced type still apply, message text included
+  EXPECT_EQ(InvalidParams, Call("Test.Ref", R"({"level": 12})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Ref",
+    "stack": {
+      "name": "level",
+      "type": "integer",
+      "message": "Value between 0 (inclusive) and 10 (inclusive) expected but 12 received"
+    }
+  })"),
+                  output);
+
+  // Resolving references again must not change behaviour
+  CJSONServiceDescription::ResolveReferences();
+  CJSONServiceDescription::ResolveReferences();
+  EXPECT_EQ(OK, Call("Test.Ref", "{}", output));
+  ExpectVariantEq(ParseJson(R"({ "level": 7 })"), output);
+}
+
+TEST_F(TestJSONServiceDescription, EnumParameter)
+{
+  ASSERT_TRUE(AddTestMethod(
+      "Test.Enum",
+      R"([ { "name": "mode", "schema": { "type": "string", "enum": ["one", "two"] } } ])"));
+
+  // An enum type without an explicit default defaults to its first value
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Enum", "{}", output));
+  ExpectVariantEq(ParseJson(R"({ "mode": "one" })"), output);
+
+  EXPECT_EQ(InvalidParams, Call("Test.Enum", R"({"mode": "three"})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Enum",
+    "stack": {
+      "name": "mode",
+      "type": "string",
+      "message": "Received value does not match any of the defined enum values"
+    }
+  })"),
+                  output);
+}
+
+TEST_F(TestJSONServiceDescription, APropertyNameMatchesOnlyInItsOwnCase)
+{
+  ASSERT_TRUE(AddTestMethod("Test.Camel", R"([ { "name": "o", "required": true, "schema": {
+      "type": "object",
+      "properties": { "movieId": { "type": "integer" } },
+      "additionalProperties": false } } ])"));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Camel", R"({"o": {"movieId": 3}})", output));
+  EXPECT_EQ(InvalidParams, Call("Test.Camel", R"({"o": {"movieid": 3}})", output))
+      << "a name in another case is an unexpected property, not the declared one";
+
+  const CVariant schema{Introspect("Test.Camel")["methods"]["Test.Camel"]["params"][0]["schema"]};
+  EXPECT_TRUE(schema["properties"].isMember("movieId"));
+}
+
+TEST_F(TestJSONServiceDescription, RequiredArrayMatchesMixedCaseProperties)
+{
+  ASSERT_TRUE(AddTestMethod("Test.Case", R"([ { "name": "o", "required": true, "schema": {
+      "type": "object",
+      "properties": { "MixedCase": { "type": "string" } },
+      "required": ["MixedCase"] } } ])"));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Case", R"({"o": {"MixedCase": "v"}})", output));
+  ExpectVariantEq(ParseJson(R"({ "o": { "MixedCase": "v" } })"), output);
+
+  EXPECT_EQ(InvalidParams, Call("Test.Case", R"({"o": {}})", output));
+  ExpectVariantEq(ParseJson(R"({
+    "method": "Test.Case",
+    "stack": {
+      "name": "o",
+      "type": "object",
+      "property": { "name": "MixedCase", "type": "string" },
+      "message": "Missing property"
+    }
+  })"),
+                  output);
+}
+
+TEST_F(TestJSONServiceDescription, RequiredArrayNamingUnknownPropertyFailsParse)
+{
+  EXPECT_FALSE(AddTestMethod("Test.Bad", R"([ { "name": "o", "schema": {
+      "type": "object",
+      "properties": { "real": { "type": "string" } },
+      "required": ["nonexistent"] } } ])"));
+}
+
+TEST_F(TestJSONServiceDescription, SchemaWithoutATypeAcceptsAnyValue)
+{
+  // An omitted "type" constrains nothing, which is how the schema spells a value of any
+  // type - so leaving the keyword out has to parse rather than fail.
+  ASSERT_TRUE(CJSONServiceDescription::AddMethod(R"({"Test.Any": {
+    "type": "method", "description": "test", "transport": "Response", "permission": "ReadData",
+    "params": [ { "name": "data", "schema": { "default": null } } ],
+    "returns": {}
+  }})",
+                                                 StubMethod));
+
+  CVariant output;
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": "a string"})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": "a string" })"), output);
+
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": 42})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": 42 })"), output);
+
+  EXPECT_EQ(OK, Call("Test.Any", R"({"data": {"nested": [1, 2]}})", output));
+  ExpectVariantEq(ParseJson(R"({ "data": { "nested": [1, 2] } })"), output);
+
+  // Omitting it altogether falls back to the declared default
+  EXPECT_EQ(OK, Call("Test.Any", "{}", output));
+  ExpectVariantEq(ParseJson(R"({ "data": null })"), output);
+}
+
+TEST_F(TestJSONServiceDescription, SchemaWithAMalformedTypeStillFailsParse)
+{
+  // Absent is not the same as nonsense: a "type" that is neither a name nor a list of names
+  // is a broken schema and must not be read as "any".
+  EXPECT_FALSE(AddTestMethod("Test.BadType", R"([ { "name": "data", "schema": { "type": 5 } } ])"));
+}
+
+TEST_F(TestJSONServiceDescription, AnAllOfMemberThatIsNotAReferenceFailsParse)
+{
+  EXPECT_FALSE(CJSONServiceDescription::AddType(
+      R"({"Bad.Compose": { "allOf": [ { "type": "object" } ] }})"));
+}
+
+TEST_F(TestJSONServiceDescription, PrintEmits2020Dialect)
+{
+  ASSERT_TRUE(CJSONServiceDescription::AddType(
+      R"({"Print.Enum": { "type": "string", "enum": ["a", "b"] }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(
+      R"({"Print.Base": {
+        "type": "object",
+        "properties": { "p": { "type": "string" } },
+        "required": ["p"]
+      }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(
+      R"({"Print.Derived": {
+        "allOf": [ { "$ref": "#/$defs/Print.Base" } ],
+        "properties": { "q": { "type": "integer" } }
+      }})"));
+  ASSERT_TRUE(CJSONServiceDescription::AddType(
+      R"({"Print.Union": { "anyOf": [
+        { "type": "string" },
+        { "type": "integer" }
+      ] }})"));
+  ASSERT_TRUE(AddTestMethod("Print.Method", R"([ { "name": "target", "required": true,
+                    "description": "what to print", "schema": { "$ref": "#/$defs/Print.Enum" } } ])"));
+  CJSONServiceDescription::ResolveReferences();
+
+  const CVariant result{Introspect()};
+
+  const CVariant& types = result["types"];
+  ASSERT_TRUE(types.isMember("Print.Enum"));
+
+  ExpectVariantEq(ParseJson(R"(["a", "b"])"), types["Print.Enum"]["enum"]);
+  EXPECT_FALSE(types["Print.Enum"].isMember("enums"));
+
+  ExpectVariantEq(ParseJson(R"([ { "$ref": "#/$defs/Print.Base" } ])"),
+                  types["Print.Derived"]["allOf"]);
+  EXPECT_FALSE(types["Print.Derived"].isMember("extends"));
+
+  ASSERT_TRUE(types["Print.Union"]["anyOf"].isArray());
+  EXPECT_EQ(2U, types["Print.Union"]["anyOf"].size());
+  EXPECT_FALSE(types["Print.Union"].isMember("type"));
+
+  // Requiredness of properties is an array on the object, not a boolean
+  ExpectVariantEq(ParseJson(R"(["p"])"), types["Print.Base"]["required"]);
+  EXPECT_FALSE(types["Print.Base"]["properties"]["p"].isMember("required"));
+  ExpectVariantEq(CVariant("Print.Base"), types["Print.Base"]["id"]);
+
+  // Parameters are printed as content descriptors
+  const CVariant& param = result["methods"]["Print.Method"]["params"][0];
+  ExpectVariantEq(ParseJson(R"({
+    "name": "target",
+    "required": true,
+    "description": "what to print",
+    "schema": { "$ref": "#/$defs/Print.Enum" }
+  })"),
+                  param);
+}
+
+//! \brief The annotation is part of the contract, so it outlives suppressed descriptions
+TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedMethod)
+{
+  ASSERT_TRUE(AddTestMethod("Test.Old", "[]", R"("deprecated": true)"));
+  ASSERT_TRUE(AddTestMethod("Test.New"));
+
+  for (const bool descriptions : {true, false})
+  {
+    SCOPED_TRACE(descriptions ? "with descriptions" : "without descriptions");
+    const CVariant methods{Introspect("", descriptions)["methods"]};
+
+    ExpectVariantEq(CVariant(true), methods["Test.Old"]["deprecated"]);
+    EXPECT_EQ(descriptions, methods["Test.Old"].isMember("description"));
+    EXPECT_FALSE(methods["Test.New"].isMember("deprecated"));
+  }
+}
+
 /*!
  A single property can carry the annotation without the whole type being deprecated, and a
  deprecated reference does not deprecate the type it refers to.
@@ -384,14 +572,14 @@ TEST_F(TestJSONServiceDescription, IntrospectReportsADeprecatedProperty)
   for (const bool descriptions : {true, false})
   {
     SCOPED_TRACE(descriptions ? "with descriptions" : "without descriptions");
-    const CVariant types{Introspect(descriptions)["types"]};
+    const CVariant types{Introspect("", descriptions)["types"]};
     const CVariant& properties{types["Dep.Thing"]["properties"]};
 
     ExpectVariantEq(CVariant(true), properties["old"]["deprecated"]);
     EXPECT_EQ(descriptions, properties["old"].isMember("description"));
     EXPECT_FALSE(properties["new"].isMember("deprecated"));
-    ExpectVariantEq(CVariant(true), properties["oldreference"]["deprecated"]);
-    EXPECT_FALSE(properties["newreference"].isMember("deprecated"));
+    ExpectVariantEq(CVariant(true), properties["oldReference"]["deprecated"]);
+    EXPECT_FALSE(properties["newReference"].isMember("deprecated"));
     EXPECT_FALSE(types["Dep.Target"].isMember("deprecated"));
   }
 }

@@ -403,7 +403,7 @@ struct Update
   static constexpr const char* MESSAGE = ANNOUNCEMENT::MESSAGE::ON_UPDATE;
 
   KODI::MEDIA::TYPE type{KODI::MEDIA::TYPE::NONE};
-  //! The stored type of an item no KODI::MEDIA::TYPE names, such as an actor, in place of type.
+  //! The stored type of an item no KODI::MEDIA::TYPE names, in place of type.
   std::string otherType{};
   int id{-1};
   //! The item itself, when the sender has it: the data JSON-RPC and Python are given then
@@ -656,8 +656,21 @@ const std::string& SenderOf(const Announcement& announcement);
 std::shared_ptr<const CFileItem> ItemOf(const Announcement& announcement);
 
 /*!
+ * \brief The event's own fields as the data JSON-RPC and Python are given, without its item.
+ */
+CVariant EventDataOf(const Announcement& announcement);
+
+/*!
+ * \brief The data JSON-RPC and Python are given: the event's fields and, under "item", what its
+ * item is. Python add-ons read it as it is, so nothing in it may move, be renamed, be removed or
+ * change type.
+ */
+CVariant NotificationDataOf(const Announcement& announcement);
+
+/*!
  * \brief The announcement with its item's library details loaded, when the item has no database
- * id and the library knows it by its path.
+ * id and the library knows it by its path. The item description NotificationDataOf() gives
+ * reads them, so the lookup is done once per announcement rather than once per caller.
  */
 Announcement WithLibraryDetails(Announcement announcement);
 

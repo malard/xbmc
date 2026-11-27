@@ -53,6 +53,15 @@ bool AddBookMarkToFile(const std::string& strFilenameAndPath,
                        const CBookmark& bookmark,
                        CBookmark::EType type);
 
+//! FAILED when the database cannot be opened
+CVideoDatabase::AddResult AddItem(KODI::MEDIA::TYPE type,
+                                  const std::string& path,
+                                  CVideoInfoTag& details,
+                                  const KODI::ART::Artwork& artwork,
+                                  int idShow,
+                                  const CVideoDatabase::PlayStateEdit& playState,
+                                  int& id);
+
 int AddSetForMovie(const std::string& name, int idMovie);
 
 int AddTag(const std::string& tag);
@@ -64,6 +73,22 @@ bool ClearAllBookMarksOfFile(const std::string& strFilenameAndPath);
 bool DeleteItem(VideoDbContentType type, int id);
 
 void DeleteTag(int idTag, VideoDbContentType mediaType);
+
+bool DescribePath(const std::string& path, CFileItem& item);
+
+//! FAILED when the database cannot be opened
+CVideoDatabase::EditResult EditFilePlayState(const std::string& file,
+                                             const CVideoDatabase::PlayStateEdit& playState,
+                                             CVideoInfoTag& details);
+
+//! FAILED when the database cannot be opened
+CVideoDatabase::EditResult EditItem(KODI::MEDIA::TYPE type,
+                                    int id,
+                                    CVideoInfoTag& details,
+                                    const KODI::ART::Artwork& artwork,
+                                    const std::set<std::string, std::less<>>& removedArtwork,
+                                    const std::set<std::string, std::less<>>& updatedDetails,
+                                    const CVideoDatabase::PlayStateEdit& playState);
 
 void EraseVideoSettings(const CFileItem& item);
 
@@ -179,6 +204,11 @@ bool ScraperInUse(const std::string& scraperID);
 bool SetItemTitle(const CVideoInfoTag& item, const std::string& title);
 
 bool SetPathHash(const std::string& path, const std::string& hash);
+
+void SetSourceContent(const std::string& path,
+                      const ADDON::ScraperPtr& scraper,
+                      const KODI::VIDEO::SScanSettings& settings,
+                      bool removeContent);
 
 void SetStackTimes(const std::string& filePath,
                    const std::vector<std::chrono::milliseconds>& times);

@@ -30,18 +30,11 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
 
   std::string type = !parameterObject["type"].isNull() ? parameterObject["type"].asString() : "";
 
-  std::set<std::string> fields;
-  if (parameterObject.isMember("properties") && parameterObject["properties"].isArray())
-  {
-    for (CVariant::const_iterator_array field = parameterObject["properties"].begin_array();
-         field != parameterObject["properties"].end_array(); ++field)
-      fields.insert(field->asString());
-  }
+  std::set<std::string> fields{RequestedFields(parameterObject)};
 
-  for (int i = 0; i < favourites.Size(); i++)
+  for (const auto& item : favourites)
   {
     CVariant object;
-    CFileItemPtr item = favourites.Get(i);
 
     const CFavouritesURL url(item->GetPath());
     if (!url.IsValid())
@@ -60,9 +53,9 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
       {
         object["window"] = CWindowTranslator::TranslateWindow(url.GetWindowID());
       }
-      if (fields.contains("windowparameter"))
+      if (fields.contains("windowParameter"))
       {
-        object["windowparameter"] = url.GetTarget();
+        object["windowParameter"] = url.GetTarget();
       }
     }
     else if (function == CFavouritesURL::Action::PLAY_MEDIA)
@@ -79,7 +72,7 @@ JSONRPC_STATUS CFavouritesOperations::GetFavourites(const CVariant& parameterObj
     }
     else if (function == CFavouritesURL::Action::START_ANDROID_ACTIVITY)
     {
-      object["type"] = "androidapp";
+      object["type"] = "androidApp";
       if (fields.contains("path"))
         object["path"] = url.GetTarget();
     }
@@ -104,7 +97,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
   if (type.compare("unknown") == 0)
     return InvalidParams;
 
-  if ((type.compare("media") == 0 || type.compare("script") == 0 || type.compare("androidapp") == 0) && !ParameterNotNull(parameterObject, "path"))
+  if ((type.compare("media") == 0 || type.compare("script") == 0 || type.compare("androidApp") == 0) && !ParameterNotNull(parameterObject, "path"))
   {
     result["method"] = "Favourites.AddFavourite";
     result["stack"]["message"] = "Missing parameter";
@@ -129,7 +122,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
   int contextWindow = 0;
   if (type.compare("window") == 0)
   {
-    item = CFileItem(parameterObject["windowparameter"].asString(), true);
+    item = CFileItem(parameterObject["windowParameter"].asString(), true);
     contextWindow = CWindowTranslator::TranslateWindow(parameterObject["window"].asString());
     if (contextWindow == WINDOW_INVALID)
       return InvalidParams;
@@ -140,7 +133,7 @@ JSONRPC_STATUS CFavouritesOperations::AddFavourite(const CVariant& parameterObje
       path = "script://" + path;
     item = CFileItem(path, false);
   }
-  else if (type.compare("androidapp") == 0)
+  else if (type.compare("androidApp") == 0)
   {
     if (!URIUtils::IsAndroidApp(path))
       path = "androidapp://" + path;

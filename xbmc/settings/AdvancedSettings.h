@@ -401,6 +401,9 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
 
     bool m_jsonOutputCompact;
     unsigned int m_jsonTcpPort;
+    //! Whether GUI.DeleteScreenshots is offered. Off by default: it is the only call that deletes
+    //! from disk, and the folder it clears is wherever debug.screenshotpath points.
+    bool m_jsonAllowScreenshotDeletion;
 
     bool m_enableMultimediaKeys;
     std::vector<std::string> m_settingsFiles;
@@ -410,6 +413,8 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     bool m_initialized{false};
 
     void SetDebugMode(bool debug);
+    //! Sets the level everything is logged at, which SetDebugMode also sets
+    void SetLogLevel(int level);
 
     //! \brief Toggles dirty-region visualization
     void ToggleDirtyRegionVisualization()

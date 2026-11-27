@@ -11,6 +11,8 @@
 #include "guilib/GUIDialog.h"
 #include "media/LibraryQuery.h"
 
+#include <memory>
+
 class CFileItemList;
 
 class CGUIDialogSmartPlaylistEditor :
@@ -64,7 +66,7 @@ protected:
   KODI::MEDIA::CLibraryQuery m_playlist;
 
   // our list of rules for display purposes
-  CFileItemList* m_ruleLabels;
+  std::unique_ptr<CFileItemList> m_ruleLabels;
 
   std::string m_path;
   bool m_cancelled;

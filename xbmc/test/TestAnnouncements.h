@@ -11,7 +11,6 @@
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementEvents.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementV14.h"
 #include "media/MediaType.h"
 #include "utils/Variant.h"
 
@@ -48,12 +47,35 @@ public:
     std::vector<FileAnnouncement> files;
     for (const ANNOUNCEMENT::Announcement& announcement : m_announcementQueue)
     {
-      // Temporary: the data as JSON-RPC v14 gives it; removed with JSON-RPC v15.
       if (ANNOUNCEMENT::FlagOf(announcement) == ANNOUNCEMENT::Files)
-        files.push_back({ANNOUNCEMENT::MessageOf(announcement),
-                         ANNOUNCEMENT::V14::NotificationsOf(announcement).at(0).data});
+        files.push_back(
+            {ANNOUNCEMENT::MessageOf(announcement), ANNOUNCEMENT::EventDataOf(announcement)});
     }
     return files;
+  }
+
+  //! An update of a video or music library item, and the data JSON-RPC and Python are given
+  struct LibraryUpdate
+  {
+    KODI::MEDIA::TYPE type;
+    int id;
+    CVariant data;
+  };
+
+  std::vector<LibraryUpdate> LibraryUpdates() const
+  {
+    std::vector<LibraryUpdate> updates;
+    for (const ANNOUNCEMENT::Announcement& announcement : m_announcementQueue)
+    {
+      const ANNOUNCEMENT::LibraryEvent* library{
+          std::get_if<ANNOUNCEMENT::VideoLibraryEvent>(&announcement)};
+      if (!library)
+        library = std::get_if<ANNOUNCEMENT::AudioLibraryEvent>(&announcement);
+      if (const auto* update = std::get_if<ANNOUNCEMENT::EVENT::LIBRARY::Update>(library))
+        updates.push_back(
+            {update->type, update->id, ANNOUNCEMENT::NotificationDataOf(announcement)});
+    }
+    return updates;
   }
 
 private:

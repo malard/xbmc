@@ -8,7 +8,11 @@
 
 #include "JSONUtils.h"
 
+#include "ServiceBroker.h"
 #include "XBDateTime.h"
+#include "addons/AddonManager.h"
+#include "addons/Scraper.h"
+#include "imagefiles/ImageFileURL.h"
 
 namespace JSONRPC
 {
@@ -33,6 +37,56 @@ void CJSONUtils::SetFromDBDateTime(const CVariant& jsonDate, CDateTime& date)
     date.Reset();
   else
     date.SetFromDBDateTime(jsonDate.asString());
+}
+
+bool CJSONUtils::EditArtwork(const CVariant& art,
+                             KODI::ART::Artwork& artwork,
+                             std::set<std::string, std::less<>>& removed)
+{
+  bool set = false;
+  for (CVariant::const_iterator_map artIt = art.begin_map(); artIt != art.end_map(); ++artIt)
+  {
+    if (artIt->second.isString() && !artIt->second.asString().empty())
+    {
+      artwork[artIt->first] = IMAGE_FILES::ToCacheKey(artIt->second.asString());
+      set = true;
+    }
+    else if (artIt->second.isNull())
+    {
+      artwork.erase(artIt->first);
+      removed.insert(artIt->first);
+    }
+  }
+  return set;
+}
+
+JSONRPC_STATUS CJSONUtils::ResolveScraper(const std::string& scraperId,
+                                          ADDON::ContentType content,
+                                          const std::string& settings,
+                                          std::shared_ptr<ADDON::CScraper>& scraper,
+                                          CVariant& result)
+{
+  // Looked up by type: a scraper serving more than one content type has an instance per
+  // type, and the binding is stored with the instance's own content.
+  ADDON::AddonPtr addon;
+  ADDON::CAddonMgr& addonMgr = CServiceBroker::GetAddonMgr();
+  if (!addonMgr.GetAddon(scraperId, addon, ADDON::ScraperTypeFromContent(content),
+                         ADDON::OnlyEnabled::CHOICE_YES))
+  {
+    if (!addonMgr.GetAddon(scraperId, addon, ADDON::OnlyEnabled::CHOICE_YES))
+      return Fail(result, NotFound, Reason::NoSuchAddon, Target("scraperId", scraperId));
+    return InvalidParams;
+  }
+
+  scraper = std::dynamic_pointer_cast<ADDON::CScraper>(addon);
+  if (!scraper)
+    return InvalidParams;
+
+  // Without supplied XML a failure is the scraper's own defaults, not the caller's doing.
+  if (!scraper->SetPathSettings(content, settings) && !settings.empty())
+    return InvalidParams;
+
+  return OK;
 }
 
 } // namespace JSONRPC

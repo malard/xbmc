@@ -9,6 +9,7 @@
 #include "GUIWindowManager.h"
 
 #include "GUIAudioManager.h"
+#include "GUIComponent.h"
 #include "GUIDialog.h"
 #include "GUIInfoManager.h"
 #include "GUIPassword.h"
@@ -56,6 +57,7 @@
 #include "video/windows/GUIWindowVideoNav.h"
 #include "video/windows/GUIWindowVideoPlaylist.h"
 #include "weather/GUIWindowWeather.h"
+#include "windowing/GraphicContext.h"
 #include "windowing/WinSystem.h"
 #include "windows/GUIWindowDebugInfo.h"
 #include "windows/GUIWindowFileManager.h"

@@ -160,12 +160,9 @@ void CSaveFileState::DoWork(CFileItem& item, CBookmark& bookmark, bool updatePla
                 if (newLastPlayed.IsValid())
                   item.GetVideoInfoTag()->m_lastPlayed = newLastPlayed;
 
-                const MEDIA::TYPE type{item.GetVideoInfoTag()->GetMediaType()};
                 CServiceBroker::GetAnnouncementManager()->Announce(
                     ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
-                        .type = type,
-                        .otherType = type == MEDIA::TYPE::NONE ? item.GetVideoInfoTag()->m_type
-                                                               : std::string{},
+                        .type = item.GetVideoInfoTag()->GetMediaType(),
                         .id = item.GetVideoInfoTag()->m_iDbId}});
               }
             }
@@ -213,12 +210,9 @@ void CSaveFileState::DoWork(CFileItem& item, CBookmark& bookmark, bool updatePla
             // however not if playcount is modified as that already announces
             if (item.HasVideoInfoTag() && !updatePlayCount)
             {
-              const MEDIA::TYPE type{item.GetVideoInfoTag()->GetMediaType()};
               CServiceBroker::GetAnnouncementManager()->Announce(
                   ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
-                      .type = type,
-                      .otherType = type == MEDIA::TYPE::NONE ? item.GetVideoInfoTag()->m_type
-                                                             : std::string{},
+                      .type = item.GetVideoInfoTag()->GetMediaType(),
                       .id = item.GetVideoInfoTag()->m_iDbId}});
             }
 
@@ -353,13 +347,9 @@ void CSaveFileState::DoWork(CFileItem& item, CBookmark& bookmark, bool updatePla
         // however not if playcount is modified as that already announces
         if (updated && MUSIC::IsMusicDb(item))
         {
-          const MEDIA::TYPE type{item.GetMusicInfoTag()->GetMediaType()};
-          CServiceBroker::GetAnnouncementManager()->Announce(
-              ANNOUNCEMENT::AudioLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
-                  .type = type,
-                  .otherType =
-                      type == MEDIA::TYPE::NONE ? item.GetMusicInfoTag()->GetType() : std::string{},
-                  .id = item.GetMusicInfoTag()->GetDatabaseId()}});
+          CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::AudioLibraryEvent{
+              ANNOUNCEMENT::EVENT::LIBRARY::Update{.type = item.GetMusicInfoTag()->GetMediaType(),
+                                                   .id = item.GetMusicInfoTag()->GetDatabaseId()}});
         }
       }
     }

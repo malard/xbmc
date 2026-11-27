@@ -169,43 +169,43 @@ bool CPVREpgInfoTag::operator==(const CPVREpgInfoTag& right) const
 void CPVREpgInfoTag::Serialize(CVariant& value) const
 {
   std::unique_lock lock(m_critSection);
-  value["broadcastid"] = m_iDatabaseID; // Use DB id here as it is unique across PVR clients
-  value["channeluid"] = m_channelData->UniqueClientChannelId();
-  value["parentalrating"] = m_parentalRating;
-  value["parentalratingcode"] = m_parentalRatingCode;
-  value["parentalratingicon"] = ParentalRatingIcon();
-  value["parentalratingsource"] = m_parentalRatingSource;
+  value["broadcastId"] = m_iDatabaseID; // Use DB id here as it is unique across PVR clients
+  value["channelUid"] = m_channelData->UniqueClientChannelId();
+  value["parentalRating"] = m_parentalRating;
+  value["parentalRatingCode"] = m_parentalRatingCode;
+  value["parentalRatingIcon"] = ParentalRatingIcon();
+  value["parentalRatingSource"] = m_parentalRatingSource;
   value["rating"] = m_iStarRating;
   value["title"] = m_strTitle;
-  value["titleextrainfo"] = m_titleExtraInfo;
-  value["plotoutline"] = m_strPlotOutline;
+  value["titleExtraInfo"] = m_titleExtraInfo;
+  value["plotOutline"] = m_strPlotOutline;
   value["plot"] = m_strPlot;
-  value["originaltitle"] = m_strOriginalTitle;
+  value["originalTitle"] = m_strOriginalTitle;
   value["thumbnail"] = IconPath();
   value["cast"] = DeTokenize(m_cast);
   value["director"] = DeTokenize(m_directors);
   value["writer"] = DeTokenize(m_writers);
   value["year"] = m_iYear;
-  value["imdbnumber"] = m_strIMDBNumber;
+  value["imdbNumber"] = m_strIMDBNumber;
   value["genre"] = Genre();
   value["filenameandpath"] = Path();
-  value["starttime"] = m_startTime.IsValid() ? m_startTime.GetAsDBDateTime() : StringUtils::Empty;
-  value["endtime"] = m_endTime.IsValid() ? m_endTime.GetAsDBDateTime() : StringUtils::Empty;
+  value["startTime"] = m_startTime.IsValid() ? m_startTime.GetAsDBDateTime() : StringUtils::Empty;
+  value["endTime"] = m_endTime.IsValid() ? m_endTime.GetAsDBDateTime() : StringUtils::Empty;
   value["runtime"] = GetDuration() / 60;
-  value["firstaired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
+  value["firstAired"] = m_firstAired.IsValid() ? m_firstAired.GetAsDBDate() : StringUtils::Empty;
   value["progress"] = Progress();
-  value["progresspercentage"] = ProgressPercentage();
-  value["episodename"] = m_strEpisodeName;
+  value["progressPercentage"] = ProgressPercentage();
+  value["episodeName"] = m_strEpisodeName;
   value["episode"] = m_iEpisodeNumber;
-  value["episodenum"] = m_iEpisodeNumber;
-  value["episodepart"] = m_iEpisodePart;
+  value["episodeNum"] = m_iEpisodeNumber;
+  value["episodePart"] = m_iEpisodePart;
   value["season"] = m_iSeriesNumber;
-  value["seasonnum"] = m_iSeriesNumber;
-  value["isactive"] = IsActive();
-  value["wasactive"] = WasActive();
-  value["isseries"] = IsSeries();
+  value["seasonNum"] = m_iSeriesNumber;
+  value["isActive"] = IsActive();
+  value["wasActive"] = WasActive();
+  value["isSeries"] = IsSeries();
   value["serieslink"] = m_strSeriesLink;
-  value["clientid"] = m_channelData->ClientId();
+  value["clientId"] = m_channelData->ClientId();
 }
 
 int CPVREpgInfoTag::ClientID() const

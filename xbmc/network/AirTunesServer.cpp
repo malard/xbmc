@@ -28,6 +28,7 @@
 #include "input/actions/ActionIDs.h"
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/ApplicationMessenger.h"
+#include "messaging/MessengerPayload.h"
 #include "music/tags/MusicInfoTag.h"
 #include "network/Network.h"
 #include "network/Zeroconf.h"
@@ -36,6 +37,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "utils/ArtTypes.h"
+#include "utils/ArtUtils.h"
 #include "utils/EndianSwap.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
@@ -43,6 +45,7 @@
 
 #include <cstring>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -95,7 +98,8 @@ std::map<std::string, std::string> decodeDMAP(const char *buffer, unsigned int s
     uint32_t length = Endian_SwapBE32(*(const uint32_t *)(buffer + offset));
     offset += sizeof(uint32_t);
     std::string content;
-    content.append(buffer + offset, length);//possible fixme - utf8?
+    //! @todo is the content UTF-8?
+    content.append(buffer + offset, length);
     offset += length;
     result[tag] = content;
   }
@@ -159,14 +163,16 @@ void CAirTunesServer::RefreshCoverArt(const char *outputFilename/* = NULL*/)
           : std::string{};
   if (!pipeName.empty())
   {
-    // UpdateInfo overwrites the mime type, and an empty url clears the previous thumbnail.
-    CFileItem* item = new CFileItem();
+    // UpdateInfo copies the mime type and replaces the whole art map, so an empty url clears the
+    // previous thumbnail and the default icon has to travel with it.
+    auto item = std::make_unique<CFileItem>();
     item->SetPath(pipeName);
     item->SetMimeType("audio/x-xbmc-pcm");
     item->SetArt(KODI::ART::TYPE::THUMB, CFile::Exists(coverArtFile) ? coverArtFile : "");
+    KODI::ART::FillInDefaultIcon(*item);
 
-    CServiceBroker::GetAppMessenger()->PostMsg(TMSG_UPDATE_PLAYER_ITEM, -1, -1,
-                                               static_cast<void*>(item));
+    CServiceBroker::GetAppMessenger()->PostMsg(
+        TMSG_UPDATE_PLAYER_ITEM, -1, -1, KODI::MESSAGING::TransferToMessenger(std::move(item)));
   }
 }
 
@@ -407,7 +413,7 @@ void* CAirTunesServer::AudioOutputFunctions::audio_init(void *cls, int bits, int
   m_streamStarted = true;
   m_sampleRate = samplerate;
 
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY, 0, 0, static_cast<void*>(item));
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_PLAY_ITEM, 0, 0, static_cast<void*>(item));
 
   // Not all airplay streams will provide metadata (e.g. if using mirroring,
   // no metadata will be sent).  If there *is* metadata, it will be received

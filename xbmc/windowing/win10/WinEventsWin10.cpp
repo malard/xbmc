@@ -19,6 +19,7 @@
 #include "input/mouse/MouseStat.h"
 #include "input/touch/generic/GenericTouchInputHandler.h"
 #include "interfaces/AnnouncementManager.h"
+#include "interfaces/AnnouncementMessages.h"
 #include "messaging/ApplicationMessenger.h"
 #include "peripherals/Peripherals.h"
 #include "rendering/dx/DeviceResources.h"

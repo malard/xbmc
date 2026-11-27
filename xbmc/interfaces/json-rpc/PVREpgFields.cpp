@@ -50,9 +50,9 @@ std::set<std::string> BroadcastFields()
   if (type != cachedType)
   {
     cachedFields.clear();
-    if (type && !type->items.empty())
+    if (type && type->items)
     {
-      for (const CVariant& field : type->items.front()->enums)
+      for (const CVariant& field : type->items->enums)
         cachedFields.insert(field.asString());
     }
     cachedType = type;

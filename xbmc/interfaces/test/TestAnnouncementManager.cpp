@@ -8,7 +8,6 @@
 
 #include "FileItem.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementV14.h"
 #include "threads/Event.h"
 #include "utils/Variant.h"
 #include "video/VideoInfoTag.h"
@@ -57,7 +56,7 @@ public:
   {
     if (m_removed)
       m_calledAfterRemoval = true;
-    m_data = V14::NotificationsOf(announcement).at(0).data;
+    m_data = NotificationDataOf(announcement);
     m_called.Set();
   }
 
@@ -234,7 +233,7 @@ public:
   void OnAnnouncement(const Announcement& announcement) override
   {
     m_message = MessageOf(announcement);
-    m_data = V14::NotificationsOf(announcement).at(0).data;
+    m_data = NotificationDataOf(announcement);
     IAnnouncer::OnAnnouncement(announcement);
     m_legacy.Set();
   }
@@ -289,7 +288,7 @@ public:
   void OnAnnouncement(const Announcement& announcement) override
   {
     if (FlagOf(announcement) == VideoLibrary)
-      m_videoData = V14::NotificationsOf(announcement).at(0).data;
+      m_videoData = NotificationDataOf(announcement);
     IAnnouncer::OnAnnouncement(announcement);
   }
 

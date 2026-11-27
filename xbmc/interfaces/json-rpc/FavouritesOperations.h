@@ -20,4 +20,4 @@ namespace JSONRPC
     static JSONRPC_STATUS GetFavourites(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS AddFavourite(const CVariant& parameterObject, CVariant& result);
   };
-}
+} // namespace JSONRPC

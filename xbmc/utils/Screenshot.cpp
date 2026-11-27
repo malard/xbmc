@@ -257,49 +257,6 @@ void CScreenShot::TakeScreenshot(KODI::RENDERING::CAPTURE::CaptureContent conten
   handle->Detach();
 }
 
-void CScreenShot::TakeScreenshotBoth()
-{
-  using namespace KODI::RENDERING::CAPTURE;
-
-  const auto captureService = CServiceBroker::GetCaptureService();
-  if (!captureService)
-    return;
-
-  auto composite = std::make_shared<std::string>();
-  CaptureSpec spec;
-  spec.content = CaptureContent::BOTH;
-  spec.format = CaptureFormat::NATIVE;
-  auto handle = captureService->Submit(
-      spec,
-      [composite](const CaptureResult& result)
-      {
-        if (!result.pixels)
-          return;
-        if (composite->empty())
-        {
-          const std::string dir = ResolveScreenshotDir();
-          if (dir.empty())
-          {
-            CLog::Log(LOGWARNING, "No screenshot path configured");
-            return;
-          }
-          *composite = NextScreenshotFile(dir);
-        }
-        if (composite->empty())
-        {
-          CLog::Log(LOGWARNING, "Too many screen shots or invalid folder");
-          return;
-        }
-        // derive the video name from the same NNNNN so the pair is obvious
-        const std::string file = result.content == CaptureContent::VIDEO
-                                     ? composite->substr(0, composite->length() - 4) + "-video.png"
-                                     : *composite;
-        CLog::Log(LOGDEBUG, "Saving screenshot {}", CURL::GetRedacted(file));
-        WriteCapture(result, file);
-      });
-  handle->Detach();
-}
-
 namespace
 {
 // A bare .png file name, so nothing outside the configured folder can be named.

@@ -13,6 +13,7 @@
 #include <Platinum/Source/Devices/MediaRenderer/PltMediaRenderer.h>
 
 class CFileItem;
+class CVariant;
 
 namespace UPNP
 {
@@ -66,6 +67,8 @@ private:
     NPT_Result Reset(PLT_Service* avt);
     NPT_String GetTransportState();
     NPT_Mutex m_state;
+    //! Whether the URI last set is a picture. Guarded by m_state.
+    bool m_showingPicture{false};
 };
 
 } /* namespace UPNP */

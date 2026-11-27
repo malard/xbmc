@@ -124,7 +124,7 @@ constexpr uint32_t SYSTEM_CPU_TEMPERATURE            = 112;
 constexpr uint32_t SYSTEM_GPU_TEMPERATURE            = 113;
 constexpr uint32_t SYSTEM_FAN_SPEED                  = 114;
 constexpr uint32_t SYSTEM_FREE_SPACE_C               = 115;
-//constexpr uint32_t SYSTEM_FREE_SPACE_D               = 116; // reserved for space on D
+// unused id 116
 constexpr uint32_t SYSTEM_FREE_SPACE_E               = 117;
 constexpr uint32_t SYSTEM_FREE_SPACE_F               = 118;
 constexpr uint32_t SYSTEM_FREE_SPACE_G               = 119;
@@ -443,12 +443,11 @@ constexpr uint32_t CONTAINER_NUM_ALL_ITEMS           = 384;
 constexpr uint32_t CONTAINER_NUM_NONFOLDER_ITEMS     = 385;
 
 constexpr uint32_t MUSICPM_ENABLED                   = 390;
-constexpr uint32_t MUSICPM_SONGSPLAYED               = 391;
-constexpr uint32_t MUSICPM_MATCHINGSONGS             = 392;
-constexpr uint32_t MUSICPM_MATCHINGSONGSPICKED       = 393;
-constexpr uint32_t MUSICPM_MATCHINGSONGSLEFT         = 394;
-constexpr uint32_t MUSICPM_RELAXEDSONGSPICKED        = 395;
-constexpr uint32_t MUSICPM_RANDOMSONGSPICKED         = 396;
+// unused id 391
+constexpr uint32_t MUSICPM_MATCHINGENTRIES           = 392;
+// unused id 393
+constexpr uint32_t MUSICPM_MATCHINGENTRIESLEFT       = 394;
+// unused id 395 to 396
 
 constexpr uint32_t PLAYLIST_LENGTH                   = 400;
 constexpr uint32_t PLAYLIST_POSITION                 = 401;
@@ -474,6 +473,9 @@ constexpr uint32_t STRING_IS_EQUAL                   = 421;
 constexpr uint32_t STRING_STARTS_WITH                = 422;
 constexpr uint32_t STRING_ENDS_WITH                  = 423;
 constexpr uint32_t STRING_CONTAINS                   = 424;
+
+constexpr uint32_t VIDEOPLAYER_HASPREVIOUS           = 430;
+constexpr uint32_t VIDEOPLAYER_HASNEXT               = 431;
 
 constexpr uint32_t INTEGER_IS_EQUAL                  = 450;
 constexpr uint32_t INTEGER_GREATER_THAN              = 451;
@@ -600,7 +602,7 @@ constexpr uint32_t SLIDESHOW_EXIF_DESCRIPTION        = SLIDESHOW_LABELS_START + 
 constexpr uint32_t SLIDESHOW_EXIF_CAMERA_MAKE        = SLIDESHOW_LABELS_START + 22;
 constexpr uint32_t SLIDESHOW_EXIF_CAMERA_MODEL       = SLIDESHOW_LABELS_START + 23;
 constexpr uint32_t SLIDESHOW_EXIF_COMMENT            = SLIDESHOW_LABELS_START + 24;
-//empty label   = SLIDESHOW_LABELS_START + 25;
+// unused id SLIDESHOW_LABELS_START + 25
 constexpr uint32_t SLIDESHOW_EXIF_APERTURE           = SLIDESHOW_LABELS_START + 26;
 constexpr uint32_t SLIDESHOW_EXIF_FOCAL_LENGTH       = SLIDESHOW_LABELS_START + 27;
 constexpr uint32_t SLIDESHOW_EXIF_FOCUS_DIST         = SLIDESHOW_LABELS_START + 28;
@@ -657,7 +659,7 @@ constexpr uint32_t SYSTEM_PROFILEAUTOLOGIN           = 1004;
 constexpr uint32_t SYSTEM_HAS_CMS                    = 1006;
 constexpr uint32_t SYSTEM_BUILD_VERSION_CODE         = 1007;
 constexpr uint32_t SYSTEM_BUILD_VERSION_GIT          = 1008;
-// unused id 1009
+constexpr uint32_t SYSTEM_IS_RTL                     = 1009;
 // unused id 1010
 constexpr uint32_t SYSTEM_LOCALE_REGION              = 1011;
 constexpr uint32_t SYSTEM_LOCALE                     = 1012;
@@ -1106,6 +1108,8 @@ constexpr uint32_t LISTITEM_CONTENT_ASPECT_NAME      = LISTITEM_START + 240;
 constexpr uint32_t LISTITEM_CONTENT_ASPECT_COUNT     = LISTITEM_START + 241;
 constexpr uint32_t LISTITEM_CONTENT_ASPECT_SOURCE    = LISTITEM_START + 242;
 constexpr uint32_t LISTITEM_CONTENT_ASPECT_VARIES    = LISTITEM_START + 243;
+constexpr uint32_t LISTITEM_AUDIO_LANGUAGE_NAME      = LISTITEM_START + 244;
+constexpr uint32_t LISTITEM_SUBTITLE_LANGUAGE_NAME   = LISTITEM_START + 245;
 
 constexpr int      LISTITEM_END                      = LISTITEM_START + 2500;
 

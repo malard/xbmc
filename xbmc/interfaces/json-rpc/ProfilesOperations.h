@@ -22,4 +22,4 @@ namespace JSONRPC
     static JSONRPC_STATUS GetCurrentProfile(const CVariant& parameterObject, CVariant& result);
     static JSONRPC_STATUS LoadProfile(const CVariant& parameterObject, CVariant& result);
   };
-}
+} // namespace JSONRPC

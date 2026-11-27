@@ -30,6 +30,7 @@
 #include <cstdlib> // std::abs(int) prototype
 #include <optional>
 
+
 CBaseRenderer::CBaseRenderer()
 {
   for (int i=0; i < 4; i++)

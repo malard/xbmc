@@ -31,6 +31,21 @@ class CVariant;
 
 enum class VideoAssetType;
 
+namespace KODI::VIDEO::UNIQUE_ID
+{
+//! \brief The type of a unique id whose source is not known, as a legacy NFO's bare <id> gives.
+inline constexpr char UNKNOWN[] = "unknown";
+} // namespace KODI::VIDEO::UNIQUE_ID
+
+//! \brief The root element of each kind of video NFO.
+namespace KODI::VIDEO::NFO_ROOT
+{
+inline constexpr char EPISODE[] = "episodedetails";
+inline constexpr char MOVIE[] = "movie";
+inline constexpr char MUSIC_VIDEO[] = "musicvideo";
+inline constexpr char TV_SHOW[] = "tvshow";
+} // namespace KODI::VIDEO::NFO_ROOT
+
 struct SActorInfo
 {
   bool operator<(const SActorInfo &right) const
@@ -466,6 +481,8 @@ protected:
   bool SaveTvShowSeasons(TiXmlNode* node) const;
 
 private:
+  void SerializeContentGeometry(CVariant& streamdetails) const;
+
   /* \brief Parse our native XML format for video info.
    See Load for a description of the available tag types.
 

@@ -116,3 +116,54 @@ private:
   DatabaseSettings m_restore;
   Database m_db;
 };
+
+/*!
+ * \brief Upgrades the test database named \p baseName as Kodi does at startup: points \p slot of
+ * the advanced settings at it and reinitialises CDatabaseManager, then puts both back.
+ * \return whether the database manager initialised
+ */
+inline bool UpgradeThroughManager(DatabaseSettings CAdvancedSettings::* slot,
+                                  const std::string& baseName)
+{
+  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
+  DatabaseSettings& target{(*advancedSettings).*slot};
+  const DatabaseSettings restore{target};
+
+  const DatabaseSettings test{TestDatabaseSettings()};
+  target.type = test.type;
+  target.host = test.host;
+  target.name = baseName;
+
+  CDatabaseManager& manager{CServiceBroker::GetDatabaseManager()};
+  manager.Deinitialize();
+  const bool initialized{manager.Initialize()};
+
+  target = restore;
+  manager.Deinitialize();
+
+  return initialized;
+}
+
+/*!
+ * \brief Restates the tables the 155 video upgrade changes as 154 defined them, so that upgrade can
+ * run over a database Connect() built at the current schema.
+ *
+ * Restated rather than derived from the current tables, so a column added to the 155 upgrade and
+ * not taken back out here cannot abort the upgrade on a duplicate.
+ */
+inline void RestateVideo154(CDatabase& db)
+{
+  ASSERT_TRUE(db.ExecuteQuery("DROP TABLE contentgeometry"));
+  ASSERT_TRUE(db.ExecuteQuery("DROP TABLE settings"));
+  ASSERT_TRUE(db.ExecuteQuery(
+      "CREATE TABLE settings ( idFile integer, Deinterlace bool,"
+      "ViewMode integer,ZoomAmount float, PixelRatio float, VerticalShift float, AudioStream "
+      "integer, SubtitleStream integer,"
+      "SubtitleDelay float, SubtitlesOn bool, Brightness float, Contrast float, Gamma float,"
+      "VolumeAmplification float, AudioDelay float, ResumeTime integer,"
+      "Sharpness float, NoiseReduction float, NonLinStretch bool, PostProcess bool,"
+      "ScalingMethod integer, DeinterlaceMode integer, StereoMode integer, StereoInvert bool, "
+      "VideoStream integer,"
+      "TonemapMethod integer, TonemapParam float, Orientation integer, CenterMixLevel integer, "
+      "Hue float, Saturation float)"));
+}

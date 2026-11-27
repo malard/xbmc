@@ -10,7 +10,6 @@
 
 #include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementV14.h"
 #include "interfaces/json-rpc/JSONRPC.h"
 #include "network/Network.h"
 #include "settings/AdvancedSettings.h"
@@ -344,11 +343,6 @@ bool CTCPServer::PrepareDownload(const char *path, CVariant &details, std::strin
   return false;
 }
 
-bool CTCPServer::Download(const char *path, CVariant &result)
-{
-  return false;
-}
-
 int CTCPServer::GetCapabilities()
 {
   return Response | Announcing;
@@ -356,6 +350,7 @@ int CTCPServer::GetCapabilities()
 
 void CTCPServer::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
 {
+  const ANNOUNCEMENT::AnnouncementFlag flag = ANNOUNCEMENT::FlagOf(announcement);
   // Take a snapshot under the lock and send outside it. Each entry is a shared_ptr, so a
   // connection the Process thread drops mid-iteration stays alive until we are done with it.
   std::vector<std::shared_ptr<CTCPClient>> connections;
@@ -367,23 +362,21 @@ void CTCPServer::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
     connections = m_connections;
   }
 
-  // Temporary: clients are sent the JSON-RPC v14 notifications; removed with JSON-RPC v15.
-  for (const auto& [flag, sender, message, data] : ANNOUNCEMENT::V14::NotificationsOf(announcement))
+  std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(
+      announcement,
+      CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
+  if (str.empty())
+    return;
+
+  for (const auto& connection : connections)
   {
-    std::string str = IJSONRPCAnnouncer::AnnouncementToJSONRPC(
-        flag, sender, message, data,
-        CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact);
-
-    for (const auto& connection : connections)
     {
-      {
-        std::unique_lock connLock(connection->m_critSection);
-        if ((connection->GetAnnouncementFlags() & flag) == 0)
-          continue;
-      }
-
-      connection->Send(str.c_str(), str.size());
+      std::unique_lock connLock(connection->m_critSection);
+      if ((connection->GetAnnouncementFlags() & flag) == 0)
+        continue;
     }
+
+    connection->Send(str.c_str(), str.size());
   }
 }
 
@@ -938,7 +931,7 @@ void CTCPServer::WaitForWorkers()
   m_workersDone.wait(lock, [this, self] { return m_activeWorkers <= self; });
 }
 
-void CTCPServer::CTCPClient::PushBuffer(CTCPServer* host, const char* buffer, int length)
+void CTCPServer::CTCPClient::PushBuffer(CTCPServer *host, const char *buffer, int length)
 {
   bool inObject = false;
   bool inString = false;

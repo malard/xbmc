@@ -528,6 +528,27 @@ TEST_F(TestVideoDatabase, ASmartPlaylistsOrderAndLimitApplyToAMovieListing)
   EXPECT_EQ("B.mkv", items[1]->GetVideoInfoTag()->m_strTitle);
 }
 
+TEST_F(TestVideoDatabase, RecentlyAddedListsTheNewestFirstUpToTheLimit)
+{
+  for (const auto& [name, added] :
+       {std::pair{"Old.mkv", "2026-01-01 10:00:00"}, std::pair{"Newest.mkv", "2026-03-01 10:00:00"},
+        std::pair{"Newer.mkv", "2026-02-01 10:00:00"}})
+  {
+    CVideoInfoTag movie{Tag(std::string{"/movies/"} + name)};
+    movie.m_dateAdded.SetFromDBDateTime(added);
+    ASSERT_GT(m_db.SetDetailsForMovie(movie, KODI::ART::Artwork{}), 0);
+  }
+
+  CFileItemList items;
+  ASSERT_TRUE(m_db.GetRecentlyAdded(KODI::MEDIA::TYPE::MOVIE, items, 2));
+  ASSERT_EQ(2, items.Size());
+  EXPECT_EQ("Newest.mkv", items[0]->GetVideoInfoTag()->m_strTitle);
+  EXPECT_EQ("Newer.mkv", items[1]->GetVideoInfoTag()->m_strTitle);
+
+  CFileItemList shows;
+  EXPECT_FALSE(m_db.GetRecentlyAdded(KODI::MEDIA::TYPE::TV_SHOW, shows));
+}
+
 TEST_F(TestVideoDatabase, AListItemHasTheDetailsOfTheItemLoadedAlone)
 {
   const auto addDetails = [](CVideoInfoTag& tag, const std::string& name)
@@ -840,6 +861,48 @@ TEST_F(TestVideoDatabase, AMusicVideoListedIsItsIdAndAnArtistsListIsTitledWithTh
   ASSERT_TRUE(m_db.GetMusicVideosByWhere(url.ToString(), CDatabase::Filter(), byArtist));
   ASSERT_EQ(1, byArtist.Size());
   EXPECT_EQ("Singer", byArtist.GetProperty(KODI::ITEM::PROPERTY::CUSTOM_TITLE).asString());
+}
+
+TEST_F(TestVideoDatabase, AnItemOfABrowseListingIsOfTheKindBrowsedBy)
+{
+  CVideoInfoTag movie{Tag("/videos/film.mkv")};
+  movie.SetGenre({"Drama"});
+  movie.SetCountry({"France"});
+  movie.SetStudio({"Studio"});
+  movie.SetTags({"Favourite"});
+  movie.SetDirector({"Jane Director"});
+  movie.SetWritingCredits({"Joe Writer"});
+  SActorInfo actor;
+  actor.strName = "Ann Actor";
+  movie.m_cast = {actor};
+  ASSERT_GT(m_db.SetDetailsForMovie(movie, KODI::ART::Artwork{}), 0);
+
+  struct Browse
+  {
+    bool (CVideoDatabase::*nav)(
+        const std::string&, CFileItemList&, VideoDbContentType, const CDatabase::Filter&, bool);
+    std::string path;
+    KODI::MEDIA::TYPE kind;
+    std::string type;
+  };
+  using enum KODI::MEDIA::TYPE;
+  for (const auto& [nav, path, kind, type] : std::vector<Browse>{
+           {&CVideoDatabase::GetGenresNav, "videodb://movies/genres/", GENRE, "genre"},
+           {&CVideoDatabase::GetCountriesNav, "videodb://movies/countries/", COUNTRY, "country"},
+           {&CVideoDatabase::GetStudiosNav, "videodb://movies/studios/", STUDIO, "studio"},
+           {&CVideoDatabase::GetTagsNav, "videodb://movies/tags/", TAG, "tag"},
+           {&CVideoDatabase::GetActorsNav, "videodb://movies/actors/", ACTOR, "actor"},
+           {&CVideoDatabase::GetDirectorsNav, "videodb://movies/directors/", DIRECTOR, "director"},
+           {&CVideoDatabase::GetWritersNav, "videodb://movies/", WRITER, "writer"},
+       })
+  {
+    CFileItemList items;
+    ASSERT_TRUE((m_db.*nav)(path, items, VideoDbContentType::MOVIES, CDatabase::Filter(), false))
+        << type;
+    ASSERT_EQ(1, items.Size()) << type;
+    EXPECT_EQ(kind, items[0]->GetVideoInfoTag()->GetMediaType()) << type;
+    EXPECT_EQ(type, items[0]->GetVideoInfoTag()->m_type);
+  }
 }
 
 TEST_F(TestVideoDatabase, AListingsTotalCountsEveryMatchNotOnlyThoseItsLimitReturns)
@@ -2550,6 +2613,26 @@ TEST_F(TestVideoDatabase, APlayedItemMovesToTheFileItWasPlayedFromOnlyWhenThatCh
   CVideoInfoTag moved;
   ASSERT_TRUE(m_db.GetMovieInfo("", moved, idMovie));
   EXPECT_EQ(move->idFile, moved.m_iFileId);
+}
+
+TEST_F(TestVideoDatabase, TotalsCountWhatHasBeenWatched)
+{
+  ASSERT_GT(AddMovie("/movies/one.mkv"), 0);
+  ASSERT_GT(AddMovie("/movies/two.mkv"), 0);
+  const int idShow{AddTvShow("/tv/Show/")};
+  ASSERT_GT(AddEpisode(idShow, "/tv/Show/Show S01E01.mkv", 1), 0);
+  ASSERT_GT(AddEpisode(idShow, "/tv/Show/Show S01E02.mkv", 2), 0);
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/movies/one.mkv", false), 1).IsValid());
+  ASSERT_TRUE(m_db.SetPlayCount(CFileItem("/tv/Show/Show S01E01.mkv", false), 1).IsValid());
+
+  const CVideoDatabase::Totals totals{m_db.GetTotals()};
+  EXPECT_EQ(2, totals.movies);
+  EXPECT_EQ(1, totals.moviesWatched);
+  EXPECT_EQ(1, totals.tvShows);
+  EXPECT_EQ(0, totals.tvShowsWatched);
+  EXPECT_EQ(2, totals.episodes);
+  EXPECT_EQ(1, totals.episodesWatched);
+  EXPECT_EQ(0, totals.musicVideos);
 }
 
 TEST_F(TestVideoDatabase, ATagIsFoundOnlyForTheTypeItIsGivenTo)

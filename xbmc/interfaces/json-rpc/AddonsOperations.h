@@ -16,7 +16,7 @@ namespace ADDON
 {
 class CAddonDatabase;
 class IAddon;
-}
+} // namespace ADDON
 
 class CVariant;
 
@@ -37,4 +37,4 @@ namespace JSONRPC
                             CVariant& result,
                             bool append);
   };
-}
+} // namespace JSONRPC

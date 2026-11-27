@@ -6,18 +6,17 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DatabaseManager.h"
 #include "FileItem.h"
-#include "ServiceBroker.h"
 #include "filesystem/File.h"
-#include "settings/SettingsComponent.h"
 #include "test/TestUtils.h"
 #include "utils/Artwork.h"
+#include "utils/ItemProperties.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "video/VideoDatabaseDDL.h"
 #include "video/VideoInfoTag.h"
 #include "video/VideoManagerTypes.h"
+#include "video/VideoThumbLoader.h"
 #include "video/geometry/ContentGeometryRecord.h"
 #include "video/test/VideoDatabaseTestBase.h"
 
@@ -44,6 +43,18 @@ ContentGeometryRecord MakeRecord(const FileIdentity& identity = IDENTITY)
   record.identity = identity;
   return record;
 }
+
+//! \brief A thumb loader reading a database it does not own.
+class CTestVideoThumbLoader : public CVideoThumbLoader
+{
+public:
+  explicit CTestVideoThumbLoader(CVideoDatabase& db)
+  {
+    delete m_videoDatabase;
+    m_videoDatabase = &db;
+  }
+  ~CTestVideoThumbLoader() override { m_videoDatabase = nullptr; }
+};
 
 } // unnamed namespace
 
@@ -265,6 +276,45 @@ TEST_F(TestVideoDatabaseContentGeometry, AFileWithNoRowHasNothingStored)
   EXPECT_TRUE(NeedsContentGeometry(stored, {8'000'000'000, 1'700'000'000}));
 }
 
+TEST_F(TestVideoDatabaseContentGeometry, AListedItemCarriesItsStoredGeometry)
+{
+  const int idMeasured{AddTestFile("listedmeasured.mkv")};
+  const int idUnmeasured{AddTestFile("listedunmeasured.mkv")};
+  ASSERT_TRUE(m_db.SetContentGeometry(idMeasured, MakeRecord()));
+
+  CVideoInfoTag measured;
+  measured.m_iFileId = idMeasured;
+  CVideoInfoTag unmeasured;
+  unmeasured.m_iFileId = idUnmeasured;
+  ASSERT_TRUE(m_db.AddStreamDetailsForList({&measured, &unmeasured}));
+
+  EXPECT_EQ(MakeRecord().aspects, measured.m_contentGeometry.Get().aspects);
+  EXPECT_FALSE(unmeasured.m_contentGeometry.Get().HasReading());
+}
+
+TEST_F(TestVideoDatabaseContentGeometry, AListedItemWithoutStreamDetailsCarriesItsStoredGeometry)
+{
+  const int idFile{AddTestFile("listedstreamless.mkv")};
+  ASSERT_TRUE(m_db.SetContentGeometry(idFile, MakeRecord()));
+
+  // a library movie whose art is filled, so loading it reads no texture cache
+  CFileItem item{"/test/contentgeometry/listedstreamless.mkv", false};
+  CVideoInfoTag& tag{*item.GetVideoInfoTag()};
+  tag.m_iFileId = idFile;
+  tag.m_iDbId = 1;
+  tag.m_type = "movie";
+  tag.m_parsedDetails = VideoDbDetailsRating | VideoDbDetailsTag | VideoDbDetailsUniqueID;
+  item.SetProperty(KODI::ITEM::PROPERTY::LIBRARY_ART_FILLED, true);
+  item.SetArt("thumb", "/test/contentgeometry/thumb.jpg");
+
+  CTestVideoThumbLoader loader{m_db};
+  loader.Prefetch({&item});
+  loader.LoadItemCached(&item);
+
+  EXPECT_FALSE(item.GetVideoInfoTag()->HasStreamDetails());
+  EXPECT_EQ(MakeRecord().aspects, item.GetVideoInfoTag()->m_contentGeometry.Get().aspects);
+}
+
 /*!
  * The sweep's work list. Every file comes back whether or not it has been measured, because
  * the criterion that retires a row - the file having changed underneath it - can only be
@@ -370,62 +420,7 @@ TEST_F(TestVideoDatabaseContentGeometry, TheCascadeSurvivesTheAnalyticsCycleAnUp
                                        "contentgeometry";
 }
 
-namespace
-{
-
-/*!
- * \brief Upgrades the test database named \p baseName as Kodi does at startup: points \p slot of
- * the advanced settings at it and reinitialises CDatabaseManager, then puts both back.
- * \return whether the database manager initialised
- */
-bool UpgradeThroughManager(DatabaseSettings CAdvancedSettings::* slot, const std::string& baseName)
-{
-  const auto advancedSettings{CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()};
-  DatabaseSettings& target{(*advancedSettings).*slot};
-  const DatabaseSettings restore{target};
-
-  const DatabaseSettings test{TestDatabaseSettings()};
-  target.type = test.type;
-  target.host = test.host;
-  target.name = baseName;
-
-  CDatabaseManager& manager{CServiceBroker::GetDatabaseManager()};
-  manager.Deinitialize();
-  const bool initialized{manager.Initialize()};
-
-  target = restore;
-  manager.Deinitialize();
-
-  return initialized;
-}
-
-/*!
- * \brief Restates the tables the 155 video upgrade changes as 154 defined them, so that upgrade can
- * run over a database Connect() built at the current schema.
- *
- * Restated rather than derived from the current tables, so a column added to the 155 upgrade and
- * not taken back out here cannot abort the upgrade on a duplicate.
- */
-void RestateVideo154(CDatabase& db)
-{
-  ASSERT_TRUE(db.ExecuteQuery("DROP TABLE contentgeometry"));
-  ASSERT_TRUE(db.ExecuteQuery("DROP TABLE settings"));
-  ASSERT_TRUE(db.ExecuteQuery(
-      "CREATE TABLE settings ( idFile integer, Deinterlace bool,"
-      "ViewMode integer,ZoomAmount float, PixelRatio float, VerticalShift float, AudioStream "
-      "integer, SubtitleStream integer,"
-      "SubtitleDelay float, SubtitlesOn bool, Brightness float, Contrast float, Gamma float,"
-      "VolumeAmplification float, AudioDelay float, ResumeTime integer,"
-      "Sharpness float, NoiseReduction float, NonLinStretch bool, PostProcess bool,"
-      "ScalingMethod integer, DeinterlaceMode integer, StereoMode integer, StereoInvert bool, "
-      "VideoStream integer,"
-      "TonemapMethod integer, TonemapParam float, Orientation integer, CenterMixLevel integer, "
-      "Hue float, Saturation float)"));
-}
-
-} // unnamed namespace
-
-//! The real 154 to 155 upgrade, driven through CDatabaseManager to the current schema.
+//! The real upgrade from 154, driven through CDatabaseManager.
 TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndItsCascade)
 {
   const DatabaseSettings settings{TestDatabaseSettings()};

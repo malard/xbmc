@@ -428,6 +428,12 @@ public:
 
   std::string GetArtistById(int id) const;
   int GetArtistByName(const std::string& strArtist);
+
+  //! \brief The art of the artist of this name. False if no artist has the name, or it has none.
+  bool GetArtistArtByName(const std::string& name, KODI::ART::Artwork& art);
+
+  //! \brief A piece of art of the artist of this name. Empty if no artist has the name.
+  std::string GetArtistArtByName(const std::string& name, const std::string& artType);
   int GetArtistByMatch(const CArtist& artist);
   bool GetArtistFromSong(int idSong, CArtist& artist);
   bool IsSongArtist(int idSong, int idArtist) const;
@@ -653,18 +659,11 @@ public:
                          bool countOnly = false);
   int GetDiscsCount(const std::string& baseDir, const Filter& filter = Filter());
   int GetSongsCount(const Filter& filter = Filter());
+
+  //! \brief The number of different album names the songs carry
+  int GetAlbumNamesCount() const;
   bool GetFilter(CDbUrl& musicUrl, Filter& filter, SortDescription& sorting) override;
   int GetOrderFilter(KODI::MEDIA::TYPE type, const SortDescription& sorting, Filter& filter) const;
-
-  /////////////////////////////////////////////////
-  // Party Mode
-  /////////////////////////////////////////////////
-  /*! \brief Gets song IDs in random order that match the filter criteria
-  \param filter the criteria to apply in the query
-  \param songIDs a vector of <1, id> pairs suited to party mode use
-  \return count of song ids found.
-  */
-  unsigned int GetRandomSongIDs(const Filter& filter, std::vector<std::pair<int, int>>& songIDs);
 
   /////////////////////////////////////////////////
   // JSON-RPC

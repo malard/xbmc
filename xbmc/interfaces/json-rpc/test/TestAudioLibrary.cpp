@@ -6,21 +6,18 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "DatabaseManager.h"
 #include "FileItem.h"
 #include "FileItemList.h"
-#include "GUIInfoManager.h"
-#include "ServiceBroker.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
-#include "interfaces/AnnouncementManager.h"
+#include "JSONRPCTestUtils.h"
+#include "guilib/test/TestGUIStubs.h"
 #include "interfaces/json-rpc/AudioLibrary.h"
 #include "music/MusicDatabase.h"
 #include "music/tags/MusicInfoTag.h"
+#include "test/TestAnnouncements.h"
+#include "test/TestLibrary.h"
 #include "utils/Variant.h"
 
 #include <array>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,35 +25,15 @@
 
 namespace
 {
-class TestGUI : public CGUIComponent
-{
-public:
-  TestGUI() : CGUIComponent(false)
-  {
-    m_pWindowManager = std::make_unique<CGUIWindowManager>();
-    m_guiInfoManager = std::make_unique<CGUIInfoManager>();
-    CServiceBroker::RegisterGUI(this);
-  }
+using KODI::GUILIB::TEST::CTestGUIComponent;
 
-  ~TestGUI() override { m_pWindowManager.reset(); }
-};
-
-class TestAudioLibrary : public testing::TestWithParam<bool>
+class TestAudioLibrary : public JSONRPC::ShippedServiceDescriptionTestBase,
+                         public testing::WithParamInterface<bool>
 {
 protected:
   void SetUp() override
   {
-    m_previousAnnouncements = CServiceBroker::GetAnnouncementManager();
-    CServiceBroker::RegisterAnnouncementManager(
-        std::make_shared<ANNOUNCEMENT::CAnnouncementManager>());
-    if (!CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
-    {
-      ASSERT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
-    }
-    ASSERT_TRUE(m_db.Open());
-    m_lastScanned = m_db.GetLibraryLastUpdated();
-    m_lastScannedIsNull =
-        m_db.GetSingleValue("SELECT lastscanned IS NULL FROM versiontagscan LIMIT 1") == "1";
+    ShippedServiceDescriptionTestBase::SetUp();
     m_artistId = m_db.AddArtist("SetArtistDetails test", "");
     ASSERT_GT(m_artistId, 0);
     ASSERT_TRUE(m_db.ExecuteQuery("INSERT INTO album (strAlbum) VALUES ('Test album')"));
@@ -65,28 +42,12 @@ protected:
         "INSERT INTO album_artist (idArtist, idAlbum) VALUES (%i, %i)", m_artistId, m_albumId)));
   }
 
-  void TearDown() override
-  {
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM album WHERE idAlbum = %i", m_albumId));
-    EXPECT_TRUE(m_db.ExecuteQuery(m_db.PrepareSQL(
-        "DELETE FROM removed_link WHERE idArtist = %i AND idMedia = %i AND idRole = -1", m_artistId,
-        m_albumId)));
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM artist WHERE idArtist = %i", m_artistId));
-    EXPECT_TRUE(m_db.ExecuteQuery(
-        m_lastScannedIsNull ? "UPDATE versiontagscan SET lastscanned = NULL"
-                            : m_db.PrepareSQL("UPDATE versiontagscan SET lastscanned = '%s'",
-                                              m_lastScanned.c_str())));
-    m_db.Close();
-    CServiceBroker::RegisterAnnouncementManager(m_previousAnnouncements);
-  }
-
-  TestGUI m_gui;
-  CMusicDatabase m_db;
+  CTestGUIComponent m_gui{CTestGUIComponent::InfoManager::WITH};
+  CScopedAnnouncementManager m_announcements;
+  CTestLibrary m_library{"TestAudioLibrary"};
+  CMusicDatabase& m_db{m_library.Music()};
   int m_artistId{-1};
   int m_albumId{-1};
-  std::string m_lastScanned;
-  bool m_lastScannedIsNull{true};
-  std::shared_ptr<ANNOUNCEMENT::CAnnouncementManager> m_previousAnnouncements;
 };
 } // namespace
 
@@ -134,12 +95,13 @@ TEST_P(TestAudioLibrary, SetArtistDetailsPreservesDiscographyAndVideoLinks)
   ASSERT_TRUE(m_db.ExecuteQuery("UPDATE versiontagscan SET lastscanned = '2000-01-01 00:00:00'"));
 
   CVariant params(CVariant::VariantTypeObject);
-  params["artistid"] = m_artistId;
-  params["description"] = "Updated biography";
-  params["art"]["thumb"] = "new-thumb";
-  params["art"]["banner"] = CVariant(CVariant::VariantTypeNull);
+  params["item"]["kind"] = "artist";
+  params["item"]["id"] = m_artistId;
+  params["properties"]["description"] = "Updated biography";
+  params["properties"]["art"]["thumb"] = "new-thumb";
+  params["properties"]["art"]["banner"] = CVariant(CVariant::VariantTypeNull);
   CVariant result;
-  ASSERT_EQ(JSONRPC::ACK, JSONRPC::CAudioLibrary::SetArtistDetails(params, result));
+  ASSERT_EQ(JSONRPC::OK, JSONRPC::CAudioLibrary::SetItemProperties(params, result));
 
   EXPECT_EQ("Updated biography",
             m_db.GetSingleValue(m_db.PrepareSQL(
@@ -180,59 +142,21 @@ namespace
 class TestAudioLibraryFillFileItemList : public testing::Test
 {
 protected:
-  void SetUp() override
-  {
-    if (!CServiceBroker::GetDatabaseManager().CanOpen("MyMusic"))
-    {
-      ASSERT_TRUE(CServiceBroker::GetDatabaseManager().Initialize());
-    }
-    ASSERT_TRUE(m_db.Open());
-    ASSERT_TRUE(m_db.ExecuteQuery(
-        "INSERT INTO path (strPath) VALUES ('special://temp/fillfileitemlist/')"));
-    m_pathId = std::stoi(m_db.GetSingleValue("SELECT MAX(idPath) FROM path"));
-    // a song is listed through its artist credits
-    m_artistId = m_db.AddArtist("FillFileItemList artist", "");
-    ASSERT_GT(m_artistId, 0);
-  }
-
-  void TearDown() override
-  {
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM song_artist WHERE idArtist = %i", m_artistId));
-    m_db.ExecuteQuery(
-        m_db.PrepareSQL("DELETE FROM removed_link WHERE idArtist = %i AND idRole = 1", m_artistId));
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM song WHERE idPath = %i", m_pathId));
-    for (const int albumId : m_albumIds)
-      m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM album WHERE idAlbum = %i", albumId));
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM path WHERE idPath = %i", m_pathId));
-    m_db.ExecuteQuery(m_db.PrepareSQL("DELETE FROM artist WHERE idArtist = %i", m_artistId));
-    m_db.Close();
-  }
-
   int AddAlbumWithTwoTracks(const std::string& name)
   {
-    EXPECT_TRUE(m_db.ExecuteQuery(
-        m_db.PrepareSQL("INSERT INTO album (strAlbum) VALUES ('%s')", name.c_str())));
-    const int albumId = std::stoi(m_db.GetSingleValue("SELECT MAX(idAlbum) FROM album"));
-    m_albumIds.push_back(albumId);
+    int idSong{-1};
     for (const int track : {1, 2})
     {
-      EXPECT_TRUE(m_db.ExecuteQuery(
-          m_db.PrepareSQL("INSERT INTO song (idAlbum, idPath, strFileName, iTrack, strTitle) "
-                          "VALUES (%i, %i, '%s%i.flac', %i, '%s %i')",
-                          albumId, m_pathId, name.c_str(), track, track, name.c_str(), track)));
-      EXPECT_TRUE(m_db.ExecuteQuery(
-          m_db.PrepareSQL("INSERT INTO song_artist (idArtist, idSong, idRole, iOrder, strArtist) "
-                          "SELECT %i, MAX(idSong), 1, 0, 'FillFileItemList artist' FROM song",
-                          m_artistId)));
+      idSong = m_library.AddSong(name + " " + std::to_string(track), name,
+                                 "FillFileItemList artist", track);
+      EXPECT_GT(idSong, 0);
     }
-    return albumId;
+    return std::stoi(m_library.Music().GetSingleValue(
+        m_library.Music().PrepareSQL("SELECT idAlbum FROM song WHERE idSong = %i", idSong)));
   }
 
-  TestGUI m_gui;
-  CMusicDatabase m_db;
-  int m_pathId{-1};
-  int m_artistId{-1};
-  std::vector<int> m_albumIds;
+  CTestGUIComponent m_gui{CTestGUIComponent::InfoManager::WITH};
+  CTestLibrary m_library{"TestAudioLibraryFillFileItemList"};
 };
 } // namespace
 
@@ -246,7 +170,7 @@ TEST_F(TestAudioLibraryFillFileItemList, AlbumsAddedTogetherKeepTheirTracksToget
   for (const int albumId : {first, second})
   {
     CVariant parameters(CVariant::VariantTypeObject);
-    parameters["albumid"] = albumId;
+    parameters["albumId"] = albumId;
     ASSERT_TRUE(JSONRPC::CAudioLibrary::FillFileItemList(parameters, list));
   }
 

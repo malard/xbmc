@@ -19,7 +19,6 @@
 #include "application/Application.h"
 #include "filesystem/SpecialProtocol.h"
 #include "interfaces/AnnouncementManager.h"
-#include "interfaces/AnnouncementV14.h"
 #include "interfaces/legacy/AddonUtils.h"
 #include "interfaces/legacy/CallbackHandler.h"
 #include "interfaces/legacy/Monitor.h"
@@ -206,18 +205,15 @@ void XBPython::OnAnnouncement(const ANNOUNCEMENT::Announcement& announcement)
 {
   IAnnouncer::OnAnnouncement(announcement);
 
-  // Temporary: add-ons are given the JSON-RPC v14 notifications; removed with JSON-RPC v15.
-  for (const auto& [flag, sender, message, data] : ANNOUNCEMENT::V14::NotificationsOf(announcement))
-  {
-    std::string jsonData;
-    if (CJSONVariantWriter::Write(
-            data, jsonData,
-            CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact))
-      OnNotification(sender,
-                     std::string(ANNOUNCEMENT::AnnouncementFlagToString(flag)) + "." +
-                         std::string(message),
-                     jsonData);
-  }
+  std::string jsonData;
+  if (CJSONVariantWriter::Write(
+          ANNOUNCEMENT::NotificationDataOf(announcement), jsonData,
+          CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_jsonOutputCompact))
+    OnNotification(
+        ANNOUNCEMENT::SenderOf(announcement),
+        std::string(ANNOUNCEMENT::AnnouncementFlagToString(ANNOUNCEMENT::FlagOf(announcement))) +
+            "." + ANNOUNCEMENT::MessageOf(announcement),
+        jsonData);
 
   // abort once OnQuit is queued, so scripts get it before their abort
   if (const auto* system = std::get_if<ANNOUNCEMENT::SystemEvent>(&announcement);
