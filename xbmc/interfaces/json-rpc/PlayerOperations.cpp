@@ -467,9 +467,9 @@ JSONRPC_STATUS CPlayerOperations::Stop(const CVariant& parameterObject, CVariant
                                                  : CApplication::PlaybackWindow::Visualisation));
             return ACK;
 
-          case Picture:
-            SendSlideshowAction(ACTION_STOP);
-            return ACK;
+    case Picture:
+      SendSlideshowAction(ACTION_STOP);
+      return ACK;
 
           case None:
           default:
@@ -760,22 +760,22 @@ JSONRPC_STATUS CPlayerOperations::Move(const CVariant& parameterObject, CVariant
             else
               return InvalidParams;
 
-            return ACK;
+      return ACK;
 
-          case Video:
-          case Audio:
-            if (direction == "left" || direction == "up")
-              CServiceBroker::GetAppMessenger()->SendMsg(
-                  TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                  TransferToMessenger(std::make_unique<CAction>(ACTION_PREV_ITEM)));
-            else if (direction == "right" || direction == "down")
-              CServiceBroker::GetAppMessenger()->SendMsg(
-                  TMSG_GUI_ACTION, WINDOW_INVALID, -1,
-                  TransferToMessenger(std::make_unique<CAction>(ACTION_NEXT_ITEM)));
-            else
-              return InvalidParams;
+    case Video:
+    case Audio:
+      if (direction == "left" || direction == "up")
+        CServiceBroker::GetAppMessenger()->SendMsg(
+            TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+            TransferToMessenger(std::make_unique<CAction>(ACTION_PREV_ITEM)));
+      else if (direction == "right" || direction == "down")
+        CServiceBroker::GetAppMessenger()->SendMsg(
+            TMSG_GUI_ACTION, WINDOW_INVALID, -1,
+            TransferToMessenger(std::make_unique<CAction>(ACTION_NEXT_ITEM)));
+      else
+        return InvalidParams;
 
-            return ACK;
+      return ACK;
 
           case None:
           default:
@@ -1404,10 +1404,10 @@ JSONRPC_STATUS CPlayerOperations::GoTo(const CVariant& parameterObject, CVariant
               return Fail(result, FailedToExecute, Reason::NotApplicable);
             break;
 
-          case None:
-          default:
-            return FailedToExecute;
-        }
+    case None:
+    default:
+      return FailedToExecute;
+  }
 
         return ACK;
       });

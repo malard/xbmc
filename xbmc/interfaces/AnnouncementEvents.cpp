@@ -34,6 +34,10 @@ struct Overloaded : Ts...
   using Ts::operator()...;
 };
 
+// Apple clang does not implement C++20 aggregate class template argument deduction
+template<class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
 CVariant PlayersOf(KODI::MEDIA::Streams streams)
 {
   CVariant list(CVariant::VariantTypeArray);

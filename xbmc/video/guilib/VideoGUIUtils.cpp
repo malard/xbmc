@@ -342,6 +342,14 @@ void AddItemToPlayListAndPlay(const std::shared_ptr<CFileItem>& itemToQueue,
   CFileItemList queuedItems;
   int start = -1;
   VIDEO::UTILS::GetItemsForPlayList(itemToQueue, queuedItems, mode, itemToPlay, &start);
+
+  // The enumeration's watched filter can drop the chosen item.
+  if (itemToPlay && start < 0)
+  {
+    queuedItems.AddFront(itemToPlay, 0);
+    start = 0;
+  }
+
   CServiceBroker::GetPlayLists()->PlayExpanded(PLAYLIST::Video, queuedItems, start, itemToPlay,
                                                {.player = player});
 }

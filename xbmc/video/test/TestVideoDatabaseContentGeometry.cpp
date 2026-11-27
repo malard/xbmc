@@ -391,9 +391,9 @@ TEST(TestVideoDatabaseContentGeometryMigration, UpgradingFrom154AddsTheTableAndI
 
   CVideoDatabase migrated;
   ASSERT_EQ(CDatabase::ConnectionState::STATE_CONNECTED,
-            migrated.Connect("MyVideosMigration158", settings, false));
+            migrated.Connect("MyVideosMigration157", settings, false));
 
-  EXPECT_EQ(158, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
+  EXPECT_EQ(157, migrated.GetSingleValueInt("SELECT idVersion FROM version"));
 
   // 157 drops the zoom the custom view mode no longer has, and keeps the rest of the row.
   EXPECT_EQ(0, migrated.GetSingleValueInt(

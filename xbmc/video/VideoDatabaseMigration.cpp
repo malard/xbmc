@@ -242,7 +242,7 @@ void RepairVideoAssetTypesV154(CDatabase& db, Dataset& ds, Dataset& ds2, int iVe
 
 // A code with an ISO 639-1 equivalent becomes it, as BCP 47 prefers it. Any other is already the
 // tag, or came from <languagecodes> or a language add-on and stays as it is, as in step 141.
-void StoreStreamLanguagesAsTagsV158(CDatabase& db, Dataset& ds, Dataset& ds2)
+void StoreStreamLanguagesAsTagsV157(CDatabase& db, Dataset& ds, Dataset& ds2)
 {
   for (const char* column : {"strVideoLanguage", "strAudioLanguage", "strSubtitleLanguage"})
   {
@@ -1612,15 +1612,12 @@ void CVideoDatabase::UpdateTables(int iVersion)
                 "TonemapParam, Orientation, CenterMixLevel, Hue, Saturation, DeclaredAspect, "
                 "DeclaredOn, DetectedWhenDeclared FROM settingsold");
     m_pDS->exec("DROP TABLE settingsold");
-  }
 
-  if (iVersion < 158)
-  {
-    KODI::DATABASE::MIGRATION::StoreStreamLanguagesAsTagsV158(*this, *m_pDS, *m_pDS2);
+    KODI::DATABASE::MIGRATION::StoreStreamLanguagesAsTagsV157(*this, *m_pDS, *m_pDS2);
   }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 158;
+  return 157;
 }

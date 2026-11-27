@@ -36,5 +36,5 @@ void RepairVideoAssetTypesV154(CDatabase& db,
  * \param[in] ds a dataset of \p db
  * \param[in] ds2 another dataset of \p db
  */
-void StoreStreamLanguagesAsTagsV158(CDatabase& db, dbiplus::Dataset& ds, dbiplus::Dataset& ds2);
+void StoreStreamLanguagesAsTagsV157(CDatabase& db, dbiplus::Dataset& ds, dbiplus::Dataset& ds2);
 } // namespace KODI::DATABASE::MIGRATION

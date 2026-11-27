@@ -20960,7 +20960,7 @@ msgctxt "#36169"
 msgid "Select the quality of resampling for cases where the audio output needs to be at a different sampling rate from that used by the source.[CR][Low] Is fast and will have minimal impact on system resources such as the use of the CPU.[CR][Medium] & [High] Will use progressively more system resources."
 msgstr ""
 
-#. Description of setting with label #22021 "Minimise black bars"
+#. Description of setting with label #22021 "Stretch to fill limit"
 #: system/settings/settings.xml
 msgctxt "#36170"
 msgid "The most the Stretch to fill view mode stretches a video to fill the screen. A video that needs more is left as it is."

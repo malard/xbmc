@@ -1267,8 +1267,7 @@ bool CGUIDialogVideoInfo::UpdateVideoItemTitle(const std::shared_ptr<CFileItem>&
           false))
     return false;
 
-  VIDEO::LIBRARY::SetItemTitle(tag, title);
-  return true;
+  return VIDEO::LIBRARY::SetItemTitle(tag, title);
 }
 
 namespace

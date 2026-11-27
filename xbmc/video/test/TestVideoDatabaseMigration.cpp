@@ -41,7 +41,7 @@ public:
 
   void StoreStreamLanguagesAsTags()
   {
-    KODI::DATABASE::MIGRATION::StoreStreamLanguagesAsTagsV158(*this, *m_pDS, *m_pDS2);
+    KODI::DATABASE::MIGRATION::StoreStreamLanguagesAsTagsV157(*this, *m_pDS, *m_pDS2);
   }
 };
 

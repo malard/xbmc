@@ -136,11 +136,10 @@ void AnnouncePlayCountChanged(const std::string& file, int playCount)
 
 void AnnounceResumePointChanged(const std::string& file, const CBookmark& resumePoint)
 {
-  CServiceBroker::GetAnnouncementManager()->Announce(
-      ANNOUNCEMENT::FilesEvent{ANNOUNCEMENT::EVENT::FILES::ResumePointChanged{
-          .file = CURL(file).GetWithoutUserDetails(),
-          .position = resumePoint.timeInSeconds,
-          .total = resumePoint.totalTimeInSeconds}});
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::FilesEvent{
+      ANNOUNCEMENT::EVENT::FILES::ResumePointChanged{.file = CURL(file).GetWithoutUserDetails(),
+                                                     .position = resumePoint.timeInSeconds,
+                                                     .total = resumePoint.totalTimeInSeconds}});
 }
 
 // zip:// (native) and archive:// (vfs addon) paths refer to the same archive
@@ -6748,15 +6747,14 @@ void CVideoDatabase::SetVideoSettings(int idFile, const CVideoSettings &setting)
     else
     { // add the items
       m_pDS->close();
-      strSQL =
-          "INSERT INTO settings (idFile,Deinterlace,ViewMode,PixelRatio, VerticalShift, "
-          "AudioStream,SubtitleStream,SubtitleDelay,SubtitlesOn,Brightness,"
-          "Contrast,Gamma,VolumeAmplification,AudioDelay,"
-          "ResumeTime,"
-          "Sharpness,NoiseReduction,NonLinStretch,PostProcess,ScalingMethod,StereoMode,"
-          "StereoInvert,VideoStream,TonemapMethod,TonemapParam,Orientation,CenterMixLevel,"
-          "Hue,Saturation,DeclaredAspect,DeclaredOn,DetectedWhenDeclared) "
-          "VALUES ";
+      strSQL = "INSERT INTO settings (idFile,Deinterlace,ViewMode,PixelRatio, VerticalShift, "
+               "AudioStream,SubtitleStream,SubtitleDelay,SubtitlesOn,Brightness,"
+               "Contrast,Gamma,VolumeAmplification,AudioDelay,"
+               "ResumeTime,"
+               "Sharpness,NoiseReduction,NonLinStretch,PostProcess,ScalingMethod,StereoMode,"
+               "StereoInvert,VideoStream,TonemapMethod,TonemapParam,Orientation,CenterMixLevel,"
+               "Hue,Saturation,DeclaredAspect,DeclaredOn,DetectedWhenDeclared) "
+               "VALUES ";
       strSQL += PrepareSQL(
           "(%i,%i,%i,%f,%f,%i,%i,%f,%i,%f,%f,%f,%f,%f,%i,%f,%f,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%f,"
           "%f,%f,'%s',%f)",

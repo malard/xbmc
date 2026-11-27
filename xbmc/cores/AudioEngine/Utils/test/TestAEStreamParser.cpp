@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -18,6 +19,10 @@ namespace
 {
 constexpr unsigned int CORE_SIZE = 2012;
 constexpr unsigned int HD_SIZE = 1000;
+//! Bytes handed to the parser per call, smaller than any frame here. The parser buffers what it is
+//! given and hands out one frame per call, so a stream given in one call yields only its first
+//! frame and the rest are never checked.
+constexpr size_t PACKET_SIZE = 1000;
 
 //! A 16-bit big-endian DTS core frame: 512 samples, 48 kHz, 5.1.
 std::vector<uint8_t> CoreFrame()
@@ -95,6 +100,8 @@ std::vector<CAEStreamInfo::DataType> Parse(std::vector<uint8_t> stream,
     const size_t available = std::min(chunk, stream.size() - pos);
     const int used =
         parser.AddData(stream.data() + pos, static_cast<unsigned int>(available), &out, &outSize);
+    // AddData() hands each frame out in a buffer allocated with new[], which the caller owns.
+    const std::unique_ptr<uint8_t[]> packet(out);
     if (outSize > 0)
       types.push_back(parser.GetDataType());
     if (used <= 0 && outSize == 0)
@@ -115,9 +122,9 @@ TEST(TestAEStreamParser, ACoreFrameNotFollowedByASyncIsNotTakenAsTheStream)
   for (int i = 0; i < 4; ++i)
     Append(stream, MaFrame());
 
-  const std::vector<CAEStreamInfo::DataType> types = Parse(stream);
+  const std::vector<CAEStreamInfo::DataType> types = Parse(stream, PACKET_SIZE);
 
-  ASSERT_FALSE(types.empty());
+  ASSERT_EQ(4u, types.size());
   for (const CAEStreamInfo::DataType type : types)
     EXPECT_EQ(CAEStreamInfo::STREAM_TYPE_DTSHD_MA, type);
 }
@@ -131,9 +138,9 @@ TEST(TestAEStreamParser, AnExtensionWithAnUnknownAssetIsNotTakenAsTheStream)
   for (int i = 0; i < 4; ++i)
     Append(stream, MaFrame());
 
-  const std::vector<CAEStreamInfo::DataType> types = Parse(stream);
+  const std::vector<CAEStreamInfo::DataType> types = Parse(stream, PACKET_SIZE);
 
-  ASSERT_FALSE(types.empty());
+  ASSERT_EQ(4u, types.size());
   for (const CAEStreamInfo::DataType type : types)
     EXPECT_EQ(CAEStreamInfo::STREAM_TYPE_DTSHD_MA, type);
 }
@@ -157,9 +164,9 @@ TEST(TestAEStreamParser, ADtsHdMaStreamIsDetectedFromItsFirstFrame)
   for (int i = 0; i < 4; ++i)
     Append(stream, MaFrame());
 
-  const std::vector<CAEStreamInfo::DataType> types = Parse(stream);
+  const std::vector<CAEStreamInfo::DataType> types = Parse(stream, PACKET_SIZE);
 
-  ASSERT_FALSE(types.empty());
+  ASSERT_EQ(4u, types.size());
   EXPECT_EQ(CAEStreamInfo::STREAM_TYPE_DTSHD_MA, types.front());
 }
 
@@ -169,9 +176,10 @@ TEST(TestAEStreamParser, ACoreOnlyStreamIsStillDts)
   for (int i = 0; i < 4; ++i)
     Append(stream, CoreFrame());
 
-  const std::vector<CAEStreamInfo::DataType> types = Parse(stream);
+  const std::vector<CAEStreamInfo::DataType> types = Parse(stream, PACKET_SIZE);
 
-  ASSERT_FALSE(types.empty());
+  // The last frame is held until the bytes after it show whether DTS-HD follows.
+  ASSERT_EQ(3u, types.size());
   for (const CAEStreamInfo::DataType type : types)
     EXPECT_EQ(CAEStreamInfo::STREAM_TYPE_DTS_512, type);
 }
