@@ -424,8 +424,8 @@ void CVideoInfoScannerArt::GetArtwork(CFileItem* pItem,
     }
   }
 
-  if (!art.contains(ART::TYPE::THUMB) && settings->GetBool(
-          CSettings::SETTING_MYVIDEOS_EXTRACTTHUMB) &&
+  if (!art.contains(ART::TYPE::THUMB) &&
+      settings->GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTTHUMB) &&
       CVideoThumbLoader::CanExtractEmbeddedThumb(mediaItem ? *mediaItem : *pItem))
   {
     art[ART::TYPE::THUMB] = CVideoThumbLoader::GetEmbeddedThumbURL(mediaItem ? *mediaItem : *pItem);

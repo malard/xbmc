@@ -576,15 +576,15 @@ void CUPnPServer::OnLibraryEvent(const LibraryEvent& event, AnnouncementFlag fla
         }
         case MEDIA::TYPE::TV_SHOW:
           UpdateContainer(MEDIA::LIBRARY_PATH::TVSHOW_TITLES);
-        UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES);
+          UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_EPISODES);
           break;
         case MEDIA::TYPE::MOVIE:
           UpdateContainer(MEDIA::LIBRARY_PATH::MOVIE_TITLES);
-        UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES);
+          UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MOVIES);
           break;
         case MEDIA::TYPE::MUSIC_VIDEO:
           UpdateContainer(MEDIA::LIBRARY_PATH::MUSICVIDEO_TITLES);
-        UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS);
+          UpdateContainer(VIDEO::DB_PATH::RECENTLY_ADDED_MUSICVIDEOS);
           break;
         default:
           break;

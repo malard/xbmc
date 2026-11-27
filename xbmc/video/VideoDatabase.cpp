@@ -13461,7 +13461,7 @@ void CVideoDatabase::ImportFromXML(const std::string &path)
         }
         current++;
         // now load the episodes
-        TiXmlElement *episode = movie->FirstChildElement(VIDEO::NFO_ROOT::EPISODE);
+        TiXmlElement* episode = movie->FirstChildElement(VIDEO::NFO_ROOT::EPISODE);
         while (episode)
         {
           // no need to delete the episode info, due to the above deletion

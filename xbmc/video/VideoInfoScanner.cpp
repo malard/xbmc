@@ -2774,8 +2774,8 @@ CVideoInfoScanner::~CVideoInfoScanner()
       m_summary.added.push_back({type, path, strTitle});
 
       // Announce() copies the item before it returns, so it is lent here rather than copied twice
-      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::VideoLibraryEvent{
-          ANNOUNCEMENT::EVENT::LIBRARY::Update{
+      CServiceBroker::GetAnnouncementManager()->Announce(
+          ANNOUNCEMENT::VideoLibraryEvent{ANNOUNCEMENT::EVENT::LIBRARY::Update{
               .type = movieDetails.GetMediaType(),
               .id = movieDetails.m_iDbId,
               .item = std::shared_ptr<const CFileItem>(pItem, [](const CFileItem*) {}),

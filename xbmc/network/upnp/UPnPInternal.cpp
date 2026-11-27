@@ -416,24 +416,24 @@ NPT_Result PopulateObjectFromTag(CVideoInfoTag& tag,
     {
       case MEDIA::TYPE::MUSIC_VIDEO:
         object.m_ObjectClass.type = "object.item.videoItem.musicVideoClip";
-      object.m_Creator =
-          StringUtils::Join(
-              tag.m_artist,
-              CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator)
-              .c_str();
+        object.m_Creator =
+            StringUtils::Join(
+                tag.m_artist,
+                CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator)
+                .c_str();
         AddAll(object.m_People.artists, tag.m_artist);
-      object.m_Affiliation.album = tag.m_strAlbum.c_str();
-      object.m_Title = tag.m_strTitle.c_str();
-      object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
-      object.m_ReferenceID =
-          EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MUSICVIDEO_TITLES, tag.m_iDbId));
+        object.m_Affiliation.album = tag.m_strAlbum.c_str();
+        object.m_Title = tag.m_strTitle.c_str();
+        object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
+        object.m_ReferenceID = EncodeObjectId(
+            StringUtils::Format("{}{}", VIDEO::DB_PATH::MUSICVIDEO_TITLES, tag.m_iDbId));
         break;
       case MEDIA::TYPE::MOVIE:
         object.m_ObjectClass.type = "object.item.videoItem.movie";
-      object.m_Title = tag.m_strTitle.c_str();
-      object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
-      object.m_ReferenceID =
-          EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MOVIE_TITLES, tag.m_iDbId));
+        object.m_Title = tag.m_strTitle.c_str();
+        object.m_Date = tag.GetPremiered().GetAsW3CDate().c_str();
+        object.m_ReferenceID =
+            EncodeObjectId(StringUtils::Format("{}{}", VIDEO::DB_PATH::MOVIE_TITLES, tag.m_iDbId));
         break;
       case MEDIA::TYPE::TV_SHOW:
         object.m_Recorded.series_title = tag.m_strShowTitle.c_str();

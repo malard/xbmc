@@ -2850,7 +2850,7 @@ void EndMoviePlaylistSearch(const std::vector<PlaylistInformation>& playlists)
  *
  * The audio and presentation graphic streams the playlist flags as its defaults - audio stream
  * number 1 and presentation graphic stream number 1 of its longest play item - shown as
- * "eng | jpn". A playlist that flags no default, or whose default names no language,
+ * "English | Japanese". A playlist that flags no default, or whose default names no language,
  * contributes nothing.
  *
  * The flag is read rather than the first stream taken, so that this agrees with the stream
