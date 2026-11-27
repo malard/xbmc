@@ -724,7 +724,8 @@ public:
   /*! \brief Get many items' stream details as GetStreamDetails() does; keeps m_parsedDetails. */
   void GetStreamDetailsForList(const std::vector<CVideoInfoTag*>& tags);
   /*!
-   * \brief Add many items' stream details without picking best streams, which copying them does.
+   * \brief Add many items' stream details and stored content geometry without picking best
+   * streams, which copying them does.
    * \return false if the database isn't open or the query failed, leaving the details incomplete.
    */
   bool AddStreamDetailsForList(const std::vector<CVideoInfoTag*>& tags);
@@ -1669,6 +1670,10 @@ protected:
   int SetFileForUnknown(const std::string& fileAndPath, int oldIdFile, int newIdFile);
 
 private:
+  //! \brief Set the stored content geometry of the files in \p fileIds on their tags in \p byFile.
+  void AddStoredContentGeometryForList(const std::map<int, std::vector<CVideoInfoTag*>>& byFile,
+                                       const std::string& fileIds);
+
   void CreateTables() override;
   void CreateAnalytics() override;
   void UpdateTables(int version) override;
